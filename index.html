@@ -82,7 +82,7 @@
                 <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
-            <!-- Public Simple Payment Methods (Free / Local Only - No hidden/foreign bank clutter for students) -->
+            <!-- Public Simple Payment Methods for Students -->
             <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 space-y-4 shadow-xl">
                 <h4 class="text-lg font-bold text-emerald-400 flex items-center" id="t-paymentTitle">
                     <i class="fa-solid fa-credit-card ml-2"></i> طرق الدفع المتاحة للطلاب
@@ -121,11 +121,11 @@
                 </div>
             </div>
 
-            <!-- OWNER FULL DASHBOARD (Hidden from teachers and students completely) -->
+            <!-- OWNER FULL DASHBOARD -->
             <div id="adminControls" class="hidden space-y-6">
                 <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
                     <h5 class="font-bold text-emerald-400 text-xl flex items-center" id="t-adminTitle">
-                        <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم المالك الخاصة (تتضمن البنوك المجانية في إيطاليا ومصر)
+                        <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم المالك الخاصة (تتضمن الحسابات المجانية في إيطاليا ومصر)
                     </h5>
 
                     <!-- Financial, Commission & Teacher Statistics -->
@@ -466,7 +466,6 @@
             document.getElementById('t-welcome').innerText = d.welcome;
             document.getElementById('t-logout').innerHTML = `${d.logout} <i class="fa-solid fa-right-from-bracket mr-1"></i>`;
             
-            // Teacher Profile
             document.getElementById('t-teacherProfileTitle').innerHTML = `<i class="fa-solid fa-id-card ml-2"></i> ${d.teacherProfileTitle}`;
             document.getElementById('t-certsLabel').innerText = d.certsLabel;
             document.getElementById('t-sampleLabel').innerText = d.sampleLabel;
@@ -475,7 +474,6 @@
             document.getElementById('t-slotTitle').innerText = d.slotTitle;
             document.getElementById('t-addSlotBtn').innerText = d.addSlotBtn;
 
-            // Admin
             document.getElementById('t-adminTitle').innerHTML = `<i class="fa-solid fa-gears ml-2"></i> ${d.adminTitle}`;
             document.getElementById('t-statsTitle').innerText = d.statsTitle;
             document.getElementById('t-academyShareLabel').innerText = d.academyShareLabel;
@@ -493,16 +491,13 @@
             document.getElementById('t-optStudent').innerText = d.optStudent;
             document.getElementById('t-promoteBtn').innerText = d.promoteBtn;
 
-            // Student
             document.getElementById('t-studentViewTitle').innerText = d.studentViewTitle;
             document.getElementById('t-loadingSlots').innerText = d.loadingSlots;
             
-            // Chat
             document.getElementById('t-aiTitle').innerText = d.aiTitle;
             document.getElementById('t-aiWelcome').innerText = d.aiWelcome;
             document.getElementById('aiUserInput').placeholder = d.aiPlaceholder;
             
-            // Modal
             document.getElementById('t-modalName').innerText = d.modalName;
             document.getElementById('t-modalLang').innerText = d.modalLang;
             document.getElementById('t-modalPhone').innerText = d.modalPhone;
@@ -570,7 +565,7 @@
             setTimeout(() => {
                 const lang = document.getElementById('siteLangSelect').value;
                 let reply = lang === 'ar' 
-                    ? "مرحباً بك! تم استلام رسالتك وسيتواصل معك الفريق الإداري مباشرة." 
+                    ? "مرحباً بك! تم استلاستلام رسالتك وسيتواصل معك الفريق الإداري مباشرة." 
                     : "Welcome! Your message has been received and our team will reply directly.";
                 chatBox.innerHTML += `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
