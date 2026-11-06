@@ -164,7 +164,9 @@
         
         let supabaseClient;
         try {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: { persistSession: true, autoRefreshToken: true }
+            });
         } catch (e) {
             console.error("Supabase error:", e);
         }
