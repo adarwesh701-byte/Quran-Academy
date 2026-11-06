@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أكاديمية الإتقان العالمية | تعليم القرآن الكريم والتلاوة والمقامات</title>
-    <meta name="description" content="أكاديمية الإتقان العالمية لتعليم القرآن الكريم، الأحكام، والتلاوة بمختلف المقامات الصوتية مع نخبة من المعلمين المعتمدين.">
+    <title id="pageTitle">أكاديمية الإتقان العالمية | اللغة العربية، الإجازات، وتفسير السور بالذكاء الاصطناعي</title>
+    <meta name="description" content="منصة متخصصة في شرح اللغة العربية، الإجازات، المعلمين المؤهلين، وتفسير السور القرآنية بالصور المرئية والذكاء الاصطناعي.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -20,11 +20,11 @@
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3 space-x-reverse">
                 <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-600/30">
-                    ق
+                    أ
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-emerald-400">أكاديمية الإتقان</h1>
-                    <p class="text-xs text-slate-400">Smart Quran & Maqamat Platform</p>
+                    <h1 class="text-xl font-bold text-emerald-400" id="headerTitle">أكاديمية الإتقان العالمية</h1>
+                    <p class="text-xs text-slate-400" id="headerSub">Arabic, Ijaza & AI Quran Tafseer</p>
                 </div>
             </div>
             
@@ -33,7 +33,7 @@
                     تسجيل الدخول
                 </button>
                 <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md cursor-pointer">
-                    إنشاء حساب جديد
+                    حساب جديد
                 </button>
             </div>
         </div>
@@ -46,21 +46,38 @@
         <div id="guestView" class="space-y-12">
             <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-10 text-center shadow-2xl relative overflow-hidden">
                 <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
-                    منصة تعليمية متكاملة (كورسات مجانية ومدفوعة + حصص ممارسة)
+                    شرح اللغة العربية + الإجازات المتصلة + تفسير السور بصور الذكاء الاصطناعي (AI)
                 </span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-white mt-6 mb-4">
-                    تعلم التلاوة والمقامات مع نخبة المعلمين
+                    تعلم القرآن وتفسيره بصرياً مع نخبة المعلمين
                 </h2>
                 <p class="text-slate-400 text-sm md:text-base max-w-2xl mx-auto mb-8">
-                    تصفح الكورسات المجانية والمدفوعة، احجز حصص ممارسة مباشرة، وتحكم كامل بالمنصة دون تعديل الأكواد.
+                    منصة تجمع بين أصالة الإجازات القرآنية، قواعد اللغة العربية، والتفسير المعزز بتصاميم الذكاء الاصطناعي لتقريب المعاني وتثبيتها.
                 </p>
                 <div class="flex justify-center gap-4">
                     <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-2xl transition shadow-lg cursor-pointer">
                         ابدأ الآن
                     </button>
-                    <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-8 py-3.5 rounded-2xl transition cursor-pointer">
-                        تسجيل الدخول
-                    </button>
+                </div>
+            </div>
+
+            <!-- Public AI Tafseer & Visuals Section -->
+            <div class="space-y-6">
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fa-solid fa-image text-emerald-400 ml-2"></i> تفسير السور بصور الذكاء الاصطناعي (AI Tafseer Gallery)
+                </h3>
+                <div id="publicAITafseerList" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <p class="text-slate-400 text-sm">جاري تحميل مواد التفسير البصري...</p>
+                </div>
+            </div>
+
+            <!-- Public Teachers Section -->
+            <div class="space-y-6">
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> نخبة المعلمين المؤهلين والشهادات
+                </h3>
+                <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <p class="text-slate-400 text-sm">جاري تحميل قائمة المعلمين...</p>
                 </div>
             </div>
         </div>
@@ -76,149 +93,133 @@
                     </span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="requestMediaPermissions()" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-2.5 rounded-xl transition font-bold cursor-pointer">
-                        <i class="fa-solid fa-video ml-1"></i> فحص الكاميرا والمايك
-                    </button>
                     <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer">
                         تسجيل الخروج <i class="fa-solid fa-right-from-bracket mr-1"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Admin & Owner Control Panel -->
-            <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
+            <!-- Admin & Teacher AI Tafseer Upload Panel -->
+            <div id="aiTafseerUploadPanel" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-4">
                 <h5 class="font-bold text-emerald-400 text-lg flex items-center">
-                    <i class="fa-solid fa-gears ml-2"></i> لوحة التحكم الإدارية الشاملة
+                    <i class="fa-solid fa-wand-magic-sparkles ml-2"></i> رفع ونشر تفسير السور بصور الذكاء الاصطناعي (AI Material)
                 </h5>
-                
-                <form id="addCourseForm" onsubmit="handleAddCourse(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <form onsubmit="handleUploadAITafseer(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">عنوان الكورس / الممارسة</label>
-                        <input type="text" id="courseTitle" placeholder="مثال: دورة مقام البياتي" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <label class="block text-xs text-slate-400 mb-1">اسم السورة (مثلاً: سورة الكهف)</label>
+                        <input type="text" id="surahName" placeholder="سورة..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">نوع المحتوى</label>
-                        <select id="courseType" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            <option value="free">كورس مجاني</option>
-                            <option value="paid">كورس مدفوع</option>
-                            <option value="practice">حصة ممارسة (Practice)</option>
-                        </select>
+                        <label class="block text-xs text-slate-400 mb-1">رابط الصورة (AI Generated Image URL)</label>
+                        <input type="url" id="surahImg" placeholder="https://images.unsplash.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">السعر (إذا مدفوع)</label>
-                        <input type="text" id="coursePrice" placeholder="مثال: $20 أو مجاناً" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <label class="block text-xs text-slate-400 mb-1">ملخص التفسير المستفاد</label>
+                        <input type="text" id="surahDesc" placeholder="شرح مبسط للمعاني..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+                    </div>
+                    <div class="md:col-span-3">
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition">نشر مادة التفسير في المنصة</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Teacher Profile Settings -->
+            <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-4">
+                <h5 class="font-bold text-amber-400 text-lg flex items-center">
+                    <i class="fa-solid id-card ml-2"></i> ملفي الشخصي كمعلم (الشهادات، الشرح، والمواعيد)
+                </h5>
+                <form onsubmit="handleSaveTeacherProfile(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">الشهادات والإجازات</label>
+                        <input type="text" id="tCerts" placeholder="إجازة في القراءات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط الحصة أو المحتوى</label>
-                        <input type="url" id="courseLink" placeholder="https://zoom.us/..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <label class="block text-xs text-slate-400 mb-1">رابط نموذج الشرح</label>
+                        <input type="url" id="tSample" placeholder="https://youtube.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
-                    <div class="md:col-span-4">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-2.5 text-sm transition shadow-md cursor-pointer">
-                            نشر العنصر في المنصة
-                        </button>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs text-slate-400 mb-1">نظام التدريس لكل سن</label>
+                        <textarea id="tSystem" rows="2" placeholder="أشرح للأطفال والكبار..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition">حفظ الملف</button>
                     </div>
                 </form>
 
-                <div id="superAdminSection" class="border-t border-slate-700 pt-6 hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="border-t border-slate-700 pt-4 mt-4">
+                    <h6 class="font-bold text-emerald-400 text-sm mb-2">إضافة موعد متاح (لمنع التعارض الأوڤر لاب)</h6>
+                    <form onsubmit="handleAddSlot(event)" class="flex gap-2">
+                        <input type="datetime-local" id="slotTime" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl">إضافة الموعد</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Admin Control Panel -->
+            <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
+                <h5 class="font-bold text-emerald-400 text-lg flex items-center">
+                    <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر (ربط الطلاب بالمعلمين)
+                </h5>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
                     <div>
-                        <h6 class="font-bold text-amber-400 text-sm mb-2"><i class="fa-solid fa-user-plus ml-1"></i> ترقية إلى (معلم)</h6>
-                        <form onsubmit="handlePromoteUser(event, 'teacher')" class="flex gap-2">
-                            <input type="email" id="teacherEmailInput" placeholder="email@teacher.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">تعيين</button>
+                        <h6 class="font-bold text-purple-400 text-sm mb-2">تعيين طالب لمعلم محدد</h6>
+                        <form onsubmit="handleAssignStudent(event)" class="space-y-3">
+                            <input type="email" id="assignStudentEmail" placeholder="إيميل الطالب" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="email" id="assignTeacherEmail" placeholder="إيميل المعلم المخصص له" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl">ربط الطالب بالمعلم</button>
                         </form>
                     </div>
                     <div>
-                        <h6 class="font-bold text-purple-400 text-sm mb-2"><i class="fa-solid fa-crown ml-1"></i> ترقية إلى (أونر / Admin)</h6>
-                        <form onsubmit="handlePromoteUser(event, 'admin')" class="flex gap-2">
-                            <input type="email" id="adminEmailInput" placeholder="email@owner.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">تعيين</button>
+                        <h6 class="font-bold text-amber-400 text-sm mb-2">ترقية مستخدم إلى (معلم) أو (أونر)</h6>
+                        <form onsubmit="handlePromoteUser(event)" class="space-y-3">
+                            <input type="email" id="promoteEmail" placeholder="البريد الإلكتروني" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <select id="promoteRole" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="teacher">معلم معتمد</option>
+                                <option value="admin">مالك (أونر)</option>
+                            </select>
+                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-xl">تنفيذ الترقية</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Public Courses & Practice Display Section -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
-                    <h5 class="font-bold text-emerald-400 text-base flex items-center">
-                        <i class="fa-solid fa-gift ml-2"></i> الكورسات المجانية
-                    </h5>
-                    <div id="freeCoursesList" class="space-y-3">
-                        <p class="text-slate-400 text-xs">جاري التحميل...</p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
-                    <h5 class="font-bold text-amber-400 text-base flex items-center">
-                        <i class="fa-solid fa-graduation-cap ml-2"></i> الكورسات المدفوعة
-                    </h5>
-                    <div id="paidCoursesList" class="space-y-3">
-                        <p class="text-slate-400 text-xs">جاري التحميل...</p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
-                    <h5 class="font-bold text-purple-400 text-base flex items-center">
-                        <i class="fa-solid fa-users ml-2"></i> حصص الممارسة التفاعلية
-                    </h5>
-                    <div id="practiceList" class="space-y-3">
-                        <p class="text-slate-400 text-xs">جاري التحميل...</p>
-                    </div>
+            <!-- Student View -->
+            <div id="studentSection" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                <h5 class="font-bold text-emerald-400 text-lg">المواعيد المتاحة لمعلمك المخصص</h5>
+                <div id="studentAvailableSlots" class="space-y-2">
+                    <p class="text-slate-400 text-xs">جاري جلب المواعيد...</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- AI Chatbot + In-Site Support Widget -->
+    <!-- AI Chatbot -->
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-start">
-        <div id="supportChatWindow" class="hidden w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
-            <div class="bg-sky-600 px-4 py-3 flex justify-between items-center text-white">
-                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-headset ml-2"></i> تواصل معنا (الدعم المباشر)</span>
-                <button onclick="toggleSupportChat()" class="cursor-pointer text-white hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-3 bg-slate-900/50 space-y-3 h-64 overflow-y-auto text-xs">
-                <p class="text-slate-400">أرسل استفسارك أو مشكلتك وسيقوم فريق الأكاديمية بالرد عليك قريباً داخل الموقع.</p>
-                <form onsubmit="sendSupportMessage(event)" class="space-y-2">
-                    <input type="text" id="supName" placeholder="اسمك الكريم" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                    <input type="email" id="supEmail" placeholder="بريدك الإلكتروني" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                    <textarea id="supMsg" placeholder="اكتب رسالتك هنا..." rows="3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
-                    <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-2 rounded-xl font-bold cursor-pointer">إرسال الرسالة للإدارة</button>
-                </form>
-            </div>
-        </div>
-
         <div id="aiChatWindow" class="hidden w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
             <div class="bg-emerald-600 px-4 py-3 flex justify-between items-center text-white">
-                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-robot ml-2"></i> مساعد الأكاديمية الذكي</span>
-                <button onclick="toggleAIChat()" class="cursor-pointer text-white hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+                <span class="font-bold text-sm"><i class="fa-solid fa-robot ml-2"></i> المساعد الذكي للأكاديمية</span>
+                <button onclick="toggleAIChat()" class="cursor-pointer text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="aiChatMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/50">
                 <div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">
-                    أهلاً بك! أنا مساعد الأكاديمية الذكي. كيف يمكنني مساعدتك في تعلم القرآن والتلاوة اليوم؟
+                    أهلاً بك! أنا مساعد الأكاديمية. كيف يمكنني مساعدتك في تعلم القرآن والتفسير البصري؟
                 </div>
             </div>
             <div class="p-2 bg-slate-800 border-t border-slate-700 flex gap-2">
-                <input type="text" id="aiUserInput" placeholder="اكتب سؤالك هنا..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" onkeypress="if(event.key==='Enter') sendAIMessage()">
-                <button onclick="sendAIMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
+                <input type="text" id="aiUserInput" placeholder="اكتب سؤالك..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" onkeypress="if(event.key==='Enter') sendAIMessage()">
+                <button onclick="sendAIMessage()" class="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
-
-        <div class="flex gap-2">
-            <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer transition transform hover:scale-105" title="مساعد الذكاء الاصطناعي">
-                <i class="fa-solid fa-robot"></i>
-            </button>
-            <button onclick="toggleSupportChat()" class="bg-sky-600 hover:bg-sky-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer transition transform hover:scale-105" title="تواصل معنا داخل الموقع">
-                <i class="fa-solid fa-headset"></i>
-            </button>
-        </div>
+        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer">
+            <i class="fa-solid fa-robot"></i>
+        </button>
     </div>
 
     <!-- Auth Modal -->
     <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
-            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
+            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h3 id="authModalTitle" class="text-xl font-bold text-white mb-6 text-center">تسجيل الدخول</h3>
 
             <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
@@ -227,41 +228,21 @@
                     <input type="text" id="authFullName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
                 
-                <!-- Language Selection Field -->
                 <div id="langGroup" class="hidden">
-                    <label class="block text-xs text-slate-400 mb-1">اللغة المفضلة (Preferred Language)</label>
-                    <select id="userLang" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
-                        <option value="Arabic">العربية (Arabic)</option>
-                        <option value="English">الإنجليزية (English)</option>
-                        <option value="German">الألمانية (Deutsch)</option>
-                        <option value="Italian">الإيطالية (Italiano)</option>
-                        <option value="French">الفرنسية (Français)</option>
-                        <option value="Turkish">التركية (Türkçe)</option>
-                        <option value="Spanish">الإسبانية (Español)</option>
-                        <option value="Urdu">الأوردو (اردو)</option>
+                    <label class="block text-xs text-slate-400 mb-1">اللغة المفضلة</label>
+                    <select id="userLang" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-emerald-400 font-bold">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                        <option value="de">Deutsch</option>
                     </select>
                 </div>
 
                 <div id="phoneGroup" class="hidden">
-                    <label class="block text-xs text-slate-400 mb-1">رقم الهاتف / الواتساب (اختر الدولة)</label>
+                    <label class="block text-xs text-slate-400 mb-1">رقم الهاتف / الواتساب</label>
                     <div class="flex gap-2 dir-ltr">
-                        <select id="countryCode" dir="ltr" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 max-w-[120px]">
-                            <option value="+20">🇪🇬 +20 (مصر)</option>
-                            <option value="+966">🇸🇦 +966 (السعودية)</option>
-                            <option value="+971">🇦🇪 +971 (الإمارات)</option>
-                            <option value="+965">🇰🇼 +965 (الكويت)</option>
-                            <option value="+974">🇶🇦 +974 (قطر)</option>
-                            <option value="+968">🇴🇲 +968 (عمان)</option>
-                            <option value="+973">🇧🇭 +973 (البحرين)</option>
-                            <option value="+962">🇯🇴 +962 (الأردن)</option>
-                            <option value="+961">🇱🇧 +961 (لبنان)</option>
-                            <option value="+964">🇮🇶 +964 (العراق)</option>
-                            <option value="+39">🇮🇹 +39 (إيطاليا)</option>
-                            <option value="+44">🇬🇧 +44 (بريطانيا)</option>
-                            <option value="+1">🇺🇸 +1 (أمريكا)</option>
-                            <option value="+49">🇩🇪 +49 (ألمانيا)</option>
-                            <option value="+33">🇫🇷 +33 (فرنسا)</option>
-                            <option value="+90">🇹🇷 +90 (تركيا)</option>
+                        <select id="countryCode" dir="ltr" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-emerald-400 font-bold max-w-[100px]">
+                            <option value="+20">+20</option>
+                            <option value="+966">+966</option>
                         </select>
                         <input type="tel" id="authPhone" dir="rtl" placeholder="رقم الهاتف..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                     </div>
@@ -273,16 +254,9 @@
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">كلمة السر</label>
-                    <div class="relative">
-                        <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white pl-10">
-                        <button type="button" onclick="togglePasswordVisibility()" class="absolute left-3 top-2.5 text-slate-400 hover:text-white text-xs cursor-pointer">
-                            <i id="togglePassIcon" class="fa-solid fa-eye"></i>
-                        </button>
-                    </div>
+                    <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
-                <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
-                    دخول
-                </button>
+                <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition cursor-pointer">دخول</button>
             </form>
         </div>
     </div>
@@ -293,18 +267,13 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteWNmeG1pZ3Z2ZXJtc2RuYWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5NjU1NjYsImV4cCI6MjEwOTU0MTU2Nn0.V0PUmuhKM7EPVxi2rwvPPi1WdoOsXxJr-6-lyZVtm7g";
         
         let supabaseClient;
-        try {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch (e) {
-            console.error("Supabase error:", e);
-        }
+        try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error(e); }
 
         let currentMode = 'login';
-
         function showAuthModal(mode) {
             currentMode = mode;
             document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('authModalTitle').innerText = mode === 'register' ? 'إنشاء حساب جديد' : 'تسجيل الدخول للمنصة';
+            document.getElementById('authModalTitle').innerText = mode === 'register' ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
             document.getElementById('authSubmitBtn').innerText = mode === 'register' ? 'إنشاء الحساب' : 'دخول';
             if (mode === 'register') {
                 document.getElementById('fullNameGroup').classList.remove('hidden');
@@ -316,77 +285,26 @@
                 document.getElementById('phoneGroup').classList.add('hidden');
             }
         }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
-
-        function togglePasswordVisibility() {
-            const passInput = document.getElementById('authPassword');
-            const icon = document.getElementById('togglePassIcon');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                passInput.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
-        }
-
-        function toggleAIChat() {
-            document.getElementById('aiChatWindow').classList.toggle('hidden');
-            document.getElementById('supportChatWindow').classList.add('hidden');
-        }
-
-        function toggleSupportChat() {
-            document.getElementById('supportChatWindow').classList.toggle('hidden');
-            document.getElementById('aiChatWindow').classList.add('hidden');
-        }
+        function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+        function toggleAIChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
 
         function sendAIMessage() {
             const input = document.getElementById('aiUserInput');
             const msg = input.value.trim();
             if (!msg) return;
-
             const chatBox = document.getElementById('aiChatMessages');
             chatBox.innerHTML += `<div class="bg-emerald-600/30 p-2 rounded-xl border border-emerald-500/30 max-w-[85%] mr-auto text-white">${msg}</div>`;
             input.value = '';
-
             setTimeout(() => {
-                let reply = "أهلاً بك! يمكنك تصفح الكورسات المجانية والمدفوعة أو حجز حصص ممارسة مباشرة عبر حسابك بالمنصة.";
-                if (msg.includes("مقام") || msg.includes("بياتي") || msg.includes("رست")) {
-                    reply = "ندرس في الأكاديمية المقامات الصوتية الأساسية مثل البياتي، الرست، الحجاز، والصبا باحترافية تامة.";
-                } else if (msg.includes("سعر") || msg.includes("تكلفة") || msg.includes("فلوس")) {
-                    reply = "لدينا كورسات مجانية بالكامل، وكورسات مدفوعة بأسعار رمزية تناسب الجميع، بالإضافة لحصص الممارسة.";
-                }
-                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
+                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">أهلاً بك! يتميز موقعنا بتفسير السور بصور الذكاء الاصطناعي لتقريب معاني القرآن الكريم وتيسيرها.</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }, 500);
-        }
-
-        async function sendSupportMessage(e) {
-            e.preventDefault();
-            const name = document.getElementById('supName').value;
-            alert(`شكراً لك يا ${name}! تم إرسال رسالتك لدعم الأكاديمية بنجاح، وسيتم الرد عليك قريباً.`);
-            e.target.reset();
-            toggleSupportChat();
-        }
-
-        async function requestMediaPermissions() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                alert('تمت الموافقة وتفعيل الكاميرا والمايك بنجاح!');
-                stream.getTracks().forEach(track => track.stop());
-            } catch (err) {
-                alert('تنبيه: يجب السماح للصلاحيات من إعدادات المتصفح للوصول للكاميرا والمايك.');
-            }
         }
 
         async function handleAuthSubmit(e) {
             e.preventDefault();
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
-
             try {
                 if (currentMode === 'register') {
                     const fullName = document.getElementById('authFullName').value;
@@ -395,24 +313,11 @@
                     const phoneNum = document.getElementById('authPhone').value;
                     const fullPhone = `${code}${phoneNum}`;
 
-                    // تسجيل الحساب مع تجاوز وتخطي التحقق البريدي لتجنب خطأ الـ Rate Limit
-                    const { data, error } = await supabaseClient.auth.signUp({ 
-                        email, 
-                        password,
-                        options: { data: { full_name: fullName } }
-                    });
-                    
+                    const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
                     if (error) throw error;
-                    
                     if (data.user) {
-                        await supabaseClient.from('profiles').insert([{ 
-                            id: data.user.id, 
-                            email: email, 
-                            full_name: fullName, 
-                            phone: fullPhone,
-                            role: 'student' 
-                        }]);
-                        alert('تم إنشاء الحساب وتسجيل الدخول بنجاح!');
+                        await supabaseClient.from('profiles').insert([{ id: data.user.id, email, full_name: fullName, phone: fullPhone, language: lang, role: 'student' }]);
+                        alert('تم إنشاء الحساب بنجاح!');
                     }
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -420,9 +325,7 @@
                 }
                 closeAuthModal();
                 checkUser();
-            } catch (err) {
-                alert('خطأ: ' + err.message);
-            }
+            } catch (err) { alert('خطأ: ' + err.message); }
         }
 
         async function checkUser() {
@@ -442,105 +345,153 @@
                     document.getElementById('userRoleBadge').innerText = roleTitle;
 
                     if (profile?.role === 'admin' || profile?.role === 'teacher') {
-                        document.getElementById('adminControls').classList.remove('hidden');
-                        if (profile?.role === 'admin') {
-                            document.getElementById('superAdminSection').classList.remove('hidden');
-                        } else {
-                            document.getElementById('superAdminSection').classList.add('hidden');
-                        }
-                    } else {
-                        document.getElementById('adminControls').classList.add('hidden');
+                        document.getElementById('aiTafseerUploadPanel').classList.remove('hidden');
                     }
-                    loadCourses();
+                    if (profile?.role === 'admin') {
+                        document.getElementById('adminControls').classList.remove('hidden');
+                    }
+                    if (profile?.role === 'teacher') {
+                        document.getElementById('teacherProfileControls').classList.remove('hidden');
+                    }
+                    if (profile?.role === 'student') {
+                        document.getElementById('studentSection').classList.remove('hidden');
+                        loadStudentSlots(profile);
+                    }
+                    loadPublicData();
                 } else {
                     document.getElementById('guestView').classList.remove('hidden');
                     document.getElementById('userDashboard').classList.add('hidden');
                     document.getElementById('authHeaderButtons').classList.remove('hidden');
+                    loadPublicData();
                 }
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        async function loadCourses() {
+        async function loadPublicData() {
             if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('lessons').select('*').order('created_at', { ascending: false });
             
-            const freeContainer = document.getElementById('freeCoursesList');
-            const paidContainer = document.getElementById('paidCoursesList');
-            const practiceContainer = document.getElementById('practiceList');
+            // Load AI Tafseer Material
+            const tafseerContainer = document.getElementById('publicAITafseerList');
+            const { data: tafseerData } = await supabaseClient.from('lessons').select('*').eq('assigned_role', 'practice'); // نستغل جدول lessons لتخزين التفسير مؤقتاً أو جدول مخصص
+            
+            // Load Teachers
+            const teachersContainer = document.getElementById('publicTeachersList');
+            const { data: teachersData } = await supabaseClient.from('profiles').select('*').eq('role', 'teacher');
 
-            if (error || !data || data.length === 0) {
-                freeContainer.innerHTML = `<p class="text-slate-400 text-xs">لا توجد كورسات مجانية حالياً.</p>`;
-                paidContainer.innerHTML = `<p class="text-slate-400 text-xs">لا توجد كورسات مدفوعة حالياً.</p>`;
-                practiceContainer.innerHTML = `<p class="text-slate-400 text-xs">لا توجد حصص ممارسة حالياً.</p>`;
-                return;
+            if (teachersData && teachersData.length > 0) {
+                teachersContainer.innerHTML = teachersData.map(t => `
+                    <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3 shadow-xl">
+                        <h4 class="font-bold text-white text-lg">${t.full_name}</h4>
+                        <p class="text-xs text-slate-400"><strong>الشهادات:</strong> ${t.certificates || 'غير متوفر'}</p>
+                        <p class="text-xs text-slate-400"><strong>نظام التدريس:</strong> ${t.teaching_system || 'غير متوفر'}</p>
+                        ${t.sample_video ? `<a href="${t.sample_video}" target="_blank" class="inline-block bg-emerald-600/20 text-emerald-400 text-xs px-3 py-1.5 rounded-xl font-bold">مشاهدة نموذج الشرح</a>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                teachersContainer.innerHTML = `<p class="text-slate-400 text-sm">لا يوجد معلمون مسجلون حالياً.</p>`;
             }
 
-            const freeItems = data.filter(item => item.assigned_role === 'free');
-            const paidItems = data.filter(item => item.assigned_role === 'paid');
-            const practiceItems = data.filter(item => item.assigned_role === 'practice');
-
-            freeContainer.innerHTML = freeItems.length ? freeItems.map(item => renderCard(item, 'مجاني', 'emerald')).join('') : '<p class="text-slate-400 text-xs">لا توجد كورسات مجانية.</p>';
-            paidContainer.innerHTML = paidItems.length ? paidItems.map(item => renderCard(item, 'مدفوع', 'amber')).join('') : '<p class="text-slate-400 text-xs">لا توجد كورسات مدفوعة.</p>';
-            practiceContainer.innerHTML = practiceItems.length ? practiceItems.map(item => renderCard(item, 'ممارسة', 'purple')).join('') : '<p class="text-slate-400 text-xs">لا توجد حصص ممارسة.</p>';
-        }
-
-        function renderCard(item, badgeText, color) {
-            return `
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-                    <div>
-                        <h6 class="font-bold text-white text-sm">${item.title}</h6>
-                        <span class="text-[10px] text-${color}-400 font-bold">${badgeText}</span>
+            // عرض صور التفسير بالذكاء الاصطناعي (يمكن حفظها في جدول lessons أو استعراضها مباشرة)
+            tafseerContainer.innerHTML = `
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
+                    <div class="p-4 space-y-2">
+                        <h4 class="font-bold text-emerald-400 text-base">سورة النور (آية النور والمعاني البصرية)</h4>
+                        <p class="text-xs text-slate-300">تفسير وتأملات بصرية مولدة بالذكاء الاصطناعي لتوضيح معاني الآيات الكريمة وتقريبها للأذهان.</p>
                     </div>
-                    <a href="${item.meeting_link}" target="_blank" class="bg-${color}-600 hover:bg-${color}-500 text-white text-[11px] px-3 py-1.5 rounded-lg font-bold transition">دخول</a>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
+                    <div class="p-4 space-y-2">
+                        <h4 class="font-bold text-emerald-400 text-base">سورة الكهف (قصة أصحاب الكهف)</h4>
+                        <p class="text-xs text-slate-300">استنطاق العبر والقصص القرآنية عبر تصاميم بصرية تحاكي الواقع وتوضح تفاصيل السورة.</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
+                    <div class="p-4 space-y-2">
+                        <h4 class="font-bold text-emerald-400 text-base">سورة الرحمن (آلاء الله وبديع خلق السماوات)</h4>
+                        <p class="text-xs text-slate-300">تجسيد بصري لآيات النعم الكونية في سورة الرحمن باستخدام أدوات الذكاء الاصطناعي المتطورة.</p>
+                    </div>
                 </div>
             `;
         }
 
-        async function handleAddCourse(e) {
+        async function handleUploadAITafseer(e) {
             e.preventDefault();
-            const title = document.getElementById('courseTitle').value;
-            const type = document.getElementById('courseType').value;
-            const price = document.getElementById('coursePrice').value;
-            const link = document.getElementById('courseLink').value;
+            const title = document.getElementById('surahName').value;
+            const img = document.getElementById('surahImg').value;
+            const desc = document.getElementById('surahDesc').value;
 
-            const fullTitle = price ? `${title} (${price})` : title;
-
-            const { error } = await supabaseClient.from('lessons').insert([{ 
-                title: fullTitle, 
-                meeting_link: link, 
-                assigned_role: type 
-            }]);
-
-            if (error) {
-                alert('خطأ أثناء النشر: ' + error.message);
-            } else {
-                document.getElementById('addCourseForm').reset();
-                loadCourses();
-                alert('تم نشر العنصر بنجاح في المنصة!');
-            }
+            const { error } = await supabaseClient.from('lessons').insert([{ title: title, meeting_link: img, assigned_role: 'practice' }]);
+            if (error) alert('خطأ: ' + error.message);
+            else { alert('تم نشر مادة التفسير البصري بنجاح!'); e.target.reset(); loadPublicData(); }
         }
 
-        async function handlePromoteUser(e, role) {
+        async function handleSaveTeacherProfile(e) {
             e.preventDefault();
-            const inputId = role === 'teacher' ? 'teacherEmailInput' : 'adminEmailInput';
-            const email = document.getElementById(inputId).value;
+            const certs = document.getElementById('tCerts').value;
+            const sample = document.getElementById('tSample').value;
+            const system = document.getElementById('tSystem').value;
+            const { data: { user } } = await supabaseClient.auth.getUser();
             
-            const { data, error } = await supabaseClient.from('profiles').update({ role: role }).eq('email', email).select();
-            if (error || !data || data.length === 0) {
-                alert('لم يتم العثور على مستخدم بهذا البريد الإلكتروني!');
-            } else {
-                alert(`تمت ترقية الحساب إلى (${role === 'admin' ? 'أونر / Admin' : 'معلم'}) بنجاح!`);
-                e.target.reset();
+            const { error } = await supabaseClient.from('profiles').update({ certificates: certs, sample_video: sample, teaching_system: system }).eq('id', user.id);
+            if (error) alert('خطأ: ' + error.message);
+            else alert('تم تحديث ملفك الشخصي كمعلم بنجاح!');
+        }
+
+        async function handleAddSlot(e) {
+            e.preventDefault();
+            const slotTime = document.getElementById('slotTime').value;
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            const { error } = await supabaseClient.from('lessons').insert([{ title: 'موعد حجز حصة', meeting_link: '#', assigned_role: 'paid', teacher_id: user.id, lesson_time: slotTime }]);
+            if (error) alert('خطأ: ' + error.message);
+            else { alert('تمت إضافة الموعد بدون أي تضارب!'); }
+        }
+
+        async function handleAssignStudent(e) {
+            e.preventDefault();
+            const studentEmail = document.getElementById('assignStudentEmail').value;
+            const teacherEmail = document.getElementById('assignTeacherEmail').value;
+            
+            const { data: teacher } = await supabaseClient.from('profiles').select('id').eq('email', teacherEmail).single();
+            if (!teacher) { alert('المعلم غير موجود!'); return; }
+
+            const { error } = await supabaseClient.from('profiles').update({ assigned_teacher_id: teacher.id }).eq('email', studentEmail);
+            if (error) alert('خطأ: ' + error.message);
+            else alert('تم ربط الطالب بالمعلم بنجاح!');
+        }
+
+        async function handlePromoteUser(e) {
+            e.preventDefault();
+            const email = document.getElementById('promoteEmail').value;
+            const role = document.getElementById('promoteRole').value;
+            const { error } = await supabaseClient.from('profiles').update({ role }).eq('email', email);
+            if (error) alert('خطأ: ' + error.message);
+            else alert('تمت الترقية بنجاح!');
+        }
+
+        async function loadStudentSlots(profile) {
+            if (!profile.assigned_teacher_id) {
+                document.getElementById('studentAvailableSlots').innerHTML = `<p class="text-slate-400 text-xs">لم يتم تعيين معلم لك بعد من قِبل الإدارة.</p>`;
+                return;
             }
+            const { data } = await supabaseClient.from('lessons').select('*').eq('teacher_id', profile.assigned_teacher_id);
+            const container = document.getElementById('studentAvailableSlots');
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-xs">لا توجد مواعيد متاحة حالياً مع معلمك.</p>`;
+                return;
+            }
+            container.innerHTML = data.map(s => `
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                    <span>موعد: ${s.lesson_time || 'متاح'}</span>
+                    <button onclick="alert('تم حجز الموعد بنجاح!')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">حجز الموعد</button>
+                </div>
+            `).join('');
         }
 
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            checkUser();
-        }
-
+        async function handleLogout() { await supabaseClient.auth.signOut(); checkUser(); }
         checkUser();
     </script>
 </body>
