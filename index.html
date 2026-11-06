@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أكاديمية الإتقان العالمية - Itqan Academy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-emerald-500/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-600/30">
+                    ق
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-emerald-400">أكاديمية الإتقان</h1>
+                    <p class="text-xs text-slate-400">Smart Quran & Maqamat Platform</p>
+                </div>
+            </div>
+            
+            <div id="authHeaderButtons" class="flex items-center space-x-3 space-x-reverse">
+                <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
+                    تسجيل الدخول
+                </button>
+                <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md cursor-pointer">
+                    حساب طالب جديد
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="py-10 px-4 max-w-6xl mx-auto w-full flex-grow">
+        <div id="guestView" class="space-y-12">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-10 text-center shadow-2xl relative overflow-hidden">
+                <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
+                    منصة تعليمية متكاملة بنظام الحجوزات ونسب المعلمين
+                </span>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-white mt-6 mb-4">
+                    تعلم التلاوة والمقامات مع نخبة المعلمين
+                </h2>
+                <p class="text-slate-400 text-sm md:text-base max-w-2xl mx-auto mb-8">
+                    نظام جدول زمني ذكي يمنع التعارض، تحكم كامل للإدارة والأونرز، وتوزيع عادل للنسب.
+                </p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-2xl transition shadow-lg cursor-pointer">
+                        ابدأ التعلم الآن
+                    </button>
+                    <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-8 py-3.5 rounded-2xl transition cursor-pointer">
+                        تسجيل الدخول
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authenticated Dashboard -->
+        <div id="userDashboard" class="hidden space-y-6">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+                <div>
+                    <span class="text-xs text-slate-400">مرحباً بك،</span>
+                    <h4 id="userNameDisplay" class="text-xl font-bold text-white">...</h4>
+                    <span id="userRoleBadge" class="inline-block mt-1 text-xs uppercase font-bold bg-emerald-500/20 text-emerald-300 px-3 py-0.5 rounded-full border border-emerald-500/30">
+                        ...
+                    </span>
+                </div>
+                <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer">
+                    تسجيل الخروج <i class="fa-solid fa-right-from-bracket mr-1"></i>
+                </button>
+            </div>
+
+            <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
+                <h5 class="font-bold text-emerald-400 text-lg flex items-center">
+                    <i class="fa-solid fa-gears ml-2"></i> لوحة التحكم الإدارية الشاملة
+                </h5>
+                
+                <form id="addLessonForm" onsubmit="handleAddLesson(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">عنوان الحصة</label>
+                        <input type="text" id="lessonTitle" placeholder="مثال: تصحيح سورة البقرة" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ميعاد الحصة</label>
+                        <input type="datetime-local" id="lessonTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">رابط الغرفة (Zoom / Meet)</label>
+                        <input type="url" id="lessonLink" placeholder="https://zoom.us/..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="md:col-span-3">
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-2.5 text-sm transition shadow-md cursor-pointer">
+                            نشر الحصة في الجدول الزمني
+                        </button>
+                    </div>
+                </form>
+
+                <div id="superAdminSection" class="border-t border-slate-700 pt-6 hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h6 class="font-bold text-amber-400 text-sm mb-2">ترقية إلى (معلم)</h6>
+                        <form onsubmit="handlePromoteUser(event, 'teacher')" class="flex gap-2">
+                            <input type="email" id="teacherEmailInput" placeholder="email@teacher.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">تعيين</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h6 class="font-bold text-purple-400 text-sm mb-2">إضافة مالك مشارك (Admin)</h6>
+                        <form onsubmit="handlePromoteUser(event, 'admin')" class="flex gap-2">
+                            <input type="email" id="adminEmailInput" placeholder="email@owner.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">تعيين</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <h5 class="font-bold text-white text-lg mb-4">الجدول الزمني للحصص</h5>
+                <div id="lessonsList" class="space-y-3">
+                    <p class="text-slate-400 text-sm">جاري جلب المواعيد...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
+            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 id="authModalTitle" class="text-xl font-bold text-white mb-6 text-center">تسجيل الدخول</h3>
+
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="fullNameGroup" class="hidden">
+                    <label class="block text-xs text-slate-400 mb-1">الاسم بالكامل</label>
+                    <input type="text" id="authFullName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="authEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">كلمة السر</label>
+                    <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                </div>
+                <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
+                    دخول
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        const SUPABASE_URL = "https://ymycfxmigvvermsdnagm.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_a_gvW7KjGudVxaPi3WvnoA_jeok9";
+        
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            console.error("Supabase error:", e);
+        }
+
+        let currentMode = 'login';
+
+        function showAuthModal(mode) {
+            currentMode = mode;
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModalTitle').innerText = mode === 'register' ? 'حساب طالب جديد' : 'تسجيل الدخول للمنصة';
+            document.getElementById('authSubmitBtn').innerText = mode === 'register' ? 'إنشاء الحساب' : 'دخول';
+            if (mode === 'register') {
+                document.getElementById('fullNameGroup').classList.remove('hidden');
+            } else {
+                document.getElementById('fullNameGroup').classList.add('hidden');
+            }
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            try {
+                if (currentMode === 'register') {
+                    const fullName = document.getElementById('authFullName').value;
+                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                    if (error) throw error;
+                    if (data.user) {
+                        await supabaseClient.from('profiles').insert([{ id: data.user.id, email: email, full_name: fullName, role: 'student' }]);
+                        alert('تم إنشاء حساب الطالب بنجاح!');
+                    }
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                }
+                closeAuthModal();
+                checkUser();
+            } catch (err) {
+                alert('خطأ: ' + err.message);
+            }
+        }
+
+        async function checkUser() {
+            if (!supabaseClient) return;
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
+                    document.getElementById('guestView').classList.add('hidden');
+                    document.getElementById('userDashboard').classList.remove('hidden');
+                    document.getElementById('authHeaderButtons').classList.add('hidden');
+                    document.getElementById('userNameDisplay').innerText = profile?.full_name || user.email;
+                    
+                    let roleTitle = 'طالب';
+                    if (profile?.role === 'admin') roleTitle = 'مالك المنصة (Admin)';
+                    else if (profile?.role === 'teacher') roleTitle = 'معلم معتمد';
+                    document.getElementById('userRoleBadge').innerText = roleTitle;
+
+                    if (profile?.role === 'admin' || profile?.role === 'teacher') {
+                        document.getElementById('adminControls').classList.remove('hidden');
+                        if (profile?.role === 'admin') {
+                            document.getElementById('superAdminSection').classList.remove('hidden');
+                        }
+                    }
+                    loadLessons();
+                } else {
+                    document.getElementById('guestView').classList.remove('hidden');
+                    document.getElementById('userDashboard').classList.add('hidden');
+                    document.getElementById('authHeaderButtons').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadLessons() {
+            if (!supabaseClient) return;
+            const container = document.getElementById('lessonsList');
+            const { data } = await supabaseClient.from('lessons').select('*').order('created_at', { ascending: false });
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-sm">لا توجد حصص محجوزة حالياً.</p>`;
+                return;
+            }
+            container.innerHTML = data.map(l => `
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                    <div>
+                        <h6 class="font-bold text-white">${l.title}</h6>
+                    </div>
+                    <a href="${l.meeting_link}" target="_blank" class="bg-emerald-600 text-white text-xs px-4 py-2 rounded-xl font-bold">دخول القاعة</a>
+                </div>
+            `).join('');
+        }
+
+        async function handleAddLesson(e) {
+            e.preventDefault();
+            const title = document.getElementById('lessonTitle').value;
+            const timeSlot = document.getElementById('lessonTime').value;
+            const link = document.getElementById('lessonLink').value;
+            await supabaseClient.from('lessons').insert([{ title: `${title} (${timeSlot})`, meeting_link: link, assigned_role: 'student' }]);
+            document.getElementById('addLessonForm').reset();
+            loadLessons();
+            alert('تم نشر الحصة بنجاح!');
+        }
+
+        async function handlePromoteUser(e, role) {
+            e.preventDefault();
+            const email = document.getElementById(role === 'teacher' ? 'teacherEmailInput' : 'adminEmailInput').value;
+            const { data } = await supabaseClient.from('profiles').update({ role: role }).eq('email', email).select();
+            if (!data || data.length === 0) alert('الإيميل غير موجود!');
+            else { alert('تمت الترقية بنجاح!'); e.target.reset(); }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            checkUser();
+        }
+
+        checkUser();
+    </script>
+</body>
+</html>
