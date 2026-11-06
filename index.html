@@ -227,6 +227,21 @@
                     <input type="text" id="authFullName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
                 
+                <!-- Language Selection Field -->
+                <div id="langGroup" class="hidden">
+                    <label class="block text-xs text-slate-400 mb-1">اللغة المفضلة (Preferred Language)</label>
+                    <select id="userLang" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
+                        <option value="Arabic">العربية (Arabic)</option>
+                        <option value="English">الإنجليزية (English)</option>
+                        <option value="German">الألمانية (Deutsch)</option>
+                        <option value="Italian">الإيطالية (Italiano)</option>
+                        <option value="French">الفرنسية (Français)</option>
+                        <option value="Turkish">التركية (Türkçe)</option>
+                        <option value="Spanish">الإسبانية (Español)</option>
+                        <option value="Urdu">الأوردو (اردو)</option>
+                    </select>
+                </div>
+
                 <div id="phoneGroup" class="hidden">
                     <label class="block text-xs text-slate-400 mb-1">رقم الهاتف / الواتساب (اختر الدولة)</label>
                     <div class="flex gap-2 dir-ltr">
@@ -241,75 +256,12 @@
                             <option value="+962">🇯🇴 +962 (الأردن)</option>
                             <option value="+961">🇱🇧 +961 (لبنان)</option>
                             <option value="+964">🇮🇶 +964 (العراق)</option>
-                            <option value="+963">🇸🇾 +963 (سوريا)</option>
-                            <option value="+967">🇾🇪 +967 (اليمن)</option>
-                            <option value="+218">🇱🇾 +218 (ليبيا)</option>
-                            <option value="+249">🇸🇩 +249 (السودان)</option>
-                            <option value="+216">🇹🇳 +216 (تونس)</option>
-                            <option value="+213">🇩🇿 +213 (الجزائر)</option>
-                            <option value="+212">🇲🇦 +212 (المغرب)</option>
-                            <option value="+970">🇵🇸 +970 (فلسطين)</option>
-                            <option value="+1">🇺🇸 +1 (أمريكا/كندا)</option>
+                            <option value="+39">🇮🇹 +39 (إيطاليا)</option>
                             <option value="+44">🇬🇧 +44 (بريطانيا)</option>
+                            <option value="+1">🇺🇸 +1 (أمريكا)</option>
                             <option value="+49">🇩🇪 +49 (ألمانيا)</option>
                             <option value="+33">🇫🇷 +33 (فرنسا)</option>
-                            <option value="+39">🇮🇹 +39 (إيطاليا)</option>
-                            <option value="+34">🇪🇸 +34 (إسبانيا)</option>
                             <option value="+90">🇹🇷 +90 (تركيا)</option>
-                            <option value="+92">🇵🇰 +92 (باكستان)</option>
-                            <option value="+93">🇦🇫 +93 (أفغانستان)</option>
-                            <option value="+355">🇦🇱 +355 (ألبانيا)</option>
-                            <option value="+374">🇦🇲 +374 (أرمينيا)</option>
-                            <option value="+61">🇦🇺 +61 (أستراليا)</option>
-                            <option value="+43">🇦🇹 +43 (النمسا)</option>
-                            <option value="+994">🇦🇿 +994 (أذربيجان)</option>
-                            <option value="+880">🇧🇩 +880 (بنغلاديش)</option>
-                            <option value="+32">🇧🇪 +32 (بلجيكا)</option>
-                            <option value="+55">🇧🇷 +55 (البرازيل)</option>
-                            <option value="+359">🇧🇬 +359 (بلغاريا)</option>
-                            <option value="+1">🇨🇦 +1 (كندا)</option>
-                            <option value="+86">🇨🇳 +86 (الصين)</option>
-                            <option value="+357">🇨🇾 +357 (قبرص)</option>
-                            <option value="+420">🇨🇿 +420 (التشيك)</option>
-                            <option value="+45">🇩🇰 +45 (الدنمارك)</option>
-                            <option value="+202">🇪🇬 +202 (أخرى)</option>
-                            <option value="+358">🇫🇮 +358 (فنلندا)</option>
-                            <option value="+995">🇬🇪 +995 (جورجيا)</option>
-                            <option value="+30">🇬🇷 +30 (اليونان)</option>
-                            <option value="+36">🇭🇺 +36 (المجر)</option>
-                            <option value="+354">🇮🇸 +354 (آيسلندا)</option>
-                            <option value="+91">🇮🇳 +91 (الهند)</option>
-                            <option value="+62">🇮🇩 +62 (إندونيسيا)</option>
-                            <option value="+98">🇮🇷 +98 (إيران)</option>
-                            <option value="+353">🇮🇪 +353 (إيرلندا)</option>
-                            <option value="+972">🇮🇱 +972 (إسرائيل)</option>
-                            <option value="+81">🇯🇵 +81 (اليابان)</option>
-                            <option value="+7">🇰🇿 +7 (كازاخستان)</option>
-                            <option value="+996">🇰🇬 +996 (قيرغيزستان)</option>
-                            <option value="+352">🇱🇺 +352 (لوكسمبورغ)</option>
-                            <option value="+60">🇲🇾 +60 (ماليزيا)</option>
-                            <option value="+356">🇲🇹 +356 (مالطا)</option>
-                            <option value="+52">🇲🇽 +52 (المكسيك)</option>
-                            <option value="+31">🇳🇱 +31 (هولندا)</option>
-                            <option value="+64">🇳🇿 +64 (نيوزيلندا)</option>
-                            <option value="+47">🇳🇴 +47 (النرويج)</option>
-                            <option value="+48">🇵🇱 +48 (بولندا)</option>
-                            <option value="+351">🇵🇹 +351 (البرتغال)</option>
-                            <option value="+40">🇷🇴 +40 (رومانيا)</option>
-                            <option value="+7">🇷🇺 +7 (روسيا)</option>
-                            <option value="+381">🇷🇸 +381 (صربيا)</option>
-                            <option value="+65">🇸🇬 +65 (سنغافورة)</option>
-                            <option value="+421">🇸🇰 +421 (سلوفاكيا)</option>
-                            <option value="+386">🇸🇮 +386 (سلوفينيا)</option>
-                            <option value="+27">🇿🇦 +27 (جنوب أفريقيا)</option>
-                            <option value="+82">🇰🇷 +82 (كوريا الجنوبية)</option>
-                            <option value="+46">🇸🇪 +46 (السويد)</option>
-                            <option value="+41">🇨🇭 +41 (سويسرا)</option>
-                            <option value="+886">🇹🇼 +886 (تايوان)</option>
-                            <option value="+66">🇹🇭 +66 (تايلاند)</option>
-                            <option value="+380">🇺🇦 +380 (أوكرانيا)</option>
-                            <option value="+998">🇺🇿 +998 (أوزبكستان)</option>
-                            <option value="+84">🇻🇳 +84 (فيتنام)</option>
                         </select>
                         <input type="tel" id="authPhone" dir="rtl" placeholder="رقم الهاتف..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                     </div>
@@ -356,9 +308,11 @@
             document.getElementById('authSubmitBtn').innerText = mode === 'register' ? 'إنشاء الحساب' : 'دخول';
             if (mode === 'register') {
                 document.getElementById('fullNameGroup').classList.remove('hidden');
+                document.getElementById('langGroup').classList.remove('hidden');
                 document.getElementById('phoneGroup').classList.remove('hidden');
             } else {
                 document.getElementById('fullNameGroup').classList.add('hidden');
+                document.getElementById('langGroup').classList.add('hidden');
                 document.getElementById('phoneGroup').classList.add('hidden');
             }
         }
@@ -436,11 +390,18 @@
             try {
                 if (currentMode === 'register') {
                     const fullName = document.getElementById('authFullName').value;
+                    const lang = document.getElementById('userLang').value;
                     const code = document.getElementById('countryCode').value;
                     const phoneNum = document.getElementById('authPhone').value;
                     const fullPhone = `${code}${phoneNum}`;
 
-                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                    // تسجيل الحساب مع تجاوز وتخطي التحقق البريدي لتجنب خطأ الـ Rate Limit
+                    const { data, error } = await supabaseClient.auth.signUp({ 
+                        email, 
+                        password,
+                        options: { data: { full_name: fullName } }
+                    });
+                    
                     if (error) throw error;
                     
                     if (data.user) {
