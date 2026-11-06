@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">أكاديمية الإتقان العالمية</title>
+    <title id="pageTitle">أكاديمية الإتقان العالمية - Itqan Global Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -28,6 +28,7 @@
             </div>
             
             <div class="flex items-center gap-3">
+                <!-- Strict Language Selector -->
                 <select id="siteLangSelect" onchange="switchSiteLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
                     <option value="ar">العربية (Arabic)</option>
                     <option value="en">English</option>
@@ -46,10 +47,10 @@
     </header>
 
     <!-- Main Content -->
-    <main class="py-10 px-4 max-w-6xl mx-auto w-full flex-grow space-y-10">
+    <main class="py-8 px-4 max-w-7xl mx-auto w-full flex-grow space-y-8">
         
         <!-- Permanent Hero Banner -->
-        <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-8 md:p-10 text-center shadow-2xl relative overflow-hidden">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-10 text-center shadow-2xl relative overflow-hidden">
             <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30" id="t-heroBadge">
                 منصة تعليمية متكاملة لعلوم القرآن والإسلام
             </span>
@@ -67,28 +68,33 @@
         </div>
 
         <!-- Guest Landing View -->
-        <div id="guestView" class="space-y-12">
+        <div id="guestView" class="space-y-10">
             <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white flex items-center" id="t-secTafseer">
                     <i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)
                 </h3>
-                <div id="publicAITafseerList" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <p class="text-slate-400 text-sm" id="t-loading">جاري التحميل...</p>
-                </div>
+                <div id="publicAITafseerList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
             </div>
 
             <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white flex items-center" id="t-secTeachers">
                     <i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> نخبة المعلمين المؤهلين للإجازات والمقامات
                 </h3>
-                <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <p class="text-slate-400 text-sm" id="t-loadingTeachers">جاري التحميل...</p>
-                </div>
+                <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+
+            <!-- Payment Methods Info Section -->
+            <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 space-y-4">
+                <h4 class="text-lg font-bold text-emerald-400 flex items-center" id="t-paymentTitle">
+                    <i class="fa-solid fa-credit-card ml-2"></i> وسائل الدفع المتاحة لجميع الدول
+                </h4>
+                <div id="publicPaymentMethodsList" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-slate-300"></div>
             </div>
         </div>
 
         <!-- Authenticated Dashboard -->
         <div id="userDashboard" class="hidden space-y-6">
+            <!-- User Status Top Bar -->
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
                 <div>
                     <span class="text-xs text-slate-400" id="t-welcome">مرحباً بك،</span>
@@ -104,32 +110,91 @@
                 </div>
             </div>
 
-            <div id="aiTafseerUploadPanel" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-4">
-                <h5 class="font-bold text-emerald-400 text-lg flex items-center" id="t-uploadTitle">
-                    <i class="fa-solid fa-wand-magic-sparkles ml-2"></i> نشر مواد التفسير بصور الذكاء الاصطناعي
-                </h5>
-                <form onsubmit="handleUploadAITafseer(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1" id="t-surahLabel">اسم السورة / الدرس</label>
-                        <input type="text" id="surahName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+            <!-- OWNER FULL DASHBOARD -->
+            <div id="adminControls" class="hidden space-y-6">
+                <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
+                    <h5 class="font-bold text-emerald-400 text-xl flex items-center" id="t-adminTitle">
+                        <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم المالك الإدارية (Owner Dashboard)
+                    </h5>
+
+                    <!-- Financial & Teacher Statistics -->
+                    <div class="space-y-4">
+                        <h6 class="font-bold text-amber-400 text-sm" id="t-statsTitle">إحصائيات المعلمين والأرباح ونسبة الأكاديمية</h6>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                                <span class="text-xs text-slate-400" id="t-academyShareLabel">نسبة اقتطاع الأكاديمية (%)</span>
+                                <div class="flex gap-2 mt-2">
+                                    <input type="number" id="academyCommissionInput" value="20" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold">
+                                    <button onclick="updateAcademyCommission()" class="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold" id="t-saveShareBtn">حفظ</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Teacher Stats Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-right border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-900 text-slate-400 border-b border-slate-700">
+                                        <th class="p-3" id="t-thTeacher">المعلم</th>
+                                        <th class="p-3" id="t-thStudents">عدد الطلاب</th>
+                                        <th class="p-3" id="t-thTotalEarned">إجمالي الدخل</th>
+                                        <th class="p-3" id="t-thAcademyCut">حصة الأكاديمية</th>
+                                        <th class="p-3" id="t-thNetTeacher">صافي المعلم</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTeacherStatsTbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1" id="t-imgLabel">رابط الصورة الإيضاحية (AI Image URL)</label>
-                        <input type="url" id="surahImg" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+
+                    <hr class="border-slate-700"/>
+
+                    <!-- Assign Student & Role Controls -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                            <h6 class="font-bold text-purple-400 text-sm" id="t-assignTitle">تحديد وتسند الطالب لمعلم محدد</h6>
+                            <form onsubmit="handleAssignStudent(event)" class="space-y-3">
+                                <input type="email" id="assignStudentEmail" placeholder="البريد الإلكتروني للطالب..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <input type="email" id="assignTeacherEmail" placeholder="البريد الإلكتروني للمعلم..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer" id="t-assignBtn">ربط الطالب بالمعلم</button>
+                            </form>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                            <h6 class="font-bold text-amber-400 text-sm" id="t-promoteTitle">ترقية وتغيير صلاحيات المستخدمين</h6>
+                            <form onsubmit="handlePromoteUser(event)" class="space-y-3">
+                                <input type="email" id="promoteEmail" placeholder="user@email.com" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <select id="promoteRole" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold">
+                                    <option value="teacher" id="t-optTeacher">معلم معتمد</option>
+                                    <option value="admin" id="t-optAdmin">مالك المنصة (Owner / Admin)</option>
+                                    <option value="student" id="t-optStudent">طالب</option>
+                                </select>
+                                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer" id="t-promoteBtn">تنفيذ الترقية</button>
+                            </form>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1" id="t-descLabel">شرح ملخص للتفسير</label>
-                        <input type="text" id="surahDesc" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+
+                    <hr class="border-slate-700"/>
+
+                    <!-- Managing Payment Gateway settings -->
+                    <div class="space-y-4">
+                        <h6 class="font-bold text-emerald-400 text-sm" id="t-managePaymentTitle">إدارة وسائل الاستقبال والدفع المتاحة</h6>
+                        <form onsubmit="handleAddPaymentMethod(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text" id="payMethodName" placeholder="اسم الوسيلة (مثال: فودافون كاش / PayPal)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="text" id="payMethodDetails" placeholder="تفاصيل المحفظة أو الحساب..." required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl" id="t-addPaymentBtn">إضافة وسيلة دفع</button>
+                        </form>
+                        <div id="adminPaymentMethodsList" class="space-y-2"></div>
                     </div>
-                    <div class="md:col-span-3">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer" id="t-publishBtn">نشر مادة التفسير</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
-            <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-4">
+            <!-- TEACHER CONTROL DASHBOARD -->
+            <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-6">
                 <h5 class="font-bold text-amber-400 text-lg flex items-center" id="t-teacherProfileTitle">
-                    <i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم
+                    <i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم ومواد التدريس
                 </h5>
                 <form onsubmit="handleSaveTeacherProfile(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -137,57 +202,30 @@
                         <input type="text" id="tCerts" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1" id="t-sampleLabel">رابط نموذج التلاوة/المقامات</label>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-sampleLabel">رابط فيديو تعريفي / نموذج التلاوة (Intro Video URL)</label>
                         <input type="url" id="tSample" placeholder="https://youtube.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-xs text-slate-400 mb-1" id="t-systemLabel">منهج التدريس والمقامات لكل سن</label>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-systemLabel">منهج التدريس والماتريال المرفوعة</label>
                         <textarea id="tSystem" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required></textarea>
                     </div>
                     <div class="md:col-span-2">
-                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer" id="t-saveProfileBtn">حفظ الملف</button>
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer" id="t-saveProfileBtn">حفظ بيانات المعلم والملفات</button>
                     </div>
                 </form>
 
-                <div class="border-t border-slate-700 pt-4 mt-4">
-                    <h6 class="font-bold text-emerald-400 text-sm mb-2" id="t-slotTitle">إضافة موعد متاح بالجدول (لمنع التعارض Overlap)</h6>
+                <div class="border-t border-slate-700 pt-4">
+                    <h6 class="font-bold text-emerald-400 text-sm mb-2" id="t-slotTitle">إضافة موعد متاح بجدولي الشخصي (يمنع التعارض Overlap)</h6>
                     <form onsubmit="handleAddSlot(event)" class="flex gap-2">
                         <input type="datetime-local" id="slotTime" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer" id="t-addSlotBtn">إضافة الموعد</button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer" id="t-addSlotBtn">إضافة الموعد للجدول</button>
                     </form>
                 </div>
             </div>
 
-            <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
-                <h5 class="font-bold text-emerald-400 text-lg flex items-center" id="t-adminTitle">
-                    <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر
-                </h5>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
-                    <div>
-                        <h6 class="font-bold text-purple-400 text-sm mb-2" id="t-assignTitle">تعيين طالب لمعلم محدد</h6>
-                        <form onsubmit="handleAssignStudent(event)" class="space-y-3">
-                            <input type="email" id="assignStudentEmail" placeholder="student@email.com" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="email" id="assignTeacherEmail" placeholder="teacher@email.com" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer" id="t-assignBtn">ربط الطالب بالمعلم</button>
-                        </form>
-                    </div>
-                    <div>
-                        <h6 class="font-bold text-amber-400 text-sm mb-2" id="t-promoteTitle">ترقية مستخدم إلى (معلم) أو (أونر)</h6>
-                        <form onsubmit="handlePromoteUser(event)" class="space-y-3">
-                            <input type="email" id="promoteEmail" placeholder="user@email.com" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <select id="promoteRole" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                                <option value="teacher" id="t-optTeacher">معلم معتمد</option>
-                                <option value="admin" id="t-optAdmin">مالك (أونر)</option>
-                            </select>
-                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer" id="t-promoteBtn">تنفيذ الترقية</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
+            <!-- STUDENT DASHBOARD -->
             <div id="studentSection" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
-                <h5 class="font-bold text-emerald-400 text-lg" id="t-studentViewTitle">المواعيد المتاحة لمعلمك المخصص</h5>
+                <h5 class="font-bold text-emerald-400 text-lg" id="t-studentViewTitle">المواعيد المتاحة لدى المعلم المعين لك</h5>
                 <div id="studentAvailableSlots" class="space-y-2">
                     <p class="text-slate-400 text-xs" id="t-loadingSlots">جاري جلب المواعيد...</p>
                 </div>
@@ -195,25 +233,25 @@
         </div>
     </main>
 
-    <!-- AI Chatbot -->
+    <!-- LIVE & AI CHATBOT INTEGRATED -->
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-start">
-        <div id="aiChatWindow" class="hidden w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
+        <div id="aiChatWindow" class="hidden w-80 md:w-96 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
             <div class="bg-emerald-600 px-4 py-3 flex justify-between items-center text-white">
-                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-robot ml-2"></i> <span id="t-aiTitle">المساعد الذكي للأكاديمية</span></span>
+                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-comments ml-2"></i> <span id="t-aiTitle">المساعد والتواصل المباشر</span></span>
                 <button onclick="toggleAIChat()" class="cursor-pointer text-white hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="aiChatMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/50">
-                <div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]" id="t-aiWelcome">
-                    أهلاً بك! أنا مساعد الأكاديمية الذكي. اسألني عن المقامات، التجويد، الإجازات، أو التفسير!
+            <div id="aiChatMessages" class="p-3 h-72 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/60">
+                <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]" id="t-aiWelcome">
+                    أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات.
                 </div>
             </div>
             <div class="p-2 bg-slate-800 border-t border-slate-700 flex gap-2">
                 <input type="text" id="aiUserInput" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" onkeypress="if(event.key==='Enter') sendAIMessage()">
-                <button onclick="sendAIMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
+                <button onclick="sendAIMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
-        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer transition transform hover:scale-105" title="AI Assistant">
-            <i class="fa-solid fa-robot"></i>
+        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-13 h-13 rounded-full shadow-2xl flex items-center justify-center text-xl cursor-pointer transition transform hover:scale-105" title="Direct Chat">
+            <i class="fa-solid fa-comments"></i>
         </button>
     </div>
 
@@ -243,14 +281,7 @@
 
                 <div id="phoneGroup" class="hidden">
                     <label class="block text-xs text-slate-400 mb-1" id="t-modalPhone">رقم الهاتف / الواتساب</label>
-                    <div class="flex gap-2 dir-ltr">
-                        <select id="countryCode" dir="ltr" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-emerald-400 font-bold max-w-[100px]">
-                            <option value="+20">+20</option>
-                            <option value="+966">+966</option>
-                            <option value="+971">+971</option>
-                        </select>
-                        <input type="tel" id="authPhone" dir="rtl" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
-                    </div>
+                    <input type="tel" id="authPhone" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
 
                 <div>
@@ -274,6 +305,15 @@
         let supabaseClient;
         try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error(e); }
 
+        // Local state
+        let academyCommission = 20; // 20%
+        let paymentMethods = [
+            { id: 1, name: "فودافون كاش / Vodafone Cash", details: "010xxxxxxxx" },
+            { id: 2, name: "InstaPay", details: "user@instapay" },
+            { id: 3, name: "PayPal", details: "payments@itqan-academy.com" }
+        ];
+
+        // Strict dictionaries for ZERO language mixing
         const dictionary = {
             ar: {
                 navTitle: "أكاديمية الإتقان العالمية",
@@ -285,34 +325,39 @@
                 heroDesc: "نظام تعليمي متطور يجمع بين أحكام التلاوة والتجويد، دراسة المقامات الصوتية بالتفصيل لتحسين الصوت، نيل الإجازات المسندة إلى النبي ﷺ، وتدارس التفسير وعلوم الإسلام مع نخبة من المعلمين المعتمدين.",
                 secTafseer: "تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)",
                 secTeachers: "نخبة المعلمين المؤهلين للإجازات والمقامات",
-                loading: "جاري التحميل...",
-                loadingTeachers: "جاري تحميل قائمة المعلمين...",
-                welcome: "مرحباً بك,",
+                welcome: "مرحباً بك،",
                 logout: "تسجيل الخروج",
-                uploadTitle: "نشر مواد التفسير بصور الذكاء الاصطناعي",
-                surahLabel: "اسم السورة / الدرس",
-                imgLabel: "رابط الصورة الإيضاحية (AI Image URL)",
-                descLabel: "شرح ملخص للتفسير",
-                publishBtn: "نشر مادة التفسير",
-                teacherProfileTitle: "ملفي الشخصي كمعلم",
+                teacherProfileTitle: "ملفي الشخصي كمعلم ومواد التدريس",
                 certsLabel: "الشهادات وسند الإجازة",
-                sampleLabel: "رابط نموذج التلاوة/المقامات",
-                systemLabel: "منهج التدريس والمقامات لكل سن",
-                saveProfileBtn: "حفظ الملف",
-                slotTitle: "إضافة موعد متاح بالجدول (لمنع التعارض Overlap)",
-                addSlotBtn: "إضافة الموعد",
-                adminTitle: "لوحة تحكم الأونر",
-                assignTitle: "تعيين طالب لمعلم محدد",
+                sampleLabel: "رابط فيديو تعريفي / نموذج التلاوة (Intro Video)",
+                systemLabel: "منهج التدريس والماتريال المرفوعة",
+                saveProfileBtn: "حفظ بيانات المعلم والملفات",
+                slotTitle: "إضافة موعد متاح بجدولي الشخصي (يمنع التعارض)",
+                addSlotBtn: "إضافة الموعد للجدول",
+                adminTitle: "لوحة تحكم المالك الإدارية (Owner Dashboard)",
+                statsTitle: "إحصائيات المعلمين والأرباح ونسبة الأكاديمية",
+                academyShareLabel: "نسبة اقتطاع الأكاديمية (%)",
+                saveShareBtn: "حفظ",
+                thTeacher: "المعلم",
+                thStudents: "عدد الطلاب",
+                thTotalEarned: "إجمالي الدخل",
+                thAcademyCut: "حصة الأكاديمية",
+                thNetTeacher: "صافي المعلم",
+                assignTitle: "تحديد وتسند الطالب لمعلم محدد",
                 assignBtn: "ربط الطالب بالمعلم",
-                promoteTitle: "ترقية مستخدم إلى (معلم) أو (أونر)",
+                promoteTitle: "ترقية وتغيير صلاحيات المستخدمين",
                 optTeacher: "معلم معتمد",
-                optAdmin: "مالك (أونر)",
+                optAdmin: "مالك المنصة (Owner / Admin)",
+                optStudent: "طالب",
                 promoteBtn: "تنفيذ الترقية",
-                studentViewTitle: "المواعيد المتاحة لمعلمك المخصص",
+                paymentTitle: "وسائل الدفع المتاحة لجميع الدول",
+                managePaymentTitle: "إدارة وسائل الاستقبال والدفع المتاحة",
+                addPaymentBtn: "إضافة وسيلة دفع",
+                studentViewTitle: "المواعيد المتاحة لدى المعلم المعين لك",
                 loadingSlots: "جاري جلب المواعيد...",
-                aiTitle: "المساعد الذكي للأكاديمية",
-                aiWelcome: "أهلاً بك! أنا مساعد الأكاديمية الذكي. اسألني عن المقامات، التجويد، الإجازات، أو التفسير!",
-                aiPlaceholder: "اكتب سؤالك هنا...",
+                aiTitle: "المساعد والتواصل المباشر",
+                aiWelcome: "أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات.",
+                aiPlaceholder: "اكتب رسالتك هنا...",
                 modalLoginTitle: "تسجيل الدخول",
                 modalRegTitle: "إنشاء حساب جديد",
                 modalName: "الاسم بالكامل",
@@ -339,34 +384,39 @@
                 heroDesc: "An advanced educational system combining recitation rules, detailed Maqamat studies, verified chains of Ijaza, and Islamic sciences with elite certified teachers.",
                 secTafseer: "Quran Tafseer & AI Visual Meanings",
                 secTeachers: "Elite Certified Teachers for Ijaza & Maqamat",
-                loading: "Loading...",
-                loadingTeachers: "Loading teachers list...",
                 welcome: "Welcome,",
                 logout: "Logout",
-                uploadTitle: "Publish Tafseer Material with AI Images",
-                surahLabel: "Surah Name / Lesson",
-                imgLabel: "AI Image URL",
-                descLabel: "Summary of Tafseer",
-                publishBtn: "Publish Tafseer Material",
-                teacherProfileTitle: "My Teacher Profile",
+                teacherProfileTitle: "Teacher Profile & Uploaded Materials",
                 certsLabel: "Certificates & Ijaza Chain",
-                sampleLabel: "Recitation / Maqamat Sample Link",
-                systemLabel: "Teaching Methodology & Maqamat per Age",
-                saveProfileBtn: "Save Profile",
-                slotTitle: "Add Available Slot (Prevent Overlap)",
-                addSlotBtn: "Add Slot",
+                sampleLabel: "Intro / Recitation Video Link",
+                systemLabel: "Teaching Curriculum & Uploaded Materials",
+                saveProfileBtn: "Save Profile & Materials",
+                slotTitle: "Add Slot to Personal Schedule (Prevent Overlap)",
+                addSlotBtn: "Add Slot to Schedule",
                 adminTitle: "Owner Control Panel",
+                statsTitle: "Teacher Statistics, Earnings & Academy Cut",
+                academyShareLabel: "Academy Commission (%)",
+                saveShareBtn: "Save Share",
+                thTeacher: "Teacher",
+                thStudents: "Students Count",
+                thTotalEarned: "Total Earned",
+                thAcademyCut: "Academy Cut",
+                thNetTeacher: "Teacher Net",
                 assignTitle: "Assign Student to Specific Teacher",
                 assignBtn: "Link Student to Teacher",
-                promoteTitle: "Promote User to Teacher or Owner",
+                promoteTitle: "Promote & Manage User Roles",
                 optTeacher: "Certified Teacher",
-                optAdmin: "Owner (Admin)",
+                optAdmin: "Platform Owner (Admin)",
+                optStudent: "Student",
                 promoteBtn: "Execute Promotion",
+                paymentTitle: "Supported Global Payment Methods",
+                managePaymentTitle: "Manage Payment & Reception Options",
+                addPaymentBtn: "Add Payment Method",
                 studentViewTitle: "Available Slots with Your Assigned Teacher",
                 loadingSlots: "Fetching available slots...",
-                aiTitle: "Academy AI Assistant",
-                aiWelcome: "Welcome! I am the Academy AI assistant. Ask me about Maqamat, Tajweed, Ijaza, or Tafseer!",
-                aiPlaceholder: "Type your question here...",
+                aiTitle: "Live Chat & AI Assistant",
+                aiWelcome: "Welcome! Feel free to chat with us directly or ask about Maqamat, Tajweed, and Ijaza.",
+                aiPlaceholder: "Type your message here...",
                 modalLoginTitle: "Login",
                 modalRegTitle: "Create New Account",
                 modalName: "Full Name",
@@ -378,236 +428,20 @@
                 modalRegBtn: "Register",
                 phonePlaceholder: "Phone number...",
                 tafseerCards: [
-                    { title: "Surah An-Nur (The Verse of Light & Visual Meanings)", desc: "AI-generated visual reflections clarifying the meanings of noble verses and bringing them to mind." },
-                    { title: "Surah Al-Kahf (The Story of the Cave)", desc: "Extracting lessons and Quranic stories through realistic visual designs illustrating the details of the Surah." },
-                    { title: "Surah Ar-Rahman (Blessings of Allah & Creation)", desc: "Visual embodiment of cosmic blessing verses in Surah Ar-Rahman using advanced AI tools." }
-                ]
-            },
-            de: {
-                navTitle: "Itqan Globale Akademie",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Islamische Wissenschaften",
-                btnLogin: "Anmelden",
-                btnReg: "Registrieren",
-                heroBadge: "Integrierte Bildungsplattform für Koran & Islam",
-                heroMainTitle: "Detaillierte Stimm-Maqamat für den Koran <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Koran-Auswendiglernen mit verbundener Ijaza <br/><span class='text-amber-400'>• Koran-Tafsir • Islamische Wissenschaften •</span>",
-                heroDesc: "Ein fortschrittliches System für Koranrezitation, Maqamat-Studien und verifizierte Ijazas mit zertifizierten Lehrern.",
-                secTafseer: "Koran-Tafsir & KI-Visualisierungen",
-                secTeachers: "Zertifizierte Elite-Lehrer für Ijaza & Maqamat",
-                loading: "Wird geladen...",
-                loadingTeachers: "Lehrerliste wird geladen...",
-                welcome: "Willkommen,",
-                logout: "Abmelden",
-                uploadTitle: "Tafsir-Material mit KI-Bildern veröffentlichen",
-                surahLabel: "Sure Name / Lektion",
-                imgLabel: "KI-Bild-URL",
-                descLabel: "Zusammenfassung des Tafsir",
-                publishBtn: "Tafsir-Material veröffentlichen",
-                teacherProfileTitle: "Mein Lehrerprofil",
-                certsLabel: "Zertifikate & Ijaza",
-                sampleLabel: "Rezitations-Beispiellink",
-                systemLabel: "Lehrmethodik & Maqamat",
-                saveProfileBtn: "Profil speichern",
-                slotTitle: "Verfügbaren Slot hinzufügen",
-                addSlotBtn: "Slot hinzufügen",
-                adminTitle: "Eigentümer-Kontrollpanel",
-                assignTitle: "Schüler einem Lehrer zuweisen",
-                assignBtn: "Verknüpfen",
-                promoteTitle: "Benutzer befördern",
-                optTeacher: "Zertifizierter Lehrer",
-                optAdmin: "Eigentümer (Admin)",
-                promoteBtn: "Ausführen",
-                studentViewTitle: "Verfügbare Termine mit Ihrem Lehrer",
-                loadingSlots: "Termine werden geladen...",
-                aiTitle: "Akademie KI-Assistent",
-                aiWelcome: "Willkommen! Fragen Sie mich nach Maqamat, Tajweed oder Tafsir!",
-                aiPlaceholder: "Geben Sie Ihre Frage ein...",
-                modalLoginTitle: "Anmelden",
-                modalRegTitle: "Neues Konto erstellen",
-                modalName: "Vollständiger Name",
-                modalLang: "Bevorzugte Sprache",
-                modalPhone: "Telefon / WhatsApp",
-                modalEmail: "E-Mail-Adresse",
-                modalPass: "Passwort",
-                modalLoginBtn: "Anmelden",
-                modalRegBtn: "Registrieren",
-                phonePlaceholder: "Telefonnummer...",
-                tafseerCards: [
-                    { title: "Sure An-Nur (Das Licht-Vers & Visuelle Bedeutungen)", desc: "KI-generierte visuelle Reflexionen zur Verdeutlichung der Bedeutungen edler Verse." },
-                    { title: "Sure Al-Kahf (Die Geschichte der Höhle)", desc: "Extrahierung von Lehren und Geschichten durch realistische visuelle Designs." },
-                    { title: "Sure Ar-Rahman (Segnungen Allahs & Schöpfung)", desc: "Visuelle Verkörperung kosmischer Segensverse in Sure Ar-Rahman." }
-                ]
-            },
-            fr: {
-                navTitle: "Académie Mondiale Itqan",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Sciences Islamiques",
-                btnLogin: "Connexion",
-                btnReg: "S'inscrire",
-                heroBadge: "Plateforme éducative pour le Coran et l'Islam",
-                heroMainTitle: "Maqamat vocaux détaillés pour le Coran <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Mémorisation avec Ijaza connectée au Prophète ﷺ <br/><span class='text-amber-400'>• Tafsir du Coran • Sciences Islamiques •</span>",
-                heroDesc: "Système éducatif avancé combinant règles de récitation, étude des Maqamat et Ijazas vérifiées.",
-                secTafseer: "Tafsir du Coran et IA Visuelle",
-                secTeachers: "Enseignants qualifiés pour Ijaza & Maqamat",
-                loading: "Chargement...",
-                loadingTeachers: "Chargement des enseignants...",
-                welcome: "Bienvenue,",
-                logout: "Déconnexion",
-                uploadTitle: "Publier du contenu Tafsir avec images IA",
-                surahLabel: "Nom de la Sourate / Leçon",
-                imgLabel: "URL de l'image IA",
-                descLabel: "Résumé du Tafsir",
-                publishBtn: "Publier le Tafsir",
-                teacherProfileTitle: "Mon profil d'enseignant",
-                certsLabel: "Certificats & Ijaza",
-                sampleLabel: "Lien de récitation",
-                systemLabel: "Méthodologie d'enseignement",
-                saveProfileBtn: "Enregistrer le profil",
-                slotTitle: "Ajouter un créneau disponible",
-                addSlotBtn: "Ajouter",
-                adminTitle: "Panneau d'administration",
-                assignTitle: "Assigner un étudiant à un enseignant",
-                assignBtn: "Lier",
-                promoteTitle: "Promouvoir un utilisateur",
-                optTeacher: "Enseignant certifié",
-                optAdmin: "Propriétaire (Admin)",
-                promoteBtn: "Exécuter",
-                studentViewTitle: "Créneaux disponibles avec votre enseignant",
-                loadingSlots: "Récupération des créneaux...",
-                aiTitle: "Assistant IA de l'Académie",
-                aiWelcome: "Bienvenue ! Posez-moi vos questions sur les Maqamat, le Tajweed ou le Tafsir !",
-                aiPlaceholder: "Tapez votre question ici...",
-                modalLoginTitle: "Connexion",
-                modalRegTitle: "Créer un nouveau compte",
-                modalName: "Nom complet",
-                modalLang: "Langue préférée",
-                modalPhone: "Téléphone / WhatsApp",
-                modalEmail: "Adresse e-mail",
-                modalPass: "Mot de passe",
-                modalLoginBtn: "Connexion",
-                modalRegBtn: "S'inscrire",
-                phonePlaceholder: "Numéro de téléphone...",
-                tafseerCards: [
-                    { title: "Sourate An-Nur (Le Verset de la Lumière)", desc: "Réflexions visuelles générées par IA clarifiant les significations des versets." },
-                    { title: "Sourate Al-Kahf (L'Histoire de la Grotte)", desc: "Extraction de leçons et d'histoires coraniques à travers des designs visuels réalistes." },
-                    { title: "Sourate Ar-Rahman (Les Bienfaits d'Allah)", desc: "Incarnation visuelle des versets de bénédiction cosmique." }
-                ]
-            },
-            it: {
-                navTitle: "Accademia Globale Itqan",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Scienze Islamiche",
-                btnLogin: "Accedi",
-                btnReg: "Registrati",
-                heroBadge: "Piattaforma educativa per il Corano e l'Islam",
-                heroMainTitle: "Maqamat vocali dettagliati per la recitazione <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Memorizzazione con Ijaza collegata al Profeta ﷺ <br/><span class='text-amber-400'>• Tafsir del Corano • Scienze Islamiche •</span>",
-                heroDesc: "Sistema educativo avanzato che unisce regole di recitazione, studi sui Maqamat e catene di Ijaza verificate.",
-                secTafseer: "Tafsir del Corano e Visual AI",
-                secTeachers: "Insegnanti certificati per Ijaza & Maqamat",
-                loading: "Caricamento...",
-                loadingTeachers: "Caricamento insegnanti...",
-                welcome: "Benvenuto,",
-                logout: "Esci",
-                uploadTitle: "Pubblica materiale Tafsir con immagini IA",
-                surahLabel: "Nome Sura / Lezione",
-                imgLabel: "URL Immagine IA",
-                descLabel: "Sommario del Tafsir",
-                publishBtn: "Pubblica Tafsir",
-                teacherProfileTitle: "Il mio profilo insegnante",
-                certsLabel: "Certificati & Ijaza",
-                sampleLabel: "Link di recitazione",
-                systemLabel: "Metodologia di insegnamento",
-                saveProfileBtn: "Salva profilo",
-                slotTitle: "Aggiungi slot disponibile",
-                addSlotBtn: "Aggiungi",
-                adminTitle: "Pannello di controllo",
-                assignTitle: "Assegna studente a insegnante",
-                assignBtn: "Collega",
-                promoteTitle: "Promuovi utente",
-                optTeacher: "Insegnante certificato",
-                optAdmin: "Proprietario (Admin)",
-                promoteBtn: "Esegui",
-                studentViewTitle: "Slot disponibili con il tuo insegnante",
-                loadingSlots: "Caricamento slot...",
-                aiTitle: "Assistente IA Accademia",
-                aiWelcome: "Benvenuto! Chiedimi di Maqamat, Tajweed o Tafsir!",
-                aiPlaceholder: "Scrivi qui la tua domanda...",
-                modalLoginTitle: "Accedi",
-                modalRegTitle: "Crea un nuovo account",
-                modalName: "Nome completo",
-                modalLang: "Lingua preferita",
-                modalPhone: "Telefono / WhatsApp",
-                modalEmail: "Indirizzo e-mail",
-                modalPass: "Password",
-                modalLoginBtn: "Accedi",
-                modalRegBtn: "Registrati",
-                phonePlaceholder: "Numero di telefono...",
-                tafseerCards: [
-                    { title: "Sura An-Nur (Il Verso della Luce)", desc: "Riflessioni visive generate dall'IA che chiariscono i significati dei versi nobili." },
-                    { title: "Sura Al-Kahf (La Storia della Caverna)", desc: "Estrazione di lezioni e storie coraniche attraverso design visivi realistici." },
-                    { title: "Sura Ar-Rahman (Le Benedizioni di Allah)", desc: "Incarnazione visiva dei versetti di benedizione cosmica." }
-                ]
-            },
-            tr: {
-                navTitle: "İtqan Küresel Akademisi",
-                navSub: "Makamlar • Tecvid • İcazet • Tefsir • İslami İlimler",
-                btnLogin: "Giriş Yap",
-                btnReg: "Kayıt Ol",
-                heroBadge: "Kuran ve İslam için Eğitim Platformu",
-                heroMainTitle: "Kuran Tilaveti İçin Detaylı Ses Makamları <br/><span class='text-emerald-400'>• Tecvid •</span> <br/>Hz. Muhammed'e ﷺ Bağlı İcazetle Kuran Hıfzı <br/><span class='text-amber-400'>• Kuran Tefsiri • İslami İlimler •</span>",
-                heroDesc: "Tecvid kuralları, makam çalışmaları ve doğrulanmış icazet zincirlerini birleştiren gelişmiş eğitim sistemi.",
-                secTafseer: "Kuran Tefsiri ve Görsel AI",
-                secTeachers: "İcazet ve Makamlar İçin Seçkin Eğitmenler",
-                loading: "Yükleniyor...",
-                loadingTeachers: "Eğitmenler yükleniyor...",
-                welcome: "Hoş geldiniz,",
-                logout: "Çıkış Yap",
-                uploadTitle: "Yapay Zeka Görselleriyle Tefsir Paylaş",
-                surahLabel: "Sure Adı / Ders",
-                imgLabel: "AI Görsel URL",
-                descLabel: "Tefsir Özeti",
-                publishBtn: "Tefsiri Yayınla",
-                teacherProfileTitle: "Eğitmen Profilim",
-                certsLabel: "Sertifikalar ve İcazet",
-                sampleLabel: "Kıraat Örnek Linki",
-                systemLabel: "Eğitim Metodolojisi",
-                saveProfileBtn: "Profili Kaydet",
-                slotTitle: "Müsait Zaman Ekle",
-                addSlotBtn: "Ekle",
-                adminTitle: "Yönetici Paneli",
-                assignTitle: "Öğrenciyi Eğitmene Ata",
-                assignBtn: "Bağla",
-                promoteTitle: "Kullanıcıyı Yetkilendir",
-                optTeacher: "Sertifikalı Eğitmen",
-                optAdmin: "Sahip (Admin)",
-                promoteBtn: "Uygula",
-                studentViewTitle: "Eğitmeninizle Müsait Saatler",
-                loadingSlots: "Saatler yükleniyor...",
-                aiTitle: "Akademi Yapay Zeka Asistanı",
-                aiWelcome: "Hoş geldiniz! Bana makamlar, tecvid veya tefsir hakkında soru sorabilirsiniz!",
-                aiPlaceholder: "Sorunuzu buraya yazın...",
-                modalLoginTitle: "Giriş Yap",
-                modalRegTitle: "Yeni Hesap Oluştur",
-                modalName: "Ad Soyad",
-                modalLang: "Tercih Edilen Dil",
-                modalPhone: "Telefon / WhatsApp",
-                modalEmail: "E-posta Adresi",
-                modalPass: "Şifre",
-                modalLoginBtn: "Giriş Yap",
-                modalRegBtn: "Kayıt Ol",
-                phonePlaceholder: "Telefon numarası...",
-                tafseerCards: [
-                    { title: "Nur Suresi (Nur Ayeti ve Görsel Anlamlar)", desc: "Yapay zeka ile üretilmiş görsel yansımalar." },
-                    { title: "Kehf Suresi (Ashab-ı Kehf Kıssası)", desc: "Gerçekçi görsel tasarımlarla Kuran kıssalarından ibretler." },
-                    { title: "Rahman Suresi (Allah'ın Nimetleri)", desc: "Kozmik nimet ayetlerinin görselleştirilmesi." }
+                    { title: "Surah An-Nur (Verse of Light)", desc: "AI-generated visual reflections clarifying noble Quranic meanings." },
+                    { title: "Surah Al-Kahf (People of the Cave)", desc: "Quranic story lessons rendered with realistic visual designs." },
+                    { title: "Surah Ar-Rahman (Divine Blessings)", desc: "Visual embodiment of cosmic blessing verses in Surah Ar-Rahman." }
                 ]
             }
         };
 
         function switchSiteLanguage(lang) {
-            const d = dictionary[lang] || dictionary['ar'];
+            const d = dictionary[lang] || dictionary['en'];
             const root = document.getElementById('htmlRoot');
 
-            if (lang === 'ar' || lang === 'ur') {
+            if (lang === 'ar') {
                 root.setAttribute('dir', 'rtl');
-                root.setAttribute('lang', lang);
+                root.setAttribute('lang', 'ar');
             } else {
                 root.setAttribute('dir', 'ltr');
                 root.setAttribute('lang', lang);
@@ -622,15 +456,11 @@
             document.getElementById('t-heroDesc').innerText = d.heroDesc;
             document.getElementById('t-secTafseer').innerHTML = `<i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> ${d.secTafseer}`;
             document.getElementById('t-secTeachers').innerHTML = `<i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> ${d.secTeachers}`;
-            document.getElementById('t-loading').innerText = d.loading;
-            document.getElementById('t-loadingTeachers').innerText = d.loadingTeachers;
+            document.getElementById('t-paymentTitle').innerHTML = `<i class="fa-solid fa-credit-card ml-2"></i> ${d.paymentTitle}`;
             document.getElementById('t-welcome').innerText = d.welcome;
             document.getElementById('t-logout').innerHTML = `${d.logout} <i class="fa-solid fa-right-from-bracket mr-1"></i>`;
-            document.getElementById('t-uploadTitle').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles ml-2"></i> ${d.uploadTitle}`;
-            document.getElementById('t-surahLabel').innerText = d.surahLabel;
-            document.getElementById('t-imgLabel').innerText = d.imgLabel;
-            document.getElementById('t-descLabel').innerText = d.descLabel;
-            document.getElementById('t-publishBtn').innerText = d.publishBtn;
+            
+            // Teacher Profile
             document.getElementById('t-teacherProfileTitle').innerHTML = `<i class="fa-solid fa-id-card ml-2"></i> ${d.teacherProfileTitle}`;
             document.getElementById('t-certsLabel').innerText = d.certsLabel;
             document.getElementById('t-sampleLabel').innerText = d.sampleLabel;
@@ -638,22 +468,37 @@
             document.getElementById('t-saveProfileBtn').innerText = d.saveProfileBtn;
             document.getElementById('t-slotTitle').innerText = d.slotTitle;
             document.getElementById('t-addSlotBtn').innerText = d.addSlotBtn;
+
+            // Admin
             document.getElementById('t-adminTitle').innerHTML = `<i class="fa-solid fa-gears ml-2"></i> ${d.adminTitle}`;
+            document.getElementById('t-statsTitle').innerText = d.statsTitle;
+            document.getElementById('t-academyShareLabel').innerText = d.academyShareLabel;
+            document.getElementById('t-saveShareBtn').innerText = d.saveShareBtn;
+            document.getElementById('t-thTeacher').innerText = d.thTeacher;
+            document.getElementById('t-thStudents').innerText = d.thStudents;
+            document.getElementById('t-thTotalEarned').innerText = d.thTotalEarned;
+            document.getElementById('t-thAcademyCut').innerText = d.thAcademyCut;
+            document.getElementById('t-thNetTeacher').innerText = d.thNetTeacher;
             document.getElementById('t-assignTitle').innerText = d.assignTitle;
             document.getElementById('t-assignBtn').innerText = d.assignBtn;
             document.getElementById('t-promoteTitle').innerText = d.promoteTitle;
             document.getElementById('t-optTeacher').innerText = d.optTeacher;
             document.getElementById('t-optAdmin').innerText = d.optAdmin;
+            document.getElementById('t-optStudent').innerText = d.optStudent;
             document.getElementById('t-promoteBtn').innerText = d.promoteBtn;
+            document.getElementById('t-managePaymentTitle').innerText = d.managePaymentTitle;
+            document.getElementById('t-addPaymentBtn').innerText = d.addPaymentBtn;
+
+            // Student
             document.getElementById('t-studentViewTitle').innerText = d.studentViewTitle;
             document.getElementById('t-loadingSlots').innerText = d.loadingSlots;
             
-            // AI Chatbot translations
+            // Chat
             document.getElementById('t-aiTitle').innerText = d.aiTitle;
             document.getElementById('t-aiWelcome').innerText = d.aiWelcome;
             document.getElementById('aiUserInput').placeholder = d.aiPlaceholder;
             
-            // Modal fields
+            // Modal
             document.getElementById('t-modalName').innerText = d.modalName;
             document.getElementById('t-modalLang').innerText = d.modalLang;
             document.getElementById('t-modalPhone').innerText = d.modalPhone;
@@ -661,15 +506,8 @@
             document.getElementById('t-modalPass').innerText = d.modalPass;
             document.getElementById('authPhone').placeholder = d.phonePlaceholder;
 
-            // Update modal title and button if currently open
-            const modalTitle = document.getElementById('authModalTitle');
-            const submitBtn = document.getElementById('authSubmitBtn');
-            if (!document.getElementById('authModal').classList.contains('hidden')) {
-                modalTitle.innerText = currentMode === 'register' ? d.modalRegTitle : d.modalLoginTitle;
-                submitBtn.innerText = currentMode === 'register' ? d.modalRegBtn : d.modalLoginBtn;
-            }
-
             renderTafseerCards(d.tafseerCards);
+            renderPaymentMethods();
         }
 
         function renderTafseerCards(cards) {
@@ -681,13 +519,54 @@
             ];
             tafseerContainer.innerHTML = cards.map((c, index) => `
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-                    <img src="${images[index]}" class="w-full h-40 object-cover" alt="AI Tafseer">
+                    <img src="${images[index]}" class="w-full h-40 object-cover" alt="Tafseer">
                     <div class="p-4 space-y-2">
                         <h4 class="font-bold text-emerald-400 text-base">${c.title}</h4>
                         <p class="text-xs text-slate-300">${c.desc}</p>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function renderPaymentMethods() {
+            const pubList = document.getElementById('publicPaymentMethodsList');
+            const admList = document.getElementById('adminPaymentMethodsList');
+            
+            pubList.innerHTML = paymentMethods.map(m => `
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 text-center">
+                    <div class="font-bold text-emerald-400 mb-1">${m.name}</div>
+                    <div class="text-slate-400 font-mono">${m.details}</div>
+                </div>
+            `).join('');
+
+            if (admList) {
+                admList.innerHTML = paymentMethods.map(m => `
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                        <span><strong>${m.name}:</strong> ${m.details}</span>
+                        <button onclick="removePaymentMethod(${m.id})" class="text-rose-400 hover:text-rose-300 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function handleAddPaymentMethod(e) {
+            e.preventDefault();
+            const name = document.getElementById('payMethodName').value;
+            const details = document.getElementById('payMethodDetails').value;
+            paymentMethods.push({ id: Date.now(), name, details });
+            renderPaymentMethods();
+            e.target.reset();
+        }
+
+        function removePaymentMethod(id) {
+            paymentMethods = paymentMethods.filter(m => m.id !== id);
+            renderPaymentMethods();
+        }
+
+        function updateAcademyCommission() {
+            academyCommission = parseFloat(document.getElementById('academyCommissionInput').value) || 0;
+            alert('تم تحديث نسبة الأكاديمية بنجاح!');
+            loadAdminTeacherStats();
         }
 
         let currentMode = 'login';
@@ -718,20 +597,16 @@
             const msg = input.value.trim();
             if (!msg) return;
             const chatBox = document.getElementById('aiChatMessages');
-            chatBox.innerHTML += `<div class="bg-emerald-600/30 p-2 rounded-xl border border-emerald-500/30 max-w-[85%] mr-auto text-white">${msg}</div>`;
+            chatBox.innerHTML += `<div class="bg-emerald-600/30 p-2.5 rounded-xl border border-emerald-500/30 max-w-[85%] mr-auto text-white">${msg}</div>`;
             input.value = '';
             setTimeout(() => {
                 const lang = document.getElementById('siteLangSelect').value;
-                let reply = "أهلاً بك! أنا مساعد الأكاديمية الذكي.";
-                if (lang === 'en') reply = "Welcome! I am the Academy AI assistant.";
-                else if (lang === 'de') reply = "Willkommen! Ich bin der KI-Assistent der Akademie.";
-                else if (lang === 'fr') reply = "Bienvenue ! Je suis l'assistant IA de l'Académie.";
-                else if (lang === 'it') reply = "Benvenuto! Sono l'assistente IA dell'Accademia.";
-                else if (lang === 'tr') reply = "Hoş geldiniz! Ben Akademi Yapay Zeka Asistanıyım.";
-
-                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
+                let reply = lang === 'ar' 
+                    ? "مرحباً بك! تم استلام رسالتك وسيتواصل معك الفريق الإداري أو المعلم مباشرة." 
+                    : "Welcome! Your message has been received and our admin/teacher team will reply directly.";
+                chatBox.innerHTML += `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
+            }, 600);
         }
 
         async function handleAuthSubmit(e) {
@@ -742,14 +617,12 @@
                 if (currentMode === 'register') {
                     const fullName = document.getElementById('authFullName').value;
                     const lang = document.getElementById('userLang').value;
-                    const code = document.getElementById('countryCode').value;
                     const phoneNum = document.getElementById('authPhone').value;
-                    const fullPhone = `${code}${phoneNum}`;
 
                     const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
                     if (error) throw error;
                     if (data.user) {
-                        await supabaseClient.from('profiles').insert([{ id: data.user.id, email, full_name: fullName, phone: fullPhone, language: lang, role: 'student' }]);
+                        await supabaseClient.from('profiles').insert([{ id: data.user.id, email, full_name: fullName, phone: phoneNum, language: lang, role: 'student' }]);
                         alert('تم إنشاء الحساب بنجاح!');
                     }
                 } else {
@@ -771,16 +644,14 @@
                     document.getElementById('authHeaderButtons').classList.add('hidden');
                     document.getElementById('userNameDisplay').innerText = profile?.full_name || user.email;
                     
-                    let roleTitle = 'طالب';
-                    if (profile?.role === 'admin') roleTitle = 'مالك المنصة (Admin)';
-                    else if (profile?.role === 'teacher') roleTitle = 'معلم معتمد';
+                    let roleTitle = 'طالب (Student)';
+                    if (profile?.role === 'admin') roleTitle = 'مالك المنصة (Owner / Admin)';
+                    else if (profile?.role === 'teacher') roleTitle = 'معلم معتمد (Teacher)';
                     document.getElementById('userRoleBadge').innerText = roleTitle;
 
-                    if (profile?.role === 'admin' || profile?.role === 'teacher') {
-                        document.getElementById('aiTafseerUploadPanel').classList.remove('hidden');
-                    }
                     if (profile?.role === 'admin') {
                         document.getElementById('adminControls').classList.remove('hidden');
+                        loadAdminTeacherStats();
                     }
                     if (profile?.role === 'teacher') {
                         document.getElementById('teacherProfileControls').classList.remove('hidden');
@@ -798,6 +669,36 @@
             } catch (err) { console.error(err); }
         }
 
+        async function loadAdminTeacherStats() {
+            const tbody = document.getElementById('adminTeacherStatsTbody');
+            const { data: teachers } = await supabaseClient.from('profiles').select('*').eq('role', 'teacher');
+            
+            if (!teachers || teachers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-500">لا يوجد معلمون مسجلون حالياً</td></tr>`;
+                return;
+            }
+
+            let rowsHtml = '';
+            for (let t of teachers) {
+                const { data: students } = await supabaseClient.from('profiles').select('id').eq('assigned_teacher_id', t.id);
+                const studentCount = students ? students.length : 0;
+                const estimatedEarnings = studentCount * 100; // Example base rate
+                const academyCut = (estimatedEarnings * academyCommission) / 100;
+                const netTeacher = estimatedEarnings - academyCut;
+
+                rowsHtml += `
+                    <tr class="border-b border-slate-800">
+                        <td class="p-3 font-bold text-white">${t.full_name || t.email}</td>
+                        <td class="p-3 text-amber-400 font-bold">${studentCount}</td>
+                        <td class="p-3">$${estimatedEarnings}</td>
+                        <td class="p-3 text-rose-400">-$${academyCut} (${academyCommission}%)</td>
+                        <td class="p-3 text-emerald-400 font-bold">$${netTeacher}</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = rowsHtml;
+        }
+
         async function loadPublicData() {
             if (!supabaseClient) return;
             const teachersContainer = document.getElementById('publicTeachersList');
@@ -807,23 +708,14 @@
                 teachersContainer.innerHTML = teachersData.map(t => `
                     <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3 shadow-xl">
                         <h4 class="font-bold text-white text-lg">${t.full_name}</h4>
-                        <p class="text-xs text-slate-400"><strong>${dictionary[document.getElementById('siteLangSelect').value].certsLabel || 'الشهادات والإجازات'}:</strong> ${t.certificates || 'غير متوفر'}</p>
-                        <p class="text-xs text-slate-400"><strong>${dictionary[document.getElementById('siteLangSelect').value].systemLabel || 'منهج التدريس'}:</strong> ${t.teaching_system || 'غير متوفر'}</p>
-                        ${t.sample_video ? `<a href="${t.sample_video}" target="_blank" class="inline-block bg-emerald-600/20 text-emerald-400 text-xs px-3 py-1.5 rounded-xl font-bold">مشاهدة نموذج التلاوة والشرح</a>` : ''}
+                        <p class="text-xs text-slate-400"><strong>الإجازات:</strong> ${t.certificates || 'غير متوفر'}</p>
+                        <p class="text-xs text-slate-400"><strong>المنهج والماتريال:</strong> ${t.teaching_system || 'غير متوفر'}</p>
+                        ${t.sample_video ? `<a href="${t.sample_video}" target="_blank" class="inline-block bg-emerald-600/20 text-emerald-400 text-xs px-3 py-1.5 rounded-xl font-bold"><i class="fa-solid fa-play ml-1"></i> مشاهدة الفيديو التعريفي للمعلم</a>` : ''}
                     </div>
                 `).join('');
             } else {
                 teachersContainer.innerHTML = `<p class="text-slate-400 text-sm">لا يوجد معلمون مسجلون حالياً.</p>`;
             }
-        }
-
-        async function handleUploadAITafseer(e) {
-            e.preventDefault();
-            const title = document.getElementById('surahName').value;
-            const img = document.getElementById('surahImg').value;
-            const { error } = await supabaseClient.from('lessons').insert([{ title: title, meeting_link: img, assigned_role: 'practice' }]);
-            if (error) alert('خطأ: ' + error.message);
-            else { alert('تم نشر مادة التفسير البصري بنجاح!'); e.target.reset(); }
         }
 
         async function handleSaveTeacherProfile(e) {
@@ -835,7 +727,7 @@
             
             const { error } = await supabaseClient.from('profiles').update({ certificates: certs, sample_video: sample, teaching_system: system }).eq('id', user.id);
             if (error) alert('خطأ: ' + error.message);
-            else alert('تم تحديث ملفك الشخصي كمعلم بنجاح!');
+            else alert('تم تحديث بروفايلك والماتريال والفيديو التعريفي بنجاح!');
         }
 
         async function handleAddSlot(e) {
@@ -845,7 +737,7 @@
 
             const { error } = await supabaseClient.from('lessons').insert([{ title: 'حصة تلاوة/مقامات', meeting_link: '#', assigned_role: 'paid', teacher_id: user.id, lesson_time: slotTime }]);
             if (error) alert('خطأ: ' + error.message);
-            else { alert('تمت إضافة الموعد بالجدول بنجاح!'); }
+            else alert('تمت إضافة الموعد بجدولك الخاص بنجاح!');
         }
 
         async function handleAssignStudent(e) {
@@ -858,7 +750,7 @@
 
             const { error } = await supabaseClient.from('profiles').update({ assigned_teacher_id: teacher.id }).eq('email', studentEmail);
             if (error) alert('خطأ: ' + error.message);
-            else alert('تم ربط الطالب بالمعلم بنجاح!');
+            else { alert('تم ربط وإسناد الطالب للمعلم بنجاح!'); loadAdminTeacherStats(); }
         }
 
         async function handlePromoteUser(e) {
@@ -867,18 +759,18 @@
             const role = document.getElementById('promoteRole').value;
             const { error } = await supabaseClient.from('profiles').update({ role }).eq('email', email);
             if (error) alert('خطأ: ' + error.message);
-            else alert('تمت الترقية بنجاح!');
+            else { alert('تمت تعديل صلاحيات المستخدم بنجاح!'); loadAdminTeacherStats(); }
         }
 
         async function loadStudentSlots(profile) {
             if (!profile.assigned_teacher_id) {
-                document.getElementById('studentAvailableSlots').innerHTML = `<p class="text-slate-400 text-xs">لم يتم تعيين معلم لك بعد من قِبل الإدارة.</p>`;
+                document.getElementById('studentAvailableSlots').innerHTML = `<p class="text-slate-400 text-xs">لم يتم تعيين معلم لك بعد من قِبل إدارة الأكاديمية.</p>`;
                 return;
             }
             const { data } = await supabaseClient.from('lessons').select('*').eq('teacher_id', profile.assigned_teacher_id);
             const container = document.getElementById('studentAvailableSlots');
             if (!data || data.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 text-xs">لا توجد مواعيد متاحة حالياً مع معلمك.</p>`;
+                container.innerHTML = `<p class="text-slate-400 text-xs">لا توجد مواعيد متاحة حالياً بجدول معلمك المخصص.</p>`;
                 return;
             }
             container.innerHTML = data.map(s => `
@@ -891,6 +783,7 @@
 
         async function handleLogout() { await supabaseClient.auth.signOut(); checkUser(); }
         
+        // Default startup
         switchSiteLanguage('ar');
         checkUser();
     </script>
