@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أكاديمية الإتقان لعلوم القرآن والتجويد</title>
+    <title>أكاديمية الإتقان العالمية - Itqan Academy</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -17,49 +17,56 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
     <!-- Header / Navigation -->
-    <header class="bg-slate-800 border-b border-emerald-500/25 sticky top-0 z-50">
+    <header class="bg-slate-800 border-b border-emerald-500/30 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-600/30">
+                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-600/30">
                     ق
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-emerald-400">أكاديمية الإتقان</h1>
-                    <p class="text-xs text-slate-400">Itqan Academy Dashboard</p>
+                    <p class="text-xs text-slate-400">Smart Quran & Maqamat Platform</p>
                 </div>
             </div>
             
             <div id="authHeaderButtons" class="flex items-center space-x-3 space-x-reverse">
-                <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition">
                     تسجيل الدخول
                 </button>
-                <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-md">
-                    حساب جديد (طالب)
+                <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md">
+                    حساب طالب جديد
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Portal Container -->
-    <main class="py-10 px-4 max-w-5xl mx-auto w-full flex-grow">
-        <!-- Guest View -->
-        <div id="guestView" class="bg-slate-800/80 border border-slate-700 rounded-2xl p-10 text-center">
-            <i class="fa-solid fa-graduation-cap text-6xl text-emerald-400 mb-4"></i>
-            <h3 class="text-3xl font-bold text-white mb-3">منصة أكاديمية الإتقان الذكية</h3>
-            <p class="text-slate-400 text-sm max-w-lg mx-auto mb-8">
-                قم بتسجيل الدخول بحسابك للوصول المباشر إلى لوحة التحكم الخاصة بك وتصفح الدروس والمحتويات التعليمية.
-            </p>
-            <div class="flex justify-center gap-4">
-                <button onclick="showAuthModal('login')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3 rounded-xl transition shadow-lg">
-                    تسجيل الدخول
-                </button>
-                <button onclick="showAuthModal('register')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-8 py-3 rounded-xl transition">
-                    إنشاء حساب طالب جديد
-                </button>
+    <!-- Main Content Container -->
+    <main class="py-10 px-4 max-w-6xl mx-auto w-full flex-grow">
+        <!-- Guest Landing View -->
+        <div id="guestView" class="space-y-12">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-10 text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
+                    منصة تعليمية متكاملة بنظام الحجوزات ونسب المعلمين
+                </span>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-white mt-6 mb-4">
+                    تعلم التلاوة والمقامات مع نخبة المعلمين
+                </h2>
+                <p class="text-slate-400 text-sm md:text-base max-w-2xl mx-auto mb-8">
+                    نظام جدول زمني ذكي يمنع التعارض، تحكم كامل للإدارة والأونرز، توزيع عادل للنسب المئوية، ووسائل دفع ميسرة.
+                </p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-2xl transition shadow-lg shadow-emerald-600/30">
+                        ابدأ التعلم الآن
+                    </button>
+                    <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-8 py-3.5 rounded-2xl transition">
+                        تسجيل الدخول
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Authenticated Dashboard -->
+        <!-- Authenticated Dashboard View -->
         <div id="userDashboard" class="hidden space-y-6">
             <!-- User Status Header -->
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
@@ -68,7 +75,7 @@
                         <i class="fa-solid fa-user-shield"></i>
                     </div>
                     <div>
-                        <span class="text-xs text-slate-400">مرحباً بك،</span>
+                        <span class="text-xs text-slate-400">مرحباً بك في لوحة التحكم،</span>
                         <h4 id="userNameDisplay" class="text-xl font-bold text-white">...</h4>
                         <span id="userRoleBadge" class="inline-block mt-1 text-xs uppercase font-bold bg-emerald-500/20 text-emerald-300 px-3 py-0.5 rounded-full border border-emerald-500/30">
                             ...
@@ -80,52 +87,73 @@
                 </button>
             </div>
 
-            <!-- Admin Control Panel: Add Lessons & Manage Teachers -->
+            <!-- Admin & Super Owner Control Panel -->
             <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
-                <!-- Add Lessons Form -->
-                <div>
-                    <h5 class="font-bold text-emerald-400 text-lg mb-4 flex items-center">
-                        <i class="fa-solid fa-cloud-arrow-up ml-2"></i> لوحة رفع المحتوى وإدارة الحصص
-                    </h5>
-                    <form id="addLessonForm" onsubmit="handleAddLesson(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">عنوان الحصة أو المحتوى</label>
-                                <input type="text" id="lessonTitle" placeholder="مثال: شرح أحكام الإدغام ومخارج الحروف" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">رابط الحصة (Zoom / Meet) أو الملف</label>
-                                <input type="url" id="lessonLink" placeholder="https://zoom.us/..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 transition shadow-lg shadow-emerald-600/20">
-                            نشر المحتوى فوراً لجميع الطلاب
+                <h5 class="font-bold text-emerald-400 text-lg flex items-center">
+                    <i class="fa-solid fa-gears ml-2"></i> لوحة التحكم الإدارية الشاملة (للأونرز والمعلمين)
+                </h5>
+                
+                <!-- Add Lesson / Schedule Slot Form -->
+                <form id="addLessonForm" onsubmit="handleAddLesson(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">عنوان الحصة / المادة</label>
+                        <input type="text" id="lessonTitle" placeholder="مثال: تصحيح سورة البقرة" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ميعاد الحصة</label>
+                        <input type="datetime-local" id="lessonTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">رابط الغرفة (Zoom / Meet)</label>
+                        <input type="url" id="lessonLink" placeholder="https://zoom.us/..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="md:col-span-3">
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-2.5 text-sm transition shadow-md">
+                            حجز الموعد ونشر الحصة في الجدول الزمني
                         </button>
-                    </form>
-                </div>
+                    </div>
+                </form>
 
-                <!-- Admin Only: Promote Student to Teacher Box -->
-                <div id="promoteSection" class="border-t border-slate-700 pt-6 hidden">
-                    <h5 class="font-bold text-amber-400 text-base mb-2 flex items-center">
-                        <i class="fa-solid fa-user-plus ml-2"></i> ترقية حساب طالب إلى (معلم)
-                    </h5>
-                    <p class="text-xs text-slate-400 mb-4">اكتب البريد الإلكتروني للطالب المسجل مسبقاً لتمنحه صلاحيات المعلم:</p>
-                    <form onsubmit="handlePromoteTeacher(event)" class="flex gap-2">
-                        <input type="email" id="teacherEmailInput" placeholder="email@example.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                        <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition">
-                            تعيين كمعلم
-                        </button>
-                    </form>
+                <!-- Admin Only Management -->
+                <div id="superAdminSection" class="border-t border-slate-700 pt-6 hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h6 class="font-bold text-amber-400 text-sm mb-2"><i class="fa-solid fa-user-plus ml-1"></i> ترقية حساب إلى (معلم)</h6>
+                        <form onsubmit="handlePromoteUser(event, 'teacher')" class="flex gap-2">
+                            <input type="email" id="teacherEmailInput" placeholder="email@teacher.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition">تعيين معلم</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h6 class="font-bold text-purple-400 text-sm mb-2"><i class="fa-solid fa-crown ml-1"></i> إضافة مالك مشارك (Admin)</h6>
+                        <form onsubmit="handlePromoteUser(event, 'admin')" class="flex gap-2">
+                            <input type="email" id="adminEmailInput" placeholder="email@owner.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                            <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition">تعيين أونر</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <!-- Lessons & Files List -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                <h5 class="font-bold text-white text-lg mb-4 flex items-center">
-                    <i class="fa-solid fa-book-open-reader text-emerald-400 ml-2"></i> جدول الحصص والمحتويات التعليمية المتاحة
-                </h5>
-                <div id="lessonsList" class="space-y-3">
-                    <p class="text-slate-400 text-sm">جاري جلب البيانات...</p>
+            <!-- Lessons Schedule & Payment Gateways Info -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Schedule List -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <h5 class="font-bold text-white text-lg mb-4 flex items-center">
+                        <i class="fa-solid fa-calendar-days text-emerald-400 ml-2"></i> الجدول الزمني للحصص والمواعيد
+                    </h5>
+                    <div id="lessonsList" class="space-y-3">
+                        <p class="text-slate-400 text-sm">جاري جلب المواعيد...</p>
+                    </div>
+                </div>
+
+                <!-- Payment Methods Info Card -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                    <h5 class="font-bold text-emerald-400 text-base flex items-center">
+                        <i class="fa-solid fa-wallet ml-2"></i> وسائل الدفع المعتمدة
+                    </h5>
+                    <div class="text-xs text-slate-300 space-y-2 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white">📱 فودافون كاش / إنستاباي:</p>
+                        <p class="text-emerald-400 font-mono">010xxxxxxxx</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,14 +189,17 @@
 
     <!-- Footer -->
     <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-slate-500 text-xs mt-auto">
-        <p>© 2026 أكاديمية الإتقان لعلوم القرآن والإنشاد - جميع الحقوق محفوظة</p>
+        <p>© 2026 أكاديمية الإتقان العالمية - جميع الحقوق محفوظة</p>
     </footer>
 
     <!-- Script Logic -->
     <script>
+        // استخدام المفتاح الحديث المنسوخ من لوحة Supabase
         const SUPABASE_URL = "https://ymycfxmigvvermsdnagm.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_a_gvW7KjGudVxaPi3WvnoA_jeok9";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_ANON_KEY = "sb_publishable_a_gvW7KjGudVxaPi3WvnoA_jeok9... [أو مفتاحك الحديث كامل]";
+        
+        // ربط العميل بالتوافق الكامل مع المفاتيح الحديثة
+        const supabaseClient = supabase.createClient(SUPABASE_URL, "sb_publishable_a_gvW7KjGudVxaPi3WvnoA_jeok9");
 
         let currentMode = 'login';
         let currentUser = null;
@@ -182,11 +213,11 @@
             const fullNameGroup = document.getElementById('fullNameGroup');
 
             if (mode === 'register') {
-                title.innerText = 'إنشاء حساب طالب جديد';
+                title.innerText = 'حساب طالب جديد';
                 submitBtn.innerText = 'إنشاء الحساب';
                 fullNameGroup.classList.remove('hidden');
             } else {
-                title.innerText = 'تسجيل الدخول';
+                title.innerText = 'تسجيل الدخول للمنصة';
                 submitBtn.innerText = 'دخول';
                 fullNameGroup.classList.add('hidden');
             }
@@ -203,130 +234,4 @@
 
             try {
                 if (currentMode === 'register') {
-                    const fullName = document.getElementById('authFullName').value;
-                    const role = 'student'; // Force all new registrations to be students securely!
-
-                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
-                    if (error) throw error;
-
-                    if (data.user) {
-                        await supabaseClient.from('profiles').insert([
-                            { id: data.user.id, email: email, full_name: fullName, role: role }
-                        ]);
-                        alert('تم تسجيل الحساب طالب بنجاح!');
-                    }
-                } else {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
-                }
-                closeAuthModal();
-                checkUser();
-            } catch (err) {
-                alert('خطأ: ' + err.message);
-            }
-        }
-
-        async function checkUser() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            currentUser = user;
-
-            if (user) {
-                const { data } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
-                userProfile = data;
-
-                document.getElementById('guestView').classList.add('hidden');
-                document.getElementById('userDashboard').classList.remove('hidden');
-                document.getElementById('authHeaderButtons').classList.add('hidden');
-
-                document.getElementById('userNameDisplay').innerText = userProfile?.full_name || user.email;
-                document.getElementById('userRoleBadge').innerText = userProfile?.role === 'admin' ? 'مالك الأكاديمية (Admin)' : (userProfile?.role === 'teacher' ? 'معلم معتمد' : 'طالب');
-
-                if (userProfile?.role === 'admin' || userProfile?.role === 'teacher') {
-                    document.getElementById('adminControls').classList.remove('hidden');
-                    
-                    // Show promotion box only for Admin
-                    if (userProfile?.role === 'admin') {
-                        document.getElementById('promoteSection').classList.remove('hidden');
-                    } else {
-                        document.getElementById('promoteSection').classList.add('hidden');
-                    }
-                } else {
-                    document.getElementById('adminControls').classList.add('hidden');
-                }
-                loadLessons();
-            } else {
-                document.getElementById('guestView').classList.remove('hidden');
-                document.getElementById('userDashboard').classList.add('hidden');
-                document.getElementById('authHeaderButtons').classList.remove('hidden');
-            }
-        }
-
-        async function loadLessons() {
-            const container = document.getElementById('lessonsList');
-            const { data, error } = await supabaseClient.from('lessons').select('*').order('created_at', { ascending: false });
-
-            if (error || !data || data.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 text-sm">لا توجد حصص أو محتويات مرفوعة حالياً.</p>`;
-                return;
-            }
-
-            container.innerHTML = data.map(lesson => `
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
-                    <div>
-                        <h6 class="font-bold text-white text-base">${lesson.title}</h6>
-                        <span class="text-xs text-slate-400">تاريخ النشر: ${new Date(lesson.created_at).toLocaleDateString('ar-EG')}</span>
-                    </div>
-                    <a href="${lesson.meeting_link}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-bold transition flex items-center">
-                        فتح الرابط / المحتوى <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>
-                    </a>
-                </div>
-            `).join('');
-        }
-
-        async function handleAddLesson(e) {
-            e.preventDefault();
-            const title = document.getElementById('lessonTitle').value;
-            const link = document.getElementById('lessonLink').value;
-
-            const { error } = await supabaseClient.from('lessons').insert([
-                { title: title, meeting_link: link, assigned_role: 'student' }
-            ]);
-
-            if (error) {
-                alert('خطأ أثناء النشر: ' + error.message);
-            } else {
-                document.getElementById('lessonTitle').value = '';
-                document.getElementById('lessonLink').value = '';
-                loadLessons();
-                alert('تم نشر المحتوى بنجاح لجميع الطلاب!');
-            }
-        }
-
-        // Admin Feature: Promote student to teacher by email
-        async function handlePromoteTeacher(e) {
-            e.preventDefault();
-            const emailInput = document.getElementById('teacherEmailInput').value;
-
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .update({ role: 'teacher' })
-                .eq('email', emailInput)
-                .select();
-
-            if (error || !data || data.length === 0) {
-                alert('لم يتم العثور على طالب بهذا البريد الإلكتروني، تأكد من صحته!');
-            } else {
-                document.getElementById('teacherEmailInput').value = '';
-                alert('تم ترقية هذا الحساب إلى (معلم) بنجاح! سيتمكن من رفع المحتوى فور إعادة تسجيل الدخول.');
-            }
-        }
-
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            checkUser();
-        }
-
-        checkUser();
-    </script>
-</body>
-</html>
+                    const fullName = document.
