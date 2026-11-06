@@ -142,6 +142,10 @@
                     <label class="block text-xs text-slate-400 mb-1">الاسم بالكامل</label>
                     <input type="text" id="authFullName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
+                <div id="phoneGroup" class="hidden">
+                    <label class="block text-xs text-slate-400 mb-1">رقم الهاتف / الواتساب</label>
+                    <input type="tel" id="authPhone" placeholder="01xxxxxxxx" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
                     <input type="email" id="authEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
@@ -178,8 +182,10 @@
             document.getElementById('authSubmitBtn').innerText = mode === 'register' ? 'إنشاء الحساب' : 'دخول';
             if (mode === 'register') {
                 document.getElementById('fullNameGroup').classList.remove('hidden');
+                document.getElementById('phoneGroup').classList.remove('hidden');
             } else {
                 document.getElementById('fullNameGroup').classList.add('hidden');
+                document.getElementById('phoneGroup').classList.add('hidden');
             }
         }
 
@@ -195,10 +201,18 @@
             try {
                 if (currentMode === 'register') {
                     const fullName = document.getElementById('authFullName').value;
+                    const phone = document.getElementById('authPhone').value;
+
                     const { data, error } = await supabaseClient.auth.signUp({ email, password });
                     if (error) throw error;
                     if (data.user) {
-                        await supabaseClient.from('profiles').insert([{ id: data.user.id, email: email, full_name: fullName, role: 'student' }]);
+                        await supabaseClient.from('profiles').insert([{ 
+                            id: data.user.id, 
+                            email: email, 
+                            full_name: fullName, 
+                            phone: phone,
+                            role: 'student' 
+                        }]);
                         alert('تم إنشاء حساب الطالب بنجاح!');
                     }
                 } else {
@@ -238,7 +252,7 @@
                 } else {
                     document.getElementById('guestView').classList.remove('hidden');
                     document.getElementById('userDashboard').classList.add('hidden');
-                    document.getElementById('authHeaderButtons').classList.add('hidden');
+                    document.getElementById('authHeaderButtons').classList.remove('hidden');
                 }
             } catch (err) {
                 console.error(err);
