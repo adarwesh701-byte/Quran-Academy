@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">أكاديمية الإتقان العالمية | المقامات الصوتية، التجويد، الإجازات، التفسير وعلوم الإسلام</title>
+    <title>أكاديمية الإتقان العالمية | المقامات الصوتية، التجويد، الإجازات، التفسير وعلوم الإسلام</title>
     <meta name="description" content="منصة متخصصة في تدريس المقامات الصوتية لتجميل الصوت في القرآن الكريم بالتفصيل، التجويد، حفظ القرآن الكريم مع إجازة متصلة السند بالنبي صلى الله عليه وسلم، تفسير القرآن، وعلوم الإسلام.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -23,31 +23,25 @@
                     أ
                 </div>
                 <div>
-                    <h1 class="text-lg md:text-xl font-bold text-emerald-400" id="navTitle">أكاديمية الإتقان العالمية</h1>
-                    <p class="text-xs text-slate-400" id="navSub">مقامات • تجويد • إجازات بسند • تفسير • علوم الإسلام</p>
+                    <h1 class="text-lg md:text-xl font-bold text-emerald-400" id="t-navTitle">أكاديمية الإتقان العالمية</h1>
+                    <p class="text-xs text-slate-400" id="t-navSub">مقامات • تجويد • إجازات بسند • تفسير • علوم الإسلام</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-3">
-                <!-- Global Language Switcher -->
-                <select id="globalLangSelect" onchange="changeGlobalLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 cursor-pointer">
+                <!-- Full Language Switcher -->
+                <select id="siteLangSelect" onchange="switchSiteLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
                     <option value="ar">العربية (Arabic)</option>
                     <option value="en">English</option>
                     <option value="de">Deutsch</option>
                     <option value="fr">Français</option>
                     <option value="it">Italiano</option>
                     <option value="tr">Türkçe</option>
-                    <option value="es">Español</option>
-                    <option value="ur">اردو</option>
                 </select>
 
                 <div id="authHeaderButtons" class="flex items-center space-x-3 space-x-reverse">
-                    <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer" id="btnLoginText">
-                        تسجيل الدخول
-                    </button>
-                    <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md cursor-pointer" id="btnRegText">
-                        حساب جديد
-                    </button>
+                    <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer" id="t-btnLogin">تسجيل الدخول</button>
+                    <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md cursor-pointer" id="t-btnReg">حساب جديد</button>
                 </div>
             </div>
         </div>
@@ -58,18 +52,18 @@
         
         <!-- Permanent Hero Banner -->
         <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-8 md:p-10 text-center shadow-2xl relative overflow-hidden">
-            <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30" id="heroBadge">
+            <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30" id="t-heroBadge">
                 منصة تعليمية متكاملة لعلوم القرآن والإسلام
             </span>
             
-            <h2 class="text-xl md:text-3xl font-extrabold text-white mt-6 mb-4 leading-relaxed" id="heroMainTitle">
+            <h2 class="text-xl md:text-3xl font-extrabold text-white mt-6 mb-4 leading-relaxed" id="t-heroMainTitle">
                 مقامات صوتية لتجميل الصوت في القرآن بالتفصيل <br/>
                 <span class="text-emerald-400">• التجويد •</span> <br/>
                 حفظ القرآن مع إجازة متصلة السند بالنبي صلى الله عليه وسلم <br/>
                 <span class="text-amber-400">• تفسير القرآن • علوم الإسلام •</span>
             </h2>
 
-            <p class="text-slate-400 text-xs md:text-sm max-w-3xl mx-auto" id="heroDesc">
+            <p class="text-slate-400 text-xs md:text-sm max-w-3xl mx-auto" id="t-heroDesc">
                 نظام تعليمي متطور يجمع بين أحكام التلاوة والتجويد، دراسة المقامات الصوتية بالتفصيل لتحسين الصوت، نيل الإجازات المسندة إلى النبي ﷺ، وتدارس التفسير وعلوم الإسلام مع نخبة من المعلمين المعتمدين.
             </p>
         </div>
@@ -77,20 +71,20 @@
         <!-- Guest Landing View -->
         <div id="guestView" class="space-y-12">
             <div class="space-y-6">
-                <h3 class="text-2xl font-bold text-white flex items-center" id="sectionTafseerTitle">
+                <h3 class="text-2xl font-bold text-white flex items-center" id="t-secTafseer">
                     <i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)
                 </h3>
                 <div id="publicAITafseerList" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <p class="text-slate-400 text-sm">جاري تحميل مواد التفسير...</p>
+                    <p class="text-slate-400 text-sm" id="t-loading">جاري التحميل...</p>
                 </div>
             </div>
 
             <div class="space-y-6">
-                <h3 class="text-2xl font-bold text-white flex items-center" id="sectionTeachersTitle">
+                <h3 class="text-2xl font-bold text-white flex items-center" id="t-secTeachers">
                     <i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> نخبة المعلمين المؤهلين للإجازات والمقامات
                 </h3>
                 <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <p class="text-slate-400 text-sm">جاري تحميل قائمة المعلمين...</p>
+                    <p class="text-slate-400 text-sm" id="t-loadingTeachers">جاري التحميل...</p>
                 </div>
             </div>
         </div>
@@ -99,119 +93,123 @@
         <div id="userDashboard" class="hidden space-y-6">
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
                 <div>
-                    <span class="text-xs text-slate-400" id="welcomeText">مرحباً بك،</span>
+                    <span class="text-xs text-slate-400" id="t-welcome">مرحباً بك،</span>
                     <h4 id="userNameDisplay" class="text-xl font-bold text-white">...</h4>
                     <span id="userRoleBadge" class="inline-block mt-1 text-xs uppercase font-bold bg-emerald-500/20 text-emerald-300 px-3 py-0.5 rounded-full border border-emerald-500/30">
                         ...
                     </span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer" id="logoutBtnText">
+                    <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer" id="t-logout">
                         تسجيل الخروج <i class="fa-solid fa-right-from-bracket mr-1"></i>
                     </button>
                 </div>
             </div>
 
+            <!-- Admin & Teacher AI Tafseer Upload Panel -->
             <div id="aiTafseerUploadPanel" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-4">
-                <h5 class="font-bold text-emerald-400 text-lg flex items-center">
+                <h5 class="font-bold text-emerald-400 text-lg flex items-center" id="t-uploadTitle">
                     <i class="fa-solid fa-wand-magic-sparkles ml-2"></i> نشر مواد التفسير بصور الذكاء الاصطناعي
                 </h5>
                 <form onsubmit="handleUploadAITafseer(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">اسم السورة / الدرس</label>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-surahLabel">اسم السورة / الدرس</label>
                         <input type="text" id="surahName" placeholder="مثال: سورة الكهف" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط الصورة الإيضاحية (AI Image URL)</label>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-imgLabel">رابط الصورة الإيضاحية (AI Image URL)</label>
                         <input type="url" id="surahImg" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">شرح ملخص للتفسير</label>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-descLabel">شرح ملخص للتفسير</label>
                         <input type="text" id="surahDesc" placeholder="تفسير معاني الآيات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div class="md:col-span-3">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">نشر مادة التفسير</button>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer" id="t-publishBtn">نشر مادة التفسير</button>
                     </div>
                 </form>
             </div>
 
+            <!-- Teacher Profile Settings -->
             <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-4">
-                <h5 class="font-bold text-amber-400 text-lg flex items-center">
-                    <i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم (الشهادات، الإجازات، المواعيد)
+                <h5 class="font-bold text-amber-400 text-lg flex items-center" id="t-teacherProfileTitle">
+                    <i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم
                 </h5>
                 <form onsubmit="handleSaveTeacherProfile(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">الشهادات وسند الإجازة</label>
-                        <input type="text" id="tCerts" placeholder="إجازة بسند متصل للنبي ﷺ..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-certsLabel">الشهادات وسند الإجازة</label>
+                        <input type="text" id="tCerts" placeholder="إجازة بسند متصل..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط نموذج التلاوة/المقامات</label>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-sampleLabel">رابط نموذج التلاوة/المقامات</label>
                         <input type="url" id="tSample" placeholder="https://youtube.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-xs text-slate-400 mb-1">منهج التدريس والمقامات لكل سن</label>
-                        <textarea id="tSystem" rows="2" placeholder="تدريب على المقامات (البياتي، الرست)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required></textarea>
+                        <label class="block text-xs text-slate-400 mb-1" id="t-systemLabel">منهج التدريس والمقامات لكل سن</label>
+                        <textarea id="tSystem" rows="2" placeholder="تدريب على المقامات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required></textarea>
                     </div>
                     <div class="md:col-span-2">
-                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">حفظ الملف</button>
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer" id="t-saveProfileBtn">حفظ الملف</button>
                     </div>
                 </form>
 
                 <div class="border-t border-slate-700 pt-4 mt-4">
-                    <h6 class="font-bold text-emerald-400 text-sm mb-2">إضافة موعد متاح بالجدول (لمنع التعارض Overlap)</h6>
+                    <h6 class="font-bold text-emerald-400 text-sm mb-2" id="t-slotTitle">إضافة موعد متاح بالجدول (لمنع التعارض Overlap)</h6>
                     <form onsubmit="handleAddSlot(event)" class="flex gap-2">
                         <input type="datetime-local" id="slotTime" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">إضافة الموعد</button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer" id="t-addSlotBtn">إضافة الموعد</button>
                     </form>
                 </div>
             </div>
 
+            <!-- Admin Control Panel -->
             <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
-                <h5 class="font-bold text-emerald-400 text-lg flex items-center">
-                    <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر (إدارة المعلمين وتوزيع الطلاب)
+                <h5 class="font-bold text-emerald-400 text-lg flex items-center" id="t-adminTitle">
+                    <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر
                 </h5>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
                     <div>
-                        <h6 class="font-bold text-purple-400 text-sm mb-2">تعيين طالب لمعلم محدد</h6>
+                        <h6 class="font-bold text-purple-400 text-sm mb-2" id="t-assignTitle">تعيين طالب لمعلم محدد</h6>
                         <form onsubmit="handleAssignStudent(event)" class="space-y-3">
                             <input type="email" id="assignStudentEmail" placeholder="إيميل الطالب" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                             <input type="email" id="assignTeacherEmail" placeholder="إيميل المعلم المخصص له" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer">ربط الطالب بالمعلم</button>
+                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer" id="t-assignBtn">ربط الطالب بالمعلم</button>
                         </form>
                     </div>
                     <div>
-                        <h6 class="font-bold text-amber-400 text-sm mb-2">ترقية مستخدم إلى (معلم) أو (أونر)</h6>
+                        <h6 class="font-bold text-amber-400 text-sm mb-2" id="t-promoteTitle">ترقية مستخدم إلى (معلم) أو (أونر)</h6>
                         <form onsubmit="handlePromoteUser(event)" class="space-y-3">
                             <input type="email" id="promoteEmail" placeholder="البريد الإلكتروني" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                             <select id="promoteRole" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                                <option value="teacher">معلم معتمد</option>
-                                <option value="admin">مالك (أونر)</option>
+                                <option value="teacher" id="t-optTeacher">معلم معتمد</option>
+                                <option value="admin" id="t-optAdmin">مالك (أونر)</option>
                             </select>
-                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer">تنفيذ الترقية</button>
+                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer" id="t-promoteBtn">تنفيذ الترقية</button>
                         </form>
                     </div>
                 </div>
             </div>
 
+            <!-- Student View -->
             <div id="studentSection" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
-                <h5 class="font-bold text-emerald-400 text-lg">المواعيد المتاحة لمعلمك المخصص</h5>
+                <h5 class="font-bold text-emerald-400 text-lg" id="t-studentViewTitle">المواعيد المتاحة لمعلمك المخصص</h5>
                 <div id="studentAvailableSlots" class="space-y-2">
-                    <p class="text-slate-400 text-xs">جاري جلب المواعيد...</p>
+                    <p class="text-slate-400 text-xs" id="t-loadingSlots">جاري جلب المواعيد...</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- AI Chatbot -->
+    <!-- AI Chatbot (Restored) -->
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-start">
         <div id="aiChatWindow" class="hidden w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
             <div class="bg-emerald-600 px-4 py-3 flex justify-between items-center text-white">
-                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-robot ml-2"></i> المساعد الذكي للأكاديمية</span>
+                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-robot ml-2"></i> <span id="t-aiTitle">المساعد الذكي للأكاديمية</span></span>
                 <button onclick="toggleAIChat()" class="cursor-pointer text-white hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="aiChatMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/50">
-                <div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">
+                <div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]" id="t-aiWelcome">
                     أهلاً بك! أنا مساعد الأكاديمية الذكي. اسألني عن المقامات، التجويد، الإجازات، أو التفسير!
                 </div>
             </div>
@@ -220,7 +218,7 @@
                 <button onclick="sendAIMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
-        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer transition transform hover:scale-105" title="الذكاء الاصطناعي">
+        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer transition transform hover:scale-105" title="AI Assistant">
             <i class="fa-solid fa-robot"></i>
         </button>
     </div>
@@ -233,12 +231,12 @@
 
             <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
                 <div id="fullNameGroup" class="hidden">
-                    <label class="block text-xs text-slate-400 mb-1">الاسم بالكامل</label>
+                    <label class="block text-xs text-slate-400 mb-1" id="t-modalName">الاسم بالكامل</label>
                     <input type="text" id="authFullName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
                 
                 <div id="langGroup" class="hidden">
-                    <label class="block text-xs text-slate-400 mb-1">اللغة المفضلة</label>
+                    <label class="block text-xs text-slate-400 mb-1" id="t-modalLang">اللغة المفضلة</label>
                     <select id="userLang" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-emerald-400 font-bold">
                         <option value="ar">العربية</option>
                         <option value="en">English</option>
@@ -246,13 +244,11 @@
                         <option value="fr">Français</option>
                         <option value="it">Italiano</option>
                         <option value="tr">Türkçe</option>
-                        <option value="es">Español</option>
-                        <option value="ur">اردو</option>
                     </select>
                 </div>
 
                 <div id="phoneGroup" class="hidden">
-                    <label class="block text-xs text-slate-400 mb-1">رقم الهاتف / الواتساب</label>
+                    <label class="block text-xs text-slate-400 mb-1" id="t-modalPhone">رقم الهاتف / الواتساب</label>
                     <div class="flex gap-2 dir-ltr">
                         <select id="countryCode" dir="ltr" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-emerald-400 font-bold max-w-[100px]">
                             <option value="+20">+20</option>
@@ -264,11 +260,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
+                    <label class="block text-xs text-slate-400 mb-1" id="t-modalEmail">البريد الإلكتروني</label>
                     <input type="email" id="authEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">كلمة السر</label>
+                    <label class="block text-xs text-slate-400 mb-1" id="t-modalPass">كلمة السر</label>
                     <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                 </div>
                 <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition cursor-pointer">دخول</button>
@@ -284,153 +280,154 @@
         let supabaseClient;
         try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error(e); }
 
-        // Multi-language dictionary
-        const translations = {
+        const dictionary = {
             ar: {
                 navTitle: "أكاديمية الإتقان العالمية",
                 navSub: "مقامات • تجويد • إجازات بسند • تفسير • علوم الإسلام",
-                btnLoginText: "تسجيل الدخول",
-                btnRegText: "حساب جديد",
+                btnLogin: "تسجيل الدخول",
+                btnReg: "حساب جديد",
                 heroBadge: "منصة تعليمية متكاملة لعلوم القرآن والإسلام",
                 heroMainTitle: "مقامات صوتية لتجميل الصوت في القرآن بالتفصيل <br/><span class='text-emerald-400'>• التجويد •</span> <br/>حفظ القرآن مع إجازة متصلة السند بالنبي صلى الله عليه وسلم <br/><span class='text-amber-400'>• تفسير القرآن • علوم الإسلام •</span>",
                 heroDesc: "نظام تعليمي متطور يجمع بين أحكام التلاوة والتجويد، دراسة المقامات الصوتية بالتفصيل لتحسين الصوت، نيل الإجازات المسندة إلى النبي ﷺ، وتدارس التفسير وعلوم الإسلام مع نخبة من المعلمين المعتمدين.",
-                sectionTafseerTitle: "تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)",
-                sectionTeachersTitle: "نخبة المعلمين المؤهلين للإجازات والمقامات",
-                welcomeText: "مرحباً بك،",
-                logoutBtnText: "تسجيل الخروج"
+                secTafseer: "تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)",
+                secTeachers: "نخبة المعلمين المؤهلين للإجازات والمقامات",
+                loading: "جاري التحميل...",
+                loadingTeachers: "جاري تحميل قائمة المعلمين...",
+                welcome: "مرحباً بك,",
+                logout: "تسجيل الخروج",
+                uploadTitle: "نشر مواد التفسير بصور الذكاء الاصطناعي",
+                surahLabel: "اسم السورة / الدرس",
+                imgLabel: "رابط الصورة الإيضاحية (AI Image URL)",
+                descLabel: "شرح ملخص للتفسير",
+                publishBtn: "نشر مادة التفسير",
+                teacherProfileTitle: "ملفي الشخصي كمعلم",
+                certsLabel: "الشهادات وسند الإجازة",
+                sampleLabel: "رابط نموذج التلاوة/المقامات",
+                systemLabel: "منهج التدريس والمقامات لكل سن",
+                saveProfileBtn: "حفظ الملف",
+                slotTitle: "إضافة موعد متاح بالجدول (لمنع التعارض Overlap)",
+                addSlotBtn: "إضافة الموعد",
+                adminTitle: "لوحة تحكم الأونر",
+                assignTitle: "تعيين طالب لمعلم محدد",
+                assignBtn: "ربط الطالب بالمعلم",
+                promoteTitle: "ترقية مستخدم إلى (معلم) أو (أونر)",
+                optTeacher: "معلم معتمد",
+                optAdmin: "مالك (أونر)",
+                promoteBtn: "تنفيذ الترقية",
+                studentViewTitle: "المواعيد المتاحة لمعلمك المخصص",
+                loadingSlots: "جاري جلب المواعيد...",
+                aiTitle: "المساعد الذكي للأكاديمية",
+                aiWelcome: "أهلاً بك! أنا مساعد الأكاديمية الذكي. اسألني عن المقامات، التجويد، الإجازات، أو التفسير!",
+                modalName: "الاسم بالكامل",
+                modalLang: "اللغة المفضلة",
+                modalPhone: "رقم الهاتف / الواتساب",
+                modalEmail: "البريد الإلكتروني",
+                modalPass: "كلمة السر"
             },
             en: {
                 navTitle: "Itqan Global Academy",
                 navSub: "Maqamat • Tajweed • Verified Ijaza • Tafseer • Islamic Sciences",
-                btnLoginText: "Login",
-                btnRegText: "Register",
+                btnLogin: "Login",
+                btnReg: "Register",
                 heroBadge: "Integrated Educational Platform for Quran & Islam",
                 heroMainTitle: "Detailed Voice Maqamat for Quran Recitation <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Memorization with Connected Ijaza to Prophet Muhammad ﷺ <br/><span class='text-amber-400'>• Quran Tafseer • Islamic Sciences •</span>",
                 heroDesc: "An advanced educational system combining recitation rules, detailed Maqamat studies, verified chains of Ijaza, and Islamic sciences with elite certified teachers.",
-                sectionTafseerTitle: "Quran Tafseer & AI Visual Meanings",
-                sectionTeachersTitle: "Elite Certified Teachers for Ijaza & Maqamat",
-                welcomeText: "Welcome,",
-                logoutBtnText: "Logout"
-            },
-            de: {
-                navTitle: "Itqan Globale Akademie",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Islamische Wissenschaften",
-                btnLoginText: "Anmelden",
-                btnRegText: "Registrieren",
-                heroBadge: "Integrierte Bildungsplattform für Koran & Islam",
-                heroMainTitle: "Detaillierte Stimm-Maqamat für den Koran <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Koran-Auswendiglernen mit verbundener Ijaza <br/><span class='text-amber-400'>• Koran-Tafsir • Islamische Wissenschaften •</span>",
-                heroDesc: "Ein fortschrittliches System für Koranrezitation, Maqamat-Studien und verifizierte Ijazas mit zertifizierten Lehrern.",
-                sectionTafseerTitle: "Koran-Tafsir & KI-Visualisierungen",
-                sectionTeachersTitle: "Zertifizierte Elite-Lehrer für Ijaza & Maqamat",
-                welcomeText: "Willkommen,",
-                logoutBtnText: "Abmelden"
-            },
-            fr: {
-                navTitle: "Académie Mondiale Itqan",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Sciences Islamiques",
-                btnLoginText: "Connexion",
-                btnRegText: "S'inscrire",
-                heroBadge: "Plateforme éducative pour le Coran et l'Islam",
-                heroMainTitle: "Maqamat vocaux détaillés pour le Coran <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Mémorisation avec Ijaza connectée au Prophète ﷺ <br/><span class='text-amber-400'>• Tafsir du Coran • Sciences Islamiques •</span>",
-                heroDesc: "Un système éducatif avancé combinant les règles de récitation, l'étude des Maqamat et des Ijazas vérifiées.",
-                sectionTafseerTitle: "Tafsir du Coran et IA Visuelle",
-                sectionTeachersTitle: "Enseignants qualifiés pour Ijaza & Maqamat",
-                welcomeText: "Bienvenue,",
-                logoutBtnText: "Déconnexion"
-            },
-            it: {
-                navTitle: "Accademia Globale Itqan",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Scienze Islamiche",
-                btnLoginText: "Accedi",
-                btnRegText: "Registrati",
-                heroBadge: "Piattaforma educativa per il Corano e l'Islam",
-                heroMainTitle: "Maqamat vocali dettagliati per la recitazione <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Memorizzazione con Ijaza collegata al Profeta ﷺ <br/><span class='text-amber-400'>• Tafsir del Corano • Scienze Islamiche •</span>",
-                heroDesc: "Un sistema educativo avanzato che unisce regole di recitazione, studi sui Maqamat e catene di Ijaza verificate.",
-                sectionTafseerTitle: "Tafsir del Corano e Visual AI",
-                sectionTeachersTitle: "Insegnanti certificati per Ijaza & Maqamat",
-                welcomeText: "Benvenuto,",
-                logoutBtnText: "Esci"
-            },
-            tr: {
-                navTitle: "İtqan Küresel Akademisi",
-                navSub: "Makamlar • Tecvid • İcazet • Tefsir • İslami İlimler",
-                btnLoginText: "Giriş Yap",
-                btnRegText: "Kayıt Ol",
-                heroBadge: "Kuran ve İslam için Eğitim Platformu",
-                heroMainTitle: "Kuran Tilaveti İçin Detaylı Ses Makamları <br/><span class='text-emerald-400'>• Tecvid •</span> <br/>Hz. Muhammed'e ﷺ Bağlı İcazetle Kuran Hıfzı <br/><span class='text-amber-400'>• Kuran Tefsiri • İslami İlimler •</span>",
-                heroDesc: "Tecvid kuralları, makam çalışmaları ve doğrulanmış icazet zincirlerini birleştiren gelişmiş eğitim sistemi.",
-                sectionTafseerTitle: "Kuran Tefsiri ve Görsel AI",
-                sectionTeachersTitle: "İcazet ve Makamlar İçin Seçkin Eğitmenler",
-                welcomeText: "Hoş geldiniz,",
-                logoutBtnText: "Çıkış Yap"
-            },
-            es: {
-                navTitle: "Academia Global Itqan",
-                navSub: "Maqamat • Tajweed • Ijaza • Tafsir • Ciencias Islámicas",
-                btnLoginText: "Iniciar Sesión",
-                btnRegText: "Registrarse",
-                heroBadge: "Plataforma educativa para el Corán y el Islam",
-                heroMainTitle: "Maqamat vocales detallados para la recitación <br/><span class='text-emerald-400'>• Tajweed •</span> <br/>Memorización con Ijaza conectada al Profeta ﷺ <br/><span class='text-amber-400'>• Tafsir del Corán • Ciencias Islámicas •</span>",
-                heroDesc: "Sistema educativo avanzado que combina reglas de recitación, estudio de Maqamat e Ijazas verificadas.",
-                sectionTafseerTitle: "Tafsir del Corán y Visual AI",
-                sectionTeachersTitle: "Profesores certificados para Ijaza & Maqamat",
-                welcomeText: "Bienvenido,",
-                logoutBtnText: "Cerrar Sesión"
-            },
-            ur: {
-                navTitle: "اتقان گلوبل اکیڈمی",
-                navSub: "مقامات • تجوید • اجازہ • تفسیر • اسلامی علوم",
-                btnLoginText: "لاگ ان",
-                btnRegText: "رجستر",
-                heroBadge: "قرآن اور اسلام کے لیے تعلیمی پلیٹ فارم",
-                heroMainTitle: "قرآن کی تلاوت کے لیے تفصیلی صوتی مقامات <br/><span class='text-emerald-400'>• تجوید •</span> <br/>نبی کریم ﷺ سے متصل سند کے ساتھ حفظِ قرآن <br/><span class='text-amber-400'>• تفسیر القرآن • اسلامی علوم •</span>",
-                heroDesc: "ایک جدید تعلیمی نظام جو تجوید، مقامات، تصدیق شدہ اسناد اور اسلامی علوم کو یکجا کرتا ہے۔",
-                sectionTafseerTitle: "تفسیر القرآن اور تصویری معانی",
-                sectionTeachersTitle: "اجازہ اور مقامات کے ماہر اساتذہ",
-                welcomeText: "خوش آمدید،",
-                logoutBtnText: "لاگ آؤٹ"
+                secTafseer: "Quran Tafseer & AI Visual Meanings",
+                secTeachers: "Elite Certified Teachers for Ijaza & Maqamat",
+                loading: "Loading...",
+                loadingTeachers: "Loading teachers list...",
+                welcome: "Welcome,",
+                logout: "Logout",
+                uploadTitle: "Publish Tafseer Material with AI Images",
+                surahLabel: "Surah Name / Lesson",
+                imgLabel: "AI Image URL",
+                descLabel: "Summary of Tafseer",
+                publishBtn: "Publish Tafseer Material",
+                teacherProfileTitle: "My Teacher Profile",
+                certsLabel: "Certificates & Ijaza Chain",
+                sampleLabel: "Recitation / Maqamat Sample Link",
+                systemLabel: "Teaching Methodology & Maqamat per Age",
+                saveProfileBtn: "Save Profile",
+                slotTitle: "Add Available Slot (Prevent Overlap)",
+                addSlotBtn: "Add Slot",
+                adminTitle: "Owner Control Panel",
+                assignTitle: "Assign Student to Specific Teacher",
+                assignBtn: "Link Student to Teacher",
+                promoteTitle: "Promote User to Teacher or Owner",
+                optTeacher: "Certified Teacher",
+                optAdmin: "Owner (Admin)",
+                promoteBtn: "Execute Promotion",
+                studentViewTitle: "Available Slots with Your Assigned Teacher",
+                loadingSlots: "Fetching available slots...",
+                aiTitle: "Academy AI Assistant",
+                aiWelcome: "Welcome! I am the Academy AI assistant. Ask me about Maqamat, Tajweed, Ijaza, or Tafseer!",
+                modalName: "Full Name",
+                modalLang: "Preferred Language",
+                modalPhone: "Phone / WhatsApp",
+                modalEmail: "Email Address",
+                modalPass: "Password"
             }
         };
 
-        // Auto-detect browser/phone language on load
-        function initAppLanguage() {
-            const browserLang = (navigator.language || navigator.userLanguage || 'ar').slice(0, 2);
-            const selectedLang = translations[browserLang] ? browserLang : 'ar';
-            document.getElementById('globalLangSelect').value = selectedLang;
-            changeGlobalLanguage(selectedLang);
-        }
+        function switchSiteLanguage(lang) {
+            const d = dictionary[lang] || dictionary['ar'];
+            const root = document.getElementById('htmlRoot');
 
-        function changeGlobalLanguage(lang) {
-            const t = translations[lang] || translations['ar'];
-            const htmlRoot = document.getElementById('htmlRoot');
-            
             if (lang === 'ar' || lang === 'ur') {
-                htmlRoot.setAttribute('dir', 'rtl');
-                htmlRoot.setAttribute('lang', lang);
+                root.setAttribute('dir', 'rtl');
+                root.setAttribute('lang', lang);
             } else {
-                htmlRoot.setAttribute('dir', 'ltr');
-                htmlRoot.setAttribute('lang', lang);
+                root.setAttribute('dir', 'ltr');
+                root.setAttribute('lang', lang);
             }
 
-            document.getElementById('navTitle').innerText = t.navTitle;
-            document.getElementById('navSub').innerText = t.navSub;
-            document.getElementById('btnLoginText').innerText = t.btnLoginText;
-            document.getElementById('btnRegText').innerText = t.btnRegText;
-            document.getElementById('heroBadge').innerText = t.heroBadge;
-            document.getElementById('heroMainTitle').innerHTML = t.heroMainTitle;
-            document.getElementById('heroDesc').innerText = t.heroDesc;
-            document.getElementById('sectionTafseerTitle').innerHTML = `<i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> ${t.sectionTafseerTitle}`;
-            document.getElementById('sectionTeachersTitle').innerHTML = `<i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> ${t.sectionTeachersTitle}`;
-            document.getElementById('welcomeText').innerText = t.welcomeText;
-            document.getElementById('logoutBtnText').innerHTML = `${t.logoutBtnText} <i class="fa-solid fa-right-from-bracket mr-1"></i>`;
+            document.getElementById('t-navTitle').innerText = d.navTitle;
+            document.getElementById('t-navSub').innerText = d.navSub;
+            document.getElementById('t-btnLogin').innerText = d.btnLogin;
+            document.getElementById('t-btnReg').innerText = d.btnReg;
+            document.getElementById('t-heroBadge').innerText = d.heroBadge;
+            document.getElementById('t-heroMainTitle').innerHTML = d.heroMainTitle;
+            document.getElementById('t-heroDesc').innerText = d.heroDesc;
+            document.getElementById('t-secTafseer').innerHTML = `<i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> ${d.secTafseer}`;
+            document.getElementById('t-secTeachers').innerHTML = `<i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> ${d.secTeachers}`;
+            document.getElementById('t-loading').innerText = d.loading;
+            document.getElementById('t-loadingTeachers').innerText = d.loadingTeachers;
+            document.getElementById('t-welcome').innerText = d.welcome;
+            document.getElementById('t-logout').innerHTML = `${d.logout} <i class="fa-solid fa-right-from-bracket mr-1"></i>`;
+            document.getElementById('t-uploadTitle').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles ml-2"></i> ${d.uploadTitle}`;
+            document.getElementById('t-surahLabel').innerText = d.surahLabel;
+            document.getElementById('t-imgLabel').innerText = d.imgLabel;
+            document.getElementById('t-descLabel').innerText = d.descLabel;
+            document.getElementById('t-publishBtn').innerText = d.publishBtn;
+            document.getElementById('t-teacherProfileTitle').innerHTML = `<i class="fa-solid fa-id-card ml-2"></i> ${d.teacherProfileTitle}`;
+            document.getElementById('t-certsLabel').innerText = d.certsLabel;
+            document.getElementById('t-sampleLabel').innerText = d.sampleLabel;
+            document.getElementById('t-systemLabel').innerText = d.systemLabel;
+            document.getElementById('t-saveProfileBtn').innerText = d.saveProfileBtn;
+            document.getElementById('t-slotTitle').innerText = d.slotTitle;
+            document.getElementById('t-addSlotBtn').innerText = d.addSlotBtn;
+            document.getElementById('t-adminTitle').innerHTML = `<i class="fa-solid fa-gears ml-2"></i> ${d.adminTitle}`;
+            document.getElementById('t-assignTitle').innerText = d.assignTitle;
+            document.getElementById('t-assignBtn').innerText = d.assignBtn;
+            document.getElementById('t-promoteTitle').innerText = d.promoteTitle;
+            document.getElementById('t-optTeacher').innerText = d.optTeacher;
+            document.getElementById('t-optAdmin').innerText = d.optAdmin;
+            document.getElementById('t-promoteBtn').innerText = d.promoteBtn;
+            document.getElementById('t-studentViewTitle').innerText = d.studentViewTitle;
+            document.getElementById('t-loadingSlots').innerText = d.loadingSlots;
+            document.getElementById('t-aiTitle').innerText = d.aiTitle;
+            document.getElementById('t-aiWelcome').innerText = d.aiWelcome;
+            document.getElementById('t-modalName').innerText = d.modalName;
+            document.getElementById('t-modalLang').innerText = d.modalLang;
+            document.getElementById('t-modalPhone').innerText = d.modalPhone;
+            document.getElementById('t-modalEmail').innerText = d.modalEmail;
+            document.getElementById('t-modalPass').innerText = d.modalPass;
         }
 
         let currentMode = 'login';
         function showAuthModal(mode) {
             currentMode = mode;
             document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('authModalTitle').innerText = mode === 'register' ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
-            document.getElementById('authSubmitBtn').innerText = mode === 'register' ? 'إنشاء الحساب' : 'دخول';
             if (mode === 'register') {
                 document.getElementById('fullNameGroup').classList.remove('hidden');
                 document.getElementById('langGroup').classList.remove('hidden');
@@ -443,7 +440,9 @@
         }
         function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
         
-        function toggleAIChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
+        function toggleAIChat() { 
+            document.getElementById('aiChatWindow').classList.toggle('hidden'); 
+        }
 
         function sendAIMessage() {
             const input = document.getElementById('aiUserInput');
@@ -456,12 +455,10 @@
 
             setTimeout(() => {
                 let reply = "أهلاً بك في أكاديمية الإتقان! نقدم تعليم المقامات الصوتية بالتفصيل، التجويد، والحفظ بالسند المتصل للنبي ﷺ.";
-                if (msg.includes("مقام") || msg.includes("بياتي") || msg.includes("رست") || msg.includes("صوت")) {
+                if (msg.includes("مقام") || msg.includes("بياتي") || msg.includes("رست") || msg.includes("صوت") || msg.toLowerCase().includes("maqamat")) {
                     reply = "ندرس المقامات الصوتية الأساسية (البياتي، الرست، النهاوند، الحجاز، العجم، السيكاه، الصبا) لتجميل الصوت في تلاوة القرآن الكريم بالتفصيل.";
-                } else if (msg.includes("إجازة") || msg.includes("سند") || msg.includes("حفظ")) {
+                } else if (msg.includes("إجازة") || msg.includes("سند") || msg.includes("حفظ") || msg.toLowerCase().includes("ijaza")) {
                     reply = "نوفر برنامج حفظ القرآن الكريم ومنح الإجازات بسند متصل متواتر إلى الرسول صلى الله عليه وسلم على يد شيوخ معتمدين.";
-                } else if (msg.includes("تفسير") || msg.includes("علوم")) {
-                    reply = "لدينا دروس متخصصة في تفسير القرآن وعلوم الإسلام واللغة العربية يناسب جميع الأعمار والمستويات.";
                 }
                 chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -534,7 +531,6 @@
 
         async function loadPublicData() {
             if (!supabaseClient) return;
-            
             const tafseerContainer = document.getElementById('publicAITafseerList');
             const teachersContainer = document.getElementById('publicTeachersList');
             const { data: teachersData } = await supabaseClient.from('profiles').select('*').eq('role', 'teacher');
@@ -651,7 +647,7 @@
 
         async function handleLogout() { await supabaseClient.auth.signOut(); checkUser(); }
         
-        initAppLanguage();
+        switchSiteLanguage('ar');
         checkUser();
     </script>
 </body>
