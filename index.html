@@ -32,28 +32,30 @@
                     تسجيل الدخول
                 </button>
                 <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md cursor-pointer">
-                    حساب طالب جديد
+                    إنشاء حساب جديد
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="py-10 px-4 max-w-6xl mx-auto w-full flex-grow">
+    <main class="py-10 px-4 max-w-6xl mx-auto w-full flex-grow space-y-10">
+        
+        <!-- Guest Landing View -->
         <div id="guestView" class="space-y-12">
             <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-10 text-center shadow-2xl relative overflow-hidden">
                 <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
-                    منصة تعليمية متكاملة بنظام الحجوزات ونسب المعلمين
+                    منصة تعليمية متكاملة (كورسات مجانية ومدفوعة + حصص ممارسة)
                 </span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-white mt-6 mb-4">
                     تعلم التلاوة والمقامات مع نخبة المعلمين
                 </h2>
                 <p class="text-slate-400 text-sm md:text-base max-w-2xl mx-auto mb-8">
-                    نظام جدول زمني ذكي يمنع التعارض، تحكم كامل للإدارة والأونرز، وتوزيع عادل للنسب.
+                    تصفح الكورسات المجانية والمدفوعة، احجز حصص ممارسة مباشرة، وتحكم كامل بالمنصة دون تعديل الأكواد.
                 </p>
                 <div class="flex justify-center gap-4">
                     <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-2xl transition shadow-lg cursor-pointer">
-                        ابدأ التعلم الآن
+                        ابدأ الآن
                     </button>
                     <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-8 py-3.5 rounded-2xl transition cursor-pointer">
                         تسجيل الدخول
@@ -72,46 +74,62 @@
                         ...
                     </span>
                 </div>
-                <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer">
-                    تسجيل الخروج <i class="fa-solid fa-right-from-bracket mr-1"></i>
-                </button>
+                <div class="flex items-center gap-3">
+                    <button onclick="requestMediaPermissions()" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-2.5 rounded-xl transition font-bold cursor-pointer">
+                        <i class="fa-solid fa-video ml-1"></i> فحص الكاميرا والمايك
+                    </button>
+                    <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer">
+                        تسجيل الخروج <i class="fa-solid fa-right-from-bracket mr-1"></i>
+                    </button>
+                </div>
             </div>
 
+            <!-- Admin & Owner Control Panel -->
             <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
                 <h5 class="font-bold text-emerald-400 text-lg flex items-center">
-                    <i class="fa-solid fa-gears ml-2"></i> لوحة التحكم الإدارية الشاملة
+                    <i class="fa-solid fa-gears ml-2"></i> لوحة التحكم الإدارية (إضافة كورسات وحصص ممارسة)
                 </h5>
                 
-                <form id="addLessonForm" onsubmit="handleAddLesson(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <!-- Add Course / Practice Session Form -->
+                <form id="addCourseForm" onsubmit="handleAddCourse(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">عنوان الحصة</label>
-                        <input type="text" id="lessonTitle" placeholder="مثال: تصحيح سورة البقرة" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <label class="block text-xs text-slate-400 mb-1">عنوان الكورس / الممارسة</label>
+                        <input type="text" id="courseTitle" placeholder="مثال: دورة مقام البياتي" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">ميعاد الحصة</label>
-                        <input type="datetime-local" id="lessonTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <label class="block text-xs text-slate-400 mb-1">نوع المحتوى</label>
+                        <select id="courseType" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <option value="free">كورس مجاني</option>
+                            <option value="paid">كورس مدفوع</option>
+                            <option value="practice">حصة ممارسة (Practice)</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط الغرفة (Zoom / Meet)</label>
-                        <input type="url" id="lessonLink" placeholder="https://zoom.us/..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <label class="block text-xs text-slate-400 mb-1">السعر (إذا مدفوع)</label>
+                        <input type="text" id="coursePrice" placeholder="مثال: $20 أو مجاناً" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
-                    <div class="md:col-span-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">رابط الحصة أو المحتوى</label>
+                        <input type="url" id="courseLink" placeholder="https://zoom.us/..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="md:col-span-4">
                         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-2.5 text-sm transition shadow-md cursor-pointer">
-                            نشر الحصة في الجدول الزمني
+                            نشر العنصر في المنصة
                         </button>
                     </div>
                 </form>
 
+                <!-- Direct Promotion Panel -->
                 <div id="superAdminSection" class="border-t border-slate-700 pt-6 hidden grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h6 class="font-bold text-amber-400 text-sm mb-2">ترقية إلى (معلم)</h6>
+                        <h6 class="font-bold text-amber-400 text-sm mb-2"><i class="fa-solid fa-user-plus ml-1"></i> ترقية إلى (معلم)</h6>
                         <form onsubmit="handlePromoteUser(event, 'teacher')" class="flex gap-2">
                             <input type="email" id="teacherEmailInput" placeholder="email@teacher.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                             <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">تعيين</button>
                         </form>
                     </div>
                     <div>
-                        <h6 class="font-bold text-purple-400 text-sm mb-2">إضافة مالك مشارك (Admin)</h6>
+                        <h6 class="font-bold text-purple-400 text-sm mb-2"><i class="fa-solid fa-crown ml-1"></i> ترقية إلى (أونر / Admin)</h6>
                         <form onsubmit="handlePromoteUser(event, 'admin')" class="flex gap-2">
                             <input type="email" id="adminEmailInput" placeholder="email@owner.com" required class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                             <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">تعيين</button>
@@ -120,10 +138,36 @@
                 </div>
             </div>
 
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                <h5 class="font-bold text-white text-lg mb-4">الجدول الزمني للحصص</h5>
-                <div id="lessonsList" class="space-y-3">
-                    <p class="text-slate-400 text-sm">جاري جلب المواعيد...</p>
+            <!-- Public Courses & Practice Display Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Free Courses -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
+                    <h5 class="font-bold text-emerald-400 text-base flex items-center">
+                        <i class="fa-solid fa-gift ml-2"></i> الكورسات المجانية
+                    </h5>
+                    <div id="freeCoursesList" class="space-y-3">
+                        <p class="text-slate-400 text-xs">جاري التحميل...</p>
+                    </div>
+                </div>
+
+                <!-- Paid Courses -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
+                    <h5 class="font-bold text-amber-400 text-base flex items-center">
+                        <i class="fa-solid fa-graduation-cap ml-2"></i> الكورسات المدفوعة
+                    </h5>
+                    <div id="paidCoursesList" class="space-y-3">
+                        <p class="text-slate-400 text-xs">جاري التحميل...</p>
+                    </div>
+                </div>
+
+                <!-- Practice Sessions -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
+                    <h5 class="font-bold text-purple-400 text-base flex items-center">
+                        <i class="fa-solid fa-users ml-2"></i> حصص الممارسة التفاعلية
+                    </h5>
+                    <div id="practiceList" class="space-y-3">
+                        <p class="text-slate-400 text-xs">جاري التحميل...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -152,7 +196,12 @@
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">كلمة السر</label>
-                    <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                    <div class="relative">
+                        <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white pl-10">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute left-3 top-2.5 text-slate-400 hover:text-white text-xs cursor-pointer">
+                            <i id="togglePassIcon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
                     دخول
@@ -178,7 +227,7 @@
         function showAuthModal(mode) {
             currentMode = mode;
             document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('authModalTitle').innerText = mode === 'register' ? 'حساب طالب جديد' : 'تسجيل الدخول للمنصة';
+            document.getElementById('authModalTitle').innerText = mode === 'register' ? 'إنشاء حساب جديد' : 'تسجيل الدخول للمنصة';
             document.getElementById('authSubmitBtn').innerText = mode === 'register' ? 'إنشاء الحساب' : 'دخول';
             if (mode === 'register') {
                 document.getElementById('fullNameGroup').classList.remove('hidden');
@@ -191,6 +240,28 @@
 
         function closeAuthModal() {
             document.getElementById('authModal').classList.add('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('authPassword');
+            const icon = document.getElementById('togglePassIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        async function requestMediaPermissions() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                alert('تمت الموافقة وتفعيل الكاميرا والمايك بنجاح!');
+                stream.getTracks().forEach(track => track.stop());
+            } catch (err) {
+                alert('تنبيه: يجب السماح للصلاحيات من إعدادات المتصفح للوصول للكاميرا والمايك.');
+            }
         }
 
         async function handleAuthSubmit(e) {
@@ -213,7 +284,7 @@
                             phone: phone,
                             role: 'student' 
                         }]);
-                        alert('تم إنشاء حساب الطالب بنجاح!');
+                        alert('تم إنشاء الحساب بنجاح!');
                     }
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -246,9 +317,13 @@
                         document.getElementById('adminControls').classList.remove('hidden');
                         if (profile?.role === 'admin') {
                             document.getElementById('superAdminSection').classList.remove('hidden');
+                        } else {
+                            document.getElementById('superAdminSection').classList.add('hidden');
                         }
+                    } else {
+                        document.getElementById('adminControls').classList.add('hidden');
                     }
-                    loadLessons();
+                    loadCourses();
                 } else {
                     document.getElementById('guestView').classList.remove('hidden');
                     document.getElementById('userDashboard').classList.add('hidden');
@@ -259,41 +334,78 @@
             }
         }
 
-        async function loadLessons() {
+        async function loadCourses() {
             if (!supabaseClient) return;
-            const container = document.getElementById('lessonsList');
-            const { data } = await supabaseClient.from('lessons').select('*').order('created_at', { ascending: false });
-            if (!data || data.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 text-sm">لا توجد حصص محجوزة حالياً.</p>`;
+            const { data, error } = await supabaseClient.from('lessons').select('*').order('created_at', { ascending: false });
+            
+            const freeContainer = document.getElementById('freeCoursesList');
+            const paidContainer = document.getElementById('paidCoursesList');
+            const practiceContainer = document.getElementById('practiceList');
+
+            if (error || !data || data.length === 0) {
+                freeContainer.innerHTML = `<p class="text-slate-400 text-xs">لا توجد كورسات مجانية حالياً.</p>`;
+                paidContainer.innerHTML = `<p class="text-slate-400 text-xs">لا توجد كورسات مدفوعة حالياً.</p>`;
+                practiceContainer.innerHTML = `<p class="text-slate-400 text-xs">لا توجد حصص ممارسة حالياً.</p>`;
                 return;
             }
-            container.innerHTML = data.map(l => `
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
-                    <div>
-                        <h6 class="font-bold text-white">${l.title}</h6>
-                    </div>
-                    <a href="${l.meeting_link}" target="_blank" class="bg-emerald-600 text-white text-xs px-4 py-2 rounded-xl font-bold">دخول القاعة</a>
-                </div>
-            `).join('');
+
+            const freeItems = data.filter(item => item.assigned_role === 'free');
+            const paidItems = data.filter(item => item.assigned_role === 'paid');
+            const practiceItems = data.filter(item => item.assigned_role === 'practice');
+
+            freeContainer.innerHTML = freeItems.length ? freeItems.map(item => renderCard(item, 'مجاني', 'emerald')).join('') : '<p class="text-slate-400 text-xs">لا توجد كورسات مجانية.</p>';
+            paidContainer.innerHTML = paidItems.length ? paidItems.map(item => renderCard(item, item.meeting_link ? 'مدفوع' : 'مدفوع', 'amber')).join('') : '<p class="text-slate-400 text-xs">لا توجد كورسات مدفوعة.</p>';
+            practiceContainer.innerHTML = practiceItems.length ? practiceItems.map(item => renderCard(item, 'ممارسة', 'purple')).join('') : '<p class="text-slate-400 text-xs">لا توجد حصص ممارسة.</p>';
         }
 
-        async function handleAddLesson(e) {
+        function renderCard(item, badgeText, color) {
+            return `
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                    <div>
+                        <h6 class="font-bold text-white text-sm">${item.title}</h6>
+                        <span class="text-[10px] text-${color}-400 font-bold">${badgeText}</span>
+                    </div>
+                    <a href="${item.meeting_link}" target="_blank" class="bg-${color}-600 hover:bg-${color}-500 text-white text-[11px] px-3 py-1.5 rounded-lg font-bold transition">دخول</a>
+                </div>
+            `;
+        }
+
+        async function handleAddCourse(e) {
             e.preventDefault();
-            const title = document.getElementById('lessonTitle').value;
-            const timeSlot = document.getElementById('lessonTime').value;
-            const link = document.getElementById('lessonLink').value;
-            await supabaseClient.from('lessons').insert([{ title: `${title} (${timeSlot})`, meeting_link: link, assigned_role: 'student' }]);
-            document.getElementById('addLessonForm').reset();
-            loadLessons();
-            alert('تم نشر الحصة بنجاح!');
+            const title = document.getElementById('courseTitle').value;
+            const type = document.getElementById('courseType').value;
+            const price = document.getElementById('coursePrice').value;
+            const link = document.getElementById('courseLink').value;
+
+            const fullTitle = price ? `${title} (${price})` : title;
+
+            const { error } = await supabaseClient.from('lessons').insert([{ 
+                title: fullTitle, 
+                meeting_link: link, 
+                assigned_role: type // تخزين النوع في حقل التصنيف لتصنيفها (free, paid, practice)
+            }]);
+
+            if (error) {
+                alert('خطأ أثناء النشر: ' + error.message);
+            } else {
+                document.getElementById('addCourseForm').reset();
+                loadCourses();
+                alert('تم نشر العنصر بنجاح في المنصة!');
+            }
         }
 
         async function handlePromoteUser(e, role) {
             e.preventDefault();
-            const email = document.getElementById(role === 'teacher' ? 'teacherEmailInput' : 'adminEmailInput').value;
-            const { data } = await supabaseClient.from('profiles').update({ role: role }).eq('email', email).select();
-            if (!data || data.length === 0) alert('الإيميل غير موجود!');
-            else { alert('تمت الترقية بنجاح!'); e.target.reset(); }
+            const inputId = role === 'teacher' ? 'teacherEmailInput' : 'adminEmailInput';
+            const email = document.getElementById(inputId).value;
+            
+            const { data, error } = await supabaseClient.from('profiles').update({ role: role }).eq('email', email).select();
+            if (error || !data || data.length === 0) {
+                alert('لم يتم العثور على مستخدم بهذا البريد الإلكتروني!');
+            } else {
+                alert(`تمت ترقية الحساب إلى (${role === 'admin' ? 'أونر / Admin' : 'معلم'}) بنجاح!`);
+                e.target.reset();
+            }
         }
 
         async function handleLogout() {
