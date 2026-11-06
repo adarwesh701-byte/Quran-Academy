@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">أكاديمية الإتقان العالمية | اللغة العربية، الإجازات، وتفسير السور بالذكاء الاصطناعي</title>
-    <meta name="description" content="منصة متخصصة في شرح اللغة العربية، الإجازات، المعلمين المؤهلين، وتفسير السور القرآنية بالصور المرئية والذكاء الاصطناعي.">
+    <title id="pageTitle">أكاديمية الإتقان العالمية | المقامات الصوتية، التجويد، الإجازات، التفسير وعلوم الإسلام</title>
+    <meta name="description" content="منصة متخصصة في تدريس المقامات الصوتية لتجميل الصوت في القرآن الكريم بالتفصيل، التجويد، حفظ القرآن الكريم مع إجازة متصلة السند بالنبي صلى الله عليه وسلم، تفسير القرآن، وعلوم الإسلام.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,16 +23,16 @@
                     أ
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-emerald-400" id="headerTitle">أكاديمية الإتقان العالمية</h1>
-                    <p class="text-xs text-slate-400" id="headerSub">Arabic, Ijaza & AI Quran Tafseer</p>
+                    <h1 class="text-lg md:text-xl font-bold text-emerald-400" id="headerTitle">أكاديمية الإتقان العالمية</h1>
+                    <p class="text-xs text-slate-400" id="headerSub">قرآن • تجويد • مقامات • إجازات • تفسير • علوم الإسلام</p>
                 </div>
             </div>
             
             <div id="authHeaderButtons" class="flex items-center space-x-3 space-x-reverse">
-                <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
+                <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer" id="btnLoginText">
                     تسجيل الدخول
                 </button>
-                <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md cursor-pointer">
+                <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md cursor-pointer" id="btnRegText">
                     حساب جديد
                 </button>
             </div>
@@ -44,19 +44,25 @@
         
         <!-- Guest Landing View -->
         <div id="guestView" class="space-y-12">
-            <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-10 text-center shadow-2xl relative overflow-hidden">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-8 md:p-10 text-center shadow-2xl relative overflow-hidden">
                 <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
-                    شرح اللغة العربية + الإجازات المتصلة + تفسير السور بصور الذكاء الاصطناعي (AI)
+                    منصة تعليمية متكاملة لعلوم القرآن والإسلام
                 </span>
-                <h2 class="text-3xl md:text-5xl font-extrabold text-white mt-6 mb-4">
-                    تعلم القرآن وتفسيره بصرياً مع نخبة المعلمين
+                
+                <!-- Main Detailed Title -->
+                <h2 class="text-2xl md:text-4xl font-extrabold text-white mt-6 mb-6 leading-relaxed">
+                    مقامات صوتية لتجميل الصوت في القرآن بالتفصيل <br/>
+                    <span class="text-emerald-400">• التجويد •</span> <br/>
+                    حفظ القرآن مع إجازة متصلة السند بالنبي صلى الله عليه وسلم <br/>
+                    <span class="text-amber-400">• تفسير القرآن • علوم الإسلام •</span>
                 </h2>
-                <p class="text-slate-400 text-sm md:text-base max-w-2xl mx-auto mb-8">
-                    منصة تجمع بين أصالة الإجازات القرآنية، قواعد اللغة العربية، والتفسير المعزز بتصاميم الذكاء الاصطناعي لتقريب المعاني وتثبيتها.
+
+                <p class="text-slate-400 text-sm md:text-base max-w-3xl mx-auto mb-8">
+                    نظام تعليمي متطور يجمع بين أحكام التلاوة والتجويد، دراسة المقامات الصوتية بالتفصيل لتحسين الصوت، نيل الإجازات المسندة إلى النبي ﷺ، وتدارس التفسير وعلوم الإسلام مع نخبة من المعلمين المعتمدين.
                 </p>
                 <div class="flex justify-center gap-4">
                     <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-2xl transition shadow-lg cursor-pointer">
-                        ابدأ الآن
+                        ابدأ رحلتك المباركة
                     </button>
                 </div>
             </div>
@@ -64,17 +70,17 @@
             <!-- Public AI Tafseer & Visuals Section -->
             <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fa-solid fa-image text-emerald-400 ml-2"></i> تفسير السور بصور الذكاء الاصطناعي (AI Tafseer Gallery)
+                    <i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)
                 </h3>
                 <div id="publicAITafseerList" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <p class="text-slate-400 text-sm">جاري تحميل مواد التفسير البصري...</p>
+                    <p class="text-slate-400 text-sm">جاري تحميل مواد التفسير...</p>
                 </div>
             </div>
 
             <!-- Public Teachers Section -->
             <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> نخبة المعلمين المؤهلين والشهادات
+                    <i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> نخبة المعلمين المؤهلين للإجازات والمقامات
                 </h3>
                 <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <p class="text-slate-400 text-sm">جاري تحميل قائمة المعلمين...</p>
@@ -102,23 +108,23 @@
             <!-- Admin & Teacher AI Tafseer Upload Panel -->
             <div id="aiTafseerUploadPanel" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-4">
                 <h5 class="font-bold text-emerald-400 text-lg flex items-center">
-                    <i class="fa-solid fa-wand-magic-sparkles ml-2"></i> رفع ونشر تفسير السور بصور الذكاء الاصطناعي (AI Material)
+                    <i class="fa-solid fa-wand-magic-sparkles ml-2"></i> نشر مواد التفسير بصور الذكاء الاصطناعي
                 </h5>
                 <form onsubmit="handleUploadAITafseer(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">اسم السورة (مثلاً: سورة الكهف)</label>
-                        <input type="text" id="surahName" placeholder="سورة..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+                        <label class="block text-xs text-slate-400 mb-1">اسم السورة / الدرس</label>
+                        <input type="text" id="surahName" placeholder="مثال: سورة الكهف" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط الصورة (AI Generated Image URL)</label>
-                        <input type="url" id="surahImg" placeholder="https://images.unsplash.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+                        <label class="block text-xs text-slate-400 mb-1">رابط الصورة الإيضاحية (AI Image URL)</label>
+                        <input type="url" id="surahImg" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">ملخص التفسير المستفاد</label>
-                        <input type="text" id="surahDesc" placeholder="شرح مبسط للمعاني..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+                        <label class="block text-xs text-slate-400 mb-1">شرح ملخص للتفسير</label>
+                        <input type="text" id="surahDesc" placeholder="تفسير معاني الآيات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div class="md:col-span-3">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition">نشر مادة التفسير في المنصة</button>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">نشر مادة التفسير</button>
                     </div>
                 </form>
             </div>
@@ -126,31 +132,31 @@
             <!-- Teacher Profile Settings -->
             <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-4">
                 <h5 class="font-bold text-amber-400 text-lg flex items-center">
-                    <i class="fa-solid id-card ml-2"></i> ملفي الشخصي كمعلم (الشهادات، الشرح، والمواعيد)
+                    <i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم (الشهادات، الإجازات، المواعيد)
                 </h5>
                 <form onsubmit="handleSaveTeacherProfile(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">الشهادات والإجازات</label>
-                        <input type="text" id="tCerts" placeholder="إجازة في القراءات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+                        <label class="block text-xs text-slate-400 mb-1">الشهادات وسند الإجازة</label>
+                        <input type="text" id="tCerts" placeholder="إجازة بسند متصل للنبي ﷺ في قراءة عاصم..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط نموذج الشرح</label>
+                        <label class="block text-xs text-slate-400 mb-1">رابط نموذج التلاوة/المقامات</label>
                         <input type="url" id="tSample" placeholder="https://youtube.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-xs text-slate-400 mb-1">نظام التدريس لكل سن</label>
-                        <textarea id="tSystem" rows="2" placeholder="أشرح للأطفال والكبار..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required></textarea>
+                        <label class="block text-xs text-slate-400 mb-1">منهج التدريس والمقامات لكل سن</label>
+                        <textarea id="tSystem" rows="2" placeholder="تدريب على المقامات (البياتي، الرست، الحجاز) + التجويد والتسميع..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required></textarea>
                     </div>
                     <div class="md:col-span-2">
-                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition">حفظ الملف</button>
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">حفظ الملف</button>
                     </div>
                 </form>
 
                 <div class="border-t border-slate-700 pt-4 mt-4">
-                    <h6 class="font-bold text-emerald-400 text-sm mb-2">إضافة موعد متاح (لمنع التعارض الأوڤر لاب)</h6>
+                    <h6 class="font-bold text-emerald-400 text-sm mb-2">إضافة موعد متاح بالجدول (لمنع التعارض Overlap)</h6>
                     <form onsubmit="handleAddSlot(event)" class="flex gap-2">
                         <input type="datetime-local" id="slotTime" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl">إضافة الموعد</button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">إضافة الموعد</button>
                     </form>
                 </div>
             </div>
@@ -158,7 +164,7 @@
             <!-- Admin Control Panel -->
             <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
                 <h5 class="font-bold text-emerald-400 text-lg flex items-center">
-                    <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر (ربط الطلاب بالمعلمين)
+                    <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر (إدارة المعلمين وتوزيع الطلاب)
                 </h5>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
@@ -167,7 +173,7 @@
                         <form onsubmit="handleAssignStudent(event)" class="space-y-3">
                             <input type="email" id="assignStudentEmail" placeholder="إيميل الطالب" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                             <input type="email" id="assignTeacherEmail" placeholder="إيميل المعلم المخصص له" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl">ربط الطالب بالمعلم</button>
+                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer">ربط الطالب بالمعلم</button>
                         </form>
                     </div>
                     <div>
@@ -178,7 +184,7 @@
                                 <option value="teacher">معلم معتمد</option>
                                 <option value="admin">مالك (أونر)</option>
                             </select>
-                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-xl">تنفيذ الترقية</button>
+                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-xl cursor-pointer">تنفيذ الترقية</button>
                         </form>
                     </div>
                 </div>
@@ -194,24 +200,24 @@
         </div>
     </main>
 
-    <!-- AI Chatbot -->
+    <!-- AI Chatbot (المساعد الذكي الفعال) -->
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-start">
         <div id="aiChatWindow" class="hidden w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
             <div class="bg-emerald-600 px-4 py-3 flex justify-between items-center text-white">
-                <span class="font-bold text-sm"><i class="fa-solid fa-robot ml-2"></i> المساعد الذكي للأكاديمية</span>
-                <button onclick="toggleAIChat()" class="cursor-pointer text-white"><i class="fa-solid fa-xmark"></i></button>
+                <span class="font-bold text-sm flex items-center"><i class="fa-solid fa-robot ml-2"></i> المساعد الذكي للأكاديمية</span>
+                <button onclick="toggleAIChat()" class="cursor-pointer text-white hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="aiChatMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/50">
                 <div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">
-                    أهلاً بك! أنا مساعد الأكاديمية. كيف يمكنني مساعدتك في تعلم القرآن والتفسير البصري؟
+                    أهلاً بك! أنا مساعد الأكاديمية الذكي. كيف يمكنني مساعدتك اليوم في المقامات الصوتية، التجويد، الإجازات، التفسير أو علوم الإسلام؟
                 </div>
             </div>
             <div class="p-2 bg-slate-800 border-t border-slate-700 flex gap-2">
-                <input type="text" id="aiUserInput" placeholder="اكتب سؤالك..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" onkeypress="if(event.key==='Enter') sendAIMessage()">
-                <button onclick="sendAIMessage()" class="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-paper-plane"></i></button>
+                <input type="text" id="aiUserInput" placeholder="اكتب سؤالك هنا..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" onkeypress="if(event.key==='Enter') sendAIMessage()">
+                <button onclick="sendAIMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
-        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer">
+        <button onclick="toggleAIChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg cursor-pointer transition transform hover:scale-105" title="الذكاء الاصطناعي للأكاديمية">
             <i class="fa-solid fa-robot"></i>
         </button>
     </div>
@@ -234,6 +240,8 @@
                         <option value="ar">العربية</option>
                         <option value="en">English</option>
                         <option value="de">Deutsch</option>
+                        <option value="fr">Français</option>
+                        <option value="it">Italiano</option>
                     </select>
                 </div>
 
@@ -243,6 +251,7 @@
                         <select id="countryCode" dir="ltr" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-emerald-400 font-bold max-w-[100px]">
                             <option value="+20">+20</option>
                             <option value="+966">+966</option>
+                            <option value="+971">+971</option>
                         </select>
                         <input type="tel" id="authPhone" dir="rtl" placeholder="رقم الهاتف..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
                     </div>
@@ -286,17 +295,30 @@
             }
         }
         function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-        function toggleAIChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
+        
+        function toggleAIChat() { 
+            document.getElementById('aiChatWindow').classList.toggle('hidden'); 
+        }
 
         function sendAIMessage() {
             const input = document.getElementById('aiUserInput');
             const msg = input.value.trim();
             if (!msg) return;
+
             const chatBox = document.getElementById('aiChatMessages');
             chatBox.innerHTML += `<div class="bg-emerald-600/30 p-2 rounded-xl border border-emerald-500/30 max-w-[85%] mr-auto text-white">${msg}</div>`;
             input.value = '';
+
             setTimeout(() => {
-                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">أهلاً بك! يتميز موقعنا بتفسير السور بصور الذكاء الاصطناعي لتقريب معاني القرآن الكريم وتيسيرها.</div>`;
+                let reply = "أهلاً بك في أكاديمية الإتقان! نقدم تعليم المقامات الصوتية بالتفصيل، التجويد، والحفظ بالسند المتصل للنبي ﷺ.";
+                if (msg.includes("مقام") || msg.includes("بياتي") || msg.includes("رست") || msg.includes("صوت")) {
+                    reply = "ندرس المقامات الصوتية الأساسية (البياتي، الرست، النهاوند، الحجاز، العجم، السيكاه، الصبا) لتجميل الصوت في تلاوة القرآن الكريم بالتفصيل.";
+                } else if (msg.includes("إجازة") || msg.includes("سند") || msg.includes("حفظ")) {
+                    reply = "نوفر برنامج حفظ القرآن الكريم ومنح الإجازات بسند متصل متواتر إلى الرسول صلى الله عليه وسلم على يد شيوخ معتمدين.";
+                } else if (msg.includes("تفسير") || msg.includes("علوم")) {
+                    reply = "لدينا دروس متخصصة في تفسير القرآن وعلوم الإسلام واللغة العربية يناسب جميع الأعمار والمستويات.";
+                }
+                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }, 500);
         }
@@ -370,11 +392,7 @@
         async function loadPublicData() {
             if (!supabaseClient) return;
             
-            // Load AI Tafseer Material
             const tafseerContainer = document.getElementById('publicAITafseerList');
-            const { data: tafseerData } = await supabaseClient.from('lessons').select('*').eq('assigned_role', 'practice'); // نستغل جدول lessons لتخزين التفسير مؤقتاً أو جدول مخصص
-            
-            // Load Teachers
             const teachersContainer = document.getElementById('publicTeachersList');
             const { data: teachersData } = await supabaseClient.from('profiles').select('*').eq('role', 'teacher');
 
@@ -382,16 +400,15 @@
                 teachersContainer.innerHTML = teachersData.map(t => `
                     <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3 shadow-xl">
                         <h4 class="font-bold text-white text-lg">${t.full_name}</h4>
-                        <p class="text-xs text-slate-400"><strong>الشهادات:</strong> ${t.certificates || 'غير متوفر'}</p>
-                        <p class="text-xs text-slate-400"><strong>نظام التدريس:</strong> ${t.teaching_system || 'غير متوفر'}</p>
-                        ${t.sample_video ? `<a href="${t.sample_video}" target="_blank" class="inline-block bg-emerald-600/20 text-emerald-400 text-xs px-3 py-1.5 rounded-xl font-bold">مشاهدة نموذج الشرح</a>` : ''}
+                        <p class="text-xs text-slate-400"><strong>الشهادات والإجازات:</strong> ${t.certificates || 'غير متوفر'}</p>
+                        <p class="text-xs text-slate-400"><strong>منهج تدريس المقامات والتجويد:</strong> ${t.teaching_system || 'غير متوفر'}</p>
+                        ${t.sample_video ? `<a href="${t.sample_video}" target="_blank" class="inline-block bg-emerald-600/20 text-emerald-400 text-xs px-3 py-1.5 rounded-xl font-bold">مشاهدة نموذج التلاوة والشرح</a>` : ''}
                     </div>
                 `).join('');
             } else {
                 teachersContainer.innerHTML = `<p class="text-slate-400 text-sm">لا يوجد معلمون مسجلون حالياً.</p>`;
             }
 
-            // عرض صور التفسير بالذكاء الاصطناعي (يمكن حفظها في جدول lessons أو استعراضها مباشرة)
             tafseerContainer.innerHTML = `
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
                     <img src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
@@ -421,8 +438,6 @@
             e.preventDefault();
             const title = document.getElementById('surahName').value;
             const img = document.getElementById('surahImg').value;
-            const desc = document.getElementById('surahDesc').value;
-
             const { error } = await supabaseClient.from('lessons').insert([{ title: title, meeting_link: img, assigned_role: 'practice' }]);
             if (error) alert('خطأ: ' + error.message);
             else { alert('تم نشر مادة التفسير البصري بنجاح!'); e.target.reset(); loadPublicData(); }
@@ -445,9 +460,9 @@
             const slotTime = document.getElementById('slotTime').value;
             const { data: { user } } = await supabaseClient.auth.getUser();
 
-            const { error } = await supabaseClient.from('lessons').insert([{ title: 'موعد حجز حصة', meeting_link: '#', assigned_role: 'paid', teacher_id: user.id, lesson_time: slotTime }]);
+            const { error } = await supabaseClient.from('lessons').insert([{ title: 'حصة تلاوة/مقامات', meeting_link: '#', assigned_role: 'paid', teacher_id: user.id, lesson_time: slotTime }]);
             if (error) alert('خطأ: ' + error.message);
-            else { alert('تمت إضافة الموعد بدون أي تضارب!'); }
+            else { alert('تمت إضافة الموعد بالجدول بنجاح!'); }
         }
 
         async function handleAssignStudent(e) {
@@ -486,7 +501,7 @@
             container.innerHTML = data.map(s => `
                 <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
                     <span>موعد: ${s.lesson_time || 'متاح'}</span>
-                    <button onclick="alert('تم حجز الموعد بنجاح!')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">حجز الموعد</button>
+                    <button onclick="alert('تم حجز الموعد بنجاح!')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold cursor-pointer">حجز الموعد</button>
                 </div>
             `).join('');
         }
