@@ -82,12 +82,12 @@
                 <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
-            <!-- Public Simple Payment Methods for Students -->
+            <!-- Public Payment Methods Section -->
             <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 space-y-4 shadow-xl">
                 <h4 class="text-lg font-bold text-emerald-400 flex items-center" id="t-paymentTitle">
-                    <i class="fa-solid fa-credit-card ml-2"></i> طرق الدفع المتاحة للطلاب
+                    <i class="fa-solid fa-credit-card ml-2"></i> طرق ووسائل الدفع المتاحة للطلاب
                 </h4>
-                <div id="publicPaymentMethodsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs text-slate-300">
+                <div id="publicPaymentMethodsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs text-slate-300">
                     <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
                         <div class="font-bold text-emerald-400 mb-1">انستا باي / InstaPay</div>
                         <div class="text-slate-400 font-mono text-[11px]">تحويل فوري بدون عمولة داخل مصر</div>
@@ -97,8 +97,12 @@
                         <div class="text-slate-400 font-mono text-[11px]">تحويل سهل ومحلي متاح دائماً</div>
                     </div>
                     <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
-                        <div class="font-bold text-emerald-400 mb-1">PayPal / تحويل دولي</div>
+                        <div class="font-bold text-emerald-400 mb-1">PayPal / دولي</div>
                         <div class="text-slate-400 font-mono text-[11px]">للطلاب من خارج مصر</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                        <div class="font-bold text-emerald-400 mb-1">Stripe / European SEPA</div>
+                        <div class="text-slate-400 font-mono text-[11px]">للتحويلات البنكية الأوروبية والدولية</div>
                     </div>
                 </div>
             </div>
@@ -121,11 +125,11 @@
                 </div>
             </div>
 
-            <!-- OWNER FULL DASHBOARD -->
+            <!-- OWNER FULL DASHBOARD (Private Admin Only) -->
             <div id="adminControls" class="hidden space-y-6">
                 <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
                     <h5 class="font-bold text-emerald-400 text-xl flex items-center" id="t-adminTitle">
-                        <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم المالك الخاصة (تتضمن الحسابات المجانية في إيطاليا ومصر)
+                        <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم المالك الخاصة (إدارة الحسابات ووسائل الدفع المجانية)
                     </h5>
 
                     <!-- Financial, Commission & Teacher Statistics -->
@@ -188,22 +192,15 @@
 
                     <hr class="border-slate-700"/>
 
-                    <!-- Free / Zero-Cost Accounts Management (Italy & Egypt) -->
+                    <!-- Admin Payment Gateways Manager -->
                     <div class="space-y-4">
-                        <h6 class="font-bold text-emerald-400 text-sm">إدارة حسابات الاستقبال المجانية الخاصة بك (لا تكلفة تشغيلية عليك)</h6>
-                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3 text-xs text-slate-300">
-                            <p class="text-amber-400">💡 هذه الحسابات خاصة بك وحدك (إيطاليا ومصر) لاستقبال أرباح الأكاديمية بدون رسوم شهرية:</p>
-                            <div id="adminFreeAccountsList" class="space-y-2">
-                                <div class="p-2.5 bg-slate-800 rounded-lg border border-slate-700 flex justify-between items-center">
-                                    <span>🇮🇹 <strong>حساب إيطاليا (SEPA / Wise):</strong> مجاني تماماً باسم والدك لاستقبال تحويلات أوروبا</span>
-                                    <span class="text-emerald-400 font-bold">بتكلفة 0€ شهرياً</span>
-                                </div>
-                                <div class="p-2.5 bg-slate-800 rounded-lg border border-slate-700 flex justify-between items-center">
-                                    <span>🇪🇬 <strong>حساب مصر (InstaPay & Vodafone Cash):</strong> مجاني تماماً لاستقبال الطلاب بمصر</span>
-                                    <span class="text-emerald-400 font-bold">بتكلفة 0 ج.م</span>
-                                </div>
-                            </div>
-                        </div>
+                        <h6 class="font-bold text-emerald-400 text-sm">إدارة وتعديل وسائل استقبال الأموال الخاصة بك (مجانية بالكامل)</h6>
+                        <form onsubmit="handleAddPaymentMethod(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text" id="payMethodName" placeholder="اسم الوسيلة (مثال: حساب والدي في إيطاليا / InstaPay)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="text" id="payMethodDetails" placeholder="التفاصيل / IBAN / الرقم..." required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl" id="t-addPaymentBtn">إضافة وسيلة استقبال</button>
+                        </form>
+                        <div id="adminPaymentMethodsList" class="space-y-2"></div>
                     </div>
                 </div>
             </div>
@@ -259,7 +256,7 @@
             </div>
             <div id="aiChatMessages" class="p-3 h-72 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/60">
                 <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]" id="t-aiWelcome">
-                    أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات.
+                    أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات، وطرق الدفع.
                 </div>
             </div>
             <div class="p-2 bg-slate-800 border-t border-slate-700 flex gap-2">
@@ -324,6 +321,13 @@
 
         let academyCommission = 20;
 
+        let paymentMethods = [
+            { id: 1, name: "InstaPay / انستا باي", details: "user@instapay (مصر - بدون عمولة)" },
+            { id: 2, name: "Vodafone Cash / فودافون كاش", details: "010xxxxxxxx (مصر - فوري)" },
+            { id: 3, name: "PayPal / باي بال", details: "payments@itqan-academy.com (دولي)" },
+            { id: 4, name: "Italy / Europe SEPA Bank", details: "حساب إيطاليا المجاني باسم والدك (لأوروبا)" }
+        ];
+
         const dictionary = {
             ar: {
                 navTitle: "أكاديمية الإتقان العالمية",
@@ -360,7 +364,7 @@
                 optAdmin: "مالك المنصة (Owner / Admin)",
                 optStudent: "طالب",
                 promoteBtn: "تنفيذ الترقية",
-                paymentTitle: "طرق الدفع المتاحة للطلاب",
+                paymentTitle: "طرق ووسائل الدفع المتاحة للطلاب",
                 studentViewTitle: "المواعيد المتاحة لدى المعلم المعين لك",
                 loadingSlots: "جاري جلب المواعيد...",
                 aiTitle: "المساعد والتواصل المباشر",
@@ -506,6 +510,7 @@
             document.getElementById('authPhone').placeholder = d.phonePlaceholder;
 
             renderTafseerCards(d.tafseerCards);
+            renderPaymentMethods();
         }
 
         function renderTafseerCards(cards) {
@@ -524,6 +529,43 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function renderPaymentMethods() {
+            const pubList = document.getElementById('publicPaymentMethodsList');
+            const admList = document.getElementById('adminPaymentMethodsList');
+            
+            if (pubList) {
+                pubList.innerHTML = paymentMethods.map(m => `
+                    <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                        <div class="font-bold text-emerald-400 mb-1">${m.name}</div>
+                        <div class="text-slate-400 font-mono text-[11px]">${m.details}</div>
+                    </div>
+                `).join('');
+            }
+
+            if (admList) {
+                admList.innerHTML = paymentMethods.map(m => `
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                        <span><strong>${m.name}:</strong> ${m.details}</span>
+                        <button onclick="removePaymentMethod(${m.id})" class="text-rose-400 hover:text-rose-300 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function handleAddPaymentMethod(e) {
+            e.preventDefault();
+            const name = document.getElementById('payMethodName').value;
+            const details = document.getElementById('payMethodDetails').value;
+            paymentMethods.push({ id: Date.now(), name, details });
+            renderPaymentMethods();
+            e.target.reset();
+        }
+
+        function removePaymentMethod(id) {
+            paymentMethods = paymentMethods.filter(m => m.id !== id);
+            renderPaymentMethods();
         }
 
         function updateAcademyCommission() {
@@ -565,7 +607,7 @@
             setTimeout(() => {
                 const lang = document.getElementById('siteLangSelect').value;
                 let reply = lang === 'ar' 
-                    ? "مرحباً بك! تم استلاستلام رسالتك وسيتواصل معك الفريق الإداري مباشرة." 
+                    ? "مرحباً بك! تم استلام رسالتك وسيتواصل معك الفريق الإداري مباشرة لتأكيد الحجز وطريقة الدفع." 
                     : "Welcome! Your message has been received and our team will reply directly.";
                 chatBox.innerHTML += `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -748,6 +790,7 @@
         
         switchSiteLanguage('ar');
         checkUser();
+        renderPaymentMethods();
     </script>
 </body>
 </html>
