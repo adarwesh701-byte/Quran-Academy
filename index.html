@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أكاديمية الإتقان العالمية | المقامات الصوتية، التجويد، الإجازات، التفسير وعلوم الإسلام</title>
-    <meta name="description" content="منصة متخصصة في تدريس المقامات الصوتية لتجميل الصوت في القرآن الكريم بالتفصيل، التجويد، حفظ القرآن الكريم مع إجازة متصلة السند بالنبي صلى الله عليه وسلم، تفسير القرآن، وعلوم الإسلام.">
+    <title>أكاديمية الإتقان العالمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -29,7 +28,6 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <!-- Full Language Switcher -->
                 <select id="siteLangSelect" onchange="switchSiteLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
                     <option value="ar">العربية (Arabic)</option>
                     <option value="en">English</option>
@@ -106,7 +104,6 @@
                 </div>
             </div>
 
-            <!-- Admin & Teacher AI Tafseer Upload Panel -->
             <div id="aiTafseerUploadPanel" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-4">
                 <h5 class="font-bold text-emerald-400 text-lg flex items-center" id="t-uploadTitle">
                     <i class="fa-solid fa-wand-magic-sparkles ml-2"></i> نشر مواد التفسير بصور الذكاء الاصطناعي
@@ -130,7 +127,6 @@
                 </form>
             </div>
 
-            <!-- Teacher Profile Settings -->
             <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-4">
                 <h5 class="font-bold text-amber-400 text-lg flex items-center" id="t-teacherProfileTitle">
                     <i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم
@@ -162,7 +158,6 @@
                 </div>
             </div>
 
-            <!-- Admin Control Panel -->
             <div id="adminControls" class="hidden bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
                 <h5 class="font-bold text-emerald-400 text-lg flex items-center" id="t-adminTitle">
                     <i class="fa-solid fa-gears ml-2"></i> لوحة تحكم الأونر
@@ -191,7 +186,6 @@
                 </div>
             </div>
 
-            <!-- Student View -->
             <div id="studentSection" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
                 <h5 class="font-bold text-emerald-400 text-lg" id="t-studentViewTitle">المواعيد المتاحة لمعلمك المخصص</h5>
                 <div id="studentAvailableSlots" class="space-y-2">
@@ -201,7 +195,7 @@
         </div>
     </main>
 
-    <!-- AI Chatbot (Restored) -->
+    <!-- AI Chatbot -->
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-start">
         <div id="aiChatWindow" class="hidden w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2">
             <div class="bg-emerald-600 px-4 py-3 flex justify-between items-center text-white">
@@ -318,11 +312,20 @@
                 loadingSlots: "جاري جلب المواعيد...",
                 aiTitle: "المساعد الذكي للأكاديمية",
                 aiWelcome: "أهلاً بك! أنا مساعد الأكاديمية الذكي. اسألني عن المقامات، التجويد، الإجازات، أو التفسير!",
+                modalLoginTitle: "تسجيل الدخول",
+                modalRegTitle: "إنشاء حساب جديد",
                 modalName: "الاسم بالكامل",
                 modalLang: "اللغة المفضلة",
                 modalPhone: "رقم الهاتف / الواتساب",
                 modalEmail: "البريد الإلكتروني",
-                modalPass: "كلمة السر"
+                modalPass: "كلمة السر",
+                modalLoginBtn: "دخول",
+                modalRegBtn: "إنشاء الحساب",
+                tafseerCards: [
+                    { title: "سورة النور (آية النور والمعاني البصرية)", desc: "تفسير وتأملات بصرية مولدة بالذكاء الاصطناعي لتوضيح معاني الآيات الكريمة وتقريبها للأذهان." },
+                    { title: "سورة الكهف (قصة أصحاب الكهف)", desc: "استنطاق العبر والقصص القرآنية عبر تصاميم بصرية تحاكي الواقع وتوضح تفاصيل السورة." },
+                    { title: "سورة الرحمن (آلاء الله وبديع خلق السماوات)", desc: "تجسيد بصري لآيات النعم الكونية في سورة الرحمن باستخدام أدوات الذكاء الاصطناعي المتطورة." }
+                ]
             },
             en: {
                 navTitle: "Itqan Global Academy",
@@ -361,11 +364,20 @@
                 loadingSlots: "Fetching available slots...",
                 aiTitle: "Academy AI Assistant",
                 aiWelcome: "Welcome! I am the Academy AI assistant. Ask me about Maqamat, Tajweed, Ijaza, or Tafseer!",
+                modalLoginTitle: "Login",
+                modalRegTitle: "Create New Account",
                 modalName: "Full Name",
                 modalLang: "Preferred Language",
                 modalPhone: "Phone / WhatsApp",
                 modalEmail: "Email Address",
-                modalPass: "Password"
+                modalPass: "Password",
+                modalLoginBtn: "Login",
+                modalRegBtn: "Register",
+                tafseerCards: [
+                    { title: "Surah An-Nur (The Verse of Light & Visual Meanings)", desc: "AI-generated visual reflections clarifying the meanings of noble verses and bringing them to mind." },
+                    { title: "Surah Al-Kahf (The Story of the Cave)", desc: "Extracting lessons and Quranic stories through realistic visual designs illustrating the details of the Surah." },
+                    { title: "Surah Ar-Rahman (Blessings of Allah & Creation)", desc: "Visual embodiment of cosmic blessing verses in Surah Ar-Rahman using advanced AI tools." }
+                ]
             }
         };
 
@@ -417,17 +429,46 @@
             document.getElementById('t-loadingSlots').innerText = d.loadingSlots;
             document.getElementById('t-aiTitle').innerText = d.aiTitle;
             document.getElementById('t-aiWelcome').innerText = d.aiWelcome;
+            
+            // Modal translations
             document.getElementById('t-modalName').innerText = d.modalName;
             document.getElementById('t-modalLang').innerText = d.modalLang;
             document.getElementById('t-modalPhone').innerText = d.modalPhone;
             document.getElementById('t-modalEmail').innerText = d.modalEmail;
             document.getElementById('t-modalPass').innerText = d.modalPass;
+
+            // Re-render Tafseer cards dynamically based on language
+            renderTafseerCards(d.tafseerCards);
+        }
+
+        function renderTafseerCards(cards) {
+            const tafseerContainer = document.getElementById('publicAITafseerList');
+            const images = [
+                "https://images.unsplash.com/photo-1609599006353-e629aaabfeae?q=80&w=600",
+                "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600",
+                "https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=600"
+            ];
+            tafseerContainer.innerHTML = cards.map((c, index) => `
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                    <img src="${images[index]}" class="w-full h-40 object-cover" alt="AI Tafseer">
+                    <div class="p-4 space-y-2">
+                        <h4 class="font-bold text-emerald-400 text-base">${c.title}</h4>
+                        <p class="text-xs text-slate-300">${c.desc}</p>
+                    </div>
+                </div>
+            `).join('');
         }
 
         let currentMode = 'login';
         function showAuthModal(mode) {
             currentMode = mode;
+            const lang = document.getElementById('siteLangSelect').value;
+            const d = dictionary[lang] || dictionary['ar'];
+            
             document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModalTitle').innerText = mode === 'register' ? d.modalRegTitle : d.modalLoginTitle;
+            document.getElementById('authSubmitBtn').innerText = mode === 'register' ? d.modalRegBtn : d.modalLoginBtn;
+
             if (mode === 'register') {
                 document.getElementById('fullNameGroup').classList.remove('hidden');
                 document.getElementById('langGroup').classList.remove('hidden');
@@ -439,28 +480,17 @@
             }
         }
         function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-        
-        function toggleAIChat() { 
-            document.getElementById('aiChatWindow').classList.toggle('hidden'); 
-        }
+        function toggleAIChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
 
         function sendAIMessage() {
             const input = document.getElementById('aiUserInput');
             const msg = input.value.trim();
             if (!msg) return;
-
             const chatBox = document.getElementById('aiChatMessages');
             chatBox.innerHTML += `<div class="bg-emerald-600/30 p-2 rounded-xl border border-emerald-500/30 max-w-[85%] mr-auto text-white">${msg}</div>`;
             input.value = '';
-
             setTimeout(() => {
-                let reply = "أهلاً بك في أكاديمية الإتقان! نقدم تعليم المقامات الصوتية بالتفصيل، التجويد، والحفظ بالسند المتصل للنبي ﷺ.";
-                if (msg.includes("مقام") || msg.includes("بياتي") || msg.includes("رست") || msg.includes("صوت") || msg.toLowerCase().includes("maqamat")) {
-                    reply = "ندرس المقامات الصوتية الأساسية (البياتي، الرست، النهاوند، الحجاز، العجم، السيكاه، الصبا) لتجميل الصوت في تلاوة القرآن الكريم بالتفصيل.";
-                } else if (msg.includes("إجازة") || msg.includes("سند") || msg.includes("حفظ") || msg.toLowerCase().includes("ijaza")) {
-                    reply = "نوفر برنامج حفظ القرآن الكريم ومنح الإجازات بسند متصل متواتر إلى الرسول صلى الله عليه وسلم على يد شيوخ معتمدين.";
-                }
-                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
+                chatBox.innerHTML += `<div class="bg-slate-800 p-2 rounded-xl border border-slate-700 max-w-[85%]">أهلاً بك! أنا مساعد الأكاديمية الذكي.</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }, 500);
         }
@@ -531,7 +561,6 @@
 
         async function loadPublicData() {
             if (!supabaseClient) return;
-            const tafseerContainer = document.getElementById('publicAITafseerList');
             const teachersContainer = document.getElementById('publicTeachersList');
             const { data: teachersData } = await supabaseClient.from('profiles').select('*').eq('role', 'teacher');
 
@@ -547,39 +576,15 @@
             } else {
                 teachersContainer.innerHTML = `<p class="text-slate-400 text-sm">لا يوجد معلمون مسجلون حالياً.</p>`;
             }
-
-            tafseerContainer.innerHTML = `
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-                    <img src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
-                    <div class="p-4 space-y-2">
-                        <h4 class="font-bold text-emerald-400 text-base">سورة النور (آية النور والمعاني البصرية)</h4>
-                        <p class="text-xs text-slate-300">تفسير وتأملات بصرية مولدة بالذكاء الاصطناعي لتوضيح معاني الآيات الكريمة وتقريبها للأذهان.</p>
-                    </div>
-                </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
-                    <div class="p-4 space-y-2">
-                        <h4 class="font-bold text-emerald-400 text-base">سورة الكهف (قصة أصحاب الكهف)</h4>
-                        <p class="text-xs text-slate-300">استنطاق العبر والقصص القرآنية عبر تصاميم بصرية تحاكي الواقع وتوضح تفاصيل السورة.</p>
-                    </div>
-                </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-                    <img src="https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=600" class="w-full h-40 object-cover" alt="AI Tafseer">
-                    <div class="p-4 space-y-2">
-                        <h4 class="font-bold text-emerald-400 text-base">سورة الرحمن (آلاء الله وبديع خلق السماوات)</h4>
-                        <p class="text-xs text-slate-300">تجسيد بصري لآيات النعم الكونية في سورة الرحمن باستخدام أدوات الذكاء الاصطناعي المتطورة.</p>
-                    </div>
-                </div>
-            `;
         }
 
         async function handleUploadAITafseer(e) {
             e.preventDefault();
             const title = document.getElementById('surahName').value;
-            const img = document.getElementById('surahImg').value;
+            const img = document.getElementById('surahImg.value') || document.getElementById('surahImg').value;
             const { error } = await supabaseClient.from('lessons').insert([{ title: title, meeting_link: img, assigned_role: 'practice' }]);
             if (error) alert('خطأ: ' + error.message);
-            else { alert('تم نشر مادة التفسير البصري بنجاح!'); e.target.reset(); loadPublicData(); }
+            else { alert('تم نشر مادة التفسير البصري بنجاح!'); e.target.reset(); }
         }
 
         async function handleSaveTeacherProfile(e) {
