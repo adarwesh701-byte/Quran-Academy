@@ -83,12 +83,17 @@
                 <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
-            <!-- Payment Methods Info Section -->
-            <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 space-y-4">
-                <h4 class="text-lg font-bold text-emerald-400 flex items-center" id="t-paymentTitle">
-                    <i class="fa-solid fa-credit-card ml-2"></i> وسائل الدفع المتاحة لجميع الدول
-                </h4>
-                <div id="publicPaymentMethodsList" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-slate-300"></div>
+            <!-- Enhanced Payment Methods Info Section -->
+            <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 space-y-4 shadow-xl">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h4 class="text-lg font-bold text-emerald-400 flex items-center" id="t-paymentTitle">
+                        <i class="fa-solid fa-credit-card ml-2"></i> وسائل الدفع والاستقبال المتاحة حول العالم (أقل عمولة)
+                    </h4>
+                    <span class="text-xs text-amber-400 font-medium bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full" id="t-lowFeeNote">
+                        ⚡ تدعم SEPA, Stripe, Wise, PayPal والدفع المحلي
+                    </span>
+                </div>
+                <div id="publicPaymentMethodsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-xs text-slate-300"></div>
             </div>
         </div>
 
@@ -154,7 +159,7 @@
                     <!-- Assign Student & Role Controls -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                            <h6 class="font-bold text-purple-400 text-sm" id="t-assignTitle">تحديد وتسند الطالب لمعلم محدد</h6>
+                            <h6 class="font-bold text-purple-400 text-sm" id="t-assignTitle">تحديد وتعيين الطالب لمعلم محدد</h6>
                             <form onsubmit="handleAssignStudent(event)" class="space-y-3">
                                 <input type="email" id="assignStudentEmail" placeholder="البريد الإلكتروني للطالب..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                                 <input type="email" id="assignTeacherEmail" placeholder="البريد الإلكتروني للمعلم..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -178,13 +183,14 @@
 
                     <hr class="border-slate-700"/>
 
-                    <!-- Managing Payment Gateway settings -->
+                    <!-- Managing Payment Gateway & Bank Account Settings -->
                     <div class="space-y-4">
-                        <h6 class="font-bold text-emerald-400 text-sm" id="t-managePaymentTitle">إدارة وسائل الاستقبال والدفع المتاحة</h6>
-                        <form onsubmit="handleAddPaymentMethod(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <input type="text" id="payMethodName" placeholder="اسم الوسيلة (مثال: فودافون كاش / PayPal)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="text" id="payMethodDetails" placeholder="تفاصيل المحفظة أو الحساب..." required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl" id="t-addPaymentBtn">إضافة وسيلة دفع</button>
+                        <h6 class="font-bold text-emerald-400 text-sm" id="t-managePaymentTitle">إدارة وإضافة وسائل استقبال الأموال والدفع</h6>
+                        <form onsubmit="handleAddPaymentMethod(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input type="text" id="payMethodName" placeholder="اسم الوسيلة (مثال: Stripe Italy / Wise / فودافون)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="text" id="payMethodDetails" placeholder="تفاصيل الحساب / IBAN / الرقم..." required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="text" id="payMethodFee" placeholder="العمولة المتوقعة (مثال: 0% أو 1.4%)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl" id="t-addPaymentBtn">إضافة/تحديث الوسيلة</button>
                         </form>
                         <div id="adminPaymentMethodsList" class="space-y-2"></div>
                     </div>
@@ -242,7 +248,7 @@
             </div>
             <div id="aiChatMessages" class="p-3 h-72 overflow-y-auto space-y-2 text-xs text-slate-200 bg-slate-900/60">
                 <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]" id="t-aiWelcome">
-                    أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات.
+                    أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات، وطرق الدفع.
                 </div>
             </div>
             <div class="p-2 bg-slate-800 border-t border-slate-700 flex gap-2">
@@ -305,15 +311,20 @@
         let supabaseClient;
         try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error(e); }
 
-        // Local state
-        let academyCommission = 20; // 20%
+        let academyCommission = 20;
+
+        // Expanded Low-Fee Payment Methods (Italy, Europe, Egypt Dollar, Egypt SWIFT, PayPal, Local)
         let paymentMethods = [
-            { id: 1, name: "فودافون كاش / Vodafone Cash", details: "010xxxxxxxx" },
-            { id: 2, name: "InstaPay", details: "user@instapay" },
-            { id: 3, name: "PayPal", details: "payments@itqan-academy.com" }
+            { id: 1, name: "Stripe / Cards (Europe & Italy)", details: "Pay with Visa/MasterCard directly", fee: "1.4%" },
+            { id: 2, name: "SEPA European Transfer (Italy Bank)", details: "IBAN: IT99X00000000000000000", fee: "0% (Free in Europe)" },
+            { id: 3, name: "Wise Account (EUR / USD)", details: "wise.me/itqan-academy", fee: "~0.4%" },
+            { id: 4, name: "Egypt USD Bank Account (SWIFT)", details: "Bank: NBE - IBAN: EG00000000000000000000", fee: "Low Wire Fee" },
+            { id: 5, name: "Egypt Universal Bank Transfer", details: "All Currency Worldwide Support", fee: "Bank Standard" },
+            { id: 6, name: "InstaPay / فودافون كاش", details: "010xxxxxxxx | instapay@user", fee: "0% (Local Egypt)" },
+            { id: 7, name: "PayPal International", details: "payments@itqan-academy.com", fee: "3.4% + fixed" },
+            { id: 8, name: "Payoneer / Western Union", details: "Available upon request via support", fee: "Varies" }
         ];
 
-        // Strict dictionaries for ZERO language mixing
         const dictionary = {
             ar: {
                 navTitle: "أكاديمية الإتقان العالمية",
@@ -343,20 +354,21 @@
                 thTotalEarned: "إجمالي الدخل",
                 thAcademyCut: "حصة الأكاديمية",
                 thNetTeacher: "صافي المعلم",
-                assignTitle: "تحديد وتسند الطالب لمعلم محدد",
+                assignTitle: "تحديد وتعين الطالب لمعلم محدد",
                 assignBtn: "ربط الطالب بالمعلم",
                 promoteTitle: "ترقية وتغيير صلاحيات المستخدمين",
                 optTeacher: "معلم معتمد",
                 optAdmin: "مالك المنصة (Owner / Admin)",
                 optStudent: "طالب",
                 promoteBtn: "تنفيذ الترقية",
-                paymentTitle: "وسائل الدفع المتاحة لجميع الدول",
-                managePaymentTitle: "إدارة وسائل الاستقبال والدفع المتاحة",
-                addPaymentBtn: "إضافة وسيلة دفع",
+                paymentTitle: "وسائل الدفع والاستقبال المتاحة حول العالم (أقل عمولة)",
+                lowFeeNote: "⚡ تدعم SEPA, Stripe, Wise, PayPal والدفع المحلي",
+                managePaymentTitle: "إدارة وإضافة وسائل استقبال الأموال والدفع",
+                addPaymentBtn: "إضافة/تحديث الوسيلة",
                 studentViewTitle: "المواعيد المتاحة لدى المعلم المعين لك",
                 loadingSlots: "جاري جلب المواعيد...",
                 aiTitle: "المساعد والتواصل المباشر",
-                aiWelcome: "أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات.",
+                aiWelcome: "أهلاً بك! يمكنك الاستفسار أو التواصل المباشر معنا هنا حول المقامات، التجويد، والإجازات، وطرق الدفع.",
                 aiPlaceholder: "اكتب رسالتك هنا...",
                 modalLoginTitle: "تسجيل الدخول",
                 modalRegTitle: "إنشاء حساب جديد",
@@ -409,13 +421,14 @@
                 optAdmin: "Platform Owner (Admin)",
                 optStudent: "Student",
                 promoteBtn: "Execute Promotion",
-                paymentTitle: "Supported Global Payment Methods",
+                paymentTitle: "Available Worldwide Low-Fee Payment Options",
+                lowFeeNote: "⚡ Supports SEPA, Stripe, Wise, PayPal & Local Payments",
                 managePaymentTitle: "Manage Payment & Reception Options",
-                addPaymentBtn: "Add Payment Method",
+                addPaymentBtn: "Add / Update Option",
                 studentViewTitle: "Available Slots with Your Assigned Teacher",
                 loadingSlots: "Fetching available slots...",
                 aiTitle: "Live Chat & AI Assistant",
-                aiWelcome: "Welcome! Feel free to chat with us directly or ask about Maqamat, Tajweed, and Ijaza.",
+                aiWelcome: "Welcome! Feel free to chat with us directly or ask about Maqamat, Tajweed, Ijaza & Payment options.",
                 aiPlaceholder: "Type your message here...",
                 modalLoginTitle: "Login",
                 modalRegTitle: "Create New Account",
@@ -457,6 +470,7 @@
             document.getElementById('t-secTafseer').innerHTML = `<i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> ${d.secTafseer}`;
             document.getElementById('t-secTeachers').innerHTML = `<i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> ${d.secTeachers}`;
             document.getElementById('t-paymentTitle').innerHTML = `<i class="fa-solid fa-credit-card ml-2"></i> ${d.paymentTitle}`;
+            document.getElementById('t-lowFeeNote').innerText = d.lowFeeNote;
             document.getElementById('t-welcome').innerText = d.welcome;
             document.getElementById('t-logout').innerHTML = `${d.logout} <i class="fa-solid fa-right-from-bracket mr-1"></i>`;
             
@@ -533,17 +547,25 @@
             const admList = document.getElementById('adminPaymentMethodsList');
             
             pubList.innerHTML = paymentMethods.map(m => `
-                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 text-center">
-                    <div class="font-bold text-emerald-400 mb-1">${m.name}</div>
-                    <div class="text-slate-400 font-mono">${m.details}</div>
+                <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <div class="font-bold text-emerald-400 mb-1 flex justify-between items-center">
+                            <span>${m.name}</span>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/20">${m.fee}</span>
+                        </div>
+                        <div class="text-slate-400 font-mono text-[11px] break-all">${m.details}</div>
+                    </div>
                 </div>
             `).join('');
 
             if (admList) {
                 admList.innerHTML = paymentMethods.map(m => `
                     <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
-                        <span><strong>${m.name}:</strong> ${m.details}</span>
-                        <button onclick="removePaymentMethod(${m.id})" class="text-rose-400 hover:text-rose-300 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                        <div>
+                            <span class="text-white font-bold">${m.name}</span>
+                            <span class="text-slate-400 text-[11px] block font-mono">${m.details} (العمولة: ${m.fee})</span>
+                        </div>
+                        <button onclick="removePaymentMethod(${m.id})" class="text-rose-400 hover:text-rose-300 cursor-pointer p-1"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `).join('');
             }
@@ -553,7 +575,8 @@
             e.preventDefault();
             const name = document.getElementById('payMethodName').value;
             const details = document.getElementById('payMethodDetails').value;
-            paymentMethods.push({ id: Date.now(), name, details });
+            const fee = document.getElementById('payMethodFee').value;
+            paymentMethods.push({ id: Date.now(), name, details, fee });
             renderPaymentMethods();
             e.target.reset();
         }
@@ -602,8 +625,8 @@
             setTimeout(() => {
                 const lang = document.getElementById('siteLangSelect').value;
                 let reply = lang === 'ar' 
-                    ? "مرحباً بك! تم استلام رسالتك وسيتواصل معك الفريق الإداري أو المعلم مباشرة." 
-                    : "Welcome! Your message has been received and our admin/teacher team will reply directly.";
+                    ? "مرحباً بك! تم استلام رسالتك وسيتواصل معك الفريق الإداري أو المعلم مباشرة لتأكيد الحجز وطريقة الدفع المناسبة لك." 
+                    : "Welcome! Your message has been received and our team will reply directly regarding lessons and payment methods.";
                 chatBox.innerHTML += `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 max-w-[85%]">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }, 600);
@@ -682,7 +705,7 @@
             for (let t of teachers) {
                 const { data: students } = await supabaseClient.from('profiles').select('id').eq('assigned_teacher_id', t.id);
                 const studentCount = students ? students.length : 0;
-                const estimatedEarnings = studentCount * 100; // Example base rate
+                const estimatedEarnings = studentCount * 100;
                 const academyCut = (estimatedEarnings * academyCommission) / 100;
                 const netTeacher = estimatedEarnings - academyCut;
 
