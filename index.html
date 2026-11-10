@@ -32,11 +32,6 @@
                     <option value="en">English (Global)</option>
                     <option value="ru">Русский (Russia)</option>
                     <option value="tr">Türkçe (Turkey)</option>
-                    <option value="ur">اردو (Urdu)</option>
-                    <option value="id">Bahasa Indonesia</option>
-                    <option value="fr">Français (France)</option>
-                    <option value="de">Deutsch (Germany)</option>
-                    <option value="it">Italiano (Italy)</option>
                 </select>
 
                 <button onclick="showSection('home')" class="text-xs text-emerald-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnHome">الرئيسية</button>
@@ -135,11 +130,11 @@
         </main>
     </div>
 
-    <!-- BOOKING MODAL (Step 1) -->
+    <!-- BOOKING MODAL (Step 1: Trial Lesson Specific Time) -->
     <div id="bookingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeBookingModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center" id="modalTitle1">حجز حصة أو اشتراك جديد</h3>
+            <h3 class="text-lg font-bold text-white text-center" id="modalTitle1">حجز الحصة التجريبية (الخطوة 1)</h3>
             <p id="selectedTrackName" class="text-xs text-emerald-400 text-center font-bold"></p>
 
             <form onsubmit="goToStep2(event)" class="space-y-3">
@@ -158,40 +153,32 @@
                             <option value="+1">🇺🇸 +1 (USA/CA)</option>
                             <option value="+7">🇷🇺 +7 (Russia)</option>
                             <option value="+90">🇹🇷 +90 (Turkey)</option>
-                            <option value="+92">🇵🇰 +92 (Pakistan)</option>
-                            <option value="+62">🇮🇩 +62 (Indonesia)</option>
-                            <option value="+33">🇫🇷 +33 (France)</option>
-                            <option value="+49">🇩🇪 +49 (Germany)</option>
-                            <option value="+39">🇮🇹 +39 (Italy)</option>
                         </select>
                         <input type="tel" id="bookPhone" required placeholder="1091121907" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1" id="lblTrialNote">نوع الاشتراك / الحصة</label>
-                    <select id="isTrial" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
-                        <option value="Trial Lesson" id="optTrial">حصة تجريبية (Trial Lesson)</option>
-                        <option value="Direct Subscription" id="optDirect">اشتراك مباشر فوراً</option>
-                    </select>
+                    <label class="block text-xs text-slate-400 mb-1" id="lblTrialDateTime">تاريخ ووقت الحصة التجريبية المحددة</label>
+                    <input type="datetime-local" id="trialDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: اختيار الأيام وكل الأوقات المتاحة</button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: تحديد أوقات الدروس العادية الدائمة</button>
             </form>
         </div>
     </div>
 
-    <!-- BOOKING MODAL (Step 2: Full 24-Hour Slots for All Days) -->
+    <!-- BOOKING MODAL (Step 2: Regular Weekly Hours & Teacher Match) -->
     <div id="bookingModalStep2" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeStep2()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center" id="modalTitle2">اختر الأيام وكل الساعات المتاحة لك طوال اليوم</h3>
-            <p class="text-xs text-slate-400 text-center" id="step2Sub">قم بتفعيل الأيام التي تناسبك، ثم حدد كل الساعات المتاحة لديك بكل حرية:</p>
+            <h3 class="text-lg font-bold text-white text-center" id="modalTitle2">تحديد الأوقات العادية الدائمة طوال الأسبوع (الخطوة 2)</h3>
+            <p class="text-xs text-slate-400 text-center" id="step2Sub">اختر الأيام وكل الساعات المتاحة لديك للدروس المنتظمة لكي نطابقها مع المعلمين:</p>
 
             <div class="space-y-4 text-xs" id="daysContainer">
-                <!-- Days will be dynamically rendered based on selected language -->
+                <!-- Days rendered dynamically -->
             </div>
 
             <button onclick="sendBookingToWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp text-base"></i> <span id="btnWhatsappText">إرسال كافة تفاصيل المواعيد والأيام عبر الواتساب للإدارة</span>
+                <i class="fa-brands fa-whatsapp text-base"></i> <span id="btnWhatsappText">إرسال تفاصيل الحصة التجريبية والمواعيد الدائمة والمطابقة عبر الواتساب</span>
             </button>
         </div>
     </div>
@@ -201,6 +188,13 @@
         let currentLang = 'ar';
         let selectedTrack = '';
         let studentData = {};
+
+        // محاكاة جدول المعلمين المتاحين في الأكاديمية
+        const teachersPool = [
+            { name: "الشيخ أحمد خالد", availableDays: ["السبت", "الإثنين", "الأربعاء"], hours: ["04:00 PM", "06:00 PM", "08:00 PM"] },
+            { name: "الشيخ إبراهيم محمد", availableDays: ["الأحد", "الثلاثاء", "الخميس"], hours: ["10:00 AM", "02:00 PM", "08:00 PM"] },
+            { name: "د. نور (تفسير وعلوم)", availableDays: ["الإثنين", "الأربعاء", "الجمعة"], hours: ["12:00 PM", "06:00 PM", "10:00 PM"] }
+        ];
 
         const translations = {
             ar: {
@@ -236,16 +230,14 @@
                 btnTierPrivate: "احجز تدريب برايفت",
                 socTitle: "صفحاتنا الرسمية على السوشيال ميديا",
                 socDesc: "تابع نماذج التلاوة، التوجيهات، ومقاطع المقامات اليومية:",
-                modalTitle1: "حجز حصة أو اشتراك جديد",
+                modalTitle1: "حجز الحصة التجريبية (الخطوة 1)",
                 lblEmail: "البريد الإلكتروني",
                 lblPhone: "رقم الهاتف / الواتساب مع الرمز الدولي",
-                lblTrialNote: "نوع الاشتراك / الحصة",
-                optTrial: "نعم، أرغب بحصة تجريبية",
-                optDirect: "لا، أرغب بالاشتراك المباشر فوراً",
-                btnNextStep: "التالي: اختيار الأيام وكل الأوقات المتاحة",
-                modalTitle2: "اختر الأيام وكل الساعات المتاحة لك طوال اليوم",
-                step2Sub: "قم بتفعيل الأيام التي تناسبك، ثم حدد كل الساعات المتاحة لديك من اليوم كاملًا:",
-                btnWhatsappText: "إرسال كافة تفاصيل المواعيد والأيام عبر الواتساب للإدارة",
+                lblTrialDateTime: "تاريخ ووقت الحصة التجريبية المحددة",
+                btnNextStep: "التالي: تحديد أوقات الدروس العادية الدائمة",
+                modalTitle2: "تحديد الأوقات العادية الدائمة طوال الأسبوع (الخطوة 2)",
+                step2Sub: "اختر الأيام وكل الساعات المتاحة لديك لكي نطابقها مع المعلمين المتاحين:",
+                btnWhatsappText: "إرسال تفاصيل الحصة التجريبية والمواعيد الدائمة والمطابقة عبر الواتساب",
                 days: ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"]
             },
             en: {
@@ -281,16 +273,14 @@
                 btnTierPrivate: "Book Private Coaching",
                 socTitle: "Our Official Social Media Pages",
                 socDesc: "Follow recitation samples, guidance, and daily maqam clips:",
-                modalTitle1: "Book a Lesson or Subscription",
+                modalTitle1: "Book Trial Lesson (Step 1)",
                 lblEmail: "Email Address",
                 lblPhone: "Phone / WhatsApp with Country Code",
-                lblTrialNote: "Subscription / Lesson Type",
-                optTrial: "Yes, Trial Lesson",
-                optDirect: "No, Direct Subscription",
-                btnNextStep: "Next: Choose Days & All Available Hours",
-                modalTitle2: "Select Days and All Available Hours Throughout the Day",
-                step2Sub: "Enable the days that suit you, then select all available hours throughout the day:",
-                btnWhatsappText: "Send All Schedule Details via WhatsApp",
+                lblTrialDateTime: "Trial Lesson Date & Time",
+                btnNextStep: "Next: Choose Regular Weekly Hours",
+                modalTitle2: "Select Regular Weekly Hours (Step 2)",
+                step2Sub: "Select days and available hours so we can match you with available teachers:",
+                btnWhatsappText: "Send Trial & Regular Schedule via WhatsApp",
                 days: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
             },
             ru: {
@@ -301,41 +291,39 @@
                 btnSocial: "Соцсети",
                 btnTrial: "✨ Пробный урок",
                 sidebarTitle: "Направления",
-                catAll: "Все / Главная",
+                catAll: "Все",
                 catIjaza: "📜 Иджаза",
                 catHifz: "📖 Хифз",
                 catMaqamat: "🎵 Макаматы",
                 catTafseer: "💡 Тафсир",
-                heroBadge: "Личная платформа Шейха Ахмеда",
-                heroTitle: "Освойте Коран и макаматы вашим голосом",
-                heroDesc: "Уникальная платформа для студентов по всему миру.",
+                heroBadge: "Платформа Шейха Ахмеда",
+                heroTitle: "Освойте Коран вашим голосом",
+                heroDesc: "Уникальная платформа.",
                 heroBtnBook: "Забронировать",
-                maqBadge: "🎵 Раздел Макаматов",
+                maqBadge: "🎵 Макаматы",
                 maqTitle: "Изучите 8 макаматов",
                 tierFree: "Бесплатно",
-                tierFreeTitle: "Основы",
-                tierFreeDesc: "Аудио-уроки.",
+                tierFreeTitle: "Базовый",
+                tierFreeDesc: "Аудио-уроки",
                 btnTierFree: "Начать",
                 tierGroup: "Группа",
                 tierGroupTitle: "Мастер-класс",
-                tierGroupDesc: "Совместные занятия.",
+                tierGroupDesc: "Групповые занятия",
                 btnTierGroup: "Вступить",
                 tierPrivate: "Личная",
                 tierPrivateTitle: "Индивидуально",
-                tierPrivateDesc: "Коучинг 1-на-1.",
+                tierPrivateDesc: "Коучинг 1-на-1",
                 btnTierPrivate: "Забронировать",
-                socTitle: "Наши страницы",
-                socDesc: "Следите за обновлениями:",
-                modalTitle1: "Бронирование",
+                socTitle: "Соцсети",
+                socDesc: "Следите за нами",
+                modalTitle1: "Пробный урок (Шаг 1)",
                 lblEmail: "Email",
-                lblPhone: "Телефон / WhatsApp",
-                lblTrialNote: "Тип",
-                optTrial: "Пробный урок",
-                optDirect: "Прямая подписка",
+                lblPhone: "Телефон",
+                lblTrialDateTime: "Дата и время пробного урока",
                 btnNextStep: "Далее",
-                modalTitle2: "Выберите дни и любые часы",
-                step2Sub: "Отметьте дни и доступные часы:",
-                btnWhatsappText: "Отправить детали в WhatsApp",
+                modalTitle2: "Регулярное расписание (Шаг 2)",
+                step2Sub: "Выберите дни и часы для подбора преподавателя:",
+                btnWhatsappText: "Отправить в WhatsApp",
                 days: ["Суббота", "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
             },
             tr: {
@@ -345,42 +333,40 @@
                 btnMaqamat: "🎵 Makamlar",
                 btnSocial: "Sosyal Medya",
                 btnTrial: "✨ Deneme Dersi",
-                sidebarTitle: "Akademi Dalları",
+                sidebarTitle: "Dallar",
                 catAll: "Tümü",
                 catIjaza: "📜 İcazet",
                 catHifz: "📖 Hafızlık",
                 catMaqamat: "🎵 Makam Eğitimi",
                 catTafseer: "💡 Tefsir",
                 heroBadge: "Şeyh Ahmed'in Özel Platformu",
-                heroTitle: "Kuran'ı ve Makamları Sesinizle Öğrenin",
-                heroDesc: "Dünya çapındaki öğrenciler için benzersiz platform.",
-                heroBtnBook: "Ders Rezerve Et",
-                maqBadge: "🎵 Makam Bölümü",
-                maqTitle: "8 Temel Makamı Öğrenin",
+                heroTitle: "Kuran'ı Sesinizle Öğrenin",
+                heroDesc: "Benzersiz platform.",
+                heroBtnBook: "Rezervasyon",
+                maqBadge: "🎵 Makam",
+                maqTitle: "8 Makam Öğrenin",
                 tierFree: "Ücretsiz",
-                tierFreeTitle: "Temel Seviye",
-                tierFreeDesc: "Sesli dersler.",
-                btnTierFree: "Ücretsiz Başla",
+                tierFreeTitle: "Temel",
+                tierFreeDesc: "Dersler",
+                btnTierFree: "Başla",
                 tierGroup: "Grup",
-                tierGroupTitle: "Grup Atölyesi",
-                tierGroupDesc: "Ortak dersler.",
+                tierGroupTitle: "Atölye",
+                tierGroupDesc: "Grup dersleri",
                 btnTierGroup: "Katıl",
                 tierPrivate: "Özel",
-                tierPrivateTitle: "Birebir Koçluk",
-                tierPrivateDesc: "Özel takip.",
+                tierPrivateTitle: "Birebir",
+                tierPrivateDesc: "Özel koçluk",
                 btnTierPrivate: "Rezerve Et",
                 socTitle: "Sosyal Medya",
-                socDesc: "Bizi takip edin:",
-                modalTitle1: "Ders Rezervasyonu",
+                socDesc: "Takip edin",
+                modalTitle1: "Deneme Dersi (Adım 1)",
                 lblEmail: "E-posta",
-                lblPhone: "Telefon / WhatsApp",
-                lblTrialNote: "Tür",
-                optTrial: "Deneme Dersi",
-                optDirect: "Doğrudan Abone Ol",
+                lblPhone: "Telefon",
+                lblTrialDateTime: "Deneme Dersi Tarih ve Saati",
                 btnNextStep: "İleri",
-                modalTitle2: "Günleri ve Tüm Müsait Saatleri Seçin",
-                step2Sub: "Uygun günleri ve saatleri işaretleyin:",
-                btnWhatsappText: "Detayları WhatsApp ile Gönder",
+                modalTitle2: "Düzenli Ders Saatleri (Adım 2)",
+                step2Sub: "Hoca eşleşmesi için uygun saatleri seçin:",
+                btnWhatsappText: "WhatsApp ile Gönder",
                 days: ["Cumartesi", "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
             }
         };
@@ -418,10 +404,8 @@
             const dict = translations[currentLang] || translations['en'];
             const container = document.getElementById('daysContainer');
             const hoursList = [
-                "12:00 AM", "01:00 AM", "02:00 AM", "03:00 AM", "04:00 AM", "05:00 AM",
-                "06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM",
-                "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM",
-                "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM", "10:00 PM", "11:00 PM"
+                "06:00 AM", "08:00 AM", "10:00 AM", "12:00 PM", 
+                "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM", "10:00 PM"
             ];
 
             container.innerHTML = dict.days.map((dayName, index) => `
@@ -429,7 +413,7 @@
                     <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
                         <input type="checkbox" value="${dayName}" class="day-chk" onchange="toggleDayHours('hoursBox_${index}', this)"> ${dayName}
                     </label>
-                    <div id="hoursBox_${index}" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                    <div id="hoursBox_${index}" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-2">
                         ${hoursList.map(h => `
                             <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer text-[11px]">
                                 <input type="checkbox" value="${h}" class="slot-day-${index}"> ${h}
@@ -479,7 +463,7 @@
             e.preventDefault();
             studentData.email = document.getElementById('bookEmail').value;
             studentData.phone = document.getElementById('countryCode').value + " " + document.getElementById('bookPhone').value;
-            studentData.type = document.getElementById('isTrial').value;
+            studentData.trialDateTime = document.getElementById('trialDateTime').value;
             studentData.track = selectedTrack;
 
             closeBookingModal();
@@ -495,15 +479,37 @@
             document.getElementById(hoursId).classList.toggle('hidden', !checkbox.checked);
         }
 
+        function findBestMatchedTeacher(studentSchedule) {
+            let bestTeacher = teachersPool[0];
+            let maxMatches = -1;
+
+            teachersPool.forEach(teacher => {
+                let matches = 0;
+                studentSchedule.forEach(item => {
+                    if (teacher.availableDays.includes(item.day)) {
+                        matches++;
+                    }
+                });
+                if (matches > maxMatches) {
+                    maxMatches = matches;
+                    bestTeacher = teacher;
+                }
+            });
+
+            return bestTeacher.name;
+        }
+
         function sendBookingToWhatsApp() {
             let scheduleDetails = "";
+            let studentScheduleArray = [];
             const dict = translations[currentLang] || translations['en'];
 
             dict.days.forEach((dayName, index) => {
                 const checkedHours = document.querySelectorAll(`.slot-day-${index}:checked`);
                 if (checkedHours.length > 0) {
-                    const times = Array.from(checkedHours).map(h => h.value).join(', ');
-                    scheduleDetails += `\n- ${dayName}: [${times}]`;
+                    const times = Array.from(checkedHours).map(h => h.value);
+                    scheduleDetails += `\n- ${dayName}: [${times.join(', ')}]`;
+                    studentScheduleArray.push({ day: dayName, hours: times });
                 }
             });
 
@@ -512,15 +518,18 @@
                 return;
             }
 
+            // مطابقة المعلم الأنسب
+            const matchedTeacher = findBestMatchedTeacher(studentScheduleArray);
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-            const msg = `السلام عليكم شيخ أحمد، أرغب بتأكيد حجزي في الأكاديمية:\n\n` +
+            const msg = `السلام عليكم شيخ أحمد، تفاصيل حجز الطالب الجديد:\n\n` +
                         `📌 *المسار:* ${studentData.track}\n` +
-                        `📋 *نوع الطلب:* ${studentData.type}\n` +
+                        `✨ *موعد الحصة التجريبية:* ${studentData.trialDateTime}\n` +
                         `📧 *البريد:* ${studentData.email}\n` +
                         `📱 *رقم الواتساب:* ${studentData.phone}\n` +
                         `🌐 *المنطقة الزمنية:* ${tz}\n\n` +
-                        `⏰ *الأيام وكل الساعات المتاحة التي اخترتها:*` + scheduleDetails;
+                        `🤝 *المعلم الأنسب المقترح (مطابقة ذكية):* ${matchedTeacher}\n\n` +
+                        `⏰ *الأوقات الدائمة التي حددها الطالب:*` + scheduleDetails;
 
             const encodedMsg = encodeURIComponent(msg);
             const adminWhatsApp = "201091121907";
