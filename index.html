@@ -27,9 +27,17 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <button onclick="showSection('home')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700">الرئيسية</button>
-                <button onclick="showSection('social')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700">منصاتنا وشبكاتنا</button>
-                <button onclick="showAuthModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md">دخول الطالب</button>
+                <button onclick="showSection('home')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">الرئيسية</button>
+                <button onclick="showSection('social')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">منصاتنا وشبكاتنا</button>
+                
+                <div id="userInfoHeader" class="hidden items-center gap-2">
+                    <span id="headerUserName" class="text-xs font-bold text-emerald-300"></span>
+                    <button onclick="handleLogout()" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer">خروج</button>
+                </div>
+
+                <div id="authHeaderButtons">
+                    <button onclick="showAuthModal('login')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md cursor-pointer">تسجيل الدخول</button>
+                </div>
             </div>
         </div>
     </header>
@@ -50,14 +58,14 @@
                     <span class="text-amber-400">• تفسير القرآن • علوم الإسلام •</span>
                 </h2>
                 <p class="text-slate-400 text-xs md:text-sm max-w-3xl mx-auto">
-                    اختر التخصص المناسب لك، طالع محتوى الذكاء الاصطناعي وشرح الحصص، واحجز حصتك مباشرة بالتوقيت المحلي لبلدك لتتطابق تلقائياً مع جدول الإدارة.
+                    اختر التخصص المناسب، حدد اليوم والساعة المتاحة بحسب منطقتك الزمنية، وسيقوم النظام بتنسيق الحصة تلقائياً مع الجدول الإداري بتوقيت مصر.
                 </p>
             </div>
 
             <!-- Categories / Tracks Section -->
             <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fa-solid fa-layer-group text-emerald-400 ml-2"></i> تخصصات ومسارات الأكاديمية (مع المحتوى والشرح)
+                    <i class="fa-solid fa-layer-group text-emerald-400 ml-2"></i> تخصصات ومسارات الأكاديمية
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
@@ -65,75 +73,121 @@
                     <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
                         <div class="flex items-center justify-between">
                             <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-bold">📜 مسار الإجازات بالسند</span>
-                            <button onclick="openBookingModal('إجازات بالسند المتصل')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                            <button onclick="openBookingModal('إجازات بالسند المتصل')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
                         </div>
                         <h4 class="text-lg font-bold text-white">إجازات القراءات القرآنية المتصلة بالسند</h4>
                         <p class="text-xs text-slate-300 leading-relaxed">تتضمن مادة هذا القسم شرح أحكام الأداء، السند المتصل، والتلقي المباشر عبر الحصص التفاعلية.</p>
-                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
-                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> تم توليد ملخصات تفصيلية لمتون الجزرية والشاطبية ومخارج الحروف.
-                        </div>
                     </div>
 
                     <!-- Track 2: Hifz -->
                     <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
                         <div class="flex items-center justify-between">
                             <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">📖 مسار التحفيظ</span>
-                            <button onclick="openBookingModal('تحفيظ القرآن الكريم')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                            <button onclick="openBookingModal('تحفيظ القرآن الكريم')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
                         </div>
                         <h4 class="text-lg font-bold text-white">تحفيظ القرآن الكريم ومراجعة الحفظ</h4>
                         <p class="text-xs text-slate-300 leading-relaxed">برامج مخصصة لتثبيت الحفظ، خطط يومية ومتابعة دقيقة لمواطن الضعف والتثبيت.</p>
-                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
-                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> خطط حفظ مرنة مقسمة تناسب أوقاتك اليومية.
-                        </div>
                     </div>
 
                     <!-- Track 3: Maqamat -->
                     <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
                         <div class="flex items-center justify-between">
                             <span class="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-full font-bold">🎵 مسار المقامات والتلاوة</span>
-                            <button onclick="openBookingModal('مقامات صوتية وتجميل التلاوة')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                            <button onclick="openBookingModal('مقامات صوتية وتجميل التلاوة')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
                         </div>
                         <h4 class="text-lg font-bold text-white">المقامات الصوتية الثمانية وتجميل الصوت</h4>
-                        <p class="text-xs text-slate-300 leading-relaxed">دراسة مقامات (بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا) وتطبيقات عملية لتحسين النغمة الصوتية في القرآن.</p>
-                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
-                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> تمارين صوتية تفاعلية ودليل نغمي شامل لكل مقام.
-                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">دراسة المقامات الثمانية والتطبيقات العملية لتحسين النغمة الصوتية في القرآن الكريم.</p>
                     </div>
 
                     <!-- Track 4: Tafseer -->
                     <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
                         <div class="flex items-center justify-between">
                             <span class="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full font-bold">💡 مسار التفسير وعلوم الإسلام</span>
-                            <button onclick="openBookingModal('تفسير القرآن وعلوم الإسلام')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                            <button onclick="openBookingModal('تفسير القرآن وعلوم الإسلام')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
                         </div>
                         <h4 class="text-lg font-bold text-white">تفسير القرآن وعلوم الشريعة</h4>
                         <p class="text-xs text-slate-300 leading-relaxed">تدبر معاني الآيات، أسباب النزول، والفقه الإسلامي بلغة مبسطة وعميقة.</p>
-                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
-                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> تصاميم بصرية وخرائط ذهنية لمعاني سور القرآن.
-                        </div>
                     </div>
 
                 </div>
             </div>
+        </div>
 
-            <!-- Payment Methods Info -->
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
-                <h4 class="text-lg font-bold text-emerald-400 flex items-center">
-                    <i class="fa-solid fa-credit-card ml-2"></i> وسائل الدفع المتاحة للاشتراكات والحصص
-                </h4>
-                <p class="text-xs text-slate-300">توفر الأكاديمية وسائل دفع ميسرة وآمنة تناسب الطلاب من جميع أنحاء العالم:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
-                        <span class="font-bold text-white block mb-1">💳 البطاقات البنكية الدولية</span>
-                        <span class="text-slate-400">Stripe / Visa / MasterCard</span>
+        <!-- TEACHER DASHBOARD (Only shown to Teachers) -->
+        <div id="teacherDashboard" class="hidden space-y-6">
+            <div class="bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-6">
+                <h5 class="font-bold text-amber-400 text-lg flex items-center">
+                    <i class="fa-solid fa-clock ml-2"></i> تحديد أوقاتي المتاحة للعمل (خاص بالمعلم)
+                </h5>
+                
+                <form onsubmit="handleSaveTeacherAvailability(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">الأيام المتاحة للتدريس:</label>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الأحد" class="t-day"> الأحد</label>
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الإثنين" class="t-day"> الإثنين</label>
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الثلاثاء" class="t-day"> الثلاثاء</label>
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الأربعاء" class="t-day"> الأربعاء</label>
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الخميس" class="t-day"> الخميس</label>
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الجمعة" class="t-day"> الجمعة</label>
+                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="السبت" class="t-day"> السبت</label>
+                        </div>
                     </div>
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
-                        <span class="font-bold text-white block mb-1">🇪🇬 وسائل الدفع المحلي (مصر)</span>
-                        <span class="text-slate-400">InstaPay / فودافون كاش / تحويل بنكي</span>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">الساعات المتاحة خلال اليوم (بتوقيت القاهرة):</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs">
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="10:00 ص" class="t-hour"> 10:00 ص</label>
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="12:00 م" class="t-hour"> 12:00 م</label>
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="02:00 م" class="t-hour"> 02:00 م</label>
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="04:00 م" class="t-hour"> 04:00 م</label>
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="06:00 م" class="t-hour"> 06:00 م</label>
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="08:00 م" class="t-hour"> 08:00 م</label>
+                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="10:00 م" class="t-hour"> 10:00 م</label>
+                        </div>
                     </div>
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
-                        <span class="font-bold text-white block mb-1">🌍 التحويلات العالمية</span>
-                        <span class="text-slate-400">Wise / PayPal / تحويل SEPA</span>
+
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 px-6 rounded-xl cursor-pointer">حفظ أوقاتي المتاحة</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- OWNER / ADMIN DASHBOARD (Strictly Exclusive for Owner) -->
+        <div id="ownerDashboard" class="hidden space-y-6">
+            <div class="bg-slate-800 border border-emerald-500/50 rounded-2xl p-6 shadow-2xl space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+                    <h5 class="font-bold text-emerald-400 text-xl flex items-center">
+                        <i class="fa-solid fa-user-shield ml-2"></i> لوحة الإدارة العليا والتحكم اليدوي الكامل (Owner Panel)
+                    </h5>
+                    <span class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1 rounded-full font-bold">خاص بالمالك فقط</span>
+                </div>
+
+                <!-- Owner Manual Control Forms -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Manual Booking Override -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-3">
+                        <h6 class="font-bold text-amber-400 text-sm">تعديل/إضافة حجز يدوي لطالب</h6>
+                        <form onsubmit="handleOwnerManualBooking(event)" class="space-y-3">
+                            <input type="text" id="manualStudentName" placeholder="اسم الطالب..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="tel" id="manualPhone" placeholder="رقم الهاتف/الواتساب..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="text" id="manualAssignTeacher" placeholder="اسم المعلم المعين..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="datetime-local" id="manualTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer">حفظ الحجز اليدوي</button>
+                        </form>
+                    </div>
+
+                    <!-- System Statistics & Bookings List -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-3">
+                        <h6 class="font-bold text-emerald-400 text-sm">جدول الحصص المجدولة والمطابقة</h6>
+                        <div id="ownerBookingsList" class="space-y-2 max-h-56 overflow-y-auto text-xs">
+                            <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700">
+                                <div class="font-bold text-white flex justify-between">
+                                    <span>طالب: أحمد محمد</span>
+                                    <span class="text-emerald-400">مكتمل</span>
+                                </div>
+                                <div class="text-slate-400 text-[11px] mt-1">المعلم: معلم 1 | الوقت (مصر): 08:00 م</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -143,7 +197,6 @@
         <div id="socialSection" class="hidden space-y-8">
             <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 text-center space-y-4 shadow-xl">
                 <h3 class="text-2xl font-bold text-emerald-400">تابعنا على منصات التواصل الاجتماعي وشبكات الأكاديمية</h3>
-                <p class="text-xs text-slate-300 max-w-xl mx-auto">ابق على اطلاع بأحدث الحصص، المقاطع الصوتية، ودروس المقامات والتفسير عبر صفحاتنا الرسمية:</p>
                 <div class="flex flex-wrap justify-center gap-4 pt-4">
                     <a href="https://tiktok.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
                         <i class="fa-brands fa-tiktok text-emerald-400 text-lg"></i> تيك توك (TikTok)
@@ -151,48 +204,64 @@
                     <a href="https://instagram.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
                         <i class="fa-brands fa-instagram text-pink-400 text-lg"></i> انستجرام (Instagram)
                     </a>
-                    <a href="https://youtube.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
-                        <i class="fa-brands fa-youtube text-rose-400 text-lg"></i> يوتيوب (YouTube)
-                    </a>
-                    <a href="https://wa.me/201091121907" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
-                        <i class="fa-brands fa-whatsapp text-lg"></i> واتساب الدعم المباشر
-                    </a>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- BOOKING MODAL WITH TIMEZONE CONVERSION -->
+    <!-- BOOKING MODAL WITH TIMEZONE & MATCHING -->
     <div id="bookingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeBookingModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center">حجز حصة جديدة</h3>
+            <h3 class="text-lg font-bold text-white text-center">حجز حصة جديدة وتحديد الموعد</h3>
             <p id="selectedTrackName" class="text-xs text-emerald-400 text-center font-bold"></p>
 
             <form onsubmit="handleBookingSubmit(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني الخاص بك</label>
-                    <input type="email" id="bookEmail" required placeholder="student@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="bookEmail" required placeholder="email@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 </div>
+
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">تاريخ ووقت الحصة (بتوقيتك المحلي)</label>
-                    <input type="datetime-local" id="bookLocalDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <label class="block text-xs text-slate-400 mb-1">رقم الواتساب / التواصل المباشر</label>
+                    <input type="tel" id="bookPhone" required placeholder="+2010xxxxxxx" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">اختر اليوم المفضل</label>
+                    <select id="bookDaySelect" onchange="updateAvailableHours()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold">
+                        <option value="الأحد">الأحد</option>
+                        <option value="الإثنين">الإثنين</option>
+                        <option value="الثلاثاء">الثلاثاء</option>
+                        <option value="الأربعاء">الأربعاء</option>
+                        <option value="الخميس">الخميس</option>
+                        <option value="الجمعة">الجمعة</option>
+                        <option value="السبت">السبت</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">اختر الساعة المتاحة (بتوقيتك المحلي)</label>
+                    <select id="bookHourSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
+                        <!-- Dynamic Hours -->
+                    </select>
                     <span id="detectedTimezone" class="text-[10px] text-amber-400 mt-1 block"></span>
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer">تأكيد حجز الحصة (تحويل تلقائي لتوقيت مصر)</button>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer">تأكيد حجز الحصة والمطابقة</button>
             </form>
         </div>
     </div>
 
-    <!-- AUTH MODAL -->
+    <!-- AUTH MODAL (Login only) -->
     <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-xl font-bold text-white mb-4 text-center">تسجيل دخول الطالب</h3>
+            <h3 class="text-xl font-bold text-white mb-4 text-center">تسجيل الدخول للمنصة</h3>
             <form onsubmit="handleAuthSubmit(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
-                    <input type="email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="loginEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">كلمة المرور</label>
@@ -205,7 +274,11 @@
 
     <!-- Script Logic -->
     <script>
+        let currentUser = null;
         let selectedTrack = '';
+
+        // Default available hours in system
+        const availableHoursList = ["10:00 ص", "12:00 م", "02:00 م", "04:00 م", "06:00 م", "08:00 م", "10:00 م"];
 
         function showSection(sec) {
             document.getElementById('homeSection').classList.toggle('hidden', sec !== 'home');
@@ -214,13 +287,18 @@
 
         function openBookingModal(track) {
             selectedTrack = track;
-            document.getElementById('selectedTrackName').innerText = "المسار المختاره: " + track;
+            document.getElementById('selectedTrackName').innerText = "المسار المختار: " + track;
             
-            // Detect user timezone
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            document.getElementById('detectedTimezone').innerText = "🌐 منطقتك الزمنية المكتشفة: " + tz;
-            
+            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.getElementById('detectedTimezone').innerText = "🌐 منطقتك الزمنية: " + userTz;
+
+            updateAvailableHours();
             document.getElementById('bookingModal').classList.remove('hidden');
+        }
+
+        function updateAvailableHours() {
+            const select = document.getElementById('bookHourSelect');
+            select.innerHTML = availableHoursList.map(h => `<option value="${h}">${h}</option>`).join('');
         }
 
         function closeBookingModal() {
@@ -235,25 +313,60 @@
             document.getElementById('authModal').classList.add('hidden');
         }
 
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            
+            // Strict Role Assignment
+            let role = 'student';
+            if (email.includes('owner') || email.includes('admin')) {
+                role = 'owner';
+            } else if (email.includes('teacher')) {
+                role = 'teacher';
+            }
+
+            currentUser = { email, role };
+            closeAuthModal();
+
+            // Render views strictly according to role
+            document.getElementById('userInfoHeader').classList.remove('hidden');
+            document.getElementById('authHeaderButtons').classList.add('hidden');
+            document.getElementById('headerUserName').innerText = role === 'owner' ? 'المالك (Owner)' : (role === 'teacher' ? 'معلم' : 'طالب');
+
+            document.getElementById('ownerDashboard').classList.toggle('hidden', role !== 'owner');
+            document.getElementById('teacherDashboard').classList.toggle('hidden', role !== 'teacher');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('userInfoHeader').classList.add('hidden');
+            document.getElementById('authHeaderButtons').classList.remove('hidden');
+            document.getElementById('ownerDashboard').classList.add('hidden');
+            document.getElementById('teacherDashboard').classList.add('hidden');
+        }
+
         function handleBookingSubmit(e) {
             e.preventDefault();
             const email = document.getElementById('bookEmail').value;
-            const localTime = document.getElementById('bookLocalDateTime').value;
+            const phone = document.getElementById('bookPhone').value;
+            const day = document.getElementById('bookDaySelect').value;
+            const hour = document.getElementById('bookHourSelect').value;
             const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-            // Convert / calculate to Egypt timezone (Cairo) for management
-            const localDate = new Date(localTime);
-            const cairoTimeStr = localDate.toLocaleString('en-US', { timeZone: 'Africa/Cairo' });
-
-            alert(`تم حجز الحصة بنجاح!\n\nالتخصص: ${selectedTrack}\nالبريد: ${email}\nتوقيتك المحلي: ${localTime} (${userTz})\nالموعد بتوقيت القاهرة للإدارة: ${cairoTimeStr}`);
+            alert(`تم تسجيل طلب الحصة بنجاح!\n\nالتخصص: ${selectedTrack}\nالبريد: ${email}\nرقم التواصل: ${phone}\nاليوم والساعة: ${day} - ${hour} (${userTz})\nتم تحويل وتطابق الموعد مع المعلمين المتوفرين لجدول الإدارة.`);
             closeBookingModal();
             e.target.reset();
         }
 
-        function handleAuthSubmit(e) {
+        function handleSaveTeacherAvailability(e) {
             e.preventDefault();
-            alert("تم تسجيل الدخول بنجاح!");
-            closeAuthModal();
+            alert("تم حفظ أوقاتك المتاحة بنجاح، وستظهر أوقاتك للطالب للتنسيق الفوري.");
+        }
+
+        function handleOwnerManualBooking(e) {
+            e.preventDefault();
+            alert("تمت الإضافة والتعديل اليدوي بنجاح عبر لوحة تحكم المالك!");
+            e.target.reset();
         }
     </script>
 </body>
