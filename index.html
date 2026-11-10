@@ -108,7 +108,7 @@
                             <span class="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded" id="tierFree">محتوى مجاني</span>
                             <h4 class="font-bold text-white text-base" id="tierFreeTitle">المقامات الأساسية للمبتدئين</h4>
                             <p class="text-xs text-slate-400" id="tierFreeDesc">دروس صوتية ومقاطع مرجعية للتعرف على النغمات الأساسية وطريقة التدرب عليها.</p>
-                            <button onclick="alert('Opened Free Maqamat!')" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs py-2 rounded-xl border border-slate-700" id="btnTierFree">ابدأ التعلم مجاناً</button>
+                            <button onclick="openBookingModal('Free Maqamat Course')" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs py-2 rounded-xl border border-slate-700" id="btnTierFree">ابدأ التعلم مجاناً</button>
                         </div>
                         <div class="bg-slate-900 border border-emerald-500/40 p-5 rounded-2xl space-y-3 shadow-lg">
                             <span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded" id="tierGroup">اشتراك جماعي</span>
@@ -141,7 +141,7 @@
         </main>
     </div>
 
-    <!-- BOOKING MODAL (Step 1: Info & Trial Selection) -->
+    <!-- BOOKING MODAL (Step 1: Info) -->
     <div id="bookingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeBookingModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -179,8 +179,8 @@
                 <div>
                     <label class="block text-xs text-slate-400 mb-1" id="lblTrialNote">هل ترغب في بدء حصة تجريبية أولاً؟</label>
                     <select id="isTrial" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
-                        <option value="yes">نعم، أرغب بحصة تجريبية (Trial Lesson)</option>
-                        <option value="no">لا، أرغب بالاشتراك المباشر فوراً</option>
+                        <option value="Trial Lesson">نعم، أرغب بحصة تجريبية (Trial Lesson)</option>
+                        <option value="Direct Subscription">لا، أرغب بالاشتراك المباشر فوراً</option>
                     </select>
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: اختيار الأيام والأوقات المفضلة</button>
@@ -188,7 +188,7 @@
         </div>
     </div>
 
-    <!-- BOOKING MODAL (Step 2: Multiple Days & Multiple Times Slots) -->
+    <!-- BOOKING MODAL (Step 2: Multiple Days & Slots + WhatsApp Direct Dispatch) -->
     <div id="bookingModalStep2" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeStep2()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -196,48 +196,48 @@
             <p class="text-xs text-slate-400 text-center" id="step2Sub">اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:</p>
 
             <div class="space-y-4 text-xs">
-                <!-- Day 1: Monday -->
+                <!-- Days & Slots Checkboxes -->
                 <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
                     <label class="font-bold text-emerald-400 flex items-center gap-2">
-                        <input type="checkbox" value="Monday" class="day-chk" onchange="toggleDaySlots('monSlots', this)"> الإثنين (Monday / Понедельник)
+                        <input type="checkbox" value="الإثنين (Monday)" class="day-chk" onchange="toggleDaySlots('monSlots', this)"> الإثنين (Monday)
                     </label>
                     <div id="monSlots" class="hidden flex flex-wrap gap-2 pt-1">
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM"> 08:00 AM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM"> 02:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM"> 06:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM"> 09:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM" class="slot-mon"> 08:00 AM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM" class="slot-mon"> 02:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM" class="slot-mon"> 06:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM" class="slot-mon"> 09:00 PM</label>
                     </div>
                 </div>
 
-                <!-- Day 2: Wednesday -->
                 <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
                     <label class="font-bold text-emerald-400 flex items-center gap-2">
-                        <input type="checkbox" value="Wednesday" class="day-chk" onchange="toggleDaySlots('wedSlots', this)"> الأربعاء (Wednesday / Среда)
+                        <input type="checkbox" value="الأربعاء (Wednesday)" class="day-chk" onchange="toggleDaySlots('wedSlots', this)"> الأربعاء (Wednesday)
                     </label>
                     <div id="wedSlots" class="hidden flex flex-wrap gap-2 pt-1">
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM"> 08:00 AM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM"> 02:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM"> 06:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM"> 09:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM" class="slot-wed"> 08:00 AM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM" class="slot-wed"> 02:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM" class="slot-wed"> 06:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM" class="slot-wed"> 09:00 PM</label>
                     </div>
                 </div>
 
-                <!-- Day 3: Saturday -->
                 <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
                     <label class="font-bold text-emerald-400 flex items-center gap-2">
-                        <input type="checkbox" value="Saturday" class="day-chk" onchange="toggleDaySlots('satSlots', this)"> السبت (Saturday / Суббота)
+                        <input type="checkbox" value="السبت (Saturday)" class="day-chk" onchange="toggleDaySlots('satSlots', this)"> السبت (Saturday)
                     </label>
                     <div id="satSlots" class="hidden flex flex-wrap gap-2 pt-1">
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="10:00 AM"> 10:00 AM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="03:00 PM"> 03:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="07:00 PM"> 07:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="10:00 AM" class="slot-sat"> 10:00 AM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="03:00 PM" class="slot-sat"> 03:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="07:00 PM" class="slot-sat"> 07:00 PM</label>
                     </div>
                 </div>
 
                 <div id="detectedTzBox" class="text-[11px] text-amber-400 font-bold text-center"></div>
             </div>
 
-            <button onclick="finalizeBooking()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnFinalSubmit">إتمام الحجز والانتقال لخيارات الدفع</button>
+            <button onclick="sendBookingToWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-base"></i> إرسال تفاصيل الحجز عبر الواتساب للإدارة
+            </button>
         </div>
     </div>
 
@@ -245,6 +245,7 @@
     <script>
         let currentLang = 'ar';
         let selectedTrack = '';
+        let studentData = {};
 
         const translations = {
             ar: {
@@ -283,11 +284,10 @@
                 modalTitle1: "حجز حصة أو اشتراك جديد",
                 lblEmail: "البريد الإلكتروني",
                 lblPhone: "رقم الهاتف / الواتساب مع الرمز الدولي",
-                lblTrialNote: "هل ترغب في بدء حصة تجريبية أولاً؟",
+                lblTrialNote: "نوع الاشتراك / الحصة",
                 btnNextStep: "التالي: اختيار الأيام والأوقات المفضلة",
                 modalTitle2: "تحديد الأيام والأوقات الطبيعية المتاحة للدروس",
-                step2Sub: "اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:",
-                btnFinalSubmit: "إتمام الحجز والانتقال لخيارات الدفع"
+                step2Sub: "اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:"
             },
             en: {
                 navTitleText: "Sheikh Ahmed Academy for Maqamat & Quran",
@@ -325,62 +325,18 @@
                 modalTitle1: "Book a Lesson or Subscription",
                 lblEmail: "Email Address",
                 lblPhone: "Phone / WhatsApp with Country Code",
-                lblTrialNote: "Would you like to start with a Trial Lesson first?",
+                lblTrialNote: "Subscription / Lesson Type",
                 btnNextStep: "Next: Choose Preferred Days & Times",
                 modalTitle2: "Select Your Available Regular Lesson Days & Times",
-                step2Sub: "Select multiple days and pick all your available hours for each day with complete flexibility:",
-                btnFinalSubmit: "Finalize Booking & Proceed to Payment Options"
-            },
-            ru: {
-                navTitleText: "Академия Шейха Ахмеда по Макамату и Корану",
-                navSubText: "Иджаза • Хифз • Голосовые Макаматы • Тафсир",
-                btnHome: "Главная",
-                btnMaqamat: "🎵 Макаматы (Бесплатно и Приватно)",
-                btnSocial: "Соцсети",
-                btnTrial: "✨ Пробный урок",
-                sidebarTitle: "Направления Академии",
-                catAll: "Все / Главная",
-                catIjaza: "📜 Иджаза со связью иснада",
-                catHifz: "📖 Заучивание Корана (Хифз)",
-                catMaqamat: "🎵 Вокальные Макаматы и Кыраат",
-                catTafseer: "💡 Тафсир и Исламские науки",
-                heroBadge: "Добро пожаловать на личную платформу Шейха Ахмеда",
-                heroTitle: "Освойте Коран и макаматы чтения вашим голосом <br/><span class='text-emerald-400'>с непрерывной иджазой</span> и прямым руководством.",
-                heroDesc: "Уникальная платформа для студентов по всему миру, объединяющая правила таджвида, продвинутый вокальный тренинг макаматов и понятный тафсир.",
-                heroBtnBook: "Забронировать урок",
-                maqBadge: "🎵 Специализированный раздел Макаматов",
-                maqTitle: "Изучите 8 основных макаматов (Баяти, Раст, Нахаванд, Хиджаз, Курд, Сика, Аджам, Саба)",
-                tierFree: "Бесплатный контент",
-                tierFreeTitle: "Основы макаматов для начинающих",
-                tierFreeDesc: "Аудио-уроки и справочные материалы для изучения основных тональностей.",
-                btnTierFree: "Начать бесплатно",
-                tierGroup: "Групповая подписка",
-                tierGroupTitle: "Мастер-класс и групповая практика",
-                tierGroupDesc: "Регулярные совместные занятия для практического применения.",
-                btnTierGroup: "Вступить в группу",
-                tierPrivate: "Личная подписка (Private)",
-                tierPrivateTitle: "Индивидуальный коучинг 1-на-1",
-                tierPrivateDesc: "Точное персональное сопровождение, коррекция макаматов и обратная связь.",
-                btnTierPrivate: "Забронировать приват",
-                socTitle: "Наши официальные страницы",
-                socDesc: "Следите за примерами чтения и ежедневными клипами макаматов:",
-                modalTitle1: "Бронирование урока или подписки",
-                lblEmail: "Электронная почта",
-                lblPhone: "Телефон / WhatsApp с кодом страны",
-                lblTrialNote: "Хотите начать с пробного урока?",
-                btnNextStep: "Далее: Выберите дни и время",
-                modalTitle2: "Выберите доступные дни и время для занятий",
-                step2Sub: "Выберите несколько дней и отметьте все доступные часы для каждого дня:",
-                btnFinalSubmit: "Завершить бронирование и перейти к оплате"
+                step2Sub: "Select multiple days and pick all your available hours for each day with complete flexibility:"
             }
-            // يمكن إضافة باقي اللغات بسهولة عبر مطابقة نفس المفاتيح
         };
 
         const tracksData = [
-            { id: 'ijaza', title: '📜 إجازات القراءات والسند المتصل / Connected Ijaza', desc: 'تلقي دقيق برواية حفص وعاصم أو القراءات العشر مع سند متصل للنبي ﷺ.', teacher: 'الشيخ أحمد خالد' },
-            { id: 'hifz', title: '📖 تحفيظ القرآن الكريم والمتابعة / Quran Hifz', desc: 'برامج حفظ ومراجعة وتثبيت مع خطط يومية مخصصة وملاحظات دورية.', teacher: 'فريق المعلمين المعتمدين' },
-            { id: 'maqamat', title: '🎵 مقامات صوتية وتجميل التلاوة / Voice Maqamat', desc: 'تدريب احترافي على المقامات الثمانية لتحسين النغمة والخشوع في التلاوة.', teacher: 'الشيخ أحمد خالد' },
-            { id: 'tafseer', title: '💡 تفسير القرآن وعلوم الإسلام / Quran Tafseer', desc: 'فهم معاني الآيات وأسباب النزول عبر تدبر هادئ وعميق.', teacher: 'د. نور' }
+            { id: 'ijaza', title: '📜 إجازات القراءات والسند المتصل', desc: 'تلقي دقيق برواية حفص وعاصم أو القراءات العشر مع سند متصل للنبي ﷺ.', teacher: 'الشيخ أحمد خالد' },
+            { id: 'hifz', title: '📖 تحفيظ القرآن الكريم والمتابعة', desc: 'برامج حفظ ومراجعة وتثبيت مع خطط يومية مخصصة وملاحظات دورية.', teacher: 'فريق المعلمين المعتمدين' },
+            { id: 'maqamat', title: '🎵 مقامات صوتية وتجميل التلاوة', desc: 'تدريب احترافي على المقامات الثمانية لتحسين النغمة والخشوع في التلاوة.', teacher: 'الشيخ أحمد خالد' },
+            { id: 'tafseer', title: '💡 تفسير القرآن وعلوم الإسلام', desc: 'فهم معاني الآيات وأسباب النزول عبر تدبر هادئ وعميق.', teacher: 'د. نور' }
         ];
 
         function switchLanguage(lang) {
@@ -440,9 +396,14 @@
 
         function goToStep2(e) {
             e.preventDefault();
+            studentData.email = document.getElementById('bookEmail').value;
+            studentData.phone = document.getElementById('countryCode').value + " " + document.getElementById('bookPhone').value;
+            studentData.type = document.getElementById('isTrial').value;
+            studentData.track = selectedTrack;
+
             closeBookingModal();
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            document.getElementById('detectedTzBox').innerText = "🌐 منطقتك الزمنية المكتشفة: " + tz + " (سيتم مطابقة أوقاتك تلقائياً)";
+            document.getElementById('detectedTzBox').innerText = "🌐 منطقتك الزمنية المكتشفة: " + tz;
             document.getElementById('bookingModalStep2').classList.remove('hidden');
         }
 
@@ -454,8 +415,45 @@
             document.getElementById(slotId).classList.toggle('hidden', !checkbox.checked);
         }
 
-        function finalizeBooking() {
-            alert("تم حفظ أيامك وأوقاتك المتعددة بنجاح! سيتم تحويلك الآن لصفحة إتمام الدفع والتنسيق الفوري.");
+        function sendBookingToWhatsApp() {
+            let scheduleDetails = "";
+            
+            // Gather selected days & hours
+            const days = [
+                { name: 'الإثنين (Monday)', slotsClass: 'slot-mon' },
+                { name: 'الأربعاء (Wednesday)', slotsClass: 'slot-wed' },
+                { name: 'السبت (Saturday)', slotsClass: 'slot-sat' }
+            ];
+
+            days.forEach(d => {
+                const checkedSlots = document.querySelectorAll(`.${d.slotsClass}:checked`);
+                if (checkedSlots.length > 0) {
+                    const times = Array.from(checkedSlots).map(s => s.value).join(', ');
+                    scheduleDetails += `\n- ${d.name}: [${times}]`;
+                }
+            });
+
+            if (!scheduleDetails) {
+                alert("يرجى اختيار يوم واحد على الأقل وتحديد الأوقات المتاحة!");
+                return;
+            }
+
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Format WhatsApp Message
+            const msg = `السلام عليكم شيخ أحمد، أرغب بتأكيد حجزي في الأكاديمية:\n\n` +
+                        `📌 *المسار:* ${studentData.track}\n` +
+                        `📋 *نوع الطلب:* ${studentData.type}\n` +
+                        `📧 *البريد:* ${studentData.email}\n` +
+                        `📱 *رقم الواتساب:* ${studentData.phone}\n` +
+                        `🌐 *المنطقة الزمنية:* ${tz}\n\n` +
+                        `⏰ *الأوقات والأيام المتاحة التي اخترتها:*` + scheduleDetails;
+
+            const encodedMsg = encodeURIComponent(msg);
+            const adminWhatsApp = "201091121907"; // رقم الواتساب الخاص بك
+
+            // Open WhatsApp with prefilled message
+            window.open(`https://wa.me/${adminWhatsApp}?text=${encodedMsg}`, '_blank');
             closeStep2();
         }
 
