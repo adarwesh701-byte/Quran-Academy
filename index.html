@@ -27,7 +27,6 @@
             </div>
             
             <div class="flex items-center gap-2 flex-wrap">
-                <!-- International Language Selector -->
                 <select id="globalLangSelect" onchange="switchLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
                     <option value="ar">العربية (Arabic)</option>
                     <option value="en">English (Global)</option>
@@ -57,7 +56,7 @@
     <!-- Main Layout with Right Navigation -->
     <div class="max-w-7xl mx-auto w-full flex-grow flex flex-col md:flex-row gap-6 p-4">
         
-        <!-- Right Sidebar (التقسيمات على اليمين) -->
+        <!-- Right Sidebar -->
         <aside class="w-full md:w-72 bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3 h-fit sticky top-24 shadow-xl">
             <h3 class="font-bold text-emerald-400 text-sm border-b border-slate-700 pb-2 mb-2 flex items-center" id="sidebarTitle"><i class="fa-solid fa-bars ml-2"></i> مسارات الأكاديمية</h3>
             <button onclick="filterCategory('all')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catAll">الكل / الرئيسية</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
@@ -90,9 +89,7 @@
                     </div>
                 </div>
 
-                <div id="tracksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Dynamic Tracks -->
-                </div>
+                <div id="tracksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
             <!-- MAQAMAT DEDICATED SECTION -->
@@ -177,58 +174,149 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1" id="lblTrialNote">هل ترغب في بدء حصة تجريبية أولاً؟</label>
+                    <label class="block text-xs text-slate-400 mb-1" id="lblTrialNote">نوع الاشتراك / الحصة</label>
                     <select id="isTrial" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
                         <option value="Trial Lesson">نعم، أرغب بحصة تجريبية (Trial Lesson)</option>
                         <option value="Direct Subscription">لا، أرغب بالاشتراك المباشر فوراً</option>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: اختيار الأيام والأوقات المفضلة</button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: اختيار الأيام وكل الأوقات المتاحة</button>
             </form>
         </div>
     </div>
 
-    <!-- BOOKING MODAL (Step 2: Multiple Days & Slots + WhatsApp Direct Dispatch) -->
+    <!-- BOOKING MODAL (Step 2: Full 24-Hour Slots for All Days + WhatsApp Dispatch) -->
     <div id="bookingModalStep2" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeStep2()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center" id="modalTitle2">تحديد الأيام والأوقات الطبيعية المتاحة للدروس</h3>
-            <p class="text-xs text-slate-400 text-center" id="step2Sub">اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:</p>
+            <h3 class="text-lg font-bold text-white text-center" id="modalTitle2">اختر الأيام وكل الساعات المتاحة لك طوال اليوم</h3>
+            <p class="text-xs text-slate-400 text-center" id="step2Sub">قم بتفعيل الأيام التي تناسبك، ثم حدد كل الساعات المتاحة لديك بكل حرية:</p>
 
             <div class="space-y-4 text-xs">
-                <!-- Days & Slots Checkboxes -->
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
-                    <label class="font-bold text-emerald-400 flex items-center gap-2">
-                        <input type="checkbox" value="الإثنين (Monday)" class="day-chk" onchange="toggleDaySlots('monSlots', this)"> الإثنين (Monday)
+                
+                <!-- Day 1: السبت / Saturday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="السبت (Saturday)" class="day-chk" onchange="toggleDayHours('satHours', this)"> السبت (Saturday / Суббота)
                     </label>
-                    <div id="monSlots" class="hidden flex flex-wrap gap-2 pt-1">
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM" class="slot-mon"> 08:00 AM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM" class="slot-mon"> 02:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM" class="slot-mon"> 06:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM" class="slot-mon"> 09:00 PM</label>
+                    <div id="satHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-sat"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-sat"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-sat"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-sat"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-sat"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-sat"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-sat"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-sat"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-sat"> 10:00 PM</label>
                     </div>
                 </div>
 
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
-                    <label class="font-bold text-emerald-400 flex items-center gap-2">
-                        <input type="checkbox" value="الأربعاء (Wednesday)" class="day-chk" onchange="toggleDaySlots('wedSlots', this)"> الأربعاء (Wednesday)
+                <!-- Day 2: الأحد / Sunday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="الأحد (Sunday)" class="day-chk" onchange="toggleDayHours('sunHours', this)"> الأحد (Sunday / Воскресенье)
                     </label>
-                    <div id="wedSlots" class="hidden flex flex-wrap gap-2 pt-1">
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM" class="slot-wed"> 08:00 AM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM" class="slot-wed"> 02:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM" class="slot-wed"> 06:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM" class="slot-wed"> 09:00 PM</label>
+                    <div id="sunHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-sun"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-sun"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-sun"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-sun"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-sun"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-sun"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-sun"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-sun"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-sun"> 10:00 PM</label>
                     </div>
                 </div>
 
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
-                    <label class="font-bold text-emerald-400 flex items-center gap-2">
-                        <input type="checkbox" value="السبت (Saturday)" class="day-chk" onchange="toggleDaySlots('satSlots', this)"> السبت (Saturday)
+                <!-- Day 3: الإثنين / Monday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="الإثنين (Monday)" class="day-chk" onchange="toggleDayHours('monHours', this)"> الإثنين (Monday / Понедельник)
                     </label>
-                    <div id="satSlots" class="hidden flex flex-wrap gap-2 pt-1">
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="10:00 AM" class="slot-sat"> 10:00 AM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="03:00 PM" class="slot-sat"> 03:00 PM</label>
-                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="07:00 PM" class="slot-sat"> 07:00 PM</label>
+                    <div id="monHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-mon"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-mon"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-mon"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-mon"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-mon"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-mon"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-mon"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-mon"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-mon"> 10:00 PM</label>
+                    </div>
+                </div>
+
+                <!-- Day 4: الثلاثاء / Tuesday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="الثلاثاء (Tuesday)" class="day-chk" onchange="toggleDayHours('tueHours', this)"> الثلاثاء (Tuesday / Вторник)
+                    </label>
+                    <div id="tueHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-tue"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-tue"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-tue"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-tue"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-tue"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-tue"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-tue"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-tue"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-tue"> 10:00 PM</label>
+                    </div>
+                </div>
+
+                <!-- Day 5: الأربعاء / Wednesday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="الأربعاء (Wednesday)" class="day-chk" onchange="toggleDayHours('wedHours', this)"> الأربعاء (Wednesday / Среда)
+                    </label>
+                    <div id="wedHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-wed"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-wed"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-wed"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-wed"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-wed"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-wed"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-wed"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-wed"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-wed"> 10:00 PM</label>
+                    </div>
+                </div>
+
+                <!-- Day 6: الخميس / Thursday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="الخميس (Thursday)" class="day-chk" onchange="toggleDayHours('thuHours', this)"> الخميس (Thursday / Четверг)
+                    </label>
+                    <div id="thuHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-thu"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-thu"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-thu"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-thu"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-thu"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-thu"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-thu"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-thu"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-thu"> 10:00 PM</label>
+                    </div>
+                </div>
+
+                <!-- Day 7: الجمعة / Friday -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" value="الجمعة (Friday)" class="day-chk" onchange="toggleDayHours('friHours', this)"> الجمعة (Friday / Пятница)
+                    </label>
+                    <div id="friHours" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2">
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 AM" class="slot-fri"> 06:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 AM" class="slot-fri"> 08:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 AM" class="slot-fri"> 10:00 AM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="12:00 PM" class="slot-fri"> 12:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="02:00 PM" class="slot-fri"> 02:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="04:00 PM" class="slot-fri"> 04:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="06:00 PM" class="slot-fri"> 06:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="08:00 PM" class="slot-fri"> 08:00 PM</label>
+                        <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer"><input type="checkbox" value="10:00 PM" class="slot-fri"> 10:00 PM</label>
                     </div>
                 </div>
 
@@ -236,7 +324,7 @@
             </div>
 
             <button onclick="sendBookingToWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp text-base"></i> إرسال تفاصيل الحجز عبر الواتساب للإدارة
+                <i class="fa-brands fa-whatsapp text-base"></i> إرسال كافة تفاصيل المواعيد والأيام عبر الواتساب للإدارة
             </button>
         </div>
     </div>
@@ -285,9 +373,9 @@
                 lblEmail: "البريد الإلكتروني",
                 lblPhone: "رقم الهاتف / الواتساب مع الرمز الدولي",
                 lblTrialNote: "نوع الاشتراك / الحصة",
-                btnNextStep: "التالي: اختيار الأيام والأوقات المفضلة",
-                modalTitle2: "تحديد الأيام والأوقات الطبيعية المتاحة للدروس",
-                step2Sub: "اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:"
+                btnNextStep: "التالي: اختيار الأيام وكل الأوقات المتاحة",
+                modalTitle2: "اختر الأيام وكل الساعات المتاحة لك طوال اليوم",
+                step2Sub: "قم بتفعيل الأيام التي تناسبك، ثم حدد كل الساعات المتاحة لديك بكل حرية:"
             },
             en: {
                 navTitleText: "Sheikh Ahmed Academy for Maqamat & Quran",
@@ -326,9 +414,9 @@
                 lblEmail: "Email Address",
                 lblPhone: "Phone / WhatsApp with Country Code",
                 lblTrialNote: "Subscription / Lesson Type",
-                btnNextStep: "Next: Choose Preferred Days & Times",
-                modalTitle2: "Select Your Available Regular Lesson Days & Times",
-                step2Sub: "Select multiple days and pick all your available hours for each day with complete flexibility:"
+                btnNextStep: "Next: Choose Days & All Available Hours",
+                modalTitle2: "Select Days and All Available Hours Throughout the Day",
+                step2Sub: "Enable the days that suit you, then select all available hours with complete freedom:"
             }
         };
 
@@ -411,48 +499,49 @@
             document.getElementById('bookingModalStep2').classList.add('hidden');
         }
 
-        function toggleDaySlots(slotId, checkbox) {
-            document.getElementById(slotId).classList.toggle('hidden', !checkbox.checked);
+        function toggleDayHours(hoursId, checkbox) {
+            document.getElementById(hoursId).classList.toggle('hidden', !checkbox.checked);
         }
 
         function sendBookingToWhatsApp() {
             let scheduleDetails = "";
             
-            // Gather selected days & hours
-            const days = [
-                { name: 'الإثنين (Monday)', slotsClass: 'slot-mon' },
-                { name: 'الأربعاء (Wednesday)', slotsClass: 'slot-wed' },
-                { name: 'السبت (Saturday)', slotsClass: 'slot-sat' }
+            const daysConfig = [
+                { name: 'السبت (Saturday)', cls: 'slot-sat' },
+                { name: 'الأحد (Sunday)', cls: 'slot-sun' },
+                { name: 'الإثنين (Monday)', cls: 'slot-mon' },
+                { name: 'الثلاثاء (Tuesday)', cls: 'slot-tue' },
+                { name: 'الأربعاء (Wednesday)', cls: 'slot-wed' },
+                { name: 'الخميس (Thursday)', cls: 'slot-thu' },
+                { name: 'الجمعة (Friday)', cls: 'slot-fri' }
             ];
 
-            days.forEach(d => {
-                const checkedSlots = document.querySelectorAll(`.${d.slotsClass}:checked`);
-                if (checkedSlots.length > 0) {
-                    const times = Array.from(checkedSlots).map(s => s.value).join(', ');
+            daysConfig.forEach(d => {
+                const checkedHours = document.querySelectorAll(`.${d.cls}:checked`);
+                if (checkedHours.length > 0) {
+                    const times = Array.from(checkedHours).map(h => h.value).join(', ');
                     scheduleDetails += `\n- ${d.name}: [${times}]`;
                 }
             });
 
             if (!scheduleDetails) {
-                alert("يرجى اختيار يوم واحد على الأقل وتحديد الأوقات المتاحة!");
+                alert("يرجى اختيار يوم واحد على الأقل وتحديد بعض الساعات المتاحة!");
                 return;
             }
 
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-            // Format WhatsApp Message
             const msg = `السلام عليكم شيخ أحمد، أرغب بتأكيد حجزي في الأكاديمية:\n\n` +
                         `📌 *المسار:* ${studentData.track}\n` +
                         `📋 *نوع الطلب:* ${studentData.type}\n` +
                         `📧 *البريد:* ${studentData.email}\n` +
                         `📱 *رقم الواتساب:* ${studentData.phone}\n` +
                         `🌐 *المنطقة الزمنية:* ${tz}\n\n` +
-                        `⏰ *الأوقات والأيام المتاحة التي اخترتها:*` + scheduleDetails;
+                        `⏰ *الأيام والساعات المتاحة التي اخترتها:*` + scheduleDetails;
 
             const encodedMsg = encodeURIComponent(msg);
-            const adminWhatsApp = "201091121907"; // رقم الواتساب الخاص بك
+            const adminWhatsApp = "201091121907";
 
-            // Open WhatsApp with prefilled message
             window.open(`https://wa.me/${adminWhatsApp}?text=${encodedMsg}`, '_blank');
             closeStep2();
         }
