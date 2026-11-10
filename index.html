@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title id="pageTitle">أكاديمية الإتقان العالمية - Itqan Global Academy</title>
+    <title id="pageTitle">أكاديمية الإتقان العالمية - Sheikh Ahmed Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -21,353 +21,447 @@
                     أ
                 </div>
                 <div>
-                    <h1 class="text-lg md:text-xl font-bold text-emerald-400">أكاديمية الإتقان العالمية</h1>
-                    <p class="text-xs text-slate-400">إجازات • تحفيظ • مقامات • تفسير • علوم الإسلام</p>
+                    <h1 class="text-lg md:text-xl font-bold text-emerald-400" id="navTitleText">أكاديمية الشيخ أحمد للمقامات والقرآن</h1>
+                    <p class="text-xs text-slate-400" id="navSubText">إجازات • تحفيظ • مقامات صوتية • تفسير</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="showSection('home')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">الرئيسية</button>
-                <button onclick="showSection('social')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">منصاتنا وشبكاتنا</button>
-                
-                <div id="userInfoHeader" class="hidden items-center gap-2">
-                    <span id="headerUserName" class="text-xs font-bold text-emerald-300"></span>
-                    <button onclick="handleLogout()" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer">خروج</button>
-                </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- International Language Selector -->
+                <select id="globalLangSelect" onchange="switchLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
+                    <option value="ar">العربية (Arabic)</option>
+                    <option value="en">English (Global)</option>
+                    <option value="ru">Русский (Russia)</option>
+                    <option value="tr">Türkçe (Turkey)</option>
+                    <option value="ur">اردو (Pakistan/India)</option>
+                    <option value="id">Bahasa Indonesia</option>
+                    <option value="ms">Bahasa Melayu</option>
+                    <option value="bn">বাংলা (Bangladesh)</option>
+                    <option value="fr">Français (France)</option>
+                    <option value="de">Deutsch (Germany)</option>
+                    <option value="it">Italiano (Italy)</option>
+                    <option value="nz">English (New Zealand)</option>
+                </select>
 
-                <div id="authHeaderButtons">
-                    <button onclick="showAuthModal('login')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md cursor-pointer">تسجيل الدخول</button>
-                </div>
+                <button onclick="showSection('home')" class="text-xs text-emerald-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnHome">الرئيسية</button>
+                <button onclick="showSection('maqamatTrack')" class="text-xs text-amber-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnMaqamat">🎵 المقامات (مجاني وبرايفت)</button>
+                <button onclick="showSection('social')" class="text-xs text-emerald-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnSocial">منصاتنا</button>
+                
+                <button onclick="openBookingModal('Trial Lesson')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-1.5 rounded-xl text-xs font-extrabold transition shadow-lg cursor-pointer animate-pulse" id="btnTrial">
+                    ✨ حصة تجريبية (Trial Lesson)
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="py-8 px-4 max-w-7xl mx-auto w-full flex-grow space-y-10">
+    <!-- Main Layout with Right Navigation -->
+    <div class="max-w-7xl mx-auto w-full flex-grow flex flex-col md:flex-row gap-6 p-4">
         
-        <!-- HOME SECTION -->
-        <div id="homeSection" class="space-y-10">
-            <!-- Hero Banner -->
-            <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-10 text-center shadow-2xl relative overflow-hidden">
-                <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
-                    منصة تعليمية متكاملة لعلوم القرآن والإسلام
-                </span>
-                <h2 class="text-xl md:text-3xl font-extrabold text-white mt-6 mb-4 leading-relaxed">
-                    حفظ القرآن الكريم وإجازات بالسند المتصل للنبي ﷺ <br/>
-                    <span class="text-emerald-400">• المقامات الصوتية وتجميل التلاوة •</span> <br/>
-                    <span class="text-amber-400">• تفسير القرآن • علوم الإسلام •</span>
-                </h2>
-                <p class="text-slate-400 text-xs md:text-sm max-w-3xl mx-auto">
-                    اختر التخصص المناسب، حدد اليوم والساعة المتاحة بحسب منطقتك الزمنية، وسيقوم النظام بتنسيق الحصة تلقائياً مع الجدول الإداري بتوقيت مصر.
-                </p>
-            </div>
+        <!-- Right Sidebar (التقسيمات على اليمين) -->
+        <aside class="w-full md:w-72 bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3 h-fit sticky top-24 shadow-xl">
+            <h3 class="font-bold text-emerald-400 text-sm border-b border-slate-700 pb-2 mb-2 flex items-center" id="sidebarTitle"><i class="fa-solid fa-bars ml-2"></i> مسارات الأكاديمية</h3>
+            <button onclick="filterCategory('all')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catAll">الكل / الرئيسية</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+            <button onclick="filterCategory('ijaza')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catIjaza">📜 إجازات بالسند المتصل</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+            <button onclick="filterCategory('hifz')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catHifz">📖 تحفيظ القرآن الكريم</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+            <button onclick="filterCategory('maqamat')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catMaqamat">🎵 مقامات صوتية وتلاوة</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+            <button onclick="filterCategory('tafseer')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catTafseer">💡 تفسير وعلوم الإسلام</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+        </aside>
 
-            <!-- Categories / Tracks Section -->
-            <div class="space-y-6">
-                <h3 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fa-solid fa-layer-group text-emerald-400 ml-2"></i> تخصصات ومسارات الأكاديمية
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <!-- Track 1: Ijaza -->
-                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-bold">📜 مسار الإجازات بالسند</span>
-                            <button onclick="openBookingModal('إجازات بالسند المتصل')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
-                        </div>
-                        <h4 class="text-lg font-bold text-white">إجازات القراءات القرآنية المتصلة بالسند</h4>
-                        <p class="text-xs text-slate-300 leading-relaxed">تتضمن مادة هذا القسم شرح أحكام الأداء، السند المتصل، والتلقي المباشر عبر الحصص التفاعلية.</p>
+        <!-- Main Content Area -->
+        <main class="flex-grow space-y-8">
+            
+            <!-- HOME SECTION -->
+            <div id="homeSection" class="space-y-8">
+                <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-8 text-center shadow-2xl relative overflow-hidden space-y-4">
+                    <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30" id="heroBadge">
+                        مرحباً بكم في منصة الشيخ أحمد الخاصة
+                    </span>
+                    <h2 class="text-xl md:text-3xl font-extrabold text-white leading-relaxed" id="heroTitle">
+                        أتقن القرآن الكريم ومقامات التلاوة بصوتك <br/>
+                        <span class="text-emerald-400">مع إجازات متصلة السند</span> وتوجيه مباشر.
+                    </h2>
+                    <p class="text-slate-400 text-xs md:text-sm max-w-2xl mx-auto" id="heroDesc">
+                        منصة فريدة ومخصصة للطلاب في الغرب والشرق وروسيا وآسيا، تجمع بين علوم التجويد، التدريب الصوتي المتقدم على المقامات، والتفسير المبسط.
+                    </p>
+                    <div class="pt-2">
+                        <button onclick="openBookingModal('General Lesson')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition" id="heroBtnBook">
+                            احجز حصتك الآن (Book a Lesson)
+                        </button>
                     </div>
-
-                    <!-- Track 2: Hifz -->
-                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">📖 مسار التحفيظ</span>
-                            <button onclick="openBookingModal('تحفيظ القرآن الكريم')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
-                        </div>
-                        <h4 class="text-lg font-bold text-white">تحفيظ القرآن الكريم ومراجعة الحفظ</h4>
-                        <p class="text-xs text-slate-300 leading-relaxed">برامج مخصصة لتثبيت الحفظ، خطط يومية ومتابعة دقيقة لمواطن الضعف والتثبيت.</p>
-                    </div>
-
-                    <!-- Track 3: Maqamat -->
-                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-full font-bold">🎵 مسار المقامات والتلاوة</span>
-                            <button onclick="openBookingModal('مقامات صوتية وتجميل التلاوة')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
-                        </div>
-                        <h4 class="text-lg font-bold text-white">المقامات الصوتية الثمانية وتجميل الصوت</h4>
-                        <p class="text-xs text-slate-300 leading-relaxed">دراسة المقامات الثمانية والتطبيقات العملية لتحسين النغمة الصوتية في القرآن الكريم.</p>
-                    </div>
-
-                    <!-- Track 4: Tafseer -->
-                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full font-bold">💡 مسار التفسير وعلوم الإسلام</span>
-                            <button onclick="openBookingModal('تفسير القرآن وعلوم الإسلام')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition cursor-pointer">حجز حصة</button>
-                        </div>
-                        <h4 class="text-lg font-bold text-white">تفسير القرآن وعلوم الشريعة</h4>
-                        <p class="text-xs text-slate-300 leading-relaxed">تدبر معاني الآيات، أسباب النزول، والفقه الإسلامي بلغة مبسطة وعميقة.</p>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- TEACHER DASHBOARD (Only shown to Teachers) -->
-        <div id="teacherDashboard" class="hidden space-y-6">
-            <div class="bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-6">
-                <h5 class="font-bold text-amber-400 text-lg flex items-center">
-                    <i class="fa-solid fa-clock ml-2"></i> تحديد أوقاتي المتاحة للعمل (خاص بالمعلم)
-                </h5>
-                
-                <form onsubmit="handleSaveTeacherAvailability(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-2">الأيام المتاحة للتدريس:</label>
-                        <div class="flex flex-wrap gap-2 text-xs">
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الأحد" class="t-day"> الأحد</label>
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الإثنين" class="t-day"> الإثنين</label>
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الثلاثاء" class="t-day"> الثلاثاء</label>
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الأربعاء" class="t-day"> الأربعاء</label>
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الخميس" class="t-day"> الخميس</label>
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="الجمعة" class="t-day"> الجمعة</label>
-                            <label class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="السبت" class="t-day"> السبت</label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-2">الساعات المتاحة خلال اليوم (بتوقيت القاهرة):</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs">
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="10:00 ص" class="t-hour"> 10:00 ص</label>
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="12:00 م" class="t-hour"> 12:00 م</label>
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="02:00 م" class="t-hour"> 02:00 م</label>
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="04:00 م" class="t-hour"> 04:00 م</label>
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="06:00 م" class="t-hour"> 06:00 م</label>
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="08:00 م" class="t-hour"> 08:00 م</label>
-                            <label class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" value="10:00 م" class="t-hour"> 10:00 م</label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 px-6 rounded-xl cursor-pointer">حفظ أوقاتي المتاحة</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- OWNER / ADMIN DASHBOARD (Strictly Exclusive for Owner) -->
-        <div id="ownerDashboard" class="hidden space-y-6">
-            <div class="bg-slate-800 border border-emerald-500/50 rounded-2xl p-6 shadow-2xl space-y-6">
-                <div class="flex justify-between items-center border-b border-slate-700 pb-4">
-                    <h5 class="font-bold text-emerald-400 text-xl flex items-center">
-                        <i class="fa-solid fa-user-shield ml-2"></i> لوحة الإدارة العليا والتحكم اليدوي الكامل (Owner Panel)
-                    </h5>
-                    <span class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1 rounded-full font-bold">خاص بالمالك فقط</span>
                 </div>
 
-                <!-- Owner Manual Control Forms -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Manual Booking Override -->
-                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-3">
-                        <h6 class="font-bold text-amber-400 text-sm">تعديل/إضافة حجز يدوي لطالب</h6>
-                        <form onsubmit="handleOwnerManualBooking(event)" class="space-y-3">
-                            <input type="text" id="manualStudentName" placeholder="اسم الطالب..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="tel" id="manualPhone" placeholder="رقم الهاتف/الواتساب..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="text" id="manualAssignTeacher" placeholder="اسم المعلم المعين..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="datetime-local" id="manualTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer">حفظ الحجز اليدوي</button>
-                        </form>
+                <div id="tracksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Dynamic Tracks -->
+                </div>
+            </div>
+
+            <!-- MAQAMAT DEDICATED SECTION -->
+            <div id="maqamatTrackSection" class="hidden space-y-6">
+                <div class="bg-slate-800 border border-amber-500/40 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
+                    <div class="border-b border-slate-700 pb-4">
+                        <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-bold" id="maqBadge">🎵 قسم المقامات الصوتية المتخصص</span>
+                        <h3 class="text-2xl font-bold text-white mt-2" id="maqTitle">تعلم المقامات الثمانية (بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا)</h3>
                     </div>
 
-                    <!-- System Statistics & Bookings List -->
-                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-3">
-                        <h6 class="font-bold text-emerald-400 text-sm">جدول الحصص المجدولة والمطابقة</h6>
-                        <div id="ownerBookingsList" class="space-y-2 max-h-56 overflow-y-auto text-xs">
-                            <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700">
-                                <div class="font-bold text-white flex justify-between">
-                                    <span>طالب: أحمد محمد</span>
-                                    <span class="text-emerald-400">مكتمل</span>
-                                </div>
-                                <div class="text-slate-400 text-[11px] mt-1">المعلم: معلم 1 | الوقت (مصر): 08:00 م</div>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-slate-900 border border-slate-700 p-5 rounded-2xl space-y-3">
+                            <span class="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded" id="tierFree">محتوى مجاني</span>
+                            <h4 class="font-bold text-white text-base" id="tierFreeTitle">المقامات الأساسية للمبتدئين</h4>
+                            <p class="text-xs text-slate-400" id="tierFreeDesc">دروس صوتية ومقاطع مرجعية للتعرف على النغمات الأساسية وطريقة التدرب عليها.</p>
+                            <button onclick="alert('Opened Free Maqamat!')" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs py-2 rounded-xl border border-slate-700" id="btnTierFree">ابدأ التعلم مجاناً</button>
+                        </div>
+                        <div class="bg-slate-900 border border-emerald-500/40 p-5 rounded-2xl space-y-3 shadow-lg">
+                            <span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded" id="tierGroup">اشتراك جماعي</span>
+                            <h4 class="font-bold text-white text-base" id="tierGroupTitle">ورشة المقامات والتدريب الجماعي</h4>
+                            <p class="text-xs text-slate-400" id="tierGroupDesc">حصص دورية مشتركة لممارسة التطبيق العملي وتقييم الأصوات مع زملاء الدراسة.</p>
+                            <button onclick="openBookingModal('Group Maqamat Workshop')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl" id="btnTierGroup">انضم للورشة الجماعية</button>
+                        </div>
+                        <div class="bg-slate-900 border border-purple-500/40 p-5 rounded-2xl space-y-3 shadow-lg">
+                            <span class="text-xs text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded" id="tierPrivate">اشتراك خاص (Private)</span>
+                            <h4 class="font-bold text-white text-base" id="tierPrivateTitle">تدريب خاص وفردي (1-on-1)</h4>
+                            <p class="text-xs text-slate-400" id="tierPrivateDesc">متابعة دقيقة ومخصصة لصوتك، تصحيح المقامات، وتسجيل ملاحظات خاصة لتطوير أدائك بسرعة.</p>
+                            <button onclick="openBookingModal('Private Maqamat Coaching')" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl" id="btnTierPrivate">احجز تدريب برايفت</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- SOCIAL MEDIA SECTION -->
-        <div id="socialSection" class="hidden space-y-8">
-            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 text-center space-y-4 shadow-xl">
-                <h3 class="text-2xl font-bold text-emerald-400">تابعنا على منصات التواصل الاجتماعي وشبكات الأكاديمية</h3>
-                <div class="flex flex-wrap justify-center gap-4 pt-4">
-                    <a href="https://tiktok.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
-                        <i class="fa-brands fa-tiktok text-emerald-400 text-lg"></i> تيك توك (TikTok)
-                    </a>
-                    <a href="https://instagram.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
-                        <i class="fa-brands fa-instagram text-pink-400 text-lg"></i> انستجرام (Instagram)
-                    </a>
+            <!-- SOCIAL MEDIA SECTION -->
+            <div id="socialSection" class="hidden space-y-8">
+                <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 text-center space-y-4 shadow-xl">
+                    <h3 class="text-2xl font-bold text-emerald-400" id="socTitle">صفحاتنا الرسمية على السوشيال ميديا</h3>
+                    <p class="text-xs text-slate-300" id="socDesc">تابع نماذج التلاوة، التوجيهات، ومقاطع المقامات اليومية:</p>
+                    <div class="flex flex-wrap justify-center gap-4 pt-4">
+                        <a href="https://tiktok.com" target="_blank" class="bg-slate-900 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2"><i class="fa-brands fa-tiktok text-emerald-400 text-lg"></i> TikTok</a>
+                        <a href="https://instagram.com" target="_blank" class="bg-slate-900 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2"><i class="fa-brands fa-instagram text-pink-400 text-lg"></i> Instagram</a>
+                        <a href="https://youtube.com" target="_blank" class="bg-slate-900 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2"><i class="fa-brands fa-youtube text-rose-400 text-lg"></i> YouTube</a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <!-- BOOKING MODAL WITH TIMEZONE & MATCHING -->
+    <!-- BOOKING MODAL (Step 1: Info & Trial Selection) -->
     <div id="bookingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeBookingModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center">حجز حصة جديدة وتحديد الموعد</h3>
+            <h3 class="text-lg font-bold text-white text-center" id="modalTitle1">حجز حصة أو اشتراك جديد</h3>
             <p id="selectedTrackName" class="text-xs text-emerald-400 text-center font-bold"></p>
 
-            <form onsubmit="handleBookingSubmit(event)" class="space-y-3">
+            <form onsubmit="goToStep2(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="bookEmail" required placeholder="email@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <label class="block text-xs text-slate-400 mb-1" id="lblEmail">البريد الإلكتروني</label>
+                    <input type="email" id="bookEmail" required placeholder="student@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 </div>
-
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">رقم الواتساب / التواصل المباشر</label>
-                    <input type="tel" id="bookPhone" required placeholder="+2010xxxxxxx" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <label class="block text-xs text-slate-400 mb-1" id="lblPhone">رقم الهاتف / الواتساب مع الرمز الدولي</label>
+                    <div class="flex gap-2">
+                        <select id="countryCode" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs text-amber-400 font-bold w-32">
+                            <option value="+20">🇪🇬 +20 (Egypt)</option>
+                            <option value="+966">🇸🇦 +966 (KSA)</option>
+                            <option value="+971">🇦🇪 +971 (UAE)</option>
+                            <option value="+44">🇬🇧 +44 (UK)</option>
+                            <option value="+1">🇺🇸 +1 (USA/CA)</option>
+                            <option value="+7">🇷🇺 +7 (Russia)</option>
+                            <option value="+90">🇹🇷 +90 (Turkey)</option>
+                            <option value="+92">🇵🇰 +92 (Pakistan)</option>
+                            <option value="+62">🇮🇩 +62 (Indonesia)</option>
+                            <option value="+60">🇲🇾 +60 (Malaysia)</option>
+                            <option value="+880">🇧🇩 +880 (Bangladesh)</option>
+                            <option value="+33">🇫🇷 +33 (France)</option>
+                            <option value="+49">🇩🇪 +49 (Germany)</option>
+                            <option value="+39">🇮🇹 +39 (Italy)</option>
+                            <option value="+64">🇳🇿 +64 (New Zealand)</option>
+                        </select>
+                        <input type="tel" id="bookPhone" required placeholder="1091121907" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
                 </div>
-
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">اختر اليوم المفضل</label>
-                    <select id="bookDaySelect" onchange="updateAvailableHours()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold">
-                        <option value="الأحد">الأحد</option>
-                        <option value="الإثنين">الإثنين</option>
-                        <option value="الثلاثاء">الثلاثاء</option>
-                        <option value="الأربعاء">الأربعاء</option>
-                        <option value="الخميس">الخميس</option>
-                        <option value="الجمعة">الجمعة</option>
-                        <option value="السبت">السبت</option>
+                    <label class="block text-xs text-slate-400 mb-1" id="lblTrialNote">هل ترغب في بدء حصة تجريبية أولاً؟</label>
+                    <select id="isTrial" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
+                        <option value="yes">نعم، أرغب بحصة تجريبية (Trial Lesson)</option>
+                        <option value="no">لا، أرغب بالاشتراك المباشر فوراً</option>
                     </select>
                 </div>
-
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">اختر الساعة المتاحة (بتوقيتك المحلي)</label>
-                    <select id="bookHourSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
-                        <!-- Dynamic Hours -->
-                    </select>
-                    <span id="detectedTimezone" class="text-[10px] text-amber-400 mt-1 block"></span>
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer">تأكيد حجز الحصة والمطابقة</button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: اختيار الأيام والأوقات المفضلة</button>
             </form>
         </div>
     </div>
 
-    <!-- AUTH MODAL (Login only) -->
-    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
-            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-xl font-bold text-white mb-4 text-center">تسجيل الدخول للمنصة</h3>
-            <form onsubmit="handleAuthSubmit(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="loginEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+    <!-- BOOKING MODAL (Step 2: Multiple Days & Multiple Times Slots) -->
+    <div id="bookingModalStep2" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeStep2()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-lg font-bold text-white text-center" id="modalTitle2">تحديد الأيام والأوقات الطبيعية المتاحة للدروس</h3>
+            <p class="text-xs text-slate-400 text-center" id="step2Sub">اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:</p>
+
+            <div class="space-y-4 text-xs">
+                <!-- Day 1: Monday -->
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2">
+                        <input type="checkbox" value="Monday" class="day-chk" onchange="toggleDaySlots('monSlots', this)"> الإثنين (Monday / Понедельник)
+                    </label>
+                    <div id="monSlots" class="hidden flex flex-wrap gap-2 pt-1">
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM"> 08:00 AM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM"> 02:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM"> 06:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM"> 09:00 PM</label>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">كلمة المرور</label>
-                    <input type="password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+
+                <!-- Day 2: Wednesday -->
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2">
+                        <input type="checkbox" value="Wednesday" class="day-chk" onchange="toggleDaySlots('wedSlots', this)"> الأربعاء (Wednesday / Среда)
+                    </label>
+                    <div id="wedSlots" class="hidden flex flex-wrap gap-2 pt-1">
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="08:00 AM"> 08:00 AM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="02:00 PM"> 02:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="06:00 PM"> 06:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="09:00 PM"> 09:00 PM</label>
+                    </div>
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl cursor-pointer">دخول</button>
-            </form>
+
+                <!-- Day 3: Saturday -->
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2">
+                    <label class="font-bold text-emerald-400 flex items-center gap-2">
+                        <input type="checkbox" value="Saturday" class="day-chk" onchange="toggleDaySlots('satSlots', this)"> السبت (Saturday / Суббота)
+                    </label>
+                    <div id="satSlots" class="hidden flex flex-wrap gap-2 pt-1">
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="10:00 AM"> 10:00 AM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="03:00 PM"> 03:00 PM</label>
+                        <label class="bg-slate-800 px-2 py-1 rounded border border-slate-700"><input type="checkbox" value="07:00 PM"> 07:00 PM</label>
+                    </div>
+                </div>
+
+                <div id="detectedTzBox" class="text-[11px] text-amber-400 font-bold text-center"></div>
+            </div>
+
+            <button onclick="finalizeBooking()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnFinalSubmit">إتمام الحجز والانتقال لخيارات الدفع</button>
         </div>
     </div>
 
     <!-- Script Logic -->
     <script>
-        let currentUser = null;
+        let currentLang = 'ar';
         let selectedTrack = '';
 
-        // Default available hours in system
-        const availableHoursList = ["10:00 ص", "12:00 م", "02:00 م", "04:00 م", "06:00 م", "08:00 م", "10:00 م"];
+        const translations = {
+            ar: {
+                navTitleText: "أكاديمية الشيخ أحمد للمقامات والقرآن",
+                navSubText: "إجازات • تحفيظ • مقامات صوتية • تفسير",
+                btnHome: "الرئيسية",
+                btnMaqamat: "🎵 المقامات (مجاني وبرايفت)",
+                btnSocial: "منصاتنا",
+                btnTrial: "✨ حصة تجريبية (Trial Lesson)",
+                sidebarTitle: "مسارات الأكاديمية",
+                catAll: "الكل / الرئيسية",
+                catIjaza: "📜 إجازات بالسند المتصل",
+                catHifz: "📖 تحفيظ القرآن الكريم",
+                catMaqamat: "🎵 مقامات صوتية وتلاوة",
+                catTafseer: "💡 تفسير وعلوم الإسلام",
+                heroBadge: "مرحباً بكم في منصة الشيخ أحمد الخاصة",
+                heroTitle: "أتقن القرآن الكريم ومقامات التلاوة بصوتك <br/><span class='text-emerald-400'>مع إجازات متصلة السند</span> وتوجيه مباشر.",
+                heroDesc: "منصة فريدة ومخصصة للطلاب في الغرب والشرق وروسيا وآسيا، تجمع بين علوم التجويد، التدريب الصوتي المتقدم على المقامات، والتفسير المبسط.",
+                heroBtnBook: "احجز حصتك الآن (Book a Lesson)",
+                maqBadge: "🎵 قسم المقامات الصوتية المتخصص",
+                maqTitle: "تعلم المقامات الثمانية (بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا)",
+                tierFree: "محتوى مجاني",
+                tierFreeTitle: "المقامات الأساسية للمبتدئين",
+                tierFreeDesc: "دروس صوتية ومقاطع مرجعية للتعرف على النغمات الأساسية وطريقة التدرب عليها.",
+                btnTierFree: "ابدأ التعلم مجاناً",
+                tierGroup: "اشتراك جماعي",
+                tierGroupTitle: "ورشة المقامات والتدريب الجماعي",
+                tierGroupDesc: "حصص دورية مشتركة لممارسة التطبيق العملي وتقييم الأصوات مع زملاء الدراسة.",
+                btnTierGroup: "انضم للورشة الجماعية",
+                tierPrivate: "اشتراك خاص (Private)",
+                tierPrivateTitle: "تدريب خاص وفردي (1-on-1)",
+                tierPrivateDesc: "متابعة دقيقة ومخصصة لصوتك، تصحيح المقامات، وتسجيل ملاحظات خاصة لتطوير أدائك بسرعة.",
+                btnTierPrivate: "احجز تدريب برايفت",
+                socTitle: "صفحاتنا الرسمية على السوشيال ميديا",
+                socDesc: "تابع نماذج التلاوة، التوجيهات، ومقاطع المقامات اليومية:",
+                modalTitle1: "حجز حصة أو اشتراك جديد",
+                lblEmail: "البريد الإلكتروني",
+                lblPhone: "رقم الهاتف / الواتساب مع الرمز الدولي",
+                lblTrialNote: "هل ترغب في بدء حصة تجريبية أولاً؟",
+                btnNextStep: "التالي: اختيار الأيام والأوقات المفضلة",
+                modalTitle2: "تحديد الأيام والأوقات الطبيعية المتاحة للدروس",
+                step2Sub: "اختر أكثر من يوم وحدد الساعات المتاحة لك في كل يوم بمرونة تامة:",
+                btnFinalSubmit: "إتمام الحجز والانتقال لخيارات الدفع"
+            },
+            en: {
+                navTitleText: "Sheikh Ahmed Academy for Maqamat & Quran",
+                navSubText: "Ijaza • Hifz • Voice Maqamat • Tafseer",
+                btnHome: "Home",
+                btnMaqamat: "🎵 Maqamat (Free & Private)",
+                btnSocial: "Social Media",
+                btnTrial: "✨ Trial Lesson",
+                sidebarTitle: "Academy Tracks",
+                catAll: "All / Home",
+                catIjaza: "📜 Connected Ijaza",
+                catHifz: "📖 Quran Hifz (Memorization)",
+                catMaqamat: "🎵 Voice Maqamat & Recitation",
+                catTafseer: "💡 Tafseer & Islamic Sciences",
+                heroBadge: "Welcome to Sheikh Ahmed's Private Platform",
+                heroTitle: "Master the Quran & Recitation Maqamat with Your Voice <br/><span class='text-emerald-400'>with Connected Ijaza</span> & Direct Guidance.",
+                heroDesc: "A unique platform for students worldwide, combining Tajweed rules, advanced vocal Maqamat training, and simplified Tafseer.",
+                heroBtnBook: "Book Your Lesson Now",
+                maqBadge: "🎵 Specialized Voice Maqamat Section",
+                maqTitle: "Learn the 8 Primary Maqamat (Bayati, Rast, Nahawand, Hijaz, Kurd, Sikah, Ajam, Saba)",
+                tierFree: "Free Content",
+                tierFreeTitle: "Essential Maqamat for Beginners",
+                tierFreeDesc: "Audio lessons and reference clips to recognize basic tones and practice techniques.",
+                btnTierFree: "Start Learning Free",
+                tierGroup: "Group Subscription",
+                tierGroupTitle: "Maqamat Workshop & Group Practice",
+                tierGroupDesc: "Regular joint sessions for practical application and peer voice evaluation.",
+                btnTierGroup: "Join Group Workshop",
+                tierPrivate: "Private Subscription",
+                tierPrivateTitle: "1-on-1 Private Coaching",
+                tierPrivateDesc: "Precise personalized tracking, maqam correction, and tailored feedback notes.",
+                btnTierPrivate: "Book Private Coaching",
+                socTitle: "Our Official Social Media Pages",
+                socDesc: "Follow recitation samples, guidance, and daily maqam clips:",
+                modalTitle1: "Book a Lesson or Subscription",
+                lblEmail: "Email Address",
+                lblPhone: "Phone / WhatsApp with Country Code",
+                lblTrialNote: "Would you like to start with a Trial Lesson first?",
+                btnNextStep: "Next: Choose Preferred Days & Times",
+                modalTitle2: "Select Your Available Regular Lesson Days & Times",
+                step2Sub: "Select multiple days and pick all your available hours for each day with complete flexibility:",
+                btnFinalSubmit: "Finalize Booking & Proceed to Payment Options"
+            },
+            ru: {
+                navTitleText: "Академия Шейха Ахмеда по Макамату и Корану",
+                navSubText: "Иджаза • Хифз • Голосовые Макаматы • Тафсир",
+                btnHome: "Главная",
+                btnMaqamat: "🎵 Макаматы (Бесплатно и Приватно)",
+                btnSocial: "Соцсети",
+                btnTrial: "✨ Пробный урок",
+                sidebarTitle: "Направления Академии",
+                catAll: "Все / Главная",
+                catIjaza: "📜 Иджаза со связью иснада",
+                catHifz: "📖 Заучивание Корана (Хифз)",
+                catMaqamat: "🎵 Вокальные Макаматы и Кыраат",
+                catTafseer: "💡 Тафсир и Исламские науки",
+                heroBadge: "Добро пожаловать на личную платформу Шейха Ахмеда",
+                heroTitle: "Освойте Коран и макаматы чтения вашим голосом <br/><span class='text-emerald-400'>с непрерывной иджазой</span> и прямым руководством.",
+                heroDesc: "Уникальная платформа для студентов по всему миру, объединяющая правила таджвида, продвинутый вокальный тренинг макаматов и понятный тафсир.",
+                heroBtnBook: "Забронировать урок",
+                maqBadge: "🎵 Специализированный раздел Макаматов",
+                maqTitle: "Изучите 8 основных макаматов (Баяти, Раст, Нахаванд, Хиджаз, Курд, Сика, Аджам, Саба)",
+                tierFree: "Бесплатный контент",
+                tierFreeTitle: "Основы макаматов для начинающих",
+                tierFreeDesc: "Аудио-уроки и справочные материалы для изучения основных тональностей.",
+                btnTierFree: "Начать бесплатно",
+                tierGroup: "Групповая подписка",
+                tierGroupTitle: "Мастер-класс и групповая практика",
+                tierGroupDesc: "Регулярные совместные занятия для практического применения.",
+                btnTierGroup: "Вступить в группу",
+                tierPrivate: "Личная подписка (Private)",
+                tierPrivateTitle: "Индивидуальный коучинг 1-на-1",
+                tierPrivateDesc: "Точное персональное сопровождение, коррекция макаматов и обратная связь.",
+                btnTierPrivate: "Забронировать приват",
+                socTitle: "Наши официальные страницы",
+                socDesc: "Следите за примерами чтения и ежедневными клипами макаматов:",
+                modalTitle1: "Бронирование урока или подписки",
+                lblEmail: "Электронная почта",
+                lblPhone: "Телефон / WhatsApp с кодом страны",
+                lblTrialNote: "Хотите начать с пробного урока?",
+                btnNextStep: "Далее: Выберите дни и время",
+                modalTitle2: "Выберите доступные дни и время для занятий",
+                step2Sub: "Выберите несколько дней и отметьте все доступные часы для каждого дня:",
+                btnFinalSubmit: "Завершить бронирование и перейти к оплате"
+            }
+            // يمكن إضافة باقي اللغات بسهولة عبر مطابقة نفس المفاتيح
+        };
+
+        const tracksData = [
+            { id: 'ijaza', title: '📜 إجازات القراءات والسند المتصل / Connected Ijaza', desc: 'تلقي دقيق برواية حفص وعاصم أو القراءات العشر مع سند متصل للنبي ﷺ.', teacher: 'الشيخ أحمد خالد' },
+            { id: 'hifz', title: '📖 تحفيظ القرآن الكريم والمتابعة / Quran Hifz', desc: 'برامج حفظ ومراجعة وتثبيت مع خطط يومية مخصصة وملاحظات دورية.', teacher: 'فريق المعلمين المعتمدين' },
+            { id: 'maqamat', title: '🎵 مقامات صوتية وتجميل التلاوة / Voice Maqamat', desc: 'تدريب احترافي على المقامات الثمانية لتحسين النغمة والخشوع في التلاوة.', teacher: 'الشيخ أحمد خالد' },
+            { id: 'tafseer', title: '💡 تفسير القرآن وعلوم الإسلام / Quran Tafseer', desc: 'فهم معاني الآيات وأسباب النزول عبر تدبر هادئ وعميق.', teacher: 'د. نور' }
+        ];
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            const dict = translations[lang] || translations['en'];
+            const root = document.getElementById('htmlRoot');
+
+            if (lang === 'ar' || lang === 'ur') {
+                root.setAttribute('dir', 'rtl');
+                root.setAttribute('lang', lang);
+            } else {
+                root.setAttribute('dir', 'ltr');
+                root.setAttribute('lang', lang);
+            }
+
+            for (const key in dict) {
+                const el = document.getElementById(key);
+                if (el) el.innerHTML = dict[key];
+            }
+            filterCategory('all');
+        }
 
         function showSection(sec) {
             document.getElementById('homeSection').classList.toggle('hidden', sec !== 'home');
+            document.getElementById('maqamatTrackSection').classList.toggle('hidden', sec !== 'maqamatTrack');
             document.getElementById('socialSection').classList.toggle('hidden', sec !== 'social');
         }
 
-        function openBookingModal(track) {
-            selectedTrack = track;
-            document.getElementById('selectedTrackName').innerText = "المسار المختار: " + track;
+        function filterCategory(cat) {
+            showSection('home');
+            const grid = document.getElementById('tracksGrid');
+            const filtered = cat === 'all' ? tracksData : tracksData.filter(t => t.id === cat);
             
-            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            document.getElementById('detectedTimezone').innerText = "🌐 منطقتك الزمنية: " + userTz;
-
-            updateAvailableHours();
-            document.getElementById('bookingModal').classList.remove('hidden');
+            grid.innerHTML = filtered.map(t => `
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <h4 class="text-lg font-bold text-white">${t.title}</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">${t.desc}</p>
+                        <div class="text-[11px] text-emerald-400 font-semibold"><i class="fa-solid fa-chalkboard-user ml-1"></i> المشرف: ${t.teacher}</div>
+                    </div>
+                    <button onclick="openBookingModal('${t.title}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer">
+                        حجز حصة في هذا المسار
+                    </button>
+                </div>
+            `).join('');
         }
 
-        function updateAvailableHours() {
-            const select = document.getElementById('bookHourSelect');
-            select.innerHTML = availableHoursList.map(h => `<option value="${h}">${h}</option>`).join('');
+        function openBookingModal(trackTitle) {
+            selectedTrack = trackTitle;
+            document.getElementById('selectedTrackName').innerText = "المسار المختار: " + trackTitle;
+            document.getElementById('bookingModal').classList.remove('hidden');
         }
 
         function closeBookingModal() {
             document.getElementById('bookingModal').classList.add('hidden');
         }
 
-        function showAuthModal() {
-            document.getElementById('authModal').classList.remove('hidden');
-        }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
-
-        function handleAuthSubmit(e) {
+        function goToStep2(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            
-            // Strict Role Assignment
-            let role = 'student';
-            if (email.includes('owner') || email.includes('admin')) {
-                role = 'owner';
-            } else if (email.includes('teacher')) {
-                role = 'teacher';
-            }
-
-            currentUser = { email, role };
-            closeAuthModal();
-
-            // Render views strictly according to role
-            document.getElementById('userInfoHeader').classList.remove('hidden');
-            document.getElementById('authHeaderButtons').classList.add('hidden');
-            document.getElementById('headerUserName').innerText = role === 'owner' ? 'المالك (Owner)' : (role === 'teacher' ? 'معلم' : 'طالب');
-
-            document.getElementById('ownerDashboard').classList.toggle('hidden', role !== 'owner');
-            document.getElementById('teacherDashboard').classList.toggle('hidden', role !== 'teacher');
-        }
-
-        function handleLogout() {
-            currentUser = null;
-            document.getElementById('userInfoHeader').classList.add('hidden');
-            document.getElementById('authHeaderButtons').classList.remove('hidden');
-            document.getElementById('ownerDashboard').classList.add('hidden');
-            document.getElementById('teacherDashboard').classList.add('hidden');
-        }
-
-        function handleBookingSubmit(e) {
-            e.preventDefault();
-            const email = document.getElementById('bookEmail').value;
-            const phone = document.getElementById('bookPhone').value;
-            const day = document.getElementById('bookDaySelect').value;
-            const hour = document.getElementById('bookHourSelect').value;
-            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-            alert(`تم تسجيل طلب الحصة بنجاح!\n\nالتخصص: ${selectedTrack}\nالبريد: ${email}\nرقم التواصل: ${phone}\nاليوم والساعة: ${day} - ${hour} (${userTz})\nتم تحويل وتطابق الموعد مع المعلمين المتوفرين لجدول الإدارة.`);
             closeBookingModal();
-            e.target.reset();
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.getElementById('detectedTzBox').innerText = "🌐 منطقتك الزمنية المكتشفة: " + tz + " (سيتم مطابقة أوقاتك تلقائياً)";
+            document.getElementById('bookingModalStep2').classList.remove('hidden');
         }
 
-        function handleSaveTeacherAvailability(e) {
-            e.preventDefault();
-            alert("تم حفظ أوقاتك المتاحة بنجاح، وستظهر أوقاتك للطالب للتنسيق الفوري.");
+        function closeStep2() {
+            document.getElementById('bookingModalStep2').classList.add('hidden');
         }
 
-        function handleOwnerManualBooking(e) {
-            e.preventDefault();
-            alert("تمت الإضافة والتعديل اليدوي بنجاح عبر لوحة تحكم المالك!");
-            e.target.reset();
+        function toggleDaySlots(slotId, checkbox) {
+            document.getElementById(slotId).classList.toggle('hidden', !checkbox.checked);
         }
+
+        function finalizeBooking() {
+            alert("تم حفظ أيامك وأوقاتك المتعددة بنجاح! سيتم تحويلك الآن لصفحة إتمام الدفع والتنسيق الفوري.");
+            closeStep2();
+        }
+
+        window.onload = function() {
+            filterCategory('all');
+        };
     </script>
 </body>
 </html>
