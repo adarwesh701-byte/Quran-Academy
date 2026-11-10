@@ -6,7 +6,6 @@
     <title id="pageTitle">أكاديمية الإتقان العالمية - Itqan Global Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
@@ -22,405 +21,240 @@
                     أ
                 </div>
                 <div>
-                    <h1 class="text-lg md:text-xl font-bold text-emerald-400" id="t-navTitle">أكاديمية الإتقان العالمية</h1>
+                    <h1 class="text-lg md:text-xl font-bold text-emerald-400">أكاديمية الإتقان العالمية</h1>
                     <p class="text-xs text-slate-400">إجازات • تحفيظ • مقامات • تفسير • علوم الإسلام</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-3">
-                <select id="siteLangSelect" onchange="switchSiteLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
-                    <option value="ar">العربية (Arabic)</option>
-                    <option value="en">English</option>
-                    <option value="de">Deutsch</option>
-                    <option value="it">Italiano</option>
-                </select>
-
-                <div id="authHeaderButtons" class="flex items-center space-x-2 space-x-reverse">
-                    <button onclick="showAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer">تسجيل الدخول</button>
-                    <button onclick="showAuthModal('register')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md cursor-pointer">حساب جديد</button>
-                </div>
+                <button onclick="showSection('home')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700">الرئيسية</button>
+                <button onclick="showSection('social')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700">منصاتنا وشبكاتنا</button>
+                <button onclick="showAuthModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition shadow-md">دخول الطالب</button>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="py-8 px-4 max-w-7xl mx-auto w-full flex-grow space-y-8">
+    <main class="py-8 px-4 max-w-7xl mx-auto w-full flex-grow space-y-10">
         
-        <!-- Permanent Hero Banner -->
-        <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-10 text-center shadow-2xl relative overflow-hidden">
-            <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
-                منصة تعليمية متكاملة لعلوم القرآن والإسلام
-            </span>
-            
-            <h2 class="text-xl md:text-3xl font-extrabold text-white mt-6 mb-4 leading-relaxed">
-                حفظ القرآن الكريم وإجازات بالسند المتصل للنبي ﷺ <br/>
-                <span class="text-emerald-400">• المقامات الصوتية وتجميل التلاوة •</span> <br/>
-                <span class="text-amber-400">• تفسير القرآن • علوم الإسلام •</span>
-            </h2>
-
-            <p class="text-slate-400 text-xs md:text-sm max-w-3xl mx-auto">
-                نظام تعليمي متطور يجمع بين نخبة المعلمين المتخصصين في الإجازات، التحفيظ، والمقامات الصوتية، لتتلمذ وتتقن تلاوتك وتفصيل علوم الشريعة بأعلى معايير الإتقان.
-            </p>
-        </div>
-
-        <!-- Guest Landing View -->
-        <div id="guestView" class="space-y-10">
-            
-            <!-- Category Filter Tabs -->
-            <div class="flex flex-wrap gap-2 justify-center pb-2">
-                <button onclick="filterTeachers('all')" class="cat-btn active bg-emerald-600 text-white text-xs px-4 py-2 rounded-xl font-bold transition">جميع التخصصات</button>
-                <button onclick="filterTeachers('ijaza')" class="cat-btn bg-slate-800 border border-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl font-bold transition hover:bg-slate-700">📜 إجازات بالسند</button>
-                <button onclick="filterTeachers('hifz')" class="cat-btn bg-slate-800 border border-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl font-bold transition hover:bg-slate-700">📖 تحفيظ القرآن</button>
-                <button onclick="filterTeachers('maqamat')" class="cat-btn bg-slate-800 border border-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl font-bold transition hover:bg-slate-700">🎵 مقامات صوتية وتلاوة</button>
-                <button onclick="filterTeachers('tafseer')" class="cat-btn bg-slate-800 border border-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl font-bold transition hover:bg-slate-700">💡 تفسير وعلوم إسلامية</button>
+        <!-- HOME SECTION -->
+        <div id="homeSection" class="space-y-10">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-10 text-center shadow-2xl relative overflow-hidden">
+                <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">
+                    منصة تعليمية متكاملة لعلوم القرآن والإسلام
+                </span>
+                <h2 class="text-xl md:text-3xl font-extrabold text-white mt-6 mb-4 leading-relaxed">
+                    حفظ القرآن الكريم وإجازات بالسند المتصل للنبي ﷺ <br/>
+                    <span class="text-emerald-400">• المقامات الصوتية وتجميل التلاوة •</span> <br/>
+                    <span class="text-amber-400">• تفسير القرآن • علوم الإسلام •</span>
+                </h2>
+                <p class="text-slate-400 text-xs md:text-sm max-w-3xl mx-auto">
+                    اختر التخصص المناسب لك، طالع محتوى الذكاء الاصطناعي وشرح الحصص، واحجز حصتك مباشرة بالتوقيت المحلي لبلدك لتتطابق تلقائياً مع جدول الإدارة.
+                </p>
             </div>
 
-            <!-- Teachers Grid -->
+            <!-- Categories / Tracks Section -->
             <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fa-solid fa-chalkboard-user text-emerald-400 ml-2"></i> نخبة المعلمين المعتمدين في الأكاديمية
+                    <i class="fa-solid fa-layer-group text-emerald-400 ml-2"></i> تخصصات ومسارات الأكاديمية (مع المحتوى والشرح)
                 </h3>
-                <div id="publicTeachersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Track 1: Ijaza -->
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-bold">📜 مسار الإجازات بالسند</span>
+                            <button onclick="openBookingModal('إجازات بالسند المتصل')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">إجازات القراءات القرآنية المتصلة بالسند</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">تتضمن مادة هذا القسم شرح أحكام الأداء، السند المتصل، والتلقي المباشر عبر الحصص التفاعلية.</p>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
+                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> تم توليد ملخصات تفصيلية لمتون الجزرية والشاطبية ومخارج الحروف.
+                        </div>
+                    </div>
+
+                    <!-- Track 2: Hifz -->
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">📖 مسار التحفيظ</span>
+                            <button onclick="openBookingModal('تحفيظ القرآن الكريم')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">تحفيظ القرآن الكريم ومراجعة الحفظ</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">برامج مخصصة لتثبيت الحفظ، خطط يومية ومتابعة دقيقة لمواطن الضعف والتثبيت.</p>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
+                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> خطط حفظ مرنة مقسمة تناسب أوقاتك اليومية.
+                        </div>
+                    </div>
+
+                    <!-- Track 3: Maqamat -->
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-full font-bold">🎵 مسار المقامات والتلاوة</span>
+                            <button onclick="openBookingModal('مقامات صوتية وتجميل التلاوة')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">المقامات الصوتية الثمانية وتجميل الصوت</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">دراسة مقامات (بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا) وتطبيقات عملية لتحسين النغمة الصوتية في القرآن.</p>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
+                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> تمارين صوتية تفاعلية ودليل نغمي شامل لكل مقام.
+                        </div>
+                    </div>
+
+                    <!-- Track 4: Tafseer -->
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full font-bold">💡 مسار التفسير وعلوم الإسلام</span>
+                            <button onclick="openBookingModal('تفسير القرآن وعلوم الإسلام')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition">حجز حصة</button>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">تفسير القرآن وعلوم الشريعة</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">تدبر معاني الآيات، أسباب النزول، والفقه الإسلامي بلغة مبسطة وعميقة.</p>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-400">
+                            💡 <strong>محتوى مدعوم بالذكاء الاصطناعي:</strong> تصاميم بصرية وخرائط ذهنية لمعاني سور القرآن.
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <!-- AI Tafseer Section -->
-            <div class="space-y-6">
-                <h3 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fa-solid fa-book-open text-emerald-400 ml-2"></i> تفسير القرآن وتصاميم المعاني (AI Quran Tafseer)
-                </h3>
-                <div id="publicAITafseerList" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-3">
-                        <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center font-bold"><i class="fa-solid fa-sparkles"></i></div>
-                        <h4 class="font-bold text-white text-base">سورة النور (آية النور والمعاني البصرية)</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">تفسير وتأملات بصرية لتوضيح معاني الآيات الكريمة وتقريبها للأذهان.</p>
+            <!-- Payment Methods Info -->
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
+                <h4 class="text-lg font-bold text-emerald-400 flex items-center">
+                    <i class="fa-solid fa-credit-card ml-2"></i> وسائل الدفع المتاحة للاشتراكات والحصص
+                </h4>
+                <p class="text-xs text-slate-300">توفر الأكاديمية وسائل دفع ميسرة وآمنة تناسب الطلاب من جميع أنحاء العالم:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <span class="font-bold text-white block mb-1">💳 البطاقات البنكية الدولية</span>
+                        <span class="text-slate-400">Stripe / Visa / MasterCard</span>
                     </div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-3">
-                        <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center font-bold"><i class="fa-solid fa-sparkles"></i></div>
-                        <h4 class="font-bold text-white text-base">سورة الكهف (قصة أصحاب الكهف)</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">استنطاق العبر والقصص القرآنية عبر تصاميم بصرية تحاكي الواقع وتوضح تفاصيل السورة.</p>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <span class="font-bold text-white block mb-1">🇪🇬 وسائل الدفع المحلي (مصر)</span>
+                        <span class="text-slate-400">InstaPay / فودافون كاش / تحويل بنكي</span>
                     </div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-3">
-                        <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center font-bold"><i class="fa-solid fa-sparkles"></i></div>
-                        <h4 class="font-bold text-white text-base">سورة الرحمن (آلاء الله وبديع خلق السماوات)</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">تجسيد بصري لآيات النعم الكونية في سورة الرحمن باستخدام أدوات الذكاء الاصطناعي.</p>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <span class="font-bold text-white block mb-1">🌍 التحويلات العالمية</span>
+                        <span class="text-slate-400">Wise / PayPal / تحويل SEPA</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Authenticated Dashboard -->
-        <div id="userDashboard" class="hidden space-y-6">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
-                <div>
-                    <span class="text-xs text-slate-400">مرحباً بك،</span>
-                    <h4 id="userNameDisplay" class="text-xl font-bold text-white">...</h4>
-                    <span id="userRoleBadge" class="inline-block mt-1 text-xs uppercase font-bold bg-emerald-500/20 text-emerald-300 px-3 py-0.5 rounded-full border border-emerald-500/30">...</span>
+        <!-- SOCIAL MEDIA SECTION -->
+        <div id="socialSection" class="hidden space-y-8">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 text-center space-y-4 shadow-xl">
+                <h3 class="text-2xl font-bold text-emerald-400">تابعنا على منصات التواصل الاجتماعي وشبكات الأكاديمية</h3>
+                <p class="text-xs text-slate-300 max-w-xl mx-auto">ابق على اطلاع بأحدث الحصص، المقاطع الصوتية، ودروس المقامات والتفسير عبر صفحاتنا الرسمية:</p>
+                <div class="flex flex-wrap justify-center gap-4 pt-4">
+                    <a href="https://tiktok.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
+                        <i class="fa-brands fa-tiktok text-emerald-400 text-lg"></i> تيك توك (TikTok)
+                    </a>
+                    <a href="https://instagram.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
+                        <i class="fa-brands fa-instagram text-pink-400 text-lg"></i> انستجرام (Instagram)
+                    </a>
+                    <a href="https://youtube.com" target="_blank" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
+                        <i class="fa-brands fa-youtube text-rose-400 text-lg"></i> يوتيوب (YouTube)
+                    </a>
+                    <a href="https://wa.me/201091121907" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> واتساب الدعم المباشر
+                    </a>
                 </div>
-                <div>
-                    <button onclick="handleLogout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-xl transition font-bold cursor-pointer">
-                        تسجيل الخروج <i class="fa-solid fa-right-from-bracket mr-1"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ADMIN CONTROLS -->
-            <div id="adminControls" class="hidden space-y-6">
-                <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-6">
-                    <h5 class="font-bold text-emerald-400 text-xl flex items-center"><i class="fa-solid fa-gears ml-2"></i> لوحة تحكم المالك الإدارية</h5>
-
-                    <!-- Add New Teacher Form -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                        <h6 class="font-bold text-emerald-400 text-sm">إضافة معلم جديد للمنصة (مع تخصصاته وروابط التواصل)</h6>
-                        <form onsubmit="handleAddNewTeacherAdmin(event)" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <input type="text" id="newTName" placeholder="اسم المعلم (مثال: الشيخ أحمد خالد)" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <select id="newTCategory" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold">
-                                <option value="ijaza">📜 إجازات بالسند المتصل</option>
-                                <option value="hifz">📖 تحفيظ القرآن الكريم</option>
-                                <option value="maqamat">🎵 مقامات صوتية وتلاوة</option>
-                                <option value="tafseer">💡 تفسير وعلوم إسلامية</option>
-                            </select>
-                            <input type="text" id="newTCerts" placeholder="الشهادات وسند الإجازة..." required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="url" id="newTiktok" placeholder="رابط تيك توك (TikTok URL)..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="url" id="newInsta" placeholder="رابط انستجرام (Instagram URL)..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <input type="url" id="newTSample" placeholder="رابط فيديو تلاوة أو تعريفي (YouTube)..." required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <div class="md:col-span-2">
-                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer">إضافة المعلم للقائمة العامة فوراً</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TEACHER CONTROLS -->
-            <div id="teacherProfileControls" class="hidden bg-slate-800 border border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-6">
-                <h5 class="font-bold text-amber-400 text-lg flex items-center"><i class="fa-solid fa-id-card ml-2"></i> ملفي الشخصي كمعلم وروابط التواصل الاجتماعي</h5>
-                <form onsubmit="handleSaveTeacherProfile(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">اختر التخصص الأساسي</label>
-                        <select id="tCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
-                            <option value="ijaza">📜 إجازات بالسند المتصل</option>
-                            <option value="hifz">📖 تحفيظ القرآن الكريم</option>
-                            <option value="maqamat">🎵 مقامات صوتية وتلاوة</option>
-                            <option value="tafseer">💡 تفسير وعلوم إسلامية</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">الشهادات وسند الإجازة</label>
-                        <input type="text" id="tCerts" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط حساب تيك توك (TikTok)</label>
-                        <input type="url" id="tTiktokInput" placeholder="https://tiktok.com/@..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">رابط حساب انستجرام (Instagram)</label>
-                        <input type="url" id="tInstaInput" placeholder="https://instagram.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs text-slate-400 mb-1">رابط فيديو تعريفي / نموذج التلاوة (YouTube)</label>
-                        <input type="url" id="tSample" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
-                    </div>
-                    <div class="md:col-span-2">
-                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">حفظ الروابط والتصنيف</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- STUDENT DASHBOARD -->
-            <div id="studentSection" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
-                <h5 class="font-bold text-emerald-400 text-lg">التواصل المباشر مع معلمك عبر واتساب</h5>
-                <p class="text-xs text-slate-300">يمكنك التنسيق المباشر مع الإدارة والمعلمين لحجز مواعيد الحصص والتلاوة:</p>
-                <a href="https://wa.me/201091121907" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl text-xs transition">
-                    <i class="fa-brands fa-whatsapp text-lg"></i> تواصل مع الإدارة والدعم عبر واتساب (+201091121907)
-                </a>
             </div>
         </div>
     </main>
 
-    <!-- WHATSAPP FLOATING CHAT BUTTON -->
-    <div class="fixed bottom-6 left-6 z-50 flex items-center gap-2">
-        <a href="https://wa.me/201091121907" target="_blank" class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-2 text-xs font-bold transition transform hover:scale-105">
-            <i class="fa-brands fa-whatsapp text-lg"></i> اتصل بالدعم (واتساب)
-        </a>
+    <!-- BOOKING MODAL WITH TIMEZONE CONVERSION -->
+    <div id="bookingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4">
+            <button onclick="closeBookingModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-lg font-bold text-white text-center">حجز حصة جديدة</h3>
+            <p id="selectedTrackName" class="text-xs text-emerald-400 text-center font-bold"></p>
+
+            <form onsubmit="handleBookingSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني الخاص بك</label>
+                    <input type="email" id="bookEmail" required placeholder="student@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">تاريخ ووقت الحصة (بتوقيتك المحلي)</label>
+                    <input type="datetime-local" id="bookLocalDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <span id="detectedTimezone" class="text-[10px] text-amber-400 mt-1 block"></span>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer">تأكيد حجز الحصة (تحويل تلقائي لتوقيت مصر)</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Auth Modal -->
+    <!-- AUTH MODAL -->
     <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 id="authModalTitle" class="text-xl font-bold text-white mb-6 text-center">تسجيل الدخول</h3>
-
-            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
-                <div id="fullNameGroup" class="hidden">
-                    <label class="block text-xs text-slate-400 mb-1">الاسم بالكامل</label>
-                    <input type="text" id="authFullName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
-                </div>
+            <h3 class="text-xl font-bold text-white mb-4 text-center">تسجيل دخول الطالب</h3>
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="authEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                    <input type="email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">كلمة السر</label>
-                    <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                    <label class="block text-xs text-slate-400 mb-1">كلمة المرور</label>
+                    <input type="password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 </div>
-                <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition cursor-pointer">دخول</button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl cursor-pointer">دخول</button>
             </form>
         </div>
     </div>
 
     <!-- Script Logic -->
     <script>
-        let currentUser = null;
-        let authMode = 'login';
-        let currentFilter = 'all';
+        let selectedTrack = '';
 
-        // قائمة المعلمين (مع التصنيفات وروابط تيك توك وانستجرام)
-        let teachersList = [
-            {
-                id: 1,
-                name: "الشيخ أحمد خالد",
-                category: "maqamat",
-                categoryName: "🎵 مقامات صوتية وتلاوة",
-                certs: "إجازة في القراءات العشر الكبرى ومقامات التلاوة",
-                tiktok: "https://tiktok.com/@itqan_academy",
-                insta: "https://instagram.com/itqan_academy",
-                sample: "https://youtube.com"
-            },
-            {
-                id: 2,
-                name: "د. نور",
-                category: "tafseer",
-                categoryName: "💡 تفسير وعلوم إسلامية",
-                certs: "ماجستير في أصول الدين والتفسير المقارن",
-                tiktok: "",
-                insta: "",
-                sample: "https://youtube.com"
-            },
-            {
-                id: 3,
-                name: "الشيخ إبراهيم محمد",
-                category: "ijaza",
-                categoryName: "📜 إجازات بالسند المتصل",
-                certs: "مسند برواية حفص وعاصم بالسند المتصل للنبي ﷺ",
-                tiktok: "",
-                insta: "https://instagram.com",
-                sample: "https://youtube.com"
-            }
-        ];
-
-        function switchSiteLanguage(lang) {
-            const root = document.getElementById('htmlRoot');
-            if (lang === 'ar') {
-                root.setAttribute('dir', 'rtl');
-                root.setAttribute('lang', 'ar');
-            } else {
-                root.setAttribute('dir', 'ltr');
-                root.setAttribute('lang', lang);
-            }
-            renderTeachers();
+        function showSection(sec) {
+            document.getElementById('homeSection').classList.toggle('hidden', sec !== 'home');
+            document.getElementById('socialSection').classList.toggle('hidden', sec !== 'social');
         }
 
-        function filterTeachers(cat) {
-            currentFilter = cat;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white');
-                btn.classList.add('bg-slate-800', 'text-slate-300');
-            });
-            event.target.classList.remove('bg-slate-800', 'text-slate-300');
-            event.target.classList.add('bg-emerald-600', 'text-white');
-            renderTeachers();
-        }
-
-        function renderTeachers() {
-            const container = document.getElementById('publicTeachersList');
-            const filtered = currentFilter === 'all' ? teachersList : teachersList.filter(t => t.category === currentFilter);
+        function openBookingModal(track) {
+            selectedTrack = track;
+            document.getElementById('selectedTrackName').innerText = "المسار المختاره: " + track;
             
-            if (filtered.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 col-span-3 text-center py-6">لا يوجد معلمين مضافين في هذا التخصص حالياً.</p>`;
-                return;
-            }
-
-            container.innerHTML = filtered.map(t => `
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-4 shadow-xl flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div class="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">${t.name.charAt(0)}</div>
-                            <span class="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full font-bold">${t.categoryName}</span>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-white text-base">${t.name}</h4>
-                            <p class="text-xs text-slate-300 mt-1">${t.certs}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-3 pt-3 border-t border-slate-700">
-                        <div class="flex items-center gap-2">
-                            ${t.tiktok ? `<a href="${t.tiktok}" target="_blank" class="text-xs bg-slate-900 border border-slate-700 hover:text-emerald-400 px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="fa-brands fa-tiktok"></i> تيك توك</a>` : ''}
-                            ${t.insta ? `<a href="${t.insta}" target="_blank" class="text-xs bg-slate-900 border border-slate-700 hover:text-pink-400 px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="fa-brands fa-instagram"></i> انستجرام</a>` : ''}
-                        </div>
-                        <a href="https://wa.me/201091121907?text=${encodeURIComponent('أرغب في حجز حصة مع المعلم: ' + t.name)}" target="_blank" class="w-full block text-center bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl transition">
-                            <i class="fa-brands fa-whatsapp ml-1"></i> احجز حصتك عبر واتساب
-                        </a>
-                    </div>
-                </div>
-            `).join('');
+            // Detect user timezone
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.getElementById('detectedTimezone').innerText = "🌐 منطقتك الزمنية المكتشفة: " + tz;
+            
+            document.getElementById('bookingModal').classList.remove('hidden');
         }
 
-        function showAuthModal(mode) {
-            authMode = mode;
+        function closeBookingModal() {
+            document.getElementById('bookingModal').classList.add('hidden');
+        }
+
+        function showAuthModal() {
             document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('authModalTitle').innerText = mode === 'login' ? 'تسجيل الدخول' : 'حساب جديد';
-            document.getElementById('fullNameGroup').classList.toggle('hidden', mode === 'login');
-            document.getElementById('authSubmitBtn').innerText = mode === 'login' ? 'دخول' : 'إنشاء الحساب';
         }
 
         function closeAuthModal() {
             document.getElementById('authModal').classList.add('hidden');
         }
 
+        function handleBookingSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('bookEmail').value;
+            const localTime = document.getElementById('bookLocalDateTime').value;
+            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Convert / calculate to Egypt timezone (Cairo) for management
+            const localDate = new Date(localTime);
+            const cairoTimeStr = localDate.toLocaleString('en-US', { timeZone: 'Africa/Cairo' });
+
+            alert(`تم حجز الحصة بنجاح!\n\nالتخصص: ${selectedTrack}\nالبريد: ${email}\nتوقيتك المحلي: ${localTime} (${userTz})\nالموعد بتوقيت القاهرة للإدارة: ${cairoTimeStr}`);
+            closeBookingModal();
+            e.target.reset();
+        }
+
         function handleAuthSubmit(e) {
             e.preventDefault();
-            const email = document.getElementById('authEmail').value;
-            const fullName = document.getElementById('authFullName')?.value || "مستخدم جديد";
-            
-            currentUser = {
-                email: email,
-                name: fullName,
-                role: email.includes('admin') ? 'admin' : (email.includes('teacher') ? 'teacher' : 'student')
-            };
-
+            alert("تم تسجيل الدخول بنجاح!");
             closeAuthModal();
-            updateDashboardView();
         }
-
-        function handleLogout() {
-            currentUser = null;
-            updateDashboardView();
-        }
-
-        function updateDashboardView() {
-            const guestView = document.getElementById('guestView');
-            const userDashboard = document.getElementById('userDashboard');
-            const authHeaderButtons = document.getElementById('authHeaderButtons');
-
-            if (!currentUser) {
-                guestView.classList.remove('hidden');
-                userDashboard.classList.add('hidden');
-                authHeaderButtons.classList.remove('hidden');
-            } else {
-                guestView.classList.add('hidden');
-                userDashboard.classList.remove('hidden');
-                authHeaderButtons.classList.add('hidden');
-
-                document.getElementById('userNameDisplay').innerText = currentUser.name;
-                document.getElementById('userRoleBadge').innerText = currentUser.role;
-
-                document.getElementById('adminControls').classList.toggle('hidden', currentUser.role !== 'admin');
-                document.getElementById('teacherProfileControls').classList.toggle('hidden', currentUser.role !== 'teacher');
-                document.getElementById('studentSection').classList.toggle('hidden', currentUser.role !== 'student');
-            }
-        }
-
-        function handleAddNewTeacherAdmin(e) {
-            e.preventDefault();
-            const name = document.getElementById('newTName').value;
-            const category = document.getElementById('newTCategory').value;
-            const certs = document.getElementById('newTCerts').value;
-            const tiktok = document.getElementById('newTiktok').value;
-            const insta = document.getElementById('newInsta').value;
-            const sample = document.getElementById('newTSample').value;
-
-            const catNames = {
-                'ijaza': '📜 إجازات بالسند المتصل',
-                'hifz': '📖 تحفيظ القرآن الكريم',
-                'maqamat': '🎵 مقامات صوتية وتلاوة',
-                'tafseer': '💡 تفسير وعلوم إسلامية'
-            };
-
-            teachersList.push({
-                id: teachersList.length + 1,
-                name,
-                category,
-                categoryName: catNames[category],
-                certs,
-                tiktok,
-                insta,
-                sample
-            });
-
-            alert("تمت إضافة المعلم بنجاح وعرضه في القسم المخصص له فوراً!");
-            e.target.reset();
-            renderTeachers();
-        }
-
-        function handleSaveTeacherProfile(e) {
-            e.preventDefault();
-            alert("تم حفظ بيانات المعلم وتصنيفه وروابط السوشيال ميديا بنجاح!");
-        }
-
-        window.onload = function() {
-            renderTeachers();
-        };
     </script>
 </body>
 </html>
