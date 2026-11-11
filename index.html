@@ -3235,7 +3235,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v6";
+const UI_VERSION = "2026-11-11-v7";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -7026,6 +7026,637 @@ async function saveIceSettings() {
   if (error) return toast(error.message, true);
   invalidate("privSettings"); toast(L("saved")); render();
 }
+
+
+/* ======================= v10: هوية فريدة وحظر، أرباح المعلمين، الواجبات، الآراء، ضمان الاسترداد ======================= */
+Object.assign(UI.en, {
+  emailOrPhone: "Email or mobile number", phoneRequired: "Mobile number is required (with country code)", phoneHint: "With country code, e.g. +20 10…",
+  sc_blocked: "This account can't be registered. Please contact the academy.", sc_email_taken: "This email is already registered — sign in instead.",
+  sc_phone_taken: "This mobile number is already registered with another account.", sc_phone_invalid: "Please enter a valid mobile number.",
+  blockedMsg: "This account has been blocked by the academy.", badLogin: "Wrong email/mobile number or password.", nidTaken: "This national ID is already registered.",
+  signupFailed: "Couldn't create the account — this email, mobile or ID may already be registered or blocked.",
+  blTitle: "Blocklist", blHint: "A blocked email, mobile number or national ID can't sign up, sign in, or reach anything in the academy.", blKind: "Type",
+  blEmail: "Email", blPhone: "Mobile", blNid: "National ID", blValue: "Value", blNote: "Reason (private)", blAdd: "Block", blUser: "Block a user (all their identifiers)",
+  blUnblock: "Unblock", blConfirm: "Block this user? They will be signed out and can't come back with the same email, mobile or ID.", blocked: "Blocked",
+  lifetimeHint: "leave empty = lifetime ∞",
+  earnBalance: "Available balance", earnPaid: "Paid to you so far", earnLifetime: "Lessons taught (all time)", earnUpcoming: "Upcoming lessons", earnRating: "Average rating",
+  perWeek7: "Last 7 days", perMonth30: "Last 30 days", perQuarter90: "Last 3 months", stTaught: "Lessons taught", stHours: "Hours", stStudents: "Students",
+  stNew: "New students", stCancelled: "Cancelled", stStuAbs: "Student no-shows", stTchAbs: "Teacher absences", stTrials: "Trial lessons", stEarn: "Earnings",
+  earnWeekly: "Weekly earnings (12 weeks)", earnHistory: "Earnings & payouts", earnLesson: "Lesson", earnPayout: "Payout", earnBonus: "Bonus", earnAdjust: "Adjustment",
+  earnNote: "Lessons are credited automatically once confirmed (by attendance, by the student, or 48 hours after the lesson). Payouts are sent at the end of each month to your payout method.",
+  finTitle: "Teacher earnings & payouts", finLessons: "Lessons", finGross: "Lesson value", finNet: "Teacher earnings", finAcademy: "Academy share", finPaid: "Paid (period)",
+  finBalance: "Balance due", finPct: "Current commission", finPay: "Pay", finBonus: "Bonus", finPayAmt: "Amount to pay (leave as is to pay the full balance):",
+  finMethod: "Payment method / reference:", finBonusAmt: "Bonus amount (use a negative number to deduct):", finTotal: "Total", finPrivate: "Commission and academy share are visible only to you — teachers see their net earnings only.",
+  comTitle: "Academy commission tiers", comHint: "Commission drops as the teacher completes more lessons.", comFirst: "First lessons", comUpTo: "until lesson #", comAfter: "After that",
+  attSummary: "Attendance this month",
+  hwTitle: "Homework", hwNone: "No homework yet.", hwSubmit: "Submit homework", hwText: "Your answer / notes", hwFile: "Attach a file (audio, video, PDF, image)",
+  hwRecord: "Record audio", hwStop: "Stop recording", hwRecorded: "Recording ready", hwSent: "Homework submitted ✓", hwStatusNew: "Not submitted", hwStatusSent: "Submitted",
+  hwStatusDone: "Reviewed", hwFeedback: "Teacher feedback", hwGrade: "Grade", hwOpen: "Open file", hwAssign: "Assign homework", hwAssignHint: "Recent lessons without homework",
+  hwToReview: "Submissions to review", hwReviewed: "Reviewed", hwSaveReview: "Send feedback", hwGrades: ["Excellent", "Very good", "Good", "Needs review"], hwAssigned: "Homework sent to the student ✓",
+  rvTitle: "What our students say", rvMine: "Rate the academy", rvMineHint: "Your opinion helps other students — it appears on the site after review.", rvName: "Name to show",
+  rvBody: "Your experience", rvSend: "Send review", rvPending: "Waiting for approval", rvApproved: "Published ✓", rvHidden: "Not published", rvOwner: "Student reviews",
+  rvApprove: "Publish", rvHide: "Hide", rvFeature: "Feature", rvDelete: "Delete", rvNone: "No reviews yet.",
+  gtTitle: "Money-back guarantee", gtText: "If you don't benefit from the academy within {days} days of subscribing, we'll refund you.",
+  gtRequest: "Request a refund", gtOrder: "Subscription", gtReason: "Tell us what happened", gtSent: "Your request was sent — we'll get back to you soon.",
+  gtMine: "My refund requests", gtOwner: "Refund requests", gtApprove: "Approve", gtReject: "Reject", gtRemoveCredits: "Remove the remaining lessons of this package",
+  gtNote: "Note to the student (optional):", gtOn: "Show the money-back guarantee", gtDays: "Guarantee period (days)", gtNone: "No requests.",
+  sbkTitle: "Book from the teacher's real schedule", sbkHint: "Choose the student and teacher, then pick a free time from the teacher's schedule. Times are shown in your time zone and the student's.",
+  sbkWeeks: "Repeat weekly (weeks)", sbkShow: "Show available times", sbkNoSlots: "No free times in the next 3 weeks.", sbkConfirm: "Book this time?",
+  sbkBooked: "Booked {n} lesson(s)", sbkSkipped: "{n} week(s) skipped (busy)", sbkYou: "You", sbkStudentTime: "Student", sbkTeacherTime: "Teacher"
+});
+Object.assign(UI.ar, {
+  emailOrPhone: "الإيميل أو رقم الموبايل", phoneRequired: "رقم الموبايل مطلوب (بكود الدولة)", phoneHint: "بكود الدولة، مثلًا ‎+20 10…",
+  sc_blocked: "مينفعش تسجيل الحساب ده. تواصل مع الأكاديمية.", sc_email_taken: "الإيميل ده متسجل قبل كده — سجّل دخول بدل كده.",
+  sc_phone_taken: "رقم الموبايل ده متسجل على حساب تاني.", sc_phone_invalid: "اكتب رقم موبايل صحيح.",
+  blockedMsg: "الحساب ده محظور من الأكاديمية.", badLogin: "الإيميل/رقم الموبايل أو كلمة السر غلط.", nidTaken: "الرقم القومي ده متسجل قبل كده.",
+  signupFailed: "معرفناش ننشئ الحساب — ممكن الإيميل أو الموبايل أو الرقم القومي متسجل قبل كده أو محظور.",
+  blTitle: "قائمة الحظر", blHint: "أي إيميل أو رقم موبايل أو رقم قومي محظور مش هيقدر يسجل أو يدخل أو يوصل لأي حاجة في الأكاديمية.", blKind: "النوع",
+  blEmail: "إيميل", blPhone: "موبايل", blNid: "رقم قومي", blValue: "القيمة", blNote: "السبب (خاص بيك)", blAdd: "حظر", blUser: "حظر مستخدم (كل بياناته)",
+  blUnblock: "فك الحظر", blConfirm: "تحظر المستخدم ده؟ هيتعمله خروج ومش هيقدر يرجع بنفس الإيميل أو الموبايل أو الرقم القومي.", blocked: "محظور",
+  lifetimeHint: "سيبها فاضية = مدى الحياة ∞",
+  earnBalance: "رصيدك المتاح", earnPaid: "اللي اتحولك لحد دلوقتي", earnLifetime: "حصص اديتها (الإجمالي)", earnUpcoming: "حصص جاية", earnRating: "متوسط التقييم",
+  perWeek7: "آخر 7 أيام", perMonth30: "آخر 30 يوم", perQuarter90: "آخر 3 شهور", stTaught: "حصص اتدّت", stHours: "ساعات", stStudents: "طلاب",
+  stNew: "طلاب جدد", stCancelled: "اتلغت", stStuAbs: "غياب الطالب", stTchAbs: "غياب المعلم", stTrials: "حصص تجريبية", stEarn: "الأرباح",
+  earnWeekly: "الأرباح الأسبوعية (12 أسبوع)", earnHistory: "الأرباح والتحويلات", earnLesson: "حصة", earnPayout: "تحويل", earnBonus: "مكافأة", earnAdjust: "تعديل",
+  earnNote: "الحصة بتتحسب لك تلقائيًا أول ما تتأكد (بسجل الحضور، أو من الطالب، أو بعد 48 ساعة من الحصة). التحويل بيتم آخر كل شهر على وسيلة الدفع اللي اخترتها.",
+  finTitle: "أرباح المعلمين والتحويلات", finLessons: "حصص", finGross: "قيمة الحصص", finNet: "أرباح المعلم", finAcademy: "نصيب الأكاديمية", finPaid: "اتحول (الفترة)",
+  finBalance: "الرصيد المستحق", finPct: "العمولة الحالية", finPay: "تحويل", finBonus: "مكافأة", finPayAmt: "المبلغ اللي هيتحول (سيبه زي ما هو لتحويل الرصيد كله):",
+  finMethod: "وسيلة الدفع / رقم العملية:", finBonusAmt: "مبلغ المكافأة (اكتب رقم بالسالب للخصم):", finTotal: "الإجمالي", finPrivate: "العمولة ونصيب الأكاديمية ظاهرين ليك بس — المعلم بيشوف صافي أرباحه بس.",
+  comTitle: "شرائح عمولة الأكاديمية", comHint: "العمولة بتقل كل ما المعلم يدي حصص أكتر.", comFirst: "أول الحصص", comUpTo: "لحد الحصة رقم", comAfter: "بعد كده",
+  attSummary: "الحضور في الشهر ده",
+  hwTitle: "الواجبات", hwNone: "لسه مفيش واجبات.", hwSubmit: "سلّم الواجب", hwText: "إجابتك / ملاحظاتك", hwFile: "ارفع ملف (صوت، فيديو، PDF، صورة)",
+  hwRecord: "سجّل صوتك", hwStop: "إيقاف التسجيل", hwRecorded: "التسجيل جاهز", hwSent: "اتسلم الواجب ✓", hwStatusNew: "لسه متسلمش", hwStatusSent: "اتسلم",
+  hwStatusDone: "اتصحح", hwFeedback: "ملاحظات المعلم", hwGrade: "التقدير", hwOpen: "افتح الملف", hwAssign: "ضيف واجب", hwAssignHint: "حصص قريبة من غير واجب",
+  hwToReview: "واجبات محتاجة تصحيح", hwReviewed: "اتصححت", hwSaveReview: "ابعت التصحيح", hwGrades: ["ممتاز", "جيد جدًا", "جيد", "يحتاج مراجعة"], hwAssigned: "الواجب اتبعت للطالب ✓",
+  rvTitle: "آراء طلابنا", rvMine: "قيّم الأكاديمية", rvMineHint: "رأيك بيساعد طلاب تانيين — هيظهر على الموقع بعد المراجعة.", rvName: "الاسم اللي يظهر",
+  rvBody: "تجربتك معانا", rvSend: "ابعت رأيك", rvPending: "مستني الموافقة", rvApproved: "منشور ✓", rvHidden: "مش منشور", rvOwner: "آراء الطلاب",
+  rvApprove: "انشر", rvHide: "إخفاء", rvFeature: "تمييز", rvDelete: "حذف", rvNone: "لسه مفيش آراء.",
+  gtTitle: "ضمان استرداد الفلوس", gtText: "لو ماستفدتش من الأكاديمية خلال {days} يوم من اشتراكك، هنرجعلك فلوسك.",
+  gtRequest: "اطلب استرداد", gtOrder: "الاشتراك", gtReason: "احكيلنا حصل إيه", gtSent: "طلبك اتبعت — هنرد عليك قريب.",
+  gtMine: "طلبات الاسترداد بتاعتي", gtOwner: "طلبات الاسترداد", gtApprove: "موافقة", gtReject: "رفض", gtRemoveCredits: "شيل الحصص المتبقية من الباقة دي",
+  gtNote: "ملاحظة للطالب (اختياري):", gtOn: "إظهار ضمان استرداد الفلوس", gtDays: "مدة الضمان (أيام)", gtNone: "مفيش طلبات.",
+  sbkTitle: "احجز من جدول المعلم الحقيقي", sbkHint: "اختار الطالب والمعلم، وبعدين اختار وقت فاضي من جدول المعلم. المواعيد بتظهر بتوقيتك وتوقيت الطالب.",
+  sbkWeeks: "تكرار أسبوعي (عدد الأسابيع)", sbkShow: "اعرض المواعيد المتاحة", sbkNoSlots: "مفيش مواعيد فاضية في الـ 3 أسابيع الجاية.", sbkConfirm: "تحجز الميعاد ده؟",
+  sbkBooked: "اتحجز {n} حصة", sbkSkipped: "{n} أسبوع اتساب (مشغول)", sbkYou: "إنت", sbkStudentTime: "الطالب", sbkTeacherTime: "المعلم"
+});
+Object.assign(UI.en.nkT, {
+  earning: "💰 {amount} added to your balance", payout_sent: "✅ Payout sent: {amount} {method}",
+  apology_credit: "🎁 Your teacher missed the lesson on {at} — it wasn't deducted and you got an extra free lesson as an apology",
+  homework_assigned: "📝 New homework: {text}", homework_reminder: "⏰ Reminder — your homework is waiting: {text}", homework_submitted: "📥 {name} submitted homework",
+  homework_reviewed: "✅ Your teacher reviewed your homework {grade}", homework_prompt: "📝 Your lesson with {name} has finished — add homework",
+  review_new: "⭐ New academy review ({rating}★) waiting for approval", refund_request: "💸 New refund request", refund_approved: "✅ Your refund request was approved {note}",
+  refund_rejected: "Your refund request was declined {note}"
+});
+Object.assign(UI.ar.nkT, {
+  earning: "💰 اتضاف {amount} لرصيدك", payout_sent: "✅ اتحولك {amount} {method}",
+  apology_credit: "🎁 المعلم غاب عن حصة {at} — الحصة متخصمتش واتضافلك حصة إضافية هدية واعتذار",
+  homework_assigned: "📝 واجب جديد: {text}", homework_reminder: "⏰ تذكير — الواجب مستنيك: {text}", homework_submitted: "📥 {name} سلّم الواجب",
+  homework_reviewed: "✅ المعلم صحّح الواجب {grade}", homework_prompt: "📝 حصتك مع {name} خلصت — ضيف الواجب",
+  review_new: "⭐ رأي جديد عن الأكاديمية ({rating}★) مستني موافقتك", refund_request: "💸 طلب استرداد جديد", refund_approved: "✅ طلب الاسترداد اتوافق عليه {note}",
+  refund_rejected: "طلب الاسترداد اترفض {note}"
+});
+const TABS10 = {
+  en: { homework: "Homework", reviews: "Reviews & refunds", dues: "Earnings" },
+  ar: { homework: "الواجبات", reviews: "الآراء والاسترداد", dues: "أرباحي" }
+};
+function T10(k) { const d = TABS10[state.lang] || TABS10.en; return d[k] || TABS10.en[k] || k; }
+const _dashTabs10 = dashTabs;
+dashTabs = function (tabs) {
+  let h = _dashTabs10(tabs);
+  ["homework", "reviews"].forEach(k => { h = h.replace(">" + k + "</a>", ">" + T10(k) + "</a>"); });
+  if (role() === "teacher" && tabs.includes("dues")) h = h.replace(new RegExp("(onclick=\"state\\.dash\\.tab='dues'[^>]*>)[^<]*</a>"), "$1" + T10("dues") + "</a>");
+  return h;
+};
+function stars5(n) { n = Math.round(+n || 0); return `<span style="color:#f59e0b;letter-spacing:1px">${"★".repeat(n)}<span style="opacity:.3">${"★".repeat(5 - n)}</span></span>`; }
+function tpl10(s, o) { return String(s).replace(/\{(\w+)\}/g, (_, k) => o[k] == null ? "" : o[k]); }
+
+/* ---------- رسائل الأخطاء ---------- */
+const _toast10 = toast;
+toast = function (msg, isErr) {
+  let m = String(msg == null ? "" : msg);
+  if (/banned|blocked_identity/i.test(m)) m = L("blockedMsg");
+  else if (/profiles_phone_key_uniq/.test(m)) m = L("sc_phone_taken");
+  else if (/national_id_taken|teacher_apps_nid_uniq/.test(m)) m = L("nidTaken");
+  else if (/Database error saving new user/i.test(m)) m = L("signupFailed");
+  else if (/Invalid login credentials/i.test(m)) m = L("badLogin");
+  return _toast10(m, isErr);
+};
+
+/* ---------- التسجيل والدخول بالإيميل أو الموبايل ---------- */
+const _renderAuth10 = renderAuth;
+renderAuth = function () {
+  let h = _renderAuth10();
+  if (state.route === "signup") {
+    h = h.replace(`id="au_phone" type="tel" autocomplete="tel" placeholder="+20..."`, `id="au_phone" type="tel" autocomplete="tel" placeholder="+20 10..." required dir="ltr"`)
+      .replace(`<label class="l">${L("phone")}</label>`, `<label class="l">${L("phone")} <span class="xs muted">— ${L("phoneHint")}</span></label>`);
+  } else {
+    h = h.replace(`<label class="l">${L("email")}</label><input class="in" id="au_email" type="email" autocomplete="email" required>`,
+      `<label class="l">${L("emailOrPhone")}</label><input class="in" id="au_email" type="text" autocomplete="username" required dir="ltr">`);
+  }
+  return h;
+};
+const _doLogin10 = doLogin;
+doLogin = async function () {
+  const v = ((document.getElementById("au_email") || {}).value || "").trim();
+  const pw = (document.getElementById("au_pw") || {}).value || "";
+  if (!v || v.indexOf("@") >= 0 || !pw) return _doLogin10();
+  state.busy = true; render();
+  let err = null, data = null;
+  try {
+    const r = await sb.functions.invoke("phone-login", { body: { phone: v, password: pw } });
+    data = r.data; if (r.error) { try { const b = await r.error.context.json(); err = b.error; } catch (e) { err = "invalid_credentials"; } }
+  } catch (e) { err = "invalid_credentials"; }
+  if (!err && data && data.access_token) { const s = await sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token }); if (s.error) err = s.error.message; }
+  else if (!err) err = "invalid_credentials";
+  state.busy = false;
+  if (err) { toast(err === "blocked" ? L("blockedMsg") : err === "email_not_confirmed" ? L("checkEmail") : L("badLogin"), true); render(); return; }
+  // أكمل نفس مسار الدخول العادي (الباقات المعلقة، الرجوع للصفحة السابقة...)
+  const orig = sb.auth.signInWithPassword;
+  sb.auth.signInWithPassword = async () => ({ data: {}, error: null });
+  try { await _doLogin10(); } finally { sb.auth.signInWithPassword = orig; }
+};
+const _doSignup10 = doSignup;
+doSignup = async function () {
+  const email = ((document.getElementById("au_email") || {}).value || "").trim();
+  const phone = ((document.getElementById("au_phone") || {}).value || "").trim();
+  if (!phone) return toast(L("phoneRequired"), true);
+  if (email) {
+    try { const { data } = await sb.rpc("signup_check", { p_email: email, p_phone: phone }); if (data && data !== "ok") return toast(L("sc_" + data), true); } catch (e) {}
+  }
+  return _doSignup10();
+};
+const _loadProfile10 = loadProfile;
+loadProfile = async function () {
+  const r = await _loadProfile10.apply(this, arguments);
+  const p = state.auth && state.auth.profile;
+  if (p && p.blocked && p.role !== "owner") { try { await sb.auth.signOut(); } catch (e) {} state.auth.user = null; state.auth.profile = null; toast(L("blockedMsg"), true); navigate("home"); }
+  return r;
+};
+
+/* ---------- قائمة الحظر (الأونر) ---------- */
+function blocklistCard(P) {
+  const list = useData("blocklist", () => q(sb.from("blocked_identities").select("*").order("created_at", { ascending: false })));
+  const users = P.list.filter(u => u.role !== "owner");
+  const kn = { email: L("blEmail"), phone: L("blPhone"), national_id: L("blNid") };
+  return `<div class="card" style="margin-top:1rem;border-color:var(--danger)"><h3 style="margin-bottom:.3rem">🚫 ${L("blTitle")}</h3><p class="xs muted" style="margin-bottom:.8rem">${L("blHint")}</p>
+    <div class="grid g2" style="align-items:end">
+      <form class="fgrid" style="align-items:end" onsubmit="event.preventDefault();blockIdentity()">
+        <div><label class="l">${L("blKind")}</label><select class="in" id="bl_k"><option value="email">${kn.email}</option><option value="phone">${kn.phone}</option><option value="national_id">${kn.national_id}</option></select></div>
+        <div><label class="l">${L("blValue")}</label><input class="in" id="bl_v" required dir="ltr"></div>
+        <div><label class="l">${L("blNote")}</label><input class="in" id="bl_n"></div>
+        <button class="btn btn-o" style="color:var(--danger)">🚫 ${L("blAdd")}</button>
+      </form>
+      <form class="fgrid" style="align-items:end" onsubmit="event.preventDefault();blockUser(document.getElementById('bl_u').value)">
+        <div><label class="l">${L("blUser")}</label><select class="in" id="bl_u">${users.map(u => `<option value="${u.id}">${esc(u.real_name || u.email)} — ${esc(u.email || "")}</option>`).join("")}</select></div>
+        <button class="btn btn-o" style="color:var(--danger)">🚫 ${L("blAdd")}</button>
+      </form>
+    </div>
+    ${Array.isArray(list) && list.length ? `<div style="margin-top:1rem">${list.map(b => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span class="sm"><span class="badge">${esc(kn[b.kind] || b.kind)}</span> <b dir="ltr">${esc(b.value)}</b>${b.user_id ? ` · ${esc(personName(b.user_id, P.map))}` : ""}${b.note ? ` <span class="xs muted">— ${esc(b.note)}</span>` : ""}</span>
+      <button class="btn btn-o" style="padding:.3rem .7rem" onclick="unblockId('${b.id}')">${L("blUnblock")}</button></div>`).join("")}</div>` : ""}
+  </div>`;
+}
+async function blockIdentity() {
+  const g = (x) => document.getElementById(x).value.trim();
+  const { error } = await sb.rpc("owner_block_identity", { p_kind: g("bl_k"), p_value: g("bl_v"), p_note: g("bl_n") || null });
+  if (error) return toast(error.message, true);
+  invalidate("blocklist", "people"); toast(L("saved")); render();
+}
+async function blockUser(uid) {
+  if (!uid || !confirm(L("blConfirm"))) return;
+  const { error } = await sb.rpc("owner_block_user", { p_user: uid, p_note: null });
+  if (error) return toast(error.message, true);
+  invalidate("blocklist", "people"); toast(L("saved")); render();
+}
+async function unblockId(id) { const { error } = await sb.rpc("owner_unblock", { p_id: id }); if (error) return toast(error.message, true); invalidate("blocklist", "people"); render(); }
+async function unblockUser(uid) { const { error } = await sb.rpc("owner_unblock", { p_user: uid }); if (error) return toast(error.message, true); invalidate("blocklist", "people"); render(); }
+const _ownerUsers10 = ownerUsers;
+ownerUsers = function (P) {
+  return _ownerUsers10(P).replace(/(<select class="in" style="width:auto" onchange="changeRole\('([0-9a-f-]{36})'[\s\S]*?<\/select>)/g, (m, sel, uid) => {
+    const u = P.map[uid] || {};
+    return sel + (u.blocked ? ` <span class="badge" style="color:var(--danger)">🚫 ${L("blocked")}</span> <button class="btn btn-o" style="padding:.3rem .6rem" onclick="unblockUser('${uid}')">${L("blUnblock")}</button>`
+      : ` <button class="ibtn" style="color:var(--danger)" title="${L("blAdd")}" onclick="blockUser('${uid}')"><i class="fa-solid fa-ban"></i></button>`);
+  });
+};
+
+/* ---------- منح وصول مدى الحياة ---------- */
+const _accessGrantCard10 = accessGrantCard;
+accessGrantCard = function (P) {
+  return _accessGrantCard10(P).replace(`<label class="l">${L("grantDays")}</label><input class="in" id="ga_days" type="number" min="1">`,
+    `<label class="l">${L("grantDays")} <span class="xs muted">(${L("lifetimeHint")})</span></label><input class="in" id="ga_days" type="number" min="1" placeholder="∞">`);
+};
+
+/* ---------- الإشعارات: الفتح = مقروء + يوديك للمكان الصح ---------- */
+const NOTIF_TAB = { earning: "dues", payout_sent: "dues", homework_assigned: "homework", homework_reminder: "homework", homework_reviewed: "homework", homework_submitted: "homework",
+  homework_prompt: "homework", review_new: "reviews", refund_request: "reviews", refund_approved: "billing", refund_rejected: "billing", apology_credit: "lessons", new_message: "messages", message: "messages" };
+async function openNotif(id) {
+  const n = state.notif.list.find(x => x.id === id);
+  state.notif.open = false;
+  if (n && !n.read_at) { n.read_at = new Date().toISOString(); sb.from("notifications").update({ read_at: n.read_at }).eq("id", id).then(() => {}, () => {}); }
+  const tab = n && NOTIF_TAB[n.kind];
+  if (tab) { state.dash.tab = tab; Object.keys(state.data).forEach(k => { if (/^(hw|tStats|tLedger|fin:|rv|refund)/.test(k)) delete state.data[k]; }); }
+  navigate("dashboard");
+}
+const _renderBell10 = renderBell;
+renderBell = function () {
+  let i = 0; const list = state.notif.list || [];
+  return _renderBell10().replace(/onclick="state\.notif\.open=false;navigate\('dashboard'\);return false;"/g, () => { const n = list[i++]; return n ? `onclick="openNotif('${n.id}');return false;"` : `onclick="state.notif.open=false;navigate('dashboard');return false;"`; });
+};
+
+/* ---------- أرباح المعلم (بدون إظهار العمولة) ---------- */
+function statsTiles(per) {
+  per = per || {};
+  const tile = (lbl, v, cls) => `<div class="card" style="background:var(--bg);padding:.8rem"><div class="xs muted">${lbl}</div><div class="${cls || ""}" style="font-size:1.45rem;font-weight:800">${v}</div></div>`;
+  return `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem">
+    ${tile(L("stTaught"), per.taught || 0, "accent")}${tile(L("stHours"), per.hours || 0)}${tile(L("stStudents"), per.students || 0)}${tile(L("stNew"), per.new_students || 0, "accent")}
+    ${tile(L("stTrials"), per.trials || 0)}${tile(L("stCancelled"), per.cancelled || 0)}${tile(L("stStuAbs"), per.student_absent || 0)}${tile(L("stTchAbs"), per.teacher_absent || 0)}
+    ${per.earnings != null ? tile(L("stEarn"), esc(money(per.earnings, per.currency || setv("currency", "USD"))), "accent") : ""}</div>`;
+}
+function weeklyBars(weeks, cur) {
+  if (!Array.isArray(weeks) || !weeks.length) return "";
+  const max = Math.max(1, ...weeks.map(w => +w.earn || 0));
+  return `<div style="display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:1rem" dir="ltr">${weeks.map(w => { const v = +w.earn || 0; const h = Math.round(v / max * 110);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0" title="${esc(money(v, cur))} · ${w.lessons} ${L("finLessons")}">
+      <span class="xs muted" style="font-size:.62rem">${v ? Math.round(v) : ""}</span><div style="width:100%;max-width:34px;height:${Math.max(2, h)}px;background:var(--accent);border-radius:6px 6px 2px 2px;opacity:${v ? 1 : .25}"></div>
+      <span class="xs muted" dir="ltr" style="font-size:.6rem;white-space:nowrap">${new Date(w.w).getDate()}/${new Date(w.w).getMonth() + 1}</span></div>`; }).join("")}</div>`;
+}
+teacherDues = function () {
+  const st = useData("tStats", async () => { const { data, error } = await sb.rpc("teacher_stats"); if (error) throw error; return data; });
+  const led = useData("tLedger", () => q(sb.rpc("my_earnings")));
+  if (st === null) return loadingBox();
+  if (!st || st.__error) return errBox(st || {});
+  const cur = st.currency || "USD", per = state.earnPer || "month";
+  const big = (lbl, v, cls) => `<div class="card" style="background:var(--bg)"><div class="muted sm">${lbl}</div><div class="${cls || ""}" style="font-size:1.8rem;font-weight:800">${v}</div></div>`;
+  const kindName = { lesson: L("earnLesson"), payout: L("earnPayout"), bonus: L("earnBonus"), adjust: L("earnAdjust") };
+  return `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:1rem">
+      ${big(L("earnBalance"), esc(money(st.balance, cur)), "accent")}${big(L("earnPaid"), esc(money(st.paid_total, cur)))}${big(L("earnLifetime"), st.lifetime_lessons || 0)}
+      ${big(L("earnUpcoming"), st.upcoming || 0)}${st.rating ? big(L("earnRating"), stars5(st.rating) + ` <span class="sm">${st.rating}</span>`) : ""}</div>
+    <div class="card" style="margin-bottom:1rem"><div class="tabs" style="margin-bottom:.8rem">${[["week", "perWeek7"], ["month", "perMonth30"], ["quarter", "perQuarter90"]].map(([k, l]) => `<a href="#" aria-current="${per === k}" onclick="state.earnPer='${k}';render();return false;">${L(l)}</a>`).join("")}</div>
+      ${statsTiles(Object.assign({ currency: cur }, st[per] || {}))}</div>
+    <div class="card" style="margin-bottom:1rem"><h3>${L("earnWeekly")}</h3>${weeklyBars(st.weeks, cur)}</div>
+    <div class="card"><h3 style="margin-bottom:.6rem">${L("earnHistory")}</h3>
+      ${!Array.isArray(led) ? loadingBox() : !led.length ? `<p class="muted sm">${L("none")}</p>` : led.map(x => `<div class="kv" style="align-items:center;flex-wrap:wrap">
+        <span class="sm"><b>${esc(kindName[x.kind] || x.kind)}</b>${x.kind === "lesson" && x.start_time ? ` · ${esc(fmtDT(x.start_time))}${x.student_name ? " · " + esc(x.student_name) : ""}${x.attendance && x.attendance !== "present" ? ` <span class="badge">${esc(attName(x.attendance))}</span>` : ""}` : ""}${x.method ? " · " + esc(x.method) : ""}${x.note ? ` <span class="xs muted">— ${esc(x.note)}</span>` : ""}
+        <br><span class="xs muted">${esc(fmtDT(x.created_at))}</span></span>
+        <b style="color:${+x.amount < 0 ? "var(--danger)" : "var(--accent)"}">${+x.amount > 0 ? "+" : ""}${esc(money(x.amount, x.currency))}</b></div>`).join("")}
+      <p class="xs muted" style="margin-top:.8rem">${L("earnNote")}</p></div>`;
+};
+
+/* ---------- الأونر: الأرباح والتحويلات + شرائح العمولة ---------- */
+ownerReports = function (P) {
+  const m = state.repMonth || curMonth(); state.repMonth = m;
+  const [s, e] = monthRange(m);
+  const fin = useData("fin:" + m, () => q(sb.rpc("owner_finance", { p_from: s.toISOString(), p_to: e.toISOString() })));
+  const list = useData("report:" + m, () => q(sb.from("lessons").select("teacher_id,attendance,status,start_time,end_time,rating").gte("start_time", s.toISOString()).lt("start_time", e.toISOString())));
+  const cur = setv("currency", "USD");
+  const att = {};
+  if (Array.isArray(list)) list.forEach(l => { const r = att[l.teacher_id] = att[l.teacher_id] || { present: 0, student_absent: 0, teacher_absent: 0, pending: 0, rs: [] }; const a = l.attendance || "pending"; if (a === "excused" || a === "late_cancel") r.student_absent++; else if (r[a] != null) r[a]++; if (l.rating) r.rs.push(l.rating); });
+  const rows = Array.isArray(fin) ? fin : [];
+  const tot = rows.reduce((a, r) => { ["lessons", "hours", "gross", "teacher_net", "academy", "paid", "balance"].forEach(k => a[k] = (a[k] || 0) + (+r[k] || 0)); return a; }, {});
+  const open = state.finOpen;
+  return `<div class="card" style="overflow-x:auto;margin-bottom:1rem">
+    <div class="row" style="gap:.6rem;margin-bottom:1rem;justify-content:space-between;flex-wrap:wrap"><h3>💼 ${L("finTitle")}</h3>
+      <span class="row" style="gap:.4rem"><label class="l" style="margin:0">${L("repMonth")}</label><input class="in" type="month" style="width:auto" value="${m}" onchange="state.repMonth=this.value;render()"></span></div>
+    ${fin === null ? loadingBox() : fin && fin.__error ? errBox(fin) : `<table class="tbl"><thead><tr><th>${L("teacher")}</th><th>${L("finLessons")}</th><th>${L("repHours")}</th><th>${L("repStudentAbs")}</th><th>${L("repTeacherAbs")}</th><th>★</th><th>${L("finGross")}</th><th>${L("finNet")}</th><th>${L("finAcademy")}</th><th>${L("finPaid")}</th><th>${L("finBalance")}</th><th>${L("finPct")}</th><th></th></tr></thead><tbody>
+      ${rows.map(r => { const a = att[r.teacher_id] || { student_absent: 0, teacher_absent: 0, rs: [] }; const avg = a.rs.length ? (a.rs.reduce((x, y) => x + y, 0) / a.rs.length).toFixed(1) : "—";
+        return `<tr><td><a href="#" class="b" onclick="state.finOpen=state.finOpen==='${r.teacher_id}'?null:'${r.teacher_id}';render();return false;">${esc(r.name)} ${open === r.teacher_id ? "▴" : "▾"}</a><div class="xs muted">${r.lifetime} ${L("finLessons")}</div></td>
+          <td class="accent b">${r.lessons}</td><td>${r.hours}</td><td>${a.student_absent}</td><td style="color:var(--danger)">${a.teacher_absent}</td><td>${avg}</td>
+          <td>${esc(money(r.gross, cur))}</td><td class="b">${esc(money(r.teacher_net, cur))}</td><td>${esc(money(r.academy, cur))}</td><td>${esc(money(r.paid, cur))}</td>
+          <td class="b" style="color:${+r.balance > 0 ? "var(--gold)" : "inherit"}">${esc(money(r.balance, cur))}</td><td>${(+r.next_pct).toFixed(0)}%</td>
+          <td style="white-space:nowrap"><button class="btn btn-p" style="padding:.3rem .7rem" ${+r.balance > 0 ? "" : "disabled"} onclick="payTeacher('${r.teacher_id}',${+r.balance})">${L("finPay")}</button>
+            <button class="btn btn-o" style="padding:.3rem .7rem" onclick="bonusTeacher('${r.teacher_id}')">${L("finBonus")}</button></td></tr>
+          ${open === r.teacher_id ? `<tr><td colspan="13">${teacherStatsPanel(r.teacher_id)}</td></tr>` : ""}`; }).join("")}
+      <tr style="border-top:2px solid var(--line)"><td class="b">${L("finTotal")}</td><td class="b">${tot.lessons || 0}</td><td>${(tot.hours || 0).toFixed(1)}</td><td></td><td></td><td></td><td>${esc(money(tot.gross || 0, cur))}</td><td class="b">${esc(money(tot.teacher_net || 0, cur))}</td><td class="b accent">${esc(money(tot.academy || 0, cur))}</td><td>${esc(money(tot.paid || 0, cur))}</td><td class="b">${esc(money(tot.balance || 0, cur))}</td><td></td><td></td></tr>
+      </tbody></table>`}
+    <p class="xs muted" style="margin-top:.6rem">🔒 ${L("finPrivate")}</p></div>` + commissionCard();
+};
+function teacherStatsPanel(tid) {
+  const st = useData("tStatsO:" + tid, async () => { const { data, error } = await sb.rpc("teacher_stats", { p_teacher: tid }); if (error) throw error; return data; });
+  if (st === null) return loadingBox();
+  if (!st || st.__error) return "";
+  const cur = st.currency || "USD";
+  return `<div class="grid g3" style="gap:.6rem">${[["week", "perWeek7"], ["month", "perMonth30"], ["quarter", "perQuarter90"]].map(([k, l]) => `<div><b class="sm">${L(l)}</b>${statsTiles(Object.assign({ currency: cur }, st[k]))}</div>`).join("")}</div>${weeklyBars(st.weeks, cur)}`;
+}
+async function payTeacher(tid, bal) {
+  const a = prompt(L("finPayAmt"), String(bal)); if (a === null) return;
+  const amt = +a; if (!(amt > 0)) return;
+  const meta = Array.isArray(state.data.tmeta) ? state.data.tmeta.find(x => x.id === tid) : null;
+  const method = prompt(L("finMethod"), meta && meta.payout_method ? meta.payout_method : ""); if (method === null) return;
+  const { error } = await sb.rpc("owner_pay_teacher", { p_teacher: tid, p_amount: amt, p_method: method || null, p_note: null, p_kind: "payout" });
+  if (error) return toast(error.message, true);
+  Object.keys(state.data).forEach(k => { if (k.startsWith("fin:") || k.startsWith("tStatsO:")) delete state.data[k]; }); toast(L("saved")); render();
+}
+async function bonusTeacher(tid) {
+  const a = prompt(L("finBonusAmt"), "5"); if (a === null) return; const amt = +a; if (!amt) return;
+  const { error } = await sb.rpc("owner_pay_teacher", { p_teacher: tid, p_amount: amt, p_method: null, p_note: amt > 0 ? "bonus" : "adjustment", p_kind: amt > 0 ? "bonus" : "adjust" });
+  if (error) return toast(error.message, true);
+  Object.keys(state.data).forEach(k => { if (k.startsWith("fin:") || k.startsWith("tStatsO:")) delete state.data[k]; }); toast(L("saved")); render();
+}
+function commissionCard() {
+  const ps = useData("privSettings", () => q(sb.from("private_settings").select("data").eq("id", 1)));
+  const d = Array.isArray(ps) && ps[0] ? ps[0].data || {} : {};
+  const t = (d.commission && d.commission.tiers) || [{ upto: 20, pct: 40 }, { upto: 40, pct: 30 }, { pct: 25 }];
+  const v = (i, k, def) => t[i] && t[i][k] != null ? t[i][k] : def;
+  const n = (id, val) => `<input class="in" type="number" min="0" max="100" step="1" id="${id}" value="${val}" style="width:6rem">`;
+  return `<div class="card"><h3 style="margin-bottom:.3rem">📉 ${L("comTitle")}</h3><p class="xs muted" style="margin-bottom:.8rem">${L("comHint")} 🔒</p>
+    <div class="fgrid" style="align-items:end">
+      <div><label class="l">${L("comFirst")} — %</label>${n("ct_p1", v(0, "pct", 40))}</div><div><label class="l">${L("comUpTo")}</label>${n("ct_u1", v(0, "upto", 20))}</div>
+      <div><label class="l">%</label>${n("ct_p2", v(1, "pct", 30))}</div><div><label class="l">${L("comUpTo")}</label>${n("ct_u2", v(1, "upto", 40))}</div>
+      <div><label class="l">${L("comAfter")} — %</label>${n("ct_p3", v(2, "pct", 25))}</div>
+      <button class="btn btn-p" onclick="saveCommission()">${L("save")}</button></div></div>`;
+}
+async function saveCommission() {
+  const g = (x) => +document.getElementById(x).value;
+  const tiers = [{ upto: g("ct_u1"), pct: g("ct_p1") }, { upto: Math.max(g("ct_u2"), g("ct_u1") + 1), pct: g("ct_p2") }, { pct: g("ct_p3") }];
+  const { error } = await sb.rpc("owner_set_commission", { p_tiers: tiers });
+  if (error) return toast(error.message, true);
+  invalidate("privSettings"); Object.keys(state.data).forEach(k => { if (k.startsWith("fin:")) delete state.data[k]; }); toast(L("saved")); render();
+}
+
+/* ---------- الواجبات ---------- */
+state.hw = { rec: null, blobs: {} };
+async function hwOpenFile(path) {
+  const { data, error } = await sb.storage.from("homework").createSignedUrl(path, 3600);
+  if (error) return toast(error.message, true);
+  window.open(data.signedUrl, "_blank", "noopener");
+}
+async function hwToggleRec(lid) {
+  const r = state.hw.rec;
+  if (r && r.lid === lid) { r.mr.stop(); return; }
+  if (r) r.mr.stop();
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
+    const mr = new MediaRecorder(s, mime ? { mimeType: mime } : {}); const chunks = [];
+    mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => { s.getTracks().forEach(t => t.stop()); state.hw.blobs[lid] = new Blob(chunks, { type: mr.mimeType || "audio/webm" }); state.hw.rec = null; render(); };
+    mr.start(); state.hw.rec = { lid, mr }; render();
+  } catch (e) { toast(e.message || String(e), true); }
+}
+async function hwSubmit(lid) {
+  const uid = state.auth.user.id;
+  const body = ((document.getElementById("hw_b_" + lid) || {}).value || "").trim();
+  const fi = document.getElementById("hw_f_" + lid); const f = fi && fi.files && fi.files[0];
+  const blob = state.hw.blobs[lid];
+  if (!body && !f && !blob) return toast(L("fillAll"), true);
+  state.busy = true; render();
+  try {
+    const up = async (file, name, type) => { const path = `${uid}/${lid}/${Date.now()}-${name.replace(/[^\w.\-]+/g, "_")}`; const { error } = await sb.storage.from("homework").upload(path, file, { contentType: type || undefined }); if (error) throw error; return path; };
+    let path = null, type = null;
+    if (f) { path = await up(f, f.name, f.type); type = f.type; }
+    else if (blob) { path = await up(blob, "recording." + (blob.type.indexOf("mp4") >= 0 ? "m4a" : "webm"), blob.type); type = blob.type; }
+    await q(sb.from("homework_submissions").insert({ lesson_id: lid, student_id: uid, body: body || null, file_path: path, file_type: type }));
+    delete state.hw.blobs[lid]; invalidate("hwSubs"); toast(L("hwSent"));
+  } catch (e) { toast(e.message || String(e), true); }
+  state.busy = false; render();
+}
+function hwSubHtml(s) {
+  return `<div style="border-inline-start:3px solid var(--line);padding:.3rem .7rem;margin-top:.5rem">
+    <div class="xs muted">${esc(fmtDT(s.created_at))}</div>${s.body ? `<div class="sm" style="white-space:pre-wrap">${esc(s.body)}</div>` : ""}
+    ${s.file_path ? `<button class="btn btn-o" style="padding:.25rem .6rem;margin-top:.3rem" onclick="hwOpenFile('${esc(s.file_path)}')">${/audio/.test(s.file_type || "") ? "🎧" : /video/.test(s.file_type || "") ? "🎬" : "📎"} ${L("hwOpen")}</button>` : ""}
+    ${s.reviewed_at ? `<div class="notice ok" style="margin-top:.4rem"><b>${L("hwFeedback")}${s.grade ? ` · ${esc(s.grade)}` : ""}:</b> ${esc(s.feedback || "")}</div>` : ""}</div>`;
+}
+function hwStudent() {
+  const uid = state.auth.user.id;
+  const ls = useData("hwLessons", () => q(sb.from("lessons").select("id,start_time,end_time,teacher_id,homework,homework_at,track").eq("student_id", uid).not("homework", "is", null).order("start_time", { ascending: false }).limit(40)));
+  const subs = useData("hwSubs", () => q(sb.from("homework_submissions").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+  if (!Array.isArray(ls) || !Array.isArray(subs)) return loadingBox();
+  const list = ls.filter(l => (l.homework || "").trim());
+  if (!list.length) return `<div class="card muted">📝 ${L("hwNone")}</div>`;
+  const by = {}; subs.forEach(s => (by[s.lesson_id] = by[s.lesson_id] || []).push(s));
+  return list.map(l => {
+    const ss = by[l.id] || [], done = ss.some(s => s.reviewed_at), recOn = state.hw.rec && state.hw.rec.lid === l.id, blob = state.hw.blobs[l.id];
+    return `<div class="card" style="margin-bottom:1rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+      <b>📝 ${esc(fmtDT(l.start_time))}${l.track ? " · " + esc(trackTitle(l.track)) : ""}</b>
+      <span class="badge ${done ? "badge-a" : ss.length ? "badge-g" : ""}">${done ? L("hwStatusDone") : ss.length ? L("hwStatusSent") : L("hwStatusNew")}</span></div>
+      <div class="sm" style="white-space:pre-wrap;margin:.5rem 0;padding:.6rem .8rem;background:var(--bg);border-radius:10px">${esc(l.homework)}</div>
+      ${ss.map(hwSubHtml).join("")}
+      <details style="margin-top:.6rem" ${ss.length ? "" : "open"}><summary class="b sm" style="cursor:pointer">📤 ${L("hwSubmit")}</summary>
+        <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem">
+          <textarea class="in" id="hw_b_${l.id}" rows="3" placeholder="${L("hwText")}"></textarea>
+          <div><label class="l">${L("hwFile")}</label><input class="in" type="file" id="hw_f_${l.id}" accept="audio/*,video/*,image/*,application/pdf,.doc,.docx"></div>
+          <div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn ${recOn ? "btn-p" : "btn-o"}" onclick="hwToggleRec('${l.id}')">${recOn ? "⏹ " + L("hwStop") : "🎙️ " + L("hwRecord")}</button>
+            ${blob ? `<audio controls src="${URL.createObjectURL(blob)}" style="height:36px"></audio><span class="xs accent">✓ ${L("hwRecorded")}</span>` : ""}</div>
+          <button class="btn btn-p" ${state.busy ? "disabled" : ""} onclick="hwSubmit('${l.id}')">${L("hwSubmit")}</button></div></details></div>`;
+  }).join("");
+}
+function hwTeacher() {
+  const uid = state.auth.user.id, isOwner = role() === "owner";
+  const recent = useData("hwRecent", () => { let qq = sb.from("lessons").select("id,start_time,end_time,student_id,teacher_id,homework,attendance,status").lt("end_time", new Date().toISOString()).gte("end_time", new Date(Date.now() - 14 * 864e5).toISOString()).neq("status", "cancelled").order("start_time", { ascending: false }).limit(60); if (!isOwner) qq = qq.eq("teacher_id", uid); return q(qq); });
+  const subs = useData("hwTSubs", () => q(sb.from("homework_submissions").select("*, lessons(start_time,student_id,teacher_id,homework)").order("created_at", { ascending: false }).limit(120)));
+  const { map } = peopleMap();
+  const mine = Array.isArray(subs) ? subs.filter(s => isOwner || (s.lessons && s.lessons.teacher_id === uid)) : [];
+  const todo = mine.filter(s => !s.reviewed_at), done = mine.filter(s => s.reviewed_at).slice(0, 20);
+  const noHw = Array.isArray(recent) ? recent.filter(l => !(l.homework || "").trim()) : [];
+  const grades = L("hwGrades") || [];
+  return `<div class="grid g2" style="align-items:start">
+    <div class="card"><h3 style="margin-bottom:.3rem">📝 ${L("hwAssign")}</h3><p class="xs muted" style="margin-bottom:.6rem">${L("hwAssignHint")}</p>
+      ${!Array.isArray(recent) ? loadingBox() : !noHw.length ? `<p class="muted sm">${L("none")}</p>` : noHw.slice(0, 15).map(l => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+        <div class="sm"><b>${esc(personName(l.student_id, map))}</b> · ${esc(fmtDT(l.start_time))}</div>
+        <form class="row" style="gap:.4rem;margin-top:.4rem" onsubmit="event.preventDefault();hwAssign('${l.id}')"><textarea class="in" id="hwa_${l.id}" rows="2" style="flex:1" required></textarea><button class="btn btn-p">${L("save")}</button></form></div>`).join("")}</div>
+    <div class="card"><h3 style="margin-bottom:.6rem">📥 ${L("hwToReview")} (${todo.length})</h3>
+      ${!Array.isArray(subs) ? loadingBox() : !todo.length ? `<p class="muted sm">${L("none")}</p>` : todo.map(s => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+        <div class="sm"><b>${esc(personName(s.student_id, map))}</b> · <span class="muted">${esc(fmtDT((s.lessons || {}).start_time || s.created_at))}</span></div>
+        <div class="xs muted" style="white-space:pre-wrap">${esc((s.lessons || {}).homework || "")}</div>${hwSubHtml(s)}
+        <form style="display:flex;flex-direction:column;gap:.4rem;margin-top:.4rem" onsubmit="event.preventDefault();hwReview('${s.id}')">
+          <textarea class="in" id="hwr_${s.id}" rows="2" placeholder="${L("hwFeedback")}"></textarea>
+          <div class="row" style="gap:.4rem"><select class="in" id="hwg_${s.id}" style="width:auto">${grades.map(g => `<option>${esc(g)}</option>`).join("")}</select><button class="btn btn-p">${L("hwSaveReview")}</button></div></form></div>`).join("")}
+      ${done.length ? `<details style="margin-top:.8rem"><summary class="sm b">${L("hwReviewed")} (${done.length})</summary>${done.map(s => `<div class="sm" style="margin-top:.4rem"><b>${esc(personName(s.student_id, map))}</b>${hwSubHtml(s)}</div>`).join("")}</details>` : ""}</div></div>`;
+}
+async function hwAssign(lid) {
+  const v = document.getElementById("hwa_" + lid).value.trim(); if (!v) return;
+  const { error } = await sb.from("lessons").update({ homework: v }).eq("id", lid);
+  if (error) return toast(error.message, true);
+  invalidate("hwRecent"); invalidateCal(); toast(L("hwAssigned")); render();
+}
+async function hwReview(id) {
+  const { error } = await sb.rpc("review_homework", { p_id: id, p_feedback: document.getElementById("hwr_" + id).value, p_grade: document.getElementById("hwg_" + id).value });
+  if (error) return toast(error.message, true);
+  invalidate("hwTSubs"); toast(L("saved")); render();
+}
+
+/* ---------- آراء الطلاب ---------- */
+function reviewsPublicSection() {
+  const list = useData("rvPublic", () => q(sb.from("academy_reviews").select("id,name,country,rating,body,featured,created_at").eq("status", "approved").order("featured", { ascending: false }).order("created_at", { ascending: false }).limit(12)));
+  if (!Array.isArray(list) || !list.length) return "";
+  const avg = list.reduce((a, r) => a + r.rating, 0) / list.length;
+  return `<section class="sec"><div class="wrap"><div style="text-align:center;margin-bottom:1.4rem"><h2>💬 ${L("rvTitle")}</h2><div style="margin-top:.4rem">${stars5(avg)} <b>${avg.toFixed(1)}</b> <span class="muted sm">(${list.length})</span></div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${list.map(r => `<div class="card" style="${r.featured ? "border-color:var(--gold)" : ""}">
+      <div>${stars5(r.rating)}</div><p class="sm" style="margin:.6rem 0;white-space:pre-wrap">“${esc(r.body)}”</p>
+      <div class="xs muted"><b style="color:var(--fg)">${esc(r.name || "—")}</b>${r.country ? " · " + esc(countryName(r.country)) : ""}</div></div>`).join("")}</div>
+    ${guaranteeBanner(true)}</div></section>`;
+}
+const _renderHome10 = renderHome;
+renderHome = function () { return _renderHome10() + reviewsPublicSection(); };
+function myReviewCard() {
+  const uid = state.auth.user.id, p = state.auth.profile || {};
+  const mine = useData("rvMine", () => q(sb.from("academy_reviews").select("*").eq("user_id", uid)));
+  if (!Array.isArray(mine)) return "";
+  const r = mine[0] || {}; const sel = state.rvStars || r.rating || 5;
+  const stt_ = r.status === "approved" ? `<span class="badge badge-a">${L("rvApproved")}</span>` : r.status === "hidden" ? `<span class="badge">${L("rvHidden")}</span>` : r.id ? `<span class="badge badge-g">${L("rvPending")}</span>` : "";
+  return `<div class="card" style="margin-top:1.2rem"><div class="row" style="justify-content:space-between"><h3>⭐ ${L("rvMine")}</h3>${stt_}</div><p class="xs muted" style="margin:.3rem 0 .7rem">${L("rvMineHint")}</p>
+    <div style="font-size:1.7rem;cursor:pointer;color:#f59e0b" dir="ltr">${[1, 2, 3, 4, 5].map(i => `<span onclick="state.rvStars=${i};render()" style="opacity:${i <= sel ? 1 : .3}">★</span>`).join("")}</div>
+    <form style="display:flex;flex-direction:column;gap:.5rem;margin-top:.4rem" onsubmit="event.preventDefault();saveMyReview()">
+      <div><label class="l">${L("rvName")}</label><input class="in" id="rv_n" value="${esc(r.name || (p.display_name || (p.real_name || "").split(" ")[0] || ""))}" maxlength="60"></div>
+      <div><label class="l">${L("rvBody")}</label><textarea class="in" id="rv_b" rows="3" maxlength="1500" required>${esc(r.body || "")}</textarea></div>
+      <button class="btn btn-p">${L("rvSend")}</button></form></div>`;
+}
+async function saveMyReview() {
+  const uid = state.auth.user.id, p = state.auth.profile || {};
+  const row = { user_id: uid, name: document.getElementById("rv_n").value.trim() || null, country: p.country || null, rating: state.rvStars || 5, body: document.getElementById("rv_b").value.trim() };
+  const { error } = await sb.from("academy_reviews").upsert(row, { onConflict: "user_id" });
+  if (error) return toast(error.message, true);
+  invalidate("rvMine"); toast(L("saved")); render();
+}
+
+/* ---------- ضمان الاسترداد ---------- */
+function planName10(snap, id) { try { const t = planText(Object.assign({ id }, snap || {})); return typeof t === "string" ? t : (t && (t.t || t.title)) || id || ""; } catch (e) { return id || ""; } }
+function guaranteeBanner(center) {
+  const g = setv("guarantee", { on: true, days: 14 }) || {};
+  if (g.on === false) return "";
+  return `<div class="card" style="margin:1rem auto;max-width:760px;display:flex;gap:.9rem;align-items:center;border-color:var(--accent);${center ? "" : ""}">
+    <div style="font-size:2.2rem">🛡️</div><div><b>${L("gtTitle")}</b><div class="sm muted">${esc(tpl10(L("gtText"), { days: g.days || 14 }))}</div></div></div>`;
+}
+const _renderPricing10 = renderPricing;
+renderPricing = function () { return _renderPricing10().replace(`<div class="wrap">`, `<div class="wrap">${guaranteeBanner()}`); };
+const _renderPay10 = renderPay;
+renderPay = function () { const h = _renderPay10(); return h.indexOf(`<div class="wrap"`) >= 0 ? h.replace(/(<div class="wrap"[^>]*>)/, `$1${guaranteeBanner()}`) : h + guaranteeBanner(); };
+function refundCard() {
+  const uid = state.auth.user.id; const g = setv("guarantee", { on: true, days: 14 }) || {};
+  if (g.on === false) return "";
+  const ords = useData("myOrders", () => q(sb.from("orders").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+  const reqs = useData("refundMine", () => q(sb.from("refund_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false })));
+  const paid = Array.isArray(ords) ? ords.filter(o => o.payment_status === "paid" && o.status !== "cancelled") : [];
+  const sb_ = { pending: "badge-g", approved: "badge-a", rejected: "" };
+  return `<div class="card" style="margin-top:1.2rem"><h3 style="margin-bottom:.3rem">🛡️ ${L("gtTitle")}</h3><p class="sm muted" style="margin-bottom:.8rem">${esc(tpl10(L("gtText"), { days: g.days || 14 }))}</p>
+    ${paid.length ? `<form style="display:flex;flex-direction:column;gap:.5rem" onsubmit="event.preventDefault();sendRefund()">
+      <div><label class="l">${L("gtOrder")}</label><select class="in" id="rf_o">${paid.map(o => `<option value="${o.id}">${esc(planName10(o.plan_snapshot, o.plan_id) || "")} — ${esc(money(o.amount, o.currency))} · ${esc(fmtDT(o.paid_at || o.created_at, { day: "numeric", month: "short", year: "numeric" }))}</option>`).join("")}</select></div>
+      <div><label class="l">${L("gtReason")}</label><textarea class="in" id="rf_r" rows="2" required></textarea></div>
+      <button class="btn btn-o">${L("gtRequest")}</button></form>` : ""}
+    ${Array.isArray(reqs) && reqs.length ? `<h4 style="margin:1rem 0 .3rem">${L("gtMine")}</h4>${reqs.map(r => `<div class="kv"><span class="sm">${esc(fmtDT(r.created_at))} — ${esc(r.reason)}${r.owner_note ? `<br><span class="xs muted">${esc(r.owner_note)}</span>` : ""}</span><span class="badge ${sb_[r.status] || ""}">${esc(stt(r.status))}</span></div>`).join("")}` : ""}</div>`;
+}
+async function sendRefund() {
+  const { error } = await sb.from("refund_requests").insert({ user_id: state.auth.user.id, order_id: document.getElementById("rf_o").value || null, reason: document.getElementById("rf_r").value.trim() });
+  if (error) return toast(error.message, true);
+  invalidate("refundMine"); toast(L("gtSent")); render();
+}
+function ownerReviewsTab(P) {
+  const rv = useData("rvAll", () => q(sb.from("academy_reviews").select("*").order("created_at", { ascending: false })));
+  const rf = useData("refundAll", () => q(sb.from("refund_requests").select("*, orders(amount,currency,plan_id,plan_snapshot)").order("created_at", { ascending: false })));
+  const g = setv("guarantee", { on: true, days: 14 }) || {};
+  return `<div class="grid g2" style="align-items:start">
+    <div class="card"><h3 style="margin-bottom:.6rem">⭐ ${L("rvOwner")}</h3>
+      ${!Array.isArray(rv) ? loadingBox() : !rv.length ? `<p class="muted sm">${L("rvNone")}</p>` : rv.map(r => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+        <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.3rem"><span>${stars5(r.rating)} <b class="sm">${esc(r.name || personName(r.user_id, P.map))}</b> <span class="xs muted">${esc(personName(r.user_id, P.map))}</span></span>
+          <span class="badge ${r.status === "approved" ? "badge-a" : r.status === "pending" ? "badge-g" : ""}">${r.status === "approved" ? L("rvApproved") : r.status === "pending" ? L("rvPending") : L("rvHidden")}${r.featured ? " ★" : ""}</span></div>
+        <p class="sm" style="margin:.4rem 0;white-space:pre-wrap">${esc(r.body)}</p>
+        <div class="row" style="gap:.3rem;flex-wrap:wrap">${r.status !== "approved" ? `<button class="btn btn-p" style="padding:.3rem .7rem" onclick="setReview('${r.id}',{status:'approved'})">${L("rvApprove")}</button>` : `<button class="btn btn-o" style="padding:.3rem .7rem" onclick="setReview('${r.id}',{status:'hidden'})">${L("rvHide")}</button>`}
+          <button class="btn btn-o" style="padding:.3rem .7rem" onclick="setReview('${r.id}',{featured:${!r.featured}})">${r.featured ? "☆" : "★"} ${L("rvFeature")}</button>
+          <button class="btn btn-o" style="padding:.3rem .7rem;color:var(--danger)" onclick="delReview('${r.id}')">${L("rvDelete")}</button></div></div>`).join("")}</div>
+    <div><div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.6rem">🛡️ ${L("gtTitle")}</h3>
+        <div class="fgrid" style="align-items:end"><label class="opt" style="padding:.5rem .8rem"><input type="checkbox" id="gt_on" ${g.on !== false ? "checked" : ""}> <span class="sm b">${L("gtOn")}</span></label>
+          <div><label class="l">${L("gtDays")}</label><input class="in" type="number" id="gt_d" min="1" value="${g.days || 14}"></div><button class="btn btn-o" onclick="saveGuarantee()">${L("save")}</button></div></div>
+      <div class="card"><h3 style="margin-bottom:.6rem">💸 ${L("gtOwner")}</h3>
+        ${!Array.isArray(rf) ? loadingBox() : !rf.length ? `<p class="muted sm">${L("gtNone")}</p>` : rf.map(r => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+          <div class="row" style="justify-content:space-between;flex-wrap:wrap"><b class="sm">${esc(personName(r.user_id, P.map))}</b><span class="badge ${r.status === "approved" ? "badge-a" : r.status === "pending" ? "badge-g" : ""}">${esc(stt(r.status))}</span></div>
+          <div class="xs muted">${esc(fmtDT(r.created_at))}${r.orders ? ` · ${esc(money(r.orders.amount, r.orders.currency))} · ${esc(planName10(r.orders.plan_snapshot, r.orders.plan_id) || "")}` : ""}</div>
+          <p class="sm" style="margin:.3rem 0;white-space:pre-wrap">${esc(r.reason)}</p>${r.owner_note ? `<div class="xs muted">${esc(r.owner_note)}</div>` : ""}
+          ${r.status === "pending" ? `<label class="xs" style="display:flex;gap:.3rem;align-items:center;margin:.3rem 0"><input type="checkbox" id="rfc_${r.id}" checked> ${L("gtRemoveCredits")}</label>
+            <div class="row" style="gap:.3rem"><button class="btn btn-p" style="padding:.3rem .7rem" onclick="decideRefund('${r.id}',true)">${L("gtApprove")}</button><button class="btn btn-o" style="padding:.3rem .7rem" onclick="decideRefund('${r.id}',false)">${L("gtReject")}</button></div>` : ""}</div>`).join("")}</div></div></div>`;
+}
+async function setReview(id, patch) { const { error } = await sb.from("academy_reviews").update(patch).eq("id", id); if (error) return toast(error.message, true); invalidate("rvAll", "rvPublic"); render(); }
+async function delReview(id) { if (!confirm(L("rvDelete") + "?")) return; await sb.from("academy_reviews").delete().eq("id", id); invalidate("rvAll", "rvPublic"); render(); }
+async function decideRefund(id, ok) {
+  const note = prompt(L("gtNote"), ""); if (note === null) return;
+  const c = document.getElementById("rfc_" + id);
+  const { error } = await sb.rpc("owner_decide_refund", { p_id: id, p_approve: ok, p_note: note || null, p_remove_credits: c ? c.checked : true });
+  if (error) return toast(error.message, true);
+  invalidate("refundAll", "ordersAll"); toast(L("saved")); render();
+}
+async function saveGuarantee() {
+  const { data } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle();
+  const d = Object.assign({}, (data && data.data) || state.settings || {}, { guarantee: { on: document.getElementById("gt_on").checked, days: +document.getElementById("gt_d").value || 14 } });
+  const { error } = await sb.from("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() });
+  if (error) return toast(error.message, true);
+  applySettings(d); state.setDraft = null; toast(L("saved")); render();
+}
+
+/* ---------- الحجز من جدول المعلم الحقيقي ---------- */
+state.sbk = { slots: null, loading: false };
+function tzFmt(iso, tz) { try { return new Intl.DateTimeFormat(locale(), { weekday: "short", hour: "2-digit", minute: "2-digit", timeZone: tz }).format(new Date(iso)); } catch (e) { return fmtTime(iso); } }
+function scheduleBookerCard(students, teachers) {
+  const k = state.sbk, P = peopleMap();
+  if (!students.length) return "";
+  const sid = k.sid && students.find(s => s.id === k.sid) ? k.sid : students[0].id;
+  const tid = teachers ? (k.tid && teachers.find(t => t.id === k.tid) ? k.tid : (teachers[0] || {}).id) : state.auth.user.id;
+  const stu = P.map[sid] || {}, tch = P.map[tid] || {};
+  const myTz = BROWSER_TZ, sTz = stu.timezone || myTz, tTz = tch.timezone || myTz;
+  let slotsHtml = "";
+  if (k.loading) slotsHtml = loadingBox();
+  else if (Array.isArray(k.slots) && k.key === `${tid}|${k.mins || 50}`) {
+    if (!k.slots.length) slotsHtml = `<p class="muted sm">${L("sbkNoSlots")}</p>`;
+    else {
+      const days = {}; k.slots.forEach(s => { const d = fmtDT(s, { weekday: "long", day: "numeric", month: "short" }); (days[d] = days[d] || []).push(s); });
+      slotsHtml = `<div class="xs muted" style="margin:.4rem 0">🕒 ${L("sbkYou")}: ${esc(myTz)}${sTz !== myTz ? ` · 🎓 ${L("sbkStudentTime")}: ${esc(sTz)}` : ""}${tTz !== myTz ? ` · 👨‍🏫 ${L("sbkTeacherTime")}: ${esc(tTz)}` : ""}</div>
+        <div style="max-height:360px;overflow:auto">${Object.keys(days).map(d => `<div style="margin-bottom:.6rem"><b class="sm">${esc(d)}</b><div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.3rem">${days[d].map(s => `<button class="btn btn-o" style="padding:.3rem .6rem;font-size:.82rem;line-height:1.25" onclick="sbkBook('${s}')">${esc(fmtTime(s))}${sTz !== myTz ? `<br><span class="xs muted">🎓 ${esc(tzFmt(s, sTz))}</span>` : ""}</button>`).join("")}</div></div>`).join("")}</div>`;
+    }
+  }
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.3rem">📅 ${L("sbkTitle")}</h3><p class="xs muted" style="margin-bottom:.8rem">${L("sbkHint")}</p>
+    <div class="fgrid" style="align-items:end">
+      <div><label class="l">${L("student")}</label><select class="in" id="sbk_s" onchange="state.sbk.sid=this.value;render()">${students.map(s => `<option value="${s.id}" ${s.id === sid ? "selected" : ""}>${esc(s.real_name || s.display_name || s.email)}${s.timezone ? " · " + esc(s.timezone) : ""}</option>`).join("")}</select></div>
+      ${teachers ? `<div><label class="l">${L("teacher")}</label><select class="in" id="sbk_t" onchange="state.sbk.tid=this.value;state.sbk.slots=null;render()">${teachers.map(t => `<option value="${t.id}" ${t.id === tid ? "selected" : ""}>${esc(t.real_name || t.email)}</option>`).join("")}</select></div>` : ""}
+      <div><label class="l">${L("duration")}</label><select class="in" id="sbk_m" onchange="state.sbk.mins=+this.value;state.sbk.slots=null;render()">${[25, 50].map(m => `<option value="${m}" ${(k.mins || 50) === m ? "selected" : ""}>${m} ${L("min")}</option>`).join("")}</select></div>
+      <div><label class="l">${L("sbkWeeks")}</label><input class="in" type="number" id="sbk_w" min="1" max="52" value="${k.weeks || 4}" onchange="state.sbk.weeks=+this.value"></div>
+      <button class="btn btn-p" onclick="sbkLoad('${tid}')">${L("sbkShow")}</button></div>${slotsHtml}</div>`;
+}
+async function sbkLoad(tid) {
+  const k = state.sbk; k.tid = tid; k.mins = +((document.getElementById("sbk_m") || {}).value || 50); k.weeks = +((document.getElementById("sbk_w") || {}).value || 4);
+  const s = document.getElementById("sbk_s"); if (s) k.sid = s.value;
+  k.loading = true; render();
+  const { data, error } = await sb.rpc("teacher_free_slots", { p_teacher: tid, p_minutes: k.mins, p_days: 21, p_exclude: null });
+  k.loading = false; k.key = `${tid}|${k.mins}`;
+  if (error) { toast(error.message, true); k.slots = null; } else k.slots = (data || []).map(x => typeof x === "string" ? x : String(x));
+  render();
+}
+async function sbkBook(start) {
+  const k = state.sbk; const P = peopleMap();
+  const tid = k.tid || state.auth.user.id, sid = k.sid;
+  if (!confirm(`${L("sbkConfirm")}\n${fmtDT(start)} · ${(P.map[sid] || {}).real_name || ""} · ${k.mins || 50} ${L("min")} × ${k.weeks || 1}`)) return;
+  const { data, error } = await sb.rpc("book_from_schedule", { p_teacher: tid, p_student: sid, p_start: start, p_minutes: k.mins || 50, p_weeks: k.weeks || 1, p_track: null });
+  if (error) return toast(error.message, true);
+  const sk = (data && data.skipped) || [];
+  toast(tpl10(L("sbkBooked"), { n: data.booked }) + (sk.length ? " · " + tpl10(L("sbkSkipped"), { n: sk.length }) : ""));
+  invalidateCal(); invalidate("asg", "ovToday", "ovWeek"); sbkLoad(tid);
+}
+
+/* ---------- ربط التبويبات ---------- */
+const _renderStudentDash10 = renderStudentDash;
+renderStudentDash = function () {
+  const tabs = ["lessons", "homework", "messages", "share", "invite", "billing", "mycerts"];
+  if (state.dash.tab === "homework") return dashTabs(tabs) + hwStudent();
+  let h = _renderStudentDash10().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (!state.dash.tab || state.dash.tab === "lessons") h += myReviewCard();
+  if (state.dash.tab === "billing") h += refundCard();
+  return h;
+};
+const _renderTeacherDash10 = renderTeacherDash;
+renderTeacherDash = function () {
+  const tabs = ["calendar", "messages", "share", "certs", "schedule", "mystudents", "homework", "dues", "content"];
+  if (state.dash.tab === "homework") return needAttendanceList() + dashTabs(tabs) + hwTeacher();
+  let h = _renderTeacherDash10().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (state.dash.tab === "mystudents") { const P = peopleMap(); h += scheduleBookerCard(P.list.filter(p => p.role === "student"), null); }
+  return h;
+};
+const _renderOwnerDash10 = renderOwnerDash;
+renderOwnerDash = function () {
+  const tabs = ["overview", "calendar", "groups", "chats", "bookings", "requests", "orders", "users", "teacherApps", "teachers", "students", "homework", "referrals", "reviews", "reports", "certs", "content", "settings", "schedule"];
+  const P = peopleMap();
+  if (state.dash.tab === "homework") return dashTabs(tabs) + hwTeacher();
+  if (state.dash.tab === "reviews") return dashTabs(tabs) + ownerReviewsTab(P);
+  let h = _renderOwnerDash10().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (state.dash.tab === "users") h += blocklistCard(P);
+  if (state.dash.tab === "students") { const card = scheduleBookerCard(P.list.filter(p => p.role === "student"), P.list.filter(p => p.role === "teacher" || p.role === "owner")); h = h.replace(/(<div class="tabs dtabs">[\s\S]*?<\/div>)/, (m0) => m0 + card); }
+  return h;
+};
 
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
