@@ -1,546 +1,1332 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl" id="htmlRoot">
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title id="pageTitle">أكاديمية الإتقان العالمية - Sheikh Ahmed Academy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-        body { font-family: 'Tajawal', sans-serif; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أكاديمية الشيخ أحمد للمقامات والقرآن</title>
+<meta name="description" content="أكاديمية أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين وحصة تجريبية.">
+<meta name="theme-color" content="#0b0f19">
+<meta property="og:type" content="website">
+<meta property="og:title" content="أكاديمية الشيخ أحمد للمقامات والقرآن">
+<meta property="og:description" content="القرآن والتجويد والمقامات والإجازات واللغة العربية أونلاين.">
+<script>try{var s=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',s==='light'?'light':'dark')}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{--bg:#f8fafc;--fg:#0f172a;--card:#fff;--line:#e2e8f0;--muted:#475569;--accent:#047857;--accent-fg:#fff;--gold:#b45309;--gold-fg:#fff;--violet:#6d28d9;--danger:#b91c1c}
+[data-theme=dark]{--bg:#0b0f19;--fg:#f1f5f9;--card:#131b2e;--line:#243049;--muted:#9fb0c8;--accent:#10b981;--accent-fg:#04130d;--gold:#f59e0b;--gold-fg:#000;--violet:#a78bfa;--danger:#f87171}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.65;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit}
+h1,h2,h3{line-height:1.35;margin:0}
+p{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;inset-inline-start:1rem;top:-4rem;background:var(--accent);color:var(--accent-fg);padding:.5rem 1rem;border-radius:10px;z-index:100;font-weight:700}
+.skip:focus{top:1rem}
+.wrap{width:100%;max-width:1120px;margin-inline:auto;padding-inline:1rem}
+.muted{color:var(--muted)}
+.accent{color:var(--accent)}
+.gold{color:var(--gold)}
+.b{font-weight:800}
+.sm{font-size:.85rem}
+.xs{font-size:.75rem}
+/* header */
+.hdr{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding-block:.7rem}
+.logo{display:flex;align-items:center;gap:.7rem;text-decoration:none}
+.logo i{font-style:normal;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:800;font-size:1.2rem}
+.logo b{display:block;color:var(--accent);font-size:.95rem;line-height:1.2}
+.logo small{display:none;color:var(--muted);font-size:.7rem}
+.nav{display:none;gap:.15rem}
+.nav a{white-space:nowrap;padding:.45rem .6rem;border-radius:10px;text-decoration:none;font-weight:700;font-size:.88rem}
+.nav a:hover,.nav a[aria-current=page]{color:var(--accent)}
+.tools{display:flex;align-items:center;gap:.4rem}
+.ibtn{display:inline-flex;align-items:center;justify-content:center;height:36px;min-width:36px;padding-inline:.6rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;font:inherit;font-size:.85rem;font-weight:700}
+.ibtn:hover{border-color:var(--accent)}
+select.ibtn{padding-inline:.4rem;color:var(--accent)}
+.mnav{display:none;border-top:1px solid var(--line);background:var(--card)}
+.mnav.open{display:block}
+.mnav a{display:block;padding:.7rem .5rem;border-radius:10px;text-decoration:none;font-weight:700}
+.mnav a:hover{background:var(--bg)}
+.btn.hide-sm{display:none;white-space:nowrap}
+@media(min-width:640px){.logo small{display:block}.btn.hide-sm{display:inline-flex}}
+@media(min-width:1180px){.nav{display:flex}.burger{display:none}.mnav{display:none!important}}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:12px;padding:.65rem 1.25rem;font:inherit;font-weight:700;font-size:.92rem;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:.15s;text-align:center}
+.btn:hover{opacity:.9}
+.btn[disabled],.btn[aria-disabled=true]{opacity:.55;cursor:not-allowed}
+.btn-p{background:var(--accent);color:var(--accent-fg)}
+.btn-g{background:var(--gold);color:var(--gold-fg)}
+.btn-o{background:var(--card);color:var(--fg);border-color:var(--line)}
+.btn-o:hover{border-color:var(--accent);opacity:1}
+.btn-full{width:100%}
+/* layout */
+main{flex:1;outline:none}
+.sec{padding-block:3rem}
+.sec-alt{background:var(--card);border-block:1px solid var(--line)}
+.stitle{font-size:1.6rem;font-weight:800;margin-bottom:.5rem}
+.ssub{color:var(--muted);max-width:42rem;margin-bottom:1.75rem}
+.grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.grid-s{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.4rem}
+.sec-alt .card{background:var(--bg)}
+.card-h{display:flex;flex-direction:column;text-decoration:none;transition:.15s}
+.card-h:hover{border-color:var(--accent)}
+.card-h .more{margin-top:auto;padding-top:1rem;color:var(--accent);font-weight:700;font-size:.9rem}
+.badge{display:inline-block;border-radius:999px;border:1px solid var(--line);padding:.15rem .7rem;font-size:.74rem;font-weight:700;color:var(--muted)}
+.badge-a{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.badge-g{border-color:color-mix(in srgb,var(--gold) 45%,transparent);color:var(--gold);background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.notice{border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);background:color-mix(in srgb,var(--gold) 10%,transparent);color:var(--gold);border-radius:12px;padding:.7rem 1rem;font-size:.88rem;font-weight:700;margin-bottom:1.25rem}
+.ok{border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent)}
+.err{border:1px solid color-mix(in srgb,var(--danger) 50%,transparent);background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger);border-radius:12px;padding:.7rem 1rem;font-size:.88rem;font-weight:700}
+.hero{background:linear-gradient(180deg,var(--card),var(--bg));border-bottom:1px solid var(--line)}
+.hero .wrap{padding-block:3.5rem}
+.hero h1{font-size:clamp(1.7rem,5vw,3rem);font-weight:800;margin-block:1rem;max-width:46rem}
+.hero p.lead{font-size:1.05rem;color:var(--muted);max-width:40rem}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.checks li{display:flex;gap:.5rem}
+.checks li:before{content:"✓";color:var(--accent);font-weight:800}
+.checks{display:grid;gap:.45rem;font-size:.9rem;color:var(--muted)}
+.big{font-size:2rem}
+.ctab{border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:24px;padding:2.5rem 1.25rem;text-align:center}
+.num{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);align-items:center;justify-content:center;font-weight:800}
+details.faq{border-bottom:1px solid var(--line);padding:1rem 1.2rem}
+details.faq:last-child{border:0}
+details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:1rem}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary:after{content:"+";color:var(--accent);font-weight:800}
+details.faq[open] summary:after{content:"–"}
+details.faq p{margin-top:.6rem;color:var(--muted);font-size:.93rem}
+.faqbox{background:var(--card);border:1px solid var(--line);border-radius:16px;max-width:46rem}
+/* forms */
+label.l,.l{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:.3rem}
+.in{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:.65rem .8rem;font:inherit;font-size:.92rem}
+.sec-alt .in{background:var(--card)}
+.fgrid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.phone{display:flex;gap:.5rem;direction:ltr}
+.phone select{width:9rem;flex:none}
+.hp{position:absolute;inset-inline-start:-9999px;width:0;height:0;overflow:hidden}
+fieldset{border:1px solid var(--line);border-radius:14px;padding:.8rem;margin:0;min-width:0}
+legend{padding-inline:.4rem;font-weight:800;color:var(--accent);font-size:.9rem}
+.bands{display:grid;gap:.5rem;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.bandbtn{border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:.55rem .4rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer}
+.bandbtn:hover{border-color:var(--accent)}
+.bandbtn[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.steps{display:flex;flex-wrap:wrap;gap:1rem;font-size:.82rem;font-weight:700;margin-bottom:1.25rem}
+.steps li{display:flex;align-items:center;gap:.4rem;color:var(--muted)}
+.steps li[aria-current=step]{color:var(--accent)}
+.steps span{display:inline-flex;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);align-items:center;justify-content:center}
+.steps li[aria-current=step] span{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.opt{display:flex;gap:.7rem;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;cursor:pointer;background:var(--bg)}
+.opt:has(input:checked){border-color:var(--accent)}
+.kv{display:flex;justify-content:space-between;gap:1rem;padding:.45rem 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+.kv:last-child{border:0}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;unicode-bidi:plaintext}
+.price{font-size:2rem;font-weight:800;color:var(--accent)}
+.feat{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem}
+.tabs a{border:1px solid var(--line);border-radius:999px;padding:.3rem .9rem;text-decoration:none;font-size:.85rem;font-weight:700;background:var(--card)}
+.tabs a[aria-current=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+footer{margin-top:3rem;border-top:1px solid var(--line);background:var(--card)}
+footer .wrap{display:grid;gap:2rem;padding-block:2.2rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+footer li{margin-bottom:.45rem}
+footer a{text-decoration:none;color:var(--muted)}
+footer a:hover{color:var(--accent)}
+.copy{border-top:1px solid var(--line);text-align:center;padding:1rem;font-size:.78rem;color:var(--muted)}
+.avatar{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:800;font-size:1.15rem}
+.pills{display:flex;flex-wrap:wrap;gap:.4rem}
+.crumb{font-size:.88rem;color:var(--muted);margin-bottom:1.25rem}
+.crumb a{text-decoration:none}.crumb a:hover{color:var(--accent)}
+.sched li{display:flex;justify-content:space-between;gap:1rem;padding:.4rem 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+<body>
+<a class="skip" href="#main" id="skipLink">تخطَّ إلى المحتوى</a>
+<div id="app"></div>
+<noscript><p style="padding:2rem;text-align:center">يلزم تفعيل JavaScript لعرض هذا الموقع. / Please enable JavaScript.</p></noscript>
+<script>
+/* =====================================================================
+   ⚙️ الإعدادات الأساسية
+   ===================================================================== */
+const CONFIG = {
+  whatsapp: "201091121907",
+  email: "",
+  social: { tiktok: "", instagram: "", youtube: "", facebook: "", telegram: "" },
+  bookingEndpoint: "",
+  pricesArePlaceholder: true,
+  payments: {
+    stripeLinks: { pack4: "", pack8: "", pack12: "", group: "" },
+    paypalMe: "",
+    bank: { holder: "", bankName: "", iban: "", swift: "" },
+    instapay: ""
+  }
+};
 
-    <!-- Header -->
-    <header class="bg-slate-800 border-b border-emerald-500/30 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center flex-wrap gap-3">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-600/30">
-                    أ
-                </div>
-                <div>
-                    <h1 class="text-lg md:text-xl font-bold text-emerald-400" id="navTitleText">أكاديمية الشيخ أحمد للمقامات والقرآن</h1>
-                    <p class="text-xs text-slate-400" id="navSubText">إجازات • تحفيظ • مقامات صوتية • تفسير</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-2 flex-wrap">
-                <select id="globalLangSelect" onchange="switchLanguage(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none cursor-pointer">
-                    <option value="ar">العربية (Arabic)</option>
-                    <option value="en">English (Global)</option>
-                    <option value="ru">Русский (Russia)</option>
-                    <option value="tr">Türkçe (Turkey)</option>
-                </select>
+const PLANS = [
+  { id: "trial", price: null },
+  { id: "pack4", price: 40, perWeek: 1 },
+  { id: "pack8", price: 72, perWeek: 2, featured: true },
+  { id: "pack12", price: 100, perWeek: 3 },
+  { id: "group", price: 25, perWeek: 1 }
+];
+const PLAN_IDS = ["trial", "free", "pack4", "pack8", "pack12", "group", "private"];
+const TRACKS = ["ijaza", "hifz", "tajweed", "maqamat", "tafseer", "arabic", "egyptian"];
+const TRACK_EMOJI = { ijaza: "📜", hifz: "📖", tajweed: "🕌", maqamat: "🎵", tafseer: "💡", arabic: "✍️", egyptian: "🇪🇬" };
 
-                <button onclick="showSection('home')" class="text-xs text-emerald-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnHome">الرئيسية</button>
-                <button onclick="showSection('maqamatTrack')" class="text-xs text-amber-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnMaqamat">🎵 المقامات (مجاني وبرايفت)</button>
-                <button onclick="showSection('social')" class="text-xs text-emerald-400 font-bold px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer" id="btnSocial">منصاتنا</button>
-                
-                <button onclick="openBookingModal('Trial Lesson')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-1.5 rounded-xl text-xs font-extrabold transition shadow-lg cursor-pointer animate-pulse" id="btnTrial">
-                    ✨ حصة تجريبية (Trial Lesson)
-                </button>
-            </div>
+const _r = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+const TEACHERS = [
+  {
+    id: "ahmed-khaled", demo: true, tz: "Africa/Cairo",
+    name: { ar: "الشيخ أحمد خالد", en: "Sheikh Ahmed Khaled" },
+    title: { ar: "مقامات وتلاوة وإجازات", en: "Maqamat, recitation & ijaza" },
+    bio: { ar: "خبرة في تدريس القراءات والمقامات الصوتية وإجازات السند المتصل.", en: "Expert in recitation, vocal maqamat and connected ijazat." },
+    tracks: ["ijaza", "maqamat", "tajweed", "hifz"], languages: ["ar", "en"],
+    availability: { 6: _r(15, 22), 1: _r(15, 22), 3: _r(15, 22) }
+  },
+  {
+    id: "ibrahim-mohamed", demo: true, tz: "Africa/Cairo",
+    name: { ar: "الشيخ إبراهيم محمد", en: "Sheikh Ibrahim Mohamed" },
+    title: { ar: "تحفيظ وتجويد", en: "Hifz & tajweed" },
+    bio: { ar: "متخصص في تحفيظ القرآن الكريم وأحكام التجويد للأطفال والكبار.", en: "Specialized in Quran memorization and Tajweed rules." },
+    tracks: ["hifz", "tajweed", "arabic"], languages: ["ar"],
+    availability: { 0: [..._r(9, 14), ..._r(19, 21)], 2: [..._r(9, 14), ..._r(19, 21)], 4: [..._r(9, 14), ..._r(19, 21)] }
+  },
+  {
+    id: "dr-nour", demo: true, tz: "Africa/Cairo",
+    name: { ar: "د. نور", en: "Dr. Nour" },
+    title: { ar: "تفسير وعلوم إسلامية ولغة", en: "Tafseer, Islamic studies & language" },
+    bio: { ar: "متخصصة في التفسير وعلوم القرآن الكريم وتدريس اللغة العربية.", en: "Specialized in Tafseer, Quranic sciences and Arabic language." },
+    tracks: ["tafseer", "arabic", "egyptian"], languages: ["ar", "en"],
+    availability: { 1: _r(12, 23), 3: _r(12, 23), 5: _r(12, 23) }
+  }
+];
+
+const LIB = [
+  { id: "l1", track: "ijaza", type: "article", access: "free", ai: false, reviewed: true, url: "", title: { ar: "مدخل إلى الإجازة والسند", en: "Introduction to ijaza and the chain" } },
+  { id: "l2", track: "ijaza", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "مسار الإعداد للعرض على الشيخ", en: "Preparing for recitation to the sheikh" } },
+  { id: "l3", track: "hifz", type: "pdf", access: "free", ai: false, reviewed: true, url: "", title: { ar: "كيف تضع خطة حفظ ومراجعة", en: "How to plan memorisation and revision" } },
+  { id: "l4", track: "hifz", type: "pdf", access: "free", ai: false, reviewed: true, url: "", title: { ar: "جدول مراجعة أسبوعي قابل للطباعة", en: "Printable weekly revision chart" } },
+  { id: "l5", track: "hifz", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "برنامج تثبيت الحفظ (30 يومًا)", en: "30-day retention programme" } },
+  { id: "l6", track: "tajweed", type: "video", access: "free", ai: true, reviewed: false, url: "", title: { ar: "مخارج الحروف: شرح مبسّط", en: "Letter articulation: a simple guide" } },
+  { id: "l7", track: "tajweed", type: "quiz", access: "free", ai: true, reviewed: false, url: "", title: { ar: "اختبار تدريبي: النون الساكنة والتنوين", en: "Practice quiz: noon sakinah & tanween" } },
+  { id: "l8", track: "tajweed", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "دورة التجويد المتكاملة", en: "Complete tajweed course" } },
+  { id: "l9", track: "maqamat", type: "audio", access: "free", ai: false, reviewed: true, url: "", title: { ar: "التعرّف على المقامات الثمانية (استماع)", en: "Meet the eight maqamat (listening)" } },
+  { id: "l10", track: "maqamat", type: "audio", access: "free", ai: true, reviewed: false, url: "", title: { ar: "تمارين الأذن للمبتدئين", en: "Ear-training exercises for beginners" } },
+  { id: "l11", track: "maqamat", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "ورشة الانتقال بين المقامات", en: "Workshop: modulating between maqamat" } },
+  { id: "l12", track: "tafseer", type: "article", access: "free", ai: false, reviewed: true, url: "", title: { ar: "مدخل إلى علوم القرآن", en: "Introduction to the sciences of the Quran" } },
+  { id: "l13", track: "tafseer", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "تفسير جزء عمّ موضوعيًا", en: "Thematic tafseer of Juz' Amma" } },
+  { id: "l14", track: "arabic", type: "video", access: "free", ai: true, reviewed: false, url: "", title: { ar: "الحروف العربية للمبتدئين", en: "Arabic letters for beginners" } },
+  { id: "l15", track: "arabic", type: "quiz", access: "free", ai: false, reviewed: true, url: "", title: { ar: "اختبار تحديد مستوى العربية", en: "Arabic level placement quiz" } },
+  { id: "l16", track: "arabic", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "الفصحى من الصفر (المستوى 1)", en: "Standard Arabic from scratch (Level 1)" } },
+  { id: "l17", track: "egyptian", type: "audio", access: "free", ai: true, reviewed: false, url: "", title: { ar: "عبارات مصرية يومية", en: "Everyday Egyptian phrases" } },
+  { id: "l18", track: "egyptian", type: "pdf", access: "free", ai: false, reviewed: true, url: "", title: { ar: "بطاقات مفردات مصرية", en: "Egyptian vocabulary cards" } },
+  { id: "l19", track: "egyptian", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "المحادثة المصرية — المستوى الأول", en: "Egyptian conversation — Level 1" } }
+];
+
+/* =====================================================================
+   🌐 الترجمات واللغات
+   ===================================================================== */
+const I18N = {
+ar: {
+  dir: "rtl", name: "العربية", locale: "ar-u-nu-latn",
+  meta: { siteName: "أكاديمية الشيخ أحمد للمقامات والقرآن", short: "أكاديمية الشيخ أحمد", letter: "أ", tagline: "إجازات • تحفيظ • مقامات صوتية • تفسير",
+    desc: "أكاديمية أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين ومتابعة شخصية وحصة تجريبية." },
+  nav: { skip: "تخطَّ إلى المحتوى", home: "الرئيسية", tracks: "المسارات", maqamat: "المقامات", teachers: "المعلمون", library: "المحتوى المجاني", pricing: "الأسعار", about: "من نحن", contact: "تواصل", trial: "✨ حصة تجريبية", menu: "القائمة", theme: "تبديل الوضع الليلي/النهاري", lang: "اللغة" },
+  days: ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+  bands: { dawn: "فجرًا (12ص–6ص)", morning: "صباحًا (6ص–12ظ)", afternoon: "ظهرًا (12ظ–5م)", evening: "مساءً (5م–10م)", night: "ليلًا (10م–12ص)" },
+  langs: { ar: "العربية", en: "الإنجليزية", ru: "الروسية", tr: "التركية" },
+  common: { bookTrial: "احجز حصة تجريبية", learnMore: "اعرف المزيد", allTracks: "كل المسارات", free: "مجاني", premium: "مدفوع", perMonth: "/ شهريًا", back: "رجوع", all: "الكل", copy: "نسخ", copied: "تم النسخ ✓", home: "العودة للرئيسية" },
+  hero: { badge: "مرحباً بكم في منصة الشيخ أحمد", a: "أتقن القرآن الكريم ومقامات التلاوة بصوتك", b: "مع إجازات متصلة السند", c: "وتوجيه مباشر.",
+    desc: "منصة تجمع بين علوم التجويد، والتدريب الصوتي المتقدم على المقامات، والتفسير المبسط، مع معلمين ومتابعة شخصية لكل طالب.",
+    cta1: "احجز حصتك التجريبية", cta2: "تصفّح المسارات", cta3: "المحتوى المجاني",
+    points: ["حصص مباشرة فردية وجماعية", "مواعيد مرنة بتوقيت بلدك", "متابعة وتقارير للطالب وولي الأمر"] },
+  sec: { tracks: "مسارات الأكاديمية", tracksSub: "اختر المسار المناسب لمستواك وهدفك — ولكل مسار حصة تجريبية.", how: "كيف تبدأ؟", why: "لماذا أكاديميتنا؟", teachers: "تعرّف على المعلمين",
+    testi: "آراء الطلاب", testiSoon: "سنعرض هنا آراء طلابنا الحقيقية بعد انطلاق الدفعات الأولى.", faq: "أسئلة شائعة", ctaT: "جاهز تبدأ رحلتك؟", ctaD: "احجز حصتك التجريبية الآن، وسنرشّح لك المعلم الأنسب لمستواك ومواعيدك.",
+    lib: "ابدأ مجانًا", libSub: "محتوى مجاني في كل مسار تتعلم منه قبل أن تشترك." },
+  how: [{ t: "احجز حصة تجريبية", d: "اختر المسار وموعدًا مناسبًا بتوقيتك." }, { t: "نحدد مستواك ونرشّح معلمك", d: "نقيّم مستواك ونطابقك مع المعلم الأنسب." }, { t: "ابدأ جدولك الأسبوعي", d: "نثبّت مواعيدك المنتظمة ونتابع تقدمك." }],
+  why: [{ t: "سند وإتقان", d: "تلقٍّ دقيق على معلمين متخصصين في كل مسار." }, { t: "تدريب صوتي عملي", d: "تطبيق المقامات بالصوت مع تصحيح مباشر." }, { t: "مرونة في المواعيد", d: "جدول أسبوعي يناسب منطقتك الزمنية." }, { t: "متابعة مستمرة", d: "ملاحظات بعد الحصص وتقارير دورية." }],
+  faq: [
+    { q: "هل الحصة التجريبية مجانية؟", a: "الحصة التجريبية للتعرف على مستواك وأسلوب التدريس. التفاصيل الحالية في صفحة الأسعار." },
+    { q: "كيف تُحدَّد مواعيد الحصص؟", a: "تختار أوقاتك المتاحة بتوقيت بلدك، ونطابقها مع جداول المعلمين ونؤكد لك الموعد." },
+    { q: "هل يوجد مسار للأطفال؟", a: "نعم، يمكن لولي الأمر حجز الحصص لطفله، ونرسل له ملاحظات ومتابعة دورية." },
+    { q: "هل أحتاج مستوى معينًا للبدء؟", a: "لا، نبدأ معك من مستواك الحالي في كل مسار، من المبتدئ إلى المتقدم." },
+    { q: "ما وسائل الدفع المتاحة؟", a: "تظهر الوسائل المفعّلة في صفحة الدفع (بطاقات، PayPal، تحويل بنكي، إنستاباي) بحسب ما تفعّله الأكاديمية." },
+    { q: "هل يمكنني إلغاء الحصة أو تغيير موعدها؟", a: "نعم وفق سياسة الإلغاء المنشورة في صفحة الاسترداد والإلغاء." }],
+  tracks: {
+    ijaza: { title: "إجازات القراءات والسند المتصل", desc: "تلقٍّ دقيق برواية حفص عن عاصم أو القراءات العشر مع سند متصل للنبي ﷺ.", audience: "لمن أتقن التلاوة ويريد التلقي والحصول على الإجازة.", outcomes: ["التلقي والعرض على معلم متقن", "ضبط أحكام الرواية والقراءة", "التهيؤ للعرض والاختبار", "الإجازة بالسند عند استيفاء الشروط"], levels: ["تقويم القراءة والتجويد", "مراجعة الأحكام والضبط", "العرض على الشيخ", "الإجازة"] },
+    hifz: { title: "تحفيظ القرآن الكريم والمتابعة", desc: "برامج حفظ ومراجعة وتثبيت مع خطط يومية مخصصة وملاحظات دورية.", audience: "للأطفال والكبار، من البداية أو لإكمال ما تم حفظه.", outcomes: ["خطة حفظ يومية مناسبة لوقتك", "مراجعة منتظمة وتثبيت المحفوظ", "تصحيح التلاوة أثناء الحفظ", "تقارير دورية بالتقدم"], levels: ["جزء عمّ", "أجزاء متفرقة", "حفظ متقدم", "مراجعة وتثبيت"] },
+    tajweed: { title: "التجويد وأحكام التلاوة", desc: "تعلّم أحكام التجويد ومخارج الحروف وتطبيقها عمليًا في التلاوة.", audience: "لكل من يريد تحسين تلاوته بإتقان.", outcomes: ["مخارج الحروف وصفاتها", "أحكام النون الساكنة والمدود", "تطبيق عملي مع تصحيح مباشر", "تلاوة أدق وأكثر ثقة"], levels: ["المستوى التمهيدي", "المستوى المتوسط", "المستوى المتقدم"] },
+    maqamat: { title: "مقامات صوتية وتجميل التلاوة", desc: "تدريب احترافي على المقامات الثمانية لتحسين النغمة والخشوع في التلاوة.", audience: "لمن يريد تحسين صوته وتلاوته بالنغم المنضبط.", outcomes: ["التعرف على المقامات الثمانية", "تدريب الأذن والصوت", "الانتقال بين المقامات", "تجميل التلاوة مع الضبط"], levels: ["الأذن والتعرّف", "الأداء الأساسي", "الانتقال بين المقامات", "تلاوة مقامية متقنة"] },
+    tafseer: { title: "تفسير القرآن وعلوم الإسلام", desc: "فهم معاني الآيات وأسباب النزول عبر تدبر هادئ وعميق.", audience: "لمن يريد فهم القرآن ومبادئ العلوم الإسلامية.", outcomes: ["فهم معاني الآيات", "أسباب النزول والسياق", "مبادئ العلوم الإسلامية", "ربط الفهم بالتطبيق"], levels: ["تفسير ميسّر", "تفسير موضوعي", "علوم القرآن"] },
+    arabic: { title: "اللغة العربية (الفصحى)", desc: "تعلّم العربية الفصحى من الصفر: الحروف والقراءة والنحو والمحادثة.", audience: "للمبتدئين ولغير الناطقين بالعربية وللأطفال.", outcomes: ["القراءة والكتابة", "المفردات والمحادثة", "أساسيات النحو والصرف", "فهم النصوص"], levels: ["المبتدئ", "المتوسط", "المتقدم"] },
+    egyptian: { title: "اللهجة المصرية", desc: "دروس محادثة باللهجة المصرية للحياة اليومية والعمل والسفر.", audience: "لغير الناطقين بالعربية وللعرب المغتربين.", outcomes: ["محادثة يومية بطلاقة", "مفردات وتعبيرات شائعة", "فهم الأفلام والأغاني", "نطق صحيح"], levels: ["المبتدئ", "المتوسط", "المتقدم"] } },
+  tp: { audience: "لمن هذا المسار؟", outcomes: "ماذا ستتعلم؟", levels: "مراحل المسار", teachers: "معلمو المسار", none: "سنعلن عن معلمي هذا المسار قريبًا.", maq: "تفاصيل الباقات المجانية والجماعية والخاصة", freeLib: "المحتوى المجاني لهذا المسار" },
+  maq: { badge: "🎵 قسم المقامات الصوتية", title: "تعلّم المقامات الثمانية", intro: "بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا — تدريب صوتي عملي لتحسين النغمة والخشوع في التلاوة.", names: ["بياتي", "رست", "نهاوند", "حجاز", "كرد", "سيكاه", "عجم", "صبا"],
+    free: { badge: "محتوى مجاني", title: "المقامات الأساسية للمبتدئين", desc: "دروس صوتية ومقاطع مرجعية للتعرف على النغمات الأساسية وطريقة التدرب عليها.", points: ["مقاطع تعريفية بكل مقام", "تمارين استماع", "ابدأ بدون اشتراك"], cta: "ابدأ التعلم مجانًا" },
+    group: { badge: "اشتراك جماعي", title: "ورشة المقامات والتدريب الجماعي", desc: "حصص دورية مشتركة لممارسة التطبيق العملي وتقييم الأصوات مع زملاء الدراسة.", points: ["مجموعات صغيرة", "تطبيق عملي مباشر", "تقييم ومشاركة"], cta: "انضم للورشة الجماعية" },
+    private: { badge: "اشتراك خاص (Private)", title: "تدريب خاص وفردي (1-on-1)", desc: "متابعة دقيقة ومخصصة لصوتك، وتصحيح للمقامات، وملاحظات خاصة لتطوير أدائك بسرعة.", points: ["حصص فردية", "خطة مخصصة لصوتك", "ملاحظات بعد كل حصة"], cta: "احجز تدريبًا خاصًا" } },
+  tch: { title: "المعلمون", sub: "فريق من المعلمين المتخصصين في كل مسار.", demo: "بيانات المعلمين الحالية تجريبية وسيتم استبدالها ببيانات المعلمين الفعلية.", tracks: "المسارات", langs: "لغات التدريس", days: "أيام التدريس (بتوقيت المعلم)", book: "احجز حصة تجريبية", profile: "الملف الكامل", note: "تظهر المواعيد المناسبة بتوقيتك الخاص أثناء الحجز." },
+  lib: { title: "المحتوى المجاني والمدفوع", sub: "تعلّم مجانًا من كل مسار، واشترك للوصول إلى الدورات الكاملة.", banner: "العناوين التالية هي هيكل المحتوى. أضف روابط موادك الفعلية في قسم LIB داخل الملف وسيتحول \"قيد الإعداد\" إلى زر فتح.",
+    track: "المسار", access: "النوع", types: { video: "فيديو", audio: "صوت", pdf: "ملف PDF", quiz: "اختبار", article: "مقال" }, ai: "🤖 مُولَّد بالذكاء الاصطناعي", review: "قيد المراجعة", soon: "قيد الإعداد", open: "افتح", unlock: "🔒 للمشتركين", empty: "لا يوجد محتوى بهذا الفلتر.",
+    aiNote: "المحتوى الديني المُولَّد بالذكاء الاصطناعي يراجعه مختص قبل أن نزيل علامة \"قيد المراجعة\"." },
+  pr: { title: "الأسعار والباقات", sub: "اختر الباقة المناسبة. جميع الحصص مباشرة أونلاين.", ph: "الأسعار استرشادية وقيد التحديد", usd: "الأسعار بالدولار الأمريكي.", sub1: "اشترك الآن", try1: "جرّب حصة أولًا", book1: "احجز الآن",
+    plans: { trial: { t: "حصة تجريبية", d: "لتحديد مستواك والتعرف على المعلم.", f: ["حصة واحدة", "تحديد المستوى", "ترشيح المعلم المناسب"] },
+      pack4: { t: "باقة 4 حصص", d: "حصة أسبوعيًا.", f: ["4 حصص شهريًا", "جدول ثابت", "ملاحظات بعد الحصة"] },
+      pack8: { t: "باقة 8 حصص", d: "حصتان أسبوعيًا — الأكثر طلبًا.", f: ["8 حصص شهريًا", "جدول ثابت", "تقرير شهري"] },
+      pack12: { t: "باقة 12 حصة", d: "ثلاث حصص أسبوعيًا للتقدم الأسرع.", f: ["12 حصة شهريًا", "جدول ثابت", "تقرير شهري"] },
+      group: { t: "الورشة الجماعية", d: "تدريب جماعي في المقامات.", f: ["حصص جماعية دورية", "تطبيق عملي", "تقييم من المعلم"] },
+      free: { t: "محتوى مجاني" }, private: { t: "تدريب خاص" } } },
+  co: { title: "إتمام الاشتراك", sub: "اختر وسيلة الدفع المناسبة. لا نخزّن أي بيانات بطاقات على هذا الموقع.", choose: "اختر الباقة", summary: "ملخص الطلب", plan: "الباقة", total: "الإجمالي", name: "الاسم", email: "البريد الإلكتروني", method: "وسيلة الدفع",
+    m: { stripe: "بطاقة (Visa / Mastercard / Apple Pay)", paypal: "PayPal", bank: "تحويل بنكي", instapay: "إنستاباي (لمصر)" }, terms: "أوافق على الشروط وسياسة الاسترداد والإلغاء.", pay: "متابعة الدفع", secure: "الدفع بالبطاقة يتم على صفحة المزوّد الآمنة، وليس على هذا الموقع.",
+    none: "وسائل الدفع الإلكتروني لم تُفعَّل بعد. اطلب بيانات الدفع وسنرسلها لك فورًا.", ask: "اطلب بيانات الدفع عبر واتساب", bankT: "بيانات التحويل", holder: "اسم المستفيد", bankName: "البنك", iban: "IBAN", swift: "SWIFT", instapay: "عنوان إنستاباي",
+    ref: "رقم الطلب", refHint: "اكتب رقم الطلب في خانة الملاحظات أثناء التحويل.", paid: "حوّلت المبلغ — أرسل التأكيد عبر واتساب", afterPay: "بعد الدفع أرسل لنا تأكيدًا عبر واتساب ليتم تفعيل اشتراكك.", trialInfo: "الحصة التجريبية لا تحتاج دفعًا — احجزها مباشرة.",
+    err: { name: "اكتب اسمك.", email: "البريد الإلكتروني غير صحيح.", method: "اختر وسيلة دفع.", terms: "يلزم الموافقة على الشروط." } },
+  bk: { title: "احجز حصتك التجريبية", sub: "خطوتان فقط: بياناتك، ثم مواعيدك الأسبوعية المناسبة.", s1: "بياناتك والحصة التجريبية", s2: "مواعيدك الأسبوعية الدائمة", hint: "اختر الفترات المناسبة لك بتوقيتك المحلي، ونطابقها مع جداول المعلمين.",
+    l: { name: "الاسم", email: "البريد الإلكتروني", phone: "رقم الهاتف / واتساب", track: "المسار", trial: "موعد الحصة التجريبية (بتوقيتك)", tz: "المنطقة الزمنية", who: "الحصص لمن؟", self: "لي", child: "لطفلي", notes: "ملاحظات (اختياري)", consent: "أوافق على شروط الاستخدام وسياسة الخصوصية، وأؤكد أنني بالغ أو ولي أمر الطالب." },
+    next: "التالي: المواعيد الدائمة", back: "رجوع", submit: "إرسال طلب الحجز", busy: "جارٍ الإرسال...", count: "الفترات المختارة: {n}",
+    err: { name: "من فضلك اكتب اسمك.", email: "البريد الإلكتروني غير صحيح.", phone: "رقم الهاتف غير صحيح.", trial: "اختر موعدًا صحيحًا للحصة التجريبية.", past: "اختر موعدًا بعد ساعة من الآن على الأقل.", slots: "اختر فترة واحدة على الأقل.", consent: "يلزم الموافقة على الشروط للمتابعة.", tz: "اختر منطقة زمنية صحيحة.", send: "تعذّر إرسال الطلب. جرّب واتساب مباشرة." },
+    ok: { title: "تم تجهيز طلبك ✅", descWa: "خطوة أخيرة: أرسل الرسالة عبر واتساب ليصلنا طلبك ونؤكد لك الموعد.", descSent: "وصلنا طلبك. سنراجعه ونؤكد لك الموعد قريبًا.", waReq: "أرسل الطلب عبر واتساب (مطلوب لإتمام الحجز)", wa: "أرسل نسخة عبر واتساب", matches: "المعلمون الأنسب لمواعيدك", none: "سنبحث لك عن أنسب معلم ونتواصل معك.", hours: "ساعة مشتركة أسبوعيًا", sched: "جدول مقترح للأسابيع الأربعة القادمة", schedNote: "جدول مقترح مع {name} بتوقيتك، ويصبح نهائيًا بعد تأكيد الإدارة." } },
+  about: { title: "من نحن", p1: "أكاديمية أونلاين تهدف لتعليم القرآن الكريم والتجويد والمقامات الصوتية والإجازات المتصلة، وتوفير بيئة تعليمية متطورة لكل المستويات.", p2: "نجمع بين أصالة التلقي ودقة الأداء، وبين مرونة التقنية والتكنولوجيا الحديثة." },
+  contact: { title: "تواصل معنا", sub: "نحن هنا للإجابة على استفساراتكم.", wa: "تواصل عبر واتساب مباشرة", email: "البريد الإلكتروني", send: "أرسل رسالة" }
+},
+
+en: {
+  dir: "ltr", name: "English", locale: "en-US",
+  meta: { siteName: "Sheikh Ahmed Academy", short: "Sheikh Ahmed Academy", letter: "S", tagline: "Ijazat • Hifz • Maqamat • Tafseer",
+    desc: "Online academy for Quran, Tajweed, vocal maqamat, ijaza and Arabic language with expert teachers and trial lessons." },
+  nav: { skip: "Skip to content", home: "Home", tracks: "Tracks", maqamat: "Maqamat", teachers: "Teachers", library: "Free Library", pricing: "Pricing", about: "About", contact: "Contact", trial: "✨ Trial Lesson", menu: "Menu", theme: "Toggle theme", lang: "Language" },
+  days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  bands: { dawn: "Dawn (12AM–6AM)", morning: "Morning (6AM–12PM)", afternoon: "Afternoon (12PM–5PM)", evening: "Evening (5PM–10PM)", night: "Night (10PM–12AM)" },
+  langs: { ar: "Arabic", en: "English", ru: "Russian", tr: "Turkish" },
+  common: { bookTrial: "Book Trial Lesson", learnMore: "Learn More", allTracks: "All Tracks", free: "Free", premium: "Premium", perMonth: "/ month", back: "Back", all: "All", copy: "Copy", copied: "Copied ✓", home: "Home" },
+  hero: { badge: "Welcome to Sheikh Ahmed's Platform", a: "Master the Quran & Recitation Maqamat", b: "with Connected Ijazat", c: "and Direct Guidance.",
+    desc: "A unique online platform combining Tajweed rules, advanced vocal Maqamat training, and simplified Tafseer with expert personal guidance.",
+    cta1: "Book Your Trial Lesson", cta2: "Explore Tracks", cta3: "Free Library",
+    points: ["1-on-1 and group live sessions", "Flexible scheduling in your local time", "Regular progress reports for students & parents"] },
+  sec: { tracks: "Academy Tracks", tracksSub: "Choose the right track for your goal. Every track includes a trial lesson.", how: "How it Works", why: "Why Choose Us?", teachers: "Meet the Teachers",
+    testi: "Student Reviews", testiSoon: "Student reviews will appear here after the first batches.", faq: "FAQ", ctaT: "Ready to Start?", ctaD: "Book your trial lesson now, and we will match you with the best teacher for your level.",
+    lib: "Start for Free", libSub: "Free learning material in every track before you subscribe." },
+  how: [{ t: "Book a Trial Lesson", d: "Choose your track and a convenient time in your timezone." }, { t: "Level Assessment & Matching", d: "We evaluate your level and match you with the ideal teacher." }, { t: "Start Your Weekly Schedule", d: "Lock in your regular lessons and track your progress." }],
+  why: [{ t: "Certified Ijazat", d: "Precise learning with specialized teachers in each track." }, { t: "Practical Vocal Training", d: "Apply maqamat with your voice with direct correction." }, { t: "Flexible Timing", d: "Weekly schedule tailored to your local timezone." }, { t: "Continuous Support", d: "Post-lesson notes and periodic progress tracking." }],
+  faq: [
+    { q: "Is the trial lesson free?", a: "The trial lesson helps assess your level and teaching style. Current pricing details are on the pricing page." },
+    { q: "How are lesson times scheduled?", a: "You select your available times in your local timezone, and we match them with teacher availability." },
+    { q: "Is there a track for kids?", a: "Yes, parents can book lessons for children with regular reports and feedback." },
+    { q: "Do I need prior experience?", a: "No, we start from your current level in every track, from beginner to advanced." },
+    { q: "What payment methods are available?", a: "Active methods (Cards, PayPal, Bank Transfer, Instapay) appear on the payment page." },
+    { q: "Can I cancel or reschedule a lesson?", a: "Yes, according to our cancellation and refund policy." }],
+  tracks: {
+    ijaza: { title: "Quran Ijazat & Connected Chain", desc: "Precise recitation via Hafs 'an 'Asim or the Ten Qira'at with a connected chain to the Prophet ﷺ.", audience: "For those with solid recitation seeking formal ijaza.", outcomes: ["Direct recitation to a master teacher", "Mastery of recitation rules", "Preparation for formal testing", "Formal Ijazat upon meeting criteria"], levels: ["Recitation assessment", "Rules & accuracy review", "Recitation to the Sheikh", "Issuing Ijaza"] },
+    hifz: { title: "Quran Memorization & Revision", desc: "Structured memorization, revision, and retention programs with customized daily plans.", audience: "For children and adults, from scratch or completing memorization.", outcomes: ["Daily memorization plan fitting your schedule", "Regular revision to lock in retention", "Tajweed correction during memorization", "Periodic progress reports"], levels: ["Juz' Amma", "Selected parts", "Advanced memorization", "Solid revision"] },
+    tajweed: { title: "Tajweed & Recitation Rules", desc: "Learn Tajweed rules, letter articulation points and apply them practically.", audience: "Anyone wanting to improve their recitation accuracy.", outcomes: ["Letter articulation & characteristics", "Noon Sakinah & Madd rules", "Practical application with correction", "Confident, precise recitation"], levels: ["Beginner level", "Intermediate level", "Advanced level"] },
+    maqamat: { title: "Vocal Maqamat & Beautification", desc: "Professional training in the eight primary maqamat to beautify recitation.", audience: "Those wanting to improve tone, pitch, and khushoo' in recitation.", outcomes: ["Recognizing the eight maqamat", "Ear & voice training", "Modulating between maqamat", "Beautifying recitation accurately"], levels: ["Ear training", "Basic performance", "Modulation", "Master recitation"] },
+    tafseer: { title: "Tafseer & Islamic Sciences", desc: "Understand Quranic meanings and contexts through deep, serene contemplation.", audience: "Those seeking a deeper understanding of the Quran.", outcomes: ["Understanding Quranic meanings", "Context of revelation", "Fundamentals of Islamic sciences", "Connecting understanding to practice"], levels: ["Simplified Tafseer", "Thematic Tafseer", "Quranic sciences"] },
+    arabic: { title: "Classical Arabic (Fusha)", desc: "Learn Standard Arabic from scratch: alphabet, reading, grammar, and conversation.", audience: "Beginners, non-native speakers, and children.", outcomes: ["Reading and writing", "Vocabulary and conversation", "Basic grammar and morphology", "Text comprehension"], levels: ["Beginner", "Intermediate", "Advanced"] },
+    egyptian: { title: "Egyptian Arabic Dialect", desc: "Conversational Egyptian Arabic for daily life, travel, and work.", audience: "Non-native speakers and expats.", outcomes: ["Fluent daily conversation", "Common expressions & slang", "Understanding media", "Natural pronunciation"], levels: ["Beginner", "Intermediate", "Advanced"] } },
+  tp: { audience: "Who is this for?", outcomes: "What you will learn:", levels: "Track Levels", teachers: "Track Teachers", none: "We will announce teachers for this track soon.", maq: "Free, Group & Private package details", freeLib: "Free material for this track" },
+  maq: { badge: "🎵 Vocal Maqamat Section", title: "Learn the Eight Maqamat", intro: "Bayati, Rast, Nahawand, Hijaz, Kurd, Sikah, Ajam, Saba — practical vocal training for tone and devotion.", names: ["Bayati", "Rast", "Nahawand", "Hijaz", "Kurd", "Sikah", "Ajam", "Saba"],
+    free: { badge: "Free Content", title: "Essential Maqamat for Beginners", desc: "Audio lessons and reference clips to recognize basic tones and practice techniques.", points: ["Introductory clips for each maqam", "Listening exercises", "Start without subscription"], cta: "Start Learning Free" },
+    group: { badge: "Group Subscription", title: "Maqamat Group Workshop", desc: "Regular joint sessions for practical application and peer voice evaluation.", points: ["Small groups", "Direct practical application", "Evaluation & feedback"], cta: "Join Group Workshop" },
+    private: { badge: "Private 1-on-1", title: "Private Maqamat Coaching", desc: "Precise personalized tracking, pitch correction, and tailored feedback notes.", points: ["Individual lessons", "Customized voice plan", "Post-lesson notes"], cta: "Book Private Coaching" } },
+  tch: { title: "Teachers", sub: "A team of specialized teachers across all tracks.", demo: "Current teacher profiles are demo data and will be replaced with real profiles.", tracks: "Tracks", langs: "Teaching Languages", days: "Teaching Days (Teacher's timezone)", book: "Book Trial Lesson", profile: "Full Profile", note: "Suitable times in your local timezone will appear during booking." },
+  lib: { title: "Free & Paid Library", sub: "Learn for free from every track, and subscribe for full courses.", banner: "The following items are a structural template. Add your real file URLs in the LIB section inside the code.",
+    track: "Track", access: "Type", types: { video: "Video", audio: "Audio", pdf: "PDF", quiz: "Quiz", article: "Article" }, ai: "🤖 AI Generated", review: "Under Review", soon: "Coming Soon", open: "Open", unlock: "🔒 Subscribers Only", empty: "No content matches this filter.",
+    aiNote: "AI-generated religious content is reviewed by a specialist before removing the 'Under Review' badge." },
+  pr: { title: "Pricing & Plans", sub: "Choose the right plan. All live classes are online.", ph: "Prices are indicative", usd: "Prices in US Dollars.", sub1: "Subscribe Now", try1: "Try a Lesson First", book1: "Book Now",
+    plans: { trial: { t: "Trial Lesson", d: "Assess your level and meet the teacher.", f: ["1 Lesson", "Level Assessment", "Teacher recommendation"] },
+      pack4: { t: "4-Lesson Pack", d: "1 lesson per week.", f: ["4 lessons / month", "Fixed schedule", "Post-lesson notes"] },
+      pack8: { t: "8-Lesson Pack", d: "2 lessons per week — Most Popular.", f: ["8 lessons / month", "Fixed schedule", "Monthly report"] },
+      pack12: { t: "12-Lesson Pack", d: "3 lessons per week for faster progress.", f: ["12 lessons / month", "Fixed schedule", "Monthly report"] },
+      group: { t: "Group Workshop", d: "Group training in Maqamat.", f: ["Periodic group sessions", "Practical application", "Teacher feedback"] },
+      free: { t: "Free Content" }, private: { t: "Private Training" } } },
+  co: { title: "Complete Subscription", sub: "Choose your payment method. We do not store card details.", choose: "Select Plan", summary: "Order Summary", plan: "Plan", total: "Total", name: "Name", email: "Email", method: "Payment Method",
+    m: { stripe: "Card (Visa / Mastercard / Apple Pay)", paypal: "PayPal", bank: "Bank Transfer", instapay: "Instapay (Egypt)" }, terms: "I agree to terms, cancellation, and refund policy.", pay: "Proceed to Payment", secure: "Card payments are processed securely on the provider's page.",
+    none: "Electronic payments are not yet enabled. Request payment details below.", ask: "Request Payment Details via WhatsApp", bankT: "Bank Details", holder: "Beneficiary", bankName: "Bank", iban: "IBAN", swift: "SWIFT", instapay: "Instapay Handle",
+    ref: "Order Ref", refHint: "Include order reference in transfer notes.", paid: "I've Transferred — Send Confirmation via WhatsApp", afterPay: "After payment, send us confirmation via WhatsApp to activate your subscription.", trialInfo: "Trial lessons are free — book directly.",
+    err: { name: "Please enter your name.", email: "Invalid email.", method: "Select a payment method.", terms: "You must agree to terms." } },
+  bk: { title: "Book Your Trial Lesson", sub: "Only 2 steps: your details, then your weekly schedule.", s1: "Your Details & Trial Lesson", s2: "Regular Weekly Schedule", hint: "Choose available slots in your local timezone, and we will match them.",
+    l: { name: "Full Name", email: "Email Address", phone: "Phone / WhatsApp", track: "Track", trial: "Trial Lesson Date & Time (Your time)", tz: "Timezone", who: "For whom?", self: "Myself", child: "My Child", notes: "Notes (Optional)", consent: "I agree to the Terms of Use and Privacy Policy, and confirm I am an adult or parent." },
+    next: "Next: Weekly Schedule", back: "Back", submit: "Submit Booking Request", busy: "Submitting...", count: "Selected slots: {n}",
+    err: { name: "Please enter your name.", email: "Invalid email.", phone: "Invalid phone number.", trial: "Select a valid trial date.", past: "Choose a time at least 1 hour from now.", slots: "Select at least 1 time slot.", consent: "You must agree to terms.", tz: "Select a valid timezone.", send: "Failed to submit. Try WhatsApp directly." },
+    ok: { title: "Booking Request Ready ✅", descWa: "Final step: Send the message via WhatsApp so we can confirm your slot.", descSent: "We received your request. We will review and confirm soon.", waReq: "Send via WhatsApp (Required to complete booking)", wa: "Send copy via WhatsApp", matches: "Best matching teachers", none: "We will find the best teacher and contact you.", hours: "Shared weekly hours", sched: "Proposed 4-week schedule", schedNote: "Proposed schedule with {name} in your time, finalized after admin confirmation." } },
+  about: { title: "About Us", p1: "An online academy dedicated to teaching the Quran, Tajweed, vocal maqamat, connected ijazat, and Tafseer with high educational standards.", p2: "We combine authentic traditional learning with modern technological flexibility." },
+  contact: { title: "Contact Us", sub: "We are here to answer your questions.", wa: "Contact via WhatsApp", email: "Email", send: "Send Message" }
+},
+
+ru: {
+  dir: "ltr", name: "Русский", locale: "ru-RU",
+  meta: { siteName: "Академия Шейха Ахмеда", short: "Академия Шейха Ахмеда", letter: "А", tagline: "Иджаза • Хифз • Макаматы • Тафсир",
+    desc: "Онлайн-академия Корана, таджвида, макаматов и арабского языка." },
+  nav: { skip: "К контенту", home: "Главная", tracks: "Направления", maqamat: "Макаматы", teachers: "Преподаватели", library: "Библиотека", pricing: "Цены", about: "О нас", contact: "Контакты", trial: "✨ Пробный урок", menu: "Меню", theme: "Тема", lang: "Язык" },
+  days: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+  common: { bookTrial: "Записаться на урок", learnMore: "Подробнее", allTracks: "Все", free: "Бесплатно", premium: "Премиум", perMonth: "/ мес", back: "Назад", all: "Все", copy: "Копировать", copied: "Скопировано ✓", home: "Главная" },
+  hero: { badge: "Платформа Шейха Ахмеда", a: "Освойте Коран и макаматы вашим голосом", b: "с непрерывной иджазой", c: "и личным наставничеством.",
+    desc: "Уникальная онлайн-платформа, объединяющая таджвид, макаматы и тафсир.",
+    cta1: "Записаться на урок", cta2: "Направления", cta3: "Библиотека", points: ["Индивидуальные уроки", "Гибкое расписание", "Отчеты об успеваемости"] },
+  sec: { tracks: "Направления", tracksSub: "Выберите направление. В каждое входит пробный урок.", how: "Как начать", why: "Почему мы", teachers: "Преподаватели", testi: "Отзывы", faq: "Частые вопросы", ctaT: "Готовы начать?", ctaD: "Запишитесь на пробный урок прямо сейчас.", lib: "Бесплатно", libSub: "Бесплатные материалы." },
+  how: [{ t: "Заявка", d: "Выберите время и направление." }, { t: "Подбор преподавателя", d: "Оцениваем уровень." }, { t: "Начало занятий", d: "Регулярное расписание." }],
+  why: [{ t: "Иджаза", d: "Точная передача знаний." }, { t: "Практика", d: "Работа с голосом." }, { t: "Гибкость", d: "Ваше время." }, { t: "Поддержка", d: "Обратная связь." }],
+  faq: [{ q: "Пробный урок бесплатный?", a: "Помогает оценить уровень." }, { q: "Как выбрать время?", a: "По вашему часовому поясу." }],
+  tracks: {
+    ijaza: { title: "Иджаза Корана", desc: "Точное чтение по Хафсу с непрерывной цепочкой передатчиков.", audience: "Для владеющих чтением.", outcomes: ["Чтение шейху", "Правила ривая", "Получение иджазы"], levels: ["Оценка", "Разбор", "Чтение", "Иджаза"] },
+    hifz: { title: "Хифз (Заучивание)", desc: "Программы запоминания и повторения.", audience: "Для детей и взрослых.", outcomes: ["План заучивания", "Повторение", "Таджвид"], levels: ["Джуз Амма", "Части", "Продвинутый"] },
+    tajweed: { title: "Таджвид", desc: "Правила чтения Корана.", audience: "Для улучшения чтения.", outcomes: ["Махрадж", "Правила", "Практика"], levels: ["Начальный", "Средний", "Продвинутый"] },
+    maqamat: { title: "Макаматы", desc: "Изучение 8 макаматов для украшения чтения.", audience: "Для развития голоса.", outcomes: ["Знакомство", "Практика", "Переходы"], levels: ["Слух", "База", "Переходы", "Мастерство"] },
+    tafseer: { title: "Тафсир", desc: "Смысл и контекст аятов.", audience: "Для глубокого понимания.", outcomes: ["Смыслы", "Причины ниспослания"], levels: ["Простой", "Тематический"] },
+    arabic: { title: "Арабский язык", desc: "Классический арабский с нуля.", audience: "Для начинающих.", outcomes: ["Чтение", "Письмо", "Грамматика"], levels: ["Начальный", "Средний", "Продвинутый"] },
+    egyptian: { title: "Египетский диалект", desc: "Разговорный диалект для жизни.", audience: "Для всех желающих.", outcomes: ["Разговор", "Лексика"], levels: ["Начальный", "Средний", "Продвинутый"] }
+  },
+  tp: { audience: "Для кого?", outcomes: "Чему вы научитесь:", levels: "Уровни", teachers: "Преподаватели", none: "Скоро...", maq: "Пакеты", freeLib: "Материалы" },
+  maq: { badge: "🎵 Макаматы", title: "Изучение макаматов", intro: "Байяти, Раст, Нахаванд, Хиджаз, Курд, Сиках, Аджам, Саба.", names: ["Байяти", "Раст", "Нахаванд", "Хиджаз", "Курд", "Сиках", "Аджам", "Саба"],
+    free: { badge: "Бесплатно", title: "Базовые макаматы", desc: "Аудиоуроки.", points: ["Аудио", "Слух"], cta: "Начать" },
+    group: { badge: "Группа", title: "Групповой воркшоп", desc: "Совместные занятия.", points: ["Группа", "Практика"], cta: "Вступить" },
+    private: { badge: "Индивидуально", title: "Частные уроки 1 на 1", desc: "Персональная работа.", points: ["1 на 1", "План"], cta: "Записаться" } },
+  tch: { title: "Преподаватели", sub: "Команда специалистов.", demo: "Демо-данные.", tracks: "Направления", langs: "Языки", days: "Дни", book: "Записаться", profile: "Профиль", note: "Время подстраивается под вас." },
+  lib: { title: "Библиотека", sub: "Бесплатные и премиум материалы.", banner: "Структурный шаблон.", track: "Направление", access: "Тип", types: { video: "Видео", audio: "Аудио", pdf: "PDF", quiz: "Тест", article: "Статья" }, ai: "🤖 ИИ", review: "На проверке", soon: "Скоро", open: "Открыть", unlock: "🔒 По подписке", empty: "Пусто", aiNote: "Контент проверяется." },
+  pr: { title: "Цены", sub: "Выберите план.", ph: "Цены ориентировочные", usd: "В долларах США.", sub1: "Подписаться", try1: "Пробный урок", book1: "Записаться",
+    plans: { trial: { t: "Пробный урок", d: "Оценка уровня.", f: ["1 урок", "Оценка"] },
+      pack4: { t: "4 урока", d: "1 в неделю.", f: ["4 урока/мес"] },
+      pack8: { t: "8 уроков", d: "2 в неделю.", f: ["8 уроков/мес"] },
+      pack12: { t: "12 уроков", d: "3 в неделю.", f: ["12 уроков/мес"] },
+      group: { t: "Группа", d: "Макаматы.", f: ["Групповые занятия"] },
+      free: { t: "Бесплатно" }, private: { t: "Индивидуально" } } },
+  co: { title: "Оплата", sub: "Выберите способ.", choose: "План", summary: "Итог", plan: "План", total: "Всего", name: "Имя", email: "Email", method: "Способ",
+    m: { stripe: "Карта", paypal: "PayPal", bank: "Банк", instapay: "Instapay" }, terms: "Согласен с условиями.", pay: "Оплатить", secure: "Безопасно.",
+    none: "Неактивно.", ask: "Запросить в WhatsApp", bankT: "Банковские реквизиты", holder: "Получатель", bankName: "Банк", iban: "IBAN", swift: "SWIFT", instapay: "Instapay",
+    ref: "№ заказа", refHint: "Укажите в переводе.", paid: "Оплачено — отправить в WhatsApp", afterPay: "После оплаты отправьте подтверждение.", trialInfo: "Пробный урок бесплатный.",
+    err: { name: "Введите имя.", email: "Неверный email.", method: "Выберите способ.", terms: "Согласитесь с условиями." } },
+  bk: { title: "Запись на пробный урок", sub: "2 шага.", s1: "Данные", s2: "Расписание", hint: "Выберите время.",
+    l: { name: "Имя", email: "Email", phone: "Телефон / WhatsApp", track: "Направление", trial: "Дата и время", tz: "Часовой пояс", who: "Для кого?", self: "Для себя", child: "Для ребенка", notes: "Примечания", consent: "Согласен с условиями." },
+    next: "Далее", back: "Назад", submit: "Отправить", busy: "Отправка...", count: "Выбрано: {n}",
+    err: { name: "Введите имя.", email: "Неверный email.", phone: "Неверный телефон.", trial: "Выберите дату.", past: "Выберите будущее время.", slots: "Выберите слот.", consent: "Согласитесь с условиями.", tz: "Выберите часовой пояс.", send: "Ошибка." },
+    ok: { title: "Заявка готова ✅", descWa: "Отправьте в WhatsApp.", descSent: "Получено.", waReq: "Отправить в WhatsApp", wa: "Отправить", matches: "Преподаватели", none: "Найдем.", hours: "Часы", sched: "График", schedNote: "График." } },
+  about: { title: "О нас", p1: "Онлайн-академия.", p2: "Традиции и технологии." },
+  contact: { title: "Контакты", sub: "Мы на связи.", wa: "WhatsApp", email: "Email", send: "Отправить" }
+},
+
+tr: {
+  dir: "ltr", name: "Türkçe", locale: "tr-TR",
+  meta: { siteName: "Şeyh Ahmed Akademi", short: "Şeyh Ahmed Akademi", letter: "Ş", tagline: "İcazet • Hafızlık • Makam • Tefsir",
+    desc: "Kuran, tecvit, makam ve Arapça online akademisi." },
+  nav: { skip: "İçeriğe geç", home: "Ana Sayfa", tracks: "Dallar", maqamat: "Makamlar", teachers: "Eğitmenler", library: "Kütüphane", pricing: "Fiyatlar", about: "Hakkımızda", contact: "İletişim", trial: "✨ Deneme Dersi", menu: "Menü", theme: "Tema", lang: "Dil" },
+  days: ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
+  common: { bookTrial: "Deneme Dersi Al", learnMore: "Daha Fazla", allTracks: "Tümü", free: "Ücretsiz", premium: "Premium", perMonth: "/ ay", back: "Geri", all: "Tümü", copy: "Kopyala", copied: "Kopyalandı ✓", home: "Ana Sayfa" },
+  hero: { badge: "Şeyh Ahmed'in Platformu", a: "Kuran'ı ve Makamları Sesinizle Öğrenin", b: "icazetli ve doğrudan rehberlikle.", c: "",
+    desc: "Tecvit, makam ve tefsiri birleştiren özel platform.",
+    cta1: "Deneme Dersi Al", cta2: "Dallar", cta3: "Kütüphane", points: ["Canlı dersler", "Esnek saatler", "İlerleme raporları"] },
+  sec: { tracks: "Akademi Dalları", tracksSub: "Amacınıza uygun dalı seçin.", how: "Nasıl Başlanır?", why: "Neden Biz?", teachers: "Eğitmenler", testi: "Yorumlar", faq: "SSS", ctaT: "Hazır mısınız?", ctaD: "Hemen deneme dersi alın.", lib: "Ücretsiz", libSub: "Ücretsiz içerikler." },
+  how: [{ t: "Kayıt", d: "Dalı ve saati seçin." }, { t: "Seviye", d: "Eğitmenle eşleşme." }, { t: "Başlangıç", d: "Haftalık program." }],
+  why: [{ t: "İcazet", d: "Uzman eğitmenler." }, { t: "Pratik", d: "Uygulamalı ses eğitimi." }, { t: "Esneklik", d: "Bölgesel saatler." }, { t: "Takip", d: "Düzenli notlar." }],
+  faq: [{ q: "Deneme dersi ücretsiz mi?", a: "Seviye tespiti için." }],
+  tracks: {
+    ijaza: { title: "Kuran İcazeti", desc: "Hafs veya On Kıraat icazeti.", audience: "İcazet almak isteyenler.", outcomes: ["Okuma", "Kurallar", "İcazet"], levels: ["Değerlendirme", "Gözden geçirme", "Ders", "İcazet"] },
+    hifz: { title: "Hafızlık", desc: "Hafızlık ve ezber programları.", audience: "Çocuklar ve yetişkinler.", outcomes: ["Günlük plan", "Tekrar", "Tecvit"], levels: ["Amme", "Parçalar", "İleri"] },
+    tajweed: { title: "Tecvit", desc: "Tecvit kuralları.", audience: "Okumasını geliştirmek isteyenler.", outcomes: ["Mahreç", "Kurallar", "Pratik"], levels: ["Başlangıç", "Orta", "İleri"] },
+    maqamat: { title: "Makam Eğitimi", desc: "8 temel makam eğitimi.", audience: "Sesini geliştirmek isteyenler.", outcomes: ["Tanıma", "Pratik", "Geçişler"], levels: ["Kulak", "Temel", "Geçiş", "Ustalık"] },
+    tafseer: { title: "Tefsir", desc: "Kuran anlamları ve tefsir.", audience: "Derinlemesine anlamak isteyenler.", outcomes: ["Anlamlar", "Nüzul sebebi"], levels: ["Basit", "Konulu"] },
+    arabic: { title: "Arapça", desc: "Sıfırdan Fasih Arapça.", audience: "Yeni başlayanlar.", outcomes: ["Okuma", "Yazma", "Gramer"], levels: ["Başlangıç", "Orta", "İleri"] },
+    egyptian: { title: "Mısır Lehçesi", desc: "Günlük Mısır lehçesi.", audience: "Seyahat ve iş için.", outcomes: ["Konuşma", "Kelime"], levels: ["Başlangıç", "Orta", "İleri"] }
+  },
+  tp: { audience: "Kimler için?", outcomes: "Neler öğreneceksiniz:", levels: "Seviyeler", teachers: "Eğitmenler", none: "Yakında...", maq: "Paketler", freeLib: "Materyaller" },
+  maq: { badge: "🎵 Makam Dairesi", title: "Makamları Öğrenin", intro: "Beyati, Rast, Nahavend, Hicaz, Kürd, Sikah, Acem, Saba.", names: ["Beyati", "Rast", "Nahavend", "Hicaz", "Kürd", "Sikah", "Acem", "Saba"],
+    free: { badge: "Ücretsiz", title: "Temel Makamlar", desc: "Sesli dersler.", points: ["Ses", "Dinleme"], cta: "Başla" },
+    group: { badge: "Grup", title: "Grup Atölyesi", desc: "Ortak seanslar.", points: ["Grup", "Pratik"], cta: "Katıl" },
+    private: { badge: "Özel", title: "Birebir Koçluk", desc: "Kişisel takip.", points: ["Özel", "Plan"], cta: "Rezerve Et" } },
+  tch: { title: "Eğitmenler", sub: "Uzman kadro.", demo: "Demo veriler.", tracks: "Dallar", langs: "Diller", days: "Günler", book: "Rezervasyon", profile: "Profil", note: "Saatler size göre ayarlanır." },
+  lib: { title: "Kütüphane", sub: "Ücretsiz ve ücretli içerikler.", banner: "Şablon.", track: "Dal", access: "Tür", types: { video: "Video", audio: "Ses", pdf: "PDF", quiz: "Test", article: "Makale" }, ai: "🤖 AI", review: "İncelemede", soon: "Yakında", open: "Aç", unlock: "🔒 Abone Özel", empty: "Boş", aiNote: "İçerik incelenir." },
+  pr: { title: "Fiyatlar", sub: "Plan seçin.", ph: "Tahmini fiyatlar", usd: "USD cinsinden.", sub1: "Abone Ol", try1: "Deneme Dersi", book1: "Rezerve Et",
+    plans: { trial: { t: "Deneme Dersi", d: "Seviye tespiti.", f: ["1 Ders", "Seviye"] },
+      pack4: { t: "4 Ders", d: "Haftada 1.", f: ["4 ders/ay"] },
+      pack8: { t: "8 Ders", d: "Haftada 2.", f: ["8 ders/ay"] },
+      pack12: { t: "12 Ders", d: "Haftada 3.", f: ["12 ders/ay"] },
+      group: { t: "Grup", d: "Makam grubu.", f: ["Grup dersleri"] },
+      free: { t: "Ücretsiz" }, private: { t: "Özel" } } },
+  co: { title: "Ödeme", sub: "Yöntem seçin.", choose: "Plan", summary: "Özet", plan: "Plan", total: "Toplam", name: "İsim", email: "E-posta", method: "Yöntem",
+    m: { stripe: "Kart", paypal: "PayPal", bank: "Banka", instapay: "Instapay" }, terms: "Şartları kabul ediyorum.", pay: "Öde", secure: "Güvenli.",
+    none: "Aktif değil.", ask: "WhatsApp ile iste", bankT: "Banka Bilgileri", holder: "Alıcı", bankName: "Banka", iban: "IBAN", swift: "SWIFT", instapay: "Instapay",
+    ref: "Sipariş No", refHint: "Notlara ekleyin.", paid: "Ödedim — WhatsApp ile gönder", afterPay: "Ödeme sonrası WhatsApp ile bildirin.", trialInfo: "Deneme dersi ücretsizdir.",
+    err: { name: "İsim girin.", email: "Geçersiz e-posta.", method: "Yöntem seçin.", terms: "Şartları onaylayın." } },
+  bk: { title: "Deneme Dersi Rezervasyonu", sub: "2 adım.", s1: "Bilgiler", s2: "Program", hint: "Zaman diliminizi seçin.",
+    l: { name: "İsim", email: "E-posta", phone: "Telefon / WhatsApp", track: "Dal", trial: "Tarih ve Saat", tz: "Saat Dilimi", who: "Kimin için?", self: "Kendim", child: "Çocuğum", notes: "Notlar", consent: "Şartları onaylıyorum." },
+    next: "İleri", back: "Geri", submit: "Gönder", busy: "Gönderiliyor...", count: "Seçilen: {n}",
+    err: { name: "İsim girin.", email: "Geçersiz e-posta.", phone: "Telefon girin.", trial: "Tarih seçin.", past: "Gelecek bir zaman seçin.", slots: "En az 1 slot seçin.", consent: "Onaylayın.", tz: "Saat dilimi seçin.", send: "Hata." },
+    ok: { title: "Rezervasyon Hazır ✅", descWa: "WhatsApp ile gönderin.", descSent: "Alındı.", waReq: "WhatsApp ile gönder", wa: "Gönder", matches: "Eğitmenler", none: "Bulunacak.", hours: "Saatler", sched: "Program", schedNote: "Program." } },
+  about: { title: "Hakkımızda", p1: "Online akademi.", p2: "Gelenek ve teknoloji." },
+  contact: { title: "İletişim", sub: "Buradayız.", wa: "WhatsApp", email: "E-posta", send: "Gönder" }
+}
+};
+
+/* =====================================================================
+   ⚙️ محرك التطبيق (Router & State)
+   ===================================================================== */
+let state = {
+  lang: localStorage.getItem('lang') || 'ar',
+  theme: localStorage.getItem('theme') || 'dark',
+  route: 'home',
+  params: null,
+  mobileMenu: false,
+  booking: { step: 1, track: '', email: '', phone: '', countryCode: '+20', trialDateTime: '', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Cairo', who: 'self', notes: '', slots: {} },
+  checkout: { planId: '', name: '', email: '', method: 'stripe', terms: false, ref: 'AA-' + Math.floor(100000 + Math.random() * 900000) }
+};
+
+function t(path, vars) {
+  let lang = I18N[state.lang] ? state.lang : 'ar';
+  let keys = path.split('.');
+  let val = I18N[lang];
+  for (let k of keys) {
+    if (val && val[k] !== undefined) val = val[k];
+    else {
+      // Fallback to Arabic or English
+      let fb = I18N['ar'];
+      let fval = fb;
+      for (let fk of keys) { if (fval && fval[fk] !== undefined) fval = fval[fk]; else { fval = path; break; } }
+      val = fval;
+      break;
+    }
+  }
+  if (typeof val === 'string' && vars) {
+    for (let vk in vars) val = val.replace(`{${vk}}`, vars[vk]);
+  }
+  return val;
+}
+
+function navigate(route, params) {
+  state.route = route;
+  state.params = params;
+  state.mobileMenu = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  render();
+}
+
+function setTheme(theme) {
+  state.theme = theme;
+  localStorage.setItem('theme', theme);
+  document.documentElement.setAttribute('data-theme', theme);
+  render();
+}
+
+function setLang(lang) {
+  state.lang = lang;
+  localStorage.setItem('lang', lang);
+  document.documentElement.setAttribute('dir', I18N[lang]?.dir || 'rtl');
+  document.documentElement.setAttribute('lang', lang);
+  render();
+}
+
+/* =====================================================================
+   🎨 عناصر واجهة المستخدم (Components)
+   ===================================================================== */
+function renderHeader() {
+  let l = state.lang;
+  let tr = t('nav');
+  return `
+  <header class="hdr">
+    <div class="wrap">
+      <a class="logo" href="#" onclick="navigate('home');return false;">
+        <i>${I18N[l]?.meta?.letter || 'أ'}</i>
+        <div>
+          <b>${I18N[l]?.meta?.short || ''}</b>
+          <small>${I18N[l]?.meta?.tagline || ''}</small>
         </div>
-    </header>
+      </a>
+      <nav class="nav">
+        <a href="#" onclick="navigate('home');return false;" ${state.route==='home'?'aria-current="page"':''}>${tr.home}</a>
+        <a href="#" onclick="navigate('tracks');return false;" ${state.route==='tracks'?'aria-current="page"':''}>${tr.tracks}</a>
+        <a href="#" onclick="navigate('maqamat');return false;" ${state.route==='maqamat'?'aria-current="page"':''}>${tr.maqamat}</a>
+        <a href="#" onclick="navigate('teachers');return false;" ${state.route==='teachers'?'aria-current="page"':''}>${tr.teachers}</a>
+        <a href="#" onclick="navigate('library');return false;" ${state.route==='library'?'aria-current="page"':''}>${tr.library}</a>
+        <a href="#" onclick="navigate('pricing');return false;" ${state.route==='pricing'?'aria-current="page"':''}>${tr.pricing}</a>
+        <a href="#" onclick="navigate('about');return false;" ${state.route==='about'?'aria-current="page"':''}>${tr.about}</a>
+        <a href="#" onclick="navigate('contact');return false;" ${state.route==='contact'?'aria-current="page"':''}>${tr.contact}</a>
+      </nav>
+      <div class="tools">
+        <select class="ibtn" aria-label="${tr.lang}" onchange="setLang(this.value)">
+          ${Object.keys(I18N).map(k=>`<option value="${k}" ${k===l?'selected':''}>${I18N[k].name}</option>`).join('')}
+        </select>
+        <button class="ibtn" aria-label="${tr.theme}" onclick="setTheme(state.theme==='dark'?'light':'dark')">
+          ${state.theme==='dark'?'☀️':'🌙'}
+        </button>
+        <button class="ibtn burger" aria-label="${tr.menu}" onclick="state.mobileMenu=!state.mobileMenu;render();">
+          ☰
+        </button>
+        <button class="btn btn-g hide-sm" onclick="navigate('booking')">${tr.trial}</button>
+      </div>
+    </div>
+    <div class="mnav ${state.mobileMenu?'open':''}">
+      <div class="wrap" style="padding-block:.7rem">
+        <a href="#" onclick="navigate('home');return false;">${tr.home}</a>
+        <a href="#" onclick="navigate('tracks');return false;">${tr.tracks}</a>
+        <a href="#" onclick="navigate('maqamat');return false;">${tr.maqamat}</a>
+        <a href="#" onclick="navigate('teachers');return false;">${tr.teachers}</a>
+        <a href="#" onclick="navigate('library');return false;">${tr.library}</a>
+        <a href="#" onclick="navigate('pricing');return false;">${tr.pricing}</a>
+        <a href="#" onclick="navigate('about');return false;">${tr.about}</a>
+        <a href="#" onclick="navigate('contact');return false;">${tr.contact}</a>
+        <div style="margin-top:.7rem"><button class="btn btn-g btn-full" onclick="navigate('booking')">${tr.trial}</button></div>
+      </div>
+    </div>
+  </header>`;
+}
 
-    <!-- Main Layout -->
-    <div class="max-w-7xl mx-auto w-full flex-grow flex flex-col md:flex-row gap-6 p-4">
-        
-        <!-- Right Sidebar -->
-        <aside class="w-full md:w-72 bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3 h-fit sticky top-24 shadow-xl">
-            <h3 class="font-bold text-emerald-400 text-sm border-b border-slate-700 pb-2 mb-2 flex items-center" id="sidebarTitle"><i class="fa-solid fa-bars ml-2"></i> مسارات الأكاديمية</h3>
-            <button onclick="filterCategory('all')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catAll">الكل / الرئيسية</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-            <button onclick="filterCategory('ijaza')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catIjaza">📜 إجازات بالسند المتصل</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-            <button onclick="filterCategory('hifz')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catHifz">📖 تحفيظ القرآن الكريم</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-            <button onclick="filterCategory('maqamat')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catMaqamat">🎵 مقامات صوتية وتلاوة</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-            <button onclick="filterCategory('tafseer')" class="w-full text-right text-xs bg-slate-900 hover:bg-slate-700 p-2.5 rounded-xl text-white font-bold transition flex justify-between items-center"><span id="catTafseer">💡 تفسير وعلوم الإسلام</span><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-        </aside>
+function renderFooter() {
+  let tr = t('nav');
+  return `
+  <footer>
+    <div class="wrap">
+      <div>
+        <div class="logo" style="margin-bottom:.7rem">
+          <i>${I18N[state.lang]?.meta?.letter || 'أ'}</i>
+          <div><b>${I18N[state.lang]?.meta?.short || ''}</b><small>${I18N[state.lang]?.meta?.tagline || ''}</small></div>
+        </div>
+        <p class="sm muted">${I18N[state.lang]?.meta?.desc || ''}</p>
+      </div>
+      <div>
+        <div class="b sm" style="margin-bottom:.5rem">${tr.tracks}</div>
+        <ul>
+          ${TRACKS.map(id=>`<li><a href="#" onclick="navigate('track',{id:'${id}'});return false;">${TRACK_EMOJI[id]} ${t('tracks.'+id+'.title')}</a></li>`).join('')}
+        </ul>
+      </div>
+      <div>
+        <div class="b sm" style="margin-bottom:.5rem">${tr.menu}</div>
+        <ul>
+          <li><a href="#" onclick="navigate('maqamat');return false;">${tr.maqamat}</a></li>
+          <li><a href="#" onclick="navigate('teachers');return false;">${tr.teachers}</a></li>
+          <li><a href="#" onclick="navigate('library');return false;">${tr.library}</a></li>
+          <li><a href="#" onclick="navigate('pricing');return false;">${tr.pricing}</a></li>
+          <li><a href="#" onclick="navigate('booking');return false;">${tr.trial}</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copy">© ${new Date().getFullYear()} ${I18N[state.lang]?.meta?.siteName || ''}. All rights reserved.</div>
+  </footer>`;
+}
 
-        <!-- Main Content Area -->
-        <main class="flex-grow space-y-8">
-            
-            <!-- HOME SECTION -->
-            <div id="homeSection" class="space-y-8">
-                <div class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-8 text-center shadow-2xl relative overflow-hidden space-y-4">
-                    <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30" id="heroBadge">
-                        مرحباً بكم في منصة الشيخ أحمد الخاصة
-                    </span>
-                    <h2 class="text-xl md:text-3xl font-extrabold text-white leading-relaxed" id="heroTitle">
-                        أتقن القرآن الكريم ومقامات التلاوة بصوتك <br/>
-                        <span class="text-emerald-400">مع إجازات متصلة السند</span> وتوجيه مباشر.
-                    </h2>
-                    <p class="text-slate-400 text-xs md:text-sm max-w-2xl mx-auto" id="heroDesc">
-                        منصة فريدة ومخصصة للطلاب، تجمع بين علوم التجويد، التدريب الصوتي المتقدم على المقامات، والتفسير المبسط.
-                    </p>
-                    <div class="pt-2">
-                        <button onclick="openBookingModal('General Lesson')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition" id="heroBtnBook">
-                            احجز حصتك الآن
-                        </button>
-                    </div>
-                </div>
+/* =====================================================================
+   📄 الصفحات (Views)
+   ===================================================================== */
+function viewHome() {
+  let h = t('hero');
+  let sec = t('sec');
+  let how = t('how');
+  let why = t('why');
+  let faq = t('faq');
+  return `
+  <section class="hero">
+    <div class="wrap">
+      <span class="badge badge-a">${h.badge}</span>
+      <h1>${h.a} <br><span class="accent">${h.b}</span> ${h.c}</h1>
+      <p class="lead">${h.desc}</p>
+      <div class="row" style="margin-top:1.5rem">
+        <button class="btn btn-g" onclick="navigate('booking')">${h.cta1}</button>
+        <button class="btn btn-o" onclick="navigate('tracks')">${h.cta2}</button>
+        <button class="btn btn-o" onclick="navigate('library')">${h.cta3}</button>
+      </div>
+      <ul class="checks" style="margin-top:1.75rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+        ${h.points.map(p=>`<li>${p}</li>`).join('')}
+      </ul>
+    </div>
+  </section>
 
-                <div id="tracksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-            </div>
+  <section class="sec">
+    <div class="wrap">
+      <h2 class="stitle">${sec.tracks}</h2>
+      <p class="ssub">${sec.tracksSub}</p>
+      <div class="grid">
+        ${TRACKS.map(id=>{
+          let tr = t('tracks.'+id);
+          return `
+          <div class="card card-h" onclick="navigate('track',{id:'${id}'})">
+            <div style="font-size:2rem;margin-bottom:.5rem">${TRACK_EMOJI[id]}</div>
+            <h3 class="b sm" style="font-size:1.05rem;margin-bottom:.3rem">${tr.title}</h3>
+            <p class="sm muted">${tr.desc}</p>
+            <div class="more">${t('common.learnMore')} ←</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </section>
 
-            <!-- MAQAMAT DEDICATED SECTION -->
-            <div id="maqamatTrackSection" class="hidden space-y-6">
-                <div class="bg-slate-800 border border-amber-500/40 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
-                    <div class="border-b border-slate-700 pb-4">
-                        <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-bold" id="maqBadge">🎵 قسم المقامات الصوتية المتخصص</span>
-                        <h3 class="text-2xl font-bold text-white mt-2" id="maqTitle">تعلم المقامات الثمانية (بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا)</h3>
-                    </div>
+  <section class="sec sec-alt">
+    <div class="wrap">
+      <h2 class="stitle">${sec.how}</h2>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:1.5rem">
+        ${how.map((x,i)=>`
+        <div class="card">
+          <div class="num" style="margin-bottom:.7rem">${i+1}</div>
+          <h3 class="b sm" style="margin-bottom:.3rem">${x.t}</h3>
+          <p class="sm muted">${x.d}</p>
+        </div>`).join('')}
+      </div>
+    </div>
+  </section>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-slate-900 border border-slate-700 p-5 rounded-2xl space-y-3">
-                            <span class="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded" id="tierFree">محتوى مجاني</span>
-                            <h4 class="font-bold text-white text-base" id="tierFreeTitle">المقامات الأساسية للمبتدئين</h4>
-                            <p class="text-xs text-slate-400" id="tierFreeDesc">دروس صوتية ومقاطع مرجعية للتعرف على النغمات الأساسية وطريقة التدرب عليها.</p>
-                            <button onclick="openBookingModal('Free Maqamat Course')" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs py-2 rounded-xl border border-slate-700" id="btnTierFree">ابدأ التعلم مجاناً</button>
-                        </div>
-                        <div class="bg-slate-900 border border-emerald-500/40 p-5 rounded-2xl space-y-3 shadow-lg">
-                            <span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded" id="tierGroup">اشتراك جماعي</span>
-                            <h4 class="font-bold text-white text-base" id="tierGroupTitle">ورشة المقامات والتدريب الجماعي</h4>
-                            <p class="text-xs text-slate-400" id="tierGroupDesc">حصص دورية مشتركة لممارسة التطبيق العملي وتقييم الأصوات مع زملاء الدراسة.</p>
-                            <button onclick="openBookingModal('Group Maqamat Workshop')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl" id="btnTierGroup">انضم للورشة الجماعية</button>
-                        </div>
-                        <div class="bg-slate-900 border border-purple-500/40 p-5 rounded-2xl space-y-3 shadow-lg">
-                            <span class="text-xs text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded" id="tierPrivate">اشتراك خاص (Private)</span>
-                            <h4 class="font-bold text-white text-base" id="tierPrivateTitle">تدريب خاص وفردي (1-on-1)</h4>
-                            <p class="text-xs text-slate-400" id="tierPrivateDesc">متابعة دقيقة ومخصصة لصوتك، تصحيح المقامات، وتسجيل ملاحظات خاصة لتطوير أدائك بسرعة.</p>
-                            <button onclick="openBookingModal('Private Maqamat Coaching')" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 rounded-xl" id="btnTierPrivate">احجز تدريب برايفت</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <section class="sec">
+    <div class="wrap">
+      <h2 class="stitle">${sec.why}</h2>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:1.5rem">
+        ${why.map(x=>`
+        <div class="card">
+          <h3 class="b sm" style="margin-bottom:.3rem;color:var(--accent)">✓ ${x.t}</h3>
+          <p class="sm muted">${x.d}</p>
+        </div>`).join('')}
+      </div>
+    </div>
+  </section>
 
-            <!-- SOCIAL MEDIA SECTION -->
-            <div id="socialSection" class="hidden space-y-8">
-                <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 text-center space-y-4 shadow-xl">
-                    <h3 class="text-2xl font-bold text-emerald-400" id="socTitle">صفحاتنا الرسمية على السوشيال ميديا</h3>
-                    <p class="text-xs text-slate-300" id="socDesc">تابع نماذج التلاوة، التوجيهات، ومقاطع المقامات اليومية:</p>
-                    <div class="flex flex-wrap justify-center gap-4 pt-4">
-                        <a href="https://tiktok.com" target="_blank" class="bg-slate-900 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2"><i class="fa-brands fa-tiktok text-emerald-400 text-lg"></i> TikTok</a>
-                        <a href="https://instagram.com" target="_blank" class="bg-slate-900 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2"><i class="fa-brands fa-instagram text-pink-400 text-lg"></i> Instagram</a>
-                        <a href="https://youtube.com" target="_blank" class="bg-slate-900 border border-slate-700 px-6 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2"><i class="fa-brands fa-youtube text-rose-400 text-lg"></i> YouTube</a>
-                    </div>
-                </div>
-            </div>
-        </main>
+  <section class="sec sec-alt">
+    <div class="wrap" style="max-width:50rem">
+      <h2 class="stitle">${sec.faq}</h2>
+      <div class="faqbox">
+        ${faq.map(f=>`
+        <details class="faq">
+          <summary>${f.q}</summary>
+          <p>${f.a}</p>
+        </details>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="ctab">
+        <h2 class="stitle" style="margin-bottom:.5rem">${sec.ctaT}</h2>
+        <p class="ssub" style="margin-inline:auto;margin-bottom:1.5rem">${sec.ctaD}</p>
+        <button class="btn btn-g" onclick="navigate('booking')">${h.cta1}</button>
+      </div>
+    </div>
+  </section>`;
+}
+
+function viewTracks() {
+  let tr = t('sec');
+  return `
+  <div class="wrap sec">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${t('nav.tracks')}</span></div>
+    <h1 class="stitle">${tr.tracks}</h1>
+    <p class="ssub">${tr.tracksSub}</p>
+    <div class="grid" style="margin-top:1.5rem">
+      ${TRACKS.map(id=>{
+        let trk = t('tracks.'+id);
+        return `
+        <div class="card card-h" onclick="navigate('track',{id:'${id}'})">
+          <div style="font-size:2.2rem;margin-bottom:.5rem">${TRACK_EMOJI[id]}</div>
+          <h3 class="b" style="font-size:1.1rem;margin-bottom:.4rem">${trk.title}</h3>
+          <p class="sm muted">${trk.desc}</p>
+          <div class="more">${t('common.learnMore')} ←</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function viewTrack(params) {
+  let id = params?.id || 'ijaza';
+  let trk = t('tracks.'+id);
+  let tp = t('tp');
+  let trackTeachers = TEACHERS.filter(tch=>tch.tracks.includes(id));
+  let trackLib = LIB.filter(l=>l.track===id);
+  return `
+  <div class="wrap sec">
+    <div class="crumb">
+      <a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / 
+      <a href="#" onclick="navigate('tracks');return false;">${t('nav.tracks')}</a> / 
+      <span>${trk.title}</span>
+    </div>
+    
+    <div class="card" style="margin-bottom:2rem;background:linear-gradient(135deg,var(--card),var(--bg))">
+      <div style="font-size:3rem;margin-bottom:.7rem">${TRACK_EMOJI[id]}</div>
+      <h1 class="stitle" style="margin-bottom:.7rem">${trk.title}</h1>
+      <p class="lead" style="font-size:1.05rem;color:var(--muted);margin-bottom:1.5rem">${trk.desc}</p>
+      <div class="row">
+        <button class="btn btn-p" onclick="state.booking.track='${trk.title}';navigate('booking')">${t('common.bookTrial')}</button>
+        ${id==='maqamat'?`<button class="btn btn-g" onclick="navigate('maqamat')">${t('nav.maqamat')}</button>`:''}
+      </div>
     </div>
 
-    <!-- BOOKING MODAL (Step 1: Trial Lesson Specific Time) -->
-    <div id="bookingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeBookingModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center" id="modalTitle1">حجز الحصة التجريبية (الخطوة 1)</h3>
-            <p id="selectedTrackName" class="text-xs text-emerald-400 text-center font-bold"></p>
-
-            <form onsubmit="goToStep2(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1" id="lblEmail">البريد الإلكتروني</label>
-                    <input type="email" id="bookEmail" required placeholder="student@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1" id="lblPhone">رقم الهاتف / الواتساب مع الرمز الدولي</label>
-                    <div class="flex gap-2">
-                        <select id="countryCode" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs text-amber-400 font-bold w-32">
-                            <option value="+20">🇪🇬 +20 (Egypt)</option>
-                            <option value="+966">🇸🇦 +966 (KSA)</option>
-                            <option value="+971">🇦🇪 +971 (UAE)</option>
-                            <option value="+44">🇬🇧 +44 (UK)</option>
-                            <option value="+1">🇺🇸 +1 (USA/CA)</option>
-                            <option value="+7">🇷🇺 +7 (Russia)</option>
-                            <option value="+90">🇹🇷 +90 (Turkey)</option>
-                        </select>
-                        <input type="tel" id="bookPhone" required placeholder="1091121907" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1" id="lblTrialDateTime">تاريخ ووقت الحصة التجريبية المحددة</label>
-                    <input type="datetime-local" id="trialDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold">
-                </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer" id="btnNextStep">التالي: تحديد أوقات الدروس العادية الدائمة</button>
-            </form>
-        </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
+      <div class="card">
+        <h3 class="b sm accent" style="margin-bottom:.5rem">${tp.audience}</h3>
+        <p class="sm muted">${trk.audience}</p>
+      </div>
+      <div class="card">
+        <h3 class="b sm accent" style="margin-bottom:.5rem">${tp.outcomes}</h3>
+        <ul class="checks" style="font-size:.88rem">
+          ${trk.outcomes.map(o=>`<li>${o}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="b sm accent" style="margin-bottom:.5rem">${tp.levels}</h3>
+        <ol style="padding-inline-start:1.2rem;font-size:.88rem" class="muted">
+          ${trk.levels.map(l=>`<li style="margin-bottom:.3rem">${l}</li>`).join('')}
+        </ol>
+      </div>
     </div>
 
-    <!-- BOOKING MODAL (Step 2: Regular Weekly Hours & Teacher Match) -->
-    <div id="bookingModalStep2" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeStep2()" class="absolute top-4 left-4 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white text-center" id="modalTitle2">تحديد الأوقات العادية الدائمة طوال الأسبوع (الخطوة 2)</h3>
-            <p class="text-xs text-slate-400 text-center" id="step2Sub">اختر الأيام وكل الساعات المتاحة لديك للدروس المنتظمة لكي نطابقها مع المعلمين:</p>
+    ${id==='maqamat'?`
+    <div class="card" style="margin-top:2rem;border-color:var(--gold)">
+      <h3 class="b" style="margin-bottom:.5rem">${t('maq.title')}</h3>
+      <p class="sm muted" style="margin-bottom:1rem">${t('maq.intro')}</p>
+      <button class="btn btn-g" onclick="navigate('maqamat')">${t('nav.maqamat')}</button>
+    </div>`:''}
 
-            <div class="space-y-4 text-xs" id="daysContainer">
-                <!-- Days rendered dynamically -->
+    <div style="margin-top:3rem">
+      <h2 class="stitle" style="font-size:1.3rem">${tp.teachers}</h2>
+      ${trackTeachers.length===0?`<p class="sm muted">${tp.none}</p>`:`
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1rem">
+        ${trackTeachers.map(tch=>`
+        <div class="card">
+          <div class="row" style="margin-bottom:.7rem">
+            <div class="avatar">${tch.name[state.lang]?.charAt(0)||tch.name.ar.charAt(0)}</div>
+            <div>
+              <div class="b sm">${tch.name[state.lang]||tch.name.ar}</div>
+              <div class="xs muted">${tch.title[state.lang]||tch.title.ar}</div>
             </div>
-
-            <button onclick="sendBookingToWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp text-base"></i> <span id="btnWhatsappText">إرسال تفاصيل الحصة التجريبية والمواعيد الدائمة والمطابقة عبر الواتساب</span>
-            </button>
-        </div>
+          </div>
+          <p class="xs muted" style="margin-bottom:1rem">${tch.bio[state.lang]||tch.bio.ar}</p>
+          <button class="btn btn-o btn-full xs" onclick="navigate('booking')">${t('tch.book')}</button>
+        </div>`).join('')}
+      </div>`}
     </div>
 
-    <!-- Script Logic -->
-    <script>
-        let currentLang = 'ar';
-        let selectedTrack = '';
-        let studentData = {};
+    <div style="margin-top:3rem">
+      <h2 class="stitle" style="font-size:1.3rem">${tp.freeLib}</h2>
+      ${trackLib.length===0?`<p class="sm muted">${t('lib.empty')}</p>`:`
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1rem">
+        ${trackLib.map(item=>`
+        <div class="card">
+          <div class="pills" style="margin-bottom:.5rem">
+            <span class="badge ${item.access==='free'?'badge-a':'badge-g'}">${item.access==='free'?t('common.free'):t('common.premium')}</span>
+            <span class="badge">${t('lib.types.'+item.type)}</span>
+            ${item.ai?`<span class="badge" style="border-color:var(--violet);color:var(--violet)">${t('lib.ai')}</span>`:''}
+          </div>
+          <h3 class="b sm" style="margin-bottom:.7rem">${item.title[state.lang]||item.title.ar}</h3>
+          ${item.url?`<a class="btn btn-p btn-full xs" href="${item.url}" target="_blank">${t('lib.open')}</a>`:`<span class="btn btn-o btn-full xs" style="opacity:.6;cursor:default">${t('lib.soon')}</span>`}
+        </div>`).join('')}
+      </div>`}
+    </div>
+  </div>`;
+}
 
-        // محاكاة جدول المعلمين المتاحين في الأكاديمية
-        const teachersPool = [
-            { name: "الشيخ أحمد خالد", availableDays: ["السبت", "الإثنين", "الأربعاء"], hours: ["04:00 PM", "06:00 PM", "08:00 PM"] },
-            { name: "الشيخ إبراهيم محمد", availableDays: ["الأحد", "الثلاثاء", "الخميس"], hours: ["10:00 AM", "02:00 PM", "08:00 PM"] },
-            { name: "د. نور (تفسير وعلوم)", availableDays: ["الإثنين", "الأربعاء", "الجمعة"], hours: ["12:00 PM", "06:00 PM", "10:00 PM"] }
-        ];
+function viewMaqamat() {
+  let m = t('maq');
+  let tr = t('nav');
+  return `
+  <div class="wrap sec">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${tr.maqamat}</span></div>
+    
+    <div class="card" style="margin-bottom:2rem;background:linear-gradient(135deg,var(--card),var(--bg));border-color:var(--gold)">
+      <span class="badge badge-g">${m.badge}</span>
+      <h1 class="stitle" style="margin-top:.5rem;margin-bottom:.7rem">${m.title}</h1>
+      <p class="lead" style="font-size:1.05rem;color:var(--muted);margin-bottom:1.5rem">${m.intro}</p>
+      <div class="pills" style="margin-bottom:1.5rem">
+        ${m.names.map(name=>`<span class="badge" style="font-size:.9rem;padding:.3rem .9rem;font-weight:800">${name}</span>`).join('')}
+      </div>
+      <button class="btn btn-g" onclick="state.booking.track='${m.title}';navigate('booking')">${t('common.bookTrial')}</button>
+    </div>
 
-        const translations = {
-            ar: {
-                navTitleText: "أكاديمية الشيخ أحمد للمقامات والقرآن",
-                navSubText: "إجازات • تحفيظ • مقامات صوتية • تفسير",
-                btnHome: "الرئيسية",
-                btnMaqamat: "🎵 المقامات (مجاني وبرايفت)",
-                btnSocial: "منصاتنا",
-                btnTrial: "✨ حصة تجريبية",
-                sidebarTitle: "مسارات الأكاديمية",
-                catAll: "الكل / الرئيسية",
-                catIjaza: "📜 إجازات بالسند المتصل",
-                catHifz: "📖 تحفيظ القرآن الكريم",
-                catMaqamat: "🎵 مقامات صوتية وتلاوة",
-                catTafseer: "💡 تفسير وعلوم الإسلام",
-                heroBadge: "مرحباً بكم في منصة الشيخ أحمد الخاصة",
-                heroTitle: "أتقن القرآن الكريم ومقامات التلاوة بصوتك <br/><span class='text-emerald-400'>مع إجازات متصلة السند</span> وتوجيه مباشر.",
-                heroDesc: "منصة فريدة ومخصصة للطلاب، تجمع بين علوم التجويد، التدريب الصوتي المتقدم على المقامات، والتفسير المبسط.",
-                heroBtnBook: "احجز حصتك الآن",
-                maqBadge: "🎵 قسم المقامات الصوتية المتخصص",
-                maqTitle: "تعلم المقامات الثمانية (بياتي، رست، نهاوند، حجاز، كرد، سيكاه، عجم، صبا)",
-                tierFree: "محتوى مجاني",
-                tierFreeTitle: "المقامات الأساسية للمبتدئين",
-                tierFreeDesc: "دروس صوتية ومقاطع مرجعية للتعرف على النغمات الأساسية وطريقة التدرب عليها.",
-                btnTierFree: "ابدأ التعلم مجاناً",
-                tierGroup: "اشتراك جماعي",
-                tierGroupTitle: "ورشة المقامات والتدريب الجماعي",
-                tierGroupDesc: "حصص دورية مشتركة لممارسة التطبيق العملي وتقييم الأصوات مع زملاء الدراسة.",
-                btnTierGroup: "انضم للورشة الجماعية",
-                tierPrivate: "اشتراك خاص (Private)",
-                tierPrivateTitle: "تدريب خاص وفردي (1-on-1)",
-                tierPrivateDesc: "متابعة دقيقة ومخصصة لصوتك، تصحيح المقامات، وتسجيل ملاحظات خاصة لتطوير أدائك بسرعة.",
-                btnTierPrivate: "احجز تدريب برايفت",
-                socTitle: "صفحاتنا الرسمية على السوشيال ميديا",
-                socDesc: "تابع نماذج التلاوة، التوجيهات، ومقاطع المقامات اليومية:",
-                modalTitle1: "حجز الحصة التجريبية (الخطوة 1)",
-                lblEmail: "البريد الإلكتروني",
-                lblPhone: "رقم الهاتف / الواتساب مع الرمز الدولي",
-                lblTrialDateTime: "تاريخ ووقت الحصة التجريبية المحددة",
-                btnNextStep: "التالي: تحديد أوقات الدروس العادية الدائمة",
-                modalTitle2: "تحديد الأوقات العادية الدائمة طوال الأسبوع (الخطوة 2)",
-                step2Sub: "اختر الأيام وكل الساعات المتاحة لديك لكي نطابقها مع المعلمين المتاحين:",
-                btnWhatsappText: "إرسال تفاصيل الحصة التجريبية والمواعيد الدائمة والمطابقة عبر الواتساب",
-                days: ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"]
-            },
-            en: {
-                navTitleText: "Sheikh Ahmed Academy for Maqamat & Quran",
-                navSubText: "Ijaza • Hifz • Voice Maqamat • Tafseer",
-                btnHome: "Home",
-                btnMaqamat: "🎵 Maqamat (Free & Private)",
-                btnSocial: "Social Media",
-                btnTrial: "✨ Trial Lesson",
-                sidebarTitle: "Academy Tracks",
-                catAll: "All / Home",
-                catIjaza: "📜 Connected Ijaza",
-                catHifz: "📖 Quran Hifz (Memorization)",
-                catMaqamat: "🎵 Voice Maqamat & Recitation",
-                catTafseer: "💡 Tafseer & Islamic Sciences",
-                heroBadge: "Welcome to Sheikh Ahmed's Private Platform",
-                heroTitle: "Master the Quran & Recitation Maqamat with Your Voice <br/><span class='text-emerald-400'>with Connected Ijaza</span> & Direct Guidance.",
-                heroDesc: "A unique platform for students worldwide, combining Tajweed rules, advanced vocal Maqamat training, and simplified Tafseer.",
-                heroBtnBook: "Book Your Lesson Now",
-                maqBadge: "🎵 Specialized Voice Maqamat Section",
-                maqTitle: "Learn the 8 Primary Maqamat (Bayati, Rast, Nahawand, Hijaz, Kurd, Sikah, Ajam, Saba)",
-                tierFree: "Free Content",
-                tierFreeTitle: "Essential Maqamat for Beginners",
-                tierFreeDesc: "Audio lessons and reference clips to recognize basic tones and practice techniques.",
-                btnTierFree: "Start Learning Free",
-                tierGroup: "Group Subscription",
-                tierGroupTitle: "Maqamat Workshop & Group Practice",
-                tierGroupDesc: "Regular joint sessions for practical application and peer voice evaluation.",
-                btnTierGroup: "Join Group Workshop",
-                tierPrivate: "Private Subscription",
-                tierPrivateTitle: "1-on-1 Private Coaching",
-                tierPrivateDesc: "Precise personalized tracking, maqam correction, and tailored feedback notes.",
-                btnTierPrivate: "Book Private Coaching",
-                socTitle: "Our Official Social Media Pages",
-                socDesc: "Follow recitation samples, guidance, and daily maqam clips:",
-                modalTitle1: "Book Trial Lesson (Step 1)",
-                lblEmail: "Email Address",
-                lblPhone: "Phone / WhatsApp with Country Code",
-                lblTrialDateTime: "Trial Lesson Date & Time",
-                btnNextStep: "Next: Choose Regular Weekly Hours",
-                modalTitle2: "Select Regular Weekly Hours (Step 2)",
-                step2Sub: "Select days and available hours so we can match you with available teachers:",
-                btnWhatsappText: "Send Trial & Regular Schedule via WhatsApp",
-                days: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-            },
-            ru: {
-                navTitleText: "Академия Шейха Ахмеда",
-                navSubText: "Иджаза • Хифз • Макаматы • Тафсир",
-                btnHome: "Главная",
-                btnMaqamat: "🎵 Макаматы",
-                btnSocial: "Соцсети",
-                btnTrial: "✨ Пробный урок",
-                sidebarTitle: "Направления",
-                catAll: "Все",
-                catIjaza: "📜 Иджаза",
-                catHifz: "📖 Хифз",
-                catMaqamat: "🎵 Макаматы",
-                catTafseer: "💡 Тафсир",
-                heroBadge: "Платформа Шейха Ахмеда",
-                heroTitle: "Освойте Коран вашим голосом",
-                heroDesc: "Уникальная платформа.",
-                heroBtnBook: "Забронировать",
-                maqBadge: "🎵 Макаматы",
-                maqTitle: "Изучите 8 макаматов",
-                tierFree: "Бесплатно",
-                tierFreeTitle: "Базовый",
-                tierFreeDesc: "Аудио-уроки",
-                btnTierFree: "Начать",
-                tierGroup: "Группа",
-                tierGroupTitle: "Мастер-класс",
-                tierGroupDesc: "Групповые занятия",
-                btnTierGroup: "Вступить",
-                tierPrivate: "Личная",
-                tierPrivateTitle: "Индивидуально",
-                tierPrivateDesc: "Коучинг 1-на-1",
-                btnTierPrivate: "Забронировать",
-                socTitle: "Соцсети",
-                socDesc: "Следите за нами",
-                modalTitle1: "Пробный урок (Шаг 1)",
-                lblEmail: "Email",
-                lblPhone: "Телефон",
-                lblTrialDateTime: "Дата и время пробного урока",
-                btnNextStep: "Далее",
-                modalTitle2: "Регулярное расписание (Шаг 2)",
-                step2Sub: "Выберите дни и часы для подбора преподавателя:",
-                btnWhatsappText: "Отправить в WhatsApp",
-                days: ["Суббота", "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
-            },
-            tr: {
-                navTitleText: "Şeyh Ahmed Akademi",
-                navSubText: "İcazet • Hafızlık • Makam • Tefsir",
-                btnHome: "Ana Sayfa",
-                btnMaqamat: "🎵 Makamlar",
-                btnSocial: "Sosyal Medya",
-                btnTrial: "✨ Deneme Dersi",
-                sidebarTitle: "Dallar",
-                catAll: "Tümü",
-                catIjaza: "📜 İcazet",
-                catHifz: "📖 Hafızlık",
-                catMaqamat: "🎵 Makam Eğitimi",
-                catTafseer: "💡 Tefsir",
-                heroBadge: "Şeyh Ahmed'in Özel Platformu",
-                heroTitle: "Kuran'ı Sesinizle Öğrenin",
-                heroDesc: "Benzersiz platform.",
-                heroBtnBook: "Rezervasyon",
-                maqBadge: "🎵 Makam",
-                maqTitle: "8 Makam Öğrenin",
-                tierFree: "Ücretsiz",
-                tierFreeTitle: "Temel",
-                tierFreeDesc: "Dersler",
-                btnTierFree: "Başla",
-                tierGroup: "Grup",
-                tierGroupTitle: "Atölye",
-                tierGroupDesc: "Grup dersleri",
-                btnTierGroup: "Katıl",
-                tierPrivate: "Özel",
-                tierPrivateTitle: "Birebir",
-                tierPrivateDesc: "Özel koçluk",
-                btnTierPrivate: "Rezerve Et",
-                socTitle: "Sosyal Medya",
-                socDesc: "Takip edin",
-                modalTitle1: "Deneme Dersi (Adım 1)",
-                lblEmail: "E-posta",
-                lblPhone: "Telefon",
-                lblTrialDateTime: "Deneme Dersi Tarih ve Saati",
-                btnNextStep: "İleri",
-                modalTitle2: "Düzenli Ders Saatleri (Adım 2)",
-                step2Sub: "Hoca eşleşmesi için uygun saatleri seçin:",
-                btnWhatsappText: "WhatsApp ile Gönder",
-                days: ["Cumartesi", "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
-            }
-        };
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      <div class="card">
+        <span class="badge badge-a">${m.free.badge}</span>
+        <h3 class="b" style="margin-top:.5rem;margin-bottom:.5rem">${m.free.title}</h3>
+        <p class="sm muted" style="margin-bottom:1rem">${m.free.desc}</p>
+        <ul class="checks" style="font-size:.88rem;margin-bottom:1.5rem">
+          ${m.free.points.map(p=>`<li>${p}</li>`).join('')}
+        </ul>
+        <button class="btn btn-o btn-full" onclick="navigate('library')">${m.free.cta}</button>
+      </div>
 
-        const tracksData = [
-            { id: 'ijaza', title: '📜 إجازات القراءات والسند المتصل', desc: 'تلقي دقيق برواية حفص وعاصم أو القراءات العشر مع سند متصل للنبي ﷺ.', teacher: 'الشيخ أحمد خالد' },
-            { id: 'hifz', title: '📖 تحفيظ القرآن الكريم والمتابعة', desc: 'برامج حفظ ومراجعة وتثبيت مع خطط يومية مخصصة وملاحظات دورية.', teacher: 'فريق المعلمين' },
-            { id: 'maqamat', title: '🎵 مقامات صوتية وتجميل التلاوة', desc: 'تدريب احترافي على المقامات الثمانية لتحسين النغمة والخشوع في التلاوة.', teacher: 'الشيخ أحمد خالد' },
-            { id: 'tafseer', title: '💡 تفسير القرآن وعلوم الإسلام', desc: 'فهم معاني الآيات وأسباب النزول عبر تدبر هادئ وعميق.', teacher: 'د. نور' }
-        ];
+      <div class="card feat">
+        <span class="badge badge-g">${m.group.badge}</span>
+        <h3 class="b" style="margin-top:.5rem;margin-bottom:.5rem">${m.group.title}</h3>
+        <p class="sm muted" style="margin-bottom:1rem">${m.group.desc}</p>
+        <ul class="checks" style="font-size:.88rem;margin-bottom:1.5rem">
+          ${m.group.points.map(p=>`<li>${p}</li>`).join('')}
+        </ul>
+        <button class="btn btn-g btn-full" onclick="state.checkout.planId='group';navigate('checkout')">${m.group.cta}</button>
+      </div>
 
-        function switchLanguage(lang) {
-            currentLang = lang;
-            const dict = translations[lang] || translations['en'];
-            const root = document.getElementById('htmlRoot');
+      <div class="card">
+        <span class="badge" style="border-color:var(--violet);color:var(--violet)">${m.private.badge}</span>
+        <h3 class="b" style="margin-top:.5rem;margin-bottom:.5rem">${m.private.title}</h3>
+        <p class="sm muted" style="margin-bottom:1rem">${m.private.desc}</p>
+        <ul class="checks" style="font-size:.88rem;margin-bottom:1.5rem">
+          ${m.private.points.map(p=>`<li>${p}</li>`).join('')}
+        </ul>
+        <button class="btn btn-p btn-full" onclick="state.booking.track='${m.private.title}';navigate('booking')">${m.private.cta}</button>
+      </div>
+    </div>
+  </div>`;
+}
 
-            if (lang === 'ar' || lang === 'ur') {
-                root.setAttribute('dir', 'rtl');
-                root.setAttribute('lang', lang);
-            } else {
-                root.setAttribute('dir', 'ltr');
-                root.setAttribute('lang', lang);
-            }
+function viewTeachers() {
+  let tc = t('tch');
+  return `
+  <div class="wrap sec">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${t('nav.teachers')}</span></div>
+    <h1 class="stitle">${tc.title}</h1>
+    <p class="ssub">${tc.sub}</p>
+    <div class="notice sm">${tc.demo}</div>
+    <div class="grid" style="margin-top:1.5rem">
+      ${TEACHERS.map(tch=>`
+      <div class="card">
+        <div class="row" style="margin-bottom:.7rem">
+          <div class="avatar">${tch.name[state.lang]?.charAt(0)||tch.name.ar.charAt(0)}</div>
+          <div>
+            <div class="b">${tch.name[state.lang]||tch.name.ar}</div>
+            <div class="xs muted">${tch.title[state.lang]||tch.title.ar}</div>
+          </div>
+        </div>
+        <p class="sm muted" style="margin-bottom:1rem">${tch.bio[state.lang]||tch.bio.ar}</p>
+        <div class="pills" style="margin-bottom:1rem">
+          ${tch.tracks.map(id=>`<span class="badge badge-a">${TRACK_EMOJI[id]} ${t('tracks.'+id+'.title').split(' ')[0]}</span>`).join('')}
+        </div>
+        <button class="btn btn-p btn-full sm" onclick="navigate('booking')">${tc.book}</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
 
-            for (const key in dict) {
-                if (key === 'days') continue;
-                const el = document.getElementById(key);
-                if (el) el.innerHTML = dict[key];
-            }
-            filterCategory('all');
-            renderStep2Days();
-        }
+function viewLibrary() {
+  let lb = t('lib');
+  let selectedTrack = state.params?.track || 'all';
+  let selectedType = state.params?.type || 'all';
+  let filtered = LIB.filter(item => (selectedTrack==='all'||item.track===selectedTrack) && (selectedType==='all'||item.type===selectedType));
+  return `
+  <div class="wrap sec">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${t('nav.library')}</span></div>
+    <h1 class="stitle">${lb.title}</h1>
+    <p class="ssub">${lb.sub}</p>
+    
+    <div class="notice sm" style="margin-bottom:1.5rem">${lb.banner}</div>
 
-        function renderStep2Days() {
-            const dict = translations[currentLang] || translations['en'];
-            const container = document.getElementById('daysContainer');
-            const hoursList = [
-                "06:00 AM", "08:00 AM", "10:00 AM", "12:00 PM", 
-                "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM", "10:00 PM"
-            ];
+    <div class="tabs">
+      <a href="#" onclick="navigate('library',{track:'all',type:'${selectedType}'});return false;" ${selectedTrack==='all'?'aria-current="true"':''}>${lb.track}: ${t('common.all')}</a>
+      ${TRACKS.map(id=>`<a href="#" onclick="navigate('library',{track:'${id}',type:'${selectedType}'});return false;" ${selectedTrack===id?'aria-current="true"':''}>${TRACK_EMOJI[id]} ${t('tracks.'+id+'.title').split(' ')[0]}</a>`).join('')}
+    </div>
 
-            container.innerHTML = dict.days.map((dayName, index) => `
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
-                    <label class="font-bold text-emerald-400 flex items-center gap-2 cursor-pointer text-sm">
-                        <input type="checkbox" value="${dayName}" class="day-chk" onchange="toggleDayHours('hoursBox_${index}', this)"> ${dayName}
-                    </label>
-                    <div id="hoursBox_${index}" class="hidden grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-2">
-                        ${hoursList.map(h => `
-                            <label class="bg-slate-800 p-1.5 rounded text-center border border-slate-700 cursor-pointer text-[11px]">
-                                <input type="checkbox" value="${h}" class="slot-day-${index}"> ${h}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
+    <div class="tabs">
+      <a href="#" onclick="navigate('library',{track:'${selectedTrack}',type:'all'});return false;" ${selectedType==='all'?'aria-current="true"':''}>${lb.access}: ${t('common.all')}</a>
+      ${['video','audio','pdf','quiz','article'].map(tp=>`<a href="#" onclick="navigate('library',{track:'${selectedTrack}',type:'${tp}'});return false;" ${selectedType===tp?'aria-current="true"':''}>${lb.types[tp]}</a>`).join('')}
+    </div>
 
-        function showSection(sec) {
-            document.getElementById('homeSection').classList.toggle('hidden', sec !== 'home');
-            document.getElementById('maqamatTrackSection').classList.toggle('hidden', sec !== 'maqamatTrack');
-            document.getElementById('socialSection').classList.toggle('hidden', sec !== 'social');
-        }
+    ${filtered.length===0?`<div class="card" style="text-align:center;padding:3rem"><p class="muted">${lb.empty}</p></div>`:`
+    <div class="grid" style="margin-top:1.5rem">
+      ${filtered.map(item=>`
+      <div class="card">
+        <div class="pills" style="margin-bottom:.5rem">
+          <span class="badge ${item.access==='free'?'badge-a':'badge-g'}">${item.access==='free'?t('common.free'):t('common.premium')}</span>
+          <span class="badge">${lb.types[item.type]}</span>
+          ${item.ai?`<span class="badge" style="border-color:var(--violet);color:var(--violet)">${lb.ai}</span>`:''}
+          ${!item.reviewed?`<span class="badge" style="border-color:var(--gold);color:var(--gold)" title="${lb.aiNote}">${lb.review}</span>`:''}
+        </div>
+        <div class="xs muted" style="margin-bottom:.3rem">${TRACK_EMOJI[item.track]} ${t('tracks.'+item.track+'.title')}</div>
+        <h3 class="b sm" style="margin-bottom:1rem">${item.title[state.lang]||item.title.ar}</h3>
+        ${item.url?`<a class="btn btn-p btn-full xs" href="${item.url}" target="_blank">${lb.open}</a>`:item.access==='free'?`<span class="btn btn-o btn-full xs" style="opacity:.6;cursor:default">${lb.soon}</span>`:`<button class="btn btn-g btn-full xs" onclick="navigate('pricing')">${lb.unlock}</button>`}
+      </div>`).join('')}
+    </div>`}
+  </div>`;
+}
 
-        function filterCategory(cat) {
-            showSection('home');
-            const grid = document.getElementById('tracksGrid');
-            const filtered = cat === 'all' ? tracksData : tracksData.filter(t => t.id === cat);
-            
-            grid.innerHTML = filtered.map(t => `
-                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <h4 class="text-lg font-bold text-white">${t.title}</h4>
-                        <p class="text-xs text-slate-300 leading-relaxed">${t.desc}</p>
-                        <div class="text-[11px] text-emerald-400 font-semibold"><i class="fa-solid fa-chalkboard-user ml-1"></i> المشرف: ${t.teacher}</div>
-                    </div>
-                    <button onclick="openBookingModal('${t.title}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer">
-                        حجز حصة في هذا المسار
-                    </button>
-                </div>
-            `).join('');
-        }
+function viewPricing() {
+  let p = t('pr');
+  return `
+  <div class="wrap sec">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${t('nav.pricing')}</span></div>
+    <h1 class="stitle">${p.title}</h1>
+    <p class="ssub">${p.sub}</p>
+    ${CONFIG.pricesArePlaceholder?`<div class="notice sm">${p.ph} — ${p.usd}</div>`:''}
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:1.5rem">
+      ${PLANS.map(pl=>{
+        let pt = p.plans[pl.id];
+        return `
+        <div class="card ${pl.featured?'feat':''}" style="display:flex;flex-direction:column">
+          <h3 class="b" style="font-size:1.1rem;margin-bottom:.3rem">${pt.t}</h3>
+          <p class="xs muted" style="margin-bottom:1rem">${pt.d}</p>
+          ${pl.price!==null?`<div class="price" style="margin-bottom:1rem">$${pl.price}<span class="xs muted">${p.perMonth}</span></div>`:`<div class="price" style="font-size:1.3rem;margin-bottom:1rem">${t('common.free')}</div>`}
+          <ul class="checks" style="font-size:.85rem;margin-bottom:1.5rem">
+            ${pt.f.map(x=>`<li>${x}</li>`).join('')}
+          </ul>
+          <div style="margin-top:auto">
+            ${pl.id==='trial'?`<button class="btn btn-g btn-full sm" onclick="navigate('booking')">${p.try1}</button>`:`<button class="btn btn-p btn-full sm" onclick="state.checkout.planId='${pl.id}';navigate('checkout')">${p.sub1}</button>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
 
-        function openBookingModal(trackTitle) {
-            selectedTrack = trackTitle;
-            document.getElementById('selectedTrackName').innerText = "المسار المختار: " + trackTitle;
-            document.getElementById('bookingModal').classList.remove('hidden');
-        }
+function viewCheckout() {
+  let co = t('co');
+  let plan = PLANS.find(p=>p.id===state.checkout.planId) || PLANS[2];
+  let pt = t('pr.plans.'+plan.id);
+  let pay = CONFIG.payments;
+  let hasActivePay = pay.stripeLinks[plan.id] || pay.paypalMe || pay.bank.iban || pay.instapay;
+  return `
+  <div class="wrap sec" style="max-width:44rem">
+    <div class="crumb"><a href="#" onclick="navigate('pricing');return false;">${t('nav.pricing')}</a> / <span>${co.title}</span></div>
+    <h1 class="stitle">${co.title}</h1>
+    <p class="ssub">${co.sub}</p>
 
-        function closeBookingModal() {
-            document.getElementById('bookingModal').classList.add('hidden');
-        }
+    <div class="card" style="margin-bottom:1.5rem">
+      <h3 class="b sm" style="margin-bottom:.7rem">${co.summary}</h3>
+      <div class="kv"><span>${co.plan}</span><b class="accent">${pt.t}</b></div>
+      <div class="kv"><span>${co.total}</span><span class="b" style="font-size:1.1rem">$${plan.price} ${t('pr.usd')}</span></div>
+    </div>
 
-        function goToStep2(e) {
-            e.preventDefault();
-            studentData.email = document.getElementById('bookEmail').value;
-            studentData.phone = document.getElementById('countryCode').value + " " + document.getElementById('bookPhone').value;
-            studentData.trialDateTime = document.getElementById('trialDateTime').value;
-            studentData.track = selectedTrack;
+    <form onsubmit="handleCheckout(event)" class="card" style="display:grid;gap:1rem">
+      <div>
+        <label class="l">${co.name}</label>
+        <input class="in" type="text" id="coName" required value="${state.checkout.name}" placeholder="أحمد خالد">
+      </div>
+      <div>
+        <label class="l">${co.email}</label>
+        <input class="in" type="email" id="coEmail" required value="${state.checkout.email}" placeholder="student@example.com">
+      </div>
 
-            closeBookingModal();
-            renderStep2Days();
-            document.getElementById('bookingModalStep2').classList.remove('hidden');
-        }
+      <div>
+        <label class="l">${co.method}</label>
+        <div style="display:grid;gap:.5rem;margin-top:.4rem">
+          ${pay.stripeLinks[plan.id]?`<label class="opt"><input type="radio" name="payMethod" value="stripe" checked><span>${co.m.stripe}</span></label>`:''}
+          ${pay.paypalMe?`<label class="opt"><input type="radio" name="payMethod" value="paypal" ${!pay.stripeLinks[plan.id]?'checked':''}><span>${co.m.paypal}</span></label>`:''}
+          ${pay.bank.iban?`<label class="opt"><input type="radio" name="payMethod" value="bank" ${!pay.stripeLinks[plan.id]&&!pay.paypalMe?'checked':''}><span>${co.m.bank}</span></label>`:''}
+          ${pay.instapay?`<label class="opt"><input type="radio" name="payMethod" value="instapay"><span>${co.m.instapay}</span></label>`:''}
+          <label class="opt"><input type="radio" name="payMethod" value="whatsapp" ${!hasActivePay?'checked':''}><span>${co.ask}</span></label>
+        </div>
+      </div>
 
-        function closeStep2() {
-            document.getElementById('bookingModalStep2').classList.add('hidden');
-        }
+      ${!hasActivePay?`<div class="notice sm">${co.none}</div>`:''}
 
-        function toggleDayHours(hoursId, checkbox) {
-            document.getElementById(hoursId).classList.toggle('hidden', !checkbox.checked);
-        }
+      <label class="opt" style="margin-top:.5rem">
+        <input type="checkbox" id="coTerms" required>
+        <span class="xs">${co.terms}</span>
+      </label>
 
-        function findBestMatchedTeacher(studentSchedule) {
-            let bestTeacher = teachersPool[0];
-            let maxMatches = -1;
+      <button type="submit" class="btn btn-p btn-full">${co.pay}</button>
+      <div class="xs muted" style="text-align:center">${co.secure}</div>
+    </form>
+  </div>`;
+}
 
-            teachersPool.forEach(teacher => {
-                let matches = 0;
-                studentSchedule.forEach(item => {
-                    if (teacher.availableDays.includes(item.day)) {
-                        matches++;
-                    }
-                });
-                if (matches > maxMatches) {
-                    maxMatches = matches;
-                    bestTeacher = teacher;
-                }
-            });
+function handleCheckout(e) {
+  e.preventDefault();
+  let name = document.getElementById('coName').value.trim();
+  let email = document.getElementById('coEmail').value.trim();
+  let method = document.querySelector('input[name="payMethod"]:checked')?.value || 'whatsapp';
+  let terms = document.getElementById('coTerms').checked;
+  if (!name || !email || !terms) return alert(t('co.err.terms'));
 
-            return bestTeacher.name;
-        }
+  state.checkout.name = name;
+  state.checkout.email = email;
+  state.checkout.method = method;
 
-        function sendBookingToWhatsApp() {
-            let scheduleDetails = "";
-            let studentScheduleArray = [];
-            const dict = translations[currentLang] || translations['en'];
+  let pay = CONFIG.payments;
+  let plan = PLANS.find(p=>p.id===state.checkout.planId);
+  let planName = t('pr.plans.'+(plan?.id||'pack8')).t;
 
-            dict.days.forEach((dayName, index) => {
-                const checkedHours = document.querySelectorAll(`.slot-day-${index}:checked`);
-                if (checkedHours.length > 0) {
-                    const times = Array.from(checkedHours).map(h => h.value);
-                    scheduleDetails += `\n- ${dayName}: [${times.join(', ')}]`;
-                    studentScheduleArray.push({ day: dayName, hours: times });
-                }
-            });
+  if (method==='stripe' && pay.stripeLinks[plan?.id]) {
+    window.location.href = pay.stripeLinks[plan.id];
+    return;
+  }
+  if (method==='paypal' && pay.paypalMe) {
+    window.location.href = `https://paypal.me/${pay.paypalMe}/${plan?.price}USD`;
+    return;
+  }
 
-            if (!scheduleDetails) {
-                alert(currentLang === 'ar' ? "يرجى اختيار يوم واحد على الأقل وتحديد بعض الساعات المتاحة!" : "Please select at least one day and pick available hours!");
-                return;
-            }
+  // Open WhatsApp with payment confirmation
+  let text = `السلام عليكم، أرغب في إتمام الاشتراك:%0A- الاسم: ${name}%0A- البريد: ${email}%0A- الباقة: ${planName} ($${plan?.price})%0A- طريقة الدفع: ${method}%0A- رقم الطلب: ${state.checkout.ref}`;
+  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${text}`, '_blank');
+  navigate('home');
+  alert(t('co.afterPay'));
+}
 
-            // مطابقة المعلم الأنسب
-            const matchedTeacher = findBestMatchedTeacher(studentScheduleArray);
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+function viewBooking() {
+  let b = t('bk');
+  let st = state.booking;
+  return `
+  <div class="wrap sec" style="max-width:44rem">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${b.title}</span></div>
+    <h1 class="stitle">${b.title}</h1>
+    <p class="ssub">${b.sub}</p>
 
-            const msg = `السلام عليكم شيخ أحمد، تفاصيل حجز الطالب الجديد:\n\n` +
-                        `📌 *المسار:* ${studentData.track}\n` +
-                        `✨ *موعد الحصة التجريبية:* ${studentData.trialDateTime}\n` +
-                        `📧 *البريد:* ${studentData.email}\n` +
-                        `📱 *رقم الواتساب:* ${studentData.phone}\n` +
-                        `🌐 *المنطقة الزمنية:* ${tz}\n\n` +
-                        `🤝 *المعلم الأنسب المقترح (مطابقة ذكية):* ${matchedTeacher}\n\n` +
-                        `⏰ *الأوقات الدائمة التي حددها الطالب:*` + scheduleDetails;
+    <ol class="steps">
+      <li ${st.step===1?'aria-current="step"':''}><span>1</span> ${b.s1}</li>
+      <li ${st.step===2?'aria-current="step"':''}><span>2</span> ${b.s2}</li>
+    </ol>
 
-            const encodedMsg = encodeURIComponent(msg);
-            const adminWhatsApp = "201091121907";
+    ${st.step===1?`
+    <form onsubmit="handleBookingStep1(event)" class="card" style="display:grid;gap:1rem">
+      <div class="fgrid">
+        <div>
+          <label class="l">${b.l.name}</label>
+          <input class="in" type="text" id="bkName" required value="${st.name||''}" placeholder="أحمد خالد">
+        </div>
+        <div>
+          <label class="l">${b.l.email}</label>
+          <input class="in" type="email" id="bkEmail" required value="${st.email||''}" placeholder="student@example.com">
+        </div>
+      </div>
 
-            window.open(`https://wa.me/${adminWhatsApp}?text=${encodedMsg}`, '_blank');
-            closeStep2();
-        }
+      <div>
+        <label class="l">${b.l.phone}</label>
+        <div class="phone">
+          <select class="in" id="bkCC">
+            <option value="+20" ${st.countryCode==='+20'?'selected':''}>🇪🇬 +20</option>
+            <option value="+966" ${st.countryCode==='+966'?'selected':''}>🇸🇦 +966</option>
+            <option value="+971" ${st.countryCode==='+971'?'selected':''}>🇦🇪 +971</option>
+            <option value="+44" ${st.countryCode==='+44'?'selected':''}>🇬🇧 +44</option>
+            <option value="+1" ${st.countryCode==='+1'?'selected':''}>🇺🇸 +1</option>
+            <option value="+7" ${st.countryCode==='+7'?'selected':''}>🇷🇺 +7</option>
+            <option value="+90" ${st.countryCode==='+90'?'selected':''}>🇹🇷 +90</option>
+            <option value="+33" ${st.countryCode==='+33'?'selected':''}>🇫🇷 +33</option>
+            <option value="+49" ${st.countryCode==='+49'?'selected':''}>🇩🇪 +49</option>
+          </select>
+          <input class="in" type="tel" id="bkPhone" required value="${st.phone||''}" placeholder="1091121907">
+        </div>
+      </div>
 
-        window.onload = function() {
-            switchLanguage('ar');
-        };
-    </script>
+      <div class="fgrid">
+        <div>
+          <label class="l">${b.l.track}</label>
+          <select class="in" id="bkTrack">
+            ${TRACKS.map(id=>`<option value="${t('tracks.'+id+'.title')}" ${st.track===t('tracks.'+id+'.title')?'selected':''}>${TRACK_EMOJI[id]} ${t('tracks.'+id+'.title')}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="l">${b.l.who}</label>
+          <select class="in" id="bkWho">
+            <option value="self" ${st.who==='self'?'selected':''}>${b.l.self}</option>
+            <option value="child" ${st.who==='child'?'selected':''}>${b.l.child}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fgrid">
+        <div>
+          <label class="l">${b.l.trial}</label>
+          <input class="in" type="datetime-local" id="bkTrial" required value="${st.trialDateTime||''}">
+        </div>
+        <div>
+          <label class="l">${b.l.tz}</label>
+          <input class="in" type="text" id="bkTz" value="${st.timezone}" readonly>
+        </div>
+      </div>
+
+      <div>
+        <label class="l">${b.l.notes}</label>
+        <input class="in" type="text" id="bkNotes" value="${st.notes||''}" placeholder="...">
+      </div>
+
+      <label class="opt" style="margin-top:.5rem">
+        <input type="checkbox" id="bkConsent" required>
+        <span class="xs">${b.l.consent}</span>
+      </label>
+
+      <button type="submit" class="btn btn-p btn-full">${b.next}</button>
+    </form>`:``}
+
+    ${st.step===2?`
+    <div class="card" style="display:grid;gap:1.25rem">
+      <p class="sm muted">${b.hint}</p>
+      <div class="bands">
+        ${Object.keys(b.bands).map(bk=>`
+        <button class="bandbtn" aria-pressed="false" onclick="toggleBand('${bk}')">${b.bands[bk]}</button>
+        `).join('')}
+      </div>
+
+      <div style="display:grid;gap:1rem;margin-top:.5rem">
+        ${I18N[state.lang]?.days?.map((dayName, dayIndex)=>{
+          return `
+          <fieldset>
+            <legend>${dayName}</legend>
+            <div class="bands" style="margin-top:.5rem">
+              ${['08:00 AM','10:00 AM','02:00 PM','04:00 PM','06:00 PM','08:00 PM','10:00 PM'].map(h=>{
+                let key = `${dayIndex}_${h}`;
+                let checked = st.slots[key] ? 'aria-pressed="true"' : 'aria-pressed="false"';
+                return `<button class="bandbtn" id="slot_${key}" ${checked} onclick="toggleSlot(${dayIndex},'${h}')">${h}</button>`;
+              }).join('')}
+            </div>
+          </fieldset>`;
+        }).join('')}
+      </div>
+
+      <div class="row" style="justify-content:space-between;margin-top:1rem">
+        <button class="btn btn-o" onclick="state.booking.step=1;render()">${b.back}</button>
+        <button class="btn btn-p" onclick="submitBooking()">${b.submit}</button>
+      </div>
+    </div>`:``}
+
+    ${st.step===3?`
+    <div class="card" style="text-align:center;padding:2.5rem;display:grid;gap:1rem">
+      <div style="font-size:3rem">✅</div>
+      <h2 class="b" style="font-size:1.3rem">${b.ok.title}</h2>
+      <p class="sm muted">${b.ok.descWa}</p>
+      
+      <div class="card" style="text-align:start;background:var(--bg)">
+        <div class="kv"><span>${b.l.name}</span><b>${st.name}</b></div>
+        <div class="kv"><span>${b.l.track}</span><b class="accent">${st.track}</b></div>
+        <div class="kv"><span>${b.l.trial}</span><b class="mono">${st.trialDateTime}</b></div>
+      </div>
+
+      <a class="btn btn-p btn-full" href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(buildWhatsAppText())}" target="_blank">
+        <i class="fa-brands fa-whatsapp"></i> ${b.ok.waReq}
+      </a>
+      <button class="btn btn-o btn-full" onclick="navigate('home')">${t('common.home')}</button>
+    </div>`:``}
+  </div>`;
+}
+
+function handleBookingStep1(e) {
+  e.preventDefault();
+  let st = state.booking;
+  st.name = document.getElementById('bkName').value.trim();
+  st.email = document.getElementById('bkEmail').value.trim();
+  st.countryCode = document.getElementById('bkCC').value;
+  st.phone = document.getElementById('bkPhone').value.trim();
+  st.track = document.getElementById('bkTrack').value;
+  st.who = document.getElementById('bkWho').value;
+  st.trialDateTime = document.getElementById('bkTrial').value;
+  st.notes = document.getElementById('bkNotes').value.trim();
+  let consent = document.getElementById('bkConsent').checked;
+
+  if (!st.name || !st.email || !st.phone || !st.trialDateTime || !consent) {
+    alert(t('bk.err.consent'));
+    return;
+  }
+  st.step = 2;
+  render();
+}
+
+function toggleSlot(dayIndex, hour) {
+  let key = `${dayIndex}_${hour}`;
+  let st = state.booking;
+  st.slots[key] = !st.slots[key];
+  let el = document.getElementById(`slot_${key}`);
+  if (el) el.setAttribute('aria-pressed', st.slots[key] ? 'true' : 'false');
+}
+
+function toggleBand(bandKey) {
+  // Quick toggle helper for time bands
+  let st = state.booking;
+  let hoursMap = {
+    dawn: ['02:00 AM','04:00 AM'],
+    morning: ['08:00 AM','10:00 AM'],
+    afternoon: ['02:00 PM','04:00 PM'],
+    evening: ['06:00 PM','08:00 PM'],
+    night: ['10:00 PM']
+  };
+  let hours = hoursMap[bandKey] || [];
+  for (let d=0; d<7; d++) {
+    for (let h of hours) {
+      let key = `${d}_${h}`;
+      st.slots[key] = !st.slots[key];
+      let el = document.getElementById(`slot_${key}`);
+      if (el) el.setAttribute('aria-pressed', st.slots[key] ? 'true' : 'false');
+    }
+  }
+}
+
+function submitBooking() {
+  let st = state.booking;
+  let activeSlots = Object.keys(st.slots).filter(k=>st.slots[k]);
+  if (activeSlots.length===0) {
+    alert(t('bk.err.slots'));
+    return;
+  }
+  st.step = 3;
+  render();
+}
+
+function buildWhatsAppText() {
+  let st = state.booking;
+  let daysNames = I18N[state.lang]?.days || I18N['ar'].days;
+  let activeSlots = Object.keys(st.slots).filter(k=>st.slots[k]).map(k=>{
+    let [d, h] = k.split('_');
+    return `${daysNames[d]} (${h})`;
+  });
+
+  return `السلام عليكم، أرغب في حجز حصة تجريبية في أكاديمية الشيخ أحمد:%0A` +
+         `- الاسم: ${st.name}%0A` +
+         `- البريد: ${st.email}%0A` +
+         `- الهاتف: ${st.countryCode} ${st.phone}%0A` +
+         `- المسار: ${st.track}%0A` +
+         `- موعد الحصة التجريبية: ${st.trialDateTime} (${st.timezone})%0A` +
+         `- الفترات الدائمة المفضلة: ${activeSlots.join(', ')}%0A` +
+         `- ملاحظات: ${st.notes || 'لا يوجد'}`;
+}
+
+function viewAbout() {
+  let a = t('about');
+  return `
+  <div class="wrap sec" style="max-width:44rem">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${t('nav.about')}</span></div>
+    <h1 class="stitle">${a.title}</h1>
+    <div class="card" style="display:grid;gap:1rem;margin-top:1.5rem">
+      <p class="lead" style="font-size:1.05rem;color:var(--fg)">${a.p1}</p>
+      <p class="muted">${a.p2}</p>
+    </div>
+  </div>`;
+}
+
+function viewContact() {
+  let c = t('contact');
+  return `
+  <div class="wrap sec" style="max-width:44rem">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${t('common.home')}</a> / <span>${t('nav.contact')}</span></div>
+    <h1 class="stitle">${c.title}</h1>
+    <p class="ssub">${c.sub}</p>
+    <div class="card" style="display:grid;gap:1.5rem;margin-top:1.5rem">
+      <div>
+        <div class="b sm muted" style="margin-bottom:.3rem">WhatsApp</div>
+        <a class="btn btn-p" href="https://wa.me/${CONFIG.whatsapp}" target="_blank"><i class="fa-brands fa-whatsapp"></i> ${c.wa}</a>
+      </div>
+      ${CONFIG.email?`
+      <div>
+        <div class="b sm muted" style="margin-bottom:.3rem">${c.email}</div>
+        <a class="accent b" href="mailto:${CONFIG.email}">${CONFIG.email}</a>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+/* =====================================================================
+   🚀 حلقة التسيير الرئيسية (Render Loop)
+   ===================================================================== */
+function render() {
+  let app = document.getElementById('app');
+  if (!app) return;
+
+  let content = '';
+  switch (state.route) {
+    case 'home': content = viewHome(); break;
+    case 'tracks': content = viewTracks(); break;
+    case 'track': content = viewTrack(state.params); break;
+    case 'maqamat': content = viewMaqamat(); break;
+    case 'teachers': content = viewTeachers(); break;
+    case 'library': content = viewLibrary(); break;
+    case 'pricing': content = viewPricing(); break;
+    case 'checkout': content = viewCheckout(); break;
+    case 'booking': content = viewBooking(); break;
+    case 'about': content = viewAbout(); break;
+    case 'contact': content = viewContact(); break;
+    default: content = viewHome();
+  }
+
+  app.innerHTML = renderHeader() + `<main id="main" tabindex="-1">${content}</main>` + renderFooter();
+}
+
+// تشغيل التطبيق أول مرة
+document.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.setAttribute('dir', I18N[state.lang]?.dir || 'rtl');
+  document.documentElement.setAttribute('lang', state.lang);
+  document.documentElement.setAttribute('data-theme', state.theme);
+  render();
+});
+</script>
 </body>
 </html>
