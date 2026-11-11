@@ -266,6 +266,23 @@ details summary{list-style:revert}
   input,select,textarea{font-size:16px!important}
 }
 @supports(padding:max(0px)){body{padding-bottom:env(safe-area-inset-bottom)}.hdr{padding-top:env(safe-area-inset-top)}}
+
+.slotdays{display:flex;flex-direction:column;gap:.7rem;max-height:420px;overflow:auto;padding:.2rem}
+.slotgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.35rem}
+.sccard{border-color:color-mix(in srgb,var(--gold) 55%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 7%,var(--card)),var(--card))}
+.chatwrap{display:grid;grid-template-columns:260px 1fr;min-height:520px;overflow:hidden}
+.chatlist{border-inline-end:1px solid var(--line);overflow:auto;max-height:640px}
+.chatc{display:flex;align-items:center;gap:.6rem;padding:.7rem .8rem;border-bottom:1px solid var(--line);text-decoration:none}
+.chatc.on,.chatc:hover{background:var(--bg)}
+.chatmain{display:flex;flex-direction:column;min-width:0}
+.chathead{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+.chatbox{flex:1;overflow:auto;padding:.9rem;display:flex;flex-direction:column;gap:.5rem;max-height:520px;min-height:300px}
+.cmsg{max-width:78%;align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:.5rem .75rem;font-size:.92rem}
+.cmsg.mine{align-self:flex-end;background:color-mix(in srgb,var(--accent) 18%,var(--card));border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.cmsg.deleted{opacity:.55;border-style:dashed}.cmsg.flag{border-color:var(--danger)}
+.chatin{display:flex;gap:.5rem;padding:.6rem;border-top:1px solid var(--line)}.chatin textarea{flex:1;resize:none}
+.show-sm{display:none}
+@media (max-width:760px){.chatwrap{grid-template-columns:1fr}.chatlist{border:0}.hide-sm{display:none!important}.show-sm{display:inline-flex}.cmsg{max-width:90%}}
 </style>
 </head>
 <body>
@@ -1002,6 +1019,7 @@ function renderFooter() {
         <ul>
           <li><a href="#" onclick="navigate('pricing');return false;">${tr.pr.title}</a></li>
           <li><a href="#" onclick="navigate('booking');return false;">${tr.nav.trial}</a></li>
+          <li><a href="#" onclick="navigate('policy');return false;">${esc(L('policyLink'))}</a></li>
         </ul>
       </div>
     </div>
@@ -1209,18 +1227,6 @@ function renderTeachers() {
   </section>`;
 }
 
-function renderLibrary() {
-  const tr = I18N[state.lang];
-  return `
-  <section class="sec">
-    <div class="wrap">
-      <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${tr.nav.library}</div>
-      <div class="stitle">${tr.lib.title}</div>
-      <div class="ssub">${tr.lib.sub}</div>
-      ${renderLibraryDb()}
-    </div>
-  </section>`;
-}
 
 function renderAbout() {
   const tr = I18N[state.lang];
@@ -1307,7 +1313,7 @@ function renderBooking() {
         <div class="fgrid">
           <div>
             <label class="l">${tr.bk.l.trial}</label>
-            <input class="in" type="datetime-local" value="${bk.trialDate}" onchange="state.booking.trialDate=this.value">
+            ${trialPickerHtml(bk)}
           </div>
           <div>
             <label class="l">${tr.bk.l.tz}</label>
@@ -2107,7 +2113,7 @@ function ownerBookings(P) {
         <button class="btn btn-o" onclick="ownerBooking('${x.id}',{payment_status:'waived'})">${L("markWaived")}</button>` : ""}
       ${x.status !== "cancelled" ? `
         <div><label class="l xs">${L("assignTeacher")}</label><select class="in" id="bt_${x.id}">${teacherOptions(P, x.teacher_id)}</select></div>
-        <div><label class="l xs">${L("duration")}</label><select class="in" id="bd_${x.id}"><option>30</option><option>45</option><option>60</option></select></div>
+        <div><label class="l xs">${L("duration")}</label><select class="in" id="bd_${x.id}">${durOptions(setv("trialMinutes", 25))}</select></div>
         <button class="btn btn-o" onclick="scheduleTrial('${x.id}')">${L("createTrial")}</button>
         <button class="btn btn-o" style="color:var(--danger)" onclick="ownerBooking('${x.id}',{status:'cancelled'})">${L("cancelBooking")}</button>` : ""}
     </div>
@@ -2121,7 +2127,7 @@ async function ownerBooking(id, patch) {
 async function scheduleTrial(id) {
   const b = (state.data.ownerBookings || []).find(x => x.id === id);
   const tid = document.getElementById("bt_" + id).value;
-  const dur = +document.getElementById("bd_" + id).value || 30;
+  const dur = +document.getElementById("bd_" + id).value || 25;
   if (!b || !tid) return toast(L("fillAll"), true);
   if (!b.student_id) return toast("No student account", true);
   try {
@@ -2145,8 +2151,8 @@ function ownerCalendar(P) {
       <div><label class="l">${L("student")}</label><select class="in" id="al_s" required>${students.map(s => `<option value="${s.id}">${esc(s.real_name || s.email)}</option>`).join("")}</select></div>
       <div><label class="l">${L("track")}</label><select class="in" id="al_tr">${TRACKS.map(k => `<option value="${k}">${esc(trackTitle(k))}</option>`).join("")}</select></div>
       <div><label class="l">${L("date")}</label><input class="in" type="date" id="al_d" value="${ds}" required></div>
-      <div><label class="l">${L("time")}</label><input class="in" type="time" id="al_h" value="18:00" required></div>
-      <div><label class="l">${L("duration")}</label><select class="in" id="al_m"><option>30</option><option>45</option><option selected>60</option><option>90</option></select></div>
+      <div><label class="l">${L("time")}</label><select class="in" id="al_h">${halfHourOptions("18:00")}</select></div>
+      <div><label class="l">${L("duration")}</label><select class="in" id="al_m">${durOptions(50)}</select></div>
       <div><label class="l">${L("repeat")}</label><input class="in" type="number" id="al_w" value="1" min="1" max="52"></div>
       <div><label class="l">${L("meeting")}</label><input class="in" id="al_u" type="url" placeholder="https://"></div>
       <button class="btn btn-p" ${state.busy ? "disabled" : ""}>${L("add")}</button>
@@ -2292,18 +2298,6 @@ function applySettings(s) {
     s.plans.forEach(p => PLANS.push(Object.assign({ currency: cur }, p)));
   }
   CONFIG.pricesArePlaceholder = false;
-}
-function planText(p) {
-  const tr = I18N[state.lang];
-  const base = (tr.pr && tr.pr.plans && tr.pr.plans[p.id]) || null;
-  const lg = state.lang === "ar" ? "ar" : "en";
-  const pick = (o) => o && (o[state.lang] || o[lg] || o.en || o.ar) || "";
-  const feats = pick(p.features);
-  return {
-    t: pick(p.title) || (base && base.t) || p.id,
-    d: pick(p.desc) || (base && base.d) || "",
-    f: feats ? feats.split("\n").map(x => x.trim()).filter(Boolean) : ((base && base.f) || [])
-  };
 }
 function money(v, c) {
   c = (c || "USD").toUpperCase();
@@ -3578,26 +3572,6 @@ async function sendRating(lid) {
   state.rateFor = null; state.rateStars = 0; invalidate("pastLessons", "childPast:" + lid); Object.keys(state.data).forEach(k => { if (k.startsWith("childPast:")) delete state.data[k]; });
   toast(L("saved")); render();
 }
-function pastLessonRow(l) {
-  return `<div class="card" style="background:var(--bg);margin-bottom:.6rem">
-    <div class="row" style="justify-content:space-between"><b>${esc(fmtDT(l.start_time))}${l.track ? ` · ${esc(trackTitle(l.track))}` : ""}</b>
-      <span class="badge">${esc(attName(l.attendance || "pending"))}</span></div>
-    ${l.report || l.homework || l.level ? `<div class="sm" style="margin-top:.5rem">
-      ${l.report ? `<div><b>${L("report")}:</b> <span style="white-space:pre-wrap">${esc(l.report)}</span></div>` : ""}
-      ${l.homework ? `<div><b>${L("homework")}:</b> ${esc(l.homework)}</div>` : ""}
-      ${l.level ? `<div><b>${L("level")}:</b> ${esc(l.level)}</div>` : ""}</div>` : ""}
-    <div style="margin-top:.5rem">${l.rating ? `<span class="sm">${L("rated")}: ${stars(l.rating)}</span>`
-      : state.rateFor === l.id ? `<div class="row" style="gap:.4rem;align-items:center">${stars(state.rateStars || 0, "setRateStars")}
-          <input class="in" id="rt_c" style="flex:1;min-width:160px" placeholder="${L("ratingComment")}"><button class="btn btn-p" onclick="sendRating('${l.id}')">${L("sendRating")}</button></div>`
-      : l.status !== "cancelled" ? `<button class="btn btn-o" onclick="state.rateFor='${l.id}';state.rateStars=0;render()">⭐ ${L("rateLesson")}</button>` : ""}</div>
-  </div>`;
-}
-function upcomingLessonRow(l, canRequest) {
-  return `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.4rem"><span><b>${esc(fmtDT(l.start_time))}</b>${l.track ? ` · ${esc(trackTitle(l.track))}` : ""}<br><span class="xs muted">${esc(stt(l.status))}${l.is_trial ? " · Trial" : ""}</span></span>
-    <span class="row" style="gap:.4rem">${l.meeting_url && l.status !== "cancelled" ? `<a class="btn btn-p" href="${esc(l.meeting_url)}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
-    ${canRequest && l.status === "scheduled" ? `<button class="btn btn-o" onclick="state.reqFor='${l.id}';render()">${L("requestChange")}</button>` : ""}</span></div>
-    ${state.reqFor === l.id ? lessonRequestForm(l) : ""}`;
-}
 function certListHtml(list) {
   if (!Array.isArray(list)) return L("loading");
   if (!list.length) return `<p class="muted sm">${L("none")}</p>`;
@@ -3606,55 +3580,8 @@ function certListHtml(list) {
 }
 function locText(o) { o = o || {}; return o[state.lang] || o.ar || o.en || Object.values(o)[0] || ""; }
 
-function renderStudentDash() {
-  const uid = state.auth.user.id;
-  const sec = (t, body) => `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.8rem">${t}</h3>${body}</div>`;
-  const les = useData("myLessons", () => q(sb.from("lessons").select("*").eq("student_id", uid).gte("end_time", new Date().toISOString()).order("start_time").limit(30)));
-  const past = useData("pastLessons", () => q(sb.from("lessons").select("*").eq("student_id", uid).lt("end_time", new Date().toISOString()).order("start_time", { ascending: false }).limit(20)));
-  const reqs = useData("myReqs", () => q(sb.from("lesson_requests").select("*").eq("student_id", uid).order("created_at", { ascending: false }).limit(10)));
-  const certs = useData("myCerts", () => q(sb.from("certificates").select("*").eq("student_id", uid).order("issued_at", { ascending: false })));
-  const bks = useData("myBookings", () => q(sb.from("bookings").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
-  const ords = useData("myOrders", () => q(sb.from("orders").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
-  const mats = useData("myMats", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "restricted").contains("target_student_ids", [uid]).order("created_at", { ascending: false })));
-  const lesBody = !Array.isArray(les) ? L("loading") : !les.length ? `<p class="muted sm">${L("noLessons")}</p>` : les.map(l => upcomingLessonRow(l, true)).join("");
-  const pastBody = !Array.isArray(past) ? L("loading") : !past.length ? `<p class="muted sm">${L("none")}</p>` : past.map(pastLessonRow).join("");
-  const reqBody = Array.isArray(reqs) && reqs.length ? sec(L("myRequests"), reqs.map(r => `<div class="kv"><span>${esc(reqKindName(r.kind))}${r.proposed_time ? " → " + esc(fmtDT(r.proposed_time)) : ""}</span><span class="badge">${esc((L("reqSt") || {})[r.status] || r.status)}</span></div>`).join("")) : "";
-  const bkBody = !Array.isArray(bks) ? L("loading") : !bks.length
-    ? `<p class="muted sm">${L("none")}</p><button class="btn btn-p" style="margin-top:.6rem" onclick="navigate('booking')">${I18N[state.lang].nav.trial}</button>`
-    : bks.map(b => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${esc(trackTitle(b.track))}</b><br><span class="xs muted">${esc(fmtDT(b.trial_timestamp))}</span></span>
-        <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(b.status))}</span><span class="badge ${b.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(b.payment_status))}</span>
-        ${b.payment_status === "unpaid" && b.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payKind='booking';state.payBookingId='${b.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
-  const ordBody = !Array.isArray(ords) ? L("loading") : !ords.length
-    ? `<p class="muted sm">${L("none")}</p><button class="btn btn-o" style="margin-top:.6rem" onclick="navigate('pricing')">${I18N[state.lang].nav.pricing}</button>`
-    : ords.map(o => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${esc(planText(Object.assign({ id: o.plan_id }, o.plan_snapshot || {})).t)}</b><br><span class="xs muted">${esc(money(o.amount, o.currency))} · ${esc(fmtDT(o.created_at))}</span></span>
-        <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(o.status))}</span><span class="badge ${o.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(o.payment_status))}</span>
-        ${o.payment_status === "unpaid" && o.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payKind='order';state.payOrderId='${o.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
-  const matBody = !Array.isArray(mats) ? L("loading") : !mats.length ? `<p class="muted sm">${L("none")}</p>`
-    : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mats.map(c => contentCard(c, false)).join("")}</div>`;
-  return balanceCard(uid) + sec(L("myLessons"), lesBody) + reqBody + sec(L("pastLessons"), pastBody)
-    + (Array.isArray(certs) && certs.length ? sec(L("myCerts"), certListHtml(certs)) : "")
-    + sec(L("myOrders"), ordBody) + sec(L("myBookings"), bkBody) + sec(L("myMaterials"), matBody);
-}
 
 /* ---------- ولي الأمر ---------- */
-function renderParentDash() {
-  const uid = state.auth.user.id;
-  const links = useData("children", () => q(sb.from("parent_links").select("student_id").eq("parent_id", uid)));
-  const { map } = peopleMap();
-  if (!Array.isArray(links)) return loadingBox();
-  if (!links.length) return `<div class="card muted">${L("noChildren")}</div>`;
-  return links.map(({ student_id: sid }) => {
-    const up = useData("childUp:" + sid, () => q(sb.from("lessons").select("*").eq("student_id", sid).gte("end_time", new Date().toISOString()).order("start_time").limit(10)));
-    const past = useData("childPast:" + sid, () => q(sb.from("lessons").select("*").eq("student_id", sid).lt("end_time", new Date().toISOString()).order("start_time", { ascending: false }).limit(10)));
-    const certs = useData("childCerts:" + sid, () => q(sb.from("certificates").select("*").eq("student_id", sid)));
-    return `<div class="card" style="margin-bottom:1.2rem"><h2 style="font-size:1.3rem;margin-bottom:.8rem">👤 ${esc(personName(sid, map))}</h2>
-      ${balanceCard(sid)}
-      <h3 style="margin:1rem 0 .5rem">${L("myLessons")}</h3>${!Array.isArray(up) ? L("loading") : up.map(l => upcomingLessonRow(l, true)).join("") || `<p class="muted sm">${L("noLessons")}</p>`}
-      <h3 style="margin:1rem 0 .5rem">${L("pastLessons")}</h3>${!Array.isArray(past) ? L("loading") : past.map(pastLessonRow).join("") || `<p class="muted sm">${L("none")}</p>`}
-      ${Array.isArray(certs) && certs.length ? `<h3 style="margin:1rem 0 .5rem">${L("myCerts")}</h3>${certListHtml(certs)}` : ""}
-    </div>`;
-  }).join("");
-}
 
 /* ---------- تفاصيل الحصة (تقرير المعلم + الحضور) ---------- */
 function renderLessonDetails(l, map) {
@@ -3735,54 +3662,8 @@ function teacherDues() {
     </div>
     <p class="xs muted" style="margin-top:.8rem">${!(state.settings && state.settings.payAbsent === false) ? L("payAbsentNote") : ""}</p></div>`;
 }
-function renderTeacherDash() {
-  const uid = state.auth.user.id;
-  const av = availFor(uid);
-  if (av === null) return loadingBox();
-  if (!Object.keys(av).length && !state.dash.tab) {
-    return `<div class="card" style="margin-bottom:1rem;text-align:center"><h2>${L("tOnbTitle")}</h2></div>${renderScheduleEditor()}`;
-  }
-  const tabs = needAttendanceList() + dashTabs(["calendar", "schedule", "mystudents", "dues", "content"]);
-  const t = state.dash.tab;
-  let body = "";
-  if (t === "calendar") body = renderCalendar();
-  else if (t === "schedule") body = meetingLinkCard() + renderScheduleEditor();
-  else if (t === "dues") body = teacherDues();
-  else if (t === "mystudents") {
-    const { list, loading } = peopleMap();
-    const st = list.filter(p => p.role === "student");
-    body = `<div class="card">${loading ? L("loading") : st.length ? st.map(s => `<div class="kv"><b>${esc(s.real_name || s.display_name)}</b><span class="xs muted">${esc(s.timezone || "")}</span></div>`).join("") : `<p class="muted sm">${L("none")}</p>`}</div>`;
-  } else if (t === "content") {
-    const { list } = peopleMap();
-    const mine = useData("contentsMine", () => q(sb.from("contents").select("*").eq("created_by", uid).order("created_at", { ascending: false })));
-    body = `<div class="grid g2">
-      ${renderContentForm({ students: list.filter(p => p.role === "student") })}
-      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mine === null ? loadingBox() : mine.__error ? errBox(mine) : mine.map(c => contentCard(c, true)).join("") || `<p class="muted sm">${L("none")}</p>`}</div></div>`;
-  }
-  return tabs + body;
-}
 
 /* ---------- المالك ---------- */
-function renderOwnerDash() {
-  const tabs = dashTabs(["overview", "calendar", "bookings", "requests", "orders", "users", "teachers", "students", "reports", "certs", "content", "settings", "schedule"]);
-  const t = state.dash.tab;
-  const P = peopleMap();
-  let body = "";
-  if (t === "overview") body = needAttendanceList() + ownerOverview(P) + todayLessonsCard() + visitsCard();
-  else if (t === "bookings") body = ownerBookings(P);
-  else if (t === "requests") body = ownerRequests(P);
-  else if (t === "calendar") body = ownerCalendar(P);
-  else if (t === "teachers") body = ownerTeachers(P);
-  else if (t === "students") body = ownerStudents(P);
-  else if (t === "content") body = ownerContent(P);
-  else if (t === "orders") body = ownerOrders(P);
-  else if (t === "users") body = ownerUsers(P);
-  else if (t === "reports") body = ownerReports(P);
-  else if (t === "certs") body = ownerCerts(P);
-  else if (t === "settings") body = ownerSettings() + emailSettingsCard() + `<button class="btn btn-o btn-full" style="margin-top:1rem" onclick="syncUiTranslations(true)">🌐 ${L("syncI18n")}</button>`;
-  else if (t === "schedule") body = meetingLinkCard() + renderScheduleEditor();
-  return tabs + body;
-}
 function dashTabs(tabs) {
   if (!state.dash.tab || !tabs.includes(state.dash.tab)) state.dash.tab = tabs[0];
   const label = (t) => (L("tabs") || {})[t] || (L("tabs2") || {})[t] || (L("tabs3") || {})[t] || L4(t);
@@ -4053,8 +3934,649 @@ function trackView() {
   sb.from("page_views").insert({ path: p, lang: state.lang, ref: (document.referrer || "").slice(0, 250), device }).then(() => {});
 }
 
+
+/* =====================================================================
+    🗓️ حجز من جدول المعلم + سياسة الإلغاء + 💬 الرسائل + 🎙️ مشاركات الطلاب
+   ===================================================================== */
+Object.assign(UI.ar, {
+  tabs5: { lessons: "حصصي", messages: "الرسائل", share: "شارك محتوى", billing: "الاشتراكات والدفع", mycerts: "شهاداتي وموادي", chats: "المحادثات" },
+  min: "دقيقة", minShort: "د", lesson25: "حصة 25 دقيقة", lesson50: "حصة 50 دقيقة", unitsNote: "الرصيد بوحدات 25 دقيقة: حصة 25 د = 1، حصة 50 د = 2",
+  bookLesson: "احجز حصة من جدول معلمك", chooseTeacher: "المعلم", lessonLength: "مدة الحصة", noSlots: "لا توجد مواعيد متاحة حاليًا في جدول المعلم.",
+  confirmBook: "تأكيد حجز الحصة يوم", noCredits: "رصيدك لا يكفي لهذه الحصة. جدّد باقتك أولًا.", slotGone: "هذا الموعد لم يعد متاحًا، اختر موعدًا آخر.",
+  booked: "تم حجز الحصة ✅", reschedule: "تغيير الموعد", cancelFree: "إلغاء (يرجع لرصيدك)", cancelLate: "إلغاء (سيُخصم من رصيدك)",
+  confirmCancelFree: "إلغاء الحصة؟ ستعود الحصة لرصيدك.", confirmCancelLate: "باقي أقل من {h} ساعة على الحصة. لو ألغيت ستُحتسب الحصة وتُخصم من رصيدك. متأكد؟",
+  lateNote: "باقي أقل من {h} ساعة — لتغيير الموعد تواصل مع معلمك.", msgTeacher: "راسل معلمك", chooseNewTime: "اختر الموعد الجديد",
+  rescheduled: "تم تغيير الموعد ✅", cancelledFree: "تم الإلغاء وعادت الحصة لرصيدك ✅", cancelledLate: "تم الإلغاء وتم خصم الحصة من رصيدك",
+  confirmDone: "تأكيد إتمام الحصة ✓", reportProblem: "الإبلاغ عن مشكلة", problemPrompt: "اكتب المشكلة باختصار:", reported: "تم إرسال البلاغ للإدارة ✅",
+  autoConfirmNote: "لو لم تؤكد أو تُبلغ عن مشكلة خلال {h} ساعة تُعتبر الحصة تمت تلقائيًا.",
+  addLessonFor: "إضافة حصة لطالب", newDate: "تاريخ جديد", newTime: "وقت جديد", saveTime: "حفظ الموعد الجديد",
+  chatRule: "للحفاظ على جودة الخدمة، يُمنع مشاركة أرقام الهاتف أو أي وسيلة تواصل خارج المنصة.", typeMsg: "اكتب رسالتك...", send: "إرسال",
+  noChats: "لا توجد محادثات بعد.", academy: "إدارة الأكاديمية", deletedBySender: "حذفها المرسل", original: "النص الأصلي", flaggedMsg: "⚠️ محاولة مشاركة وسيلة تواصل",
+  newChat: "محادثة جديدة مع طالب", allChats: "كل المحادثات", deleteMsg: "حذف",
+  shareTitle: "شارك قراءتك أو شرحك في محتوى الأكاديمية المجاني", shareHint: "تظهر مشاركتك لزوار الموقع باسمك مع علامة «مشاركة طالب».",
+  category: "نوع المشاركة", maqam: "المقام", shareFile: "ملف صوت/فيديو", shareUrl: "أو رابط يوتيوب", shareDesc: "وصف قصير (اختياري)", publishShare: "نشر المشاركة",
+  sharePending: "تم الإرسال ✅ ستظهر بعد مراجعة الإدارة.", sharePublished: "تم النشر ✅", myShares: "مشاركاتي",
+  cats: { recitation_tajweed: "تلاوة بالتجويد", recitation_maqam: "تلاوة بمقام", tajweed_explain: "شرح جزء في التجويد", tafseer_explain: "شرح جزء في التفسير", arabic_conversation: "محادثة باللغة العربية", nasheed: "إنشاد", other: "أخرى" },
+  maqams: { bayati: "البياتي", saba: "الصبا", hijaz: "الحجاز", nahawand: "النهاوند", rast: "الرست", sikah: "السيكاه", jiharkah: "الجهاركاه", kurd: "الكرد", ajam: "العجم" },
+  maqamOf: "مقام", studentPost: "🎓 مشاركة طالب", fromStudents: "🎙️ من طلاب الأكاديمية", byStudent: "بصوت/بقلم", allCats: "الكل",
+  moderation: "مشاركات الطلاب (مراجعة)", setShowcaseAuto: "نشر مشاركات الطلاب تلقائيًا بدون مراجعة", setNotice: "أقل مدة قبل الحصة للحجز (ساعات)",
+  setAutoConfirm: "تأكيد الحصة تلقائيًا بعد (ساعات)", setTrialMin: "مدة الحصة التجريبية", setPlanMin: "مدة الحصة في الباقة",
+  issues: "بلاغات الحصص", resolve: "تم الحل", policyTitle: "سياسة الحصص والإلغاء", policyLink: "سياسة الحصص والإلغاء",
+  policy: [
+    "الحصص تبدأ دائمًا على رأس الساعة أو نصف الساعة (مثل 6:00 أو 6:30)، ومدتها 25 أو 50 دقيقة.",
+    "تحجز حصصك بنفسك من المواعيد المتاحة في جدول معلمك، قبل الحصة بـ {n} ساعات على الأقل.",
+    "يمكنك تغيير موعد الحصة أو إلغاؤها مجانًا حتى {h} ساعة قبل بدايتها، وتعود الحصة لرصيدك.",
+    "الإلغاء قبل أقل من {h} ساعة يُحتسب كحصة وتُخصم من رصيدك. وبعد هذا الوقت يمكن لمعلمك فقط تغيير الموعد بالاتفاق معك.",
+    "غياب الطالب بدون إلغاء يُحتسب كحصة. وإذا تغيب المعلم أو اعتذر لا تُخصم الحصة.",
+    "بعد كل حصة يمكنك تأكيدها أو الإبلاغ عن مشكلة خلال {a} ساعة، وبعدها تُؤكد تلقائيًا.",
+    "التواصل يكون داخل المنصة فقط، ويُمنع مشاركة أرقام الهاتف أو وسائل التواصل الخارجية.",
+    "الرصيد يُحسب بوحدات 25 دقيقة: حصة 25 دقيقة = وحدة، وحصة 50 دقيقة = وحدتان."
+  ]
+});
+Object.assign(UI.en, {
+  tabs5: { lessons: "My lessons", messages: "Messages", share: "Share content", billing: "Subscriptions & payments", mycerts: "Certificates & materials", chats: "Conversations" },
+  min: "min", minShort: "min", lesson25: "25-minute lesson", lesson50: "50-minute lesson", unitsNote: "Balance is in 25-minute units: 25 min = 1, 50 min = 2",
+  bookLesson: "Book a lesson from your teacher's schedule", chooseTeacher: "Teacher", lessonLength: "Lesson length", noSlots: "No available times in the teacher's schedule right now.",
+  confirmBook: "Confirm booking on", noCredits: "Your balance isn't enough for this lesson. Please renew your package first.", slotGone: "This time is no longer available, please choose another.",
+  booked: "Lesson booked ✅", reschedule: "Reschedule", cancelFree: "Cancel (credit returned)", cancelLate: "Cancel (credit will be used)",
+  confirmCancelFree: "Cancel this lesson? The credit returns to your balance.", confirmCancelLate: "Less than {h} hours left. Cancelling now counts as a lesson and is deducted from your balance. Are you sure?",
+  lateNote: "Less than {h} hours left — to change the time, message your teacher.", msgTeacher: "Message your teacher", chooseNewTime: "Choose the new time",
+  rescheduled: "Lesson rescheduled ✅", cancelledFree: "Cancelled — the credit is back in your balance ✅", cancelledLate: "Cancelled — the lesson was deducted from your balance",
+  confirmDone: "Confirm lesson completed ✓", reportProblem: "Report a problem", problemPrompt: "Briefly describe the problem:", reported: "Your report was sent to the academy ✅",
+  autoConfirmNote: "If you don't confirm or report a problem within {h} hours, the lesson is confirmed automatically.",
+  addLessonFor: "Add a lesson for a student", newDate: "New date", newTime: "New time", saveTime: "Save new time",
+  chatRule: "To keep our service safe, sharing phone numbers or any outside contact method is not allowed.", typeMsg: "Type your message...", send: "Send",
+  noChats: "No conversations yet.", academy: "Academy team", deletedBySender: "Deleted by sender", original: "Original text", flaggedMsg: "⚠️ Contact-sharing attempt",
+  newChat: "New conversation with a student", allChats: "All conversations", deleteMsg: "Delete",
+  shareTitle: "Share your recitation or explanation in the academy's free content", shareHint: "Your post appears to visitors with your name and a “Student post” badge.",
+  category: "Post type", maqam: "Maqam", shareFile: "Audio/video file", shareUrl: "or a YouTube link", shareDesc: "Short description (optional)", publishShare: "Publish",
+  sharePending: "Sent ✅ It will appear after the academy reviews it.", sharePublished: "Published ✅", myShares: "My posts",
+  cats: { recitation_tajweed: "Recitation with tajweed", recitation_maqam: "Recitation in a maqam", tajweed_explain: "Tajweed explanation", tafseer_explain: "Tafseer explanation", arabic_conversation: "Arabic conversation", nasheed: "Nasheed", other: "Other" },
+  maqams: { bayati: "Bayati", saba: "Saba", hijaz: "Hijaz", nahawand: "Nahawand", rast: "Rast", sikah: "Sikah", jiharkah: "Jiharkah", kurd: "Kurd", ajam: "Ajam" },
+  maqamOf: "Maqam", studentPost: "🎓 Student post", fromStudents: "🎙️ From our students", byStudent: "By", allCats: "All",
+  moderation: "Student posts (review)", setShowcaseAuto: "Publish student posts automatically without review", setNotice: "Minimum hours before a lesson to book",
+  setAutoConfirm: "Auto-confirm lessons after (hours)", setTrialMin: "Trial lesson length", setPlanMin: "Lesson length in package",
+  issues: "Lesson reports", resolve: "Resolved", policyTitle: "Lesson & cancellation policy", policyLink: "Lesson & cancellation policy",
+  policy: [
+    "Lessons always start on the hour or half hour (e.g. 6:00 or 6:30) and last 25 or 50 minutes.",
+    "You book your lessons yourself from your teacher's available times, at least {n} hours in advance.",
+    "You can reschedule or cancel for free up to {h} hours before the lesson starts, and the credit returns to your balance.",
+    "Cancelling less than {h} hours before counts as a lesson and is deducted from your balance. After that point only your teacher can change the time, in agreement with you.",
+    "A student no-show counts as a lesson. If the teacher is absent or cancels, the lesson is not deducted.",
+    "After each lesson you can confirm it or report a problem within {a} hours; after that it is confirmed automatically.",
+    "All communication happens inside the platform; sharing phone numbers or outside contact methods is not allowed.",
+    "Your balance is counted in 25-minute units: a 25-minute lesson = 1 unit, a 50-minute lesson = 2 units."
+  ]
+});
+Object.assign(UI.ar.nkT, { booking_received: "استلمنا طلب حصتك التجريبية ✅ ({at}) — سنؤكدها لك قريبًا", booking_confirmed: "تم تأكيد حصتك التجريبية ✅ ({at})",
+  new_message: "رسالة جديدة من {name}", contact_flag: "⚠️ {name} حاول مشاركة وسيلة تواصل خارجية ({reasons})", lesson_problem: "{name} أبلغ عن مشكلة في حصة {at}",
+  showcase_pending: "مشاركة جديدة من الطالب {name} بانتظار المراجعة", showcase_new: "الطالب {name} نشر مشاركة جديدة", showcase_published: "تم نشر مشاركتك في محتوى الأكاديمية ✅", showcase_rejected: "لم يتم قبول مشاركتك" });
+Object.assign(UI.en.nkT, { booking_received: "We received your trial lesson request ✅ ({at}) — we'll confirm it soon", booking_confirmed: "Your trial lesson is confirmed ✅ ({at})",
+  new_message: "New message from {name}", contact_flag: "⚠️ {name} tried to share an outside contact ({reasons})", lesson_problem: "{name} reported a problem with the lesson on {at}",
+  showcase_pending: "New post from student {name} awaiting review", showcase_new: "Student {name} published a new post", showcase_published: "Your post was published in the academy's content ✅", showcase_rejected: "Your post was not accepted" });
+function L5(k) { return (L("tabs5") || {})[k] || k; }
+function setv(k, d) { const s = state.settings || {}; return s[k] == null ? d : s[k]; }
+function catName(c) { return ((L("cats") || {})[c]) || c; }
+function maqamName(m) { return ((L("maqams") || {})[m]) || m; }
+function halfHourOptions(sel) {
+  let o = ""; for (let h = 0; h < 24; h++) for (const m of [0, 30]) { const v = `${String(h).padStart(2, "0")}:${m ? "30" : "00"}`; o += `<option value="${v}" ${v === sel ? "selected" : ""}>${v}</option>`; }
+  return o;
+}
+function durOptions(sel) { return [25, 50].map(m => `<option value="${m}" ${+sel === m ? "selected" : ""}>${m} ${L("min")}</option>`).join(""); }
+function localISODate(d) { d = d || new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+function errMsg(e) {
+  const m = (e && e.message) || String(e);
+  if (m.includes("no_credits")) return L("noCredits");
+  if (m.includes("slot_unavailable") || m.includes("overlap")) return L("slotGone");
+  if (m.includes("too_late")) return L("lateNote").replace("{h}", setv("cancelHours", 12));
+  if (m.includes("lessons_half_hour_check")) return "⏱ 00 / 30";
+  return m;
+}
+
+/* ---------- الباقات: مدة كل باقة ---------- */
+function planText(p) {
+  const tr = I18N[state.lang];
+  const base = (tr.pr && tr.pr.plans && (tr.pr.plans[p.base || p.id] || tr.pr.plans[p.id])) || null;
+  const lg = state.lang === "ar" ? "ar" : "en";
+  const pick = (o) => o && (o[state.lang] || o[lg] || o.en || o.ar) || "";
+  const feats = pick(p.features);
+  let t = pick(p.title) || (base && base.t) || p.id;
+  if (p.minutes && !p.isTrial) t += ` · ${p.minutes} ${L("minShort")}`;
+  return { t, d: pick(p.desc) || (base && base.d) || "", f: feats ? feats.split("\n").map(x => x.trim()).filter(Boolean) : ((base && base.f) || []) };
+}
+
+/* ---------- حجز التجريبية: تاريخ + نصف ساعة ---------- */
+function trialPickerHtml(bk) {
+  const d = (bk.trialDate || "").slice(0, 10), h = (bk.trialDate || "").slice(11, 16) || "18:00";
+  return `<div class="row" style="gap:.4rem"><input class="in" style="flex:1" type="date" min="${localISODate()}" value="${d}" onchange="setTrialDT(this.value,null)">
+    <select class="in" style="width:7rem" onchange="setTrialDT(null,this.value)">${halfHourOptions(h)}</select></div>`;
+}
+function setTrialDT(d, h) {
+  const cur = state.booking.trialDate || "";
+  const dd = d || cur.slice(0, 10) || localISODate(), hh = h || cur.slice(11, 16) || "18:00";
+  state.booking.trialDate = `${dd}T${hh}`;
+}
+
+/* ---------- اختيار مواعيد من جدول المعلم ---------- */
+function slotsKey(tid, mins, excl) { return `slots:${tid}:${mins}:${excl || ""}`; }
+function slotPicker(tid, mins, excl, onPick) {
+  if (!tid) return "";
+  const sl = useData(slotsKey(tid, mins, excl), async () => { const { data, error } = await sb.rpc("teacher_free_slots", { p_teacher: tid, p_minutes: +mins, p_days: 14, p_exclude: excl || null }); if (error) throw error; return data || []; });
+  if (sl === null) return loadingBox();
+  if (sl.__error) return errBox(sl);
+  if (!sl.length) return `<p class="muted sm">${L("noSlots")}</p>`;
+  const byDay = {}; sl.forEach(s => { const d = new Date(s); const k = localISODate(d); (byDay[k] = byDay[k] || []).push(s); });
+  return `<div class="slotdays">${Object.keys(byDay).map(k => `<div class="slotday"><div class="xs b" style="margin-bottom:.3rem">${esc(fmtDT(byDay[k][0], { weekday: "long", day: "numeric", month: "short" }))}</div>
+    <div class="slotgrid">${byDay[k].map(s => `<button class="hourbtn" onclick="${onPick}('${s}')">${esc(fmtTime(s))}</button>`).join("")}</div></div>`).join("")}</div>`;
+}
+function myTeachers(sid) { return useData("myTeachers:" + (sid || "me"), async () => { const { data, error } = await sb.rpc("my_teachers", { p_student: sid || null }); if (error) throw error; return data || []; }); }
+function availCredits(sid) { return useData("avail:" + sid, async () => { const { data } = await sb.rpc("student_available_credits", { p_student: sid }); return [data || 0]; }); }
+function bookingCard(sid) {
+  const ts = myTeachers(sid === state.auth.user.id ? null : sid);
+  if (!Array.isArray(ts)) return loadingBox();
+  if (!ts.length) return "";
+  const bk = state.bookUI = state.bookUI || {};
+  if (!bk.tid || !ts.find(t => t.id === bk.tid)) bk.tid = ts[0].id;
+  bk.mins = bk.mins || 50; bk.sid = sid;
+  const ac = availCredits(sid);
+  return `<div class="card" style="margin-bottom:1.2rem">
+    <h3 style="margin-bottom:.6rem">📅 ${L("bookLesson")}</h3>
+    <div class="row" style="gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
+      ${ts.length > 1 ? `<select class="in" style="width:auto" onchange="state.bookUI.tid=this.value;render()">${ts.map(t => `<option value="${t.id}" ${t.id === bk.tid ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>` : `<span class="badge badge-a">${L("chooseTeacher")}: ${esc(ts[0].name)}</span>`}
+      <div class="tabs" style="margin:0">${[25, 50].map(m => `<a href="#" aria-current="${bk.mins === m}" onclick="state.bookUI.mins=${m};render();return false;">${m} ${L("min")}</a>`).join("")}</div>
+      <span class="xs muted">${Array.isArray(ac) ? `${L("balance")}: ${ac[0]}` : ""} · ${L("unitsNote")}</span>
+    </div>
+    ${slotPicker(bk.tid, bk.mins, null, "pickBookSlot")}
+    <p class="xs muted" style="margin-top:.6rem"><a href="#" class="accent" onclick="navigate('policy');return false;">${L("policyLink")}</a></p>
+  </div>`;
+}
+async function pickBookSlot(s) {
+  const bk = state.bookUI;
+  if (!confirm(`${L("confirmBook")} ${fmtDT(s)} (${bk.mins} ${L("min")})?`)) return;
+  const { error } = await sb.rpc("student_book_lesson", { p_teacher: bk.tid, p_start: s, p_minutes: bk.mins, p_student: bk.sid === state.auth.user.id ? null : bk.sid });
+  if (error) { toast(errMsg(error), true); invalidate(slotsKey(bk.tid, bk.mins, null)); render(); return; }
+  Object.keys(state.data).forEach(k => { if (k.startsWith("slots:") || k.startsWith("avail:") || k.startsWith("childUp:")) delete state.data[k]; });
+  invalidate("myLessons"); toast(L("booked")); render();
+}
+
+/* ---------- صف الحصة القادمة: تغيير/إلغاء حسب السياسة ---------- */
+function upcomingLessonRow(l, canAct) {
+  const hrs = setv("cancelHours", 12);
+  const early = new Date(l.start_time) - Date.now() >= hrs * 3600e3;
+  const mins = Math.round((new Date(l.end_time) - new Date(l.start_time)) / 60000);
+  const acts = canAct && l.status === "scheduled";
+  return `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.4rem"><span><b>${esc(fmtDT(l.start_time))}</b> <span class="badge">${mins} ${L("minShort")}</span>${l.track ? ` · ${esc(trackTitle(l.track))}` : ""}<br>
+      <span class="xs muted">${esc(stt(l.status))}${l.is_trial ? " · Trial" : ""}${acts && !early ? " · " + esc(L("lateNote").replace("{h}", hrs)) : ""}</span></span>
+    <span class="row" style="gap:.35rem">${l.meeting_url && l.status !== "cancelled" ? `<a class="btn btn-p" href="${esc(l.meeting_url)}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
+    ${acts && early && !l.is_trial ? `<button class="btn btn-o" onclick="state.reschedFor=state.reschedFor==='${l.id}'?null:'${l.id}';render()">${L("reschedule")}</button>` : ""}
+    ${acts && !l.is_trial ? `<button class="btn btn-o" style="color:${early ? "inherit" : "var(--danger)"}" onclick="cancelMyLesson('${l.id}',${early})">${early ? L("cancelFree") : L("cancelLate")}</button>` : ""}
+    ${acts && !early ? `<button class="btn btn-o" onclick="openChatWith('${l.teacher_id}')">💬 ${L("msgTeacher")}</button>` : ""}</span></div>
+    ${state.reschedFor === l.id ? `<div class="card" style="background:var(--bg);margin:.4rem 0"><div class="sm b" style="margin-bottom:.5rem">${L("chooseNewTime")}</div>${slotPicker(l.teacher_id, mins, l.id, `pickResched_${l.id.replace(/-/g, "")}`)}</div>` : ""}`;
+}
+// مولد ديناميكي لدوال اختيار موعد التغيير
+function ensureReschedFn(id) {
+  const fn = "pickResched_" + id.replace(/-/g, "");
+  if (!window[fn]) window[fn] = async (s) => {
+    if (!confirm(`${L("reschedule")} → ${fmtDT(s)}?`)) return;
+    const { error } = await sb.rpc("student_reschedule", { p_lesson: id, p_start: s });
+    if (error) { toast(errMsg(error), true); return; }
+    state.reschedFor = null; Object.keys(state.data).forEach(k => { if (k.startsWith("slots:") || k.startsWith("childUp:")) delete state.data[k]; });
+    invalidate("myLessons"); toast(L("rescheduled")); render();
+  };
+}
+async function cancelMyLesson(id, early) {
+  const hrs = setv("cancelHours", 12);
+  if (!confirm(early ? L("confirmCancelFree") : L("confirmCancelLate").replace("{h}", hrs))) return;
+  const { data, error } = await sb.rpc("student_cancel_lesson", { p_lesson: id, p_reason: null });
+  if (error) return toast(errMsg(error), true);
+  Object.keys(state.data).forEach(k => { if (k.startsWith("slots:") || k.startsWith("avail:") || k.startsWith("bal:") || k.startsWith("childUp:")) delete state.data[k]; });
+  invalidate("myLessons"); toast(data === "late" ? L("cancelledLate") : L("cancelledFree")); render();
+}
+
+/* ---------- الحصص السابقة: تأكيد/بلاغ/تقييم ---------- */
+function pastLessonRow(l) {
+  const can = (l.student_id === state.auth.user.id || role() === "parent");
+  const pendingConfirm = can && l.attendance === "pending" && l.status === "scheduled";
+  return `<div class="card" style="background:var(--bg);margin-bottom:.6rem">
+    <div class="row" style="justify-content:space-between"><b>${esc(fmtDT(l.start_time))}${l.track ? ` · ${esc(trackTitle(l.track))}` : ""}</b>
+      <span class="badge">${esc(attName(l.attendance || "pending"))}</span></div>
+    ${l.report || l.homework || l.level ? `<div class="sm" style="margin-top:.5rem">
+      ${l.report ? `<div><b>${L("report")}:</b> <span style="white-space:pre-wrap">${esc(l.report)}</span></div>` : ""}
+      ${l.homework ? `<div><b>${L("homework")}:</b> ${esc(l.homework)}</div>` : ""}
+      ${l.level ? `<div><b>${L("level")}:</b> ${esc(l.level)}</div>` : ""}</div>` : ""}
+    ${pendingConfirm ? `<div class="row" style="gap:.4rem;margin-top:.5rem"><button class="btn btn-p" onclick="confirmLesson('${l.id}')">${L("confirmDone")}</button>
+      <button class="btn btn-o" onclick="reportProblem('${l.id}')">${L("reportProblem")}</button></div>
+      <p class="xs muted" style="margin-top:.3rem">${esc(L("autoConfirmNote").replace("{h}", setv("autoConfirmHours", 48)))}</p>` : ""}
+    <div style="margin-top:.5rem">${l.rating ? `<span class="sm">${L("rated")}: ${stars(l.rating)}</span>`
+      : state.rateFor === l.id ? `<div class="row" style="gap:.4rem;align-items:center">${stars(state.rateStars || 0, "setRateStars")}
+          <input class="in" id="rt_c" style="flex:1;min-width:160px" placeholder="${L("ratingComment")}"><button class="btn btn-p" onclick="sendRating('${l.id}')">${L("sendRating")}</button></div>`
+      : can && l.status !== "cancelled" ? `<button class="btn btn-o" onclick="state.rateFor='${l.id}';state.rateStars=0;render()">⭐ ${L("rateLesson")}</button>` : ""}</div>
+  </div>`;
+}
+async function confirmLesson(id) {
+  const { error } = await sb.rpc("confirm_lesson", { p_lesson: id });
+  if (error) return toast(errMsg(error), true);
+  Object.keys(state.data).forEach(k => { if (k.startsWith("childPast:") || k.startsWith("bal:") || k.startsWith("avail:")) delete state.data[k]; });
+  invalidate("pastLessons"); toast(L("saved")); render();
+}
+async function reportProblem(id) {
+  const t = prompt(L("problemPrompt")); if (!t) return;
+  const { error } = await sb.rpc("report_lesson_problem", { p_lesson: id, p_body: t });
+  if (error) return toast(errMsg(error), true);
+  toast(L("reported"));
+}
+
+/* ---------- 💬 الرسائل ---------- */
+state.chat = { with: null, list: [], loadingFor: null, ch: null };
+function openChatWith(uid) { state.chat.with = uid; state.dash.tab = role() === "owner" ? "chats" : "messages"; navigate("dashboard"); }
+async function loadThread() {
+  const other = state.chat.with; if (!other) return;
+  const me = state.auth.user.id; const r = role();
+  let qq = sb.from("messages").select("*").order("created_at").limit(500);
+  if (r === "student") qq = qq.eq("student_id", me).eq("teacher_id", other);
+  else qq = qq.eq("teacher_id", me).eq("student_id", other);
+  const { data } = await qq;
+  state.chat.list = data || []; state.chat.loadingFor = other;
+  sb.rpc("mark_chat_read", { p_other: other }).then(() => { invalidate("chatContacts"); });
+  render();
+  const box = document.getElementById("chatBox"); if (box) box.scrollTop = box.scrollHeight;
+}
+function subscribeChat() {
+  if (state.chat.ch || !sb || !state.auth.user) return;
+  state.chat.ch = sb.channel("msgs-" + state.auth.user.id).on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (p) => {
+    const m = p.new; const me = state.auth.user.id;
+    invalidate("chatContacts", "allPairs");
+    if (state.chat.with && (m.sender_id === state.chat.with || m.sender_id === me) && (m.student_id === me || m.teacher_id === me || role() === "owner")) loadThread();
+    else render();
+  }).subscribe();
+}
+function renderChat() {
+  subscribeChat();
+  const cs = useData("chatContacts", async () => { const { data, error } = await sb.rpc("my_chat_contacts"); if (error) throw error; return (data || []).sort((a, b) => (b.last_at || "").localeCompare(a.last_at || "")); });
+  if (!Array.isArray(cs)) return cs === null ? loadingBox() : errBox(cs);
+  if (state.chat.with && state.chat.loadingFor !== state.chat.with) { state.chat.loadingFor = state.chat.with; loadThread(); }
+  const me = state.auth.user.id;
+  const cur = cs.find(c => c.id === state.chat.with);
+  const nm = (c) => c.role === "owner" && role() === "student" ? L("academy") : c.name;
+  return `<div class="chatwrap card" style="padding:0">
+    <div class="chatlist ${state.chat.with ? "hide-sm" : ""}">
+      ${cs.length ? cs.map(c => `<a href="#" class="chatc ${c.id === state.chat.with ? "on" : ""}" onclick="state.chat.with='${c.id}';state.chat.loadingFor=null;render();return false;">
+        <span class="avatar" style="width:34px;height:34px">${esc((nm(c) || "?")[0])}</span><span style="flex:1"><b class="sm">${esc(nm(c))}</b></span>${c.unread ? `<span class="nbadge" style="position:static">${c.unread}</span>` : ""}</a>`).join("")
+        : `<p class="muted sm" style="padding:1rem">${L("noChats")}</p>`}
+    </div>
+    <div class="chatmain ${state.chat.with ? "" : "hide-sm"}">
+      ${cur ? `<div class="chathead"><button class="ibtn show-sm" onclick="state.chat.with=null;render()"><i class="fa-solid fa-arrow-right"></i></button><b>${esc(nm(cur))}</b></div>
+        <div class="chatbox" id="chatBox">${state.chat.list.map(m => `<div class="cmsg ${m.sender_id === me ? "mine" : ""}"><div style="white-space:pre-wrap">${esc(m.body)}</div>
+          <div class="xs" style="opacity:.7;margin-top:.2rem">${esc(fmtDT(m.created_at, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" }))}${m.sender_id === me ? ` · <a href="#" onclick="hideMsg('${m.id}');return false;" style="opacity:.8">${L("deleteMsg")}</a>` : ""}</div></div>`).join("")}</div>
+        <div class="xs muted" style="padding:.3rem .8rem">${L("chatRule")}</div>
+        <form class="chatin" onsubmit="event.preventDefault();sendMsg()"><textarea class="in" id="chatIn" rows="1" placeholder="${L("typeMsg")}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea><button class="btn btn-p">${L("send")}</button></form>`
+        : `<p class="muted sm" style="padding:1.5rem">${L("noChats")}</p>`}
+    </div></div>`;
+}
+async function sendMsg() {
+  const el = document.getElementById("chatIn"); const t = (el.value || "").trim(); if (!t) return;
+  el.value = "";
+  const { error } = await sb.rpc("send_message", { p_other: state.chat.with, p_body: t });
+  if (error) { toast(error.message, true); el.value = t; return; }
+  loadThread();
+}
+async function hideMsg(id) { if (!confirm(L("deleteMsg") + "?")) return; await sb.rpc("hide_message", { p_id: id }); loadThread(); }
+
+/* المالك: مراقبة كل المحادثات */
+function ownerChats(P) {
+  subscribeChat();
+  const pairs = useData("allPairs", async () => {
+    const ms = await q(sb.from("messages").select("id,student_id,teacher_id,sender_id,created_at,flagged").order("created_at", { ascending: false }).limit(3000));
+    const by = {}; ms.forEach(m => { const k = m.student_id + "|" + m.teacher_id; if (!by[k]) by[k] = { s: m.student_id, t: m.teacher_id, last: m.created_at, n: 0, f: 0 }; by[k].n++; if (m.flagged) by[k].f++; });
+    return Object.values(by);
+  });
+  const sel = state.ownerPair;
+  let thread = "";
+  if (sel) {
+    const ms = useData("pair:" + sel, async () => {
+      const [s, t] = sel.split("|");
+      const list = await q(sb.from("messages").select("*").eq("student_id", s).eq("teacher_id", t).order("created_at").limit(1000));
+      const ids = list.filter(m => m.flagged).map(m => m.id);
+      const flags = ids.length ? await q(sb.from("message_flags").select("*").in("message_id", ids)) : [];
+      const fm = {}; flags.forEach(f => fm[f.message_id] = f);
+      return list.map(m => Object.assign(m, { _flag: fm[m.id] }));
+    });
+    const [s, t] = sel.split("|");
+    const isMine = t === state.auth.user.id;
+    thread = !Array.isArray(ms) ? loadingBox() : `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:.6rem"><b>${esc(personName(s, P.map))} ↔ ${esc(personName(t, P.map))}</b>
+      <button class="ibtn" onclick="state.ownerPair=null;render()"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="chatbox" style="max-height:60vh">${ms.map(m => `<div class="cmsg ${m.sender_id === t ? "mine" : ""} ${m.deleted_at ? "deleted" : ""} ${m.flagged ? "flag" : ""}">
+        <div class="xs b">${esc(personName(m.sender_id, P.map))}</div><div style="white-space:pre-wrap">${esc(m.body)}</div>
+        ${m._flag ? `<div class="xs" style="margin-top:.3rem;color:var(--danger)">${L("flaggedMsg")} — ${L("original")}: <b>${esc(m._flag.raw_body)}</b></div>` : ""}
+        <div class="xs" style="opacity:.7">${esc(fmtDT(m.created_at))}${m.deleted_at ? " · 🗑 " + L("deletedBySender") : ""}</div></div>`).join("")}</div>
+      ${isMine ? `<form class="chatin" onsubmit="event.preventDefault();ownerSend('${s}')"><textarea class="in" id="ownIn" rows="1" placeholder="${L("typeMsg")}"></textarea><button class="btn btn-p">${L("send")}</button></form>` : ""}</div>`;
+  }
+  const st = P.list.filter(p => p.role === "student");
+  return `<div class="grid g2">
+    <div class="card"><h3 style="margin-bottom:.6rem">${L("allChats")}</h3>
+      ${!Array.isArray(pairs) ? loadingBox() : pairs.length ? pairs.map(p => `<a href="#" class="chatc ${sel === p.s + "|" + p.t ? "on" : ""}" onclick="state.ownerPair='${p.s}|${p.t}';invalidate('pair:${p.s}|${p.t}');render();return false;">
+        <span style="flex:1"><b class="sm">${esc(personName(p.s, P.map))}</b> ↔ <span class="sm">${esc(personName(p.t, P.map))}</span><br><span class="xs muted">${p.n} · ${esc(fmtDT(p.last))}</span></span>
+        ${p.f ? `<span class="badge" style="color:var(--danger);border-color:var(--danger)">⚠️ ${p.f}</span>` : ""}</a>`).join("") : `<p class="muted sm">${L("noChats")}</p>`}
+      <div style="margin-top:1rem"><label class="l">${L("newChat")}</label><div class="row" style="gap:.3rem"><select class="in" style="flex:1" id="nc_s">${st.map(s => `<option value="${s.id}">${esc(s.real_name || s.email)}</option>`).join("")}</select>
+        <button class="btn btn-o" onclick="state.ownerPair=document.getElementById('nc_s').value+'|'+state.auth.user.id;render()">💬</button></div></div>
+    </div>
+    <div>${thread}</div></div>`;
+}
+async function ownerSend(sid) {
+  const el = document.getElementById("ownIn"); const t = (el.value || "").trim(); if (!t) return;
+  const { error } = await sb.rpc("send_message", { p_other: sid, p_body: t });
+  if (error) return toast(error.message, true);
+  invalidate("pair:" + sid + "|" + state.auth.user.id, "allPairs"); render();
+}
+
+/* ---------- 🎙️ مشاركات الطلاب ---------- */
+const SC_CATS = ["recitation_tajweed", "recitation_maqam", "tajweed_explain", "tafseer_explain", "arabic_conversation", "nasheed", "other"];
+const MAQAMS = ["bayati", "saba", "hijaz", "nahawand", "rast", "sikah", "jiharkah", "kurd", "ajam"];
+function shareForm() {
+  const c = state.shareCat || "recitation_tajweed";
+  const mine = useData("myShares", () => q(sb.from("showcase_posts").select("*").eq("student_id", state.auth.user.id).order("created_at", { ascending: false })));
+  return `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.3rem">🎙️ ${L("shareTitle")}</h3><p class="xs muted" style="margin-bottom:.8rem">${L("shareHint")}</p>
+    <form onsubmit="event.preventDefault();submitShare()" style="display:flex;flex-direction:column;gap:.6rem">
+      <div class="fgrid">
+        <div><label class="l">${L("category")}</label><select class="in" id="sh_cat" onchange="state.shareCat=this.value;document.getElementById('sh_mq').style.display=this.value==='recitation_maqam'?'block':'none'">${SC_CATS.map(k => `<option value="${k}" ${k === c ? "selected" : ""}>${esc(catName(k))}</option>`).join("")}</select></div>
+        <div id="sh_mq" style="display:${c === "recitation_maqam" ? "block" : "none"}"><label class="l">${L("maqam")}</label><select class="in" id="sh_maqam">${MAQAMS.map(m => `<option value="${m}">${esc(L("maqamOf"))} ${esc(maqamName(m))}</option>`).join("")}</select></div>
+      </div>
+      <div><label class="l">${L("ctTitleOne")}</label><input class="in" id="sh_title" required placeholder="سورة الملك — الآيات 1-10"></div>
+      <div><label class="l">${L("shareDesc")}</label><textarea class="in" id="sh_desc" rows="2"></textarea></div>
+      <div class="fgrid">
+        <div><label class="l">${L("shareFile")}</label><input class="in" id="sh_file" type="file" accept="audio/*,video/*"></div>
+        <div><label class="l">${L("shareUrl")}</label><input class="in" id="sh_url" type="url" placeholder="https://youtube.com/..."></div>
+      </div>
+      <button class="btn btn-p" ${state.busy ? "disabled" : ""}>${state.busy ? L("translating") : L("publishShare")}</button>
+    </form></div>
+    ${Array.isArray(mine) && mine.length ? `<div class="card"><h3 style="margin-bottom:.6rem">${L("myShares")}</h3>${mine.map(p => `<div class="kv" style="align-items:center"><span><b>${esc(locText(p.title))}</b><br><span class="xs muted">${esc(catName(p.category))}${p.maqam ? " · " + esc(L("maqamOf")) + " " + esc(maqamName(p.maqam)) : ""}</span></span>
+      <span class="row" style="gap:.3rem"><span class="badge ${p.status === "published" ? "badge-a" : "badge-g"}">${esc(p.status === "published" ? L("sharePublished") : p.status === "pending" ? stt("pending") : stt("cancelled"))}</span>
+      <button class="ibtn" style="color:var(--danger)" onclick="deleteShare('${p.id}')"><i class="fa-solid fa-trash"></i></button></span></div>`).join("")}</div>` : ""}`;
+}
+async function submitShare() {
+  const g = (x) => document.getElementById(x);
+  const t = g("sh_title").value.trim(); if (!t) return toast(L("fillAll"), true);
+  const f = g("sh_file").files[0]; const url = g("sh_url").value.trim();
+  if (!f && !url) return toast(L("fillAll"), true);
+  state.busy = true; render();
+  try {
+    const src = detectLang(t);
+    const desc = g("sh_desc") ? g("sh_desc").value.trim() : "";
+    const [title, body] = await Promise.all([translateAll(t, src), desc ? translateAll(desc, detectLang(desc)) : Promise.resolve({})]);
+    if (!Object.keys(title).length) title[src || state.lang] = t;
+    const row = { student_id: state.auth.user.id, student_name: "-", category: state.shareCat || g("sh_cat").value, maqam: (state.shareCat || g("sh_cat").value) === "recitation_maqam" ? g("sh_maqam").value : null, title, body, url: url || null };
+    if (f) {
+      const path = `showcase/${state.auth.user.id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+      const { error } = await sb.storage.from("academy_public").upload(path, f, { upsert: false, contentType: f.type });
+      if (error) throw error;
+      row.file_path = path; row.media_type = (f.type || "").split("/")[0];
+    }
+    const ins = await sb.from("showcase_posts").insert(row).select("status").single();
+    if (ins.error) throw ins.error;
+    toast(ins.data.status === "published" ? L("sharePublished") : L("sharePending"));
+    invalidate("myShares", "showcase");
+  } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+}
+async function deleteShare(id) { if (!confirm(L("delete") + "?")) return; await sb.from("showcase_posts").delete().eq("id", id); invalidate("myShares", "showcase", "modShares"); render(); }
+function mediaHtml(p) {
+  if (p.file_path) {
+    const u = sb.storage.from("academy_public").getPublicUrl(p.file_path).data.publicUrl;
+    return p.media_type === "video" ? `<video controls preload="none" src="${esc(u)}" style="width:100%;border-radius:10px;max-height:260px"></video>` : `<audio controls preload="none" src="${esc(u)}" style="width:100%"></audio>`;
+  }
+  if (p.url) return `<a class="btn btn-o btn-full" href="${esc(p.url)}" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i> ${L("open")}</a>`;
+  return "";
+}
+function showcaseCard(p, manage) {
+  const liked = Array.isArray(state.data.myLikes) && state.data.myLikes.includes(p.id);
+  return `<div class="card sccard" style="display:flex;flex-direction:column;gap:.5rem">
+    <div class="row" style="gap:.35rem"><span class="badge badge-g">${L("studentPost")}</span><span class="badge">${esc(catName(p.category))}</span>
+      ${p.maqam ? `<span class="badge badge-a">🎵 ${esc(L("maqamOf"))} ${esc(maqamName(p.maqam))}</span>` : ""}${manage ? `<span class="badge">${esc(p.status)}</span>` : ""}</div>
+    <h3 style="font-size:1.05rem">${esc(locText(p.title))}</h3>
+    ${locText(p.body) ? `<p class="muted sm">${esc(locText(p.body))}</p>` : ""}
+    ${mediaHtml(p)}
+    <div class="row" style="justify-content:space-between;margin-top:auto;padding-top:.4rem;border-top:1px dashed var(--line)">
+      <span class="sm">— ${esc(L("byStudent"))} <b>${esc(p.student_name)}</b></span>
+      ${manage ? `<span class="row" style="gap:.3rem">${p.status !== "published" ? `<button class="btn btn-p" onclick="modShare('${p.id}','published')">${L("ctPublish")}</button>` : ""}
+        ${p.status !== "rejected" ? `<button class="btn btn-o" onclick="modShare('${p.id}','rejected')">${L("reject")}</button>` : ""}
+        <button class="ibtn" style="color:var(--danger)" onclick="deleteShare('${p.id}')"><i class="fa-solid fa-trash"></i></button></span>`
+        : `<button class="btn btn-o" style="padding:.3rem .7rem" onclick="toggleLike('${p.id}')">${liked ? "❤️" : "🤍"} ${p.likes || 0}</button>`}
+    </div></div>`;
+}
+async function toggleLike(id) {
+  if (!state.auth.user) { navigate("login"); return; }
+  const liked = Array.isArray(state.data.myLikes) && state.data.myLikes.includes(id);
+  if (liked) await sb.from("showcase_likes").delete().eq("post_id", id).eq("user_id", state.auth.user.id);
+  else await sb.from("showcase_likes").insert({ post_id: id, user_id: state.auth.user.id });
+  invalidate("showcase", "myLikes"); render();
+}
+function renderShowcasePublic() {
+  if (!sb) return "";
+  const list = useData("showcase", () => q(sb.from("showcase_posts").select("*").eq("status", "published").order("created_at", { ascending: false }).limit(60)));
+  if (state.auth.user) useData("myLikes", async () => (await q(sb.from("showcase_likes").select("post_id").eq("user_id", state.auth.user.id))).map(x => x.post_id));
+  if (!Array.isArray(list) || !list.length) return "";
+  const f = state.scFilter || "all";
+  const cats = SC_CATS.filter(c => list.some(p => p.category === c));
+  const shown = list.filter(p => f === "all" || p.category === f);
+  return `<div style="margin-top:2.5rem"><h2 style="font-size:1.4rem;margin-bottom:.8rem">${L("fromStudents")}</h2>
+    <div class="tabs">${[["all", L("allCats")]].concat(cats.map(c => [c, catName(c)])).map(([k, t]) => `<a href="#" aria-current="${f === k}" onclick="state.scFilter='${k}';render();return false;">${esc(t)}</a>`).join("")}</div>
+    <div class="grid">${shown.map(p => showcaseCard(p, false)).join("")}</div></div>`;
+}
+function renderLibrary() {
+  const tr = I18N[state.lang];
+  return `<section class="sec"><div class="wrap">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${tr.nav.library}</div>
+    <div class="stitle">${tr.lib.title}</div><div class="ssub">${tr.lib.sub}</div>
+    ${renderLibraryDb()}${renderShowcasePublic()}
+  </div></section>`;
+}
+function modSharesCard() {
+  const list = useData("modShares", () => q(sb.from("showcase_posts").select("*").order("created_at", { ascending: false }).limit(100)));
+  if (!Array.isArray(list) || !list.length) return "";
+  const pend = list.filter(p => p.status === "pending");
+  return `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.6rem">🎙️ ${L("moderation")} ${pend.length ? `<span class="nbadge" style="position:static;display:inline-flex">${pend.length}</span>` : ""}</h3>
+    <div class="grid">${list.slice(0, 30).map(p => showcaseCard(p, true)).join("")}</div></div>`;
+}
+async function modShare(id, st) {
+  const { error } = await sb.from("showcase_posts").update({ status: st }).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidate("modShares", "showcase"); toast(L("saved")); render();
+}
+
+/* ---------- صفحة السياسات ---------- */
+function renderPolicyPage() {
+  const tr = I18N[state.lang];
+  const fill = (s) => s.replace(/\{h\}/g, setv("cancelHours", 12)).replace(/\{n\}/g, setv("bookNoticeHours", 6)).replace(/\{a\}/g, setv("autoConfirmHours", 48));
+  return `<section class="sec"><div class="wrap" style="max-width:48rem">
+    <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${L("policyTitle")}</div>
+    <h1 style="font-size:1.8rem;margin-bottom:1rem">📋 ${L("policyTitle")}</h1>
+    <div class="card"><ol style="padding-inline-start:1.2rem;list-style:decimal;display:flex;flex-direction:column;gap:.7rem">${(L("policy") || []).map(p => `<li>${esc(fill(p))}</li>`).join("")}</ol></div>
+  </div></section>`;
+}
+
+/* ---------- الطالب: لوحة بتبويبات ---------- */
+function renderStudentDash() {
+  const uid = state.auth.user.id;
+  const tabs = dashTabs(["lessons", "messages", "share", "billing", "mycerts"]);
+  const t = state.dash.tab;
+  const sec = (title, body) => `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.8rem">${title}</h3>${body}</div>`;
+  if (t === "messages") return tabs + renderChat();
+  if (t === "share") return tabs + shareForm();
+  if (t === "billing") {
+    const bks = useData("myBookings", () => q(sb.from("bookings").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+    const ords = useData("myOrders", () => q(sb.from("orders").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+    const bkBody = !Array.isArray(bks) ? L("loading") : !bks.length ? `<p class="muted sm">${L("none")}</p><button class="btn btn-p" style="margin-top:.6rem" onclick="navigate('booking')">${I18N[state.lang].nav.trial}</button>`
+      : bks.map(b => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${esc(trackTitle(b.track))}</b><br><span class="xs muted">${esc(fmtDT(b.trial_timestamp))}</span></span>
+        <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(b.status))}</span><span class="badge ${b.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(b.payment_status))}</span>
+        ${b.payment_status === "unpaid" && b.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payKind='booking';state.payBookingId='${b.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
+    const ordBody = !Array.isArray(ords) ? L("loading") : !ords.length ? `<p class="muted sm">${L("none")}</p><button class="btn btn-o" style="margin-top:.6rem" onclick="navigate('pricing')">${I18N[state.lang].nav.pricing}</button>`
+      : ords.map(o => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${esc(planText(Object.assign({ id: o.plan_id }, o.plan_snapshot || {})).t)}</b><br><span class="xs muted">${esc(money(o.amount, o.currency))} · ${esc(fmtDT(o.created_at))}</span></span>
+        <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(o.status))}</span><span class="badge ${o.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(o.payment_status))}</span>
+        ${o.payment_status === "unpaid" && o.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payKind='order';state.payOrderId='${o.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
+    return tabs + balanceCard(uid) + sec(L("myOrders"), ordBody) + sec(L("myBookings"), bkBody);
+  }
+  if (t === "mycerts") {
+    const certs = useData("myCerts", () => q(sb.from("certificates").select("*").eq("student_id", uid).order("issued_at", { ascending: false })));
+    const mats = useData("myMats", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "restricted").contains("target_student_ids", [uid]).order("created_at", { ascending: false })));
+    const matBody = !Array.isArray(mats) ? L("loading") : !mats.length ? `<p class="muted sm">${L("none")}</p>` : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mats.map(c => contentCard(c, false)).join("")}</div>`;
+    return tabs + sec(L("myCerts"), certListHtml(certs)) + sec(L("myMaterials"), matBody);
+  }
+  const les = useData("myLessons", () => q(sb.from("lessons").select("*").eq("student_id", uid).gte("end_time", new Date().toISOString()).order("start_time").limit(40)));
+  const past = useData("pastLessons", () => q(sb.from("lessons").select("*").eq("student_id", uid).lt("end_time", new Date().toISOString()).order("start_time", { ascending: false }).limit(20)));
+  if (Array.isArray(les)) les.forEach(l => ensureReschedFn(l.id));
+  const lesBody = !Array.isArray(les) ? L("loading") : !les.length ? `<p class="muted sm">${L("noLessons")}</p>` : les.map(l => upcomingLessonRow(l, true)).join("");
+  const pastBody = !Array.isArray(past) ? L("loading") : !past.length ? `<p class="muted sm">${L("none")}</p>` : past.map(pastLessonRow).join("");
+  return tabs + balanceCard(uid) + bookingCard(uid) + sec(L("myLessons"), lesBody) + sec(L("pastLessons"), pastBody);
+}
+
+/* ولي الأمر: نفس قواعد الحجز والإلغاء */
+function renderParentDash() {
+  const uid = state.auth.user.id;
+  const links = useData("children", () => q(sb.from("parent_links").select("student_id").eq("parent_id", uid)));
+  const { map } = peopleMap();
+  if (!Array.isArray(links)) return loadingBox();
+  if (!links.length) return `<div class="card muted">${L("noChildren")}</div>`;
+  return links.map(({ student_id: sid }) => {
+    const up = useData("childUp:" + sid, () => q(sb.from("lessons").select("*").eq("student_id", sid).gte("end_time", new Date().toISOString()).order("start_time").limit(20)));
+    const past = useData("childPast:" + sid, () => q(sb.from("lessons").select("*").eq("student_id", sid).lt("end_time", new Date().toISOString()).order("start_time", { ascending: false }).limit(10)));
+    const certs = useData("childCerts:" + sid, () => q(sb.from("certificates").select("*").eq("student_id", sid)));
+    if (Array.isArray(up)) up.forEach(l => ensureReschedFn(l.id));
+    return `<div class="card" style="margin-bottom:1.2rem"><h2 style="font-size:1.3rem;margin-bottom:.8rem">👤 ${esc(personName(sid, map))}</h2>
+      ${balanceCard(sid)}${bookingCard(sid)}
+      <h3 style="margin:1rem 0 .5rem">${L("myLessons")}</h3>${!Array.isArray(up) ? L("loading") : up.map(l => upcomingLessonRow(l, true)).join("") || `<p class="muted sm">${L("noLessons")}</p>`}
+      <h3 style="margin:1rem 0 .5rem">${L("pastLessons")}</h3>${!Array.isArray(past) ? L("loading") : past.map(pastLessonRow).join("") || `<p class="muted sm">${L("none")}</p>`}
+      ${Array.isArray(certs) && certs.length ? `<h3 style="margin:1rem 0 .5rem">${L("myCerts")}</h3>${certListHtml(certs)}` : ""}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- المعلم: إضافة حصة لطلابه + رسائل ---------- */
+function teacherAddLessonForm() {
+  const { list } = peopleMap();
+  const st = list.filter(p => p.role === "student");
+  if (!st.length) return "";
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.8rem">➕ ${L("addLessonFor")}</h3>
+    <form onsubmit="event.preventDefault();teacherAddLesson()" class="fgrid" style="align-items:end">
+      <div><label class="l">${L("student")}</label><select class="in" id="tl_s">${st.map(s => `<option value="${s.id}">${esc(s.real_name || s.display_name)}</option>`).join("")}</select></div>
+      <div><label class="l">${L("date")}</label><input class="in" type="date" id="tl_d" min="${localISODate()}" value="${localISODate()}" required></div>
+      <div><label class="l">${L("time")}</label><select class="in" id="tl_h">${halfHourOptions("18:00")}</select></div>
+      <div><label class="l">${L("duration")}</label><select class="in" id="tl_m">${durOptions(50)}</select></div>
+      <div><label class="l">${L("repeat")}</label><input class="in" type="number" id="tl_w" value="1" min="1" max="12"></div>
+      <div><label class="l">${L("meeting")}</label><input class="in" id="tl_u" type="url" placeholder="https://"></div>
+      <button class="btn btn-p" ${state.busy ? "disabled" : ""}>${L("add")}</button>
+    </form></div>`;
+}
+async function teacherAddLesson() {
+  const g = (x) => document.getElementById(x).value;
+  const start = new Date(`${g("tl_d")}T${g("tl_h")}`); const mins = +g("tl_m"); const weeks = Math.min(12, Math.max(1, +g("tl_w") || 1));
+  const rows = Array.from({ length: weeks }, (_, i) => { const s = addDays(start, 7 * i); return { teacher_id: state.auth.user.id, student_id: g("tl_s"), start_time: s.toISOString(), end_time: new Date(s.getTime() + mins * 60000).toISOString(), meeting_url: g("tl_u").trim() || null }; });
+  state.busy = true; render();
+  const { error } = await sb.from("lessons").insert(rows);
+  state.busy = false;
+  if (error) { toast(errMsg(error), true); render(); return; }
+  invalidateCal(); state.cal.anchor = start; toast(L("saved")); render();
+}
+function renderTeacherDash() {
+  const uid = state.auth.user.id;
+  const av = availFor(uid);
+  if (av === null) return loadingBox();
+  if (!Object.keys(av).length && !state.dash.tab) return `<div class="card" style="margin-bottom:1rem;text-align:center"><h2>${L("tOnbTitle")}</h2></div>${renderScheduleEditor()}`;
+  const tabs = needAttendanceList() + dashTabs(["calendar", "messages", "schedule", "mystudents", "dues", "content"]);
+  const t = state.dash.tab;
+  let body = "";
+  if (t === "calendar") body = renderCalendar() + teacherAddLessonForm();
+  else if (t === "messages") body = renderChat();
+  else if (t === "schedule") body = meetingLinkCard() + renderScheduleEditor();
+  else if (t === "dues") body = teacherDues();
+  else if (t === "mystudents") {
+    const { list, loading } = peopleMap();
+    const st = list.filter(p => p.role === "student");
+    body = `<div class="card">${loading ? L("loading") : st.length ? st.map(s => `<div class="kv" style="align-items:center"><b>${esc(s.real_name || s.display_name)}</b><span class="row" style="gap:.3rem"><span class="xs muted">${esc(s.timezone || "")}</span><button class="btn btn-o" onclick="openChatWith('${s.id}')">💬</button></span></div>`).join("") : `<p class="muted sm">${L("none")}</p>`}</div>`;
+  } else if (t === "content") {
+    const { list } = peopleMap();
+    const mine = useData("contentsMine", () => q(sb.from("contents").select("*").eq("created_by", uid).order("created_at", { ascending: false })));
+    body = `<div class="grid g2">${renderContentForm({ students: list.filter(p => p.role === "student") })}
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mine === null ? loadingBox() : mine.__error ? errBox(mine) : mine.map(c => contentCard(c, true)).join("") || `<p class="muted sm">${L("none")}</p>`}</div></div>`;
+  }
+  return tabs + body;
+}
+
+/* ---------- المالك ---------- */
+function renderOwnerDash() {
+  const tabs = dashTabs(["overview", "calendar", "chats", "bookings", "requests", "orders", "users", "teachers", "students", "reports", "certs", "content", "settings", "schedule"]);
+  const t = state.dash.tab;
+  const P = peopleMap();
+  let body = "";
+  if (t === "overview") body = needAttendanceList() + ownerOverview(P) + todayLessonsCard() + visitsCard();
+  else if (t === "bookings") body = ownerBookings(P);
+  else if (t === "requests") body = ownerIssues(P) + ownerRequests(P);
+  else if (t === "calendar") body = ownerCalendar(P);
+  else if (t === "chats") body = ownerChats(P);
+  else if (t === "teachers") body = ownerTeachers(P);
+  else if (t === "students") body = ownerStudents(P);
+  else if (t === "content") body = modSharesCard() + ownerContent(P);
+  else if (t === "orders") body = ownerOrders(P);
+  else if (t === "users") body = ownerUsers(P);
+  else if (t === "reports") body = ownerReports(P);
+  else if (t === "certs") body = ownerCerts(P);
+  else if (t === "settings") body = ownerSettings() + emailSettingsCard() + `<button class="btn btn-o btn-full" style="margin-top:1rem" onclick="syncUiTranslations(true)">🌐 ${L("syncI18n")}</button>`;
+  else if (t === "schedule") body = meetingLinkCard() + renderScheduleEditor();
+  return tabs + body;
+}
+const _dashTabs0 = dashTabs;
+dashTabs = function (tabs) {
+  const html = _dashTabs0(tabs);
+  return html.replace(/>([a-z]+)<\/a>/g, (m, k) => ">" + ((L("tabs5") || {})[k] || k) + "</a>");
+};
+function ownerIssues(P) {
+  const list = useData("issues", () => q(sb.from("lesson_issues").select("*, lessons(start_time,teacher_id,student_id)").order("created_at", { ascending: false }).limit(50)));
+  if (!Array.isArray(list) || !list.length) return "";
+  return `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.6rem">🚩 ${L("issues")}</h3>${list.map(i => { const l = i.lessons || {}; return `<div class="kv" style="align-items:center;flex-wrap:wrap">
+    <span><b>${esc(personName(i.reporter_id, P.map))}</b> — ${esc(i.body)}<br><span class="xs muted">${esc(l.start_time ? fmtDT(l.start_time) : "")} · ${esc(personName(l.student_id, P.map))} ↔ ${esc(personName(l.teacher_id, P.map))}</span></span>
+    ${i.status === "open" ? `<button class="btn btn-o" onclick="resolveIssue('${i.id}')">${L("resolve")}</button>` : `<span class="badge badge-a">${L("resolve")} ✓</span>`}</div>`; }).join("")}</div>`;
+}
+async function resolveIssue(id) { await sb.from("lesson_issues").update({ status: "resolved" }).eq("id", id); invalidate("issues"); render(); }
+
+/* تفاصيل الحصة: إعادة جدولة من المعلم/المالك */
+const _renderLessonDetails0 = renderLessonDetails;
+renderLessonDetails = function (l, map) {
+  const html = _renderLessonDetails0(l, map);
+  const canMove = (role() === "owner" || l.teacher_id === state.auth.user.id) && l.status === "scheduled" && new Date(l.start_time) > Date.now();
+  if (!canMove) return html;
+  const d = new Date(l.start_time);
+  const hh = `${String(d.getHours()).padStart(2, "0")}:${d.getMinutes() >= 30 ? "30" : "00"}`;
+  const mv = `<div class="row" style="gap:.4rem;margin-top:.8rem;align-items:end;flex-wrap:wrap">
+    <div><label class="l">${L("newDate")}</label><input class="in" type="date" id="mv_d" value="${localISODate(d)}" min="${localISODate()}"></div>
+    <div><label class="l">${L("newTime")}</label><select class="in" id="mv_h">${halfHourOptions(hh)}</select></div>
+    <button class="btn btn-o" onclick="moveLesson('${l.id}',${new Date(l.end_time) - d})">${L("saveTime")}</button></div>`;
+  return html.replace(/<\/div>\s*$/, mv + "</div>");
+};
+async function moveLesson(id, durMs) {
+  const st = new Date(`${document.getElementById("mv_d").value}T${document.getElementById("mv_h").value}`);
+  const { error } = await sb.from("lessons").update({ start_time: st.toISOString(), end_time: new Date(st.getTime() + durMs).toISOString() }).eq("id", id);
+  if (error) return toast(errMsg(error), true);
+  invalidateCal(); state.cal.selected = null; toast(L("rescheduled")); render();
+}
+
+/* الإعدادات: مدة الباقة + قواعد السياسة */
+const _ownerSettings1 = ownerSettings;
+ownerSettings = function () {
+  const d = settingsDraft();
+  let html = _ownerSettings1();
+  html = html.replace(/(<div><label class="l">[^<]*<\/label><input class="in" type="number" min="0" value="[^"]*" oninput="sdSet\('plans\.(\d+)\.lessons'[^>]*><\/div>)/g,
+    (m, all, i) => all + `<div><label class="l">${L("setPlanMin")}</label><select class="in" onchange="sdSet('plans.${i}.minutes', +this.value)">${durOptions((d.plans[i] || {}).minutes || 50)}</select></div>`);
+  const rules = `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.8rem">📋 ${L("policyTitle")}</h3>
+    <div class="fgrid" style="align-items:end">
+      <div><label class="l">${L("setNotice")}</label><input class="in" type="number" min="0" value="${d.bookNoticeHours == null ? 6 : d.bookNoticeHours}" oninput="sdSet('bookNoticeHours', +this.value)"></div>
+      <div><label class="l">${L("setAutoConfirm")}</label><input class="in" type="number" min="1" value="${d.autoConfirmHours == null ? 48 : d.autoConfirmHours}" oninput="sdSet('autoConfirmHours', +this.value)"></div>
+      <div><label class="l">${L("setTrialMin")}</label><select class="in" onchange="sdSet('trialMinutes', +this.value)">${durOptions(d.trialMinutes || 25)}</select></div>
+      <div><label class="opt" style="padding:.5rem .8rem"><input type="checkbox" ${d.showcaseAuto ? "checked" : ""} onchange="sdSet('showcaseAuto', this.checked)"> <span class="sm b">${L("setShowcaseAuto")}</span></label></div>
+    </div></div>`;
+  return rules + html;
+};
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
-const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify"];
+const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy"];
 function readHash() {
   const h = (location.hash || "").replace(/^#\/?/, "");
   if (!h || h.includes("=")) return;
@@ -4085,6 +4607,7 @@ function render() {
   else if (r === 'pay') content += renderPay();
   else if (r === 'cert') content += renderCertPage();
   else if (r === 'verify') content += renderVerifyPage();
+  else if (r === 'policy') content += renderPolicyPage();
   else content += renderHome();
 
   content += renderFooter();
