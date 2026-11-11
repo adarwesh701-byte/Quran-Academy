@@ -195,6 +195,8 @@ footer a:hover{color:var(--accent)}
 textarea.in{resize:vertical}
 select[multiple].in{padding:.3rem}
 @media (max-width:760px){.grid[style*="2fr"]{grid-template-columns:1fr!important}}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}.tbl th,.tbl td{padding:.6rem .5rem;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}.tbl th{color:var(--muted);font-size:.78rem}
+details summary{list-style:revert}
 </style>
 </head>
 <body>
@@ -1242,36 +1244,6 @@ function renderLibrary() {
   </section>`;
 }
 
-function renderPricing() {
-  const tr = I18N[state.lang];
-  return `
-  <section class="sec">
-    <div class="wrap">
-      <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${tr.nav.pricing}</div>
-      <div class="stitle">${tr.pr.title}</div>
-      <div class="ssub">${tr.pr.sub}</div>
-      <div class="grid">
-        ${PLANS.map(p => {
-          const info = tr.pr.plans[p.id] || tr.pr.plans.trial;
-          return `
-          <div class="card ${p.featured?'feat':''}" style="display:flex;flex-direction:column">
-            ${p.featured?`<span class="badge badge-a" style="align-self:flex-start;margin-bottom:.8rem">الأكثر طلباً</span>`:''}
-            <h3 style="margin-bottom:.3rem">${info.t}</h3>
-            <p class="muted sm" style="margin-bottom:1.2rem">${info.d}</p>
-            <div class="price" style="margin-bottom:1.2rem">${p.price ? '$' + p.price : 'مجاناً'} <span class="sm muted">${p.price?tr.pr.perMonth:''}</span></div>
-            <ul class="checks" style="margin-bottom:1.5rem">
-              ${info.f.map(f => `<li>${f}</li>`).join('')}
-            </ul>
-            <div style="margin-top:auto">
-              <button class="btn ${p.featured?'btn-p':'btn-o'} btn-full" onclick="navigate('booking')">${tr.pr.sub1}</button>
-            </div>
-          </div>
-        `}).join('')}
-      </div>
-    </div>
-  </section>`;
-}
-
 function renderAbout() {
   const tr = I18N[state.lang];
   return `
@@ -1476,7 +1448,7 @@ const UI = {
     bookingSummary: "ملخص حجزك", trialTime: "موعد الحصة التجريبية", track: "المسار", status: "الحالة",
     // statuses
     st: { pending: "قيد المراجعة", confirmed: "مؤكد", cancelled: "ملغي", unpaid: "بانتظار الدفع", submitted: "دفع قيد المراجعة", paid: "مدفوع", waived: "معفى",
-          scheduled: "مجدولة", completed: "تمت", draft: "مسودة", published: "منشور", archived: "مؤرشف", public: "عام", restricted: "خاص بطلاب محددين" },
+          active: "مفعّل", expired: "منتهي", scheduled: "مجدولة", completed: "تمت", draft: "مسودة", published: "منشور", archived: "مؤرشف", public: "عام", restricted: "خاص بطلاب محددين" },
     // student
     stuHello: "أهلًا", myBookings: "حجوزاتي", myLessons: "حصصي القادمة", myMaterials: "موادي الخاصة", payNow: "أكمل الدفع",
     join: "دخول الحصة", noLessons: "لا توجد حصص قادمة بعد. سنرسل لك الموعد بعد تأكيد الحجز.",
@@ -1538,7 +1510,7 @@ const UI = {
     ],
     bookingSummary: "Your booking", trialTime: "Trial lesson time", track: "Track", status: "Status",
     st: { pending: "Under review", confirmed: "Confirmed", cancelled: "Cancelled", unpaid: "Awaiting payment", submitted: "Payment under review", paid: "Paid", waived: "Waived",
-          scheduled: "Scheduled", completed: "Completed", draft: "Draft", published: "Published", archived: "Archived", public: "Public", restricted: "Selected students only" },
+          active: "Active", expired: "Expired", scheduled: "Scheduled", completed: "Completed", draft: "Draft", published: "Published", archived: "Archived", public: "Public", restricted: "Selected students only" },
     stuHello: "Welcome", myBookings: "My bookings", myLessons: "Upcoming lessons", myMaterials: "My private materials", payNow: "Complete payment",
     join: "Join lesson", noLessons: "No upcoming lessons yet. We'll send you the time once your booking is confirmed.",
     tOnbTitle: "Welcome to the academy team 👋", tOnbSub: "Choose your available hours for each day of the week. You can change them any time.",
@@ -1567,7 +1539,7 @@ function L(k) {
   const d = UI[state.lang] || UI.en;
   return d[k] !== undefined ? d[k] : (UI.en[k] !== undefined ? UI.en[k] : (UI.ar[k] !== undefined ? UI.ar[k] : k));
 }
-function stt(s) { return (L("st") || {})[s] || s; }
+function stt(s) { return ((UI[state.lang] || {}).st || {})[s] || UI.en.st[s] || s; }
 function esc(v) {
   return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -1619,6 +1591,7 @@ async function loadProfile() {
 }
 async function initAuth() {
   if (!sb) { state.auth.ready = true; render(); return; }
+  try { await loadSettings(); } catch (e) { console.error(e); }
   const { data } = await sb.auth.getSession();
   state.auth.user = data.session ? data.session.user : null;
   await loadProfile();
@@ -1630,7 +1603,7 @@ async function initAuth() {
     if ((state.auth.user ? state.auth.user.id : null) !== prev) {
       state.data = {};
       await loadProfile();
-      if (state.auth.user) await flushPendingBooking();
+      if (state.auth.user) { await flushPendingBooking(); await flushPendingPlan(); }
       render();
     }
     if (ev === "PASSWORD_RECOVERY") {
@@ -1639,6 +1612,7 @@ async function initAuth() {
     }
   });
   await flushPendingBooking();
+  await flushPendingPlan();
 }
 async function doLogin() {
   const email = (document.getElementById("au_email").value || "").trim();
@@ -1648,6 +1622,7 @@ async function doLogin() {
   const { error } = await sb.auth.signInWithPassword({ email, password: pw });
   state.busy = false;
   if (error) { toast(error.message, true); render(); return; }
+  if (lsGet("itqan_pending_plan")) { await loadProfile(); await flushPendingPlan(); return; }
   navigate(state.payBookingId ? "pay" : "dashboard");
 }
 async function doSignup() {
@@ -1660,7 +1635,7 @@ async function doSignup() {
   state.busy = true; render();
   const res = await signUpUser({ name, email, phone, pw });
   state.busy = false;
-  if (res === "session") navigate("dashboard");
+  if (res === "session") { if (lsGet("itqan_pending_plan")) { await loadProfile(); await flushPendingPlan(); } else navigate("dashboard"); }
   else render();
 }
 async function signUpUser({ name, email, phone, pw }) {
@@ -1743,7 +1718,7 @@ async function flushPendingBooking() {
   try {
     const p = JSON.parse(raw);
     if (p.email && state.auth.user.email && p.email.toLowerCase() !== state.auth.user.email.toLowerCase()) return;
-    state.payBookingId = await insertBooking(p);
+    state.payBookingId = await insertBooking(p); state.payKind = "booking";
     state.route = "pay"; render();
   } catch (e) { console.error(e); toast(L("error"), true); }
 }
@@ -1769,7 +1744,7 @@ async function submitBooking() {
       await flushPendingBooking();
       return;
     }
-    state.payBookingId = await insertBooking(payload);
+    state.payBookingId = await insertBooking(payload); state.payKind = "booking";
     state.busy = false;
     navigate("pay");
   } catch (e) { state.busy = false; render(); toast(e.message || L("error"), true); }
@@ -1789,6 +1764,7 @@ function paymentOptions() {
 }
 function renderPay() {
   if (!state.auth.user) { state.route = "login"; return renderAuth(); }
+  if (state.payKind === "order") return renderPayOrder();
   const id = state.payBookingId;
   const list = useData("myBookings", () => q(sb.from("bookings").select("*").eq("student_id", state.auth.user.id).order("created_at", { ascending: false })));
   if (list === null) return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
@@ -1817,7 +1793,7 @@ function renderPay() {
           <div class="kv"><span class="muted">${L("status")}</span><b>${esc(stt(b.payment_status))}</b></div>
           <div style="text-align:center;margin:1.4rem 0 .4rem">
             <div class="muted sm">${L("payFee")}</div>
-            <div style="font-size:2.6rem;font-weight:800" class="accent">${esc(fee)} ${esc(cur)}</div>
+            <div style="font-size:2.6rem;font-weight:800" class="accent">${esc(money(fee, cur))}</div>
             ${CONFIG.trial.deductible ? `<div class="badge badge-a">${L("payDeduct")}</div>` : ""}
           </div>
           <div class="notice" style="margin-top:1rem"><b>${L("payWhy")}</b><br><span style="font-weight:500">${L("payWhyText")}</span></div>
@@ -2235,7 +2211,7 @@ function renderDashboard() {
 }
 function dashTabs(tabs) {
   if (!state.dash.tab || !tabs.includes(state.dash.tab)) state.dash.tab = tabs[0];
-  return `<div class="tabs">${tabs.map(t => `<a href="#" aria-current="${state.dash.tab === t}" onclick="state.dash.tab='${t}';state.cal.selected=null;render();return false;">${L("tabs")[t]}</a>`).join("")}</div>`;
+  return `<div class="tabs">${tabs.map(t => `<a href="#" aria-current="${state.dash.tab === t}" onclick="state.dash.tab='${t}';state.cal.selected=null;render();return false;">${L("tabs")[t] || L2(t)}</a>`).join("")}</div>`;
 }
 
 /* ===== الطالب ===== */
@@ -2250,13 +2226,19 @@ function renderStudentDash() {
     : bks.map(b => `<div class="kv" style="align-items:center;flex-wrap:wrap">
         <span><b>${esc(trackTitle(b.track))}</b><br><span class="xs muted">${esc(fmtDT(b.trial_timestamp))}</span></span>
         <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(b.status))}</span><span class="badge ${b.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(b.payment_status))}</span>
-        ${b.payment_status === "unpaid" && b.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payBookingId='${b.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
+        ${b.payment_status === "unpaid" && b.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payKind='booking';state.payBookingId='${b.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
   const lesBody = les === null ? L("loading") : les.__error ? errBox(les) : !les.length ? `<p class="muted sm">${L("noLessons")}</p>`
     : les.map(l => `<div class="kv" style="align-items:center"><span><b>${esc(fmtDT(l.start_time))}</b>${l.track ? ` · ${esc(trackTitle(l.track))}` : ""}<br><span class="xs muted">${esc(stt(l.status))}</span></span>
         ${l.meeting_url && l.status !== "cancelled" ? `<a class="btn btn-p" href="${esc(l.meeting_url)}" target="_blank" rel="noopener">${L("join")}</a>` : ""}</div>`).join("");
   const matBody = mats === null ? L("loading") : mats.__error ? errBox(mats) : !mats.length ? `<p class="muted sm">${L("none")}</p>`
     : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mats.map(c => contentCard(c, false)).join("")}</div>`;
-  return sec(L("myLessons"), lesBody) + sec(L("myBookings"), bkBody) + sec(L("myMaterials"), matBody);
+  const ords = useData("myOrders", () => q(sb.from("orders").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+  const ordBody = ords === null ? L("loading") : ords.__error ? errBox(ords) : !ords.length
+    ? `<p class="muted sm">${L("none")}</p><button class="btn btn-o" style="margin-top:.6rem" onclick="navigate('pricing')">${I18N[state.lang].nav.pricing}</button>`
+    : ords.map(o => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${esc(planText(Object.assign({ id: o.plan_id }, o.plan_snapshot || {})).t)}</b><br><span class="xs muted">${esc(money(o.amount, o.currency))} · ${esc(fmtDT(o.created_at))}</span></span>
+        <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(o.status))}</span><span class="badge ${o.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(o.payment_status))}</span>
+        ${o.payment_status === "unpaid" && o.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payKind='order';state.payOrderId='${o.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
+  return sec(L("myLessons"), lesBody) + sec(L("myOrders"), ordBody) + sec(L("myBookings"), bkBody) + sec(L("myMaterials"), matBody);
 }
 
 /* ===== المعلم ===== */
@@ -2288,7 +2270,7 @@ function renderTeacherDash() {
 
 /* ===== المالك (الأونر) ===== */
 function renderOwnerDash() {
-  const tabs = dashTabs(["overview", "bookings", "calendar", "teachers", "students", "content", "schedule"]);
+  const tabs = dashTabs(["overview", "bookings", "orders", "calendar", "teachers", "students", "content", "settings", "schedule"]);
   const t = state.dash.tab;
   const P = peopleMap();
   let body = "";
@@ -2298,6 +2280,8 @@ function renderOwnerDash() {
   else if (t === "teachers") body = ownerTeachers(P);
   else if (t === "students") body = ownerStudents(P);
   else if (t === "content") body = ownerContent(P);
+  else if (t === "orders") body = ownerOrders(P);
+  else if (t === "settings") body = ownerSettings();
   else if (t === "schedule") body = renderScheduleEditor();
   return tabs + body;
 }
@@ -2307,13 +2291,20 @@ function ownerOverview(P) {
   const ws = weekStart(new Date());
   const wk = useData("ovWeek", () => q(sb.from("lessons").select("id").gte("start_time", ws.toISOString()).lt("start_time", addDays(ws, 7).toISOString())));
   const n = (v) => v === null || v === undefined ? "…" : v;
+  const ms = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const rev = useData("ovRevenue", async () => {
+    const o = await q(sb.from("orders").select("amount,currency").eq("payment_status", "paid").gte("paid_at", ms));
+    const b = await q(sb.from("bookings").select("amount,currency").eq("payment_status", "paid").gte("paid_at", ms));
+    return o.concat(b);
+  });
   const bl = Array.isArray(b) ? b : [];
   const cards = [
     [L("ovStudents"), n(P.loading ? null : P.list.filter(p => p.role === "student").length), "students"],
     [L("ovTeachers"), n(P.loading ? null : P.list.filter(p => p.role === "teacher").length), "teachers"],
     [L("ovPending"), n(b === null ? null : bl.filter(x => x.payment_status === "unpaid" && x.status !== "cancelled").length), "bookings"],
     [L("ovReview"), n(b === null ? null : bl.filter(x => x.payment_status === "submitted").length), "bookings"],
-    [L("ovWeek"), n(Array.isArray(wk) ? wk.length : null), "calendar"]
+    [L("ovWeek"), n(Array.isArray(wk) ? wk.length : null), "calendar"],
+    [L("ovRevenue"), n(Array.isArray(rev) ? Object.entries(rev.reduce((a, r) => { a[r.currency || "USD"] = (a[r.currency || "USD"] || 0) + (+r.amount || 0); return a; }, {})).map(([c, v]) => money(v, c)).join(" + ") || money(0, (state.settings && state.settings.currency) || "USD") : null), "orders"]
   ];
   return `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${cards.map(c => `
     <div class="card card-h" style="cursor:pointer" onclick="state.dash.tab='${c[2]}';render()"><div class="muted sm">${c[0]}</div><div style="font-size:2.2rem;font-weight:800" class="accent">${c[1]}</div></div>`).join("")}</div>`;
@@ -2338,7 +2329,7 @@ function ownerBookings(P) {
     <div class="kv"><span class="muted">${L("trialTime")}</span><b>${esc(fmtDT(x.trial_timestamp))}</b></div>
     <div class="kv"><span class="muted">${L("weekly")}</span><span class="sm">${Object.keys(x.weekly_slots || {}).map(d => `${esc(tr.days[d])}: ${esc((x.weekly_slots[d] || []).join(", "))}`).join(" | ") || "—"}</span></div>
     ${x.payment_ref || x.payment_method ? `<div class="kv"><span class="muted">${L("ref")}</span><b class="mono">${esc(x.payment_method || "")} — ${esc(x.payment_ref || "")}</b></div>` : ""}
-    <div class="kv"><span class="muted">${L("payFee")}</span><b>${esc(x.amount ?? "")} ${esc(x.currency || "")}</b></div>
+    <div class="kv"><span class="muted">${L("payFee")}</span><b>${esc(money(x.amount, x.currency))}</b></div>
     <div class="row" style="gap:.5rem;margin-top:.8rem;align-items:flex-end">
       ${x.payment_status !== "paid" ? `<button class="btn btn-p" onclick="ownerBooking('${x.id}',{payment_status:'paid',paid_at:new Date().toISOString()})">${L("confirmPay")}</button>
         <button class="btn btn-o" onclick="ownerBooking('${x.id}',{payment_status:'waived'})">${L("markWaived")}</button>` : ""}
@@ -2483,6 +2474,539 @@ function ownerContent(P) {
     ${renderContentForm({ students: P.list.filter(p => p.role === "student") })}
     <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${all === null ? loadingBox() : all.__error ? errBox(all) : all.map(c => contentCard(c, true)).join("") || `<p class="muted sm">${L("none")}</p>`}</div></div>`;
 }
+
+
+/* =====================================================================
+    💰 الأسعار والإعدادات (يعدلها المالك من لوحة التحكم) + الاشتراكات
+   ===================================================================== */
+Object.assign(UI.ar, {
+  tabs2: { orders: "الاشتراكات والمدفوعات", settings: "الأسعار والإعدادات" },
+  myOrders: "اشتراكاتي", plan: "الباقة", amount: "المبلغ", subscribe: "اشترك الآن",
+  orderTitle: "إتمام الاشتراك", orderSub: "اختر طريقة الدفع، وبعد التحويل اكتب رقم العملية لنفعّل اشتراكك فورًا.",
+  orderPaid: "تم تأكيد الدفع ✅ اشتراكك مفعّل.", activate: "تفعيل", perMonthShort: "شهريًا", lessonsPerWeek: "حصة/أسبوع",
+  setTrial: "الحصة التجريبية", setFee: "رسوم الحصة التجريبية", setCurrency: "العملة الافتراضية", setDeduct: "تُخصم من أول باقة",
+  setPlans: "الباقات", setPrice: "السعر", setPerWeek: "حصص/أسبوع", setFeatured: "الأكثر طلبًا", setVisible: "ظاهرة",
+  setTitleAr: "اسم مخصص (عربي)", setTitleEn: "اسم مخصص (إنجليزي)", setDescAr: "وصف (عربي)", setDescEn: "وصف (إنجليزي)",
+  setFeatAr: "المميزات (عربي) — كل ميزة في سطر", setFeatEn: "المميزات (إنجليزي) — كل ميزة في سطر",
+  setAddPlan: "إضافة باقة جديدة", setPayments: "بيانات الدفع", setPaypal: "اسم PayPal.me", setInsta: "عنوان/رقم InstaPay",
+  setStripe: "رابط دفع بالبطاقة للحصة التجريبية (Stripe/Paymob/…)", setBankHolder: "اسم صاحب الحساب", setBankName: "اسم البنك",
+  setWhatsapp: "رقم واتساب الأكاديمية (بدون +)", setSaveAll: "حفظ كل الإعدادات", setHintNames: "اترك الاسم فارغًا لاستخدام الاسم المترجم الافتراضي بكل اللغات.",
+  ovRevenue: "إيرادات هذا الشهر", planStripe: "رابط دفع بالبطاقة لهذه الباقة (اختياري)", mostPopular: "الأكثر طلبًا"
+});
+Object.assign(UI.en, {
+  tabs2: { orders: "Subscriptions & payments", settings: "Prices & settings" },
+  myOrders: "My subscriptions", plan: "Plan", amount: "Amount", subscribe: "Subscribe now",
+  orderTitle: "Complete your subscription", orderSub: "Choose a payment method, then enter the transaction reference so we can activate your subscription.",
+  orderPaid: "Payment confirmed ✅ Your subscription is active.", activate: "Activate", perMonthShort: "per month", lessonsPerWeek: "lesson/week",
+  setTrial: "Trial lesson", setFee: "Trial fee", setCurrency: "Default currency", setDeduct: "Deducted from first package",
+  setPlans: "Packages", setPrice: "Price", setPerWeek: "Lessons/week", setFeatured: "Most popular", setVisible: "Visible",
+  setTitleAr: "Custom name (Arabic)", setTitleEn: "Custom name (English)", setDescAr: "Description (Arabic)", setDescEn: "Description (English)",
+  setFeatAr: "Features (Arabic) — one per line", setFeatEn: "Features (English) — one per line",
+  setAddPlan: "Add new package", setPayments: "Payment details", setPaypal: "PayPal.me username", setInsta: "InstaPay address/number",
+  setStripe: "Card payment link for the trial (Stripe/Paymob/…)", setBankHolder: "Account holder", setBankName: "Bank name",
+  setWhatsapp: "Academy WhatsApp number (no +)", setSaveAll: "Save all settings", setHintNames: "Leave the name empty to use the default translated name in every language.",
+  ovRevenue: "Revenue this month", planStripe: "Card payment link for this package (optional)", mostPopular: "Most popular"
+});
+function L2(k) { return (L("tabs2") || {})[k] || k; }
+
+state.settings = null;
+async function loadSettings() {
+  if (!sb) return;
+  const { data } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle();
+  if (!data || !data.data) return;
+  applySettings(data.data);
+}
+function applySettings(s) {
+  state.settings = JSON.parse(JSON.stringify(s));
+  const cur = s.currency || "USD";
+  if (s.trial) CONFIG.trial = { fee: +s.trial.fee || 0, currency: s.trial.currency || cur, deductible: s.trial.deductible !== false };
+  if (s.payments) {
+    CONFIG.payments.paypalMe = s.payments.paypalMe || "";
+    CONFIG.payments.instapay = s.payments.instapay || "";
+    CONFIG.payments.stripeLinks.trial = s.payments.stripeTrial || "";
+    CONFIG.payments.bank = Object.assign({ holder: "", bankName: "", iban: "", swift: "" }, s.payments.bank || {});
+  }
+  if (s.whatsapp) CONFIG.whatsapp = String(s.whatsapp).replace(/\D/g, "");
+  if (Array.isArray(s.plans)) {
+    PLANS.length = 0;
+    PLANS.push({ id: "trial", price: CONFIG.trial.fee, currency: CONFIG.trial.currency, isTrial: true });
+    s.plans.forEach(p => PLANS.push(Object.assign({ currency: cur }, p)));
+  }
+  CONFIG.pricesArePlaceholder = false;
+}
+function planText(p) {
+  const tr = I18N[state.lang];
+  const base = (tr.pr && tr.pr.plans && tr.pr.plans[p.id]) || null;
+  const lg = state.lang === "ar" ? "ar" : "en";
+  const pick = (o) => o && (o[state.lang] || o[lg] || o.en || o.ar) || "";
+  const feats = pick(p.features);
+  return {
+    t: pick(p.title) || (base && base.t) || p.id,
+    d: pick(p.desc) || (base && base.d) || "",
+    f: feats ? feats.split("\n").map(x => x.trim()).filter(Boolean) : ((base && base.f) || [])
+  };
+}
+function money(v, c) {
+  c = (c || "USD").toUpperCase();
+  const n = +v || 0;
+  const num = Number.isInteger(n) ? String(n) : n.toFixed(2);
+  const sym = { USD: "$", EUR: "€", GBP: "£" }[c];
+  return sym ? `${sym}${num}` : `${num} ${c}`;
+}
+
+/* صفحة الأسعار — تقرأ الأسعار من الإعدادات */
+function renderPricing() {
+  const tr = I18N[state.lang];
+  const plans = PLANS.filter(p => p.isTrial || p.visible !== false);
+  return `
+  <section class="sec">
+    <div class="wrap">
+      <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${tr.nav.pricing}</div>
+      <div class="stitle">${tr.pr.title}</div>
+      <div class="ssub">${tr.pr.sub}</div>
+      <div class="grid">
+        ${plans.map(p => {
+          const info = planText(p);
+          return `
+          <div class="card ${p.featured ? 'feat' : ''}" style="display:flex;flex-direction:column">
+            ${p.featured ? `<span class="badge badge-a" style="align-self:flex-start;margin-bottom:.8rem">${L("mostPopular")}</span>` : ''}
+            <h3 style="margin-bottom:.3rem">${esc(info.t)}</h3>
+            <p class="muted sm" style="margin-bottom:1.2rem">${esc(info.d)}</p>
+            <div class="price" style="margin-bottom:.4rem">${p.price ? esc(money(p.price, p.currency)) : esc(tr.common.free)}
+              ${!p.isTrial && p.price ? `<span class="sm muted">${esc(tr.pr.perMonth || "")}</span>` : ''}</div>
+            ${p.perWeek ? `<div class="xs muted" style="margin-bottom:1rem">${p.perWeek} ${L("lessonsPerWeek")}</div>` : '<div style="margin-bottom:1rem"></div>'}
+            <ul class="checks" style="margin-bottom:1.5rem">${info.f.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+            <div style="margin-top:auto">
+              ${p.isTrial
+                ? `<button class="btn btn-o btn-full" onclick="navigate('booking')">${tr.common.bookTrial}</button>`
+                : `<button class="btn ${p.featured ? 'btn-p' : 'btn-o'} btn-full" onclick="subscribePlan('${esc(p.id)}')">${L("subscribe")}</button>`}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+/* الاشتراك في باقة */
+async function subscribePlan(id) {
+  if (!state.auth.user) {
+    lsSet("itqan_pending_plan", id);
+    state.authMsg = null; navigate("signup"); return;
+  }
+  const { data, error } = await sb.rpc("create_order", { p_plan: id });
+  if (error) return toast(error.message, true);
+  invalidate("myOrders", "ownerOrders");
+  state.payKind = "order"; state.payOrderId = data; navigate("pay");
+}
+async function flushPendingPlan() {
+  const id = lsGet("itqan_pending_plan");
+  if (!id || !state.auth.user || !state.auth.profile || state.auth.profile.role !== "student") return;
+  lsSet("itqan_pending_plan", null);
+  await subscribePlan(id);
+}
+
+function paymentBlock(rec, kind) {
+  const opts = paymentOptions();
+  if (kind === "order") {
+    const pl = (state.settings && state.settings.plans || []).find(p => p.id === rec.plan_id);
+    const card = (pl && pl.stripe) || "";
+    const i = opts.findIndex(o => o.id === "card"); if (i > -1) opts.splice(i, 1);
+    if (card) opts.unshift({ id: "card", icon: "fa-regular fa-credit-card", label: "Visa / Mastercard / Apple Pay", href: card });
+    const pp = opts.find(o => o.id === "paypal"); if (pp) pp.href = `https://paypal.me/${encodeURIComponent(CONFIG.payments.paypalMe)}/${rec.amount}${rec.currency}`;
+  }
+  const done = rec.payment_status === "paid" || rec.payment_status === "waived";
+  const fn = kind === "order" ? "submitOrderPayment" : "submitPayment";
+  return `
+    ${done ? `<div class="notice ok">${kind === "order" ? L("orderPaid") : L("payPaid")}</div>` : rec.payment_status === "submitted" ? `<div class="notice ok">${L("paySubmitted")}</div>` : ""}
+    ${done ? "" : `
+    <h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>
+    <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem">
+      ${opts.map(o => o.href
+        ? `<a class="btn btn-o btn-full" style="justify-content:flex-start" href="${esc(o.href)}" target="_blank" rel="noopener"><i class="${o.icon}"></i> ${esc(o.label)}</a>`
+        : `<div class="opt" style="flex-direction:column;cursor:default"><b><i class="${o.icon}"></i> ${esc(o.label)}</b><div class="mono sm" style="white-space:pre-wrap">${esc(o.text)}</div></div>`).join("")}
+    </div>
+    <h3 style="margin-bottom:.6rem">${L("payConfirmTitle")}</h3>
+    <form onsubmit="event.preventDefault();${fn}('${rec.id}')" style="display:flex;flex-direction:column;gap:.7rem">
+      <div><label class="l">${L("payMethod")}</label>
+        <select class="in" id="pay_method">${opts.map(o => `<option value="${o.id}" ${rec.payment_method === o.id ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select></div>
+      <div><label class="l">${L("payRef")}</label><input class="in" id="pay_ref" value="${esc(rec.payment_ref || "")}" required></div>
+      <button class="btn btn-p btn-full btn-lg" ${state.busy ? "disabled" : ""}>${L("paySubmit")}</button>
+    </form>`}
+    <button class="btn btn-o btn-full" style="margin-top:.8rem" onclick="navigate('dashboard')">${L("dashboard")}</button>`;
+}
+function renderPayOrder() {
+  const list = useData("myOrders", () => q(sb.from("orders").select("*").eq("student_id", state.auth.user.id).order("created_at", { ascending: false })));
+  if (list === null) return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
+  if (list.__error) return `<section class="sec"><div class="wrap">${errBox(list)}</div></section>`;
+  const o = list.find(x => x.id === state.payOrderId) || list[0];
+  if (!o) return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
+  const info = planText(Object.assign({ id: o.plan_id }, o.plan_snapshot || {}));
+  return `
+  <section class="hero" style="padding-bottom:1.5rem"><div class="wrap" style="max-width:56rem;text-align:center">
+    <span class="badge badge-g" style="margin-bottom:.8rem">${esc(I18N[state.lang].meta.siteName)}</span>
+    <h1 style="font-size:2rem">${L("orderTitle")}</h1><p class="lead muted" style="margin-top:.6rem">${L("orderSub")}</p></div></section>
+  <section class="sec" style="padding-top:0"><div class="wrap" style="max-width:56rem">
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start">
+      <div class="card">
+        <h3 style="margin-bottom:.8rem">${esc(info.t)}</h3>
+        <p class="muted sm">${esc(info.d)}</p>
+        <ul class="checks" style="margin:1rem 0">${info.f.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
+        <div class="kv"><span class="muted">${L("status")}</span><b>${esc(stt(o.payment_status))}</b></div>
+        <div style="text-align:center;margin-top:1rem"><div style="font-size:2.4rem;font-weight:800" class="accent">${esc(money(o.amount, o.currency))}</div></div>
+      </div>
+      <div class="card">${paymentBlock(o, "order")}</div>
+    </div></div></section>`;
+}
+async function submitOrderPayment(oid) {
+  const method = document.getElementById("pay_method").value;
+  const ref = (document.getElementById("pay_ref").value || "").trim();
+  if (!ref) return toast(L("fillAll"), true);
+  const { error } = await sb.rpc("submit_order_payment", { p_order: oid, p_method: method, p_ref: ref });
+  if (error) return toast(error.message, true);
+  invalidate("myOrders", "ownerOrders"); toast(L("paySubmitted")); render();
+}
+
+/* ===== المالك: الاشتراكات ===== */
+function ownerOrders(P) {
+  const o = useData("ownerOrders", () => q(sb.from("orders").select("*").order("created_at", { ascending: false }).limit(300)));
+  if (o === null) return loadingBox();
+  if (o.__error) return errBox(o);
+  if (!o.length) return `<div class="card muted">${L("none")}</div>`;
+  return `<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr>
+    <th>${L("student")}</th><th>${L("plan")}</th><th>${L("amount")}</th><th>${L("status")}</th><th>${L("ref")}</th><th></th></tr></thead><tbody>
+    ${o.map(x => `<tr>
+      <td><b>${esc(personName(x.student_id, P.map))}</b><div class="xs muted">${esc(fmtDT(x.created_at))}</div></td>
+      <td>${esc(planText(Object.assign({ id: x.plan_id }, x.plan_snapshot || {})).t)}</td>
+      <td class="b">${esc(money(x.amount, x.currency))}</td>
+      <td><span class="badge">${esc(stt(x.status))}</span> <span class="badge ${x.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(x.payment_status))}</span></td>
+      <td class="mono xs">${esc(x.payment_method || "")} ${esc(x.payment_ref || "")}</td>
+      <td style="white-space:nowrap">
+        ${x.payment_status !== "paid" ? `<button class="btn btn-p" onclick="ownerOrder('${x.id}',{payment_status:'paid',status:'active',paid_at:new Date().toISOString()})">${L("confirmPay")}</button>` : ""}
+        ${x.status !== "active" && x.status !== "cancelled" ? `<button class="btn btn-o" onclick="ownerOrder('${x.id}',{status:'active'})">${L("activate")}</button>` : ""}
+        ${x.status !== "cancelled" ? `<button class="btn btn-o" style="color:var(--danger)" onclick="ownerOrder('${x.id}',{status:'cancelled'})">${L("cancel")}</button>` : ""}
+      </td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+async function ownerOrder(id, patch) {
+  const { error } = await sb.from("orders").update(patch).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidate("ownerOrders", "ovRevenue"); toast(L("saved")); render();
+}
+
+/* ===== المالك: الأسعار والإعدادات ===== */
+function settingsDraft() {
+  if (!state.setDraft) {
+    const s = state.settings || { currency: "USD", trial: { fee: 5, deductible: true }, plans: [], payments: { bank: {} } };
+    state.setDraft = JSON.parse(JSON.stringify(s));
+    state.setDraft.payments = state.setDraft.payments || {}; state.setDraft.payments.bank = state.setDraft.payments.bank || {};
+    state.setDraft.trial = state.setDraft.trial || { fee: 5, deductible: true };
+    state.setDraft.plans = state.setDraft.plans || [];
+  }
+  return state.setDraft;
+}
+function sdSet(path, val) {
+  const keys = path.split("."); let o = settingsDraft();
+  for (let i = 0; i < keys.length - 1; i++) { const k = isNaN(keys[i]) ? keys[i] : +keys[i]; o[k] = o[k] || {}; o = o[k]; }
+  o[keys[keys.length - 1]] = val;
+}
+function sdAddPlan() { settingsDraft().plans.push({ id: "plan" + Date.now().toString(36), price: 0, perWeek: 1, visible: true, title: { ar: "", en: "" } }); render(); }
+function sdDelPlan(i) { if (confirm(L("delete") + "?")) { settingsDraft().plans.splice(i, 1); render(); } }
+function sdMovePlan(i, d) { const a = settingsDraft().plans; const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; render(); }
+async function saveSettings() {
+  const d = settingsDraft();
+  d.trial.fee = +d.trial.fee || 0;
+  d.plans.forEach(p => { p.price = +p.price || 0; p.perWeek = +p.perWeek || 0; });
+  state.busy = true; render();
+  const { error } = await sb.from("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() });
+  state.busy = false;
+  if (error) { toast(error.message, true); render(); return; }
+  applySettings(d); state.setDraft = null; toast(L("saved")); render();
+}
+function ownerSettings() {
+  const d = settingsDraft();
+  const inp = (path, val, type, extra) => `<input class="in" ${type ? `type="${type}"` : ""} value="${esc(val == null ? "" : val)}" oninput="sdSet('${path}', this.${type === "number" ? "value" : "value"})" ${extra || ""}>`;
+  const chk = (path, val, label) => `<label class="opt" style="padding:.5rem .8rem"><input type="checkbox" ${val ? "checked" : ""} onchange="sdSet('${path}', this.checked)"> <span class="sm b">${label}</span></label>`;
+  const area = (path, val) => `<textarea class="in" rows="3" oninput="sdSet('${path}', this.value)">${esc(val || "")}</textarea>`;
+  const tr = I18N[state.lang];
+  return `
+  <div class="card" style="margin-bottom:1rem">
+    <h3 style="margin-bottom:.8rem">${L("setTrial")}</h3>
+    <div class="fgrid" style="align-items:end">
+      <div><label class="l">${L("setFee")}</label>${inp("trial.fee", d.trial.fee, "number", 'min="0" step="0.5"')}</div>
+      <div><label class="l">${L("setCurrency")}</label>${inp("currency", d.currency || "USD", "", 'maxlength="3" style="text-transform:uppercase"')}</div>
+      <div>${chk("trial.deductible", d.trial.deductible !== false, L("setDeduct"))}</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="row" style="justify-content:space-between;margin-bottom:.8rem"><h3>${L("setPlans")}</h3>
+      <button class="btn btn-o" onclick="sdAddPlan()"><i class="fa-solid fa-plus"></i> ${L("setAddPlan")}</button></div>
+    <p class="xs muted" style="margin-bottom:1rem">${L("setHintNames")}</p>
+    ${d.plans.map((p, i) => {
+      const def = (tr.pr.plans && tr.pr.plans[p.id] && tr.pr.plans[p.id].t) || "";
+      return `<div class="card" style="background:var(--bg);margin-bottom:.8rem">
+        <div class="row" style="justify-content:space-between;margin-bottom:.6rem">
+          <b>${esc((p.title && (p.title.ar || p.title.en)) || def || p.id)}</b>
+          <span class="row" style="gap:.3rem">
+            <button class="ibtn" onclick="sdMovePlan(${i},-1)"><i class="fa-solid fa-arrow-up"></i></button>
+            <button class="ibtn" onclick="sdMovePlan(${i},1)"><i class="fa-solid fa-arrow-down"></i></button>
+            <button class="ibtn" style="color:var(--danger)" onclick="sdDelPlan(${i})"><i class="fa-solid fa-trash"></i></button></span>
+        </div>
+        <div class="fgrid" style="align-items:end">
+          <div><label class="l">${L("setPrice")} (${esc(d.currency || "USD")})</label>${inp(`plans.${i}.price`, p.price, "number", 'min="0" step="0.5"')}</div>
+          <div><label class="l">${L("setPerWeek")}</label>${inp(`plans.${i}.perWeek`, p.perWeek, "number", 'min="0"')}</div>
+          <div>${chk(`plans.${i}.featured`, p.featured, L("setFeatured"))}</div>
+          <div>${chk(`plans.${i}.visible`, p.visible !== false, L("setVisible"))}</div>
+        </div>
+        <details style="margin-top:.6rem"><summary class="sm b" style="cursor:pointer">✏️ ${L("setTitleAr")} / ${L("setFeatAr")}</summary>
+          <div class="fgrid" style="margin-top:.6rem">
+            <div><label class="l">${L("setTitleAr")}</label>${inp(`plans.${i}.title.ar`, p.title && p.title.ar, "", `placeholder="${esc(def)}"`)}</div>
+            <div><label class="l">${L("setTitleEn")}</label>${inp(`plans.${i}.title.en`, p.title && p.title.en)}</div>
+            <div><label class="l">${L("setDescAr")}</label>${inp(`plans.${i}.desc.ar`, p.desc && p.desc.ar)}</div>
+            <div><label class="l">${L("setDescEn")}</label>${inp(`plans.${i}.desc.en`, p.desc && p.desc.en)}</div>
+            <div><label class="l">${L("setFeatAr")}</label>${area(`plans.${i}.features.ar`, p.features && p.features.ar)}</div>
+            <div><label class="l">${L("setFeatEn")}</label>${area(`plans.${i}.features.en`, p.features && p.features.en)}</div>
+            <div><label class="l">${L("planStripe")}</label>${inp(`plans.${i}.stripe`, p.stripe, "url", 'placeholder="https://"')}</div>
+          </div></details>
+      </div>`;
+    }).join("")}
+  </div>
+  <div class="card" style="margin-bottom:1rem">
+    <h3 style="margin-bottom:.8rem">${L("setPayments")}</h3>
+    <div class="fgrid">
+      <div><label class="l">${L("setPaypal")}</label>${inp("payments.paypalMe", d.payments.paypalMe, "", 'placeholder="username"')}</div>
+      <div><label class="l">${L("setInsta")}</label>${inp("payments.instapay", d.payments.instapay)}</div>
+      <div><label class="l">${L("setStripe")}</label>${inp("payments.stripeTrial", d.payments.stripeTrial, "url", 'placeholder="https://"')}</div>
+      <div><label class="l">${L("setWhatsapp")}</label>${inp("whatsapp", d.whatsapp || CONFIG.whatsapp, "tel")}</div>
+      <div><label class="l">${L("setBankHolder")}</label>${inp("payments.bank.holder", d.payments.bank.holder)}</div>
+      <div><label class="l">${L("setBankName")}</label>${inp("payments.bank.bankName", d.payments.bank.bankName)}</div>
+      <div><label class="l">IBAN</label>${inp("payments.bank.iban", d.payments.bank.iban)}</div>
+      <div><label class="l">SWIFT</label>${inp("payments.bank.swift", d.payments.bank.swift)}</div>
+    </div>
+  </div>
+  <button class="btn btn-p btn-full btn-lg" ${state.busy ? "disabled" : ""} onclick="saveSettings()">${state.busy ? L("loading") : L("setSaveAll")}</button>`;
+}
+
+
+/* ---------- ترجمة الصفحات الجديدة لباقي اللغات (صفحات الطالب) ---------- */
+Object.assign(UI, {
+fr: {
+  login: "Se connecter", signup: "Créer un compte", logout: "Se déconnecter", dashboard: "Mon espace",
+  email: "E-mail", password: "Mot de passe", fullName: "Nom complet", phone: "Téléphone",
+  haveAcc: "Vous avez déjà un compte ?", noAcc: "Pas encore de compte ?", forgot: "Mot de passe oublié ?",
+  resetSent: "Nous vous avons envoyé un lien de réinitialisation.", checkEmail: "Nous vous avons envoyé un e-mail de confirmation. Ouvrez-le puis connectez-vous : votre réservation sera finalisée automatiquement.",
+  accExists: "Cet e-mail est déjà inscrit. Veuillez vous connecter.", pwShort: "Le mot de passe doit contenir au moins 6 caractères.", fillAll: "Veuillez remplir tous les champs obligatoires.",
+  authSub: "Connectez-vous pour suivre vos cours et vos supports.", bookAccNote: "Un compte sera créé avec cet e-mail pour suivre votre réservation et vos cours.",
+  loading: "Chargement...", error: "Une erreur est survenue, réessayez.", none: "Rien pour le moment.", tzNote: "Horaires affichés dans votre fuseau horaire",
+  payTitle: "Dernière étape pour confirmer votre cours d'essai", paySub: "Votre cours est réservé provisoirement. Confirmez-le avec des frais symboliques pour que nous bloquions le temps de l'enseignant pour vous.",
+  payWhy: "Pourquoi des frais symboliques ?", payWhyText: "Le temps de nos enseignants est précieux : les cours d'essai sont réservés aux élèves motivés. Les frais sont minimes par rapport à la valeur du cours.",
+  payDeduct: "Ce montant est entièrement déduit de votre premier forfait.", payFee: "Frais de confirmation du cours d'essai",
+  payMethods: "Choisissez un moyen de paiement", payConfirmTitle: "Déjà payé ? Confirmez ici", payRef: "N° de transaction / nom de l'expéditeur / 4 derniers chiffres",
+  payMethod: "Moyen de paiement", paySubmit: "J'ai payé — confirmer ma réservation", paySubmitted: "Confirmation reçue ✅ Nous vérifions le paiement et vous envoyons l'horaire et le lien du cours.",
+  payPaid: "Paiement confirmé ✅ Votre cours d'essai est confirmé.", payWa: "Payer via WhatsApp", promoTitle: "Pourquoi l'Académie Itqan ?",
+  promo: [["🎓", "Chaîne de transmission et ijaza", "Apprenez auprès de spécialistes avec une chaîne de transmission, avec possibilité d'obtenir une ijaza."], ["🧭", "Suivi personnalisé", "Un plan pour chaque élève selon son niveau et ses objectifs."], ["🕐", "Horaires flexibles 24h/24", "Choisissez vos jours et heures, où que vous soyez."], ["🎵", "Maqamat vocaux", "Améliorez votre voix et votre récitation de façon méthodique."], ["📚", "Contenu gratuit", "Explications et supports dans chaque parcours, certains assistés par IA."], ["🌍", "Élèves du monde entier", "Un environnement international et multilingue."]],
+  bookingSummary: "Votre réservation", trialTime: "Horaire du cours d'essai", track: "Parcours", status: "Statut",
+  st: { pending: "En cours d'examen", confirmed: "Confirmé", cancelled: "Annulé", unpaid: "En attente de paiement", submitted: "Paiement en vérification", paid: "Payé", waived: "Offert", active: "Actif", expired: "Expiré", scheduled: "Programmé", completed: "Terminé" },
+  stuHello: "Bienvenue", myBookings: "Mes réservations", myLessons: "Mes prochains cours", myMaterials: "Mes supports privés", myOrders: "Mes abonnements", payNow: "Finaliser le paiement",
+  join: "Rejoindre le cours", noLessons: "Aucun cours à venir. Nous vous enverrons l'horaire après confirmation.",
+  aiSection: "Contenu généré par IA 🤖", humanSection: "Explications des enseignants 👨‍🏫", trackContent: "Contenu de ce parcours", open: "Ouvrir", aiBadge: "IA", humanBadge: "Humain",
+  types: { article: "Article", pdf: "PDF", video: "Vidéo", audio: "Audio", image: "Image", link: "Lien" },
+  orderTitle: "Finaliser votre abonnement", orderSub: "Choisissez un moyen de paiement, puis indiquez la référence de la transaction pour activer votre abonnement.", orderPaid: "Paiement confirmé ✅ Votre abonnement est actif.",
+  subscribe: "S'abonner", lessonsPerWeek: "cours/semaine", mostPopular: "Le plus demandé", general: "Général", plan: "Forfait", amount: "Montant"
+},
+de: {
+  login: "Anmelden", signup: "Konto erstellen", logout: "Abmelden", dashboard: "Mein Bereich",
+  email: "E-Mail", password: "Passwort", fullName: "Vollständiger Name", phone: "Telefon",
+  haveAcc: "Schon ein Konto?", noAcc: "Noch kein Konto?", forgot: "Passwort vergessen?",
+  resetSent: "Wir haben dir einen Link zum Zurücksetzen gesendet.", checkEmail: "Wir haben dir eine Bestätigungs-E-Mail gesendet. Öffne sie und melde dich an – deine Buchung wird automatisch abgeschlossen.",
+  accExists: "Diese E-Mail ist bereits registriert. Bitte melde dich an.", pwShort: "Das Passwort muss mindestens 6 Zeichen haben.", fillAll: "Bitte fülle alle Pflichtfelder aus.",
+  authSub: "Melde dich an, um deine Stunden und Materialien zu sehen.", bookAccNote: "Mit dieser E-Mail wird ein Konto erstellt, damit du deine Buchung und Stunden verfolgen kannst.",
+  loading: "Wird geladen...", error: "Etwas ist schiefgelaufen, bitte erneut versuchen.", none: "Noch nichts vorhanden.", tzNote: "Zeiten in deiner Zeitzone",
+  payTitle: "Letzter Schritt zur Bestätigung deiner Probestunde", paySub: "Deine Stunde ist vorläufig reserviert. Bestätige sie mit einer kleinen Gebühr, damit wir die Zeit der Lehrkraft für dich reservieren.",
+  payWhy: "Warum eine kleine Gebühr?", payWhyText: "Die Zeit unserer Lehrkräfte ist wertvoll, deshalb reservieren wir Probestunden für engagierte Schüler. Die Gebühr ist im Vergleich zum Wert der Stunde sehr gering.",
+  payDeduct: "Der Betrag wird vollständig auf dein erstes Paket angerechnet.", payFee: "Bestätigungsgebühr für die Probestunde",
+  payMethods: "Zahlungsart wählen", payConfirmTitle: "Bezahlt? Hier bestätigen", payRef: "Transaktions-ID / Name des Absenders / letzte 4 Ziffern",
+  payMethod: "Zahlungsart", paySubmit: "Ich habe bezahlt – Buchung bestätigen", paySubmitted: "Bestätigung erhalten ✅ Wir prüfen die Zahlung und senden dir Termin und Link.",
+  payPaid: "Zahlung bestätigt ✅ Deine Probestunde ist bestätigt.", payWa: "Über WhatsApp bezahlen", promoTitle: "Warum die Itqan Akademie?",
+  promo: [["🎓", "Überlieferungskette & Ijaza", "Lerne bei Spezialisten mit verbundener Überlieferungskette – mit der Möglichkeit einer Ijaza."], ["🧭", "Persönliche Betreuung", "Ein Plan für jeden Schüler nach Niveau und Ziel."], ["🕐", "Flexible Zeiten rund um die Uhr", "Wähle Tage und Uhrzeiten, die zu dir passen – weltweit."], ["🎵", "Stimmliche Maqamat", "Verbessere Stimme und Rezitation methodisch."], ["📚", "Kostenlose Inhalte", "Erklärungen und Materialien in jedem Kurs, teils KI-gestützt."], ["🌍", "Schüler weltweit", "Eine internationale, mehrsprachige Lernumgebung."]],
+  bookingSummary: "Deine Buchung", trialTime: "Termin der Probestunde", track: "Kurs", status: "Status",
+  st: { pending: "In Prüfung", confirmed: "Bestätigt", cancelled: "Storniert", unpaid: "Zahlung ausstehend", submitted: "Zahlung wird geprüft", paid: "Bezahlt", waived: "Erlassen", active: "Aktiv", expired: "Abgelaufen", scheduled: "Geplant", completed: "Abgeschlossen" },
+  stuHello: "Willkommen", myBookings: "Meine Buchungen", myLessons: "Kommende Stunden", myMaterials: "Meine privaten Materialien", myOrders: "Meine Abos", payNow: "Zahlung abschließen",
+  join: "Zur Stunde", noLessons: "Noch keine kommenden Stunden. Wir senden dir den Termin nach der Bestätigung.",
+  aiSection: "KI-generierte Inhalte 🤖", humanSection: "Erklärungen der Lehrkräfte 👨‍🏫", trackContent: "Inhalte dieses Kurses", open: "Öffnen", aiBadge: "KI", humanBadge: "Lehrkraft",
+  types: { article: "Artikel", pdf: "PDF", video: "Video", audio: "Audio", image: "Bild", link: "Link" },
+  orderTitle: "Abo abschließen", orderSub: "Wähle eine Zahlungsart und gib danach die Transaktionsreferenz ein, damit wir dein Abo aktivieren.", orderPaid: "Zahlung bestätigt ✅ Dein Abo ist aktiv.",
+  subscribe: "Jetzt abonnieren", lessonsPerWeek: "Stunde/Woche", mostPopular: "Am beliebtesten", general: "Allgemein", plan: "Paket", amount: "Betrag"
+},
+es: {
+  login: "Iniciar sesión", signup: "Crear cuenta", logout: "Cerrar sesión", dashboard: "Mi panel",
+  email: "Correo electrónico", password: "Contraseña", fullName: "Nombre completo", phone: "Teléfono",
+  haveAcc: "¿Ya tienes cuenta?", noAcc: "¿No tienes cuenta?", forgot: "¿Olvidaste tu contraseña?",
+  resetSent: "Te enviamos un enlace para restablecer la contraseña.", checkEmail: "Te enviamos un correo de confirmación. Ábrelo e inicia sesión: tu reserva se completará automáticamente.",
+  accExists: "Este correo ya está registrado. Inicia sesión.", pwShort: "La contraseña debe tener al menos 6 caracteres.", fillAll: "Completa todos los campos obligatorios.",
+  authSub: "Inicia sesión para seguir tus clases y materiales.", bookAccNote: "Se creará una cuenta con este correo para seguir tu reserva y tus clases.",
+  loading: "Cargando...", error: "Algo salió mal, inténtalo de nuevo.", none: "Nada por aquí todavía.", tzNote: "Horarios mostrados en tu zona horaria",
+  payTitle: "Último paso para confirmar tu clase de prueba", paySub: "Tu clase está reservada provisionalmente. Confírmala con una tarifa simbólica para reservar el tiempo del profesor.",
+  payWhy: "¿Por qué una tarifa simbólica?", payWhyText: "El tiempo de nuestros profesores es valioso, así que reservamos las clases de prueba para alumnos comprometidos. La tarifa es mínima comparada con el valor de la clase.",
+  payDeduct: "El importe se descuenta íntegramente de tu primer paquete.", payFee: "Tarifa de confirmación de la clase de prueba",
+  payMethods: "Elige un método de pago", payConfirmTitle: "¿Ya pagaste? Confírmalo aquí", payRef: "N.º de transacción / nombre del remitente / últimos 4 dígitos",
+  payMethod: "Método de pago", paySubmit: "Ya pagué — confirmar mi reserva", paySubmitted: "Confirmación recibida ✅ Revisaremos el pago y te enviaremos el horario y el enlace.",
+  payPaid: "Pago confirmado ✅ Tu clase de prueba está confirmada.", payWa: "Pagar por WhatsApp", promoTitle: "¿Por qué la Academia Itqan?",
+  promo: [["🎓", "Cadena de transmisión e ijaza", "Aprende con especialistas con cadena de transmisión conectada y opción de obtener ijaza."], ["🧭", "Seguimiento personal", "Un plan para cada alumno según su nivel y objetivo."], ["🕐", "Horario flexible 24/7", "Elige los días y horas que te convengan, desde cualquier lugar."], ["🎵", "Maqamat vocales", "Mejora tu voz y tu recitación de forma metódica."], ["📚", "Contenido gratuito", "Explicaciones y materiales en cada curso, algunos con IA."], ["🌍", "Alumnos de todo el mundo", "Un entorno internacional y multilingüe."]],
+  bookingSummary: "Tu reserva", trialTime: "Hora de la clase de prueba", track: "Curso", status: "Estado",
+  st: { pending: "En revisión", confirmed: "Confirmada", cancelled: "Cancelada", unpaid: "Pendiente de pago", submitted: "Pago en revisión", paid: "Pagado", waived: "Exento", active: "Activo", expired: "Vencido", scheduled: "Programada", completed: "Completada" },
+  stuHello: "Bienvenido", myBookings: "Mis reservas", myLessons: "Próximas clases", myMaterials: "Mis materiales privados", myOrders: "Mis suscripciones", payNow: "Completar pago",
+  join: "Entrar a la clase", noLessons: "Aún no hay clases. Te enviaremos el horario cuando se confirme tu reserva.",
+  aiSection: "Contenido con IA 🤖", humanSection: "Explicaciones de los profesores 👨‍🏫", trackContent: "Contenido de este curso", open: "Abrir", aiBadge: "IA", humanBadge: "Profesor",
+  types: { article: "Artículo", pdf: "PDF", video: "Vídeo", audio: "Audio", image: "Imagen", link: "Enlace" },
+  orderTitle: "Completa tu suscripción", orderSub: "Elige un método de pago y luego introduce la referencia de la transacción para activar tu suscripción.", orderPaid: "Pago confirmado ✅ Tu suscripción está activa.",
+  subscribe: "Suscribirme", lessonsPerWeek: "clase/semana", mostPopular: "Más solicitado", general: "General", plan: "Paquete", amount: "Importe"
+},
+tr: {
+  login: "Giriş yap", signup: "Hesap oluştur", logout: "Çıkış yap", dashboard: "Panelim",
+  email: "E-posta", password: "Şifre", fullName: "Ad soyad", phone: "Telefon",
+  haveAcc: "Hesabın var mı?", noAcc: "Hesabın yok mu?", forgot: "Şifreni mi unuttun?",
+  resetSent: "Şifre sıfırlama bağlantısını e-postana gönderdik.", checkEmail: "Onay e-postası gönderdik. E-postayı açıp giriş yap; rezervasyonun otomatik tamamlanacak.",
+  accExists: "Bu e-posta zaten kayıtlı. Lütfen giriş yap.", pwShort: "Şifre en az 6 karakter olmalı.", fillAll: "Lütfen tüm zorunlu alanları doldur.",
+  authSub: "Derslerini ve materyallerini takip etmek için giriş yap.", bookAccNote: "Rezervasyonunu ve derslerini takip etmen için bu e-postayla bir hesap oluşturulacak.",
+  loading: "Yükleniyor...", error: "Bir hata oluştu, tekrar dene.", none: "Henüz bir şey yok.", tzNote: "Saatler senin saat diliminde gösteriliyor",
+  payTitle: "Deneme dersini onaylamak için son adım", paySub: "Dersin geçici olarak ayrıldı. Öğretmenin zamanını sana ayırmamız için sembolik bir ücretle onayla.",
+  payWhy: "Neden sembolik ücret?", payWhyText: "Öğretmenlerimizin zamanı değerli; deneme derslerini kararlı öğrencilere ayırıyoruz. Ücret, dersin değerine göre çok küçük.",
+  payDeduct: "Bu tutar ilk paketinden tamamen düşülür.", payFee: "Deneme dersi onay ücreti",
+  payMethods: "Ödeme yöntemi seç", payConfirmTitle: "Ödedin mi? Buradan onayla", payRef: "İşlem no / gönderen adı / son 4 hane",
+  payMethod: "Ödeme yöntemi", paySubmit: "Ödedim — rezervasyonumu onayla", paySubmitted: "Onay alındı ✅ Ödemeyi kontrol edip ders saatini ve bağlantısını göndereceğiz.",
+  payPaid: "Ödeme onaylandı ✅ Deneme dersin onaylandı.", payWa: "WhatsApp üzerinden öde", promoTitle: "Neden İtkan Akademisi?",
+  promo: [["🎓", "Muttasıl sened ve icazet", "Muttasıl senedli uzmanlardan öğren, icazet alma imkânı."], ["🧭", "Kişisel takip", "Her öğrenciye seviyesine ve hedefine göre plan."], ["🕐", "7/24 esnek saatler", "Dünyanın her yerinden uygun gün ve saatleri seç."], ["🎵", "Makamlar", "Sesini ve kıraatini yöntemli şekilde geliştir."], ["📚", "Ücretsiz içerik", "Her kursta açıklamalar ve materyaller, bazıları yapay zekâ destekli."], ["🌍", "Dünyanın her yerinden öğrenciler", "Uluslararası ve çok dilli bir ortam."]],
+  bookingSummary: "Rezervasyonun", trialTime: "Deneme dersi saati", track: "Kurs", status: "Durum",
+  st: { pending: "İnceleniyor", confirmed: "Onaylandı", cancelled: "İptal edildi", unpaid: "Ödeme bekleniyor", submitted: "Ödeme inceleniyor", paid: "Ödendi", waived: "Muaf", active: "Aktif", expired: "Süresi doldu", scheduled: "Planlandı", completed: "Tamamlandı" },
+  stuHello: "Hoş geldin", myBookings: "Rezervasyonlarım", myLessons: "Yaklaşan derslerim", myMaterials: "Özel materyallerim", myOrders: "Aboneliklerim", payNow: "Ödemeyi tamamla",
+  join: "Derse katıl", noLessons: "Henüz yaklaşan ders yok. Rezervasyon onaylanınca saati göndereceğiz.",
+  aiSection: "Yapay zekâ içerikleri 🤖", humanSection: "Öğretmen anlatımları 👨‍🏫", trackContent: "Bu kursun içerikleri", open: "Aç", aiBadge: "YZ", humanBadge: "Öğretmen",
+  types: { article: "Makale", pdf: "PDF", video: "Video", audio: "Ses", image: "Görsel", link: "Bağlantı" },
+  orderTitle: "Aboneliğini tamamla", orderSub: "Bir ödeme yöntemi seç, ardından aboneliğini etkinleştirmemiz için işlem numarasını yaz.", orderPaid: "Ödeme onaylandı ✅ Aboneliğin aktif.",
+  subscribe: "Abone ol", lessonsPerWeek: "ders/hafta", mostPopular: "En çok tercih edilen", general: "Genel", plan: "Paket", amount: "Tutar"
+},
+id: {
+  login: "Masuk", signup: "Buat akun", logout: "Keluar", dashboard: "Dasbor saya",
+  email: "Email", password: "Kata sandi", fullName: "Nama lengkap", phone: "Telepon",
+  haveAcc: "Sudah punya akun?", noAcc: "Belum punya akun?", forgot: "Lupa kata sandi?",
+  resetSent: "Kami telah mengirim tautan atur ulang kata sandi ke email Anda.", checkEmail: "Kami telah mengirim email konfirmasi. Buka email itu lalu masuk — pemesanan Anda akan selesai otomatis.",
+  accExists: "Email ini sudah terdaftar. Silakan masuk.", pwShort: "Kata sandi minimal 6 karakter.", fillAll: "Lengkapi semua kolom yang wajib.",
+  authSub: "Masuk untuk memantau kelas dan materi Anda.", bookAccNote: "Akun akan dibuat dengan email ini agar Anda dapat memantau pemesanan dan kelas.",
+  loading: "Memuat...", error: "Terjadi kesalahan, coba lagi.", none: "Belum ada apa-apa.", tzNote: "Waktu ditampilkan sesuai zona waktu Anda",
+  payTitle: "Langkah terakhir untuk mengonfirmasi kelas uji coba", paySub: "Kelas Anda sudah dipesan sementara. Konfirmasi dengan biaya simbolis agar kami menyiapkan waktu pengajar untuk Anda.",
+  payWhy: "Mengapa ada biaya simbolis?", payWhyText: "Waktu pengajar kami sangat berharga, jadi kelas uji coba kami khususkan bagi siswa yang serius. Biayanya sangat kecil dibanding nilai kelasnya.",
+  payDeduct: "Jumlah ini dipotong penuh dari paket pertama Anda.", payFee: "Biaya konfirmasi kelas uji coba",
+  payMethods: "Pilih metode pembayaran", payConfirmTitle: "Sudah bayar? Konfirmasi di sini", payRef: "No. transaksi / nama pengirim / 4 digit terakhir",
+  payMethod: "Metode pembayaran", paySubmit: "Saya sudah bayar — konfirmasi pemesanan", paySubmitted: "Konfirmasi diterima ✅ Kami akan memeriksa pembayaran dan mengirim jadwal serta tautan kelas.",
+  payPaid: "Pembayaran dikonfirmasi ✅ Kelas uji coba Anda terkonfirmasi.", payWa: "Bayar lewat WhatsApp", promoTitle: "Mengapa Akademi Itqan?",
+  promo: [["🎓", "Sanad bersambung & ijazah", "Belajar dari pakar bersanad bersambung, dengan peluang meraih ijazah."], ["🧭", "Pendampingan pribadi", "Rencana untuk setiap siswa sesuai tingkat dan tujuannya."], ["🕐", "Jadwal fleksibel 24 jam", "Pilih hari dan jam yang cocok dari mana saja."], ["🎵", "Maqamat suara", "Tingkatkan suara dan bacaan secara metodis."], ["📚", "Konten gratis", "Penjelasan dan materi di setiap kursus, sebagian dibantu AI."], ["🌍", "Siswa dari seluruh dunia", "Lingkungan belajar internasional dan multibahasa."]],
+  bookingSummary: "Ringkasan pemesanan", trialTime: "Waktu kelas uji coba", track: "Kursus", status: "Status",
+  st: { pending: "Sedang ditinjau", confirmed: "Terkonfirmasi", cancelled: "Dibatalkan", unpaid: "Menunggu pembayaran", submitted: "Pembayaran ditinjau", paid: "Lunas", waived: "Dibebaskan", active: "Aktif", expired: "Kedaluwarsa", scheduled: "Terjadwal", completed: "Selesai" },
+  stuHello: "Selamat datang", myBookings: "Pemesanan saya", myLessons: "Kelas mendatang", myMaterials: "Materi pribadi saya", myOrders: "Langganan saya", payNow: "Selesaikan pembayaran",
+  join: "Masuk kelas", noLessons: "Belum ada kelas mendatang. Kami akan mengirim jadwal setelah pemesanan dikonfirmasi.",
+  aiSection: "Konten buatan AI 🤖", humanSection: "Penjelasan pengajar 👨‍🏫", trackContent: "Konten kursus ini", open: "Buka", aiBadge: "AI", humanBadge: "Pengajar",
+  types: { article: "Artikel", pdf: "PDF", video: "Video", audio: "Audio", image: "Gambar", link: "Tautan" },
+  orderTitle: "Selesaikan langganan Anda", orderSub: "Pilih metode pembayaran, lalu masukkan nomor transaksi agar kami mengaktifkan langganan Anda.", orderPaid: "Pembayaran dikonfirmasi ✅ Langganan Anda aktif.",
+  subscribe: "Berlangganan", lessonsPerWeek: "kelas/minggu", mostPopular: "Paling diminati", general: "Umum", plan: "Paket", amount: "Jumlah"
+},
+ms: {
+  login: "Log masuk", signup: "Daftar akaun", logout: "Log keluar", dashboard: "Papan pemuka saya",
+  email: "E-mel", password: "Kata laluan", fullName: "Nama penuh", phone: "Telefon",
+  haveAcc: "Sudah ada akaun?", noAcc: "Belum ada akaun?", forgot: "Lupa kata laluan?",
+  resetSent: "Kami telah menghantar pautan tetapan semula kata laluan ke e-mel anda.", checkEmail: "Kami telah menghantar e-mel pengesahan. Buka e-mel itu kemudian log masuk — tempahan anda akan diselesaikan secara automatik.",
+  accExists: "E-mel ini sudah berdaftar. Sila log masuk.", pwShort: "Kata laluan mesti sekurang-kurangnya 6 aksara.", fillAll: "Sila lengkapkan semua ruangan wajib.",
+  authSub: "Log masuk untuk mengikuti kelas dan bahan anda.", bookAccNote: "Akaun akan dibuat dengan e-mel ini supaya anda boleh mengikuti tempahan dan kelas anda.",
+  loading: "Memuatkan...", error: "Berlaku ralat, sila cuba lagi.", none: "Belum ada apa-apa.", tzNote: "Masa dipaparkan mengikut zon waktu anda",
+  payTitle: "Langkah terakhir untuk mengesahkan kelas percubaan", paySub: "Kelas anda telah ditempah sementara. Sahkan dengan yuran simbolik supaya kami dapat menempah masa guru untuk anda.",
+  payWhy: "Mengapa yuran simbolik?", payWhyText: "Masa guru kami amat berharga, jadi kelas percubaan dikhaskan untuk pelajar yang serius. Yurannya sangat kecil berbanding nilai kelas.",
+  payDeduct: "Jumlah ini ditolak sepenuhnya daripada pakej pertama anda.", payFee: "Yuran pengesahan kelas percubaan",
+  payMethods: "Pilih kaedah pembayaran", payConfirmTitle: "Sudah bayar? Sahkan di sini", payRef: "No. transaksi / nama pengirim / 4 digit terakhir",
+  payMethod: "Kaedah pembayaran", paySubmit: "Saya sudah bayar — sahkan tempahan", paySubmitted: "Pengesahan diterima ✅ Kami akan menyemak pembayaran dan menghantar masa serta pautan kelas.",
+  payPaid: "Pembayaran disahkan ✅ Kelas percubaan anda telah disahkan.", payWa: "Bayar melalui WhatsApp", promoTitle: "Mengapa Akademi Itqan?",
+  promo: [["🎓", "Sanad bersambung & ijazah", "Belajar daripada pakar bersanad bersambung, dengan peluang mendapat ijazah."], ["🧭", "Bimbingan peribadi", "Pelan untuk setiap pelajar mengikut tahap dan matlamat."], ["🕐", "Jadual fleksibel 24 jam", "Pilih hari dan jam yang sesuai dari mana-mana sahaja."], ["🎵", "Maqamat suara", "Perbaiki suara dan bacaan secara bersistem."], ["📚", "Kandungan percuma", "Penerangan dan bahan dalam setiap kursus, sebahagiannya dibantu AI."], ["🌍", "Pelajar dari seluruh dunia", "Persekitaran pembelajaran antarabangsa dan pelbagai bahasa."]],
+  bookingSummary: "Ringkasan tempahan", trialTime: "Masa kelas percubaan", track: "Kursus", status: "Status",
+  st: { pending: "Dalam semakan", confirmed: "Disahkan", cancelled: "Dibatalkan", unpaid: "Menunggu bayaran", submitted: "Bayaran disemak", paid: "Telah dibayar", waived: "Dikecualikan", active: "Aktif", expired: "Tamat tempoh", scheduled: "Dijadualkan", completed: "Selesai" },
+  stuHello: "Selamat datang", myBookings: "Tempahan saya", myLessons: "Kelas akan datang", myMaterials: "Bahan peribadi saya", myOrders: "Langganan saya", payNow: "Lengkapkan bayaran",
+  join: "Sertai kelas", noLessons: "Belum ada kelas akan datang. Kami akan menghantar masa selepas tempahan disahkan.",
+  aiSection: "Kandungan AI 🤖", humanSection: "Penerangan guru 👨‍🏫", trackContent: "Kandungan kursus ini", open: "Buka", aiBadge: "AI", humanBadge: "Guru",
+  types: { article: "Artikel", pdf: "PDF", video: "Video", audio: "Audio", image: "Imej", link: "Pautan" },
+  orderTitle: "Lengkapkan langganan anda", orderSub: "Pilih kaedah pembayaran, kemudian masukkan nombor transaksi supaya kami mengaktifkan langganan anda.", orderPaid: "Pembayaran disahkan ✅ Langganan anda aktif.",
+  subscribe: "Langgan sekarang", lessonsPerWeek: "kelas/minggu", mostPopular: "Paling popular", general: "Umum", plan: "Pakej", amount: "Jumlah"
+},
+ru: {
+  login: "Войти", signup: "Создать аккаунт", logout: "Выйти", dashboard: "Мой кабинет",
+  email: "Эл. почта", password: "Пароль", fullName: "Полное имя", phone: "Телефон",
+  haveAcc: "Уже есть аккаунт?", noAcc: "Нет аккаунта?", forgot: "Забыли пароль?",
+  resetSent: "Мы отправили ссылку для сброса пароля на вашу почту.", checkEmail: "Мы отправили письмо с подтверждением. Откройте его и войдите — бронирование завершится автоматически.",
+  accExists: "Эта почта уже зарегистрирована. Пожалуйста, войдите.", pwShort: "Пароль должен содержать не менее 6 символов.", fillAll: "Заполните все обязательные поля.",
+  authSub: "Войдите, чтобы следить за уроками и материалами.", bookAccNote: "С этой почтой будет создан аккаунт, чтобы вы могли следить за бронированием и уроками.",
+  loading: "Загрузка...", error: "Произошла ошибка, попробуйте снова.", none: "Пока ничего нет.", tzNote: "Время указано в вашем часовом поясе",
+  payTitle: "Последний шаг для подтверждения пробного урока", paySub: "Урок предварительно забронирован. Подтвердите его символической оплатой, чтобы мы закрепили за вами время преподавателя.",
+  payWhy: "Почему символическая оплата?", payWhyText: "Время наших преподавателей ценно, поэтому пробные уроки мы оставляем для мотивированных учеников. Сумма очень мала по сравнению с ценностью урока.",
+  payDeduct: "Эта сумма полностью засчитывается в первый пакет.", payFee: "Плата за подтверждение пробного урока",
+  payMethods: "Выберите способ оплаты", payConfirmTitle: "Оплатили? Подтвердите здесь", payRef: "Номер операции / имя отправителя / последние 4 цифры",
+  payMethod: "Способ оплаты", paySubmit: "Я оплатил — подтвердить бронирование", paySubmitted: "Подтверждение получено ✅ Мы проверим оплату и пришлём время и ссылку на урок.",
+  payPaid: "Оплата подтверждена ✅ Пробный урок подтверждён.", payWa: "Оплатить через WhatsApp", promoTitle: "Почему Академия Иткан?",
+  promo: [["🎓", "Непрерывный иснад и иджаза", "Учитесь у специалистов с непрерывной цепочкой передачи, с возможностью получить иджазу."], ["🧭", "Личное сопровождение", "План для каждого ученика по уровню и цели."], ["🕐", "Гибкий график 24/7", "Выбирайте удобные дни и часы из любой точки мира."], ["🎵", "Вокальные макамы", "Методично улучшайте голос и чтение."], ["📚", "Бесплатные материалы", "Объяснения и материалы в каждом курсе, часть — с помощью ИИ."], ["🌍", "Ученики со всего мира", "Международная многоязычная среда."]],
+  bookingSummary: "Ваше бронирование", trialTime: "Время пробного урока", track: "Курс", status: "Статус",
+  st: { pending: "На рассмотрении", confirmed: "Подтверждено", cancelled: "Отменено", unpaid: "Ожидает оплаты", submitted: "Оплата проверяется", paid: "Оплачено", waived: "Без оплаты", active: "Активна", expired: "Истекла", scheduled: "Запланирован", completed: "Проведён" },
+  stuHello: "Добро пожаловать", myBookings: "Мои бронирования", myLessons: "Ближайшие уроки", myMaterials: "Мои личные материалы", myOrders: "Мои подписки", payNow: "Завершить оплату",
+  join: "Войти на урок", noLessons: "Пока нет предстоящих уроков. Мы пришлём время после подтверждения.",
+  aiSection: "Материалы, созданные ИИ 🤖", humanSection: "Объяснения преподавателей 👨‍🏫", trackContent: "Материалы курса", open: "Открыть", aiBadge: "ИИ", humanBadge: "Преподаватель",
+  types: { article: "Статья", pdf: "PDF", video: "Видео", audio: "Аудио", image: "Изображение", link: "Ссылка" },
+  orderTitle: "Оформление подписки", orderSub: "Выберите способ оплаты, затем укажите номер операции, чтобы мы активировали подписку.", orderPaid: "Оплата подтверждена ✅ Подписка активна.",
+  subscribe: "Оформить", lessonsPerWeek: "урок/неделю", mostPopular: "Самый популярный", general: "Общее", plan: "Пакет", amount: "Сумма"
+},
+zh: {
+  login: "登录", signup: "注册账户", logout: "退出登录", dashboard: "我的主页",
+  email: "电子邮箱", password: "密码", fullName: "全名", phone: "电话",
+  haveAcc: "已有账户？", noAcc: "还没有账户？", forgot: "忘记密码？",
+  resetSent: "我们已将重置密码链接发送到您的邮箱。", checkEmail: "我们已发送确认邮件。打开邮件后登录，您的预约将自动完成。",
+  accExists: "该邮箱已注册，请直接登录。", pwShort: "密码至少需要 6 个字符。", fillAll: "请填写所有必填项。",
+  authSub: "登录以查看您的课程和学习资料。", bookAccNote: "我们将使用此邮箱为您创建账户，方便您查看预约和课程。",
+  loading: "加载中...", error: "出现错误，请重试。", none: "暂无内容。", tzNote: "时间按您所在时区显示",
+  payTitle: "确认试听课的最后一步", paySub: "您的课程已暂时预留。支付象征性费用即可确认，我们将为您保留老师的时间。",
+  payWhy: "为什么收取象征性费用？", payWhyText: "老师的时间非常宝贵，因此试听课只留给认真学习的学员。与课程价值相比，这笔费用非常少。",
+  payDeduct: "该金额将全额抵扣您的第一个课程套餐。", payFee: "试听课确认费",
+  payMethods: "选择支付方式", payConfirmTitle: "已付款？在此确认", payRef: "交易号 / 付款人姓名 / 卡号后 4 位",
+  payMethod: "支付方式", paySubmit: "我已付款 — 确认预约", paySubmitted: "已收到确认 ✅ 我们将核实付款，并发送上课时间和链接。",
+  payPaid: "付款已确认 ✅ 您的试听课已确认。", payWa: "通过 WhatsApp 付款", promoTitle: "为什么选择伊特坎学院？",
+  promo: [["🎓", "连续传承与授权（伊佳札）", "跟随拥有连续传承的专家学习，并有机会获得授权证书。"], ["🧭", "个性化跟进", "根据每位学员的水平和目标制定学习计划。"], ["🕐", "全天候灵活时间", "在世界任何地方选择适合您的日期和时间。"], ["🎵", "诵读音调（玛卡姆）", "系统地提升您的嗓音与诵读。"], ["📚", "免费内容", "每门课程都有讲解和资料，部分由人工智能辅助。"], ["🌍", "全球学员", "国际化、多语言的学习环境。"]],
+  bookingSummary: "您的预约", trialTime: "试听课时间", track: "课程", status: "状态",
+  st: { pending: "审核中", confirmed: "已确认", cancelled: "已取消", unpaid: "待付款", submitted: "付款审核中", paid: "已付款", waived: "已免除", active: "有效", expired: "已过期", scheduled: "已安排", completed: "已完成" },
+  stuHello: "欢迎", myBookings: "我的预约", myLessons: "即将上课", myMaterials: "我的专属资料", myOrders: "我的订阅", payNow: "完成付款",
+  join: "进入课堂", noLessons: "暂无即将开始的课程。预约确认后我们会发送上课时间。",
+  aiSection: "人工智能生成内容 🤖", humanSection: "老师讲解 👨‍🏫", trackContent: "本课程内容", open: "打开", aiBadge: "AI", humanBadge: "老师",
+  types: { article: "文章", pdf: "PDF", video: "视频", audio: "音频", image: "图片", link: "链接" },
+  orderTitle: "完成订阅", orderSub: "选择支付方式，付款后填写交易号，我们将为您开通订阅。", orderPaid: "付款已确认 ✅ 您的订阅已生效。",
+  subscribe: "立即订阅", lessonsPerWeek: "节/周", mostPopular: "最受欢迎", general: "通用", plan: "套餐", amount: "金额"
+},
+ku: {
+  login: "Têkeve", signup: "Hesab biafirîne", logout: "Derkeve", dashboard: "Panela min",
+  email: "E-name", password: "Şîfre", fullName: "Navê temam", phone: "Telefon",
+  haveAcc: "Hesabê te heye?", noAcc: "Hesabê te tune?", forgot: "Şîfre ji bîr kir?",
+  resetSent: "Me girêdana nûkirina şîfreyê ji e-nameya te re şand.", checkEmail: "Me e-nameyek pejirandinê şand. Veke û têkeve — rezervasyona te bixweber dê temam bibe.",
+  accExists: "Ev e-name berê hatiye tomarkirin. Ji kerema xwe têkeve.", pwShort: "Divê şîfre herî kêm 6 tîp be.", fillAll: "Ji kerema xwe hemû qadên pêwîst tije bike.",
+  authSub: "Ji bo şopandina ders û materyalên xwe têkeve.", bookAccNote: "Bi vê e-nameyê hesabek dê were afirandin da ku tu rezervasyon û dersên xwe bişopînî.",
+  loading: "Tê barkirin...", error: "Çewtiyek çêbû, dîsa biceribîne.", none: "Hîn tiştek tune.", tzNote: "Dem li gorî herêma demê ya te tên nîşandan",
+  payTitle: "Gava dawî ji bo pejirandina dersa ceribandinê", paySub: "Dersa te bi awayekî demkî hate veqetandin. Bi berdêlek sembolîk bipejirîne da ku em dema mamoste ji te re veqetînin.",
+  payWhy: "Çima berdêlek sembolîk?", payWhyText: "Dema mamosteyên me hêja ye, loma em dersên ceribandinê ji xwendekarên cidî re vediqetînin. Berdêl li gorî nirxa dersê pir hindik e.",
+  payDeduct: "Ev mîqdar bi temamî ji pakêta te ya yekem tê daxistin.", payFee: "Berdêla pejirandina dersa ceribandinê",
+  payMethods: "Rêbaza dayînê hilbijêre", payConfirmTitle: "Te daye? Li vir bipejirîne", payRef: "Hejmara danûstandinê / navê şandiyar / 4 hejmarên dawî",
+  payMethod: "Rêbaza dayînê", paySubmit: "Min da — rezervasyona min bipejirîne", paySubmitted: "Pejirandin hate wergirtin ✅ Em ê dayînê kontrol bikin û dem û girêdana dersê ji te re bişînin.",
+  payPaid: "Dayîn hate pejirandin ✅ Dersa te ya ceribandinê pejirandî ye.", payWa: "Bi WhatsAppê bide", promoTitle: "Çima Akademiya Itqan?",
+  promo: [["🎓", "Senedê girêdayî û îcazet", "Ji pisporên bi senedê girêdayî hîn bibe, bi îmkana wergirtina îcazetê."], ["🧭", "Şopandina kesane", "Ji bo her xwendekarî planek li gorî ast û armanca wî."], ["🕐", "Demjimêrên nerm 24/7", "Ji her derê cîhanê roj û saetên guncav hilbijêre."], ["🎵", "Maqamên dengî", "Deng û xwendina xwe bi rêbazî baştir bike."], ["📚", "Naveroka belaş", "Şirove û materyal di her rêkê de, hin bi alîkariya AI."], ["🌍", "Xwendekar ji hemû cîhanê", "Hawîrdorek navneteweyî û pirzimanî."]],
+  bookingSummary: "Rezervasyona te", trialTime: "Dema dersa ceribandinê", track: "Rêk", status: "Rewş",
+  st: { pending: "Di nirxandinê de", confirmed: "Pejirandî", cancelled: "Betalkirî", unpaid: "Li benda dayînê", submitted: "Dayîn tê kontrolkirin", paid: "Hatiye dayîn", waived: "Bexşandî", active: "Çalak", expired: "Dema wê qediya", scheduled: "Plankirî", completed: "Temam bû" },
+  stuHello: "Bi xêr hatî", myBookings: "Rezervasyonên min", myLessons: "Dersên pêşeroj", myMaterials: "Materyalên min ên taybet", myOrders: "Abonetiyên min", payNow: "Dayînê temam bike",
+  join: "Tevlî dersê bibe", noLessons: "Hîn dersên pêşeroj tune. Piştî pejirandinê em ê demê bişînin.",
+  aiSection: "Naveroka AI 🤖", humanSection: "Şiroveyên mamosteyan 👨‍🏫", trackContent: "Naveroka vê rêkê", open: "Veke", aiBadge: "AI", humanBadge: "Mamoste",
+  types: { article: "Gotar", pdf: "PDF", video: "Vîdyo", audio: "Deng", image: "Wêne", link: "Girêdan" },
+  orderTitle: "Abonetiya xwe temam bike", orderSub: "Rêbaza dayînê hilbijêre, paşê hejmara danûstandinê binivîse da ku em abonetiya te çalak bikin.", orderPaid: "Dayîn hate pejirandin ✅ Abonetiya te çalak e.",
+  subscribe: "Niha bibe abone", lessonsPerWeek: "ders/hefte", mostPopular: "Herî tê xwestin", general: "Giştî", plan: "Pakêt", amount: "Mîqdar"
+}
+});
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "maqamat", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay"];
