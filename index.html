@@ -371,7 +371,7 @@ const TEACHERS = [
 const I18N = {
 ar: {
   dir: "rtl", name: "العربية", locale: "ar-u-nu-latn",
-  meta: { siteName: "أكاديمية إتقان", short: "أكاديمية إتقان", letter: "إ", tagline: "إجازات • تحفيظ • مقامات صوتية • تفسير",
+  meta: { siteName: "أكاديمية إتقان", short: "أكاديمية إتقان", letter: "إ", tagline: "مقامات صوتية • تحفيظ • تجويد • تفسير",
     desc: "أكاديمية إتقان أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين ومتابعة شخصية وحصة تجريبية." },
   nav: { skip: "تخطَّ إلى المحتوى", home: "الرئيسية", tracks: "المسارات", maqamat: "المقامات", teachers: "المعلمون", library: "المحتوى المجاني", pricing: "الأسعار", about: "من نحن", contact: "تواصل", trial: "✨ حصة تجريبية", menu: "القائمة", theme: "تبديل الوضع الليلي/النهاري", lang: "اللغة" },
   days: ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
@@ -419,7 +419,7 @@ ar: {
 
 en: {
   dir: "ltr", name: "English", locale: "en-US",
-  meta: { siteName: "Itqan Academy", short: "Itqan Academy", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafseer",
+  meta: { siteName: "Itqan Academy", short: "Itqan Academy", letter: "I", tagline: "Maqamat • Hifz • Tajweed • Tafseer",
     desc: "Online academy for Quran, Tajweed, vocal maqamat, ijaza and Arabic language with expert teachers and trial lessons." },
   nav: { skip: "Skip to content", home: "Home", tracks: "Tracks", maqamat: "Maqamat", teachers: "Teachers", library: "Free Library", pricing: "Pricing", about: "About", contact: "Contact", trial: "✨ Trial Lesson", menu: "Menu", theme: "Toggle theme", lang: "Language" },
   days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -755,7 +755,7 @@ tr: {
 
 fr: {
   dir: "ltr", name: "Français", locale: "fr-FR",
-  meta: { siteName: "Académie Itqan", short: "Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafsir",
+  meta: { siteName: "Académie Itqan", short: "Itqan", letter: "I", tagline: "Maqamat • Hifz • Tajweed • Tafsir",
     desc: "Académie en ligne pour le Coran, le tajweed, les maqamat vocaux, l'ijaza et la langue arabe avec des professeurs experts." },
   nav: { skip: "Aller au contenu", home: "Accueil", tracks: "Parcours", maqamat: "Maqamat", teachers: "Professeurs", library: "Bibliothèque", pricing: "Tarifs", about: "À propos", contact: "Contact", trial: "✨ Cours d'essai", menu: "Menu", theme: "Changer de thème", lang: "Langue" },
   days: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
@@ -803,7 +803,7 @@ fr: {
 
 de: {
   dir: "ltr", name: "Deutsch", locale: "de-DE",
-  meta: { siteName: "Itqan Akademie", short: "Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafsir",
+  meta: { siteName: "Itqan Akademie", short: "Itqan", letter: "I", tagline: "Maqamat • Hifz • Tajweed • Tafsir",
     desc: "Online-Akademie für Koran, Tajweed, Vokal-Maqamat, Ijaza und arabische Sprache mit Experten und Probestunden." },
   nav: { skip: "Zum Inhalt springen", home: "Startseite", tracks: "Kurse", maqamat: "Maqamat", teachers: "Lehrer", library: "Mediathek", pricing: "Preise", about: "Über uns", contact: "Kontakt", trial: "✨ Probestunde", menu: "Menü", theme: "Thema wechseln", lang: "Sprache" },
   days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
@@ -851,7 +851,7 @@ de: {
 
 es: {
   dir: "ltr", name: "Español", locale: "es-ES",
-  meta: { siteName: "Academia Itqan", short: "Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafsir",
+  meta: { siteName: "Academia Itqan", short: "Itqan", letter: "I", tagline: "Maqamat • Hifz • Tajweed • Tafsir",
     desc: "Academia online de Corán, tajweed, maqamat vocales, ijaza y lengua árabe con profesores expertos." },
   nav: { skip: "Saltar al contenido", home: "Inicio", tracks: "Cursos", maqamat: "Maqamat", teachers: "Profesores", library: "Biblioteca", pricing: "Precios", about: "Nosotros", contact: "Contacto", trial: "✨ Clase de prueba", menu: "Menú", theme: "Cambiar tema", lang: "Idioma" },
   days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v17";
+const UI_VERSION = "2026-11-12-v18";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -11327,6 +11327,492 @@ renderTeacherDash = function () {
   const js = useData("myJudging", () => q(sb.from("competition_judges").select("competition_id, competitions(title,status)").eq("user_id", state.auth.user.id)));
   if (!Array.isArray(js) || !js.length) return h;
   return `<div class="card" style="margin-bottom:1rem;border-color:#f59e0b"><h3>⚖️ ${L("cmJudge")}</h3>${js.map(j => `<div class="kv"><span>${esc(compT((j.competitions || {}).title))}</span><button class="btn btn-p" onclick="go16('competition','${j.competition_id}')">⚖️ ${L("cmJudge")}</button></div>`).join("")}</div>` + h;
+};
+
+/* ======================= v21: ترتيب الموقع بالأقسام، حفظ احترافي باختبارات، درجات الحصص وأشجار التعلم، موسوعة المقامات، اختبار مستوى كامل، إنشاد بطبقة صوتك، صفحة التحكم في المجاني والمدفوع ======================= */
+Object.assign(UI.en, {
+  dmTitle: "Sections & tools", dmSub: "Everything in the academy, organised by what you want to learn.", dmOpen: "Open", dmContent: "Lessons & content", dmTools: "Tools",
+  promoTitle: "🎁 A surprise you won't find anywhere else", promoSub: "Maqam aahs sung by a human-like voice, maqam ladders, your own voice pitch, chant classical poems on the maqam — and a live maqam tuner.", promoBtn: "Discover the maqamat",
+  guestTitle: "Everything inside Itqan Academy — free account in 30 seconds", guestCta: "Create my free account",
+  guestList: ["🎼 Maqam ladders + human-like aahs for every maqam (main and branches)", "🎤 A live tuner that shows where your voice is on the maqam", "📖 Pro memorization plan: daily wird, review, tests after every session and a tafsir comprehension quiz", "🗺️ Memorization map of all 604 pages + growth trees + automatic juz certificates", "📚 Tafsir (Al-Sa'di, Ibn Kathir, Al-Tabari, Al-Qurtubi, Al-Muyassar) + Bukhari & Muslim in many languages", "🎬 Illustrated Quran stories with gentle humming", "🏆 Competitions with judges, qualifiers and a live final", "🧭 Full placement test with voice — tajweed, maqam and reading"],
+  hzPro: "My memorization", hzTabs: { today: "Today's plan", session: "New session + test", map: "Memorization map", history: "History" }, hzKind: { new: "New memorization", review: "Revision", wird: "Reading wird" },
+  hzFrom: "From ayah", hzTo: "To ayah", hzStart: "Start session", hzRead: "Read the portion carefully, then start the test.", hzTestBtn: "Start the test", hzQ: "Question", hzOf: "of", hzComplete: "Complete the missing word", hzNext: "Which ayah comes next?", hzMeaning: "Which meaning matches this ayah (Al-Muyassar)?",
+  hzResult: "Your result", hzSaved: "Session saved and the memorization map was updated ✓", hzPlan: "My daily plan", hzDir: "Order", hzDirs: { back: "From An-Nas backwards (Juz Amma first)", forward: "From Al-Fatiha forwards" }, hzNewPer: "New ayahs per day", hzRevPer: "Revision pages per day", hzSavePlan: "Save plan",
+  hzTodayNew: "Today's new portion", hzTodayRev: "Today's revision", hzDoIt: "Do it now", hzMax: "Up to 30 ayahs per session.",
+  grTitle: "My growth trees", grSub: "Grades from your teachers after every lesson + your memorization progress.", grCats: { hifz: "Memorization", maqam: "Maqam", tajweed: "Tajweed", explain: "Explanation" }, grLast: "Latest grades", grNone: "No grades yet — your teacher grades you after each lesson.",
+  grRate: "Grade your recent lessons", grRateHint: "0–10 for each skill; it appears in the student's growth trees.", grSave: "Save", grNote: "Note",
+  enTitle: "Maqam encyclopedia", enOverview: "Overview", enMood: "Feelings & when to use it", enLadder: "The ladder", enAjnas: "Its ajnas (building blocks)", enBranches: "Branches of this family", enQJ: "Qarar & jawab", enTips: "Performance tips", enClose: "It closes (qafla) on",
+  ptTitle: "Full placement test", ptSub: "Choose what you want to study — each part tests you in a different way (some by listening, some by voice).", ptParts: { tajweed: "Tajweed", maqam: "Vocal maqamat", reading: "Reading & memorization", arabic: "Arabic language" },
+  ptBegin: "Begin the test", ptSay: "Say this word clearly", ptListen: "Listen and choose the maqam", ptSing: "Sing a steady 'aah' going up step by step (8 seconds)", ptReadAloud: "Read these ayahs aloud", ptWhichMaqam: "Which maqam were you reading in?", ptDontKnow: "I don't know",
+  ptMic: "🎙️ Start", ptHeard: "Heard", ptOk: "✓ Correct", ptRetry: "Try again", ptNoSR: "Speech recognition isn't available in this browser — this part will be reviewed by a teacher.", ptDone: "Your results", ptLevel: "Level", ptLevels: ["Beginner", "Intermediate", "Advanced"], ptSend: "Save my results", ptAiNote: "Voice parts are checked automatically (speech & pitch recognition); a teacher reviews the result.",
+  krTitle: "🎤 Chant with me at my voice pitch", krHint: "The melody is generated at your own pitch; the verse lights up while you chant it.", krNeed: "Record your voice range on the maqam ladders page for a perfect pitch.",
+  acTitle: "Access & prices", acSub: "Decide what is free and what is paid — for every tool, maqam, section and item.", acTools: "Tools", acModes: { free: "Free (registered)", paid: "Paid (subscribers / premium)", hidden: "Hidden" }, acFreeMaq: "Free maqamat", acPremium: "Premium maqamat pass (unlocks all locked maqam tools)", acSecs: "Sections", acItems: "Content items", acFree: "Free", acPrice: "Price", acSaved: "Saved ✓",
+  toolNames: { ladder: "Maqam ladders", aah: "Aahs", tuner: "Maqam tuner", game: "Guess the maqam", karaoke: "Chant with me (karaoke)", placement: "Placement test", hifz: "Memorization sessions & tests", stories: "Illustrated stories", growth: "Growth trees", khatma: "Family khatma" },
+  lockTool: "🔒 This tool is part of the premium pass", libName: "Academy Content"
+});
+Object.assign(UI.ar, {
+  dmTitle: "الأقسام والأدوات", dmSub: "كل حاجة في الأكاديمية، مترتبة حسب اللي عاوز تتعلمه.", dmOpen: "افتح", dmContent: "الدروس والمحتوى", dmTools: "الأدوات",
+  promoTitle: "🎁 مفاجأة مش هتلاقيها في أي مكان", promoSub: "آهات كل مقام بصوت بشري مولّد، وسلالم المقامات، وطبقة صوتك إنت، وتنشد أشعار على المقام — ومُوالف بيوريك صوتك لايف على المقام.", promoBtn: "اكتشف المقامات",
+  guestTitle: "كل اللي جوه أكاديمية إتقان — حساب مجاني في 30 ثانية", guestCta: "اعمل حسابي المجاني",
+  guestList: ["🎼 سلالم المقامات + آهات بصوت بشري لكل مقام (الأساسية والفروع)", "🎤 مُوالف لايف بيوريك صوتك فين على سلم المقام", "📖 خطة حفظ احترافية: ورد يومي، مراجعة، واختبار بعد كل جلسة + اختبار فهم من التفسير", "🗺️ خريطة حفظ الـ 604 صفحة + أشجار تقدّمك + شهادة تلقائية لكل جزء", "📚 تفاسير (السعدي، ابن كثير، الطبري، القرطبي، الميسر) + البخاري ومسلم بلغات كتير", "🎬 قصص قرآنية مصوّرة بهمهمة هادية", "🏆 مسابقات بلجنة تحكيم وتصفيات ونهائي لايف", "🧭 اختبار تحديد مستوى كامل بالصوت — تجويد ومقامات وقراءة"],
+  hzPro: "حفظي", hzTabs: { today: "خطة النهارده", session: "جلسة جديدة + اختبار", map: "خريطة الحفظ", history: "السجل" }, hzKind: { new: "حفظ جديد", review: "مراجعة", wird: "ورد قراءة" },
+  hzFrom: "من آية", hzTo: "لحد آية", hzStart: "ابدأ الجلسة", hzRead: "اقرا المقطع كويس، وبعدين ابدأ الاختبار.", hzTestBtn: "ابدأ الاختبار", hzQ: "سؤال", hzOf: "من", hzComplete: "كمّل الكلمة الناقصة", hzNext: "إيه الآية اللي بعدها؟", hzMeaning: "إيه المعنى الأقرب للآية دي (التفسير الميسر)؟",
+  hzResult: "نتيجتك", hzSaved: "الجلسة اتسجلت وخريطة الحفظ اتحدثت ✓", hzPlan: "خطتي اليومية", hzDir: "الترتيب", hzDirs: { back: "من الناس لورا (جزء عمّ الأول)", forward: "من الفاتحة لقدام" }, hzNewPer: "آيات جديدة كل يوم", hzRevPer: "صفحات مراجعة كل يوم", hzSavePlan: "احفظ الخطة",
+  hzTodayNew: "حفظ النهارده", hzTodayRev: "مراجعة النهارده", hzDoIt: "يلا دلوقتي", hzMax: "لحد 30 آية في الجلسة.",
+  grTitle: "أشجار تقدّمي", grSub: "درجات معلمينك بعد كل حصة + تقدّمك في الحفظ.", grCats: { hifz: "الحفظ", maqam: "المقام", tajweed: "التجويد", explain: "الشرح" }, grLast: "آخر الدرجات", grNone: "لسه مفيش درجات — المعلم بيقيّمك بعد كل حصة.",
+  grRate: "قيّم حصصك الأخيرة", grRateHint: "من 0 لـ 10 في كل مهارة — وبتظهر في أشجار تقدّم الطالب.", grSave: "حفظ", grNote: "ملاحظة",
+  enTitle: "موسوعة المقامات", enOverview: "نظرة عامة", enMood: "المشاعر وإمتى يُستخدم", enLadder: "السلم", enAjnas: "الأجناس (الأجزاء اللي بيتبني منها)", enBranches: "فروع العائلة", enQJ: "القرار والجواب", enTips: "نصايح الأداء", enClose: "بيقفل (القفلة) على",
+  ptTitle: "اختبار تحديد المستوى الكامل", ptSub: "اختار اللي عاوز تدرسه — كل جزء بيختبرك بطريقة مختلفة (فيه بالسمع وفيه بصوتك).", ptParts: { tajweed: "التجويد", maqam: "المقامات الصوتية", reading: "القراءة والحفظ", arabic: "اللغة العربية" },
+  ptBegin: "ابدأ الاختبار", ptSay: "انطق الكلمة دي بوضوح", ptListen: "اسمع واختار المقام", ptSing: "اعمل «آه» ثابتة وطالع درجة درجة (8 ثواني)", ptReadAloud: "اقرا الآيات دي بصوت عالي", ptWhichMaqam: "كنت بتقرا بأنهي مقام؟", ptDontKnow: "مش عارف",
+  ptMic: "🎙️ ابدأ", ptHeard: "سمعت", ptOk: "✓ صح", ptRetry: "حاول تاني", ptNoSR: "التعرف على الكلام مش متاح في المتصفح ده — الجزء ده هيراجعه معلم.", ptDone: "نتيجتك", ptLevel: "المستوى", ptLevels: ["مبتدئ", "متوسط", "متقدم"], ptSend: "احفظ نتيجتي", ptAiNote: "أجزاء الصوت بتتصحح أوتوماتيك (تعرّف على الكلام والنغمة)، والمعلم بيراجع النتيجة.",
+  krTitle: "🎤 أنشد معايا بطبقة صوتي", krHint: "اللحن بيتولّد على طبقة صوتك إنت، والبيت بينوّر وإنت بتنشده.", krNeed: "سجّل مساحة صوتك من صفحة سلم المقامات عشان الطبقة تبقى مظبوطة.",
+  acTitle: "الوصول والأسعار", acSub: "حدد إيه المجاني وإيه المدفوع — لكل أداة ومقام وقسم ومحتوى.", acTools: "الأدوات", acModes: { free: "مجاني (للمسجلين)", paid: "مدفوع (للمشتركين / الباقة المميزة)", hidden: "مخفي" }, acFreeMaq: "المقامات المجانية", acPremium: "باقة المقامات المميزة (بتفتح كل أدوات المقامات المقفولة)", acSecs: "الأقسام", acItems: "المحتوى", acFree: "مجاني", acPrice: "السعر", acSaved: "اتحفظ ✓",
+  toolNames: { ladder: "سلالم المقامات", aah: "الآهات", tuner: "مُوالف المقامات", game: "خمّن المقام", karaoke: "أنشد معايا", placement: "اختبار المستوى", hifz: "جلسات واختبارات الحفظ", stories: "القصص المصوّرة", growth: "أشجار التقدّم", khatma: "ختمة العيلة" },
+  lockTool: "🔒 الأداة دي جزء من الباقة المميزة", libName: "محتوى الأكاديمية"
+});
+Object.assign(UI.en.nkT, { lesson_graded: "⭐ Your teacher graded your lesson — see your growth trees" });
+Object.assign(UI.ar.nkT, { lesson_graded: "⭐ المعلم قيّم حصتك — شوف أشجار تقدّمك" });
+Object.assign(TABS10.en, { access: "Access & prices" }); Object.assign(TABS10.ar, { access: "الوصول والأسعار" });
+
+/* ---------- 0) "محتوى الأكاديمية" بدل "المحتوى المجاني" ---------- */
+(function () {
+  const names = { ar: "محتوى الأكاديمية", en: "Academy Content", fr: "Contenu de l'académie", de: "Inhalte der Akademie", es: "Contenido de la academia", tr: "Akademi İçeriği", ru: "Материалы академии", id: "Konten Akademi", ms: "Kandungan Akademi", zh: "学院内容", ku: "Naveroka Akademiyê" };
+  Object.keys(I18N).forEach(lg => { const n = names[lg] || names.en; const t = I18N[lg]; if (t.nav) t.nav.library = n; if (t.lib) { t.lib.title = n; if (lg === "ar") t.lib.sub = "كل دروس الأكاديمية وأدواتها وقصصها في مكان واحد."; if (lg === "en") t.lib.sub = "All the academy's lessons, tools and stories in one place."; } });
+})();
+
+/* ---------- 1) إعدادات الوصول (مجاني / مدفوع) ---------- */
+function ACC() { const a = setv("access", {}) || {}; return { freeMaqamat: a.freeMaqamat || ["bayati", "shuri", "suznak"], tools: Object.assign({ ladder: "free", aah: "free", tuner: "free", game: "paid", karaoke: "paid", placement: "free", hifz: "free", stories: "free", growth: "free", khatma: "free" }, a.tools || {}) }; }
+function toolMode(t) { return ACC().tools[t] || "free"; }
+function toolOK(t) { const m = toolMode(t); if (role() === "owner" || role() === "teacher") return true; if (m === "free") return !!state.auth.user; if (m === "hidden") return false; return mqPremium(); }
+MAQ_FREE.aah = MAQ_FREE.vtest = MAQ_FREE.nasheed = MAQ_FREE.ladder = null;
+mqAllowed = function (kind, mid) { const r = role(); if (r === "owner" || r === "teacher") return true; if (kind === "aah" && !toolOK("aah") && !mqPremium()) return false; return ACC().freeMaqamat.includes(mid) || mqPremium(); };
+Object.defineProperty(MAQ_FREE, "vtest", { get: () => ACC().freeMaqamat, configurable: true });
+Object.defineProperty(MAQ_FREE, "aah", { get: () => ACC().freeMaqamat, configurable: true });
+Object.defineProperty(MAQ_FREE, "nasheed", { get: () => ACC().freeMaqamat, configurable: true });
+["shuri", "suznak"].forEach(x => { if (!MAQAMS.includes(x)) MAQAMS.push(x); });
+MAQAM_SCALES.shuri = [0, 150, 300, 500, 600, 900, 1000, 1200]; MAQAM_SCALES.suznak = [0, 200, 350, 500, 700, 800, 1100, 1200];
+Object.keys(UI).forEach(lg => { const mm = UI[lg] && UI[lg].maqams; if (mm) { mm.shuri = mm.shuri || (lg === "ar" ? "بياتي شوري" : "Bayati Shuri"); mm.suznak = mm.suznak || (lg === "ar" ? "سوزناك" : "Suznak"); } });
+// الصوت الرجالي والحريمي والسلم كمان بيتقفلوا للمقامات المقفولة
+const _renderMaqamatPage21 = renderMaqamatPage;
+renderMaqamatPage = function () {
+  if (!state.auth.user) return pageWrap("🎼", L("mqTitle"), L("mqSub"), guestPitch());
+  const ok = mqAllowed("aah", state.mq.id) && toolOK("ladder");
+  let h = _renderMaqamatPage21();
+  MQ.forEach(x => { const free = ACC().freeMaqamat.includes(x.id) || mqPremium(); h = h.replace(new RegExp(`onclick="aahStop\\(\\);state\\.mq\\.id='${x.id}';render\\(\\)">(🔒 |🎁 )?`), `onclick="aahStop();state.mq.id='${x.id}';render()">${free ? (mqPremium() ? "" : "🎁 ") : "🔒 "}`); });
+  if (!ok) h = h.replace(/<div class="card"><h3 style="margin-bottom:\.6rem">🗣️ آهات<\/h3>[\s\S]*?<\/div><\/div>/, `<div class="card" style="text-align:center;border-color:var(--gold,#f59e0b)"><div style="font-size:2.4rem">🔒</div><h3>${L("lockTool")}</h3><button class="btn btn-p" style="margin-top:.6rem" onclick="buyFeature('aah')">🔓 ${L("vrBuy")} ${esc(money(((setv("features", {}) || {}).aah || {}).price || 0, setv("currency", "USD")))}</button></div>`)
+    .replace(/<svg viewBox="0 0 520[\s\S]*?<\/svg>/, `<div style="height:200px;display:flex;align-items:center;justify-content:center;font-size:3rem;filter:blur(.5px)">🔒🎼</div>`);
+  return h;
+};
+
+
+// باقة المقامات: الاشتراك العام مش بيفتح المقامات — بس الباقة المميزة أو باقة المقامات
+mqPremium = function () { const r = role(); if (r === "owner" || r === "teacher") return true; if (!state.auth.user) return false; if (hasFeature("aah")) return true;
+  const t = useData("mqTrack", async () => { const { data } = await sb.rpc("credit_balance_tracks", {}); return [data || {}]; }); return Array.isArray(t) && +(t[0].maqamat || 0) > 0; };
+/* ---------- 2) سير المقام: البداية والقفلة الصحيحة ---------- */
+const MQ_SAYR = { husseini: { open: 4 }, shuri: { open: 4 }, saba: { open: 2 }, zamzam: { open: 2 }, suznak: { open: 4 }, nairuz: { open: 4 }, mahur: { open: 7 }, iraq: { open: 2 }, rahat: { open: 2 }, huzam: { open: 2 }, atharkurd: { open: 3 }, nakriz: { open: 3 } };
+MQ.forEach(m => { const s = MQ_SAYR[m.id] || {}; m.open = s.open || 0; m.close = s.close || 0; });
+const _mqPattern21 = mqPattern;
+mqPattern = function (m, p, speed) {
+  const notes = _mqPattern21(m, p, speed); if (!notes.length) return notes;
+  const close = mqDeg(m, m.close || 0); notes[notes.length - 1] = [close, notes[notes.length - 1][1]];
+  if ((p === 1 || p === 2 || p === 5) && m.open) { const o = mqDeg(m, m.open); notes.unshift([o, .7 / (speed || 1)], [mqDeg(m, m.open - 1), .45 / (speed || 1)]); }
+  return notes;
+};
+const _mqGenerate21 = mqGenerate;
+mqGenerate = function (m, seed, speed) { const n = _mqGenerate21(m, seed, speed); if (m.open) n.unshift([mqDeg(m, m.open), .8 / (speed || 1)]); n[n.length - 1] = [mqDeg(m, m.close || 0), n[n.length - 1][1]]; return n; };
+
+/* ---------- 3) موسوعة المقامات ---------- */
+const MQ_FAMILY_INFO = {
+  bayati: { over: "أشهر مقامات التلاوة وأكثرها استخدامًا. قراره الدوكاه، وبيتميّز بالدرجة التانية اللي بتنزل ربع تون عن الطبيعي (ثلاثة أرباع تون بين القرار والدرجة التانية).", mood: ["الخشوع", "السكينة والطمأنينة", "الحنان والقرب"], use: "افتتاح التلاوة وقفلتها، والآيات العامة. كتير من القراء بيبدأوا وبيختموا عليه.", ajnas: "جنس بياتي على الدوكاه + جنس نهاوند أو بياتي على النوا.", tips: ["ثبّت القرار كويس قبل ما تطلع.", "الدرجة التانية (السيكاه المنخفضة) هي روح البياتي — ماتعليهاش.", "اقفل نازل بهدوء على الدوكاه."] },
+  saba: { over: "مقام حزين جدًا ومميز، قراره الدوكاه. سرّه في الدرجة الرابعة المنخفضة (جهاركاه منخفضة نص تون) اللي بتدي إحساس الانكسار. مالوش جواب ثابت.", mood: ["الحزن والشجن", "الانكسار والتذلّل", "الرقة"], use: "آيات العذاب والوعيد وذكر الموت والقصص المؤثرة.", ajnas: "جنس صبا على الدوكاه + جنس حجاز على الجهاركاه المنخفضة.", tips: ["ماتطوّلش على الصبا عشان مايبقاش ثقيل.", "الدرجة الرابعة لازم تبقى منخفضة بوضوح.", "بيتلوّن كويس مع البياتي."] },
+  hijaz: { over: "مقام روحاني قوي، قراره الدوكاه. بيتميّز بالمسافة الكبيرة (تون ونص) بين الدرجة التانية والتالتة، ودي اللي بتديله الطابع الشرقي المميز.", mood: ["الروحانية والتضرّع", "الهيبة", "الشوق والحنين"], use: "آيات الدعاء والآخرة ويوم القيامة والمناجاة.", ajnas: "جنس حجاز على الدوكاه + جنس نهاوند أو رست على النوا.", tips: ["المسافة بين التانية والتالتة لازم تبان واسعة.", "ماتبالغش في الاهتزاز.", "بيستخدم كتير في الجمل العالية (الجواب)."] },
+  nahawand: { over: "مقام رقيق وعاطفي قراره الرست. شبه السلم الصغير (المينور) في الموسيقى الغربية.", mood: ["الرقة والعاطفة", "الحنين", "الرحمة"], use: "القصص والآيات اللي فيها رحمة ونداء رقيق.", ajnas: "جنس نهاوند على الرست + جنس حجاز أو كرد على النوا.", tips: ["في الطلوع السابعة بتبقى مرفوعة، وفي النزول بتنزل.", "مناسب للأصوات الرقيقة."] },
+  rast: { over: "مقام فخم ووقور، قراره الرست. بيتميّز بالدرجة التالتة (السيكاه) اللي بتبقى ربع تون أوطى من الطبيعي.", mood: ["الفخامة والهيبة", "الفرح الوقور", "الثبات"], use: "آيات الأحكام والتشريع والأوامر والقصص.", ajnas: "جنس رست على الرست + جنس رست على النوا.", tips: ["في النزول السابعة بتبقى عجم بدل الأوج.", "مقام مريح للبداية في المقامات."] },
+  sikah: { over: "مقام شجي ومختلف، قراره السيكاه (درجة ربع تون). بيتطلب أذن دقيقة.", mood: ["الشجن", "التأمل", "التشويق"], use: "آيات الوصف والقصص والتأمل في الكون.", ajnas: "جنس سيكاه على السيكاه + جنس رست على النوا.", tips: ["القرار نفسه ربع تون — ثبّته الأول بالمُوالف.", "بيتلوّن بالهزام بسهولة."] },
+  ajam: { over: "مقام مشرق ومبهج، شبه السلم الكبير (الماجور).", mood: ["البهجة والإشراق", "النصر", "الأمل"], use: "آيات البشرى والجنة والنصر.", ajnas: "جنس عجم على القرار + جنس عجم على الدرجة الخامسة.", tips: ["استخدمه بحذر وبوقار في التلاوة.", "مناسب للجمل القصيرة المبهجة."] },
+  kurd: { over: "مقام رقيق قريب من البياتي، قراره الدوكاه، بس الدرجة التانية فيه نص تون كامل.", mood: ["الرقة", "الحزن الخفيف", "الرجاء"], use: "التلوين بين المقامات وآيات الرجاء.", ajnas: "جنس كرد على الدوكاه + جنس نهاوند أو كرد على النوا.", tips: ["الفرق بينه وبين البياتي في الدرجة التانية بس — ركّز عليها."] }
+};
+function encyclopediaPage(mid) {
+  const m = MQ.find(x => x.id === mid); if (!m) return ""; const fam = MQ_FAMILY_INFO[m.fam] || {}; const isMain = m.id === m.fam;
+  const n = m.sc.length - 1, branches = MQ.filter(x => x.fam === m.fam && x.id !== m.fam);
+  const ladder = `<div class="row" style="gap:.3rem;flex-wrap:wrap;direction:rtl">${m.sc.map((c, i) => `<span class="badge ${i === 0 || i === n ? "badge-a" : ""}">${i === n ? 8 : i + 1}. ${esc(noteName(m.tonic + c) || "")}${i ? ` <small class="muted">(+${c - m.sc[i - 1]}¢)</small>` : ""}</span>`).join("")}</div>`;
+  const card = (t, body) => `<div class="card" style="margin-bottom:.8rem"><h3 style="margin-bottom:.5rem">${t}</h3>${body}</div>`;
+  return `<div style="margin-top:1.2rem">
+    ${card("📘 " + L("enOverview"), `<p style="line-height:1.9">${esc(isMain ? fam.over : `فرع من عائلة ${famName(m.fam)}. ${m.use || ""}.`)}</p>${m.note ? `<p class="sm muted">ℹ️ ${esc(m.note)}</p>` : ""}`)}
+    ${card("💗 " + L("enMood"), `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">${(fam.mood || []).map(x => `<span class="badge badge-g">${esc(x)}</span>`).join("")}</div><p>${esc(isMain ? fam.use : m.use || fam.use || "")}</p>`)}
+    ${card("🪜 " + L("enLadder"), ladder + `<div class="row" style="gap:.4rem;margin-top:.7rem;flex-wrap:wrap"><button class="btn btn-p" onclick="mqPagePlay('${m.id}',0)">▶ ${esc(L("mqPatterns")[0])}</button><button class="btn btn-o" onclick="state.mq.id='${m.id}';go16('maqamat')">🎼 ${L("mqTitle")}</button></div>`)}
+    ${card("🧩 " + L("enAjnas"), `<p>${esc(fam.ajnas || "")}</p>`)}
+    ${card("🎯 " + L("enQJ"), `<div class="kv"><span>${L("mqQarar")}</span><b>${esc(noteName(m.tonic) || "")}</b></div><div class="kv"><span>${L("mqJawab")}</span><b>${esc(noteName(m.tonic + m.sc[n]) || "")}</b></div><div class="kv"><span>${L("enClose")}</span><b>${esc(noteName(m.tonic + m.sc[m.close || 0]) || "")}</b></div>`)}
+    ${card("🌿 " + L("enBranches"), `<div class="row" style="gap:.4rem;flex-wrap:wrap">${(isMain ? branches : MQ.filter(x => x.fam === m.fam && x.id !== m.id)).map(b => `<span class="badge">${esc(mqName(b))}</span>`).join("") || "—"}</div>`)}
+    ${card("💡 " + L("enTips"), `<ul style="margin:0;padding-inline-start:1.2rem">${(fam.tips || []).map(t => `<li>${esc(t)}</li>`).join("")}</ul>`)}</div>`;
+}
+const _maqamPage21 = maqamPage;
+maqamPage = function (kind, mid) {
+  if (kind === "info") return encyclopediaPage(mid);
+  let h = _maqamPage21(kind, mid);
+  if (kind === "nasheed") h = h.replace(/(<button class="btn btn-p" onclick="mqPagePlay\('[^']+',2\)">)/, `<div class="card" style="background:var(--bg);margin:.8rem 0"><b>${L("krTitle")}</b><p class="xs muted" style="margin:.3rem 0 .6rem">${L("krHint")}</p>${toolOK("karaoke") ? `<button class="btn btn-p" onclick="karaoke('${mid}')">🎤 ${L("krTitle").replace("🎤 ", "")}</button>${myQarar() ? "" : `<p class="xs muted" style="margin-top:.4rem">${L("krNeed")}</p>`}` : `<button class="btn btn-o" onclick="buyFeature('aah')">🔒 ${L("lockTool")}</button>`}</div>$1`);
+  return h;
+};
+const _renderLibraryDb21 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb21(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec) return h;
+  const cur = secs.find(s => s.id === state.libSec); const meta = (cur && cur.meta) || {};
+  if (meta.kind === "info" && meta.maqam && secUnlocked(cur)) h = h.replace(`<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`, "") + encyclopediaPage(meta.maqam);
+  const dom = domainOfSection(cur, secs); if (dom) h = h.replace(/(<div class="libhead")/, `${domainToolbar(dom)}$1`);
+  return h;
+};
+
+/* ---------- 4) الإنشاد بطبقة صوتك (كاريوكي) ---------- */
+function karaoke(mid) {
+  const m = MQ.find(x => x.id === mid); const p = POEMS[MQ.indexOf(m) % POEMS.length]; const hem = []; p.v.forEach(v => v.split(" ... ").forEach(x => hem.push(x)));
+  const pr = state.auth.profile || {}; const voice = +pr.voice_low && +pr.voice_low > 150 ? "f" : (state.mq.voice || "m"); const tonic = myQarar() || mqTonicHz(m);
+  let notes = [], marks = [], t = 0;
+  hem.forEach((_, i) => { const ph = mqGenerate(m, 900 + i * 13, 1).slice(0, 9); if (i === hem.length - 1) ph.push([mqDeg(m, m.close || 0), 1.6]); marks.push(t); ph.forEach(n => { notes.push(n); t += n[1]; }); });
+  AAH.vol = 1; aahSing(notes, tonic, voice);
+  const els = document.querySelectorAll(".nsl span"); els.forEach(e => e.classList.remove("kon"));
+  clearTimeout(window.__kt); (window.__kts || []).forEach(clearTimeout); window.__kts = marks.map((mk, i) => setTimeout(() => { document.querySelectorAll(".nsl span").forEach((e, j) => e.classList.toggle("kon", j === i)); }, mk * 1000 + 80));
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.nsl span{transition:all .25s;border-radius:8px;padding:0 .3rem}.nsl span.kon{background:rgba(16,185,129,.22);color:var(--accent);transform:scale(1.04)}</style>`);
+
+/* ---------- 5) الأقسام والأدوات (ترتيب الموقع) ---------- */
+function secByKind(kind, parentEn) { const s = sectionsData(); if (!Array.isArray(s)) return null; return s.find(x => (x.meta || {}).kind === kind && (!parentEn || true)) || null; }
+function secByEn(en) { const s = sectionsData(); return Array.isArray(s) ? s.find(x => ((x.title || {}).en || "").toLowerCase().startsWith(en.toLowerCase())) : null; }
+function DOMAINS() {
+  const lib = (id) => id ? `libGo('${id}')` : "navigate('library')";
+  const maq = secByEn("Vocal Maqamat"), taj = secByEn("Tajweed"), isl = secByEn("Islamic Sciences") || secByEn("Quran Tafseer"), ar = secByEn("Classical Arabic"), eg = secByEn("Egyptian");
+  const k = (x) => (secByKind(x) || {}).id;
+  return [
+    { k: "maqamat", ic: "🎼", t: { ar: "المقامات الصوتية", en: "Vocal maqamat" }, s: { ar: "السلالم، الآهات بصوت بشري، المُوالف، الموسوعة، الإنشاد على المقام، المرتل والمجود.", en: "Ladders, human-like aahs, tuner, encyclopedia, chanting, murattal & mujawwad." }, color: "#7c3aed",
+      tools: [["🪜", L("mqTitle"), "go16('maqamat')", "ladder"], ["🗣️", (UI[state.lang] || UI.en).toolNames.aah, lib(k("aah")), "aah"], ["🎙️", L("tnTitle"), "go16('tuner')", "tuner"], ["📚", L("enTitle"), lib(k("info")), ""], ["🌙", L("krTitle").replace("🎤 ", ""), lib(k("nasheed")), "karaoke"], ["🎧", L("gmTitle"), "go16('maqam-game')", "game"], ["📿", "مرتل / Murattal", lib(k("murattal")), ""], ["🎤", "مجود / Mujawwad", lib(k("mujawwad")), ""]], sec: maq && maq.id },
+    { k: "hifz", ic: "📖", t: { ar: "حفظ القرآن", en: "Quran memorization" }, s: { ar: "خطة يومية، جلسات حفظ ومراجعة وورد باختبارات، خريطة الـ 604 صفحة، شجرة الحفظ، شهادات الأجزاء، ختمة العيلة.", en: "Daily plan, sessions with tests, 604-page map, growth tree, juz certificates, family khatma." }, color: "#059669",
+      tools: [["📅", L("hzTabs").today, "state.hzTab='today';go16('hifz')", "hifz"], ["📝", L("hzTabs").session, "state.hzTab='session';go16('hifz')", "hifz"], ["🗺️", L("hzTabs").map, "state.hzTab='map';go16('hifz')", ""], ["🌳", L("grTitle"), "go16('growth')", "growth"], ["📖", L("khTitle"), "go16('khatma')", "khatma"], ["🧭", L("ptTitle"), "go16('placement')", "placement"]], sec: null },
+    { k: "tajweed", ic: "🕌", t: { ar: "التجويد", en: "Tajweed" }, s: { ar: "دروس وقصص مصوّرة للأحكام، واختبار نطق بالصوت، ودرجات تجويد بعد كل حصة.", en: "Illustrated lessons, voice pronunciation test and tajweed grades after every lesson." }, color: "#0284c7",
+      tools: [["🎬", L("stTitle"), lib(taj && taj.id), "stories"], ["🧭", L("ptTitle"), "go16('placement')", "placement"], ["🌳", L("grTitle"), "go16('growth')", "growth"]], sec: taj && taj.id },
+    { k: "sciences", ic: "📚", t: { ar: "التفسير والعلوم الإسلامية", en: "Tafsir & Islamic sciences" }, s: { ar: "التفسير بخمس تفاسير وترجمة المعاني، البخاري ومسلم والنووية، الفقه والعقيدة والسيرة، وقصص مصوّرة للسور.", en: "Five tafsirs + translations, Bukhari, Muslim, Nawawi, fiqh, aqeedah, seerah and illustrated surah stories." }, color: "#b45309",
+      tools: [["📖", L("tfTitle"), lib(k("tafsir")), ""], ["📜", (L("hdBook") || ""), lib(k("hadith")), ""], ["⚖️", "الفقه / Fiqh", lib(k("fiqh")), ""], ["🎬", L("stTitle"), lib(k("tafsir")), "stories"]], sec: isl && isl.id },
+    { k: "arabic", ic: "✍️", t: { ar: "العربية واللهجة المصرية", en: "Arabic & Egyptian dialect" }, s: { ar: "الفصحى من الأساس، واللهجة المصرية للحياة اليومية، بقصص مصوّرة.", en: "Classical Arabic from scratch and everyday Egyptian, with illustrated stories." }, color: "#db2777",
+      tools: [["✍️", "الفصحى / Fusha", lib(ar && ar.id), ""], ["🗣️", "المصري / Egyptian", lib(eg && eg.id), ""], ["🧭", L("ptTitle"), "go16('placement')", "placement"]], sec: ar && ar.id },
+    { k: "competitions", ic: "🏆", t: { ar: "المسابقات", en: "Competitions" }, s: { ar: "تصفيات ونهائي لايف ولجنة تحكيم وجوائز.", en: "Qualifiers, a live final, judges and prizes." }, color: "#d97706", tools: [["🏆", L("cmTitle"), "go16('competitions')", ""]], sec: null },
+    { k: "classroom", ic: "🎥", t: { ar: "الفصل والحصص", en: "Classroom & lessons" }, s: { ar: "فصل افتراضي بسبورة وألعاب، وتقييم بعد كل حصة في المقام والحفظ والتجويد والشرح.", en: "Virtual classroom with whiteboard and games, graded after each lesson." }, color: "#475569", tools: [["🎥", L("nvClassroom"), "navigate('classroom')", ""], ["🌳", L("grTitle"), "go16('growth')", "growth"], ["💳", I18N[state.lang].nav.pricing, "navigate('pricing')", ""], ["🤝", (state.lang === "ar" ? "كفالة طالب" : "Sponsor a student"), "go16('sponsor')", ""]], sec: null }
+  ];
+}
+function libGo(id) { state.libSec = id; try { lsSet("itqan_lib_sec", id); } catch (e) {} navigate("library"); setTimeout(() => { try { libOpen(id); } catch (e) {} }, 30); }
+function domainOfSection(cur, secs) { if (!cur) return null; let x = cur, g = new Set(); while (x && x.parent_id && !g.has(x.id)) { g.add(x.id); x = secs.find(s => s.id === x.parent_id); } const ds = DOMAINS(); return ds.find(d => d.sec && x && d.sec === x.id) || null; }
+function toolBtn([ic, name, go, key]) { const locked = key && !toolOK(key) && state.auth.user; return `<button class="dmtool" onclick="${state.auth.user ? go : "lsSet('itqan_after_hash','#/tools');navigate('signup')"}"><span>${ic}</span><b>${esc(name)}</b>${locked ? "<i>🔒</i>" : ""}</button>`; }
+function domainToolbar(d) { return `<div class="dmbar" style="--c:${d.color}"><b>${d.ic} ${esc(locText(d.t))} — ${L("dmTools")}</b><div class="dmtools">${d.tools.map(toolBtn).join("")}</div></div>`; }
+function promoMaqamat() { return `<div class="mqpromo" onclick="${state.auth.user ? "go16('d','maqamat')" : "lsSet('itqan_after_hash','#/d/maqamat');navigate('signup')"}"><div class="mqwave">${Array.from({ length: 24 }, (_, i) => `<i style="animation-delay:${(i * .07).toFixed(2)}s;height:${20 + Math.round(Math.abs(Math.sin(i * .7)) * 50)}%"></i>`).join("")}</div><div><h2>${L("promoTitle")}</h2><p>${L("promoSub")}</p><span class="btn" style="background:#fff;color:#5b21b6;font-weight:800">🎼 ${L("promoBtn")} ➜</span></div></div>`; }
+function guestPitch() { return `<div class="guestpitch"><h2>✨ ${L("guestTitle")}</h2><div class="gpgrid">${L("guestList").map(x => `<div>${esc(x)}</div>`).join("")}</div><button class="btn btn-p btn-lg" onclick="navigate('signup')">🚀 ${L("guestCta")}</button></div>`; }
+function renderToolsPage() {
+  const ds = DOMAINS();
+  return `<section class="sec"><div class="wrap"><div style="text-align:center;max-width:760px;margin:0 auto 1.2rem"><h1 style="font-size:2rem;margin:.4rem 0">🧭 ${L("dmTitle")}</h1><p class="muted">${L("dmSub")}</p></div>
+    ${promoMaqamat()}${state.auth.user ? "" : guestPitch()}
+    <div class="dmgrid">${ds.map(d => `<div class="dmcard" style="--c:${d.color}"><div class="dmhead" onclick="go16('d','${d.k}')"><span class="dmic">${d.ic}</span><div><h3>${esc(locText(d.t))}</h3><p class="sm">${esc(locText(d.s))}</p></div></div><div class="dmtools">${d.tools.map(toolBtn).join("")}</div><button class="btn btn-o btn-full" style="margin-top:.6rem" onclick="go16('d','${d.k}')">${L("dmOpen")} ➜</button></div>`).join("")}</div></div></section>`;
+}
+function renderDomainPage() {
+  const d = DOMAINS().find(x => x.k === state.pageArg) || DOMAINS()[0]; const secs = sectionsData();
+  const subs = Array.isArray(secs) && d.sec ? secs.filter(s => s.parent_id === d.sec && s.is_visible !== false) : [];
+  return `<section class="sec"><div class="wrap"><div class="crumb"><a href="#" onclick="go16('tools');return false;">🧭 ${L("dmTitle")}</a> / ${esc(locText(d.t))}</div>
+    <div class="dmhero" style="--c:${d.color}"><span style="font-size:3rem">${d.ic}</span><div><h1>${esc(locText(d.t))}</h1><p>${esc(locText(d.s))}</p></div></div>
+    ${d.k === "maqamat" ? promoMaqamat() : ""}${state.auth.user ? "" : guestPitch()}
+    <h2 style="margin:1.2rem 0 .6rem">🧰 ${L("dmTools")}</h2><div class="dmtools big">${d.tools.map(toolBtn).join("")}</div>
+    ${subs.length ? `<h2 style="margin:1.4rem 0 .6rem">📚 ${L("dmContent")}</h2><div class="libgrid">${subs.map(s => `<a class="libtile" href="#" onclick="${state.auth.user ? `libGo('${s.id}')` : "navigate('signup')"};return false;" style="${s.cover_url ? `background-image:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.12)),url('${esc(s.cover_url)}')` : ""}"><span class="ic">${esc(s.icon || "📁")}${+s.price > 0 && !secUnlocked(s) ? " 🔒" : ""}</span><b>${esc(secTitle(s))}</b></a>`).join("")}</div>` : ""}</div></section>`;
+}
+document.head.insertAdjacentHTML("beforeend", `<style>
+.dmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;margin-top:1.2rem}
+.dmcard{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:18px;padding:1rem}
+.dmhead{display:flex;gap:.8rem;align-items:flex-start;cursor:pointer}.dmhead h3{margin:0 0 .2rem}.dmic{font-size:2.2rem}
+.dmtools{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem}.dmtool{position:relative;display:flex;align-items:center;gap:.35rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:.45rem .7rem;font:600 .85rem Tajawal,sans-serif;cursor:pointer}
+.dmtool:hover{border-color:var(--accent)}.dmtool span{font-size:1.1rem}.dmtool i{font-style:normal;font-size:.75rem}.dmtools.big .dmtool{padding:.8rem 1rem;font-size:.95rem}
+.dmhero{display:flex;gap:1rem;align-items:center;padding:1.4rem;border-radius:20px;color:#fff;background:linear-gradient(135deg,var(--c),#0f172a);margin:.6rem 0 1rem}.dmhero h1{margin:0;font-size:1.8rem}.dmhero p{margin:.3rem 0 0;opacity:.92}
+.dmbar{border:1px solid var(--line);border-inline-start:4px solid var(--c);border-radius:14px;padding:.6rem .8rem;margin:.6rem 0 1rem;background:var(--card)}.dmbar .dmtools{margin-top:.4rem}
+.mqpromo{display:flex;gap:1.2rem;align-items:center;padding:1.4rem;border-radius:22px;color:#fff;cursor:pointer;margin:1rem 0;background:radial-gradient(circle at 15% 50%,#a855f7,#5b21b6 45%,#1e1b4b);box-shadow:0 14px 40px rgba(91,33,182,.35)}.mqpromo h2{margin:0 0 .3rem;font-size:1.45rem}.mqpromo p{margin:0 0 .7rem;opacity:.92}
+.mqwave{display:flex;gap:3px;align-items:center;height:90px;min-width:120px}.mqwave i{display:block;width:4px;border-radius:3px;background:#f0abfc;animation:mqw 1.2s ease-in-out infinite alternate}@keyframes mqw{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+@media(max-width:640px){.mqpromo{flex-direction:column;text-align:center}.mqwave{height:60px}}
+.guestpitch{border:2px dashed var(--accent);border-radius:20px;padding:1.3rem;margin:1rem 0;text-align:center;background:rgba(16,185,129,.05)}.guestpitch h2{margin:0 0 .8rem}.gpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem;text-align:start;margin-bottom:1rem}.gpgrid div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem;font-size:.92rem}
+</style>`);
+PAGES16.push("d", "growth");
+const _render21 = render;
+render = function () {
+  if (state.route === "d" || state.route === "growth") {
+    if (RM.key || rmEl("rmRoot")) roomTeardown(); const app = document.getElementById("app"); if (!app) return;
+    let body; try { body = state.route === "d" ? renderDomainPage() : renderGrowthPage(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; }
+    app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); return;
+  }
+  return _render21();
+};
+const _renderHome21 = renderHome;
+renderHome = function () { const h = _renderHome21(); return h.replace(/(<\/div><\/div>)/, `$1<div class="wrap">${promoMaqamat()}</div>`) + (state.auth.user ? "" : `<div class="wrap">${guestPitch()}</div>`); };
+const _renderHeader21 = renderHeader;
+renderHeader = function () { return _renderHeader21().replace(/🧰 [^<]*<\/a>/g, `🧭 ${L("dmTitle")}</a>`); };
+const _renderHub21 = renderHub;
+renderHub = function () { const h = _renderHub21(); if (!h) return h; return h.replace(`<div class="tiles">`, `<div style="margin:.4rem 0 1rem">${promoMaqamat()}</div><div class="dmtools" style="margin-bottom:1rem">${DOMAINS().map(d => `<button class="dmtool" onclick="go16('d','${d.k}')"><span>${d.ic}</span><b>${esc(locText(d.t))}</b></button>`).join("")}</div><div class="tiles">`); };
+
+/* ---------- 6) الحفظ الاحترافي: خطة + جلسات + اختبارات ---------- */
+const QC = {};
+async function qRange(s, a, b) {
+  const key = s + ":" + a + "-" + b; if (QC[key]) return QC[key];
+  const p1 = Math.floor((a - 1) / 50) + 1, p2 = Math.floor((b - 1) / 50) + 1; const vs = [], tf = {};
+  for (let p = p1; p <= p2; p++) {
+    const [v, t] = await Promise.all([fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=text_uthmani,page_number&per_page=50&page=${p}`).then(r => r.json()), fetch(`https://api.quran.com/api/v4/tafsirs/16/by_chapter/${s}?per_page=50&page=${p}`).then(r => r.json()).catch(() => ({}))]);
+    (v.verses || []).forEach(x => vs.push(x)); (t.tafsirs || []).forEach(x => tf[x.verse_key] = htmlText(x.text));
+  }
+  return (QC[key] = vs.map(x => ({ n: x.verse_number, key: x.verse_key, ar: x.text_uthmani, page: x.page_number, tf: tf[x.verse_key] || "" })));
+}
+function rnd(seed) { let x = seed; return () => { x = (x * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff; }; }
+function shuffle(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function cleanW(w) { return w.replace(/[ۖ-ۭ]/g, "").trim(); }
+function buildQuiz(kind, all, a, b) {
+  const portion = all.filter(x => x.n >= a && x.n <= b), r = rnd(a * 31 + b * 7 + portion.length), qs = [];
+  const words = [].concat(...all.map(x => x.ar.split(/\s+/).map(cleanW).filter(w => w.length > 2)));
+  const mk = (q, ans, pool) => { const opts = shuffle([ans].concat(shuffle(pool.filter(x => x !== ans), r).slice(0, 3)), r); return { q, ans, opts }; };
+  if (kind !== "wird") {
+    shuffle(portion, r).slice(0, 3).forEach(v => { const ws = v.ar.split(/\s+/); const cand = ws.map((w, i) => [w, i]).filter(([w, i]) => i > 0 && cleanW(w).length > 2); if (!cand.length) return; const [w, i] = cand[Math.floor(r() * cand.length)];
+      qs.push(Object.assign(mk(ws.map((x, j) => j === i ? "＿＿＿" : x).join(" "), cleanW(w), [...new Set(words)]), { t: "complete" })); });
+  }
+  const starts = all.map(x => x.ar.split(/\s+/).slice(0, 4).join(" "));
+  shuffle(portion.filter(x => all.find(y => y.n === x.n + 1)), r).slice(0, 2).forEach(v => { const nx = all.find(y => y.n === v.n + 1); qs.push(Object.assign(mk(v.ar, nx.ar.split(/\s+/).slice(0, 4).join(" "), starts), { t: "next" })); });
+  const tfs = all.filter(x => x.tf).map(x => x.tf.slice(0, 150));
+  shuffle(portion.filter(x => x.tf), r).slice(0, kind === "wird" ? 4 : 3).forEach(v => qs.push(Object.assign(mk(v.ar, v.tf.slice(0, 150), tfs), { t: "meaning" })));
+  return qs;
+}
+state.hzS = state.hzS || {};
+function hifzPlan() { const p = (state.auth.profile || {}).hifz_plan || {}; return Object.assign({ dir: "back", newPer: 5, revPer: 2, ptr: null }, p); }
+function planPointer(p) { return p.ptr || (p.dir === "back" ? { s: 114, a: 1 } : { s: 1, a: 1 }); }
+function renderHifzPro() {
+  if (!state.auth.user) return pageWrap("📖", L("hzPro"), L("hzSub"), guestPitch());
+  const tab = state.hzTab || "today"; const isStudent = role() === "student";
+  const tabs = `<div class="tabs" style="margin-bottom:1rem">${Object.entries(L("hzTabs")).map(([k, v]) => `<a href="#" aria-current="${tab === k}" onclick="state.hzTab='${k}';render();return false;">${v}</a>`).join("")}<a href="#" onclick="go16('growth');return false;">🌳 ${L("grTitle")}</a></div>`;
+  if (tab === "map" || !isStudent) return renderHifzPage().replace(/(<h1[^>]*>[^<]*<\/h1><p[^>]*>[^<]*<\/p>)/, `$1${isStudent ? tabs : ""}`);
+  let body = "";
+  if (!toolOK("hifz")) body = `<div class="card" style="text-align:center"><h3>${L("lockTool")}</h3><button class="btn btn-p" onclick="navigate('pricing')">${L("seePlans")}</button></div>`;
+  else if (tab === "today") {
+    const p = hifzPlan(), ptr = planPointer(p); const cnt = SURAH_AYAHS[ptr.s - 1] || 7; const to = Math.min(cnt, ptr.a + p.newPer - 1);
+    const rows = state.data["hz:" + state.auth.user.id] || useData("hz:" + state.auth.user.id, () => q(sb.from("hifz_progress").select("*").eq("student_id", state.auth.user.id)));
+    const today = new Date().toISOString().slice(0, 10); const due = Array.isArray(rows) ? rows.filter(x => x.next_review && x.next_review <= today).map(x => x.page).sort((a, b) => a - b).slice(0, p.revPer) : [];
+    body = `<div class="grid g2" style="align-items:start"><div class="card"><h3>🌱 ${L("hzTodayNew")}</h3><p style="font-size:1.2rem;margin:.6rem 0"><b>${esc(SURAHS[ptr.s - 1])}</b> — ${L("hzFrom")} ${ptr.a} ${L("hzTo")} ${to}</p><button class="btn btn-p" onclick="hzStartPreset('new',${ptr.s},${ptr.a},${to})">📝 ${L("hzDoIt")}</button></div>
+      <div class="card"><h3>🔁 ${L("hzTodayRev")}</h3>${due.length ? `<p class="sm">${due.map(pg => `<span class="badge badge-g">${L("hzPage")} ${pg} · ${esc(SURAHS[surahOfPage(pg)])}</span>`).join(" ")}</p><button class="btn btn-p" style="margin-top:.6rem" onclick="hzReviewPage(${due[0]})">🔁 ${L("hzDoIt")}</button>` : `<p class="muted">${L("hzNoDue")}</p>`}</div></div>
+      <div class="card" style="margin-top:1rem"><h3>⚙️ ${L("hzPlan")}</h3><div class="fgrid" style="align-items:end"><div><label class="l">${L("hzDir")}</label><select class="in" id="hp_d">${Object.entries(L("hzDirs")).map(([k, v]) => `<option value="${k}" ${p.dir === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+        <div><label class="l">${L("hzNewPer")}</label><input class="in" id="hp_n" type="number" min="1" max="30" value="${p.newPer}"></div><div><label class="l">${L("hzRevPer")}</label><input class="in" id="hp_r" type="number" min="0" max="20" value="${p.revPer}"></div><button class="btn btn-o" onclick="hzSavePlan()">${L("hzSavePlan")}</button></div></div>`;
+  } else if (tab === "session") body = hifzSessionView();
+  else if (tab === "history") {
+    const hs = useData("hzHist", () => q(sb.from("hifz_sessions").select("*").eq("student_id", state.auth.user.id).order("created_at", { ascending: false }).limit(40)));
+    body = `<div class="card">${!Array.isArray(hs) ? loadingBox() : !hs.length ? `<p class="muted">${L("none")}</p>` : hs.map(x => `<div class="kv"><span><b>${esc(L("hzKind")[x.kind])}</b> · ${esc(SURAHS[x.surah - 1])} ${x.ayah_from}–${x.ayah_to}<br><span class="xs muted">${esc(fmtDT(x.created_at))}</span></span><b class="${x.score >= 80 ? "accent" : ""}">${Math.round(x.score)}%</b></div>`).join("")}</div>`;
+  }
+  return pageWrap("📖", L("hzPro"), L("hzSub"), tabs + body, 1200);
+}
+const SURAH_AYAHS = [7, 286, 200, 176, 120, 165, 206, 75, 129, 109, 123, 111, 43, 52, 99, 128, 111, 110, 98, 135, 112, 78, 118, 64, 77, 227, 93, 88, 69, 60, 34, 30, 73, 54, 45, 83, 182, 88, 75, 85, 54, 53, 89, 59, 37, 35, 38, 29, 18, 45, 60, 49, 62, 55, 78, 96, 29, 22, 24, 13, 14, 11, 11, 18, 12, 12, 30, 52, 52, 44, 28, 28, 20, 56, 40, 31, 50, 40, 46, 42, 29, 19, 36, 25, 22, 17, 19, 26, 30, 20, 15, 21, 11, 8, 8, 19, 5, 8, 8, 11, 11, 8, 3, 9, 5, 4, 7, 3, 6, 3, 5, 4, 5, 6];
+function hifzSessionView() {
+  const s = state.hzS;
+  if (!s.stage) return `<div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem">${Object.entries(L("hzKind")).map(([k, v]) => `<button class="chip ${(s.kind || "new") === k ? "on" : ""}" onclick="state.hzS.kind='${k}';render()">${v}</button>`).join("")}</div>
+    <div class="fgrid" style="align-items:end"><div><label class="l">${L("hzSurah")}</label><select class="in" id="hs_s">${SURAHS.map((n, i) => `<option value="${i + 1}" ${(s.s || 114) === i + 1 ? "selected" : ""}>${i + 1}. ${n}</option>`).join("")}</select></div>
+      <div><label class="l">${L("hzFrom")}</label><input class="in" id="hs_a" type="number" min="1" value="${s.a || 1}"></div><div><label class="l">${L("hzTo")}</label><input class="in" id="hs_b" type="number" min="1" value="${s.b || 6}"></div>
+      <button class="btn btn-p" onclick="hzBegin()">▶ ${L("hzStart")}</button></div><p class="xs muted" style="margin-top:.4rem">${L("hzMax")}</p></div>`;
+  if (s.stage === "loading") return `<div class="card">${loadingBox()}</div>`;
+  if (s.stage === "read") return `<div class="card"><h3>${esc(L("hzKind")[s.kind])} — ${esc(SURAHS[s.s - 1])} ${s.a}–${s.b}</h3><p class="sm muted">${L("hzRead")}</p>${s.all.filter(x => x.n >= s.a && x.n <= s.b).map(x => `<div class="tfay" style="margin:.4rem 0">${esc(x.ar)} <span class="spno">﴿${x.n}﴾</span></div>`).join("")}<button class="btn btn-p btn-lg" style="margin-top:.8rem" onclick="state.hzS.stage='quiz';state.hzS.qi=0;state.hzS.ok=0;render()">📝 ${L("hzTestBtn")}</button></div>`;
+  if (s.stage === "quiz") {
+    const qq = s.quiz[s.qi]; if (!qq) return "";
+    const title = qq.t === "complete" ? L("hzComplete") : qq.t === "next" ? L("hzNext") : L("hzMeaning");
+    return `<div class="card"><div class="row" style="justify-content:space-between"><b>${L("hzQ")} ${s.qi + 1} ${L("hzOf")} ${s.quiz.length}</b><span class="badge">${title}</span></div>
+      <div class="tfay" style="margin:.8rem 0;font-size:1.35rem">${esc(qq.q)}</div><div style="display:flex;flex-direction:column;gap:.45rem">${qq.opts.map((o, i) => `<button class="opt" style="text-align:start;${qq.t === "meaning" ? "" : "font-family:'Amiri',serif;font-size:1.15rem"}" ${s.pick != null ? "disabled" : ""} onclick="hzPick(${i})">${s.pick != null ? (o === qq.ans ? "✅ " : s.pick === i ? "❌ " : "") : ""}${esc(o)}</button>`).join("")}</div>
+      ${s.pick != null ? `<button class="btn btn-p" style="margin-top:.8rem" onclick="hzNextQ()">➜</button>` : ""}</div>`;
+  }
+  if (s.stage === "done") { const sc = Math.round(s.ok / Math.max(1, s.quiz.length) * 100);
+    return `<div class="card" style="text-align:center"><div style="font-size:3rem">${sc >= 80 ? "🌟" : sc >= 50 ? "👍" : "💪"}</div><h2>${L("hzResult")}: ${sc}%</h2><p class="muted">${s.ok} / ${s.quiz.length}</p><p class="sm" style="color:var(--accent)">${L("hzSaved")}</p><button class="btn btn-o" style="margin-top:.6rem" onclick="state.hzS={};render()">↺</button> <button class="btn btn-p" style="margin-top:.6rem" onclick="state.hzTab='map';render()">🗺️ ${L("hzTabs").map}</button></div>`; }
+  return "";
+}
+function hzStartPreset(kind, s, a, b) { state.hzTab = "session"; state.hzS = { kind, s, a, b }; hzBegin(true); }
+function hzReviewPage(pg) { const si = surahOfPage(pg); state.hzTab = "session"; state.hzS = { kind: "review", s: si + 1, a: 1, b: Math.min(SURAH_AYAHS[si], 10), page: pg }; hzBegin(true); }
+async function hzBegin(preset) {
+  const s = state.hzS; if (!preset) { s.s = +document.getElementById("hs_s").value; s.a = Math.max(1, +document.getElementById("hs_a").value || 1); s.b = +document.getElementById("hs_b").value || s.a; s.kind = s.kind || "new"; }
+  s.b = Math.min(s.b, SURAH_AYAHS[s.s - 1], s.a + 29); s.stage = "loading"; render();
+  try {
+    let all = await qRange(s.s, Math.max(1, s.a - 3), Math.min(SURAH_AYAHS[s.s - 1], s.b + 4));
+    if (s.page) { all = all; }
+    s.all = all; s.quiz = buildQuiz(s.kind, all, s.a, s.b); s.stage = s.kind === "wird" ? "read" : "read"; s.pick = null; render();
+  } catch (e) { s.stage = null; toast(e.message || "—", true); render(); }
+}
+function hzPick(i) { const s = state.hzS; s.pick = i; const qq = s.quiz[s.qi]; if (qq.opts[i] === qq.ans) { s.ok++; sfxSafe("correct"); } else sfxSafe("wrong"); render(); }
+function sfxSafe(n) { try { if (!RM.ac) RM.ac = new (window.AudioContext || window.webkitAudioContext)(); sfx(n); } catch (e) {} }
+async function hzNextQ() {
+  const s = state.hzS; s.pick = null; s.qi++;
+  if (s.qi < s.quiz.length) return render();
+  s.stage = "done"; render(); const sc = Math.round(s.ok / Math.max(1, s.quiz.length) * 100); confetti(sc >= 80 ? 2200 : 900);
+  await sb.from("hifz_sessions").insert({ kind: s.kind, surah: s.s, ayah_from: s.a, ayah_to: s.b, score: sc, details: { total: s.quiz.length, ok: s.ok } });
+  if (s.kind !== "wird") {
+    const pages = [...new Set(s.all.filter(x => x.n >= s.a && x.n <= s.b).map(x => x.page))];
+    const grade = s.kind === "new" ? (sc >= 70 ? "new" : "hard") : sc >= 80 ? "good" : sc >= 50 ? "hard" : "forgot";
+    await sb.rpc("hifz_review", { p_student: state.auth.user.id, p_pages: pages, p_grade: grade });
+    if (s.kind === "new" && sc >= 70) { const p = hifzPlan(); const cnt = SURAH_AYAHS[s.s - 1]; let ptr = { s: s.s, a: s.b + 1 }; if (ptr.a > cnt) ptr = p.dir === "back" ? { s: Math.max(1, s.s - 1), a: 1 } : { s: Math.min(114, s.s + 1), a: 1 }; p.ptr = ptr; await sb.from("profiles").update({ hifz_plan: p }).eq("id", state.auth.user.id); state.auth.profile.hifz_plan = p; }
+  }
+  invalidate("hz:" + state.auth.user.id, "hzHist", "hzCerts:" + state.auth.user.id);
+}
+async function hzSavePlan() { const p = hifzPlan(); const d = document.getElementById("hp_d").value; if (d !== p.dir) p.ptr = null; Object.assign(p, { dir: d, newPer: Math.max(1, +document.getElementById("hp_n").value || 5), revPer: Math.max(0, +document.getElementById("hp_r").value || 0) }); await sb.from("profiles").update({ hifz_plan: p }).eq("id", state.auth.user.id); state.auth.profile.hifz_plan = p; toast(L("saved")); render(); }
+const _renderHifzPage21 = renderHifzPage;
+renderHifzPage = _renderHifzPage21;
+const _render21b = render;
+render = function () {
+  if (state.route === "hifz" && role() === "student" && !state.pageArg) {
+    if (RM.key || rmEl("rmRoot")) roomTeardown(); const app = document.getElementById("app"); if (!app) return;
+    let body; try { body = renderHifzPro(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; }
+    app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); return;
+  }
+  return _render21b();
+};
+
+/* ---------- 7) درجات الحصص + أشجار التقدّم ---------- */
+function teacherGradeCard() {
+  const uid = state.auth.user.id; const since = new Date(Date.now() - 21 * 864e5).toISOString();
+  const ls = useData("gradeLs", () => q(sb.from("lessons").select("id,start_time,student_id,track").eq("teacher_id", uid).lt("end_time", new Date().toISOString()).gte("start_time", since).eq("attendance", "present").order("start_time", { ascending: false }).limit(12)));
+  const gs = useData("gradeGs", () => q(sb.from("lesson_grades").select("lesson_id").eq("teacher_id", uid)));
+  if (!Array.isArray(ls) || !Array.isArray(gs)) return ""; const done = new Set(gs.map(g => g.lesson_id)); const todo = ls.filter(l => !done.has(l.id)); if (!todo.length) return "";
+  const P = peopleMap(); const f = (id, k) => `<label class="xs" style="display:flex;flex-direction:column">${esc(L("grCats")[k])}<input class="in" style="width:4.2rem" type="number" min="0" max="10" step="0.5" id="g_${k}_${id}"></label>`;
+  return `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>⭐ ${L("grRate")}</h3><p class="xs muted" style="margin:.3rem 0 .6rem">${L("grRateHint")}</p>${todo.map(l => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)"><b class="sm">${esc(personName(l.student_id, P.map))}</b> <span class="xs muted">${esc(fmtDT(l.start_time))}</span>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:end;margin-top:.3rem">${f(l.id, "hifz")}${f(l.id, "maqam")}${f(l.id, "tajweed")}${f(l.id, "explain")}<input class="in" id="g_note_${l.id}" placeholder="${L("grNote")}" style="flex:1;min-width:9rem"><button class="btn btn-p" onclick="saveGrade('${l.id}','${l.student_id}')">${L("grSave")}</button></div></div>`).join("")}</div>`;
+}
+async function saveGrade(lid, sid) {
+  const v = (k) => { const x = document.getElementById(`g_${k}_${lid}`).value; return x === "" ? null : Math.max(0, Math.min(10, +x)); };
+  const { error } = await sb.from("lesson_grades").insert({ lesson_id: lid, student_id: sid, hifz: v("hifz"), maqam: v("maqam"), tajweed: v("tajweed"), explain: v("explain"), note: document.getElementById("g_note_" + lid).value.trim() || null });
+  if (error) return toast(error.message, true); invalidate("gradeGs"); toast(L("saved")); render();
+}
+const _renderTeacherDash21 = renderTeacherDash;
+renderTeacherDash = function () { return teacherGradeCard() + _renderTeacherDash21(); };
+function sparkBars(vals, color) { const v = vals.slice(-12); if (!v.length) return ""; return `<svg viewBox="0 0 ${v.length * 14} 40" width="100%" height="40" preserveAspectRatio="none">${v.map((x, i) => `<rect x="${i * 14 + 2}" y="${40 - x * 4}" width="10" height="${x * 4}" rx="2" fill="${color}"/>`).join("")}</svg>`; }
+function renderGrowthPage() {
+  if (!state.auth.user) return pageWrap("🌳", L("grTitle"), L("grSub"), guestPitch());
+  const r = role(); let sid = state.pageArg || (r === "student" ? state.auth.user.id : null);
+  if (!sid && r === "parent") { const l = state.data.children || useData("children", () => q(sb.from("parent_links").select("student_id").eq("parent_id", state.auth.user.id))); sid = Array.isArray(l) && l[0] ? l[0].student_id : null; }
+  if (!sid) { const P = peopleMap(); const st = P.list.filter(p => p.role === "student"); return pageWrap("🌳", L("grTitle"), L("grSub"), `<div class="row" style="gap:.4rem;flex-wrap:wrap">${st.map(s => `<button class="btn btn-o" onclick="go16('growth','${s.id}')">${esc(s.real_name || s.email)}</button>`).join("")}</div>`); }
+  const gr = useData("gr:" + sid, () => q(sb.from("lesson_grades").select("*").eq("student_id", sid).order("created_at")));
+  const hz = useData("hz:" + sid, () => q(sb.from("hifz_progress").select("page,strength").eq("student_id", sid)));
+  if (!Array.isArray(gr) || !Array.isArray(hz)) return pageWrap("🌳", L("grTitle"), L("grSub"), loadingBox());
+  const mem = hz.filter(x => x.strength >= 2).length; const cats = { hifz: "#16a34a", maqam: "#7c3aed", tajweed: "#0284c7", explain: "#d97706" };
+  const card = (k) => { const vals = gr.map(g => g[k]).filter(x => x != null).map(Number); const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0; const pts = k === "hifz" ? mem : Math.round(vals.reduce((a, b) => a + b, 0) * 6);
+    return `<div class="card" style="text-align:center;border-top:4px solid ${cats[k]}"><h3>${esc(L("grCats")[k])}</h3>${hifzTreeSvg(Math.min(604, pts), k === "hifz" ? 0 : Math.floor(vals.filter(x => x >= 9).length / 3))}<div class="row" style="justify-content:center;gap:1rem"><span><b style="font-size:1.4rem;color:${cats[k]}">${avg ? avg.toFixed(1) : "—"}</b><span class="xs muted"> /10</span></span><span class="xs muted">${vals.length} ✓</span>${k === "hifz" ? `<span class="xs muted">${mem} ${L("hzPages")}</span>` : ""}</div>${sparkBars(vals, cats[k])}</div>`; };
+  return pageWrap("🌳", L("grTitle"), L("grSub"), `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem">${["hifz", "maqam", "tajweed", "explain"].map(card).join("")}</div>
+    <div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.5rem">${L("grLast")}</h3>${gr.length ? gr.slice().reverse().slice(0, 10).map(g => `<div class="kv"><span class="xs muted">${esc(fmtDT(g.created_at))}${g.note ? " · " + esc(g.note) : ""}</span><span class="sm">${["hifz", "maqam", "tajweed", "explain"].filter(k => g[k] != null).map(k => `${esc(L("grCats")[k])}: <b>${g[k]}</b>`).join(" · ")}</span></div>`).join("") : `<p class="muted">${L("grNone")}</p>`}</div>`, 1200);
+}
+
+/* ---------- 8) اختبار تحديد المستوى الكامل ---------- */
+const PT_Q = {
+  tajweed: [["حكم النون في «مَن يَعمل»؟", ["إظهار", "إدغام بغنة", "إخفاء", "إقلاب"], 1], ["حروف القلقلة يجمعها قولك:", ["يرملون", "قطب جد", "ء هـ ع ح غ خ", "طسم"], 1], ["المد الطبيعي بيتمد كام حركة؟", ["حركتين", "4 حركات", "6 حركات", "حركة واحدة"], 0], ["حكم النون في «مِن بَعد»؟", ["إظهار", "إخفاء", "إقلاب", "إدغام بغير غنة"], 2], ["المد اللازم بيتمد:", ["حركتين", "4 أو 5", "6 حركات", "على حسب القارئ"], 2]],
+  arabic: [["جمع «كتاب»:", ["كُتُب", "كتابات", "كاتبون", "مكاتب"], 0], ["«ذهبَ الولدُ إلى المدرسةِ» — الفاعل:", ["ذهب", "الولد", "المدرسة", "إلى"], 1], ["عكس «كبير»:", ["طويل", "صغير", "قليل", "قديم"], 1], ["الجملة الصحيحة:", ["هذا بنتٌ مجتهدة", "هذه بنتٌ مجتهدة", "هذه بنتٌ مجتهد", "هذا بنت مجتهد"], 1]]
+};
+const PT_WORDS = ["الرَّحْمَٰن", "مُسْتَقِيم", "الضَّالِّين"];
+function normAr(s) { return String(s || "").replace(/[ً-ْٰـۖ-ۭ]/g, "").replace(/[إأآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[^ء-ي\s]/g, "").replace(/\s+/g, " ").trim(); }
+function simRatio(a, b) { a = normAr(a); b = normAr(b); if (!a || !b) return 0; const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return 1 - d[m][n] / Math.max(m, n); }
+function srListen(ms) { return new Promise((res) => { const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return res(null); const r = new SR(); r.lang = "ar-SA"; r.interimResults = false; r.maxAlternatives = 3; let got = ""; r.onresult = (e) => { got = [...e.results].map(x => x[0].transcript).join(" "); }; r.onerror = () => res(got || ""); r.onend = () => res(got); r.start(); setTimeout(() => { try { r.stop(); } catch (e) {} }, ms || 4000); }); }
+state.pt = state.pt || {};
+renderPlacementPage = function () {
+  if (!state.auth.user) return pageWrap("🧭", L("ptTitle"), L("ptSub"), guestPitch());
+  const pt = state.pt;
+  if (!pt.steps) return pageWrap("🧭", L("ptTitle"), L("ptSub"), `<div class="card"><div class="row" style="gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">${Object.entries(L("ptParts")).map(([k, v]) => `<label class="opt" style="padding:.6rem .9rem"><input type="checkbox" class="ptp" value="${k}" ${!pt.parts || pt.parts.includes(k) ? "checked" : ""}> <b>${v}</b></label>`).join("")}</div>
+    <button class="btn btn-p btn-lg" onclick="ptStart()">🧭 ${L("ptBegin")}</button><p class="xs muted" style="margin-top:.6rem">${L("ptAiNote")}</p></div>`, 900);
+  const st = pt.steps[pt.i];
+  if (!st) { const lv = (x) => L("ptLevels")[x >= 80 ? 2 : x >= 50 ? 1 : 0];
+    return pageWrap("🧭", L("ptTitle"), L("ptSub"), `<div class="card"><h2>${L("ptDone")}</h2>${Object.entries(pt.score).map(([k, v]) => { const p = Math.round(v.ok / Math.max(1, v.n) * 100); return `<div class="kv"><span>${esc(L("ptParts")[k])}</span><b>${p}% · ${esc(lv(p))}</b></div>`; }).join("")}${pt.selfMaqam ? `<div class="kv"><span>${L("ptWhichMaqam")}</span><b>${esc(pt.selfMaqam)}</b></div>` : ""}
+      <button class="btn btn-p btn-lg" style="margin-top:1rem" ${pt.saved ? "disabled" : ""} onclick="ptSave()">${pt.saved ? "✓" : L("ptSend")}</button> <button class="btn btn-o" style="margin-top:1rem" onclick="navigate('pricing')">${I18N[state.lang].nav.pricing}</button></div>`, 900); }
+  const head = `<div class="row" style="justify-content:space-between;margin-bottom:.6rem"><span class="badge">${esc(L("ptParts")[st.part])}</span><span class="xs muted">${pt.i + 1} / ${pt.steps.length}</span></div><div class="pbar" style="margin-bottom:1rem"><span style="width:${Math.round(pt.i / pt.steps.length * 100)}%"></span></div>`;
+  let body = "";
+  if (st.t === "mcq") body = `<h3 style="margin-bottom:.7rem">${esc(st.q)}</h3><div style="display:flex;flex-direction:column;gap:.45rem">${st.o.map((o, i) => `<button class="opt" ${st.pick != null ? "disabled" : ""} onclick="ptAns(${i === st.a ? 1 : 0},${i})">${st.pick != null ? (i === st.a ? "✅ " : st.pick === i ? "❌ " : "") : ""}${esc(o)}</button>`).join("")}</div>`;
+  else if (st.t === "say") body = `<h3>${L("ptSay")}</h3><div class="tfay" style="text-align:center;font-size:2.4rem;margin:1rem 0">${esc(st.w)}</div><div style="text-align:center"><button class="btn btn-p btn-lg" ${st.busy ? "disabled" : ""} onclick="ptSay()">${st.busy ? "🎧 …" : L("ptMic")}</button>${st.heard != null ? `<p style="margin-top:.6rem">${L("ptHeard")}: <b>${esc(st.heard || "—")}</b> ${st.ok ? `<span class="accent">${L("ptOk")}</span>` : ""}</p>` : ""}${st.nosr ? `<p class="xs muted">${L("ptNoSR")}</p>` : ""}</div>`;
+  else if (st.t === "listen") body = `<h3>${L("ptListen")}</h3><div style="text-align:center;margin:1rem 0"><button class="btn btn-o btn-lg" onclick="ptPlayListen()">▶ 🎧</button></div><div class="grid g2" style="gap:.5rem">${st.o.map((m, i) => `<button class="opt" ${st.pick != null ? "disabled" : ""} onclick="ptAns(${m === st.m ? 1 : 0},${i})">${st.pick != null ? (m === st.m ? "✅ " : st.pick === i ? "❌ " : "") : ""}${esc(maqamName(m))}</button>`).join("")}</div>`;
+  else if (st.t === "sing") body = `<h3>${L("ptSing")}</h3><div style="text-align:center;margin:1rem 0"><button class="btn btn-p btn-lg" ${st.busy ? "disabled" : ""} onclick="ptSing()">${st.busy ? "🎙️ …" : L("ptMic")}</button>${st.res != null ? `<p style="margin-top:.6rem"><b class="accent">${st.res}%</b></p>` : ""}</div>`;
+  else if (st.t === "read") body = `<h3>${L("ptReadAloud")}</h3><div class="tfay" style="margin:1rem 0">${st.text ? esc(st.text) : loadingBox()}</div><div style="text-align:center"><button class="btn btn-p btn-lg" ${st.busy || !st.text ? "disabled" : ""} onclick="ptRead()">${st.busy ? "🎧 …" : L("ptMic")}</button>${st.res != null ? `<p style="margin-top:.6rem"><b class="accent">${st.res}%</b></p>` : ""}${st.nosr ? `<p class="xs muted">${L("ptNoSR")}</p>` : ""}</div>
+    <div style="margin-top:1rem"><label class="l">${L("ptWhichMaqam")}</label><select class="in" onchange="state.pt.selfMaqam=this.value"><option value="">${L("ptDontKnow")}</option>${MAQAMS.map(m => `<option>${esc(maqamName(m))}</option>`).join("")}</select></div>`;
+  const canNext = st.pick != null || st.heard != null || st.res != null || st.nosr;
+  return pageWrap("🧭", L("ptTitle"), L("ptSub"), `<div class="card">${head}${body}<div style="text-align:end;margin-top:1rem"><button class="btn ${canNext ? "btn-p" : "btn-o"}" onclick="ptNext()">${canNext ? "➜" : L("ptDontKnow") + " ➜"}</button></div></div>`, 900);
+};
+function ptStart() {
+  const parts = [...document.querySelectorAll(".ptp:checked")].map(x => x.value); if (!parts.length) return; const steps = [];
+  if (parts.includes("tajweed")) { PT_Q.tajweed.forEach(([q, o, a]) => steps.push({ part: "tajweed", t: "mcq", q, o, a })); PT_WORDS.forEach(w => steps.push({ part: "tajweed", t: "say", w })); }
+  if (parts.includes("maqam")) { const pool = ["bayati", "saba", "hijaz", "rast", "nahawand", "sikah"]; for (let k = 0; k < 3; k++) { const m = pool[(Date.now() + k * 7) % pool.length]; steps.push({ part: "maqam", t: "listen", m, o: shuffle([m].concat(shuffle(pool.filter(x => x !== m), rnd(Date.now() + k)).slice(0, 3)), rnd(k + 3)) }); } steps.push({ part: "maqam", t: "sing" }); }
+  if (parts.includes("reading")) steps.push({ part: "reading", t: "read" });
+  if (parts.includes("arabic")) PT_Q.arabic.forEach(([q, o, a]) => steps.push({ part: "arabic", t: "mcq", q, o, a }));
+  state.pt = { parts, steps, i: 0, score: {} }; parts.forEach(p => state.pt.score[p] = { ok: 0, n: 0 }); ptPrep(); render();
+}
+function ptPrep() { const st = state.pt.steps[state.pt.i]; if (st && st.t === "read" && !st.text) qRange(1, 2, 4).then(v => { st.text = v.map(x => x.ar).join(" ۝ "); render(); }).catch(() => { st.text = "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ"; render(); }); }
+function ptScore(ok, frac) { const st = state.pt.steps[state.pt.i]; const s = state.pt.score[st.part]; if (st.scored) return; st.scored = true; s.n++; s.ok += frac != null ? frac : (ok ? 1 : 0); }
+function ptAns(ok, i) { const st = state.pt.steps[state.pt.i]; st.pick = i; ptScore(ok); sfxSafe(ok ? "correct" : "wrong"); render(); }
+function ptNext() { const st = state.pt.steps[state.pt.i]; if (!st.scored) ptScore(false); state.pt.i++; ptPrep(); render(); }
+async function ptSay() { const st = state.pt.steps[state.pt.i]; st.busy = true; render(); const t = await srListen(3500); st.busy = false; if (t === null) { st.nosr = true; st.scored = true; } else { st.heard = t; st.ok = t.split(/\s+/).some(w => simRatio(w, st.w) >= .75) || simRatio(t, st.w) >= .75; if (!st.scored) ptScore(st.ok); } render(); }
+async function ptRead() { const st = state.pt.steps[state.pt.i]; st.busy = true; render(); const t = await srListen(15000); st.busy = false; if (t === null) { st.nosr = true; st.scored = true; } else { const target = normAr(st.text).split(" "), got = normAr(t).split(" "); let hit = 0; target.forEach(w => { if (got.some(g => simRatio(g, w) >= .75)) hit++; }); st.res = Math.round(hit / Math.max(1, target.length) * 100); ptScore(null, st.res / 100); } render(); }
+function ptPlayListen() { const st = state.pt.steps[state.pt.i]; const m = MQ.find(x => x.id === st.m); AAH.vol = 1; aahSing(mqPattern(m, 0, 1.15), mqTonicHz(m), "m"); }
+async function ptSing() {
+  const st = state.pt.steps[state.pt.i]; st.busy = true; render();
+  try { const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } }); const ac = new (window.AudioContext || window.webkitAudioContext)(); const an = ac.createAnalyser(); an.fftSize = 4096; ac.createMediaStreamSource(s).connect(an); const buf = new Float32Array(an.fftSize), fr = []; const t0 = performance.now();
+    await new Promise(r => { const loop = () => { an.getFloatTimeDomainData(buf); const f = tnPitch(buf, ac.sampleRate); if (f > 60 && f < 1100) fr.push(f); if (performance.now() - t0 < 8000) requestAnimationFrame(loop); else r(); }; loop(); });
+    s.getTracks().forEach(t => t.stop()); ac.close();
+    if (fr.length < 20) st.res = 0; else { const tonic = fr.slice(0, 15).sort((a, b) => a - b)[7]; const sc = MAQAM_SCALES.bayati; let ok = 0; fr.forEach(f => { let c = 1200 * Math.log2(f / tonic); c = ((c % 1200) + 1200) % 1200; if (sc.some(v => Math.abs(c - v) <= 35 || Math.abs(c - v - 1200) <= 35 || Math.abs(c + 1200 - v) <= 35)) ok++; }); const distinct = new Set(fr.map(f => Math.round(1200 * Math.log2(f / tonic) / 100))).size; st.res = Math.round(ok / fr.length * 100 * Math.min(1, distinct / 5)); }
+  } catch (e) { toast(rmMediaErr(e), true); st.res = 0; }
+  st.busy = false; ptScore(null, (st.res || 0) / 100); render();
+}
+async function ptSave() {
+  const pt = state.pt; const answers = { parts: pt.parts, scores: Object.fromEntries(Object.entries(pt.score).map(([k, v]) => [k, Math.round(v.ok / Math.max(1, v.n) * 100)])), self_maqam: pt.selfMaqam || null, auto: true };
+  const { error } = await sb.from("placement_tests").insert({ user_id: state.auth.user.id, file_path: "", answers }); if (error) return toast(error.message, true);
+  pt.saved = true; invalidate("plMine"); toast(L("plSent")); render();
+}
+
+/* ---------- 9) الإشعار يودّيك للحاجة نفسها ---------- */
+const _openNotif21 = openNotif;
+openNotif = async function (id) {
+  const n = (state.notif.list || []).find(x => x.id === id); const d = (n && n.data) || {};
+  const go = { content_new: () => { if (d.section_id) libGo(d.section_id); else navigate("library"); setTimeout(() => { try { const all = [].concat(...Object.values(state.data).filter(Array.isArray)); const c = all.find(x => x && x.id === d.id && x.title); if (c && (c.access !== "paid" || canSee(c))) openContent(d.id); else if (d.access === "paid") toast("🔒 " + L("lockSec")); } catch (e) {} }, 1200); },
+    lesson_graded: () => go16("growth"), juz_cert: () => { state.hzTab = "map"; go16("hifz"); }, comp_active: () => go16("competition", d.id), comp_qualified: () => go16("competition", d.id), comp_eliminated: () => go16("competition", d.id), comp_result: () => go16("competition", d.id),
+    placement_done: () => go16("placement"), sponsored: () => go16("sponsor"), sponsor_assigned: () => go16("sponsor") }[n && n.kind];
+  if (!go) return _openNotif21(id);
+  state.notif.open = false; if (n && !n.read_at) { n.read_at = new Date().toISOString(); sb.from("notifications").update({ read_at: n.read_at }).eq("id", id).then(() => {}, () => {}); }
+  go();
+};
+
+/* ---------- 10) الرصيد فوق بعملة الطالب ---------- */
+const _balChip21 = balChip;
+balChip = function () {
+  const h = _balChip21(); const b = state.data.balChip; if (!h || !Array.isArray(b) || !b[0] || b[0].w == null) return h;
+  const to = displayCur(), from = setv("currency", "USD"); const conv = convert(b[0].w, from, to);
+  return conv != null && to !== from ? h.replace(esc(money(b[0].w, from)), esc(fmtCur(conv, to))) : h;
+};
+
+/* ---------- 11) صفحة الوصول والأسعار (للأونر) ---------- */
+function ownerAccessTab() {
+  const a = ACC(); const secs = sectionsData(); const cts = useData("contentsAll", () => q(sb.from("contents").select("*").order("created_at", { ascending: false })));
+  const tn = L("toolNames"); const prem = ((setv("features", {}) || {}).aah || {});
+  const tree = (pid, depth) => (Array.isArray(secs) ? secs.filter(s => (s.parent_id || null) === pid).sort((x, y) => (x.sort || 0) - (y.sort || 0)) : []).map(s => { const kids = secs.filter(k => k.parent_id === s.id);
+    const row = `<div class="acrow" style="padding-inline-start:${depth * 14}px"><span>${esc(s.icon || "📁")} ${esc(secTitle(s))}${s.is_visible === false ? " 🙈" : ""}</span><span class="row" style="gap:.3rem;align-items:center"><label class="xs"><input type="checkbox" ${+s.price > 0 ? "" : "checked"} onchange="acSec('${s.id}',this.checked?0:(+document.getElementById('acp_${s.id}').value||5))"> ${L("acFree")}</label><input class="in" id="acp_${s.id}" type="number" min="0" step="0.5" style="width:5rem" value="${+s.price || ""}" placeholder="${L("acPrice")}" onchange="acSec('${s.id}',+this.value||0)"><label class="xs"><input type="checkbox" ${s.is_visible === false ? "" : "checked"} onchange="acVis('${s.id}',this.checked)"> 👁</label></span></div>`;
+    return kids.length ? `<details ${depth === 0 ? "" : ""}><summary>${row}</summary>${tree(s.id, depth + 1)}</details>` : row; }).join("");
+  return `<div class="card" style="margin-bottom:1rem"><h3>🔐 ${L("acTitle")}</h3><p class="sm muted">${L("acSub")}</p></div>
+    <div class="grid g2" style="align-items:start"><div class="card"><h3 style="margin-bottom:.6rem">🧰 ${L("acTools")}</h3>${Object.keys(a.tools).map(k => `<div class="kv"><span>${esc(tn[k] || k)}</span><select class="in" style="width:auto" onchange="acTool('${k}',this.value)">${Object.entries(L("acModes")).map(([m, l]) => `<option value="${m}" ${a.tools[k] === m ? "selected" : ""}>${l}</option>`).join("")}</select></div>`).join("")}
+      <h3 style="margin:1rem 0 .4rem">💎 ${L("acPremium")}</h3><div class="row" style="gap:.4rem;align-items:center"><input class="in" type="number" min="0" step="0.5" style="width:7rem" value="${esc(prem.price || "")}" id="ac_pp"><span>${esc(setv("currency", "USD"))}</span><input class="in" type="number" min="0" style="width:6rem" placeholder="days" value="${esc(prem.days || "")}" id="ac_pd"><button class="btn btn-p" onclick="acPremium()">${L("save")}</button></div></div>
+    <div class="card"><h3 style="margin-bottom:.6rem">🎼 ${L("acFreeMaq")}</h3><div class="row" style="gap:.35rem;flex-wrap:wrap">${MQ.map(m => `<label class="opt" style="padding:.3rem .6rem"><input type="checkbox" ${a.freeMaqamat.includes(m.id) ? "checked" : ""} onchange="acMaq('${m.id}',this.checked)"> ${esc(mqName(m))}</label>`).join("")}</div></div></div>
+    <div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">📁 ${L("acSecs")}</h3><div class="actree">${tree(null, 0)}</div></div>
+    <div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">🗂️ ${L("acItems")}</h3>${!Array.isArray(cts) ? loadingBox() : cts.slice(0, 120).map(c => `<div class="acrow"><span>${esc(ctTitleOf(c))} <span class="xs muted">${esc(((L("types") || {})[c.type]) || c.type)}</span></span><span class="row" style="gap:.3rem"><select class="in" style="width:auto" onchange="acItem('${c.id}',{access:this.value})">${["free", "paid", "students"].map(x => `<option value="${x}" ${(c.access || "free") === x ? "selected" : ""}>${x === "free" ? L("acFree") : x === "paid" ? "💰" : "🎓"}</option>`).join("")}</select><input class="in" type="number" min="0" step="0.5" style="width:5rem" value="${c.price || ""}" placeholder="${L("acPrice")}" onchange="acItem('${c.id}',{price:+this.value||null})"></span></div>`).join("")}</div>`;
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.acrow{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.actree details>summary{list-style:none;cursor:pointer}.actree details>summary::-webkit-details-marker{display:none}.actree details>summary .acrow>span:first-child::before{content:"▸ ";color:var(--accent)}.actree details[open]>summary .acrow>span:first-child::before{content:"▾ "}</style>`);
+async function acSaveAccess(fn) { const { data } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle(); const d = Object.assign({}, (data && data.data) || {}); d.access = Object.assign({ freeMaqamat: ACC().freeMaqamat, tools: ACC().tools }, d.access || {}); fn(d); const { error } = await sb.from("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() }); if (error) return toast(error.message, true); applySettings(d); state.setDraft = null; toast(L("acSaved")); render(); }
+function acTool(k, v) { acSaveAccess(d => { d.access.tools = Object.assign({}, d.access.tools, { [k]: v }); }); }
+function acMaq(m, on) { acSaveAccess(d => { const s = new Set(d.access.freeMaqamat || []); on ? s.add(m) : s.delete(m); d.access.freeMaqamat = [...s]; }); }
+function acPremium() { const pr = +document.getElementById("ac_pp").value || 0, dy = +document.getElementById("ac_pd").value || null; acSaveAccess(d => { d.features = Object.assign({}, d.features, { aah: { price: pr, days: dy } }); }); }
+async function acSec(id, price) { const { error } = await sb.from("content_sections").update({ price }).eq("id", id); if (error) return toast(error.message, true); invSections(); toast(L("acSaved")); }
+async function acVis(id, on) { const { error } = await sb.from("content_sections").update({ is_visible: on }).eq("id", id); if (error) return toast(error.message, true); invSections(); toast(L("acSaved")); }
+async function acItem(id, patch) { const { error } = await sb.from("contents").update(patch).eq("id", id); if (error) return toast(error.message, true); invalidate("contentsAll", "libCt"); toast(L("acSaved")); }
+const _renderOwnerDash21 = renderOwnerDash;
+renderOwnerDash = function () {
+  const tabs = ["overview", "calendar", "groups", "chats", "bookings", "requests", "orders", "users", "teacherApps", "teachers", "students", "homework", "competitions", "placement", "sponsors", "referrals", "reviews", "reports", "certs", "content", "access", "settings", "schedule"];
+  if (state.dash.tab === "access") return dashTabs(tabs) + ownerAccessTab();
+  return _renderOwnerDash21().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+};
+
+/* ---------- 12) كل الأدوات بعد التسجيل بس ---------- */
+const _render21c = render;
+render = function () {
+  const gated = ["tuner", "maqam-game", "khatma", "placement", "hifz", "growth", "maqamat", "sponsor"];
+  if (!state.auth.user && gated.includes(state.route) && state.auth.ready !== false) {
+    const app = document.getElementById("app"); if (app && sb && state.authChecked !== false) {
+      app.innerHTML = renderHeader() + `<section class="sec"><div class="wrap" style="max-width:960px">${promoMaqamat()}${guestPitch()}</div></section>` + renderFooter() + renderAIWidget(); return;
+    }
+  }
+  if (state.route === "tuner" && state.auth.user && !toolOK("tuner")) { const app = document.getElementById("app"); if (app) { app.innerHTML = renderHeader() + pageWrap("🎙️", L("tnTitle"), L("tnSub"), `<div class="card" style="text-align:center"><h3>${L("lockTool")}</h3><button class="btn btn-p" onclick="buyFeature('aah')">🔓</button></div>`) + renderFooter(); return; } }
+  if (state.route === "maqam-game" && state.auth.user && !toolOK("game")) { const app = document.getElementById("app"); if (app) { app.innerHTML = renderHeader() + pageWrap("🎧", L("gmTitle"), L("gmSub"), `<div class="card" style="text-align:center"><h3>${L("lockTool")}</h3><button class="btn btn-p" onclick="navigate('pricing')">${L("seePlans")}</button></div>`) + renderFooter(); return; } }
+  return _render21c();
 };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
