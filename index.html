@@ -8828,8 +8828,8 @@ const SV = { urls: [] };
 function loadScriptOnce(src) { return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement("script"); s.src = src; s.crossOrigin = "anonymous"; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
 function svWatermarkCss() {
   const t = ((state.auth && state.auth.user && state.auth.user.email) || I18N[state.lang].meta.siteName) + " · " + new Date().toISOString().slice(0, 10);
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180'><text x='10' y='100' fill='%23000' font-size='16' font-family='sans-serif' transform='rotate(-22 180 90)'>${t.replace(/[<>&'"]/g, "")}</text></svg>`;
-  return `background-image:url("data:image/svg+xml;utf8,${svg.replace(/#/g, "%23")}")`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180"><text x="10" y="100" fill="#000" font-size="16" font-family="sans-serif" transform="rotate(-22 180 90)">${t.replace(/[<>&'"]/g, "")}</text></svg>`;
+  return `background-image:url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg).replace(/'/g, "%27")}')`;
 }
 function svKeys(e) {
   if (!document.getElementById("svModal")) return;
