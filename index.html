@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>أكاديمية الشيخ أحمد للمقامات والقرآن</title>
-<meta name="description" content="أكاديمية أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين وحصة تجريبية.">
+<meta name="description" content="أكاديمية أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين ومتابعة شخصية وحصة تجريبية.">
 <meta name="theme-color" content="#0b0f19">
 <meta property="og:type" content="website">
 <meta property="og:title" content="أكاديمية الشيخ أحمد للمقامات والقرآن">
@@ -152,7 +152,7 @@ footer a:hover{color:var(--accent)}
 <noscript><p style="padding:2rem;text-align:center">يلزم تفعيل JavaScript لعرض هذا الموقع. / Please enable JavaScript.</p></noscript>
 <script>
 /* =====================================================================
-   ⚙️ الإعدادات الأساسية
+   ⚙️ الإعدادات — القسم القابل للتعديل
    ===================================================================== */
 const CONFIG = {
   whatsapp: "201091121907",
@@ -168,6 +168,7 @@ const CONFIG = {
   }
 };
 
+/* ---------- الباقات ---------- */
 const PLANS = [
   { id: "trial", price: null },
   { id: "pack4", price: 40, perWeek: 1 },
@@ -176,16 +177,19 @@ const PLANS = [
   { id: "group", price: 25, perWeek: 1 }
 ];
 const PLAN_IDS = ["trial", "free", "pack4", "pack8", "pack12", "group", "private"];
+
+/* ---------- المسارات ---------- */
 const TRACKS = ["ijaza", "hifz", "tajweed", "maqamat", "tafseer", "arabic", "egyptian"];
 const TRACK_EMOJI = { ijaza: "📜", hifz: "📖", tajweed: "🕌", maqamat: "🎵", tafseer: "💡", arabic: "✍️", egyptian: "🇪🇬" };
 
+/* ---------- المعلمون ---------- */
 const _r = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 const TEACHERS = [
   {
     id: "ahmed-khaled", demo: true, tz: "Africa/Cairo",
     name: { ar: "الشيخ أحمد خالد", en: "Sheikh Ahmed Khaled" },
     title: { ar: "مقامات وتلاوة وإجازات", en: "Maqamat, recitation & ijaza" },
-    bio: { ar: "خبرة في تدريس القراءات والمقامات الصوتية وإجازات السند المتصل.", en: "Expert in recitation, vocal maqamat and connected ijazat." },
+    bio: { ar: "نبذة المعلم: الخبرة، الإجازات والشهادات، أسلوب التدريس.", en: "Teacher bio: experience, ijazat and certificates, teaching style." },
     tracks: ["ijaza", "maqamat", "tajweed", "hifz"], languages: ["ar", "en"],
     availability: { 6: _r(15, 22), 1: _r(15, 22), 3: _r(15, 22) }
   },
@@ -193,7 +197,7 @@ const TEACHERS = [
     id: "ibrahim-mohamed", demo: true, tz: "Africa/Cairo",
     name: { ar: "الشيخ إبراهيم محمد", en: "Sheikh Ibrahim Mohamed" },
     title: { ar: "تحفيظ وتجويد", en: "Hifz & tajweed" },
-    bio: { ar: "متخصص في تحفيظ القرآن الكريم وأحكام التجويد للأطفال والكبار.", en: "Specialized in Quran memorization and Tajweed rules." },
+    bio: { ar: "نبذة المعلم: الخبرة، الإجازات والشهادات، أسلوب التدريس.", en: "Teacher bio: experience, ijazat and certificates, teaching style." },
     tracks: ["hifz", "tajweed", "arabic"], languages: ["ar"],
     availability: { 0: [..._r(9, 14), ..._r(19, 21)], 2: [..._r(9, 14), ..._r(19, 21)], 4: [..._r(9, 14), ..._r(19, 21)] }
   },
@@ -201,12 +205,13 @@ const TEACHERS = [
     id: "dr-nour", demo: true, tz: "Africa/Cairo",
     name: { ar: "د. نور", en: "Dr. Nour" },
     title: { ar: "تفسير وعلوم إسلامية ولغة", en: "Tafseer, Islamic studies & language" },
-    bio: { ar: "متخصصة في التفسير وعلوم القرآن الكريم وتدريس اللغة العربية.", en: "Specialized in Tafseer, Quranic sciences and Arabic language." },
+    bio: { ar: "نبذة المعلم: الخبرة، المؤهلات، أسلوب التدريس.", en: "Teacher bio: experience, qualifications, teaching style." },
     tracks: ["tafseer", "arabic", "egyptian"], languages: ["ar", "en"],
     availability: { 1: _r(12, 23), 3: _r(12, 23), 5: _r(12, 23) }
   }
 ];
 
+/* ---------- مكتبة المحتوى ---------- */
 const LIB = [
   { id: "l1", track: "ijaza", type: "article", access: "free", ai: false, reviewed: true, url: "", title: { ar: "مدخل إلى الإجازة والسند", en: "Introduction to ijaza and the chain" } },
   { id: "l2", track: "ijaza", type: "video", access: "premium", ai: false, reviewed: true, url: "", title: { ar: "مسار الإعداد للعرض على الشيخ", en: "Preparing for recitation to the sheikh" } },
@@ -230,7 +235,7 @@ const LIB = [
 ];
 
 /* =====================================================================
-   🌐 الترجمات واللغات
+   🌐 الترجمات
    ===================================================================== */
 const I18N = {
 ar: {
@@ -240,8 +245,9 @@ ar: {
   nav: { skip: "تخطَّ إلى المحتوى", home: "الرئيسية", tracks: "المسارات", maqamat: "المقامات", teachers: "المعلمون", library: "المحتوى المجاني", pricing: "الأسعار", about: "من نحن", contact: "تواصل", trial: "✨ حصة تجريبية", menu: "القائمة", theme: "تبديل الوضع الليلي/النهاري", lang: "اللغة" },
   days: ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
   bands: { dawn: "فجرًا (12ص–6ص)", morning: "صباحًا (6ص–12ظ)", afternoon: "ظهرًا (12ظ–5م)", evening: "مساءً (5م–10م)", night: "ليلًا (10م–12ص)" },
-  langs: { ar: "العربية", en: "الإنجليزية", ru: "الروسية", tr: "التركية" },
+  langs: { ar: "العربية", en: "الإنجليزية" },
   common: { bookTrial: "احجز حصة تجريبية", learnMore: "اعرف المزيد", allTracks: "كل المسارات", free: "مجاني", premium: "مدفوع", perMonth: "/ شهريًا", back: "رجوع", all: "الكل", copy: "نسخ", copied: "تم النسخ ✓", home: "العودة للرئيسية" },
+  roles: { owner: "مالك الأكاديمية", teacher: "معلم", student: "طالب" },
   hero: { badge: "مرحباً بكم في منصة الشيخ أحمد", a: "أتقن القرآن الكريم ومقامات التلاوة بصوتك", b: "مع إجازات متصلة السند", c: "وتوجيه مباشر.",
     desc: "منصة تجمع بين علوم التجويد، والتدريب الصوتي المتقدم على المقامات، والتفسير المبسط، مع معلمين ومتابعة شخصية لكل طالب.",
     cta1: "احجز حصتك التجريبية", cta2: "تصفّح المسارات", cta3: "المحتوى المجاني",
@@ -303,8 +309,9 @@ en: {
   nav: { skip: "Skip to content", home: "Home", tracks: "Tracks", maqamat: "Maqamat", teachers: "Teachers", library: "Free Library", pricing: "Pricing", about: "About", contact: "Contact", trial: "✨ Trial Lesson", menu: "Menu", theme: "Toggle theme", lang: "Language" },
   days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
   bands: { dawn: "Dawn (12AM–6AM)", morning: "Morning (6AM–12PM)", afternoon: "Afternoon (12PM–5PM)", evening: "Evening (5PM–10PM)", night: "Night (10PM–12AM)" },
-  langs: { ar: "Arabic", en: "English", ru: "Russian", tr: "Turkish" },
+  langs: { ar: "Arabic", en: "English" },
   common: { bookTrial: "Book Trial Lesson", learnMore: "Learn More", allTracks: "All Tracks", free: "Free", premium: "Premium", perMonth: "/ month", back: "Back", all: "All", copy: "Copy", copied: "Copied ✓", home: "Home" },
+  roles: { owner: "Academy Owner", teacher: "Teacher", student: "Student" },
   hero: { badge: "Welcome to Sheikh Ahmed's Platform", a: "Master the Quran & Recitation Maqamat", b: "with Connected Ijazat", c: "and Direct Guidance.",
     desc: "A unique online platform combining Tajweed rules, advanced vocal Maqamat training, and simplified Tafseer with expert personal guidance.",
     cta1: "Book Your Trial Lesson", cta2: "Explore Tracks", cta3: "Free Library",
@@ -357,108 +364,6 @@ en: {
     ok: { title: "Booking Request Ready ✅", descWa: "Final step: Send the message via WhatsApp so we can confirm your slot.", descSent: "We received your request. We will review and confirm soon.", waReq: "Send via WhatsApp (Required to complete booking)", wa: "Send copy via WhatsApp", matches: "Best matching teachers", none: "We will find the best teacher and contact you.", hours: "Shared weekly hours", sched: "Proposed 4-week schedule", schedNote: "Proposed schedule with {name} in your time, finalized after admin confirmation." } },
   about: { title: "About Us", p1: "An online academy dedicated to teaching the Quran, Tajweed, vocal maqamat, connected ijazat, and Tafseer with high educational standards.", p2: "We combine authentic traditional learning with modern technological flexibility." },
   contact: { title: "Contact Us", sub: "We are here to answer your questions.", wa: "Contact via WhatsApp", email: "Email", send: "Send Message" }
-},
-
-ru: {
-  dir: "ltr", name: "Русский", locale: "ru-RU",
-  meta: { siteName: "Академия Шейха Ахмеда", short: "Академия Шейха Ахмеда", letter: "А", tagline: "Иджаза • Хифз • Макаматы • Тафсир",
-    desc: "Онлайн-академия Корана, таджвида, макаматов и арабского языка." },
-  nav: { skip: "К контенту", home: "Главная", tracks: "Направления", maqamat: "Макаматы", teachers: "Преподаватели", library: "Библиотека", pricing: "Цены", about: "О нас", contact: "Контакты", trial: "✨ Пробный урок", menu: "Меню", theme: "Тема", lang: "Язык" },
-  days: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
-  common: { bookTrial: "Записаться на урок", learnMore: "Подробнее", allTracks: "Все", free: "Бесплатно", premium: "Премиум", perMonth: "/ мес", back: "Назад", all: "Все", copy: "Копировать", copied: "Скопировано ✓", home: "Главная" },
-  hero: { badge: "Платформа Шейха Ахмеда", a: "Освойте Коран и макаматы вашим голосом", b: "с непрерывной иджазой", c: "и личным наставничеством.",
-    desc: "Уникальная онлайн-платформа, объединяющая таджвид, макаматы и тафсир.",
-    cta1: "Записаться на урок", cta2: "Направления", cta3: "Библиотека", points: ["Индивидуальные уроки", "Гибкое расписание", "Отчеты об успеваемости"] },
-  sec: { tracks: "Направления", tracksSub: "Выберите направление. В каждое входит пробный урок.", how: "Как начать", why: "Почему мы", teachers: "Преподаватели", testi: "Отзывы", faq: "Частые вопросы", ctaT: "Готовы начать?", ctaD: "Запишитесь на пробный урок прямо сейчас.", lib: "Бесплатно", libSub: "Бесплатные материалы." },
-  how: [{ t: "Заявка", d: "Выберите время и направление." }, { t: "Подбор преподавателя", d: "Оцениваем уровень." }, { t: "Начало занятий", d: "Регулярное расписание." }],
-  why: [{ t: "Иджаза", d: "Точная передача знаний." }, { t: "Практика", d: "Работа с голосом." }, { t: "Гибкость", d: "Ваше время." }, { t: "Поддержка", d: "Обратная связь." }],
-  faq: [{ q: "Пробный урок бесплатный?", a: "Помогает оценить уровень." }, { q: "Как выбрать время?", a: "По вашему часовому поясу." }],
-  tracks: {
-    ijaza: { title: "Иджаза Корана", desc: "Точное чтение по Хафсу с непрерывной цепочкой передатчиков.", audience: "Для владеющих чтением.", outcomes: ["Чтение шейху", "Правила ривая", "Получение иджазы"], levels: ["Оценка", "Разбор", "Чтение", "Иджаза"] },
-    hifz: { title: "Хифз (Заучивание)", desc: "Программы запоминания и повторения.", audience: "Для детей и взрослых.", outcomes: ["План заучивания", "Повторение", "Таджвид"], levels: ["Джуз Амма", "Части", "Продвинутый"] },
-    tajweed: { title: "Таджвид", desc: "Правила чтения Корана.", audience: "Для улучшения чтения.", outcomes: ["Махрадж", "Правила", "Практика"], levels: ["Начальный", "Средний", "Продвинутый"] },
-    maqamat: { title: "Макаматы", desc: "Изучение 8 макаматов для украшения чтения.", audience: "Для развития голоса.", outcomes: ["Знакомство", "Практика", "Переходы"], levels: ["Слух", "База", "Переходы", "Мастерство"] },
-    tafseer: { title: "Тафсир", desc: "Смысл и контекст аятов.", audience: "Для глубокого понимания.", outcomes: ["Смыслы", "Причины ниспослания"], levels: ["Простой", "Тематический"] },
-    arabic: { title: "Арабский язык", desc: "Классический арабский с нуля.", audience: "Для начинающих.", outcomes: ["Чтение", "Письмо", "Грамматика"], levels: ["Начальный", "Средний", "Продвинутый"] },
-    egyptian: { title: "Египетский диалект", desc: "Разговорный диалект для жизни.", audience: "Для всех желающих.", outcomes: ["Разговор", "Лексика"], levels: ["Начальный", "Средний", "Продвинутый"] }
-  },
-  tp: { audience: "Для кого?", outcomes: "Чему вы научитесь:", levels: "Уровни", teachers: "Преподаватели", none: "Скоро...", maq: "Пакеты", freeLib: "Материалы" },
-  maq: { badge: "🎵 Макаматы", title: "Изучение макаматов", intro: "Байяти, Раст, Нахаванд, Хиджаз, Курд, Сиках, Аджам, Саба.", names: ["Байяти", "Раст", "Нахаванд", "Хиджаз", "Курд", "Сиках", "Аджам", "Саба"],
-    free: { badge: "Бесплатно", title: "Базовые макаматы", desc: "Аудиоуроки.", points: ["Аудио", "Слух"], cta: "Начать" },
-    group: { badge: "Группа", title: "Групповой воркшоп", desc: "Совместные занятия.", points: ["Группа", "Практика"], cta: "Вступить" },
-    private: { badge: "Индивидуально", title: "Частные уроки 1 на 1", desc: "Персональная работа.", points: ["1 на 1", "План"], cta: "Записаться" } },
-  tch: { title: "Преподаватели", sub: "Команда специалистов.", demo: "Демо-данные.", tracks: "Направления", langs: "Языки", days: "Дни", book: "Записаться", profile: "Профиль", note: "Время подстраивается под вас." },
-  lib: { title: "Библиотека", sub: "Бесплатные и премиум материалы.", banner: "Структурный шаблон.", track: "Направление", access: "Тип", types: { video: "Видео", audio: "Аудио", pdf: "PDF", quiz: "Тест", article: "Статья" }, ai: "🤖 ИИ", review: "На проверке", soon: "Скоро", open: "Открыть", unlock: "🔒 По подписке", empty: "Пусто", aiNote: "Контент проверяется." },
-  pr: { title: "Цены", sub: "Выберите план.", ph: "Цены ориентировочные", usd: "В долларах США.", sub1: "Подписаться", try1: "Пробный урок", book1: "Записаться",
-    plans: { trial: { t: "Пробный урок", d: "Оценка уровня.", f: ["1 урок", "Оценка"] },
-      pack4: { t: "4 урока", d: "1 в неделю.", f: ["4 урока/мес"] },
-      pack8: { t: "8 уроков", d: "2 в неделю.", f: ["8 уроков/мес"] },
-      pack12: { t: "12 уроков", d: "3 в неделю.", f: ["12 уроков/мес"] },
-      group: { t: "Группа", d: "Макаматы.", f: ["Групповые занятия"] },
-      free: { t: "Бесплатно" }, private: { t: "Индивидуально" } } },
-  co: { title: "Оплата", sub: "Выберите способ.", choose: "План", summary: "Итог", plan: "План", total: "Всего", name: "Имя", email: "Email", method: "Способ",
-    m: { stripe: "Карта", paypal: "PayPal", bank: "Банк", instapay: "Instapay" }, terms: "Согласен с условиями.", pay: "Оплатить", secure: "Безопасно.",
-    none: "Неактивно.", ask: "Запросить в WhatsApp", bankT: "Банковские реквизиты", holder: "Получатель", bankName: "Банк", iban: "IBAN", swift: "SWIFT", instapay: "Instapay",
-    ref: "№ заказа", refHint: "Укажите в переводе.", paid: "Оплачено — отправить в WhatsApp", afterPay: "После оплаты отправьте подтверждение.", trialInfo: "Пробный урок бесплатный.",
-    err: { name: "Введите имя.", email: "Неверный email.", method: "Выберите способ.", terms: "Согласитесь с условиями." } },
-  bk: { title: "Запись на пробный урок", sub: "2 шага.", s1: "Данные", s2: "Расписание", hint: "Выберите время.",
-    l: { name: "Имя", email: "Email", phone: "Телефон / WhatsApp", track: "Направление", trial: "Дата и время", tz: "Часовой пояс", who: "Для кого?", self: "Для себя", child: "Для ребенка", notes: "Примечания", consent: "Согласен с условиями." },
-    next: "Далее", back: "Назад", submit: "Отправить", busy: "Отправка...", count: "Выбрано: {n}",
-    err: { name: "Введите имя.", email: "Неверный email.", phone: "Неверный телефон.", trial: "Выберите дату.", past: "Выберите будущее время.", slots: "Выберите слот.", consent: "Согласитесь с условиями.", tz: "Выберите часовой пояс.", send: "Ошибка." },
-    ok: { title: "Заявка готова ✅", descWa: "Отправьте в WhatsApp.", descSent: "Получено.", waReq: "Отправить в WhatsApp", wa: "Отправить", matches: "Преподаватели", none: "Найдем.", hours: "Часы", sched: "График", schedNote: "График." } },
-  about: { title: "О нас", p1: "Онлайн-академия.", p2: "Традиции и технологии." },
-  contact: { title: "Контакты", sub: "Мы на связи.", wa: "WhatsApp", email: "Email", send: "Отправить" }
-},
-
-tr: {
-  dir: "ltr", name: "Türkçe", locale: "tr-TR",
-  meta: { siteName: "Şeyh Ahmed Akademi", short: "Şeyh Ahmed Akademi", letter: "Ş", tagline: "İcazet • Hafızlık • Makam • Tefsir",
-    desc: "Kuran, tecvit, makam ve Arapça online akademisi." },
-  nav: { skip: "İçeriğe geç", home: "Ana Sayfa", tracks: "Dallar", maqamat: "Makamlar", teachers: "Eğitmenler", library: "Kütüphane", pricing: "Fiyatlar", about: "Hakkımızda", contact: "İletişim", trial: "✨ Deneme Dersi", menu: "Menü", theme: "Tema", lang: "Dil" },
-  days: ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
-  common: { bookTrial: "Deneme Dersi Al", learnMore: "Daha Fazla", allTracks: "Tümü", free: "Ücretsiz", premium: "Premium", perMonth: "/ ay", back: "Geri", all: "Tümü", copy: "Kopyala", copied: "Kopyalandı ✓", home: "Ana Sayfa" },
-  hero: { badge: "Şeyh Ahmed'in Platformu", a: "Kuran'ı ve Makamları Sesinizle Öğrenin", b: "icazetli ve doğrudan rehberlikle.", c: "",
-    desc: "Tecvit, makam ve tefsiri birleştiren özel platform.",
-    cta1: "Deneme Dersi Al", cta2: "Dallar", cta3: "Kütüphane", points: ["Canlı dersler", "Esnek saatler", "İlerleme raporları"] },
-  sec: { tracks: "Akademi Dalları", tracksSub: "Amacınıza uygun dalı seçin.", how: "Nasıl Başlanır?", why: "Neden Biz?", teachers: "Eğitmenler", testi: "Yorumlar", faq: "SSS", ctaT: "Hazır mısınız?", ctaD: "Hemen deneme dersi alın.", lib: "Ücretsiz", libSub: "Ücretsiz içerikler." },
-  how: [{ t: "Kayıt", d: "Dalı ve saati seçin." }, { t: "Seviye", d: "Eğitmenle eşleşme." }, { t: "Başlangıç", d: "Haftalık program." }],
-  why: [{ t: "İcazet", d: "Uzman eğitmenler." }, { t: "Pratik", d: "Uygulamalı ses eğitimi." }, { t: "Esneklik", d: "Bölgesel saatler." }, { t: "Takip", d: "Düzenli notlar." }],
-  faq: [{ q: "Deneme dersi ücretsiz mi?", a: "Seviye tespiti için." }],
-  tracks: {
-    ijaza: { title: "Kuran İcazeti", desc: "Hafs veya On Kıraat icazeti.", audience: "İcazet almak isteyenler.", outcomes: ["Okuma", "Kurallar", "İcazet"], levels: ["Değerlendirme", "Gözden geçirme", "Ders", "İcazet"] },
-    hifz: { title: "Hafızlık", desc: "Hafızlık ve ezber programları.", audience: "Çocuklar ve yetişkinler.", outcomes: ["Günlük plan", "Tekrar", "Tecvit"], levels: ["Amme", "Parçalar", "İleri"] },
-    tajweed: { title: "Tecvit", desc: "Tecvit kuralları.", audience: "Okumasını geliştirmek isteyenler.", outcomes: ["Mahreç", "Kurallar", "Pratik"], levels: ["Başlangıç", "Orta", "İleri"] },
-    maqamat: { title: "Makam Eğitimi", desc: "8 temel makam eğitimi.", audience: "Sesini geliştirmek isteyenler.", outcomes: ["Tanıma", "Pratik", "Geçişler"], levels: ["Kulak", "Temel", "Geçiş", "Ustalık"] },
-    tafseer: { title: "Tefsir", desc: "Kuran anlamları ve tefsir.", audience: "Derinlemesine anlamak isteyenler.", outcomes: ["Anlamlar", "Nüzul sebebi"], levels: ["Basit", "Konulu"] },
-    arabic: { title: "Arapça", desc: "Sıfırdan Fasih Arapça.", audience: "Yeni başlayanlar.", outcomes: ["Okuma", "Yazma", "Gramer"], levels: ["Başlangıç", "Orta", "İleri"] },
-    egyptian: { title: "Mısır Lehçesi", desc: "Günlük Mısır lehçesi.", audience: "Seyahat ve iş için.", outcomes: ["Konuşma", "Kelime"], levels: ["Başlangıç", "Orta", "İleri"] }
-  },
-  tp: { audience: "Kimler için?", outcomes: "Neler öğreneceksiniz:", levels: "Seviyeler", teachers: "Eğitmenler", none: "Yakında...", maq: "Paketler", freeLib: "Materyaller" },
-  maq: { badge: "🎵 Makam Dairesi", title: "Makamları Öğrenin", intro: "Beyati, Rast, Nahavend, Hicaz, Kürd, Sikah, Acem, Saba.", names: ["Beyati", "Rast", "Nahavend", "Hicaz", "Kürd", "Sikah", "Acem", "Saba"],
-    free: { badge: "Ücretsiz", title: "Temel Makamlar", desc: "Sesli dersler.", points: ["Ses", "Dinleme"], cta: "Başla" },
-    group: { badge: "Grup", title: "Grup Atölyesi", desc: "Ortak seanslar.", points: ["Grup", "Pratik"], cta: "Katıl" },
-    private: { badge: "Özel", title: "Birebir Koçluk", desc: "Kişisel takip.", points: ["Özel", "Plan"], cta: "Rezerve Et" } },
-  tch: { title: "Eğitmenler", sub: "Uzman kadro.", demo: "Demo veriler.", tracks: "Dallar", langs: "Diller", days: "Günler", book: "Rezervasyon", profile: "Profil", note: "Saatler size göre ayarlanır." },
-  lib: { title: "Kütüphane", sub: "Ücretsiz ve ücretli içerikler.", banner: "Şablon.", track: "Dal", access: "Tür", types: { video: "Video", audio: "Ses", pdf: "PDF", quiz: "Test", article: "Makale" }, ai: "🤖 AI", review: "İncelemede", soon: "Yakında", open: "Aç", unlock: "🔒 Abone Özel", empty: "Boş", aiNote: "İçerik incelenir." },
-  pr: { title: "Fiyatlar", sub: "Plan seçin.", ph: "Tahmini fiyatlar", usd: "USD cinsinden.", sub1: "Abone Ol", try1: "Deneme Dersi", book1: "Rezerve Et",
-    plans: { trial: { t: "Deneme Dersi", d: "Seviye tespiti.", f: ["1 Ders", "Seviye"] },
-      pack4: { t: "4 Ders", d: "Haftada 1.", f: ["4 ders/ay"] },
-      pack8: { t: "8 Ders", d: "Haftada 2.", f: ["8 ders/ay"] },
-      pack12: { t: "12 Ders", d: "Haftada 3.", f: ["12 ders/ay"] },
-      group: { t: "Grup", d: "Makam grubu.", f: ["Grup dersleri"] },
-      free: { t: "Ücretsiz" }, private: { t: "Özel" } } },
-  co: { title: "Ödeme", sub: "Yöntem seçin.", choose: "Plan", summary: "Özet", plan: "Plan", total: "Toplam", name: "İsim", email: "E-posta", method: "Yöntem",
-    m: { stripe: "Kart", paypal: "PayPal", bank: "Banka", instapay: "Instapay" }, terms: "Şartları kabul ediyorum.", pay: "Öde", secure: "Güvenli.",
-    none: "Aktif değil.", ask: "WhatsApp ile iste", bankT: "Banka Bilgileri", holder: "Alıcı", bankName: "Banka", iban: "IBAN", swift: "SWIFT", instapay: "Instapay",
-    ref: "Sipariş No", refHint: "Notlara ekleyin.", paid: "Ödedim — WhatsApp ile gönder", afterPay: "Ödeme sonrası WhatsApp ile bildirin.", trialInfo: "Deneme dersi ücretsizdir.",
-    err: { name: "İsim girin.", email: "Geçersiz e-posta.", method: "Yöntem seçin.", terms: "Şartları onaylayın." } },
-  bk: { title: "Deneme Dersi Rezervasyonu", sub: "2 adım.", s1: "Bilgiler", s2: "Program", hint: "Zaman diliminizi seçin.",
-    l: { name: "İsim", email: "E-posta", phone: "Telefon / WhatsApp", track: "Dal", trial: "Tarih ve Saat", tz: "Saat Dilimi", who: "Kimin için?", self: "Kendim", child: "Çocuğum", notes: "Notlar", consent: "Şartları onaylıyorum." },
-    next: "İleri", back: "Geri", submit: "Gönder", busy: "Gönderiliyor...", count: "Seçilen: {n}",
-    err: { name: "İsim girin.", email: "Geçersiz e-posta.", phone: "Telefon girin.", trial: "Tarih seçin.", past: "Gelecek bir zaman seçin.", slots: "En az 1 slot seçin.", consent: "Onaylayın.", tz: "Saat dilimi seçin.", send: "Hata." },
-    ok: { title: "Rezervasyon Hazır ✅", descWa: "WhatsApp ile gönderin.", descSent: "Alındı.", waReq: "WhatsApp ile gönder", wa: "Gönder", matches: "Eğitmenler", none: "Bulunacak.", hours: "Saatler", sched: "Program", schedNote: "Program." } },
-  about: { title: "Hakkımızda", p1: "Online akademi.", p2: "Gelenek ve teknoloji." },
-  contact: { title: "İletişim", sub: "Buradayız.", wa: "WhatsApp", email: "E-posta", send: "Gönder" }
 }
 };
 
@@ -469,10 +374,18 @@ let state = {
   lang: localStorage.getItem('lang') || 'ar',
   theme: localStorage.getItem('theme') || 'dark',
   route: 'home',
+  role: 'owner', // الأدوار: 'owner', 'teacher', 'student'
+  userProfile: { id: "U1", role: "owner", real_name: "الشيخ أحمد خالد", display_name: "أكاديمية الشيخ أحمد" },
   params: null,
   mobileMenu: false,
   booking: { step: 1, track: '', email: '', phone: '', countryCode: '+20', trialDateTime: '', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Cairo', who: 'self', notes: '', slots: {} },
   checkout: { planId: '', name: '', email: '', method: 'stripe', terms: false, ref: 'AA-' + Math.floor(100000 + Math.random() * 900000) }
+};
+
+const i18n = {
+  get currentLang() { return state.lang; },
+  t(path, vars) { return t(path, vars); },
+  setLanguage(lang) { setLang(lang); }
 };
 
 function t(path, vars) {
@@ -482,7 +395,6 @@ function t(path, vars) {
   for (let k of keys) {
     if (val && val[k] !== undefined) val = val[k];
     else {
-      // Fallback to Arabic or English
       let fb = I18N['ar'];
       let fval = fb;
       for (let fk of keys) { if (fval && fval[fk] !== undefined) fval = fval[fk]; else { fval = path; break; } }
@@ -522,6 +434,28 @@ function setLang(lang) {
 /* =====================================================================
    🎨 عناصر واجهة المستخدم (Components)
    ===================================================================== */
+function renderDashboardHeader(userProfile) {
+  const displayName = userProfile.role === 'owner' 
+    ? userProfile.real_name 
+    : (userProfile.role === 'teacher' ? `Teacher (${userProfile.id.slice(0,4)})` : `Student (${userProfile.id.slice(0,4)})`);
+
+  return `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:var(--card);border-bottom:1px solid var(--line);margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="badge badge-a" style="font-weight:800;">
+          ${t('roles.' + userProfile.role)}
+        </span>
+        <span style="font-weight:700;font-size:0.95rem;">${displayName}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <select class="ibtn" style="padding-inline:0.4rem;height:32px;font-size:0.8rem;" onchange="setLang(this.value)">
+          ${Object.keys(I18N).map(k=>`<option value="${k}" ${k===state.lang?'selected':''}>${I18N[k].name}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+}
+
 function renderHeader() {
   let l = state.lang;
   let tr = t('nav');
@@ -1038,7 +972,6 @@ function handleCheckout(e) {
     return;
   }
 
-  // Open WhatsApp with payment confirmation
   let text = `السلام عليكم، أرغب في إتمام الاشتراك:%0A- الاسم: ${name}%0A- البريد: ${email}%0A- الباقة: ${planName} ($${plan?.price})%0A- طريقة الدفع: ${method}%0A- رقم الطلب: ${state.checkout.ref}`;
   window.open(`https://wa.me/${CONFIG.whatsapp}?text=${text}`, '_blank');
   navigate('home');
@@ -1081,10 +1014,6 @@ function viewBooking() {
             <option value="+971" ${st.countryCode==='+971'?'selected':''}>🇦🇪 +971</option>
             <option value="+44" ${st.countryCode==='+44'?'selected':''}>🇬🇧 +44</option>
             <option value="+1" ${st.countryCode==='+1'?'selected':''}>🇺🇸 +1</option>
-            <option value="+7" ${st.countryCode==='+7'?'selected':''}>🇷🇺 +7</option>
-            <option value="+90" ${st.countryCode==='+90'?'selected':''}>🇹🇷 +90</option>
-            <option value="+33" ${st.countryCode==='+33'?'selected':''}>🇫🇷 +33</option>
-            <option value="+49" ${st.countryCode==='+49'?'selected':''}>🇩🇪 +49</option>
           </select>
           <input class="in" type="tel" id="bkPhone" required value="${st.phone||''}" placeholder="1091121907">
         </div>
@@ -1211,7 +1140,6 @@ function toggleSlot(dayIndex, hour) {
 }
 
 function toggleBand(bandKey) {
-  // Quick toggle helper for time bands
   let st = state.booking;
   let hoursMap = {
     dawn: ['02:00 AM','04:00 AM'],
@@ -1317,10 +1245,12 @@ function render() {
     default: content = viewHome();
   }
 
-  app.innerHTML = renderHeader() + `<main id="main" tabindex="-1">${content}</main>` + renderFooter();
+  // إضافة هيدر التبديل والمستخدم الحقيقي إذا وجد
+  let dashboardHeader = renderDashboardHeader(state.userProfile);
+
+  app.innerHTML = renderHeader() + `<main id="main" tabindex="-1"><div class="wrap" style="margin-top:1rem">${dashboardHeader}</div>${content}</main>` + renderFooter();
 }
 
-// تشغيل التطبيق أول مرة
 document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.setAttribute('dir', I18N[state.lang]?.dir || 'rtl');
   document.documentElement.setAttribute('lang', state.lang);
