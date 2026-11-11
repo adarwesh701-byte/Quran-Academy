@@ -259,10 +259,7 @@ const TEACHERS = [
 ];
 
 /* ---------- مكتبة المحتوى ---------- */
-const LIB = [
-  { id: "l1", track: "ijaza", type: "article", access: "free", ai: false, reviewed: true, url: "", title: { ar: "مدخل إلى الإجازة والسند", en: "Introduction to ijaza and the chain", zh: "ijaza与传承简介", ru: "Введение в иджазу и цепь", ku: "Destpêka îcazet û senadê", ms: "Pengenalan kepada ijaza dan sanad", id: "Pengantar Ijaza dan Sanad", tr: "İcazet ve Senede Giriş", fr: "Introduction à l'ijaza", de: "Einführung in Ijaza", es: "Introducción a la ijaza" } },
-  { id: "l3", track: "hifz", type: "pdf", access: "free", ai: false, reviewed: true, url: "", title: { ar: "كيف تضع خطة حفظ ومراجعة", en: "How to plan memorisation and revision", zh: "如何规划背诵与复习", ru: "Как спланировать заучивание и повторение", ku: "Meriv çawa plansaziya hifz û dubarekirinê dike", ms: "Cara merancang hafazan dan ulangkaji", id: "Cara merencanakan hafalan dan murojaah", tr: "Hıfz ve Tekrar Planı Yapma", fr: "Comment planifier la mémorisation", de: "Wie man plant", es: "Plan de memorización" } }
-];
+
 
 /* ---------- الترجمات الشاملة (لجميع اللغات) ---------- */
 const I18N = {
@@ -879,7 +876,6 @@ function renderHeader() {
       <nav class="nav">
         <a href="#" onclick="navigate('home');return false;" ${state.route==='home'?'aria-current="page"':''}>${tr.home}</a>
         <a href="#" onclick="navigate('tracks');return false;" ${state.route==='tracks'?'aria-current="page"':''}>${tr.tracks}</a>
-        <a href="#" onclick="navigate('maqamat');return false;" ${state.route==='maqamat'?'aria-current="page"':''}>${tr.maqamat}</a>
         <a href="#" onclick="navigate('library');return false;" ${state.route==='library'?'aria-current="page"':''}>${tr.library}</a>
         <a href="#" onclick="navigate('pricing');return false;" ${state.route==='pricing'?'aria-current="page"':''}>${tr.pricing}</a>
         <a href="#" onclick="navigate('about');return false;" ${state.route==='about'?'aria-current="page"':''}>${tr.about}</a>
@@ -905,7 +901,6 @@ function renderHeader() {
       <div class="wrap" style="padding-block:.8rem">
         <a href="#" onclick="navigate('home');return false;">${tr.home}</a>
         <a href="#" onclick="navigate('tracks');return false;">${tr.tracks}</a>
-        <a href="#" onclick="navigate('maqamat');return false;">${tr.maqamat}</a>
         <a href="#" onclick="navigate('library');return false;">${tr.library}</a>
         <a href="#" onclick="navigate('pricing');return false;">${tr.pricing}</a>
         <a href="#" onclick="navigate('about');return false;">${tr.about}</a>
@@ -1172,28 +1167,6 @@ function renderTrackDetail() {
   </section>`;
 }
 
-function renderMaqamat() {
-  const tr = I18N[state.lang];
-  return `
-  <section class="sec">
-    <div class="wrap">
-      <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${tr.nav.maqamat}</div>
-      <div class="stitle">${tr.tracks.maqamat.title}</div>
-      <div class="ssub">${tr.tracks.maqamat.desc}</div>
-      <div class="grid">
-        ${['بيات', 'رست', 'صبا', 'جهاركاه', 'سيكاه', 'حجاز', 'نهاوند', 'كرد'].map((m, idx) => `
-          <div class="card">
-            <div class="badge badge-a" style="margin-bottom:.5rem">مقام ${idx+1}</div>
-            <h3 style="margin-bottom:.5rem">مقام ${m}</h3>
-            <p class="muted sm" style="margin-bottom:1rem">تدريب احترافي وتطبيق عملي على مقام ${m} لتحسين النغمة والخشوع في التلاوة.</p>
-            <button class="btn btn-o btn-full" onclick="state.booking.track='maqamat';navigate('booking')">${tr.common.bookTrial}</button>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  </section>`;
-}
-
 function renderTeachers() {
   const tr = I18N[state.lang];
   return `
@@ -1231,14 +1204,6 @@ function renderLibrary() {
       <div class="crumb"><a href="#" onclick="navigate('home');return false;">${tr.common.home}</a> / ${tr.nav.library}</div>
       <div class="stitle">${tr.lib.title}</div>
       <div class="ssub">${tr.lib.sub}</div>
-      <div class="grid">
-        ${LIB.map(l => `
-          <div class="card" style="display:flex;flex-direction:column">
-            <span class="badge badge-g" style="align-self:flex-start;margin-bottom:.8rem">${l.track}</span>
-            <h3 style="margin-bottom:.8rem">${l.title[state.lang] || l.title.ar}</h3>
-          </div>
-        `).join('')}
-      </div>
       ${renderLibraryDb()}
     </div>
   </section>`;
@@ -2062,13 +2027,15 @@ function renderContentForm(opts) {
   return `<div class="card">
     <h3 style="margin-bottom:.8rem">${L("add")}</h3>
     ${isOwner ? "" : `<div class="notice">${L("ctTeacherNote")}</div>`}
+    ${Array.isArray(sectionsData()) && !sectionsData().length ? `<div class="notice">${L("noSections")}</div>` : ""}
     <form onsubmit="event.preventDefault();saveContent()" style="display:flex;flex-direction:column;gap:.7rem">
       <div class="fgrid">
         <div><label class="l">${L("ctTitle")}</label><input class="in" id="ct_title" required></div>
         <div><label class="l">${L("ctTitleEn")}</label><input class="in" id="ct_title2"></div>
       </div>
       <div class="fgrid">
-        <div><label class="l">${L("ctTrack")}</label><select class="in" id="ct_track">${TRACKS.map(k => `<option value="${k}">${esc(trackTitle(k))}</option>`).join("")}<option value="general">${L("general")}</option></select></div>
+        <div><label class="l">${L("ctSection")}</label><select class="in" id="ct_section" required>${(Array.isArray(sectionsData()) ? sectionsData() : []).map(sc => `<option value="${sc.id}">${esc((sc.icon || "") + " " + secTitle(sc))}</option>`).join("")}</select></div>
+        <div><label class="l">${L("ctTrackOpt")}</label><select class="in" id="ct_track"><option value="">—</option>${TRACKS.map(k => `<option value="${k}">${esc(trackTitle(k))}</option>`).join("")}</select></div>
         <div><label class="l">${L("ctType")}</label><select class="in" id="ct_type">${CT_TYPES.map(t => `<option value="${t}">${esc(L("types")[t])}</option>`).join("")}</select></div>
       </div>
       <label class="opt"><input type="checkbox" id="ct_ai"> <span><b>${L("ctAI")}</b></span></label>
@@ -2091,13 +2058,14 @@ function renderContentForm(opts) {
 async function saveContent() {
   const g = id => document.getElementById(id);
   const title = g("ct_title").value.trim(); if (!title) return toast(L("fillAll"), true);
+  if (!g("ct_section").value) return toast(L("noSections"), true);
   const t2 = g("ct_title2").value.trim();
   const titleObj = { [state.lang === "ar" ? "ar" : state.lang]: title }; if (t2) titleObj[state.lang === "ar" ? "en" : "ar"] = t2;
   let vis = g("ct_vis").value, status = g("ct_status").value;
   if (role() !== "owner" && vis === "public") status = "draft";
   const targets = Array.from(g("ct_targets").selectedOptions).map(o => o.value);
   const row = {
-    title: titleObj, track: g("ct_track").value, type: g("ct_type").value, is_ai_generated: g("ct_ai").checked,
+    title: titleObj, section_id: g("ct_section").value || null, track: g("ct_track").value || null, type: g("ct_type").value, is_ai_generated: g("ct_ai").checked,
     content_body: g("ct_body").value || null, url: g("ct_url").value.trim() || null, visibility: vis, status,
     target_student_ids: vis === "restricted" ? targets : [], created_by: state.auth.user.id
   };
@@ -2148,7 +2116,7 @@ function contentCard(c, manage) {
     <div class="row" style="gap:.35rem">
       <span class="badge ${ai ? "badge-g" : "badge-a"}">${ai ? "🤖 " + L("aiBadge") : "👨‍🏫 " + L("humanBadge")}</span>
       <span class="badge">${esc(L("types")[c.type] || c.type)}</span>
-      ${manage ? `<span class="badge">${esc(stt(c.status))}</span><span class="badge">${esc(stt(c.visibility))}</span><span class="badge">${esc(trackTitle(c.track))}</span>` : ""}
+      ${manage ? `<span class="badge">${esc(stt(c.status))}</span><span class="badge">${esc(stt(c.visibility))}</span>${(() => { const sc = (Array.isArray(state.data.sections) ? state.data.sections : []).find(x => x.id === c.section_id); return sc ? `<span class="badge badge-a">${esc((sc.icon || "") + " " + secTitle(sc))}</span>` : ""; })()}${c.track ? `<span class="badge">${esc(trackTitle(c.track))}</span>` : ""}` : ""}
     </div>
     <h3 style="font-size:1.05rem">${esc(ctTitleOf(c))}</h3>
     ${c.content_body ? `<p class="muted sm" style="white-space:pre-wrap">${esc(c.content_body.slice(0, 180))}${c.content_body.length > 180 ? "…" : ""}</p>` : ""}
@@ -2180,14 +2148,30 @@ function renderTrackContent(tk) {
     <div style="display:flex;flex-direction:column;gap:1.5rem">${col(L("humanSection"), hu)}${col(L("aiSection"), ai)}</div>
   </div>`;
 }
+function sectionsData() {
+  return useData("sections", () => q(sb.from("content_sections").select("*").order("sort").order("created_at")));
+}
+function secTitle(sc) { const t = (sc && sc.title) || {}; return t[state.lang] || t.ar || t.en || Object.values(t)[0] || "—"; }
+function secDesc(sc) { const t = (sc && sc.description) || {}; return t[state.lang] || t.ar || t.en || ""; }
 function renderLibraryDb() {
   if (!sb) return "";
+  const secs = sectionsData();
   const list = useData("libCt", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "public").order("created_at", { ascending: false })));
-  if (list === null) return loadingBox();
-  if (list.__error || !list.length) return "";
-  const groups = {}; list.forEach(c => { (groups[c.track] = groups[c.track] || []).push(c); });
-  return Object.keys(groups).map(tk => `<div style="margin-top:2rem"><h2 style="font-size:1.3rem;margin-bottom:1rem">${TRACK_EMOJI[tk] || "📁"} ${esc(trackTitle(tk))}</h2>
-    <div class="grid">${groups[tk].map(c => contentCard(c, false)).join("")}</div></div>`).join("");
+  if (list === null || secs === null) return loadingBox();
+  if (list.__error || secs.__error) return errBox(list.__error ? list : secs);
+  const f = state.libFilter || "all";
+  const items = list.filter(c => f === "all" || (f === "ai" ? c.is_ai_generated : !c.is_ai_generated));
+  const visible = secs.filter(x => x.is_visible !== false);
+  const bySec = {}; items.forEach(c => { (bySec[c.section_id || "_"] = bySec[c.section_id || "_"] || []).push(c); });
+  const blocks = visible.map(sc => ({ sc, arr: bySec[sc.id] || [] })).filter(b => b.arr.length);
+  if (bySec["_"] && bySec["_"].length) blocks.push({ sc: { icon: "📁", title: { ar: L("general"), en: "General" } }, arr: bySec["_"] });
+  const pills = `<div class="tabs" style="justify-content:center">${[["all", I18N[state.lang].common.all], ["human", L("humanSection")], ["ai", L("aiSection")]]
+    .map(([k, t]) => `<a href="#" aria-current="${f === k}" onclick="state.libFilter='${k}';render();return false;">${esc(t)}</a>`).join("")}</div>`;
+  if (!blocks.length) return pills + `<div class="card muted" style="text-align:center">${L("none")}</div>`;
+  return pills + blocks.map(({ sc, arr }) => `<div style="margin-top:2rem">
+    <h2 style="font-size:1.35rem;margin-bottom:.3rem">${esc(sc.icon || "📁")} ${esc(secTitle(sc))}</h2>
+    ${secDesc(sc) ? `<p class="muted sm" style="margin-bottom:1rem">${esc(secDesc(sc))}</p>` : `<div style="margin-bottom:1rem"></div>`}
+    <div class="grid">${arr.map(c => contentCard(c, false)).join("")}</div></div>`).join("");
 }
 
 /* ---------- لوحة التحكم ---------- */
@@ -2470,7 +2454,7 @@ async function assignTeacher(sid) {
 }
 function ownerContent(P) {
   const all = useData("contentsAll", () => q(sb.from("contents").select("*").order("created_at", { ascending: false })));
-  return `<div class="grid" style="grid-template-columns:minmax(300px,1fr) 2fr;align-items:start">
+  return renderSectionsManager() + `<div class="grid" style="grid-template-columns:minmax(300px,1fr) 2fr;align-items:start">
     ${renderContentForm({ students: P.list.filter(p => p.role === "student") })}
     <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${all === null ? loadingBox() : all.__error ? errBox(all) : all.map(c => contentCard(c, true)).join("") || `<p class="muted sm">${L("none")}</p>`}</div></div>`;
 }
@@ -3008,8 +2992,74 @@ ku: {
 }
 });
 
+/* ---------- أقسام المحتوى (يحددها المالك) ---------- */
+function renderSectionsManager() {
+  const secs = sectionsData();
+  if (secs === null) return loadingBox();
+  if (secs.__error) return errBox(secs);
+  return `<div class="card" style="margin-bottom:1.2rem">
+    <h3 style="margin-bottom:.3rem">${L("secTitle")}</h3>
+    <p class="xs muted" style="margin-bottom:1rem">${L("secHint")}</p>
+    ${secs.map((sc, i) => `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.5rem">
+      <span class="row" style="gap:.4rem;flex:1;min-width:260px">
+        <input class="in" style="width:3.2rem;text-align:center" value="${esc(sc.icon || "")}" onchange="updSection('${sc.id}',{icon:this.value})">
+        <input class="in" style="flex:1" value="${esc((sc.title || {}).ar || "")}" placeholder="${L("secNameAr")}" onchange="updSectionTitle('${sc.id}','ar',this.value)">
+        <input class="in" style="flex:1" value="${esc((sc.title || {}).en || "")}" placeholder="${L("secNameEn")}" onchange="updSectionTitle('${sc.id}','en',this.value)">
+      </span>
+      <span class="row" style="gap:.3rem">
+        <button class="ibtn" onclick="moveSection(${i},-1)" title="↑"><i class="fa-solid fa-arrow-up"></i></button>
+        <button class="ibtn" onclick="moveSection(${i},1)" title="↓"><i class="fa-solid fa-arrow-down"></i></button>
+        <button class="btn btn-o" onclick="updSection('${sc.id}',{is_visible:${!sc.is_visible}})">${sc.is_visible ? L("setVisible") : L("secHidden")}</button>
+        <button class="ibtn" style="color:var(--danger)" onclick="delSection('${sc.id}')"><i class="fa-solid fa-trash"></i></button>
+      </span></div>`).join("") || `<p class="muted sm">${L("none")}</p>`}
+    <form onsubmit="event.preventDefault();addSection()" class="row" style="gap:.4rem;margin-top:1rem">
+      <input class="in" id="ns_icon" style="width:3.2rem;text-align:center" value="📚">
+      <input class="in" id="ns_ar" style="flex:1;min-width:160px" placeholder="${L("secNameAr")}" required>
+      <input class="in" id="ns_en" style="flex:1;min-width:160px" placeholder="${L("secNameEn")}">
+      <button class="btn btn-p"><i class="fa-solid fa-plus"></i> ${L("secAdd")}</button>
+    </form>
+  </div>`;
+}
+function invSections() { invalidate("sections", "libCt"); }
+async function addSection() {
+  const g = id => document.getElementById(id).value.trim();
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : [];
+  const title = { ar: g("ns_ar") }; if (g("ns_en")) title.en = g("ns_en");
+  const { error } = await sb.from("content_sections").insert({ title, icon: g("ns_icon") || "📁", sort: secs.length ? Math.max(...secs.map(x => x.sort || 0)) + 1 : 0 });
+  if (error) return toast(error.message, true);
+  invSections(); toast(L("saved")); render();
+}
+async function updSection(id, patch) {
+  const { error } = await sb.from("content_sections").update(patch).eq("id", id);
+  if (error) return toast(error.message, true);
+  invSections(); render();
+}
+async function updSectionTitle(id, lang, val) {
+  const sc = (state.data.sections || []).find(x => x.id === id); if (!sc) return;
+  const title = Object.assign({}, sc.title || {}); if (val.trim()) title[lang] = val.trim(); else delete title[lang];
+  await updSection(id, { title }); toast(L("saved"));
+}
+async function moveSection(i, d) {
+  const a = (state.data.sections || []).slice(); const j = i + d; if (j < 0 || j >= a.length) return;
+  [a[i], a[j]] = [a[j], a[i]];
+  for (let k = 0; k < a.length; k++) if (a[k].sort !== k) await sb.from("content_sections").update({ sort: k }).eq("id", a[k].id);
+  invSections(); render();
+}
+async function delSection(id) {
+  if (!confirm(L("secDelConfirm"))) return;
+  const { error } = await sb.from("content_sections").delete().eq("id", id);
+  if (error) return toast(error.message, true);
+  invSections(); invalidate("contentsAll"); render();
+}
+Object.assign(UI.ar, { ctSection: "القسم", ctTrackOpt: "يظهر أيضًا في صفحة المسار (اختياري)", noSections: "أضف قسمًا أولًا من \"أقسام المحتوى\" ثم ضع المحتوى داخله.",
+  secTitle: "أقسام المحتوى المجاني", secHint: "أنت من يحدد الأقسام وترتيبها. المحتوى المجاني يظهر للزوار داخل هذه الأقسام فقط، والمعلمون يضيفون داخل الأقسام التي تنشئها.",
+  secNameAr: "اسم القسم بالعربي", secNameEn: "اسم القسم بالإنجليزي (اختياري)", secAdd: "إضافة قسم", secHidden: "مخفي", secDelConfirm: "حذف القسم؟ المحتوى داخله سيبقى لكن بدون قسم." });
+Object.assign(UI.en, { ctSection: "Section", ctTrackOpt: "Also show on a track page (optional)", noSections: "Add a section first from \"Content sections\", then put content inside it.",
+  secTitle: "Free content sections", secHint: "You define the sections and their order. Free content appears to visitors inside these sections only; teachers add content inside the sections you create.",
+  secNameAr: "Section name (Arabic)", secNameEn: "Section name (English, optional)", secAdd: "Add section", secHidden: "Hidden", secDelConfirm: "Delete this section? Its content stays but without a section." });
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
-const HASH_ROUTES = ["home", "tracks", "track-detail", "maqamat", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay"];
+const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay"];
 function readHash() {
   const h = (location.hash || "").replace(/^#\/?/, "");
   if (!h || h.includes("=")) return;
@@ -3030,7 +3080,6 @@ function render() {
   if (r === 'home') content += renderHome();
   else if (r === 'tracks') content += renderTracksList();
   else if (r === 'track-detail') content += renderTrackDetail();
-  else if (r === 'maqamat') content += renderMaqamat();
   else if (r === 'library') content += renderLibrary();
   else if (r === 'pricing') content += renderPricing();
   else if (r === 'about') content += renderAbout();
