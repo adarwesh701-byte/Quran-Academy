@@ -1804,8 +1804,8 @@ function renderPay() {
           <h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>
           <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem">
             ${opts.map(o => o.href
-              ? `<a class="btn btn-o btn-full" style="justify-content:flex-start" href="${esc(o.href)}" target="_blank" rel="noopener"><i class="${o.icon}"></i> ${esc(o.label)}</a>`
-              : `<div class="opt" style="flex-direction:column;cursor:default"><b><i class="${o.icon}"></i> ${esc(o.label)}</b><div class="mono sm" style="white-space:pre-wrap">${esc(o.text)}</div></div>`).join("")}
+              ? `<a class="btn btn-o btn-full" style="justify-content:flex-start" href="${esc(o.href)}" target="_blank" rel="noopener"><i class="${o.icon}"></i> ${esc(o.label)}</a>${o.text ? `<div class="mono sm" style="white-space:pre-wrap;margin-top:-.3rem;padding-inline-start:.6rem" dir="ltr">${esc(o.text)}</div>` : ""}`
+              : `<div class="opt" style="flex-direction:column;cursor:default"><b><i class="${o.icon}"></i> ${esc(o.label)}</b><div class="row" style="gap:.4rem;align-items:center"><div class="mono sm" style="white-space:pre-wrap" dir="ltr">${esc(o.text)}</div>${o.text ? `<button type="button" class="ibtn" title="Copy" onclick="navigator.clipboard&&navigator.clipboard.writeText(${esc(JSON.stringify(o.text))}).then(()=>toast('✓'))"><i class="fa-regular fa-copy"></i></button>` : ""}</div></div>`).join("")}
           </div>
           <h3 style="margin-bottom:.6rem">${L("payConfirmTitle")}</h3>
           <form onsubmit="event.preventDefault();submitPayment('${b.id}')" style="display:flex;flex-direction:column;gap:.7rem">
@@ -2377,7 +2377,7 @@ function paymentBlock(rec, kind) {
     const card = (pl && pl.stripe) || "";
     const i = opts.findIndex(o => o.id === "card"); if (i > -1) opts.splice(i, 1);
     if (card) opts.unshift({ id: "card", icon: "fa-regular fa-credit-card", label: "Visa / Mastercard / Apple Pay", href: card });
-    const pp = opts.find(o => o.id === "paypal"); if (pp) pp.href = `https://paypal.me/${encodeURIComponent(CONFIG.payments.paypalMe)}/${rec.amount}${rec.currency}`;
+    const pp = opts.find(o => o.id === "paypal"); if (pp && CONFIG.payments.paypalMe) pp.href = `https://paypal.me/${encodeURIComponent(CONFIG.payments.paypalMe)}/${rec.amount}${rec.currency}`;
   }
   const done = rec.payment_status === "paid" || rec.payment_status === "waived";
   const fn = kind === "order" ? "submitOrderPayment" : "submitPayment";
@@ -2387,8 +2387,8 @@ function paymentBlock(rec, kind) {
     <h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>
     <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem">
       ${opts.map(o => o.href
-        ? `<a class="btn btn-o btn-full" style="justify-content:flex-start" href="${esc(o.href)}" target="_blank" rel="noopener"><i class="${o.icon}"></i> ${esc(o.label)}</a>`
-        : `<div class="opt" style="flex-direction:column;cursor:default"><b><i class="${o.icon}"></i> ${esc(o.label)}</b><div class="mono sm" style="white-space:pre-wrap">${esc(o.text)}</div></div>`).join("")}
+        ? `<a class="btn btn-o btn-full" style="justify-content:flex-start" href="${esc(o.href)}" target="_blank" rel="noopener"><i class="${o.icon}"></i> ${esc(o.label)}</a>${o.text ? `<div class="mono sm" style="white-space:pre-wrap;margin-top:-.3rem;padding-inline-start:.6rem" dir="ltr">${esc(o.text)}</div>` : ""}`
+        : `<div class="opt" style="flex-direction:column;cursor:default"><b><i class="${o.icon}"></i> ${esc(o.label)}</b><div class="row" style="gap:.4rem;align-items:center"><div class="mono sm" style="white-space:pre-wrap" dir="ltr">${esc(o.text)}</div>${o.text ? `<button type="button" class="ibtn" title="Copy" onclick="navigator.clipboard&&navigator.clipboard.writeText(${esc(JSON.stringify(o.text))}).then(()=>toast('✓'))"><i class="fa-regular fa-copy"></i></button>` : ""}</div></div>`).join("")}
     </div>
     <h3 style="margin-bottom:.6rem">${L("payConfirmTitle")}</h3>
     <form onsubmit="event.preventDefault();${fn}('${rec.id}')" style="display:flex;flex-direction:column;gap:.7rem">
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v9";
+const UI_VERSION = "2026-11-11-v10";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -7974,6 +7974,243 @@ renderHome = function () {
   const h = _renderHome12();
   const i = h.indexOf("</section>");
   return i >= 0 ? h.slice(0, i + 10) + appCtaBanner() + h.slice(i + 10) : appCtaBanner() + h;
+};
+
+
+/* ======================= v13: أقسام فرعية + أغلفة بالذكاء الاصطناعي + تطبيقات حسب الجهاز ======================= */
+Object.assign(UI.en, {
+  subTitle: "Sub-sections & covers", subHint: "Put sections inside sections (e.g. Maqamat → Bayati, Saba, Hijaz…) and give each one a cover. Everything is saved for later.",
+  subParent: "Inside", subTop: "— Main section —", subAdd: "Add sub-section", subName: "Sub-section name (any language — translated automatically)",
+  aiCover: "AI cover", aiCoverOpt: "Generate an AI cover image from the title (used as the content background)", aiMaking: "Creating the AI cover…", aiDone: "AI cover ready ✓",
+  upCover: "Upload cover", sectionsJump: "Sections",
+  apDetected: "Your device", apFor: "Download for {os}", apWin: "Windows", apMac: "Mac", apLinux: "Linux",
+  apWinSteps: "Click “Install” in the window that opens (Chrome or Edge). The app appears in the Start menu and on the desktop.",
+  apMacSteps: "Chrome/Edge: click “Install”. Safari: File menu → “Add to Dock”. The app appears in Launchpad and the Dock.",
+  apAll: "Other devices", apSync: "One app everywhere: anything that changes on the site changes instantly on the phone and computer apps."
+});
+Object.assign(UI.ar, {
+  subTitle: "الأقسام الفرعية والأغلفة", subHint: "حط أقسام جوه أقسام (مثلًا المقامات ← بياتي، صبا، حجاز…) وادّي لكل قسم غلاف. كل حاجة بتتحفظ عشان تكمّل بعدين.",
+  subParent: "جوه قسم", subTop: "— قسم رئيسي —", subAdd: "أضف قسم فرعي", subName: "اسم القسم الفرعي (بأي لغة — بيتترجم تلقائي)",
+  aiCover: "غلاف بالذكاء الاصطناعي", aiCoverOpt: "اعمل صورة غلاف بالذكاء الاصطناعي من العنوان (تتحط خلفية للمحتوى)", aiMaking: "بنعمل الغلاف بالذكاء الاصطناعي…", aiDone: "الغلاف جاهز ✓",
+  upCover: "ارفع غلاف", sectionsJump: "الأقسام",
+  apDetected: "جهازك", apFor: "حمّل لـ {os}", apWin: "ويندوز", apMac: "ماك", apLinux: "لينكس",
+  apWinSteps: "اضغط «تثبيت» في النافذة اللي هتظهر (كروم أو إيدج). التطبيق هيظهر في قايمة ابدأ وعلى سطح المكتب.",
+  apMacSteps: "كروم/إيدج: اضغط «تثبيت». سفاري: قايمة ملف ← «إضافة إلى Dock». التطبيق هيظهر في Launchpad والـ Dock.",
+  apAll: "أجهزة تانية", apSync: "تطبيق واحد في كل مكان: أي تغيير على الموقع بيظهر فورًا في تطبيق الموبايل والكمبيوتر."
+});
+
+/* ---------- شجرة الأقسام ---------- */
+function secTree(secs) {
+  const by = {}; secs.forEach(s => { (by[s.parent_id || "_"] = by[s.parent_id || "_"] || []).push(s); });
+  const out = [], seen = new Set();
+  const walk = (pid, d) => (by[pid] || []).forEach(s => { if (seen.has(s.id)) return; seen.add(s.id); out.push({ s, d }); walk(s.id, d + 1); });
+  walk("_", 0);
+  secs.forEach(s => { if (!seen.has(s.id)) { seen.add(s.id); out.push({ s, d: 0 }); walk(s.id, 1); } });
+  return out;
+}
+function secDescendants(secs, id) { const r = new Set([id]); let grew = true; while (grew) { grew = false; secs.forEach(s => { if (s.parent_id && r.has(s.parent_id) && !r.has(s.id)) { r.add(s.id); grew = true; } }); } return r; }
+function secOptions(selected, exclude) {
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : [];
+  const ex = exclude ? secDescendants(secs, exclude) : new Set();
+  return secTree(secs).filter(x => !ex.has(x.s.id)).map(({ s, d }) => `<option value="${s.id}" ${s.id === selected ? "selected" : ""}>${"　".repeat(d)}${d ? "↳ " : ""}${esc((s.icon || "📁") + " " + secTitle(s))}</option>`).join("");
+}
+
+/* ---------- صور بالذكاء الاصطناعي ---------- */
+async function genAiImage(text) {
+  const prompt = `Elegant Islamic art illustration about "${text}", arabesque geometric patterns, Quran manuscript and mosque architecture motifs, emerald green and gold palette, soft cinematic light, high detail, no text, no letters, no people, no faces`;
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1280&height=720&nologo=true&seed=${Math.floor(Math.random() * 1e6)}`;
+  try {
+    const r = await fetch(url); if (!r.ok) throw new Error("gen " + r.status);
+    const blob = await r.blob(); if (!/image/.test(blob.type)) throw new Error("not image");
+    const pth = `covers/ai-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+    const u = await sb.storage.from("academy_public").upload(pth, blob, { contentType: blob.type || "image/jpeg" });
+    if (u.error) throw u.error;
+    return sb.storage.from("academy_public").getPublicUrl(pth).data.publicUrl;
+  } catch (e) { console.warn("AI image fallback", e); return url; }
+}
+function enTitle(t) { t = t || {}; return t.en || t.ar || Object.values(t)[0] || ""; }
+async function aiCoverContent(id, title) {
+  toast(L("aiMaking"));
+  if (!title) { const { data } = await sb.from("contents").select("title").eq("id", id).maybeSingle(); title = data && data.title; }
+  const url = await genAiImage(enTitle(title));
+  const { error } = await sb.from("contents").update({ cover_url: url }).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidate("contentsMine", "contentsAll", "libCt"); toast(L("aiDone")); render();
+}
+async function aiCoverSection(id) {
+  const sc = (state.data.sections || []).find(x => x.id === id); if (!sc) return;
+  toast(L("aiMaking"));
+  const url = await genAiImage(enTitle(sc.title));
+  await updSection(id, { cover_url: url }); invSections(); toast(L("aiDone")); render();
+}
+async function uploadSectionCover(id, input) {
+  const f = input.files && input.files[0]; if (!f) return;
+  const pth = `covers/sec-${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+  const u = await sb.storage.from("academy_public").upload(pth, f); if (u.error) return toast(u.error.message, true);
+  await updSection(id, { cover_url: sb.storage.from("academy_public").getPublicUrl(pth).data.publicUrl }); invSections(); render();
+}
+
+/* ---------- مدير الأقسام الفرعية ---------- */
+function subSectionsCard() {
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : [];
+  if (!secs.length) return "";
+  const tree = secTree(secs);
+  return `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.3rem">🗂️ ${L("subTitle")}</h3><p class="xs muted" style="margin-bottom:.9rem">${L("subHint")}</p>
+    ${tree.map(({ s, d }) => `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.5rem;padding-inline-start:${d * 1.4}rem">
+      <span class="row" style="gap:.5rem;flex:1;min-width:220px">${s.cover_url ? `<span style="width:56px;height:34px;border-radius:8px;background:url('${esc(s.cover_url)}') center/cover;flex:none"></span>` : `<span style="width:56px;height:34px;border-radius:8px;background:var(--bg);border:1px dashed var(--line);flex:none"></span>`}
+        <b class="sm">${d ? "↳ " : ""}${esc((s.icon || "📁") + " " + secTitle(s))}</b></span>
+      <span class="row" style="gap:.3rem;flex-wrap:wrap">
+        <label class="xs muted">${L("subParent")}</label><select class="in" style="width:auto;max-width:200px" onchange="updSection('${s.id}',{parent_id:this.value||null}).then(()=>{invSections();render()})"><option value="">${L("subTop")}</option>${secOptions(s.parent_id, s.id)}</select>
+        <button class="btn btn-o" style="padding:.3rem .6rem" onclick="aiCoverSection('${s.id}')">🎨 ${L("aiCover")}</button>
+        <label class="btn btn-o" style="padding:.3rem .6rem;cursor:pointer">🖼️ ${L("upCover")}<input type="file" accept="image/*" style="display:none" onchange="uploadSectionCover('${s.id}',this)"></label></span></div>`).join("")}
+    <form class="fgrid" style="align-items:end;margin-top:1rem" onsubmit="event.preventDefault();addSubSection()">
+      <div><label class="l">${L("subParent")}</label><select class="in" id="ss_parent">${secOptions(lsGet("itqan_last_parent") || "")}</select></div>
+      <div><label class="l">${L("subName")}</label><input class="in" id="ss_name" required></div>
+      <label class="opt" style="padding:.5rem .8rem"><input type="checkbox" id="ss_ai" checked> <span class="sm">🎨 ${L("aiCover")}</span></label>
+      <button class="btn btn-p" ${state.busy ? "disabled" : ""}><i class="fa-solid fa-plus"></i> ${state.busy ? L("translating") : L("subAdd")}</button></form></div>`;
+}
+async function addSubSection() {
+  const g = (x) => document.getElementById(x);
+  const name = g("ss_name").value.trim(), parent = g("ss_parent").value || null, ai = g("ss_ai").checked;
+  if (!name) return;
+  lsSet("itqan_last_parent", parent || "");
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : [];
+  const par = secs.find(s => s.id === parent);
+  state.busy = true; render();
+  try {
+    const src = detectLang(name) || null;
+    const title = await translateAll(name, src); if (!Object.keys(title).length) title[src || state.lang] = name;
+    const ins = await sb.from("content_sections").insert({ title, icon: (par && par.icon) || "📁", parent_id: parent, is_visible: true, sort: secs.length ? Math.max(...secs.map(x => x.sort || 0)) + 1 : 0 }).select("id").single();
+    if (ins.error) throw ins.error;
+    invSections(); toast(L("translated"));
+    if (ai) { state.busy = false; const url = await genAiImage(enTitle(title)); await sb.from("content_sections").update({ cover_url: url }).eq("id", ins.data.id); invSections(); toast(L("aiDone")); }
+  } catch (e) { toast(e.message || String(e), true); }
+  state.busy = false; render();
+}
+const _renderSectionsManager13 = renderSectionsManager;
+renderSectionsManager = function () {
+  return _renderSectionsManager13() + subSectionsCard();
+};
+
+/* ---------- نموذج المحتوى: القسم المحفوظ + غلاف بالذكاء الاصطناعي ---------- */
+const _renderContentForm13 = renderContentForm;
+renderContentForm = function (opts) {
+  let h = _renderContentForm13(opts);
+  const last = lsGet("itqan_last_sec");
+  h = h.replace(/<select class="in" id="ct_section" required>[\s\S]*?<\/select>/, `<select class="in" id="ct_section" required onchange="lsSet('itqan_last_sec',this.value)">${secOptions(last)}</select>`);
+  h = h.replace(`<div><label class="l">${L("cover")}</label>`, `<label class="opt" style="padding:.5rem .8rem"><input type="checkbox" id="ct_aicover" ${lsGet("itqan_aicover") !== "0" ? "checked" : ""} onchange="lsSet('itqan_aicover',this.checked?'1':'0')"> <span class="sm">🎨 ${L("aiCoverOpt")}</span></label><div><label class="l">${L("cover")}</label>`);
+  return h;
+};
+const _saveContent13 = saveContent;
+saveContent = async function () {
+  const g = (x) => document.getElementById(x);
+  const ai = g("ct_aicover") && g("ct_aicover").checked;
+  const hasFile = g("ct_cover") && g("ct_cover").files && g("ct_cover").files[0];
+  const sec = g("ct_section") && g("ct_section").value; if (sec) lsSet("itqan_last_sec", sec);
+  const t0 = new Date(Date.now() - 5000).toISOString();
+  await _saveContent13();
+  if (ai && !hasFile && state.auth.user) {
+    const { data } = await sb.from("contents").select("id,title,cover_url").eq("created_by", state.auth.user.id).gte("created_at", t0).order("created_at", { ascending: false }).limit(1);
+    if (data && data[0] && !data[0].cover_url) aiCoverContent(data[0].id, data[0].title);
+  }
+};
+const _contentCard13 = contentCard;
+contentCard = function (c, manage) {
+  let h = _contentCard13(c, manage);
+  if (c.cover_url && h.indexOf(`src="${esc(c.cover_url)}"`) < 0) h = h.replace(/^(\s*<div class="card[^"]*"[^>]*>)/, `$1<div style="height:140px;border-radius:12px;background:#064e3b url('${esc(c.cover_url)}') center/cover"></div>`);
+  if (manage && (role() === "owner" || (state.auth.user && c.created_by === state.auth.user.id)))
+    h = h.replace(`<button class="btn btn-o" title="${L("retranslate")}"`, `<button class="btn btn-o" title="${L("aiCover")}" onclick="aiCoverContent('${c.id}')">🎨</button><button class="btn btn-o" title="${L("retranslate")}"`);
+  return h;
+};
+const _renderContentViewer13 = renderContentViewer;
+renderContentViewer = function () {
+  const c = state.viewContent; const h = _renderContentViewer13();
+  if (!c || !c.cover_url) return h;
+  return h.replace(`max-height:85vh;overflow:auto">`, `max-height:85vh;overflow:auto"><div style="height:210px;border-radius:14px;margin-bottom:1rem;background:linear-gradient(to top,rgba(0,0,0,.55),rgba(0,0,0,0)),url('${esc(c.cover_url)}') center/cover"></div>`);
+};
+
+/* ---------- المكتبة: أقسام داخل أقسام ---------- */
+renderLibraryDb = function () {
+  if (!sb) return "";
+  const secs = sectionsData();
+  const list = useData("libCt", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "public").order("created_at", { ascending: false })));
+  if (list === null || secs === null) return loadingBox();
+  if (list.__error || secs.__error) return errBox(list.__error ? list : secs);
+  const vis = secs.filter(x => x.is_visible !== false);
+  const visIds = new Set(vis.map(s => s.id));
+  const bySec = {}; list.forEach(c => { (bySec[c.section_id || "_"] = bySec[c.section_id || "_"] || []).push(c); });
+  const kids = {}; vis.forEach(s => { const p = s.parent_id && visIds.has(s.parent_id) ? s.parent_id : "_"; (kids[p] = kids[p] || []).push(s); });
+  const memo = {};
+  const has = (id) => memo[id] != null ? memo[id] : (memo[id] = (bySec[id] || []).length > 0 || (kids[id] || []).some(k => has(k.id)));
+  const grid = (arr) => arr.length ? `<div class="grid">${arr.map(c => contentCard(c, false)).join("")}</div>` : "";
+  const block = (sc, d) => {
+    if (!has(sc.id)) return "";
+    const arr = bySec[sc.id] || [], ch = (kids[sc.id] || []).filter(k => has(k.id));
+    const head = d === 0
+      ? `<div id="sec-${sc.id}" style="border-radius:18px;padding:1.4rem 1.2rem;margin-bottom:1rem;color:#fff;min-height:${sc.cover_url ? 150 : 0}px;display:flex;flex-direction:column;justify-content:flex-end;background:${sc.cover_url ? `linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.15)),url('${esc(sc.cover_url)}') center/cover` : "linear-gradient(135deg,#065f46,#047857)"}">
+          <h2 style="font-size:1.45rem;margin:0">${esc(sc.icon || "📁")} ${esc(secTitle(sc))}</h2>
+          ${ch.length ? `<div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.6rem">${ch.map(k => `<a href="#" class="badge" style="background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.35)" onclick="document.getElementById('sec-${k.id}').scrollIntoView({behavior:'smooth',block:'start'});return false;">${esc((k.icon || "") + " " + secTitle(k))}</a>`).join("")}</div>` : ""}</div>`
+      : `<div id="sec-${sc.id}" class="row" style="gap:.7rem;margin:1.2rem 0 .8rem;align-items:center">${sc.cover_url ? `<span style="width:64px;height:40px;border-radius:10px;background:url('${esc(sc.cover_url)}') center/cover;flex:none"></span>` : ""}<h3 style="font-size:${d === 1 ? 1.15 : 1.02}rem;margin:0">${"↳ ".repeat(Math.min(d, 2))}${esc((sc.icon || "") + " " + secTitle(sc))}</h3></div>`;
+    return `<div style="margin-top:${d ? .4 : 2.2}rem;${d ? `padding-inline-start:${Math.min(d, 3) * .8}rem;border-inline-start:2px solid var(--line)` : ""}">${head}${grid(arr)}${ch.map(k => block(k, d + 1)).join("")}</div>`;
+  };
+  const roots = (kids["_"] || []).filter(s => has(s.id));
+  if (!roots.length) return `<div class="card muted" style="text-align:center">${L("none")}</div>` + renderContentViewer();
+  const jump = roots.length > 1 ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:1rem"><span class="sm muted">${L("sectionsJump")}:</span>${roots.map(s => `<a href="#" class="badge" onclick="document.getElementById('sec-${s.id}').scrollIntoView({behavior:'smooth'});return false;">${esc((s.icon || "") + " " + secTitle(s))}</a>`).join("")}</div>` : "";
+  return jump + roots.map(s => block(s, 0)).join("") + renderContentViewer();
+};
+
+/* ---------- منح الوصول: اختيار القسم بالشجرة ---------- */
+const _accessGrantCard13 = accessGrantCard;
+accessGrantCard = function (P) { return _accessGrantCard13(P).replace(/<select class="in" id="ga_sec">[\s\S]*?<\/select>/, `<select class="in" id="ga_sec">${secOptions("")}</select>`); };
+
+
+/* ---------- التطبيقات: اكتشاف الجهاز تلقائيًا ---------- */
+function detectOS() {
+  const u = navigator.userAgent || "", p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+  if (/android/i.test(u)) return "android";
+  if (/iphone|ipad|ipod/i.test(u) || (/Mac/i.test(p) && navigator.maxTouchPoints > 1)) return "ios";
+  if (/win/i.test(p) || /windows/i.test(u)) return "windows";
+  if (/mac/i.test(p) || /mac os/i.test(u)) return "mac";
+  if (/linux/i.test(p) || /linux/i.test(u)) return "linux";
+  return "other";
+}
+const OS_INFO = {
+  android: { ic: "fa-brands fa-android", n: () => L("apAndroid"), s: () => L("apAndroidSteps") },
+  ios: { ic: "fa-brands fa-apple", n: () => L("apIos"), s: () => L("apIosSteps") },
+  windows: { ic: "fa-brands fa-windows", n: () => L("apWin"), s: () => L("apWinSteps") },
+  mac: { ic: "fa-brands fa-apple", n: () => L("apMac"), s: () => L("apMacSteps") },
+  linux: { ic: "fa-brands fa-linux", n: () => L("apLinux"), s: () => L("apDesktopSteps") },
+  other: { ic: "fa-solid fa-display", n: () => L("apDesktop"), s: () => L("apDesktopSteps") }
+};
+function osLabel(os) { const n = OS_INFO[os].n(); return n.split(" (")[0]; }
+installApp12 = async function () {
+  if (deferredInstall) { deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch (e) {} deferredInstall = null; render(); return; }
+  const os = detectOS();
+  state.appHelp = os; render();
+};
+renderAppPage = function () {
+  const os = detectOS(), info = OS_INFO[os];
+  const url = location.origin && location.origin.startsWith("http") ? location.origin + "/#/app" : "https://quran-academy-nine-dusky.vercel.app/#/app";
+  const qr = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=" + encodeURIComponent(url);
+  const card = (k) => { const x = OS_INFO[k]; const me = k === os; return `<div class="card" style="${me ? "border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset" : ""}"><h3 style="margin-bottom:.4rem"><i class="${x.ic}"></i> ${esc(x.n())} ${me ? `<span class="badge badge-a">${L("apDetected")}</span>` : ""}</h3><p class="sm muted">${esc(x.s())}</p></div>`; };
+  const help = state.appHelp ? `<div class="notice ok" style="margin-top:.8rem"><b><i class="${OS_INFO[state.appHelp].ic}"></i> ${esc(OS_INFO[state.appHelp].n())}:</b> ${esc(OS_INFO[state.appHelp].s())}</div>` : "";
+  return `<section class="sec"><div class="wrap">
+    <div class="grid g2" style="align-items:center;gap:2rem">
+      <div><span class="badge badge-a">📱💻 ${L("nvApp")}</span><h1 style="font-size:2rem;margin:.6rem 0">${L("apTitle")}</h1><p class="muted" style="margin-bottom:1rem">${L("apSub")}</p>
+        <ul style="list-style:none;padding:0;margin:0 0 1.2rem;display:grid;gap:.4rem">${(L("apF") || []).map(f => `<li>✅ ${esc(f)}</li>`).join("")}<li>🔄 ${L("apSync")}</li></ul>
+        ${IS_STANDALONE ? `<div class="notice ok">${L("apInstalled")}</div>`
+          : `<button class="btn btn-p btn-lg" style="font-size:1.1rem;padding:1rem 1.6rem" onclick="installApp12()"><i class="${info.ic}"></i> ${esc(tpl10(L("apFor"), { os: osLabel(os) }))}</button>${help}`}</div>
+      <div style="text-align:center"><div class="phone-mock"><div class="ico">إ</div><b>${esc(I18N[state.lang].meta.siteName)}</b><span class="xs" style="opacity:.8">${esc(I18N[state.lang].meta.tagline || "")}</span></div>
+        ${os === "android" || os === "ios" ? "" : `<div style="margin-top:1.2rem"><img src="${qr}" width="160" height="160" alt="QR" style="border-radius:12px;background:#fff;padding:4px"><div class="xs muted">${L("apScan")}</div></div>`}</div></div>
+    <h3 style="margin:2rem 0 .8rem">${L("apAll")}</h3>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">${[os, ...["android", "ios", "windows", "mac"].filter(k => k !== os)].filter(k => OS_INFO[k]).map(card).join("")}</div>
+  </div></section>`;
+};
+appCtaBanner = function () {
+  if (IS_STANDALONE) return "";
+  const os = detectOS();
+  return `<section style="padding:1rem 0"><div class="wrap"><div class="appcta"><div><b style="font-size:1.15rem">${L("apBanner")}</b><div class="sm" style="opacity:.9">${L("apSync")}</div></div>
+    <button class="btn" onclick="deferredInstall?installApp12():navigate('app')"><i class="${OS_INFO[os].ic}"></i> ${esc(tpl10(L("apFor"), { os: osLabel(os) }))}</button></div></div></section>`;
 };
 
 
