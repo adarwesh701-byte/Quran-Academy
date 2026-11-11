@@ -3235,7 +3235,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v5";
+const UI_VERSION = "2026-11-11-v6";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -3608,6 +3608,7 @@ function renderLessonDetails(l, map) {
     <div class="kv"><span class="muted">${L("attendance")}</span><b>${esc(attName(l.attendance || "pending"))}</b></div>
     ${l.rating ? `<div class="kv"><span class="muted">${L("rated")}</span><span>${stars(l.rating)} ${esc(l.rating_comment || "")}</span></div>` : ""}
     ${attendanceButtons(l)}
+    ${roomAttendanceBlock("lesson", l.id, true)}
     <div style="margin-top:.8rem"><label class="l">${L("meeting")}</label><input class="in" id="ld_url" value="${esc(l.meeting_url || "")}" ${canEdit ? "" : "disabled"}></div>
     ${canEdit ? `<div class="fgrid" style="margin-top:.6rem">
       <div><label class="l">${L("report")}</label><textarea class="in" id="ld_report" rows="3">${esc(l.report || "")}</textarea></div>
@@ -5061,7 +5062,7 @@ function myGroupsCard() {
   return `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.6rem">👥 ${L("tabs6").mygroups}</h3>${en.map(e => { const g = e.group_sessions || {}; return `<div class="kv" style="align-items:center;flex-wrap:wrap">
     <span><b>${esc(locText(g.title))}</b><br><span class="xs muted">${esc(g.start_time ? fmtDT(g.start_time) : "")} · ${g.language === "en" ? L("langEn") : L("langAr")}</span></span>
     <span class="row" style="gap:.35rem"><span class="badge ${e.status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(e.status === "paid" ? "paid" : "unpaid"))}</span>
-    ${e.status === "paid" && lm[e.group_id] ? `<a class="btn btn-p" href="${esc(lm[e.group_id])}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
+    ${e.status === "paid" ? `<a class="btn btn-p" href="${esc(roomHref("group", e.group_id))}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
     ${e.status !== "paid" && e.order_id ? `<button class="btn btn-p" onclick="state.payKind='order';state.payOrderId='${e.order_id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`; }).join("")}</div>`;
 }
 function ownerGroups(P) {
@@ -5097,6 +5098,7 @@ function ownerGroups(P) {
       <div class="row" style="justify-content:space-between"><b>${esc(locText(g.title))}</b><span class="badge">${esc(g.status)}</span></div>
       <div class="xs muted">${esc(fmtDT(g.start_time))} · ${g.language === "en" ? L("langEn") : L("langAr")} · ${esc(personName(g.teacher_id, P.map))} · ${esc(money(g.total_price, g.currency))} ÷ ${g.capacity} = ${esc(money(g.total_price / Math.max(1, g.capacity), g.currency))}</div>
       <div class="sm" style="margin-top:.4rem"><b>${L("enrolled")}:</b> ${(by[g.id] || []).map(e => `${esc(personName(e.student_id, P.map))} ${e.status === "paid" ? "✅" : "⏳"}`).join(L("listSep")) || "—"}</div>
+      <div class="row" style="gap:.3rem;margin-top:.5rem;flex-wrap:wrap"><a class="btn btn-p" href="${esc(roomHref("group", g.id))}" target="_blank" rel="noopener">🎥 ${RL("enterRoom")}</a>${roomAttendanceBlock("group", g.id)}</div>
       <div class="row" style="gap:.3rem;margin-top:.5rem"><input class="in" style="flex:1" value="${esc(lm[g.id] || "")}" placeholder="${L("groupLink")}" onchange="setGroupLink('${g.id}',this.value)">
         ${g.status === "open" ? `<button class="btn btn-o" onclick="setGroupStatus('${g.id}','closed')">🔒</button><button class="btn btn-o" style="color:var(--danger)" onclick="setGroupStatus('${g.id}','cancelled')">${L("cancel")}</button>` : ""}</div>
     </div>`).join("") : `<div class="card muted">${L("noGroups")}</div>`}</div></div>`;
@@ -5702,6 +5704,1329 @@ const _doLogin1 = doLogin;
 doLogin = async function () { const after = lsGet("itqan_after_auth"); await _doLogin1(); if (after && state.auth.user) { lsSet("itqan_after_auth", null); navigate(after); } };
 const _doSignup1 = doSignup;
 doSignup = async function () { const after = lsGet("itqan_after_auth"); await _doSignup1(); if (after && state.auth.user) { lsSet("itqan_after_auth", null); navigate(after); } };
+
+/* ======================= 🎥 الفصل الافتراضي (Classroom) ======================= */
+Object.assign(UI.en, {
+  rm_title: "Classroom", rm_check: "System check", rm_chkBrowser: "Browser support", rm_chkCam: "Camera", rm_chkMic: "Microphone", rm_chkSpk: "Speakers",
+  rm_chkNet: "Network (video connection)", rm_chkSrv: "Academy server", rm_chkShare: "Screen sharing", rm_testSound: "Play test sound", rm_spkHint: "Press to hear a test tone",
+  rm_speakNow: "Speak — the bar should move", rm_ready: "✓ Your system is ready to connect to the class", rm_readyWarn: "You can join, but some items need attention",
+  rm_notReady: "Your device can't join yet — fix the items marked ✗", rm_noAccess: "You're not a participant in this class.", rm_loginFirst: "Sign in to enter the classroom",
+  rm_signIn: "Sign in", rm_join: "Join class", rm_joining: "Joining…", rm_back: "Back to dashboard", rm_ok: "Working", rm_denied: "Permission blocked — allow it from the browser's address bar",
+  rm_notFound: "No device found", rm_busy: "The device is being used by another app", rm_direct: "Direct connection available", rm_relay: "Connected through relay server",
+  rm_restricted: "Restricted network — the connection may fail; try another network", rm_latency: "Latency", rm_unsupported: "Not supported on this device (you can still join)",
+  rm_checking: "Checking…", rm_inClass: "Already in class", rm_mic: "Mic", rm_cam: "Camera", rm_mute: "Mute", rm_unmute: "Unmute", rm_camOn: "Start video", rm_camOff: "Stop video",
+  rm_share: "Share screen", rm_shareTab: "A browser tab", rm_shareWin: "A specific window", rm_shareScreen: "Entire screen", rm_shareAudio: "Share sound too",
+  rm_shareMotion: "Optimize for video", rm_stopShare: "Stop sharing", rm_noShare: "Screen sharing isn't supported on this device", rm_board: "Whiteboard",
+  rm_hand: "Raise hand", rm_lowerHand: "Lower hand", rm_react: "Reactions", rm_chat: "Chat", rm_people: "Participants", rm_attend: "Attendance",
+  rm_rec: "Record", rm_stopRec: "Stop recording", rm_recOn: "This class is being recorded", rm_recHint: "Choose “This tab” in the next window to record the class",
+  rm_recSaved: "Recording saved to your device", rm_leave: "Leave", rm_endAll: "End class for everyone", rm_leaveConfirm: "Leave the class?",
+  rm_ended: "The teacher ended the class", rm_removed: "You were removed from the class", rm_mutedBy: "The teacher muted your microphone",
+  rm_more: "More", rm_settings: "Settings", rm_grid: "Gallery view", rm_speaker: "Speaker view", rm_full: "Full screen", rm_hideSelf: "Hide self view",
+  rm_mirror: "Mirror my video", rm_hd: "HD video", rm_ns: "Noise suppression", rm_lowBw: "Low-bandwidth mode", rm_you: "You", rm_host: "Teacher", rm_guest: "Student", rm_owner: "Academy",
+  rm_pin: "Pin", rm_muteP: "Mute", rm_remove: "Remove", rm_removeConfirm: "Remove this participant from the class?", rm_muteAll: "Mute all", rm_lowerAll: "Lower all hands",
+  rm_allowDraw: "Students can draw on the whiteboard", rm_connecting: "Connecting…", rm_reconnecting: "Reconnecting…", rm_offline: "You're offline — trying to reconnect",
+  rm_qGood: "Excellent connection", rm_qFair: "Fair connection", rm_qPoor: "Weak connection", rm_startsIn: "Starts in", rm_remaining: "left", rm_overtime: "Overtime",
+  rm_fiveLeft: "5 minutes left", rm_typeMsg: "Type a message…", rm_send: "Send", rm_noMsgs: "No messages yet", rm_joined: "joined", rm_left: "left", rm_raised: "raised a hand",
+  rm_alone: "Waiting for others to join…", rm_attFirst: "First join", rm_attLast: "Last seen", rm_attMins: "Minutes", rm_attSessions: "Sessions",
+  rm_refresh: "Refresh", rm_csv: "Export CSV", rm_attTitle: "Classroom attendance log", rm_noAtt: "Nobody has entered the classroom yet",
+  rm_tSelect: "Select & move", rm_tPen: "Pen", rm_tHl: "Highlighter", rm_tEraser: "Eraser", rm_tLine: "Line", rm_tArrow: "Arrow", rm_tRect: "Rectangle",
+  rm_tEllipse: "Circle", rm_tTri: "Triangle", rm_tText: "Text", rm_tNote: "Sticky note", rm_tImg: "Insert image", rm_tLaser: "Laser pointer", rm_fill: "Fill shape",
+  rm_undo: "Undo", rm_redo: "Redo", rm_clear: "Clear page", rm_clearConfirm: "Clear this page for everyone?", rm_page: "Page", rm_addPage: "New page", rm_bg: "Background",
+  rm_bgBlank: "Blank", rm_bgGrid: "Grid", rm_bgLines: "Lines", rm_bgDots: "Dots", rm_bgDark: "Chalkboard", rm_export: "Save as image", rm_exportAll: "Save all pages",
+  rm_noDraw: "The teacher has turned off drawing for students", rm_closeBoard: "Close whiteboard", rm_size: "Size", rm_color: "Color",
+  rm_iceTitle: "Classroom connection (TURN server)", rm_iceHint: "Optional: add a TURN server so students behind strict networks can always connect. Paste the JSON list of ICE servers from your provider (e.g. Metered, Twilio, Cloudflare).",
+  rm_badJson: "Invalid JSON", rm_enterRoom: "Enter classroom", rm_classroomCard: "Your classroom",
+  rm_classroomHint: "Every lesson now has its own private classroom inside the academy (video, screen sharing, whiteboard, chat and attendance log). The external link below is optional — a backup only.",
+  rm_myGroups: "My group classes"
+});
+Object.assign(UI.ar, {
+  rm_title: "الفصل الافتراضي", rm_check: "فحص النظام", rm_chkBrowser: "دعم المتصفح", rm_chkCam: "الكاميرا", rm_chkMic: "الميكروفون", rm_chkSpk: "السماعات",
+  rm_chkNet: "الشبكة (اتصال الفيديو)", rm_chkSrv: "خادم الأكاديمية", rm_chkShare: "مشاركة الشاشة", rm_testSound: "تشغيل صوت تجريبي", rm_spkHint: "اضغط لسماع نغمة تجريبية",
+  rm_speakNow: "اتكلم — الشريط لازم يتحرك", rm_ready: "✓ جهازك جاهز للاتصال بالفصل", rm_readyWarn: "تقدر تدخل، لكن فيه عناصر محتاجة انتباه",
+  rm_notReady: "جهازك مش جاهز للدخول — صلّح العناصر المعلّمة ✗", rm_noAccess: "إنت مش مشارك في الفصل ده.", rm_loginFirst: "سجّل الدخول عشان تدخل الفصل",
+  rm_signIn: "تسجيل الدخول", rm_join: "ادخل الفصل", rm_joining: "جارٍ الدخول…", rm_back: "رجوع للوحة التحكم", rm_ok: "شغّال", rm_denied: "الإذن مرفوض — اسمح بيه من شريط عنوان المتصفح",
+  rm_notFound: "مفيش جهاز", rm_busy: "الجهاز مستخدم في تطبيق تاني", rm_direct: "اتصال مباشر متاح", rm_relay: "متصل عبر خادم وسيط",
+  rm_restricted: "شبكة مقيدة — ممكن الاتصال يفشل؛ جرّب شبكة تانية", rm_latency: "زمن الاستجابة", rm_unsupported: "غير مدعوم على الجهاز ده (تقدر تدخل برضه)",
+  rm_checking: "جارٍ الفحص…", rm_inClass: "موجودين في الفصل الآن", rm_mic: "الميكروفون", rm_cam: "الكاميرا", rm_mute: "كتم", rm_unmute: "إلغاء الكتم", rm_camOn: "تشغيل الكاميرا", rm_camOff: "إيقاف الكاميرا",
+  rm_share: "مشاركة الشاشة", rm_shareTab: "تبويب في المتصفح", rm_shareWin: "نافذة محددة", rm_shareScreen: "الشاشة بالكامل", rm_shareAudio: "شارك الصوت كمان",
+  rm_shareMotion: "تحسين للفيديو", rm_stopShare: "إيقاف المشاركة", rm_noShare: "مشاركة الشاشة غير مدعومة على الجهاز ده", rm_board: "السبورة",
+  rm_hand: "ارفع إيدك", rm_lowerHand: "نزّل إيدك", rm_react: "تفاعلات", rm_chat: "الدردشة", rm_people: "المشاركون", rm_attend: "الحضور",
+  rm_rec: "تسجيل", rm_stopRec: "إيقاف التسجيل", rm_recOn: "الفصل ده بيتسجّل", rm_recHint: "اختار «هذا التبويب» في النافذة الجاية عشان تسجّل الفصل",
+  rm_recSaved: "التسجيل اتحفظ على جهازك", rm_leave: "خروج", rm_endAll: "إنهاء الفصل للجميع", rm_leaveConfirm: "تخرج من الفصل؟",
+  rm_ended: "المعلم أنهى الفصل", rm_removed: "تم إخراجك من الفصل", rm_mutedBy: "المعلم كتم الميكروفون بتاعك",
+  rm_more: "المزيد", rm_settings: "الإعدادات", rm_grid: "عرض الشبكة", rm_speaker: "عرض المتحدث", rm_full: "ملء الشاشة", rm_hideSelf: "إخفاء صورتي",
+  rm_mirror: "عكس الفيديو بتاعي", rm_hd: "فيديو عالي الجودة", rm_ns: "عزل الضوضاء", rm_lowBw: "وضع الإنترنت الضعيف", rm_you: "أنت", rm_host: "المعلم", rm_guest: "طالب", rm_owner: "الأكاديمية",
+  rm_pin: "تثبيت", rm_muteP: "كتم", rm_remove: "إخراج", rm_removeConfirm: "تخرج المشارك ده من الفصل؟", rm_muteAll: "كتم الكل", rm_lowerAll: "تنزيل كل الأيدي",
+  rm_allowDraw: "الطلاب يقدروا يكتبوا على السبورة", rm_connecting: "جارٍ الاتصال…", rm_reconnecting: "جارٍ إعادة الاتصال…", rm_offline: "إنت أوفلاين — بنحاول نعيد الاتصال",
+  rm_qGood: "اتصال ممتاز", rm_qFair: "اتصال متوسط", rm_qPoor: "اتصال ضعيف", rm_startsIn: "يبدأ بعد", rm_remaining: "متبقي", rm_overtime: "وقت إضافي",
+  rm_fiveLeft: "باقي 5 دقايق", rm_typeMsg: "اكتب رسالة…", rm_send: "إرسال", rm_noMsgs: "لسه مفيش رسائل", rm_joined: "دخل", rm_left: "خرج", rm_raised: "رفع إيده",
+  rm_alone: "مستني الباقيين يدخلوا…", rm_attFirst: "أول دخول", rm_attLast: "آخر ظهور", rm_attMins: "الدقائق", rm_attSessions: "مرات الدخول",
+  rm_refresh: "تحديث", rm_csv: "تصدير CSV", rm_attTitle: "سجل حضور الفصل", rm_noAtt: "لسه محدش دخل الفصل",
+  rm_tSelect: "تحديد وتحريك", rm_tPen: "قلم", rm_tHl: "قلم تظليل", rm_tEraser: "ممحاة", rm_tLine: "خط", rm_tArrow: "سهم", rm_tRect: "مستطيل",
+  rm_tEllipse: "دائرة", rm_tTri: "مثلث", rm_tText: "نص", rm_tNote: "ملاحظة لاصقة", rm_tImg: "إدراج صورة", rm_tLaser: "مؤشر ليزر", rm_fill: "تعبئة الشكل",
+  rm_undo: "تراجع", rm_redo: "إعادة", rm_clear: "مسح الصفحة", rm_clearConfirm: "تمسح الصفحة دي عند الكل؟", rm_page: "صفحة", rm_addPage: "صفحة جديدة", rm_bg: "الخلفية",
+  rm_bgBlank: "فارغة", rm_bgGrid: "مربعات", rm_bgLines: "سطور", rm_bgDots: "نقاط", rm_bgDark: "سبورة خضراء", rm_export: "حفظ كصورة", rm_exportAll: "حفظ كل الصفحات",
+  rm_noDraw: "المعلم قفل الكتابة على السبورة للطلاب", rm_closeBoard: "قفل السبورة", rm_size: "الحجم", rm_color: "اللون",
+  rm_iceTitle: "اتصال الفصل (خادم TURN)", rm_iceHint: "اختياري: أضف خادم TURN عشان الطلاب اللي على شبكات مقيدة يقدروا يتصلوا دايمًا. الصق قائمة JSON لخوادم ICE من مزوّد الخدمة (Metered أو Twilio أو Cloudflare).",
+  rm_badJson: "JSON غير صالح", rm_enterRoom: "ادخل الفصل", rm_classroomCard: "فصلك الافتراضي",
+  rm_classroomHint: "كل حصة دلوقتي ليها فصل خاص جوه الأكاديمية (فيديو، مشاركة شاشة، سبورة، دردشة وسجل حضور). الرابط الخارجي تحت اختياري — للاحتياط بس.",
+  rm_myGroups: "حصصي الجماعية"
+});
+const RL = (k) => L("rm_" + k);
+function roomHref(kind, id) { return (location.origin && location.origin.startsWith("http") ? location.origin : "https://quran-academy-nine-dusky.vercel.app") + "/#/room/" + kind + "/" + id; }
+
+document.head.insertAdjacentHTML("beforeend", `<style id="rmCss">
+.rm{position:fixed;inset:0;z-index:5000;background:#0b1120;color:#e5e7eb;display:flex;flex-direction:column;font-family:Tajawal,system-ui,sans-serif}
+.rm *{box-sizing:border-box}.rm button,.rm select,.rm input,.rm textarea{font-family:inherit}
+#toast{z-index:6000!important}
+.rm-top{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;background:#0f172a;border-bottom:1px solid #1e293b;min-height:48px}
+.rm-top .t{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+.rm-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .6rem;border-radius:999px;background:#1e293b;font-size:.8rem;white-space:nowrap}
+.rm-chip.rec{background:#7f1d1d;color:#fecaca;animation:rmBlink 1.4s infinite}.rm-chip.warn{background:#78350f;color:#fde68a}
+@keyframes rmBlink{50%{opacity:.6}}
+.rm-body{flex:1;display:flex;min-height:0;position:relative}
+.rm-main{flex:1;display:flex;flex-direction:column;min-width:0;padding:.5rem;gap:.5rem;position:relative}
+.rm-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.rm-strip{display:flex;gap:.5rem;overflow-x:auto;height:118px;flex:none}
+.rm-strip>*{width:190px!important;height:100%!important;flex:none;cursor:pointer}
+.rm-grid{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;min-height:0;overflow:hidden}
+.rm-tile{position:relative;background:#111827;border-radius:12px;overflow:hidden;border:2px solid transparent;transition:border-color .15s}
+.rm-stage>.rm-tile,.rm-stage>.rm-wb{width:100%;height:100%}
+.rm-tile.speaking{border-color:#10b981}
+.rm-tile video{width:100%;height:100%;object-fit:cover;background:#000;display:block}
+.rm-tile.screen video,.rm-stage .rm-tile video{object-fit:contain}
+.rm-tile.mirror video{transform:scaleX(-1)}
+.rm-av{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.rm-av i{width:72px;height:72px;border-radius:50%;background:#047857;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:1.8rem;font-weight:800;color:#fff}
+.rm-strip .rm-av i{width:44px;height:44px;font-size:1.1rem}
+.rm-lbl{position:absolute;bottom:6px;inset-inline-start:6px;display:flex;gap:.35rem;align-items:center;background:rgba(0,0,0,.62);padding:.15rem .5rem;border-radius:8px;font-size:.78rem;max-width:calc(100% - 12px)}
+.rm-lbl b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.rm-pinb{background:none;border:0;cursor:pointer;font-size:.75rem;opacity:.75;padding:0;color:#fff}
+.rm-badges{position:absolute;top:6px;inset-inline-end:6px;display:flex;gap:.3rem}
+.rm-badges span{background:rgba(0,0,0,.62);border-radius:8px;padding:.1rem .4rem;font-size:.8rem}
+.rm-state{position:absolute;top:6px;inset-inline-start:6px;background:rgba(120,53,15,.85);color:#fde68a;border-radius:8px;padding:.1rem .5rem;font-size:.75rem}
+.rm-bars{display:inline-flex;align-items:flex-end;gap:1px;height:12px}
+.rm-bars i{width:3px;background:#475569;display:block}
+.rm-bars i:nth-child(1){height:4px}.rm-bars i:nth-child(2){height:8px}.rm-bars i:nth-child(3){height:12px}
+.rm-bars.q3 i{background:#10b981}.rm-bars.q2 i:nth-child(-n+2){background:#f59e0b}.rm-bars.q1 i:nth-child(1){background:#ef4444}
+.rm-bar{display:flex;align-items:center;justify-content:center;gap:.3rem;padding:.45rem;background:#0f172a;border-top:1px solid #1e293b;overflow-x:auto}
+.rm-btn{display:flex;flex-direction:column;align-items:center;gap:.2rem;min-width:64px;padding:.4rem .5rem;border-radius:10px;border:0;background:transparent;color:#e5e7eb;cursor:pointer;font-size:.72rem;position:relative;flex:none}
+.rm-btn i{font-size:1.15rem}.rm-btn:hover{background:#1e293b}.rm-btn.on{background:#1e293b;color:#34d399}.rm-btn.off i{color:#f87171}
+.rm-btn.danger{background:#b91c1c;color:#fff}.rm-btn.danger:hover{background:#991b1b}
+.rm-btn .dot{position:absolute;top:2px;inset-inline-end:10px;background:#ef4444;color:#fff;border-radius:999px;font-size:.65rem;padding:0 .3rem;font-style:normal}
+.rm-side{width:340px;max-width:100%;background:#0f172a;border-inline-start:1px solid #1e293b;display:flex;flex-direction:column;min-height:0}
+.rm-side-h{display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-bottom:1px solid #1e293b}
+.rm-side-b{flex:1;overflow:auto;padding:.6rem .8rem}
+.rm-msg{margin-bottom:.6rem}.rm-msg small{color:#94a3b8;font-size:.72rem}.rm-msg>div{background:#1e293b;border-radius:10px;padding:.4rem .6rem;margin-top:.15rem;white-space:pre-wrap;word-break:break-word}
+.rm-msg.me>div{background:#065f46}.rm-msg a{color:#93c5fd}
+.rm-in{width:100%;background:#1e293b;border:1px solid #334155;color:#e5e7eb;border-radius:10px;padding:.5rem .6rem;font:inherit}
+.rm-sel{background:#1e293b;border:1px solid #334155;color:#e5e7eb;border-radius:8px;padding:.3rem .45rem;font-size:.82rem;max-width:100%}
+.rm-pbtn{background:#1e293b;border:1px solid #334155;color:#e5e7eb;border-radius:8px;padding:.3rem .6rem;cursor:pointer;font-size:.8rem}
+.rm-pbtn:hover{background:#273449}.rm-pbtn.p{background:#047857;border-color:#047857;color:#fff}.rm-pbtn.p:disabled{opacity:.45;cursor:not-allowed}.rm-pbtn.d{color:#fca5a5}
+.rm-prow{display:flex;align-items:center;gap:.5rem;padding:.45rem 0;border-bottom:1px solid #1e293b;font-size:.85rem}
+.rm-ava{width:34px;height:34px;border-radius:50%;background:#047857;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.rm-menu{position:fixed;bottom:76px;background:#111827;border:1px solid #334155;border-radius:12px;padding:.4rem;z-index:20;min-width:230px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.rm-menu button,.rm-menu label{display:flex;align-items:center;gap:.6rem;width:100%;background:none;border:0;color:#e5e7eb;padding:.5rem .6rem;border-radius:8px;cursor:pointer;font-size:.88rem;text-align:start}
+.rm-menu button:hover,.rm-menu label:hover{background:#1e293b}
+.rm-react{display:flex;gap:.1rem;flex-wrap:wrap;max-width:270px}.rm-react button{width:auto!important;font-size:1.5rem!important;padding:.3rem!important}
+.rm-float{position:fixed;bottom:90px;font-size:2.4rem;animation:rmUp 3s ease-out forwards;pointer-events:none;z-index:30;text-align:center}
+.rm-float small{display:block;font-size:.7rem;background:rgba(0,0,0,.6);border-radius:6px;padding:0 .3rem;color:#fff}
+@keyframes rmUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-280px);opacity:0}}
+.rm-banner{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:#78350f;color:#fde68a;padding:.4rem .9rem;border-radius:999px;font-size:.85rem;z-index:25}
+.rm-pre{flex:1;overflow:auto;display:flex;gap:1.5rem;padding:1.5rem;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.rm-pre-v{width:min(620px,100%)}.rm-pre-v .rm-tile{width:100%;aspect-ratio:16/9}
+.rm-pre-c{width:min(420px,100%);background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:1.2rem}
+.rm-chk{display:flex;gap:.6rem;align-items:flex-start;padding:.45rem 0;border-bottom:1px solid #1e293b;font-size:.9rem}
+.rm-chk .ic{width:22px;text-align:center;flex:none}.rm-chk small{display:block;color:#94a3b8;font-size:.78rem;word-break:break-word}
+.rm-meter{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;margin-top:.6rem}.rm-meter i{display:block;height:100%;width:0;background:#10b981;transition:width .08s}
+.rm-verdict{margin:.8rem 0;padding:.7rem .9rem;border-radius:12px;font-weight:700;background:#1e293b}
+.rm-verdict.ok{background:#064e3b;color:#a7f3d0}.rm-verdict.warn{background:#78350f;color:#fde68a}.rm-verdict.bad{background:#7f1d1d;color:#fecaca}
+.rm-wb{position:relative;display:flex;flex-direction:column;background:#111827;border-radius:12px;overflow:hidden}
+.rm-wbt{display:flex;gap:.15rem;align-items:center;padding:.3rem;background:#1f2937;flex-wrap:wrap}
+.rm-strip .rm-wbt{display:none}
+.rm-wbt button{background:none;border:0;color:#e5e7eb;width:32px;height:32px;border-radius:8px;cursor:pointer;flex:none}
+.rm-wbt button:hover{background:#374151}.rm-wbt button.on{background:#047857}.rm-wbt button:disabled{opacity:.35;cursor:not-allowed}
+.rm-wbt .sep{width:1px;height:24px;background:#374151;margin:0 .15rem}
+.rm-wbt input[type=color]{width:28px;height:28px;border:0;background:none;padding:0;cursor:pointer}
+.rm-wbt .rm-sw{width:20px;height:20px;border-radius:50%;border:2px solid #4b5563;padding:0}.rm-wbt .rm-sw.on{border-color:#fff;box-shadow:0 0 0 2px #10b981}
+.rm-wbc{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.rm-wbc canvas{touch-action:none;box-shadow:0 0 0 1px #374151;border-radius:4px}
+.rm-txt{position:absolute;z-index:5;background:rgba(255,255,255,.96);border:1px dashed #047857;padding:2px 4px;min-width:140px;min-height:1.6em;line-height:1.25}
+.rm-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:40}
+.rm-modal>div{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:1.2rem;width:min(460px,92vw);max-height:85vh;overflow:auto}
+@media (max-width:820px){.rm-side{position:absolute;inset:0;width:100%;z-index:30}.rm-btn{min-width:52px}.rm-btn>span{display:none}.rm-strip{height:86px}.rm-strip>*{width:130px!important}.rm .hide-sm{display:none}.rm-pre{padding:.8rem}}
+</style>`);
+
+const RM = {};
+const RM_DEFAULT_ICE = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }, { urls: "stun:stun.cloudflare.com:3478" }];
+const RM_EMOJI = ["👍", "👏", "❤️", "😂", "😮", "🎉", "🤲", "✅", "❌", "🌟"];
+const RM_COLORS = ["#111827", "#ffffff", "#dc2626", "#ea580c", "#ca8a04", "#16a34a", "#0284c7", "#7c3aed", "#db2777"];
+const RM_CHECKS = ["browser", "srv", "net", "mic", "cam", "spk", "share"];
+function rmEl(id) { return document.getElementById(id); }
+function rmLoadPrefs() { try { return JSON.parse(lsGet("itqan_room_prefs") || "{}") || {}; } catch (e) { return {}; } }
+function rmSavePrefs() { lsSet("itqan_room_prefs", JSON.stringify(RM.prefs || {})); }
+function rmMyName() { const p = state.auth.profile || {}; return p.display_name || p.real_name || (state.auth.user && state.auth.user.email || "").split("@")[0]; }
+function rmBrowserName() { const u = navigator.userAgent; return /Edg\//.test(u) ? "Edge" : /OPR\//.test(u) ? "Opera" : /SamsungBrowser/.test(u) ? "Samsung" : /Firefox\//.test(u) ? "Firefox" : /Chrome\//.test(u) ? "Chrome" : /Safari\//.test(u) ? "Safari" : "Browser"; }
+function rmOS() { const u = navigator.userAgent; return /Android/.test(u) ? "Android" : /iPhone|iPad|iPod/.test(u) ? "iOS" : /Windows/.test(u) ? "Windows" : /Mac OS/.test(u) ? "macOS" : /Linux/.test(u) ? "Linux" : "—"; }
+function rmBeep(f, dur) { try { const ac = RM.ac; if (!ac || ac.state !== "running") return; const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f || 880; g.gain.value = .06; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + (dur || .12)); } catch (e) {} }
+function rmBarsHtml(q) { return `<span class="rm-bars q${q || 0}"><i></i><i></i><i></i></span>`; }
+function rmFmtDur(ms) { ms = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(ms / 3600), m = Math.floor(ms % 3600 / 60), s = ms % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0"); }
+function rmDownload(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+
+/* ---------- التوجيه ---------- */
+const _readHash9 = readHash;
+readHash = function () {
+  const h = (location.hash || "").replace(/^#\/?/, "");
+  const p = h.split("/");
+  if (p[0] === "room" && (p[1] === "lesson" || p[1] === "group") && /^[0-9a-f-]{36}$/i.test(p[2] || "")) { state.route = "room"; state.roomKind = p[1]; state.roomId = p[2]; return; }
+  _readHash9();
+};
+const _render9 = render;
+render = function () {
+  if (state.route === "room") return renderRoomRoute();
+  if (RM.key || rmEl("rmRoot")) roomTeardown();
+  return _render9();
+};
+function renderRoomRoute() {
+  const app = document.getElementById("app"); if (!app) return;
+  const key = state.roomKind + "/" + state.roomId;
+  if (RM.key === key && rmEl("rmRoot")) return;
+  if (!state.auth.ready) { app.innerHTML = `<div style="min-height:60vh;display:flex;align-items:center;justify-content:center" class="muted">${L("loading")}</div>`; return; }
+  if (!state.auth.user) {
+    app.innerHTML = renderHeader() + `<section class="sec"><div class="wrap" style="max-width:520px"><div class="card" style="text-align:center"><h2 style="margin-bottom:.6rem">🎥 ${RL("title")}</h2><p class="muted" style="margin-bottom:1rem">${RL("loginFirst")}</p><button class="btn btn-p" onclick="lsSet('itqan_after_hash', location.hash);navigate('login')">${RL("signIn")}</button></div></div></section>` + renderFooter();
+    return;
+  }
+  app.innerHTML = "";
+  roomInit(state.roomKind, state.roomId);
+}
+function rmAfterAuth() { const h = lsGet("itqan_after_hash"); if (h && state.auth.user) { lsSet("itqan_after_hash", null); location.hash = h; readHash(); render(); } }
+const _doLogin9 = doLogin; doLogin = async function () { await _doLogin9(); rmAfterAuth(); };
+const _doSignup9 = doSignup; doSignup = async function () { await _doSignup9(); rmAfterAuth(); };
+window.addEventListener("hashchange", () => { const was = state.route; readHash(); if (state.route === "room" || was === "room") render(); });
+
+/* ---------- البداية وفحص النظام ---------- */
+function roomInit(kind, id) {
+  roomTeardown();
+  Object.assign(RM, {
+    key: kind + "/" + id, kind, id, joined: false, uid: state.auth.user.id, pid: state.auth.user.id + ":" + Math.random().toString(36).slice(2, 8),
+    peers: {}, members: {}, seen: new Set(), local: new MediaStream(), camTrack: null, screen: null, ice: RM_DEFAULT_ICE.slice(), prefs: rmLoadPrefs(),
+    panel: null, unread: 0, chat: [], hand: 0, layout: "grid", pin: null, levels: {}, speaker: null, timers: [], checks: {}, tiles: {}, info: null, rec: null, menu: null, myName: rmMyName()
+  });
+  try { RM.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { RM.ac = null; }
+  document.body.style.overflow = "hidden";
+  const root = document.createElement("div"); root.id = "rmRoot"; root.className = "rm"; root.dir = (I18N[state.lang] || {}).dir || "ltr";
+  root.addEventListener("pointerdown", (e) => {
+    if (RM.ac && RM.ac.state === "suspended") RM.ac.resume().catch(() => {});
+    if (RM.menu && !e.target.closest(".rm-menu") && !e.target.closest("#rbShare,#rbReact,#rbMore,#rbLeave")) rmMenuClose();
+  });
+  document.body.appendChild(root);
+  rmRenderPre();
+  rmRunChecks();
+}
+function rmRenderPre() {
+  const root = rmEl("rmRoot"); if (!root) return;
+  root.innerHTML = `<div class="rm-top"><span class="t">🎓 ${esc(I18N[state.lang].meta.siteName)} · ${RL("title")}</span><span style="flex:1"></span><button class="rm-pbtn" onclick="roomExit()">${RL("back")}</button></div>
+  <div class="rm-pre">
+    <div class="rm-pre-v">
+      <div class="rm-tile ${RM.prefs.mirror !== false ? "mirror" : ""}"><video id="rmPreVid" autoplay playsinline muted></video><div class="rm-av" id="rmPreAv"><i>${esc((RM.myName || "?").charAt(0).toUpperCase())}</i></div>
+        <div class="rm-lbl"><b>${esc(RM.myName || "")}</b></div></div>
+      <div style="display:flex;gap:.5rem;justify-content:center;margin-top:.7rem">
+        <button class="rm-btn" id="rmPreMic" onclick="rmToggleMic()"></button><button class="rm-btn" id="rmPreCam" onclick="rmToggleCam()"></button></div>
+      <div class="rm-meter"><i id="rmPreLvl"></i></div><div style="color:#94a3b8;text-align:center;margin-top:.3rem;font-size:.8rem">${RL("speakNow")}</div>
+      <div style="display:grid;gap:.45rem;margin-top:.8rem" id="rmDevSel"></div>
+    </div>
+    <div class="rm-pre-c">
+      <h3 style="margin:0 0 .2rem">${RL("title")}</h3><div id="rmPreInfo" style="color:#94a3b8;font-size:.85rem"></div><div id="rmPreWho" style="color:#34d399;font-size:.85rem;margin-top:.3rem"></div>
+      <h4 style="margin:.9rem 0 .3rem">${RL("check")}</h4><div id="rmChecks"></div><div id="rmVerdict"></div>
+      <button class="rm-pbtn p" id="rmJoinBtn" style="width:100%;padding:.75rem;font-size:1rem" onclick="rmJoin()" disabled>${RL("join")}</button>
+    </div>
+  </div>`;
+  rmRenderChecks(); rmPreUpdate();
+  clearInterval(RM.preTimer);
+  RM.preTimer = setInterval(() => { const el = rmEl("rmPreLvl"); if (!el) return; const v = rmLevelOf("me", RM.local); el.style.width = Math.min(100, v * 500) + "%"; }, 100);
+}
+function rmPreUpdate() {
+  const mic = rmMicOn(), cam = !!RM.camTrack;
+  const m = rmEl("rmPreMic"), c = rmEl("rmPreCam"), v = rmEl("rmPreVid"), av = rmEl("rmPreAv");
+  if (m) { m.className = "rm-btn " + (mic ? "on" : "off"); m.innerHTML = `<i class="fa-solid ${mic ? "fa-microphone" : "fa-microphone-slash"}"></i><span>${mic ? RL("mute") : RL("unmute")}</span>`; }
+  if (c) { c.className = "rm-btn " + (cam ? "on" : "off"); c.innerHTML = `<i class="fa-solid ${cam ? "fa-video" : "fa-video-slash"}"></i><span>${cam ? RL("camOff") : RL("camOn")}</span>`; }
+  if (v && v.srcObject !== RM.local) v.srcObject = RM.local;
+  if (v) v.style.visibility = cam ? "visible" : "hidden";
+  if (av) av.style.display = cam ? "none" : "";
+}
+function rmSetCheck(k, s, d) { if (!RM.checks) return; RM.checks[k] = { s, d }; rmRenderChecks(); }
+function rmRenderChecks() {
+  const el = rmEl("rmChecks"); if (!el) return;
+  const ic = { ok: "✅", warn: "⚠️", bad: "❌", wait: "⏳", info: "🔈" };
+  const lbl = { browser: "chkBrowser", srv: "chkSrv", net: "chkNet", mic: "chkMic", cam: "chkCam", spk: "chkSpk", share: "chkShare" };
+  const C = RM.checks;
+  el.innerHTML = RM_CHECKS.map(k => { const c = C[k] || { s: "wait", d: RL("checking") }; return `<div class="rm-chk"><span class="ic">${ic[c.s]}</span><div style="flex:1;min-width:0"><b>${RL(lbl[k])}</b><small>${esc(c.d || "")}</small>${k === "spk" ? `<button class="rm-pbtn" style="margin-top:.3rem" onclick="rmTestSound()">🔊 ${RL("testSound")}</button>` : ""}</div></div>`; }).join("");
+  const st = (k) => (C[k] || { s: "wait" }).s;
+  const vals = RM_CHECKS.map(st);
+  let cls = "", txt = RL("checking");
+  if (st("browser") === "bad" || st("srv") === "bad") { cls = "bad"; txt = RM.noAccess ? RL("noAccess") : RL("notReady"); }
+  else if (!vals.includes("wait")) { if (vals.some(s => s === "warn" || s === "bad")) { cls = "warn"; txt = RL("readyWarn"); } else { cls = "ok"; txt = RL("ready"); } }
+  const v = rmEl("rmVerdict"); if (v) v.innerHTML = `<div class="rm-verdict ${cls}">${txt}</div>`;
+  const jb = rmEl("rmJoinBtn"); if (jb && !RM.joining) jb.disabled = !(st("browser") === "ok" && st("srv") === "ok");
+}
+async function rmRunChecks() {
+  const md = navigator.mediaDevices;
+  const ok = !!(window.RTCPeerConnection && md && md.getUserMedia);
+  rmSetCheck("browser", ok ? "ok" : "bad", ok ? `${rmBrowserName()} · ${rmOS()}` : RL("unsupported"));
+  rmSetCheck("share", md && md.getDisplayMedia ? "ok" : "warn", md && md.getDisplayMedia ? RL("ok") : RL("unsupported"));
+  rmSetCheck("spk", "info", RL("spkHint"));
+  const key = RM.key;
+  (async () => {
+    try {
+      const t0 = performance.now();
+      const { data, error } = await sb.rpc("room_access", { p_kind: RM.kind, p_id: RM.id });
+      const ms = Math.round(performance.now() - t0);
+      if (RM.key !== key) return;
+      if (error) return rmSetCheck("srv", "bad", error.message);
+      if (!data) { RM.noAccess = true; return rmSetCheck("srv", "bad", RL("noAccess")); }
+      RM.role = data; RM.latency = ms;
+      rmLoadInfo();
+      try { await rmConnectChannel(); if (RM.key === key) rmSetCheck("srv", "ok", `${RL("latency")}: ${ms} ms · Realtime ✓`); }
+      catch (e) { if (RM.key === key) rmSetCheck("srv", "bad", "Realtime: " + (e && e.message || e)); }
+    } catch (e) { rmSetCheck("srv", "bad", String(e && e.message || e)); }
+  })();
+  (async () => {
+    try { const { data } = await sb.rpc("room_ice"); if (Array.isArray(data) && data.length) RM.ice = data.concat(RM_DEFAULT_ICE); } catch (e) {}
+    if (RM.key === key) rmNetCheck();
+  })();
+  if (ok) await rmGetMedia();
+  else { rmSetCheck("mic", "bad", RL("unsupported")); rmSetCheck("cam", "bad", RL("unsupported")); }
+}
+async function rmLoadInfo() {
+  try {
+    const r = RM.kind === "lesson" ? await sb.from("lessons").select("start_time,end_time,track").eq("id", RM.id).maybeSingle()
+      : await sb.from("group_sessions").select("title,start_time,end_time").eq("id", RM.id).maybeSingle();
+    const d = r.data; if (!d) return; RM.pre = d;
+    const el = rmEl("rmPreInfo"); if (!el) return;
+    const ttl = d.track ? trackTitle(d.track) : d.title ? locText(d.title) : "";
+    el.innerHTML = `${ttl ? `<b style="color:#e5e7eb">${esc(ttl)}</b><br>` : ""}🕒 ${esc(fmtDT(d.start_time))} – ${esc(fmtTime(d.end_time))}`;
+  } catch (e) {}
+}
+async function rmNetCheck() {
+  rmSetCheck("net", "wait", RL("checking"));
+  try {
+    const pc = new RTCPeerConnection({ iceServers: RM.ice });
+    pc.createDataChannel("t");
+    const types = new Set();
+    pc.onicecandidate = (e) => { if (e.candidate && e.candidate.candidate) { const m = / typ (\w+)/.exec(e.candidate.candidate); if (m) types.add(m[1]); } };
+    await pc.setLocalDescription(await pc.createOffer());
+    await new Promise(r => { const t = setTimeout(r, 5000); pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === "complete") { clearTimeout(t); r(); } }; });
+    pc.close();
+    const c = navigator.connection; const extra = c && c.effectiveType ? ` · ${c.effectiveType}${c.downlink ? " · ~" + c.downlink + " Mbps" : ""}` : "";
+    RM.netType = types.has("srflx") ? "direct" : types.has("relay") ? "relay" : "restricted";
+    rmSetCheck("net", RM.netType === "restricted" ? "warn" : "ok", RL(RM.netType) + extra);
+  } catch (e) { rmSetCheck("net", "warn", String(e && e.message || e)); }
+}
+function rmAudioC(id) { const c = { echoCancellation: true, noiseSuppression: RM.prefs.ns !== false, autoGainControl: true }; if (id) c.deviceId = { ideal: id }; return c; }
+function rmVideoC(id) { const c = RM.prefs.hd === false || RM.prefs.lowbw ? { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 20 } } : { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } }; if (id) c.deviceId = { ideal: id }; else c.facingMode = "user"; return c; }
+function rmErrLvl(e) { return e && (e.name === "NotFoundError" || e.name === "OverconstrainedError") ? "warn" : "bad"; }
+function rmMediaErr(e) { const n = e && e.name; if (n === "NotAllowedError" || n === "SecurityError") return RL("denied"); if (n === "NotFoundError" || n === "OverconstrainedError") return RL("notFound"); if (n === "NotReadableError" || n === "AbortError") return RL("busy"); return (e && e.message) || String(e); }
+async function rmGetMedia() {
+  const md = navigator.mediaDevices; const key = RM.key;
+  let s = null;
+  try { s = await md.getUserMedia({ audio: rmAudioC(RM.prefs.mic), video: rmVideoC(RM.prefs.cam) }); }
+  catch (e) {
+    try { s = await md.getUserMedia({ audio: rmAudioC(RM.prefs.mic) }); } catch (e1) { rmSetCheck("mic", rmErrLvl(e1), rmMediaErr(e1)); }
+    try { const v = await md.getUserMedia({ video: rmVideoC(RM.prefs.cam) }); if (s) v.getTracks().forEach(t => s.addTrack(t)); else s = v; } catch (e2) { rmSetCheck("cam", rmErrLvl(e2), rmMediaErr(e2)); }
+  }
+  if (RM.key !== key) { if (s) s.getTracks().forEach(t => t.stop()); return; }
+  const a = s && s.getAudioTracks()[0], v = s && s.getVideoTracks()[0];
+  if (a) { a.enabled = !RM.prefs.micOff; RM.local.addTrack(a); rmSetCheck("mic", "ok", a.label || RL("ok")); }
+  else if (!RM.checks.mic) rmSetCheck("mic", "bad", RL("notFound"));
+  if (v) { const st = v.getSettings ? v.getSettings() : {}; rmSetCheck("cam", "ok", (v.label || RL("ok")) + (st.width ? ` · ${st.width}×${st.height}` : "")); if (RM.prefs.camOff) v.stop(); else { RM.local.addTrack(v); RM.camTrack = v; } }
+  else if (!RM.checks.cam) rmSetCheck("cam", "warn", RL("notFound"));
+  rmPreUpdate();
+  try { const d = rmEl("rmDevSel"); if (d) d.innerHTML = await rmDevSelHtml(); } catch (e) {}
+}
+async function rmDevSelHtml() {
+  const ds = await navigator.mediaDevices.enumerateDevices();
+  const a = RM.local.getAudioTracks()[0];
+  const cur = { mic: a && a.getSettings ? a.getSettings().deviceId : "", cam: RM.camTrack && RM.camTrack.getSettings ? RM.camTrack.getSettings().deviceId : RM.prefs.cam, spk: RM.prefs.spk || "default" };
+  const sel = (k, arr, icon) => arr.length ? `<label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem"><i class="fa-solid ${icon}" style="width:18px;text-align:center"></i><select class="rm-sel" style="flex:1" onchange="rmPickDev('${k}',this.value)">${arr.map((x, i) => `<option value="${esc(x.deviceId)}" ${x.deviceId === cur[k] ? "selected" : ""}>${esc(x.label || (RL(k === "spk" ? "chkSpk" : k) + " " + (i + 1)))}</option>`).join("")}</select></label>` : "";
+  return sel("mic", ds.filter(d => d.kind === "audioinput"), "fa-microphone") + sel("cam", ds.filter(d => d.kind === "videoinput"), "fa-video")
+    + ("setSinkId" in HTMLMediaElement.prototype ? sel("spk", ds.filter(d => d.kind === "audiooutput"), "fa-volume-high") : "");
+}
+async function rmPickDev(k, id) {
+  if (k === "spk") { RM.prefs.spk = id; rmSavePrefs(); document.querySelectorAll("#rmRoot video").forEach(v => { if (v.setSinkId) v.setSinkId(id).catch(() => {}); }); Object.values(RM.tiles).forEach(t => t.sink = id); return; }
+  RM.prefs[k] = id; rmSavePrefs();
+  if (k === "mic") await rmAcquire("audio", id); else { RM.prefs.camOff = false; await rmAcquire("video", id); }
+  rmAfterLocalChange();
+}
+function rmTestSound() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (RM.prefs.spk && RM.prefs.spk !== "default" && ac.setSinkId) ac.setSinkId(RM.prefs.spk).catch(() => {});
+    const o = ac.createOscillator(), g = ac.createGain(); g.gain.value = .15; o.connect(g); g.connect(ac.destination);
+    o.frequency.setValueAtTime(523, ac.currentTime); o.frequency.setValueAtTime(659, ac.currentTime + .2); o.frequency.setValueAtTime(784, ac.currentTime + .4);
+    o.start(); o.stop(ac.currentTime + .65); setTimeout(() => ac.close(), 1200);
+    rmSetCheck("spk", "ok", RL("ok"));
+  } catch (e) {}
+}
+
+/* ---------- قناة الإشارات (Realtime) ---------- */
+async function rmConnectChannel() {
+  try { const { data } = await sb.auth.getSession(); if (data && data.session) { RM.token = data.session.access_token; await sb.realtime.setAuth(data.session.access_token); } } catch (e) {}
+  return new Promise((res, rej) => {
+    const ch = sb.channel("room:" + RM.kind + ":" + RM.id, { config: { private: true, broadcast: { self: false }, presence: { key: RM.pid } } });
+    RM.ch = ch;
+    ch.on("broadcast", { event: "sig" }, ({ payload }) => rmOnSig(payload))
+      .on("broadcast", { event: "wb" }, ({ payload }) => wbOnMsg(payload))
+      .on("broadcast", { event: "ev" }, ({ payload }) => rmOnEv(payload))
+      .on("presence", { event: "sync" }, () => rmOnPresence())
+      .on("presence", { event: "join" }, ({ key, newPresences }) => rmOnJoinEv(key, newPresences))
+      .on("presence", { event: "leave" }, ({ key, leftPresences }) => rmOnLeaveEv(key, leftPresences));
+    let settled = false;
+    const to = setTimeout(() => { if (!settled) { settled = true; rej(new Error("timeout")); } }, 15000);
+    ch.subscribe((status, err) => {
+      if (ch !== RM.ch) return;
+      if (status === "SUBSCRIBED") { RM.chOk = true; rmBanner(null); if (!settled) { settled = true; clearTimeout(to); res(); } if (RM.joined) rmTrack(); }
+      else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") { RM.chOk = false; if (!settled) { settled = true; clearTimeout(to); rej(err || new Error(status)); } else if (RM.joined) rmBanner(RL("reconnecting")); }
+    });
+  });
+}
+function rmSig(to, d) { if (!RM.ch) return; const payload = { from: RM.pid, to }; if (d.description) payload.description = { type: d.description.type, sdp: d.description.sdp }; if (d.candidate) payload.candidate = d.candidate.toJSON ? d.candidate.toJSON() : d.candidate; RM.ch.send({ type: "broadcast", event: "sig", payload }); }
+function rmSend(type, data) { if (!RM.ch || !RM.joined) return; RM.ch.send({ type: "broadcast", event: "ev", payload: Object.assign({ type, from: RM.pid, uid: RM.uid, name: RM.myName, role: RM.role }, data || {}) }); }
+function rmMeta() { return { pid: RM.pid, uid: RM.uid, name: RM.myName, role: RM.role, mic: rmMicOn(), cam: !!RM.camTrack, hand: RM.hand || 0, screenId: RM.screen ? RM.screen.id : null, rec: !!RM.rec, at: RM.joinedAt || 0 }; }
+function rmTrack() { if (RM.ch && RM.joined) { try { RM.ch.track(rmMeta()); } catch (e) {} } }
+function rmBanner(t) { const b = rmEl("rmBanner"); if (b) b.innerHTML = t ? `<div class="rm-banner">${esc(t)}</div>` : ""; }
+
+/* ---------- الدخول ---------- */
+async function rmJoin() {
+  const btn = rmEl("rmJoinBtn"); RM.joining = true; if (btn) { btn.disabled = true; btn.textContent = RL("joining"); }
+  try {
+    const dev = { browser: rmBrowserName(), os: rmOS(), net: RM.netType || null, latency: RM.latency || null, conn: navigator.connection ? navigator.connection.effectiveType : null, mic: (RM.checks.mic || {}).s, cam: (RM.checks.cam || {}).s };
+    const { data, error } = await sb.rpc("room_join", { p_kind: RM.kind, p_id: RM.id, p_device: dev });
+    if (error) throw error;
+    RM.info = data; RM.att = data.attendance_id; RM.role = data.role; RM.myName = data.name || RM.myName;
+    if (Array.isArray(data.ice) && data.ice.length) RM.ice = data.ice.concat(RM_DEFAULT_ICE);
+    RM.joined = true; RM.joinedAt = Date.now(); RM.joining = false;
+    clearInterval(RM.preTimer);
+    try { if (RM.ac) await RM.ac.resume(); } catch (e) {}
+    rmRenderRoom();
+    rmTrack();
+    rmLoadChat();
+    RM.timers.push(setInterval(() => { if (RM.att) sb.rpc("room_ping", { p_att: RM.att }).then(() => {}, () => {}); }, 30000));
+    RM.timers.push(setInterval(rmTick, 1000));
+    RM.timers.push(setInterval(rmStats, 3000));
+    RM.timers.push(setInterval(rmLevels, 150));
+    try { if (navigator.wakeLock) RM.wake = await navigator.wakeLock.request("screen"); } catch (e) {}
+    RM.handlers = { pagehide: rmBeacon, keydown: rmKeys, offline: () => rmBanner(RL("offline")), online: () => { rmBanner(null); Object.values(RM.peers).forEach(p => { try { p.pc.restartIce(); } catch (e) {} }); }, paste: rmPaste };
+    Object.keys(RM.handlers).forEach(k => window.addEventListener(k, RM.handlers[k]));
+    try { RM.ro = new ResizeObserver(() => rmLayoutSoon()); RM.ro.observe(rmEl("rmMain")); } catch (e) {}
+    rmOnPresence();
+  } catch (e) { RM.joining = false; toast(e.message || String(e), true); if (btn) { btn.disabled = false; btn.textContent = RL("join"); } }
+}
+function rmBeacon() {
+  if (!RM.att || !RM.token) return;
+  try { fetch(SB_URL + "/rest/v1/rpc/room_leave", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json", apikey: SB_KEY, Authorization: "Bearer " + RM.token }, body: JSON.stringify({ p_att: RM.att }) }); } catch (e) {}
+}
+function roomTeardown() {
+  if (!RM.key && !rmEl("rmRoot")) return;
+  try { if (RM.rec) rmStopRec(); } catch (e) {}
+  if (RM.att) { const a = RM.att; RM.att = null; sb.rpc("room_leave", { p_att: a }).then(() => {}, () => {}); }
+  Object.keys(RM.peers || {}).forEach(k => { try { RM.peers[k].pc.close(); } catch (e) {} });
+  try { if (RM.local) RM.local.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { if (RM.screen) RM.screen.getTracks().forEach(t => t.stop()); } catch (e) {}
+  (RM.timers || []).forEach(clearInterval); clearInterval(RM.preTimer);
+  try { if (RM.ch) { const c = RM.ch; RM.ch = null; try { c.untrack(); } catch (e) {} sb.removeChannel(c); } } catch (e) {}
+  try { if (RM.wake) RM.wake.release(); } catch (e) {}
+  try { if (RM.ac) RM.ac.close(); } catch (e) {}
+  try { if (RM.ro) RM.ro.disconnect(); } catch (e) {}
+  if (RM.handlers) Object.keys(RM.handlers).forEach(k => window.removeEventListener(k, RM.handlers[k]));
+  const root = rmEl("rmRoot"); if (root) root.remove();
+  document.body.style.overflow = "";
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  wbReset();
+  Object.keys(RM).forEach(k => delete RM[k]);
+}
+function roomExit() { roomTeardown(); navigate("dashboard"); }
+function roomLeave(force, msg) {
+  if (!force && !confirm(RL("leaveConfirm"))) return;
+  roomTeardown(); navigate("dashboard"); if (msg) setTimeout(() => toast(msg), 300);
+}
+function rmEndAll() { rmMenuClose(); if (!confirm(RL("endAll") + "?")) return; rmSend("end", {}); setTimeout(() => roomLeave(true), 400); }
+
+/* ---------- الواجهة داخل الفصل ---------- */
+function rmRenderRoom() {
+  const root = rmEl("rmRoot"); if (!root) return;
+  root.innerHTML = `<div class="rm-top" id="rmTop"></div>
+  <div class="rm-body"><div class="rm-main" id="rmMain"><div class="rm-stage" id="rmStage"></div><div class="rm-strip" id="rmStrip"></div><div class="rm-grid" id="rmGrid"></div>
+    <div id="rmAlone" style="position:absolute;left:0;right:0;bottom:1rem;text-align:center;color:#94a3b8;font-size:.9rem;pointer-events:none">${RL("alone")}</div></div>
+    <aside class="rm-side" id="rmSide" style="display:none"></aside></div>
+  <div class="rm-bar" id="rmBar"></div><div id="rmMenu"></div><div id="rmModal"></div><div id="rmBanner"></div>`;
+  rmRenderBar(); rmTopUpdate(); rmLayout();
+}
+function rmIsHost() { return RM.role === "host" || RM.role === "owner"; }
+function rmCanRecord() { return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && window.MediaRecorder); }
+function rmRenderBar() {
+  const b = rmEl("rmBar"); if (!b) return;
+  const host = rmIsHost(), mic = rmMicOn(), cam = !!RM.camTrack, wbOn = WB.open && !WB.hidden;
+  const hands = Object.values(RM.peers).filter(p => p.meta && p.meta.hand).length;
+  const btn = (id, ic, label, cls, on, extra) => `<button class="rm-btn ${cls || ""}" id="${id}" onclick="${on}" title="${esc(label)}"><i class="fa-solid ${ic}"></i><span>${esc(label)}</span>${extra || ""}</button>`;
+  b.innerHTML = [
+    btn("rbMic", mic ? "fa-microphone" : "fa-microphone-slash", mic ? RL("mute") : RL("unmute"), mic ? "" : "off", "rmToggleMic()"),
+    btn("rbCam", cam ? "fa-video" : "fa-video-slash", cam ? RL("camOff") : RL("camOn"), cam ? "" : "off", "rmToggleCam()"),
+    btn("rbShare", "fa-desktop", RM.screen ? RL("stopShare") : RL("share"), RM.screen ? "on" : "", RM.screen ? "rmStopShare()" : "rmMenu('share',this)"),
+    btn("rbWb", "fa-chalkboard", RL("board"), wbOn ? "on" : "", "wbToggle()"),
+    btn("rbHand", "fa-hand", RM.hand ? RL("lowerHand") : RL("hand"), RM.hand ? "on" : "", "rmToggleHand()"),
+    btn("rbReact", "fa-face-smile", RL("react"), "", "rmMenu('react',this)"),
+    btn("rbChat", "fa-comments", RL("chat"), RM.panel === "chat" ? "on" : "", "rmPanel('chat')", RM.unread ? `<i class="dot">${RM.unread}</i>` : ""),
+    btn("rbPeople", "fa-users", RL("people"), RM.panel === "people" ? "on" : "", "rmPanel('people')", host && hands ? `<i class="dot">✋${hands}</i>` : `<i class="dot" style="background:#334155">${Object.keys(RM.peers).length + 1}</i>`),
+    host ? btn("rbAtt", "fa-clipboard-list", RL("attend"), RM.panel === "att" ? "on" : "", "rmPanel('att')") : "",
+    host && rmCanRecord() ? btn("rbRec", "fa-circle", RM.rec ? RL("stopRec") : RL("rec"), RM.rec ? "off" : "", "rmToggleRec()") : "",
+    btn("rbMore", "fa-ellipsis", RL("more"), "", "rmMenu('more',this)"),
+    btn("rbLeave", "fa-phone-slash", RL("leave"), "danger", host ? "rmMenu('leave',this)" : "roomLeave()")
+  ].join("");
+}
+function rmTitle() { const t = RM.info && RM.info.title; if (typeof t === "string") return t ? trackTitle(t) : RL("title"); if (t && typeof t === "object") return locText(t) || RL("title"); return RL("title"); }
+function rmTopUpdate() {
+  const el = rmEl("rmTop"); if (!el) return;
+  const anyRec = !!RM.rec || Object.values(RM.peers).some(p => p.meta && p.meta.rec);
+  const q = RM.q; const qt = q == null ? "" : q >= 3 ? RL("qGood") : q === 2 ? RL("qFair") : q === 1 ? RL("qPoor") : RL("connecting");
+  el.innerHTML = `<span class="t">🎓 ${esc(rmTitle())}</span><span class="rm-chip" id="rmTimer"></span>${anyRec ? `<span class="rm-chip rec" title="${RL("recOn")}">● REC</span>` : ""}<span style="flex:1"></span>
+    ${q == null ? "" : `<span class="rm-chip" title="${esc(qt)}">${rmBarsHtml(q)} <span class="hide-sm">${esc(qt)}</span></span>`}
+    <span class="rm-chip"><i class="fa-solid fa-user-group"></i> ${Object.keys(RM.peers).length + 1}</span>
+    <button class="rm-pbtn hide-sm" title="${RL(RM.layout === "grid" ? "speaker" : "grid")}" onclick="rmSetLayout()"><i class="fa-solid ${RM.layout === "grid" ? "fa-user" : "fa-table-cells"}"></i></button>
+    <button class="rm-pbtn" title="${RL("full")}" onclick="rmFullscreen()"><i class="fa-solid fa-expand"></i></button>`;
+  rmTick();
+}
+function rmTick() {
+  const el = rmEl("rmTimer"); if (!el || !RM.info) return;
+  const now = Date.now(), s = RM.info.start ? new Date(RM.info.start).getTime() : null, e = RM.info.end ? new Date(RM.info.end).getTime() : null;
+  let txt, cls = "";
+  if (!s) txt = "⏱ " + rmFmtDur(now - RM.joinedAt);
+  else if (now < s) txt = `${RL("startsIn")} ${rmFmtDur(s - now)}`;
+  else if (!e || now < e) {
+    txt = `⏱ ${rmFmtDur(now - s)}${e ? ` · ${rmFmtDur(e - now)} ${RL("remaining")}` : ""}`;
+    if (e && e - now < 5 * 60e3) { cls = "warn"; if (!RM.warned5) { RM.warned5 = true; if (rmIsHost()) { rmBeep(660, .2); toast("⏰ " + RL("fiveLeft")); } } }
+  } else { txt = `${RL("overtime")} +${rmFmtDur(now - e)}`; cls = "warn"; }
+  el.textContent = txt; el.className = "rm-chip " + cls;
+}
+function rmMenuClose() { RM.menu = null; const m = rmEl("rmMenu"); if (m) m.innerHTML = ""; }
+function rmMenu(kind, el) {
+  const m = rmEl("rmMenu"); if (!m) return;
+  if (RM.menu === kind) return rmMenuClose();
+  RM.menu = kind; let h = "";
+  const chk = (on, act, lbl) => `<label><input type="checkbox" ${on ? "checked" : ""} onchange="${act}"> ${lbl}</label>`;
+  if (kind === "share") h = `<button onclick="rmShare('browser')"><i class="fa-regular fa-window-maximize"></i> ${RL("shareTab")}</button><button onclick="rmShare('window')"><i class="fa-regular fa-window-restore"></i> ${RL("shareWin")}</button><button onclick="rmShare('monitor')"><i class="fa-solid fa-desktop"></i> ${RL("shareScreen")}</button>`
+    + chk(RM.prefs.shareAudio !== false, "RM.prefs.shareAudio=this.checked;rmSavePrefs()", RL("shareAudio")) + chk(RM.prefs.shareMotion, "RM.prefs.shareMotion=this.checked;rmSavePrefs()", RL("shareMotion"));
+  else if (kind === "react") h = `<div class="rm-react">${RM_EMOJI.map(e => `<button onclick="rmReact('${e}')">${e}</button>`).join("")}</div>`;
+  else if (kind === "more") h = `<button onclick="rmSettings()"><i class="fa-solid fa-gear"></i> ${RL("settings")}</button><button onclick="rmSetLayout()"><i class="fa-solid ${RM.layout === "grid" ? "fa-user" : "fa-table-cells"}"></i> ${RM.layout === "grid" ? RL("speaker") : RL("grid")}</button><button onclick="rmFullscreen()"><i class="fa-solid fa-expand"></i> ${RL("full")}</button>`
+    + chk(RM.prefs.hideSelf, "RM.prefs.hideSelf=this.checked;rmSavePrefs();rmLayout()", RL("hideSelf")) + chk(RM.prefs.mirror !== false, "RM.prefs.mirror=this.checked;rmSavePrefs();rmLayout()", RL("mirror"))
+    + chk(RM.prefs.lowbw, "RM.prefs.lowbw=this.checked;rmSavePrefs();Object.values(RM.peers).forEach(p=>p.lastBr=0)", RL("lowBw"));
+  else if (kind === "leave") h = `<button onclick="rmMenuClose();roomLeave()"><i class="fa-solid fa-right-from-bracket"></i> ${RL("leave")}</button><button style="color:#fca5a5" onclick="rmEndAll()"><i class="fa-solid fa-power-off"></i> ${RL("endAll")}</button>`;
+  m.innerHTML = `<div class="rm-menu" id="rmMenuBox">${h}</div>`;
+  const box = rmEl("rmMenuBox"); const r = el.getBoundingClientRect();
+  let left = r.left + r.width / 2 - box.offsetWidth / 2; left = Math.max(8, Math.min(window.innerWidth - box.offsetWidth - 8, left)); box.style.left = left + "px";
+}
+function rmSetLayout() { RM.layout = RM.layout === "grid" ? "speaker" : "grid"; rmMenuClose(); rmTopUpdate(); rmLayout(); }
+function rmFullscreen(el) { rmMenuClose(); const t = el || rmEl("rmRoot"); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (t && t.requestFullscreen) t.requestFullscreen().catch(() => {}); }
+function rmPin(id) { RM.pin = RM.pin === id ? null : id; rmLayout(); }
+function rmReact(e) { rmMenuClose(); rmSend("react", { emoji: e }); rmFloat(e, RL("you")); }
+function rmFloat(emoji, name) { const root = rmEl("rmRoot"); if (!root) return; const d = document.createElement("div"); d.className = "rm-float"; d.style.left = (8 + Math.random() * 70) + "%"; d.innerHTML = `${esc(emoji)}<small>${esc(name || "")}</small>`; root.appendChild(d); setTimeout(() => d.remove(), 3100); }
+function rmToggleHand() { RM.hand = RM.hand ? 0 : Date.now(); rmTrack(); rmRenderBar(); rmLayout(); if (RM.hand) rmFloat("✋", RL("you")); }
+function rmKick(pid) { if (!confirm(RL("removeConfirm"))) return; rmSend("kick", { to: pid }); }
+
+/* ---------- الميكروفون والكاميرا ---------- */
+function rmMicOn() { const a = RM.local && RM.local.getAudioTracks()[0]; return !!(a && a.enabled && a.readyState === "live"); }
+async function rmToggleMic() {
+  let a = RM.local.getAudioTracks()[0];
+  if (!a || a.readyState !== "live") { RM.prefs.micOff = false; a = await rmAcquire("audio", RM.prefs.mic); if (!a) return; a.enabled = true; }
+  else a.enabled = !a.enabled;
+  RM.prefs.micOff = !a.enabled; rmSavePrefs(); rmAfterLocalChange();
+}
+function rmSetMic(on) { const a = RM.local.getAudioTracks()[0]; if (a) a.enabled = on; RM.prefs.micOff = !on; rmAfterLocalChange(); }
+async function rmToggleCam() { await rmSetCam(!RM.camTrack); }
+async function rmSetCam(on) {
+  if (!on) { const v = RM.camTrack; if (v) { RM.local.removeTrack(v); v.stop(); } RM.camTrack = null; rmReplace("video", null); }
+  else if (!(await rmAcquire("video", RM.prefs.cam))) return;
+  RM.prefs.camOff = !on; rmSavePrefs(); rmAfterLocalChange();
+}
+async function rmAcquire(kind, deviceId) {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia(kind === "audio" ? { audio: rmAudioC(deviceId) } : { video: rmVideoC(deviceId) });
+    const t = s.getTracks()[0];
+    const old = kind === "audio" ? RM.local.getAudioTracks()[0] : RM.camTrack;
+    if (old) { RM.local.removeTrack(old); old.stop(); }
+    if (kind === "audio") { t.enabled = !RM.prefs.micOff; delete RM.levels.me; } else RM.camTrack = t;
+    RM.local.addTrack(t);
+    rmReplace(kind, t);
+    if (RM.rec && kind === "audio") RM.rec.addA(new MediaStream([t]));
+    rmSetCheck(kind === "audio" ? "mic" : "cam", "ok", t.label || RL("ok"));
+    return t;
+  } catch (e) { toast(rmMediaErr(e), true); return null; }
+}
+function rmReplace(kind, track) { Object.values(RM.peers || {}).forEach(p => { const s = p.snd && p.snd[kind]; if (s) s.replaceTrack(track).catch(() => {}); }); }
+function rmAfterLocalChange() { if (RM.joined) { rmTrack(); rmRenderBar(); rmLayout(); } else rmPreUpdate(); }
+
+/* ---------- مشاركة الشاشة ---------- */
+async function rmShare(surface) {
+  rmMenuClose();
+  const md = navigator.mediaDevices; if (!md || !md.getDisplayMedia) return toast(RL("noShare"), true);
+  const audio = RM.prefs.shareAudio !== false;
+  const opts = { video: { displaySurface: surface, frameRate: { ideal: RM.prefs.shareMotion ? 30 : 15, max: 30 } }, audio: audio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false } : false,
+    selfBrowserSurface: "exclude", surfaceSwitching: "include", systemAudio: audio ? "include" : "exclude", monitorTypeSurfaces: "include", preferCurrentTab: false };
+  let s;
+  try { s = await md.getDisplayMedia(opts); }
+  catch (e) { if (e && e.name === "TypeError") { try { s = await md.getDisplayMedia({ video: true, audio }); } catch (e2) { return; } } else return; }
+  if (!RM.joined) { s.getTracks().forEach(t => t.stop()); return; }
+  if (RM.screen) rmStopShare(true);
+  RM.screen = s;
+  const vt = s.getVideoTracks()[0];
+  if (vt) { try { vt.contentHint = RM.prefs.shareMotion ? "motion" : "detail"; } catch (e) {} vt.onended = () => rmStopShare(); }
+  Object.values(RM.peers).forEach(p => s.getTracks().forEach(t => p.scr.push(p.pc.addTrack(t, s))));
+  if (RM.rec) RM.rec.addA(s);
+  RM.pin = null; rmTrack(); rmRenderBar(); rmLayout();
+}
+function rmStopShare(quiet) {
+  const s = RM.screen; if (!s) return; RM.screen = null;
+  Object.values(RM.peers).forEach(p => { p.scr.forEach(snd => { try { p.pc.removeTrack(snd); } catch (e) {} }); p.scr = []; });
+  s.getTracks().forEach(t => t.stop());
+  if (!quiet) { rmTrack(); rmRenderBar(); rmLayout(); }
+}
+
+/* ---------- WebRTC (perfect negotiation) ---------- */
+function rmCreatePeer(pid) {
+  if (RM.peers[pid]) return RM.peers[pid];
+  const pc = new RTCPeerConnection({ iceServers: RM.ice, iceCandidatePoolSize: 2 });
+  const p = { id: pid, pc, polite: RM.pid > pid, makingOffer: false, ignoreOffer: false, srdAnswerPending: false, streams: {}, snd: {}, scr: [], meta: RM.members[pid] || {}, q: 0, chain: Promise.resolve(), pend: [] };
+  RM.peers[pid] = p;
+  ["audio", "video"].forEach(kind => {
+    const t = kind === "audio" ? RM.local.getAudioTracks()[0] : RM.camTrack;
+    p.snd[kind] = t ? pc.addTrack(t, RM.local) : pc.addTransceiver(kind, { direction: "sendrecv", streams: [RM.local] }).sender;
+  });
+  if (RM.screen) RM.screen.getTracks().forEach(t => p.scr.push(pc.addTrack(t, RM.screen)));
+  pc.onnegotiationneeded = async () => {
+    try { p.makingOffer = true; await pc.setLocalDescription(); rmSig(pid, { description: pc.localDescription }); }
+    catch (e) { console.warn("negotiation", e); } finally { p.makingOffer = false; }
+  };
+  pc.onicecandidate = (e) => { if (e.candidate) rmSig(pid, { candidate: e.candidate }); };
+  pc.ontrack = (e) => {
+    const s = e.streams && e.streams[0] ? e.streams[0] : new MediaStream([e.track]);
+    p.streams[s.id] = s;
+    s.onremovetrack = () => { if (!s.getTracks().length) delete p.streams[s.id]; rmLayout(); };
+    e.track.onunmute = () => rmLayout();
+    if (RM.rec) RM.rec.addA(s);
+    rmLayout();
+  };
+  pc.onconnectionstatechange = () => {
+    const st = pc.connectionState;
+    if (st === "failed") { try { pc.restartIce(); } catch (e) {} }
+    if (st === "disconnected") { clearTimeout(p.dto); p.dto = setTimeout(() => { if (pc.connectionState === "disconnected") { try { pc.restartIce(); } catch (e) {} } }, 4000); }
+    rmLayout();
+  };
+  return p;
+}
+function rmClosePeer(pid) {
+  const p = RM.peers[pid]; if (!p) return;
+  try { p.pc.close(); } catch (e) {}
+  delete RM.peers[pid];
+  const lv = RM.levels[pid]; if (lv) { try { lv.src.disconnect(); } catch (e) {} delete RM.levels[pid]; }
+  if (RM.pin && RM.pin.indexOf(pid) === 0) RM.pin = null;
+  delete WB.drafts[pid]; delete WB.lasers[pid];
+}
+function rmOnSig(m) {
+  if (!RM.joined || !m || m.to !== RM.pid || !m.from) return;
+  let p = RM.peers[m.from];
+  if (!p) { if (!m.description) return; p = rmCreatePeer(m.from); }
+  p.chain = p.chain.then(() => rmHandleSig(p, m)).catch(e => console.warn("sig", e));
+}
+async function rmHandleSig(p, m) {
+  const pc = p.pc; if (pc.signalingState === "closed") return;
+  if (m.description) {
+    const d = m.description;
+    const ready = !p.makingOffer && (pc.signalingState === "stable" || p.srdAnswerPending);
+    const collision = d.type === "offer" && !ready;
+    p.ignoreOffer = !p.polite && collision;
+    if (p.ignoreOffer) return;
+    p.srdAnswerPending = d.type === "answer";
+    await pc.setRemoteDescription(d);
+    p.srdAnswerPending = false;
+    if (d.type === "offer") { await pc.setLocalDescription(); rmSig(p.id, { description: pc.localDescription }); }
+    const q = p.pend; p.pend = [];
+    for (const c of q) { try { await pc.addIceCandidate(c); } catch (e) {} }
+  } else if (m.candidate) {
+    if (!pc.remoteDescription) { p.pend.push(m.candidate); return; }
+    try { await pc.addIceCandidate(m.candidate); } catch (e) { if (!p.ignoreOffer) console.warn(e); }
+  }
+}
+
+/* ---------- الحضور (Presence) ---------- */
+function rmOnPresence() {
+  if (!RM.ch) return;
+  const st = RM.ch.presenceState(); const list = {};
+  Object.keys(st).forEach(k => { const arr = st[k] || []; const m = arr[arr.length - 1]; if (m && m.pid) list[k] = m; });
+  RM.members = list;
+  if (!RM.joined) {
+    const w = rmEl("rmPreWho"); const names = Object.values(list).map(m => m.name + (m.role === "host" ? " (" + RL("host") + ")" : ""));
+    if (w) w.textContent = names.length ? `🟢 ${RL("inClass")}: ${names.join("، ")}` : "";
+    return;
+  }
+  Object.keys(list).forEach(k => {
+    if (k === RM.pid) return;
+    const p = RM.peers[k] || rmCreatePeer(k);
+    const prevHand = p.meta && p.meta.hand;
+    p.meta = list[k];
+    if (!prevHand && p.meta.hand && p.seenHand !== p.meta.hand) { p.seenHand = p.meta.hand; toast(`✋ ${p.meta.name} ${RL("raised")}`); rmBeep(990, .15); }
+  });
+  Object.keys(RM.peers).forEach(k => { if (!list[k]) rmClosePeer(k); });
+  rmRenderBar(); rmTopUpdate(); rmLayout();
+  if (RM.panel === "people") rmRenderPanel();
+}
+function rmOnJoinEv(key, arr) {
+  const isNew = !RM.seen.has(key); RM.seen.add(key);
+  if (!isNew || !RM.joined || key === RM.pid) return;
+  const m = (arr && arr[0]) || {};
+  toast(`${m.name || ""} ${RL("joined")}`); rmBeep(740, .1);
+  // تسليم حالة السبورة للقادم الجديد من قائد واحد فقط
+  const cands = Object.keys(RM.members).filter(k => k !== key).map(k => RM.members[k]);
+  if (!cands.find(c => c.pid === RM.pid)) cands.push(rmMeta());
+  cands.sort((a, b) => ((b.role === "host") - (a.role === "host")) || ((b.role === "owner") - (a.role === "owner")) || ((a.at || 0) - (b.at || 0)) || (a.pid < b.pid ? -1 : 1));
+  if (cands[0] && cands[0].pid === RM.pid) setTimeout(() => wbSendState(key), 700);
+}
+function rmOnLeaveEv(key, arr) {
+  setTimeout(() => {
+    if (!RM.ch) return;
+    const st = RM.ch.presenceState();
+    if (!st[key] || !st[key].length) { if (RM.seen.has(key) && RM.joined && key !== RM.pid) { const m = (arr && arr[0]) || {}; toast(`${m.name || ""} ${RL("left")}`); } RM.seen.delete(key); }
+  }, 80);
+}
+function rmOnEv(p) {
+  if (!RM.joined || !p || p.from === RM.pid) return;
+  const fromHost = p.role === "host" || p.role === "owner";
+  if (p.type === "chat" && p.msg) { if (!RM.chat.find(m => m.id === p.msg.id)) RM.chat.push(p.msg); if (RM.panel !== "chat") { RM.unread++; rmRenderBar(); rmBeep(880, .06); } rmRenderChat(); }
+  else if (p.type === "react") rmFloat(p.emoji, p.name);
+  else if (p.type === "mute" && fromHost && (!p.to || p.to === RM.pid)) { if (rmMicOn()) { rmSetMic(false); toast(RL("mutedBy")); } }
+  else if (p.type === "lower" && fromHost && (!p.to || p.to === RM.pid)) { if (RM.hand) { RM.hand = 0; rmTrack(); rmRenderBar(); } }
+  else if (p.type === "kick" && fromHost && p.to === RM.pid) roomLeave(true, RL("removed"));
+  else if (p.type === "end" && fromHost) roomLeave(true, RL("ended"));
+  else if (p.type === "rec" && p.on) toast("● " + RL("recOn"));
+}
+
+/* ---------- ترتيب البلاطات ---------- */
+function rmTile(id) {
+  let t = RM.tiles[id]; if (t) return t;
+  const el = document.createElement("div"); el.className = "rm-tile"; el.dataset.id = id;
+  el.innerHTML = `<video autoplay playsinline></video><div class="rm-av"><i></i></div><div class="rm-state" style="display:none"></div><div class="rm-badges"></div><div class="rm-lbl"><span class="mi"></span><b></b><span class="bars"></span><button class="rm-pinb" title="${RL("pin")}">📌</button></div>`;
+  el.querySelector(".rm-pinb").onclick = (e) => { e.stopPropagation(); rmPin(id); };
+  el.ondblclick = () => rmFullscreen(el);
+  el.onclick = () => { if (el.parentNode && el.parentNode.id === "rmStrip") rmPin(id); };
+  t = { el, v: el.querySelector("video"), id }; RM.tiles[id] = t; return t;
+}
+function rmUpdTile(it) {
+  const t = rmTile(it.id), m = it.meta || {}, scr = it.kind === "screen";
+  t.el.classList.toggle("screen", scr);
+  t.el.classList.toggle("mirror", !!(it.me && !scr && RM.prefs.mirror !== false));
+  if (t.v.srcObject !== (it.stream || null)) t.v.srcObject = it.stream || null;
+  t.v.muted = !!it.me;
+  if (!it.me && RM.prefs.spk && t.v.setSinkId && t.sink !== RM.prefs.spk) { t.sink = RM.prefs.spk; t.v.setSinkId(RM.prefs.spk).catch(() => {}); }
+  const hasV = !!(it.stream && it.stream.getVideoTracks().some(x => x.readyState === "live"));
+  const showVid = scr ? !!it.stream : (it.me ? !!RM.camTrack : !!m.cam && hasV);
+  t.v.style.visibility = showVid ? "visible" : "hidden";
+  t.el.querySelector(".rm-av").style.display = showVid ? "none" : "";
+  t.el.querySelector(".rm-av i").textContent = ((m.name || "?").trim().charAt(0) || "?").toUpperCase();
+  t.el.querySelector(".rm-lbl b").textContent = (it.me ? RL("you") : (m.name || "—")) + (scr ? " · 🖥️" : "");
+  t.el.querySelector(".mi").innerHTML = scr ? "" : (m.mic ? "" : '<i class="fa-solid fa-microphone-slash" style="color:#f87171"></i>');
+  t.el.querySelector(".bars").innerHTML = !it.me && !scr && it.peer ? rmBarsHtml(it.peer.q) : "";
+  t.el.querySelector(".rm-badges").innerHTML = (scr ? "" : (m.role === "host" ? `<span>🎓</span>` : m.role === "owner" ? `<span>🏛️</span>` : "") + (m.hand ? `<span>✋</span>` : "")) + (RM.pin === it.id ? "<span>📌</span>" : "");
+  const stEl = t.el.querySelector(".rm-state");
+  const cs = it.peer && it.peer.pc.connectionState;
+  if (it.peer && !scr && cs !== "connected") { stEl.style.display = ""; stEl.textContent = cs === "disconnected" || cs === "failed" ? RL("reconnecting") : RL("connecting"); } else stEl.style.display = "none";
+  if (t.v.srcObject && t.v.paused) t.v.play().catch(() => {});
+  return t.el;
+}
+function rmLayoutSoon() { if (RM.lraf) return; RM.lraf = requestAnimationFrame(() => { RM.lraf = 0; rmLayout(); }); }
+function rmLayout() {
+  const stage = rmEl("rmStage"), strip = rmEl("rmStrip"), grid = rmEl("rmGrid");
+  if (!stage || !RM.joined) return;
+  const items = [], me = rmMeta(), peers = Object.values(RM.peers);
+  if (!RM.prefs.hideSelf || !peers.length) items.push({ id: "me", kind: "cam", me: true, stream: RM.local, meta: me });
+  if (RM.screen) items.push({ id: "me:screen", kind: "screen", me: true, stream: RM.screen, meta: me });
+  peers.forEach(p => {
+    const m = p.meta || {};
+    const ss = m.screenId ? p.streams[m.screenId] : null;
+    const cam = Object.values(p.streams).find(s => s.id !== m.screenId) || null;
+    items.push({ id: p.id, kind: "cam", stream: cam, meta: m, peer: p });
+    if (ss && ss.getTracks().length) items.push({ id: p.id + ":screen", kind: "screen", stream: ss, meta: m, peer: p });
+  });
+  const wbOn = WB.open && !WB.hidden;
+  if (wbOn) items.push({ id: "wb", kind: "wb" });
+  let stageId = null;
+  if (RM.pin && items.find(i => i.id === RM.pin)) stageId = RM.pin;
+  else if (wbOn) stageId = "wb";
+  else {
+    const sc = items.find(i => i.kind === "screen" && !i.me);
+    if (sc) stageId = sc.id;
+    else if (RM.layout === "speaker" && peers.length) stageId = (RM.speaker && items.find(i => i.id === RM.speaker)) ? RM.speaker : (items.find(i => !i.me) || {}).id;
+  }
+  stage.style.display = stageId ? "" : "none"; strip.style.display = stageId && items.length > 1 ? "" : "none"; grid.style.display = stageId ? "none" : "";
+  const keep = new Set();
+  items.forEach(it => {
+    keep.add(it.id);
+    const el = it.kind === "wb" ? wbEl() : rmUpdTile(it);
+    const target = it.id === stageId ? stage : (stageId ? strip : grid);
+    if (target !== grid) { el.style.width = ""; el.style.height = ""; }
+    if (el.parentNode !== target) { target.appendChild(el); const v = el.querySelector("video"); if (v && v.srcObject) v.play().catch(() => {}); }
+  });
+  Object.keys(RM.tiles).forEach(id => { if (!keep.has(id)) { const t = RM.tiles[id]; t.el.remove(); t.v.srcObject = null; delete RM.tiles[id]; } });
+  if (!keep.has("wb") && WB.el && WB.el.parentNode) WB.el.parentNode.removeChild(WB.el);
+  if (!stageId) rmFitGrid(grid);
+  if (keep.has("wb")) wbResize();
+  const al = rmEl("rmAlone"); if (al) al.style.display = peers.length ? "none" : "";
+}
+function rmFitGrid(grid) {
+  const kids = [...grid.children], n = kids.length; if (!n) return;
+  const W = grid.clientWidth, H = grid.clientHeight, gap = 8; let best = { w: 0, h: 0 };
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols); let w = (W - gap * (cols - 1)) / cols, h = w * 9 / 16;
+    if (h * rows + gap * (rows - 1) > H) { h = (H - gap * (rows - 1)) / rows; w = h * 16 / 9; }
+    if (w > best.w) best = { w, h };
+  }
+  kids.forEach(c => { c.style.width = Math.floor(best.w) + "px"; c.style.height = Math.floor(best.h) + "px"; });
+}
+
+/* ---------- مستوى الصوت والمتحدث النشط ---------- */
+function rmLevelOf(key, stream) {
+  if (!RM.ac || !stream) return 0;
+  const tr = stream.getAudioTracks()[0]; if (!tr) return 0;
+  let L_ = RM.levels[key];
+  if (!L_ || L_.tid !== tr.id) {
+    if (L_) { try { L_.src.disconnect(); } catch (e) {} }
+    try { const src = RM.ac.createMediaStreamSource(new MediaStream([tr])); const an = RM.ac.createAnalyser(); an.fftSize = 512; src.connect(an); L_ = RM.levels[key] = { an, src, tid: tr.id, buf: new Uint8Array(512) }; } catch (e) { return 0; }
+  }
+  L_.an.getByteTimeDomainData(L_.buf); let sum = 0; for (let i = 0; i < L_.buf.length; i++) { const d = (L_.buf[i] - 128) / 128; sum += d * d; }
+  return Math.sqrt(sum / L_.buf.length);
+}
+function rmLevels() {
+  if (!RM.joined) return;
+  let top = null, topV = 0;
+  const me = rmMicOn() ? rmLevelOf("me", RM.local) : 0;
+  const mb = rmEl("rbMic"); if (mb) mb.style.boxShadow = me > .02 ? `0 0 0 ${Math.min(5, me * 50)}px rgba(16,185,129,.45)` : "";
+  const mt = RM.tiles.me; if (mt) mt.el.classList.toggle("speaking", me > .025);
+  Object.values(RM.peers).forEach(p => {
+    const m = p.meta || {}; const cam = Object.values(p.streams).find(s => s.id !== m.screenId);
+    const v = cam && m.mic ? rmLevelOf(p.id, cam) : 0;
+    const sp = v > .025; const t = RM.tiles[p.id]; if (t) t.el.classList.toggle("speaking", sp);
+    if (sp && v > topV) { topV = v; top = p.id; }
+  });
+  if (top && top !== RM.speaker) { RM.speaker = top; if (RM.layout === "speaker" && !RM.pin) rmLayout(); }
+}
+
+/* ---------- جودة الاتصال ---------- */
+async function rmStats() {
+  if (!RM.joined) return;
+  let worst = 3; const peers = Object.values(RM.peers);
+  for (const p of peers) {
+    try {
+      const r = await p.pc.getStats(); let rtt = null, lost = 0, recv = 0, relay = false;
+      r.forEach(s => {
+        if (s.type === "candidate-pair" && s.state === "succeeded" && (s.nominated || s.selected)) { if (s.currentRoundTripTime != null) rtt = s.currentRoundTripTime * 1000; const lc = r.get(s.localCandidateId); if (lc && lc.candidateType === "relay") relay = true; }
+        if (s.type === "inbound-rtp") { lost += s.packetsLost || 0; recv += s.packetsReceived || 0; }
+      });
+      const dl = lost - (p.lastLost || 0), dr = recv - (p.lastRecv || 0); p.lastLost = lost; p.lastRecv = recv;
+      const loss = dr + dl > 0 ? Math.max(0, dl) / (dr + dl) * 100 : 0;
+      const cs = p.pc.connectionState;
+      const q = cs !== "connected" ? (cs === "new" || cs === "connecting" ? 0 : 1) : ((rtt != null && rtt > 400) || loss > 8) ? 1 : ((rtt != null && rtt > 200) || loss > 3) ? 2 : 3;
+      p.q = q; p.rtt = rtt; p.loss = loss; p.relay = relay;
+      if (q < worst) worst = q;
+      rmAdaptBitrate(p, q, peers.length);
+    } catch (e) {}
+  }
+  RM.q = peers.length ? worst : null;
+  rmTopUpdate(); rmLayout();
+  if (RM.panel === "people") rmRenderPanel();
+}
+function rmAdaptBitrate(p, q, n) {
+  const base = RM.prefs.lowbw ? 300e3 : n > 3 ? 600e3 : 1500e3;
+  const target = q === 1 ? Math.min(base, 250e3) : q === 2 ? Math.min(base, 600e3) : base;
+  const s = p.snd && p.snd.video; if (!s || p.lastBr === target) return;
+  try { const prm = s.getParameters(); if (!prm.encodings || !prm.encodings.length) return; prm.encodings[0].maxBitrate = target; s.setParameters(prm).then(() => { p.lastBr = target; }, () => {}); } catch (e) {}
+}
+
+/* ---------- اللوحات الجانبية ---------- */
+function rmPanel(k) {
+  RM.panel = RM.panel === k ? null : k;
+  if (RM.panel === "chat") RM.unread = 0;
+  const s = rmEl("rmSide"); if (!s) return;
+  s.style.display = RM.panel ? "" : "none";
+  if (RM.panel) {
+    s.innerHTML = `<div class="rm-side-h"><b>${RL(k === "att" ? "attend" : k)}</b><button class="rm-pbtn" onclick="rmPanel('${k}')">✕</button></div><div class="rm-side-b" id="rmSideB"></div>
+      ${k === "chat" ? `<form onsubmit="event.preventDefault();rmChatSend()" style="display:flex;gap:.4rem;padding:.6rem;border-top:1px solid #1e293b"><input class="rm-in" id="rmChatIn" autocomplete="off" placeholder="${RL("typeMsg")}" maxlength="2000"><button class="rm-pbtn p">${RL("send")}</button></form>` : ""}`;
+    rmRenderPanel();
+    if (k === "att") rmLoadAtt();
+    if (k === "chat") setTimeout(() => { const i = rmEl("rmChatIn"); if (i) i.focus(); }, 50);
+  } else s.innerHTML = "";
+  rmRenderBar(); setTimeout(rmLayout, 30);
+}
+function rmRenderPanel() {
+  const b = rmEl("rmSideB"); if (!b) return;
+  if (RM.panel === "chat") rmRenderChat();
+  else if (RM.panel === "people") b.innerHTML = rmPeopleHtml();
+  else if (RM.panel === "att") b.innerHTML = rmAttHtml(RM.attRows);
+}
+function rmLinkify(s) { return s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+function rmRenderChat() {
+  if (RM.panel !== "chat") return; const b = rmEl("rmSideB"); if (!b) return;
+  const list = RM.chat.slice().sort((a, c) => a.ts - c.ts);
+  b.innerHTML = list.length ? list.map(m => `<div class="rm-msg ${m.uid === RM.uid ? "me" : ""}"><small>${esc(m.uid === RM.uid ? RL("you") : m.name)} · ${esc(fmtTime(new Date(m.ts).toISOString()))}</small><div>${rmLinkify(esc(m.body))}</div>${m.original && role() === "owner" ? `<small style="color:#fbbf24">⚑ ${esc(m.original)}</small>` : ""}</div>`).join("")
+    : `<p style="color:#94a3b8;text-align:center;margin-top:2rem">${RL("noMsgs")}</p>`;
+  b.scrollTop = b.scrollHeight;
+}
+async function rmLoadChat() {
+  try {
+    const { data } = await sb.rpc("room_chat_log", { p_kind: RM.kind, p_id: RM.id });
+    if (!Array.isArray(data) || !RM.joined) return;
+    const old = data.map(r => ({ id: r.id, uid: r.sender_id, name: r.name, body: r.body, original: r.original, ts: new Date(r.created_at).getTime() }));
+    RM.chat = old.concat(RM.chat.filter(m => !old.find(o => o.id === m.id)));
+    rmRenderChat();
+  } catch (e) {}
+}
+async function rmChatSend() {
+  const inp = rmEl("rmChatIn"); if (!inp) return; const v = inp.value.trim(); if (!v) return; inp.value = "";
+  const { data, error } = await sb.rpc("room_send", { p_kind: RM.kind, p_id: RM.id, p_body: v });
+  if (error) { inp.value = v; return toast(error.message, true); }
+  const msg = { id: data.id, uid: RM.uid, name: RM.myName, body: data.body, ts: Date.now() };
+  RM.chat.push(msg); rmSend("chat", { msg }); rmRenderChat();
+}
+function rmPeopleHtml() {
+  const host = rmIsHost();
+  const all = [Object.assign({ me: true, q: RM.q }, rmMeta())].concat(Object.values(RM.peers).map(p => Object.assign({}, p.meta || {}, { pid: p.id, q: p.q, rtt: p.rtt, relay: p.relay })));
+  const ro = { host: 0, owner: 1, guest: 2 };
+  all.sort((a, b) => ((b.hand ? 1 : 0) - (a.hand ? 1 : 0)) || ((a.hand || 0) - (b.hand || 0)) || ((ro[a.role] || 2) - (ro[b.role] || 2)) || String(a.name).localeCompare(String(b.name)));
+  const hands = all.filter(x => x.hand).length;
+  let h = host ? `<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem"><button class="rm-pbtn" onclick="rmSend('mute',{});toast('✓')"><i class="fa-solid fa-microphone-slash"></i> ${RL("muteAll")}</button>${hands ? `<button class="rm-pbtn" onclick="rmSend('lower',{})">✋ ${RL("lowerAll")} (${hands})</button>` : ""}</div>
+    <label style="display:flex;gap:.4rem;font-size:.82rem;margin-bottom:.6rem"><input type="checkbox" ${WB.allow ? "checked" : ""} onchange="wbAllow(this.checked)"> ${RL("allowDraw")}</label>` : "";
+  h += all.map(x => `<div class="rm-prow"><span class="rm-ava">${esc(((x.name || "?").charAt(0) || "?").toUpperCase())}</span>
+    <div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.name || "—")}${x.me ? ` (${RL("you")})` : ""}</b>
+    <span style="font-size:.74rem;color:#94a3b8">${RL(x.role || "guest")}${x.screenId ? " · 🖥️" : ""}${x.rtt != null ? ` · ${Math.round(x.rtt)} ms` : ""}${x.relay ? " · relay" : ""}</span></div>
+    ${x.hand ? "✋" : ""}<i class="fa-solid ${x.mic ? "fa-microphone" : "fa-microphone-slash"}" style="color:${x.mic ? "#34d399" : "#f87171"}"></i><i class="fa-solid ${x.cam ? "fa-video" : "fa-video-slash"}" style="color:${x.cam ? "#34d399" : "#f87171"}"></i>${x.q != null ? rmBarsHtml(x.q) : ""}
+    ${host && !x.me ? `<span style="display:flex;gap:.2rem"><button class="rm-pbtn" title="${RL("pin")}" onclick="rmPin('${x.pid}')">📌</button>${x.mic ? `<button class="rm-pbtn" title="${RL("muteP")}" onclick="rmSend('mute',{to:'${x.pid}'})"><i class="fa-solid fa-microphone-slash"></i></button>` : ""}${x.hand ? `<button class="rm-pbtn" title="${RL("lowerHand")}" onclick="rmSend('lower',{to:'${x.pid}'})">✋</button>` : ""}<button class="rm-pbtn d" title="${RL("remove")}" onclick="rmKick('${x.pid}')"><i class="fa-solid fa-user-xmark"></i></button></span>` : ""}</div>`).join("");
+  return h;
+}
+async function rmLoadAtt() { const { data, error } = await sb.rpc("room_attendance_log", { p_kind: RM.kind, p_id: RM.id }); RM.attRows = error ? { err: error.message } : (data || []); if (RM.panel === "att") rmRenderPanel(); }
+function rmAttAgg(rows) {
+  const by = {};
+  rows.forEach(r => {
+    const b = by[r.user_id] = by[r.user_id] || { name: r.name, role: r.role, first: r.joined_at, last: r.left_at, mins: 0, n: 0, dev: r.device };
+    b.mins += +r.minutes || 0; b.n++; if (r.joined_at < b.first) b.first = r.joined_at; if (r.left_at > b.last) b.last = r.left_at; if (r.device) b.dev = r.device;
+  });
+  return Object.values(by);
+}
+function rmAttHtml(rows) {
+  if (!rows) return RL("checking"); if (rows.err) return esc(rows.err);
+  const top = `<div style="display:flex;gap:.4rem;margin-bottom:.6rem"><button class="rm-pbtn" onclick="rmLoadAtt()">↻ ${RL("refresh")}</button>${rows.length ? `<button class="rm-pbtn" onclick="rmAttCsv()">⬇ ${RL("csv")}</button>` : ""}</div>`;
+  if (!rows.length) return top + RL("noAtt");
+  return top + rmAttAgg(rows).map(b => `<div class="rm-prow" style="align-items:flex-start"><span class="rm-ava">${esc((b.name || "?").charAt(0).toUpperCase())}</span><div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="rm-chip" style="font-size:.7rem">${RL(b.role)}</span>
+    <div style="font-size:.78rem;color:#94a3b8;margin-top:.2rem">${RL("attFirst")}: ${esc(fmtTime(b.first))} · ${RL("attLast")}: ${esc(fmtTime(b.last))}<br>${RL("attMins")}: <b style="color:#e5e7eb">${b.mins.toFixed(1)}</b> · ${RL("attSessions")}: ${b.n}${b.dev && b.dev.browser ? `<br>${esc(b.dev.browser)} / ${esc(b.dev.os || "")}${b.dev.net ? " · " + esc(RL(b.dev.net)) : ""}` : ""}</div></div></div>`).join("");
+}
+function rmAttCsv() {
+  const rows = RM.attRows; if (!Array.isArray(rows)) return;
+  const lines = [["name", "role", "joined_at", "left_or_last_seen", "minutes", "browser", "os", "network"]].concat(rows.map(r => [r.name, r.role, r.joined_at, r.left_at, r.minutes, (r.device || {}).browser || "", (r.device || {}).os || "", (r.device || {}).net || ""]));
+  rmDownload(new Blob(["﻿" + lines.map(l => l.map(x => `"${String(x == null ? "" : x).replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv" }), `attendance-${RM.kind}-${RM.id.slice(0, 8)}.csv`);
+}
+async function rmSettings() {
+  rmMenuClose(); const m = rmEl("rmModal"); if (!m) return;
+  m.innerHTML = `<div class="rm-modal" onclick="if(event.target===this)rmEl('rmModal').innerHTML=''"><div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem"><b>${RL("settings")}</b><button class="rm-pbtn" onclick="rmEl('rmModal').innerHTML=''">✕</button></div>
+    <div style="display:grid;gap:.6rem" id="rmSetDev">${RL("checking")}</div>
+    <label style="display:flex;gap:.5rem;margin-top:.9rem;font-size:.9rem"><input type="checkbox" ${RM.prefs.hd !== false ? "checked" : ""} onchange="RM.prefs.hd=this.checked;rmSavePrefs();if(RM.camTrack)rmAcquire('video',RM.prefs.cam)"> ${RL("hd")}</label>
+    <label style="display:flex;gap:.5rem;margin-top:.5rem;font-size:.9rem"><input type="checkbox" ${RM.prefs.ns !== false ? "checked" : ""} onchange="RM.prefs.ns=this.checked;rmSavePrefs();rmAcquire('audio',RM.prefs.mic).then(rmAfterLocalChange)"> ${RL("ns")}</label>
+    <label style="display:flex;gap:.5rem;margin-top:.5rem;font-size:.9rem"><input type="checkbox" ${RM.prefs.mirror !== false ? "checked" : ""} onchange="RM.prefs.mirror=this.checked;rmSavePrefs();rmLayout()"> ${RL("mirror")}</label>
+    <button class="rm-pbtn" style="margin-top:.9rem" onclick="rmTestSound()">🔊 ${RL("testSound")}</button></div></div>`;
+  try { rmEl("rmSetDev").innerHTML = await rmDevSelHtml(); } catch (e) {}
+}
+function rmKeys(e) {
+  const tg = e.target; if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.tagName === "SELECT" || tg.isContentEditable)) return;
+  if (!RM.joined) return;
+  const wbOn = WB.open && !WB.hidden;
+  if ((e.ctrlKey || e.metaKey) && wbOn) { const k = e.key.toLowerCase(); if (k === "z" && !e.shiftKey) { e.preventDefault(); wbUndo(); } else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); wbRedo(); } return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if ((e.key === "Delete" || e.key === "Backspace") && WB.sel && wbOn) { e.preventDefault(); wbDelSel(); return; }
+  if (e.key === "Escape") { rmMenuClose(); const md = rmEl("rmModal"); if (md) md.innerHTML = ""; return; }
+  const k = e.key.toLowerCase();
+  if (k === "m") rmToggleMic(); else if (k === "v") rmToggleCam(); else if (k === "h") rmToggleHand(); else if (k === "w") wbToggle();
+}
+function rmPaste(e) {
+  if (!RM.joined || !WB.open || WB.hidden || !wbCanDraw()) return;
+  const tg = e.target; if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA")) return;
+  const it = [...(e.clipboardData && e.clipboardData.items || [])].find(i => i.type && i.type.indexOf("image/") === 0);
+  if (it) { e.preventDefault(); wbImgFile(it.getAsFile()); }
+}
+
+/* ---------- التسجيل ---------- */
+async function rmToggleRec() {
+  if (RM.rec) return rmStopRec();
+  toast(RL("recHint"));
+  let disp;
+  try { disp = await navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: "browser", frameRate: 24 }, audio: false, preferCurrentTab: true, selfBrowserSurface: "include" }); } catch (e) { return; }
+  if (!RM.joined) { disp.getTracks().forEach(t => t.stop()); return; }
+  try { await RM.ac.resume(); } catch (e) {}
+  const dest = RM.ac.createMediaStreamDestination();
+  const rec = { disp, dest, nodes: [], mixed: new Set() };
+  rec.addA = (stream) => { const t = stream && stream.getAudioTracks()[0]; if (!t || rec.mixed.has(t.id)) return; try { const src = RM.ac.createMediaStreamSource(new MediaStream([t])); src.connect(dest); rec.nodes.push(src); rec.mixed.add(t.id); } catch (e) {} };
+  const out = new MediaStream([disp.getVideoTracks()[0], dest.stream.getAudioTracks()[0]]);
+  const mime = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"].find(m => MediaRecorder.isTypeSupported(m)) || "";
+  const mr = new MediaRecorder(out, mime ? { mimeType: mime, videoBitsPerSecond: 2500000 } : {});
+  const chunks = []; mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = () => { const type = mr.mimeType || "video/webm"; rmDownload(new Blob(chunks, { type }), `Itqan-class-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}.${type.indexOf("mp4") >= 0 ? "mp4" : "webm"}`); toast(RL("recSaved")); };
+  rec.mr = mr; RM.rec = rec;
+  rec.addA(RM.local); if (RM.screen) rec.addA(RM.screen);
+  Object.values(RM.peers).forEach(p => Object.values(p.streams).forEach(rec.addA));
+  disp.getVideoTracks()[0].onended = () => rmStopRec();
+  mr.start(1000);
+  rmTrack(); rmRenderBar(); rmTopUpdate(); rmSend("rec", { on: true });
+}
+function rmStopRec() {
+  const r = RM.rec; if (!r) return; RM.rec = null;
+  try { if (r.mr.state !== "inactive") r.mr.stop(); } catch (e) {}
+  r.disp.getTracks().forEach(t => t.stop());
+  r.nodes.forEach(n => { try { n.disconnect(); } catch (e) {} });
+  if (RM.joined) { rmTrack(); rmRenderBar(); rmTopUpdate(); }
+}
+
+/* ======================= 🧑‍🏫 السبورة التفاعلية ======================= */
+const WB_W = 1600, WB_H = 900;
+const WB = {};
+function wbReset() { Object.assign(WB, { open: false, hidden: false, pages: [{ id: "p1", bg: "blank", objs: [] }], page: 0, tool: "pen", color: "#111827", size: 4, fill: false, undo: [], redo: [], drafts: {}, lasers: {}, allow: true, el: null, cv: null, ctx: null, scale: 1, dpr: 1, imgs: {}, sel: null, drag: null, cur: null, lastDraft: 0, lastUpd: 0, lastLaser: 0 }); }
+wbReset();
+function wbPage() { return WB.pages[WB.page] || WB.pages[0]; }
+function wbPageById(id) { return WB.pages.find(p => p.id === id); }
+function wbCanDraw() { return WB.allow || rmIsHost(); }
+function wbId() { return (RM.pid || "x").slice(-6) + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+function wbSend(m) { if (!RM.ch || !RM.joined) return; m.from = RM.pid; RM.ch.send({ type: "broadcast", event: "wb", payload: m }); }
+function wbEl() {
+  if (WB.el) { wbToolbar(); return WB.el; }
+  const el = document.createElement("div"); el.className = "rm-wb"; el.id = "rmWb";
+  el.innerHTML = `<div class="rm-wbt" id="wbBar"></div><div class="rm-wbc" id="wbWrap"><canvas id="wbCv"></canvas></div>`;
+  WB.el = el; WB.cv = el.querySelector("canvas"); WB.ctx = WB.cv.getContext("2d");
+  const cv = WB.cv;
+  cv.addEventListener("pointerdown", wbDown); cv.addEventListener("pointermove", wbMove); cv.addEventListener("pointerup", wbUp); cv.addEventListener("pointercancel", wbUp);
+  el.addEventListener("click", () => { if (el.parentNode && el.parentNode.id === "rmStrip") { RM.pin = null; rmLayout(); } });
+  wbToolbar(); wbCursor(); return el;
+}
+function wbToolbar() {
+  const b = WB.el && WB.el.querySelector("#wbBar"); if (!b) return;
+  const can = wbCanDraw(), host = rmIsHost(), pg = wbPage();
+  const T = (k, ic, lbl) => `<button class="${WB.tool === k ? "on" : ""}" title="${esc(RL(lbl))}" ${!can && k !== "laser" ? "disabled" : ""} onclick="wbTool('${k}')"><i class="${ic}"></i></button>`;
+  b.innerHTML = T("select", "fa-solid fa-arrow-pointer", "tSelect") + T("pen", "fa-solid fa-pen", "tPen") + T("hl", "fa-solid fa-highlighter", "tHl") + T("eraser", "fa-solid fa-eraser", "tEraser")
+    + T("line", "fa-solid fa-minus", "tLine") + T("arrow", "fa-solid fa-arrow-right-long", "tArrow") + T("rect", "fa-regular fa-square", "tRect") + T("ellipse", "fa-regular fa-circle", "tEllipse") + T("tri", "fa-solid fa-caret-up", "tTri")
+    + T("text", "fa-solid fa-font", "tText") + T("note", "fa-solid fa-note-sticky", "tNote")
+    + `<button title="${RL("tImg")}" ${!can ? "disabled" : ""} onclick="wbPickImg()"><i class="fa-solid fa-image"></i></button>` + T("laser", "fa-solid fa-location-crosshairs", "tLaser")
+    + `<span class="sep"></span>` + RM_COLORS.map(c => `<button class="rm-sw ${WB.color === c ? "on" : ""}" style="background:${c}" title="${c}" onclick="wbColor('${c}')"></button>`).join("")
+    + `<input type="color" value="${WB.color}" onchange="wbColor(this.value)" title="${RL("color")}">`
+    + `<select class="rm-sel" onchange="WB.size=+this.value" title="${RL("size")}">${[2, 4, 8, 14, 24].map(s => `<option value="${s}" ${WB.size === s ? "selected" : ""}>${s}px</option>`).join("")}</select>`
+    + `<button class="${WB.fill ? "on" : ""}" title="${RL("fill")}" onclick="WB.fill=!WB.fill;wbToolbar()"><i class="fa-solid fa-fill-drip"></i></button>`
+    + `<span class="sep"></span><button title="${RL("undo")}" ${!can ? "disabled" : ""} onclick="wbUndo()"><i class="fa-solid fa-rotate-left"></i></button><button title="${RL("redo")}" ${!can ? "disabled" : ""} onclick="wbRedo()"><i class="fa-solid fa-rotate-right"></i></button><button title="${RL("clear")}" ${!can ? "disabled" : ""} onclick="wbClear()"><i class="fa-solid fa-trash"></i></button>`
+    + `<span class="sep"></span><button title="${RL("page")} −" onclick="wbGo(-1)"><i class="fa-solid fa-chevron-left"></i></button><span style="font-size:.8rem;min-width:40px;text-align:center" dir="ltr">${WB.page + 1}/${WB.pages.length}</span><button title="${RL("page")} +" onclick="wbGo(1)"><i class="fa-solid fa-chevron-right"></i></button><button title="${RL("addPage")}" ${!can ? "disabled" : ""} onclick="wbAddPage()"><i class="fa-solid fa-file-circle-plus"></i></button>`
+    + `<select class="rm-sel" title="${RL("bg")}" ${!can ? "disabled" : ""} onchange="wbBg(this.value)">${["blank", "grid", "lines", "dots", "dark"].map(k => `<option value="${k}" ${pg.bg === k ? "selected" : ""}>${RL("bg" + k[0].toUpperCase() + k.slice(1))}</option>`).join("")}</select>`
+    + `<button title="${RL("export")}" onclick="wbExport(false)"><i class="fa-solid fa-download"></i></button><button title="${RL("exportAll")}" onclick="wbExport(true)"><i class="fa-solid fa-images"></i></button>`
+    + (host ? `<label style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;margin-inline-start:.3rem"><input type="checkbox" ${WB.allow ? "checked" : ""} onchange="wbAllow(this.checked)"> ${RL("allowDraw")}</label>` : (!can ? `<span style="font-size:.75rem;color:#fbbf24;margin-inline-start:.3rem">${RL("noDraw")}</span>` : ""))
+    + `<span style="flex:1"></span><button title="${RL("closeBoard")}" onclick="wbToggle()"><i class="fa-solid fa-xmark"></i></button>`;
+}
+function wbCursor() { if (WB.cv) WB.cv.style.cursor = WB.tool === "select" ? "default" : WB.tool === "text" ? "text" : WB.tool === "eraser" ? "cell" : WB.tool === "laser" ? "none" : "crosshair"; }
+function wbTool(k) { WB.tool = k; WB.sel = null; wbToolbar(); wbCursor(); wbDraw(); }
+function wbColor(c) {
+  WB.color = c;
+  if (WB.sel && wbCanDraw()) { const pg = wbPage(), o = pg.objs.find(x => x.id === WB.sel); if (o && o.k !== "img" && o.k !== "note") { const before = JSON.parse(JSON.stringify(o)); o.c = c; wbPush({ t: "upd", page: pg.id, before, after: JSON.parse(JSON.stringify(o)) }); wbSend({ op: "upd", page: pg.id, obj: o }); } }
+  wbToolbar(); wbDraw();
+}
+function wbToggle() {
+  if (!RM.joined) return;
+  const shown = WB.open && !WB.hidden;
+  if (shown) { if (rmIsHost()) { WB.open = false; wbSend({ op: "open", on: false }); } else WB.hidden = true; }
+  else { WB.hidden = false; if (!WB.open) { WB.open = true; wbSend({ op: "open", on: true }); } RM.pin = null; }
+  rmRenderBar(); rmLayout();
+}
+function wbAllow(on) { WB.allow = on; wbSend({ op: "allow", on }); wbToolbar(); }
+function wbGo(d) { const i = Math.max(0, Math.min(WB.pages.length - 1, WB.page + d)); if (i === WB.page) return; WB.page = i; WB.sel = null; wbSend({ op: "pg", id: wbPage().id }); wbToolbar(); wbDraw(); }
+function wbAddPage() { if (!wbCanDraw()) return; const id = wbId(), at = WB.page + 1, bg = wbPage().bg; WB.pages.splice(at, 0, { id, bg, objs: [] }); WB.page = at; WB.sel = null; wbSend({ op: "pgadd", id, at, bg }); wbToolbar(); wbDraw(); }
+function wbBg(v) { const pg = wbPage(); pg.bg = v; if (v === "dark" && WB.color === "#111827") WB.color = "#ffffff"; wbSend({ op: "bg", page: pg.id, bg: v }); wbToolbar(); wbDraw(); }
+function wbResize() {
+  if (!WB.el || !WB.el.isConnected) return;
+  const wrap = WB.el.querySelector("#wbWrap"); const W = wrap.clientWidth - 8, H = wrap.clientHeight - 8; if (W <= 10 || H <= 10) return;
+  let w = W, h = W * WB_H / WB_W; if (h > H) { h = H; w = H * WB_W / WB_H; }
+  const dpr = window.devicePixelRatio || 1, cv = WB.cv;
+  cv.style.width = Math.floor(w) + "px"; cv.style.height = Math.floor(h) + "px";
+  const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  WB.scale = w / WB_W; WB.dpr = dpr; wbDraw();
+}
+function wbDraw() { if (WB.raf || !WB.ctx) return; WB.raf = requestAnimationFrame(() => { WB.raf = 0; if (WB.cv && WB.cv.isConnected) wbRender(WB.ctx, WB.cv.width / WB_W, wbPage(), true); }); }
+function wbRender(ctx, s, page, live) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.setTransform(s, 0, 0, s, 0, 0);
+  wbBgDraw(ctx, page.bg);
+  page.objs.forEach(o => wbObj(ctx, o));
+  if (!live) return;
+  Object.values(WB.drafts).forEach(d => { if (d.page === page.id && d.obj) wbObj(ctx, d.obj); });
+  if (WB.cur) wbObj(ctx, WB.cur);
+  if (WB.sel) { const o = page.objs.find(x => x.id === WB.sel); if (o) { const b = wbBox(o); ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = "#0ea5e9"; ctx.lineWidth = 2; ctx.strokeRect(b.x - 8, b.y - 8, b.w + 16, b.h + 16); ctx.restore(); } }
+  const now = Date.now(); let anim = false;
+  Object.keys(WB.lasers).forEach(k => {
+    const L_ = WB.lasers[k]; L_.pts = L_.pts.filter(p => now - p[2] < 900); if (!L_.pts.length || L_.page !== page.id) return; anim = true;
+    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (let i = 1; i < L_.pts.length; i++) { const a = 1 - (now - L_.pts[i][2]) / 900; ctx.strokeStyle = `rgba(239,68,68,${a * .7})`; ctx.lineWidth = 3 + 6 * a; ctx.beginPath(); ctx.moveTo(L_.pts[i - 1][0], L_.pts[i - 1][1]); ctx.lineTo(L_.pts[i][0], L_.pts[i][1]); ctx.stroke(); }
+    const l = L_.pts[L_.pts.length - 1]; ctx.fillStyle = "#ef4444"; ctx.shadowColor = "#ef4444"; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(l[0], l[1], 9, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  });
+  if (anim) wbDraw();
+}
+function wbBgDraw(ctx, bg) {
+  ctx.fillStyle = bg === "dark" ? "#1f3b2d" : "#ffffff"; ctx.fillRect(0, 0, WB_W, WB_H);
+  ctx.save();
+  if (bg === "grid") { ctx.strokeStyle = "#e5e7eb"; ctx.lineWidth = 1; for (let x = 0; x <= WB_W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WB_H); ctx.stroke(); } for (let y = 0; y <= WB_H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WB_W, y); ctx.stroke(); } }
+  else if (bg === "lines") { ctx.strokeStyle = "#bfdbfe"; ctx.lineWidth = 1.5; for (let y = 80; y < WB_H; y += 56) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WB_W, y); ctx.stroke(); } ctx.strokeStyle = "#fca5a5"; [90, WB_W - 90].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WB_H); ctx.stroke(); }); }
+  else if (bg === "dots") { ctx.fillStyle = "#cbd5e1"; for (let x = 20; x < WB_W; x += 40) for (let y = 20; y < WB_H; y += 40) { ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill(); } }
+  ctx.restore();
+}
+function wbImg(o) { let im = WB.imgs[o.id]; if (!im) { im = new Image(); im.onload = () => wbDraw(); im.src = o.src; WB.imgs[o.id] = im; } return im; }
+function wbWrap(ctx, text, maxW) { const out = []; String(text || "").split("\n").forEach(par => { let line = ""; par.split(" ").forEach(w => { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }); out.push(line); }); return out; }
+function wbObj(ctx, o) {
+  ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = o.c || "#111"; ctx.fillStyle = o.c || "#111"; ctx.lineWidth = o.w || 4;
+  if (o.k === "pen" || o.k === "hl") {
+    if (o.k === "hl") { ctx.globalAlpha = .35; ctx.lineWidth = (o.w || 4) * 4; ctx.lineCap = "butt"; }
+    const p = o.pts || []; if (p.length) {
+      ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+      if (p.length === 1) ctx.lineTo(p[0][0] + .1, p[0][1] + .1);
+      for (let i = 1; i < p.length - 1; i++) ctx.quadraticCurveTo(p[i][0], p[i][1], (p[i][0] + p[i + 1][0]) / 2, (p[i][1] + p[i + 1][1]) / 2);
+      if (p.length > 1) ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
+      ctx.stroke();
+    }
+  } else if (o.k === "line" || o.k === "arrow") {
+    ctx.beginPath(); ctx.moveTo(o.x1, o.y1); ctx.lineTo(o.x2, o.y2); ctx.stroke();
+    if (o.k === "arrow") { const a = Math.atan2(o.y2 - o.y1, o.x2 - o.x1), hl = Math.max(16, o.w * 4); ctx.beginPath(); ctx.moveTo(o.x2, o.y2); ctx.lineTo(o.x2 - hl * Math.cos(a - .45), o.y2 - hl * Math.sin(a - .45)); ctx.lineTo(o.x2 - hl * Math.cos(a + .45), o.y2 - hl * Math.sin(a + .45)); ctx.closePath(); ctx.fill(); }
+  } else if (o.k === "rect" || o.k === "ellipse" || o.k === "tri") {
+    const x = Math.min(o.x1, o.x2), y = Math.min(o.y1, o.y2), w = Math.abs(o.x2 - o.x1), h = Math.abs(o.y2 - o.y1);
+    ctx.beginPath();
+    if (o.k === "rect") ctx.rect(x, y, w, h); else if (o.k === "ellipse") ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2); else { ctx.moveTo(x + w / 2, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); }
+    if (o.f) { ctx.globalAlpha = .25; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.stroke();
+  } else if (o.k === "text") {
+    const s = o.s || 32; ctx.font = `${s}px Tajawal, sans-serif`; ctx.textBaseline = "top"; ctx.textAlign = "left"; ctx.direction = /[؀-ۿ]/.test(o.t || "") ? "rtl" : "ltr";
+    String(o.t || "").split("\n").forEach((ln, i) => ctx.fillText(ln, o.x, o.y + i * s * 1.25));
+  } else if (o.k === "note") {
+    ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4; ctx.fillStyle = o.c || "#fde68a"; ctx.fillRect(o.x, o.y, 260, 180); ctx.shadowColor = "transparent";
+    ctx.fillStyle = "#1f2937"; ctx.font = "24px Tajawal, sans-serif"; ctx.textBaseline = "top"; ctx.textAlign = "left"; ctx.direction = /[؀-ۿ]/.test(o.t || "") ? "rtl" : "ltr";
+    wbWrap(ctx, o.t, 230).slice(0, 6).forEach((ln, i) => ctx.fillText(ln, o.x + 15, o.y + 14 + i * 27));
+  } else if (o.k === "img") {
+    const im = wbImg(o); if (im.complete && im.naturalWidth) ctx.drawImage(im, o.x, o.y, o.w, o.h); else { ctx.strokeStyle = "#cbd5e1"; ctx.strokeRect(o.x, o.y, o.w, o.h); }
+  }
+  ctx.restore();
+}
+function wbDistSeg(px, py, x1, y1, x2, y2) { const dx = x2 - x1, dy = y2 - y1, l = dx * dx + dy * dy; let t = l ? ((px - x1) * dx + (py - y1) * dy) / l : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy)); }
+function wbBox(o) {
+  if (o.pts) { let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9; o.pts.forEach(p => { x1 = Math.min(x1, p[0]); y1 = Math.min(y1, p[1]); x2 = Math.max(x2, p[0]); y2 = Math.max(y2, p[1]); }); return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 }; }
+  if ("x1" in o) return { x: Math.min(o.x1, o.x2), y: Math.min(o.y1, o.y2), w: Math.abs(o.x2 - o.x1), h: Math.abs(o.y2 - o.y1) };
+  if (o.k === "note") return { x: o.x, y: o.y, w: 260, h: 180 };
+  if (o.k === "img") return { x: o.x, y: o.y, w: o.w, h: o.h };
+  if (o.k === "text") { const s = o.s || 32, ctx = WB.ctx; ctx.save(); ctx.font = `${s}px Tajawal, sans-serif`; const lines = String(o.t || "").split("\n"); const w = Math.max(...lines.map(l => ctx.measureText(l).width)); ctx.restore(); return { x: o.x, y: o.y, w, h: lines.length * s * 1.25 }; }
+  return { x: 0, y: 0, w: 0, h: 0 };
+}
+function wbHit(o, x, y, tol) {
+  if (o.pts) { const w = (o.k === "hl" ? o.w * 4 : o.w) / 2 + tol, p = o.pts; if (p.length === 1) return Math.hypot(p[0][0] - x, p[0][1] - y) < w; for (let i = 1; i < p.length; i++) if (wbDistSeg(x, y, p[i - 1][0], p[i - 1][1], p[i][0], p[i][1]) < w) return true; return false; }
+  if (o.k === "line" || o.k === "arrow") return wbDistSeg(x, y, o.x1, o.y1, o.x2, o.y2) < o.w / 2 + tol;
+  const b = wbBox(o); return x >= b.x - tol && x <= b.x + b.w + tol && y >= b.y - tol && y <= b.y + b.h + tol;
+}
+function wbTranslate(o, dx, dy) { if (o.pts) o.pts = o.pts.map(p => [p[0] + dx, p[1] + dy]); else if ("x1" in o) { o.x1 += dx; o.x2 += dx; o.y1 += dy; o.y2 += dy; } else { o.x += dx; o.y += dy; } }
+function wbPt(e) { const r = WB.cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * WB_W, (e.clientY - r.top) / r.height * WB_H]; }
+function wbLaser(pt) {
+  const me = WB.lasers[RM.pid] = WB.lasers[RM.pid] || { pts: [] }; me.page = wbPage().id; me.pts.push([pt[0], pt[1], Date.now()]); wbDraw();
+  const now = Date.now(); if (now - WB.lastLaser > 45) { WB.lastLaser = now; wbSend({ op: "laser", page: me.page, p: [Math.round(pt[0]), Math.round(pt[1])] }); }
+}
+function wbDown(e) {
+  if (!RM.joined) return;
+  const [x, y] = wbPt(e), t = WB.tool;
+  if (t === "laser") { WB.lasering = true; wbLaser([x, y]); return; }
+  if (!wbCanDraw()) { toast(RL("noDraw"), true); return; }
+  if (t === "text" || t === "note") { e.preventDefault(); wbTextInput(x, y, t); return; }
+  try { WB.cv.setPointerCapture(e.pointerId); } catch (er) {}
+  const pg = wbPage();
+  if (t === "select") { const o = [...pg.objs].reverse().find(o => wbHit(o, x, y, 10)); WB.sel = o ? o.id : null; WB.drag = o ? { id: o.id, x0: x, y0: y, dx: 0, dy: 0, before: JSON.parse(JSON.stringify(o)) } : null; wbDraw(); return; }
+  if (t === "eraser") { WB.erasing = true; WB.erased = []; wbEraseAt(x, y); return; }
+  const id = wbId();
+  WB.cur = (t === "pen" || t === "hl") ? { id, k: t, c: WB.color, w: WB.size, pts: [[Math.round(x), Math.round(y)]] } : { id, k: t, c: WB.color, w: WB.size, f: WB.fill, x1: x, y1: y, x2: x, y2: y };
+  wbDraw();
+}
+function wbMove(e) {
+  if (!WB.cv) return;
+  const [x, y] = wbPt(e);
+  if (WB.tool === "laser") { if (WB.lasering || e.pointerType === "mouse") wbLaser([x, y]); return; }
+  if (WB.drag) {
+    const d = WB.drag, pg = wbPage(), o = pg.objs.find(o => o.id === d.id); if (!o) return;
+    const ddx = x - d.x0 - d.dx, ddy = y - d.y0 - d.dy; wbTranslate(o, ddx, ddy); d.dx += ddx; d.dy += ddy; wbDraw();
+    const now = Date.now(); if (now - WB.lastUpd > 80) { WB.lastUpd = now; wbSend({ op: "upd", page: pg.id, obj: o }); }
+    return;
+  }
+  if (WB.erasing) { wbEraseAt(x, y); return; }
+  const c = WB.cur; if (!c) return;
+  if (c.pts) { const l = c.pts[c.pts.length - 1]; if (Math.hypot(l[0] - x, l[1] - y) < 1.5) return; c.pts.push([Math.round(x), Math.round(y)]); }
+  else {
+    c.x2 = x; c.y2 = y;
+    if (e.shiftKey && (c.k === "rect" || c.k === "ellipse" || c.k === "tri")) { const s = Math.max(Math.abs(x - c.x1), Math.abs(y - c.y1)); c.x2 = c.x1 + Math.sign(x - c.x1 || 1) * s; c.y2 = c.y1 + Math.sign(y - c.y1 || 1) * s; }
+  }
+  wbDraw(); wbDraftSend();
+}
+function wbDraftSend() {
+  const now = Date.now();
+  if (now - WB.lastDraft < 70) { clearTimeout(WB.dt); WB.dt = setTimeout(wbDraftSend, 75); return; }
+  WB.lastDraft = now; if (WB.cur) wbSend({ op: "draft", page: wbPage().id, obj: WB.cur });
+}
+function wbUp() {
+  if (WB.tool === "laser") { WB.lasering = false; return; }
+  if (WB.drag) {
+    const d = WB.drag; WB.drag = null; const pg = wbPage(), o = pg.objs.find(o => o.id === d.id);
+    if (o && (Math.abs(d.dx) > .5 || Math.abs(d.dy) > .5)) { wbPush({ t: "upd", page: pg.id, before: d.before, after: JSON.parse(JSON.stringify(o)) }); wbSend({ op: "upd", page: pg.id, obj: o }); }
+    return;
+  }
+  if (WB.erasing) { WB.erasing = false; if (WB.erased && WB.erased.length) wbPush({ t: "del", page: wbPage().id, objs: WB.erased }); WB.erased = null; return; }
+  const o = WB.cur; if (!o) return; WB.cur = null; clearTimeout(WB.dt);
+  if (!o.pts && Math.hypot(o.x2 - o.x1, o.y2 - o.y1) < 3) { wbSend({ op: "draftend" }); wbDraw(); return; }
+  wbAdd(o);
+}
+function wbAdd(o) { const pg = wbPage(); pg.objs.push(o); wbPush({ t: "add", page: pg.id, obj: o }); wbSend({ op: "add", page: pg.id, obj: o }); wbDraw(); }
+function wbPush(a) { WB.undo.push(a); if (WB.undo.length > 200) WB.undo.shift(); WB.redo = []; }
+function wbEraseAt(x, y) {
+  const pg = wbPage(); const hit = pg.objs.filter(o => wbHit(o, x, y, 12)); if (!hit.length) return;
+  WB.erased = (WB.erased || []).concat(hit); pg.objs = pg.objs.filter(o => hit.indexOf(o) < 0);
+  hit.forEach(o => wbSend({ op: "del", page: pg.id, id: o.id })); wbDraw();
+}
+function wbDelSel() { const pg = wbPage(), o = pg.objs.find(x => x.id === WB.sel); if (!o || !wbCanDraw()) return; pg.objs = pg.objs.filter(x => x !== o); wbSend({ op: "del", page: pg.id, id: o.id }); wbPush({ t: "del", page: pg.id, objs: [o] }); WB.sel = null; wbDraw(); }
+function wbApply(a, inverse) {
+  const pg = wbPageById(a.page); if (!pg) return;
+  const add = (o) => { if (!pg.objs.find(x => x.id === o.id)) pg.objs.push(o); wbSend({ op: "add", page: pg.id, obj: o }); };
+  const del = (id) => { pg.objs = pg.objs.filter(x => x.id !== id); wbSend({ op: "del", page: pg.id, id }); };
+  const upd = (o) => { const c = JSON.parse(JSON.stringify(o)); const i = pg.objs.findIndex(x => x.id === o.id); if (i >= 0) pg.objs[i] = c; wbSend({ op: "upd", page: pg.id, obj: c }); };
+  if (a.t === "add") inverse ? del(a.obj.id) : add(a.obj);
+  else if (a.t === "del") a.objs.forEach(o => inverse ? add(o) : del(o.id));
+  else if (a.t === "upd") upd(inverse ? a.before : a.after);
+  else if (a.t === "clear") { if (inverse) wbSendObjs(pg, a.objs.filter(o => !pg.objs.find(x => x.id === o.id)), null, true); else { pg.objs = []; wbSend({ op: "clear", page: pg.id }); } }
+  WB.sel = null; wbDraw();
+}
+function wbUndo() { if (!wbCanDraw()) return; const a = WB.undo.pop(); if (!a) return; wbApply(a, true); WB.redo.push(a); }
+function wbRedo() { if (!wbCanDraw()) return; const a = WB.redo.pop(); if (!a) return; wbApply(a, false); WB.undo.push(a); }
+function wbClear() { if (!wbCanDraw()) return; const pg = wbPage(); if (!pg.objs.length || !confirm(RL("clearConfirm"))) return; wbPush({ t: "clear", page: pg.id, objs: pg.objs.slice() }); pg.objs = []; WB.sel = null; wbSend({ op: "clear", page: pg.id }); wbDraw(); }
+function wbTextInput(x, y, kind) {
+  const wrap = WB.el.querySelector("#wbWrap"); const r = WB.cv.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+  const ta = document.createElement("textarea"); ta.className = "rm-txt"; ta.rows = 2;
+  const fs = kind === "note" ? 24 : Math.max(20, WB.size * 7);
+  ta.style.left = (r.left - wr.left + x * WB.scale) + "px"; ta.style.top = (r.top - wr.top + y * WB.scale) + "px";
+  ta.style.fontSize = Math.max(12, fs * WB.scale) + "px"; ta.style.color = kind === "note" ? "#111" : (WB.color === "#ffffff" ? "#111" : WB.color); if (kind === "note") ta.style.background = "#fde68a";
+  wrap.appendChild(ta); setTimeout(() => ta.focus(), 30);
+  let done = false;
+  const commit = () => { if (done) return; done = true; const t = ta.value.trim(); ta.remove(); if (!t) return; wbAdd(kind === "note" ? { id: wbId(), k: "note", x, y, t, c: "#fde68a" } : { id: wbId(), k: "text", x, y, t, c: WB.color, s: fs }); };
+  ta.addEventListener("blur", commit);
+  ta.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit(); } if (e.key === "Escape") { ta.value = ""; commit(); } });
+}
+function wbPickImg() { if (!wbCanDraw()) return; const i = document.createElement("input"); i.type = "file"; i.accept = "image/*"; i.onchange = () => { if (i.files[0]) wbImgFile(i.files[0]); }; i.click(); }
+function wbImgFile(f) {
+  if (!f) return; const rd = new FileReader();
+  rd.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      let w = im.naturalWidth, h = im.naturalHeight; const m = Math.min(1, 1200 / Math.max(w, h)); w = Math.round(w * m); h = Math.round(h * m);
+      const c = document.createElement("canvas"); c.width = w; c.height = h; const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, w, h); cx.drawImage(im, 0, 0, w, h);
+      let q = .82, src = c.toDataURL("image/jpeg", q); while (src.length > 300000 && q > .3) { q -= .12; src = c.toDataURL("image/jpeg", q); }
+      const fit = Math.min(1, 900 / w, 600 / h), dw = w * fit, dh = h * fit;
+      wbAdd({ id: wbId(), k: "img", src, x: (WB_W - dw) / 2, y: (WB_H - dh) / 2, w: dw, h: dh });
+      WB.tool = "select"; wbToolbar(); wbCursor();
+    };
+    im.src = rd.result;
+  };
+  rd.readAsDataURL(f);
+}
+async function wbExport(all) {
+  const list = all ? WB.pages : [wbPage()];
+  for (let i = 0; i < list.length; i++) {
+    const pg = list[i];
+    await Promise.all(pg.objs.filter(o => o.k === "img").map(o => new Promise(r => { const im = wbImg(o); if (im.complete) r(); else { im.addEventListener("load", r); im.addEventListener("error", r); } })));
+    const c = document.createElement("canvas"); c.width = WB_W; c.height = WB_H; wbRender(c.getContext("2d"), 1, pg, false);
+    const blob = await new Promise(r => c.toBlob(r, "image/png"));
+    rmDownload(blob, `whiteboard-${WB.pages.indexOf(pg) + 1}.png`);
+    await new Promise(r => setTimeout(r, 350));
+  }
+}
+function wbSendObjs(pg, objs, to, local) {
+  if (local) objs.forEach(o => { if (!pg.objs.find(x => x.id === o.id)) pg.objs.push(o); });
+  let batch = [], size = 0;
+  const flush = () => { if (batch.length) wbSend({ op: "addmany", to, page: pg.id, objs: batch }); batch = []; size = 0; };
+  objs.forEach(o => { const s = JSON.stringify(o).length; if (size + s > 150000) flush(); batch.push(o); size += s; });
+  flush();
+}
+function wbSendState(to) {
+  if (!RM.joined) return;
+  wbSend({ op: "state", to, pages: WB.pages.map(p => ({ id: p.id, bg: p.bg })), cur: wbPage().id, allow: WB.allow, open: WB.open });
+  WB.pages.forEach(p => wbSendObjs(p, p.objs, to, false));
+}
+function wbOnMsg(m) {
+  if (!RM.joined || !m || m.from === RM.pid) return;
+  if (m.to && m.to !== RM.pid) return;
+  const pg = m.page ? wbPageById(m.page) : null;
+  switch (m.op) {
+    case "draft": WB.drafts[m.from] = { page: m.page, obj: m.obj }; break;
+    case "draftend": delete WB.drafts[m.from]; break;
+    case "add": delete WB.drafts[m.from]; if (pg && m.obj && !pg.objs.find(o => o.id === m.obj.id)) pg.objs.push(m.obj); break;
+    case "addmany": if (pg && Array.isArray(m.objs)) m.objs.forEach(o => { if (!pg.objs.find(x => x.id === o.id)) pg.objs.push(o); }); break;
+    case "del": if (pg) pg.objs = pg.objs.filter(o => o.id !== m.id); if (WB.sel === m.id) WB.sel = null; break;
+    case "upd": if (pg && m.obj) { const i = pg.objs.findIndex(o => o.id === m.obj.id); if (i >= 0) pg.objs[i] = m.obj; } break;
+    case "clear": if (pg) pg.objs = []; break;
+    case "bg": if (pg) pg.bg = m.bg; wbToolbar(); break;
+    case "pgadd": if (!wbPageById(m.id)) WB.pages.splice(Math.min(m.at, WB.pages.length), 0, { id: m.id, bg: m.bg || "blank", objs: [] }); WB.page = WB.pages.findIndex(p => p.id === m.id); WB.sel = null; wbToolbar(); break;
+    case "pg": { const i = WB.pages.findIndex(p => p.id === m.id); if (i >= 0) { WB.page = i; WB.sel = null; wbToolbar(); } break; }
+    case "open": if (WB.open !== m.on || (m.on && WB.hidden)) { WB.open = m.on; if (m.on) { WB.hidden = false; RM.pin = null; } rmRenderBar(); rmLayout(); } break;
+    case "allow": WB.allow = !!m.on; if (!wbCanDraw()) { WB.cur = null; WB.drag = null; } wbToolbar(); break;
+    case "laser": { const L_ = WB.lasers[m.from] = WB.lasers[m.from] || { pts: [] }; L_.page = m.page; if (m.p) L_.pts.push([m.p[0], m.p[1], Date.now()]); break; }
+    case "state":
+      WB.pages = (m.pages || []).map(p => ({ id: p.id, bg: p.bg, objs: [] })); if (!WB.pages.length) WB.pages = [{ id: "p1", bg: "blank", objs: [] }];
+      WB.page = Math.max(0, WB.pages.findIndex(p => p.id === m.cur)); WB.allow = m.allow !== false; WB.undo = []; WB.redo = [];
+      if (WB.open !== !!m.open) { WB.open = !!m.open; rmRenderBar(); rmLayout(); }
+      wbToolbar(); break;
+  }
+  wbDraw();
+}
+
+/* ---------- ربط الفصل بباقي الموقع ---------- */
+function roomAttendanceBlock(kind, id, auto) {
+  if (role() !== "owner" && role() !== "teacher") return "";
+  const open = auto || (state.rmAttOpen || {})[id];
+  if (!open) return `<button class="btn btn-o" style="margin-top:.5rem" onclick="state.rmAttOpen=state.rmAttOpen||{};state.rmAttOpen['${id}']=1;render()">📋 ${RL("attTitle")}</button>`;
+  const d = useData("roomAtt_" + id, () => q(sb.rpc("room_attendance_log", { p_kind: kind, p_id: id })));
+  let body;
+  if (d === null) body = `<span class="xs muted">${L("loading")}</span>`;
+  else if (!Array.isArray(d)) body = "";
+  else if (!d.length) body = `<span class="xs muted">${RL("noAtt")}</span>`;
+  else body = rmAttAgg(d).map(b => `<div class="kv" style="flex-wrap:wrap"><span><b>${esc(b.name)}</b> <span class="badge">${RL(b.role)}</span></span><span class="xs">${esc(fmtTime(b.first))} → ${esc(fmtTime(b.last))} · <b>${b.mins.toFixed(1)}</b> ${RL("attMins")} · ${b.n}×</span></div>`).join("");
+  return `<div style="margin-top:.8rem;padding:.6rem .8rem;border:1px dashed var(--line);border-radius:12px"><div class="row" style="justify-content:space-between;margin-bottom:.3rem;flex-wrap:wrap;gap:.3rem"><b class="sm">📋 ${RL("attTitle")}</b><span class="row" style="gap:.3rem"><button class="ibtn" title="${RL("refresh")}" onclick="invalidate('roomAtt_${id}');render()"><i class="fa-solid fa-rotate"></i></button><a class="btn btn-o" style="padding:.25rem .6rem" href="${esc(roomHref(kind, id))}" target="_blank" rel="noopener">🎥 ${RL("enterRoom")}</a></span></div>${body}</div>`;
+}
+function teacherGroupsCard() {
+  const uid = state.auth.user && state.auth.user.id; if (!uid) return "";
+  const list = useData("tGroups", () => q(sb.from("group_sessions").select("*").eq("teacher_id", uid).neq("status", "cancelled").gte("start_time", new Date(Date.now() - 6 * 3600e3).toISOString()).order("start_time")));
+  if (!Array.isArray(list) || !list.length) return "";
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">👥 ${RL("myGroups")}</h3>${list.map(g => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${esc(locText(g.title))}</b><br><span class="xs muted">${esc(fmtDT(g.start_time))} · ${g.language === "en" ? L("langEn") : L("langAr")}</span></span><a class="btn btn-p" href="${esc(roomHref("group", g.id))}" target="_blank" rel="noopener">🎥 ${RL("enterRoom")}</a></div>`).join("")}</div>`;
+}
+const _tALF9 = teacherAddLessonForm; teacherAddLessonForm = function () { return teacherGroupsCard() + _tALF9(); };
+const _meetingLinkCard9 = meetingLinkCard;
+meetingLinkCard = function () { return `<div class="card" style="margin-bottom:1rem;border-inline-start:4px solid var(--accent)"><h3 style="margin-bottom:.4rem">🎥 ${RL("classroomCard")}</h3><p class="sm muted">${RL("classroomHint")}</p></div>` + _meetingLinkCard9(); };
+const _emailSettingsCard9 = emailSettingsCard;
+emailSettingsCard = function () { return _emailSettingsCard9() + iceSettingsCard(); };
+function iceSettingsCard() {
+  const ps = state.data.privSettings; const d = Array.isArray(ps) && ps[0] ? ps[0].data || {} : {};
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.4rem">🎥 ${RL("iceTitle")}</h3><p class="xs muted" style="margin-bottom:.6rem">${RL("iceHint")}</p>
+    <textarea class="in" id="ice_json" rows="4" dir="ltr" placeholder='[{"urls":"turn:turn.example.com:3478","username":"user","credential":"pass"}]'>${esc(d.iceServers ? JSON.stringify(d.iceServers, null, 1) : "")}</textarea>
+    <button class="btn btn-o" style="margin-top:.5rem" onclick="saveIceSettings()">${L("save")}</button></div>`;
+}
+async function saveIceSettings() {
+  const raw = document.getElementById("ice_json").value.trim(); let v = null;
+  if (raw) { try { v = JSON.parse(raw); if (!Array.isArray(v)) v = [v]; if (!v.every(x => x && x.urls)) throw 0; } catch (e) { return toast(RL("badJson"), true); } }
+  const ps = state.data.privSettings; const cur = Array.isArray(ps) && ps[0] ? ps[0].data || {} : {};
+  const data = Object.assign({}, cur); if (v) data.iceServers = v; else delete data.iceServers;
+  const { error } = await sb.from("private_settings").update({ data }).eq("id", 1);
+  if (error) return toast(error.message, true);
+  invalidate("privSettings"); toast(L("saved")); render();
+}
+
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
