@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v8";
+const UI_VERSION = "2026-11-11-v9";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -7786,6 +7786,195 @@ document.addEventListener("visibilitychange", () => {
     }).catch(() => {});
   }
 });
+
+
+/* ======================= v12: شريط أقسامي + صفحة الفصل + تطبيق الموبايل ======================= */
+Object.assign(UI.en, {
+  rm_testRoom: "Practice classroom", nvMine: "My space", nvClassroom: "Classroom", nvApp: "Get the app",
+  crTitle: "The Itqan Classroom", crSub: "Your private online classroom — everything you know from Zoom, Google Meet and Preply, built into the academy.",
+  crTry: "Try the classroom now", crTryHint: "Open your private practice room to test your camera, microphone, screen sharing and the whiteboard.",
+  crUpcoming: "Your upcoming classes", crNone: "No upcoming classes.", crGroups: "Group classes",
+  crF: [["🔎", "System check before joining", "Camera, microphone, speakers, network and server — with a clear “ready to connect” result."],
+    ["🎥", "HD video & clear audio", "Noise suppression, echo cancellation, speaker and gallery views, pin and full screen."],
+    ["🖥️", "Screen sharing", "Share a browser tab, a specific window, or your entire screen — with sound."],
+    ["🧑‍🏫", "Full interactive whiteboard", "Pen, highlighter, shapes, arrows, text, sticky notes, images, laser pointer, pages, undo/redo and export."],
+    ["💬", "Chat, reactions & raise hand", "Talk without interrupting; the teacher can mute, lower hands or remove participants."],
+    ["⏺️", "Recording", "The teacher can record the class to their device, with a visible REC sign for everyone."],
+    ["📋", "Automatic attendance log", "Exact join/leave times and minutes for the teacher and every student."],
+    ["📶", "Connection quality", "Live signal bars for every participant, automatic reconnection and quality adjustment."]],
+  apTitle: "The Itqan app on your phone", apSub: "Install the academy app on your phone in seconds — lessons, classroom, messages, homework and notifications in one tap.",
+  apInstall: "Install the app", apInstalled: "The app is installed on this device ✓", apAndroid: "Android (Chrome)", apIos: "iPhone / iPad (Safari)", apDesktop: "Computer (Chrome / Edge)",
+  apAndroidSteps: "Press “Install the app” — or open the ⋮ menu and choose “Install app”.", apIosSteps: "Open the site in Safari → tap Share ⎋ → “Add to Home Screen” → Add.",
+  apDesktopSteps: "Click the install icon ⊕ in the address bar, or press “Install the app”.", apScan: "Scan to open on your phone",
+  apF: ["Opens full-screen like a native app", "Lesson & homework notifications", "Works on slow connections", "No store needed — always up to date"],
+  apBanner: "📱 Get the Itqan app on your phone", apBannerBtn: "Download the app"
+});
+Object.assign(UI.ar, {
+  rm_testRoom: "فصل التجربة", nvMine: "مساحتي", nvClassroom: "الفصل", nvApp: "حمّل التطبيق",
+  crTitle: "فصل إتقان الافتراضي", crSub: "فصلك الخاص أونلاين — كل اللي تعرفه من زووم وجوجل ميت وبريبلي، جوه الأكاديمية.",
+  crTry: "جرّب الفصل دلوقتي", crTryHint: "افتح فصل التجربة الخاص بيك واختبر الكاميرا والمايك ومشاركة الشاشة والسبورة.",
+  crUpcoming: "فصولك الجاية", crNone: "مفيش حصص جاية.", crGroups: "الحصص الجماعية",
+  crF: [["🔎", "فحص الجهاز قبل الدخول", "الكاميرا والمايك والسماعات والشبكة والخادم — ونتيجة واضحة «جاهز للاتصال»."],
+    ["🎥", "فيديو عالي الجودة وصوت واضح", "عزل الضوضاء ومنع الصدى، عرض المتحدث أو الشبكة، تثبيت وملء الشاشة."],
+    ["🖥️", "مشاركة الشاشة", "شارك تبويب في المتصفح أو نافذة محددة أو الشاشة كلها — بالصوت."],
+    ["🧑‍🏫", "سبورة تفاعلية كاملة", "قلم وتظليل وأشكال وأسهم ونص وملاحظات لاصقة وصور ومؤشر ليزر وصفحات وتراجع وحفظ."],
+    ["💬", "دردشة وتفاعلات ورفع اليد", "اتكلم من غير ما تقاطع؛ والمعلم يقدر يكتم أو ينزّل الأيدي أو يخرج مشارك."],
+    ["⏺️", "تسجيل الحصة", "المعلم يقدر يسجل الحصة على جهازه، وعلامة REC بتظهر للكل."],
+    ["📋", "سجل حضور تلقائي", "وقت الدخول والخروج بالظبط وعدد الدقائق للمعلم وكل طالب."],
+    ["📶", "جودة الاتصال", "مؤشر إشارة لكل مشارك، وإعادة اتصال تلقائية وضبط الجودة حسب النت."]],
+  apTitle: "تطبيق إتقان على موبايلك", apSub: "نزّل تطبيق الأكاديمية على موبايلك في ثواني — الحصص والفصل والرسائل والواجبات والإشعارات بضغطة واحدة.",
+  apInstall: "تثبيت التطبيق", apInstalled: "التطبيق متثبت على الجهاز ده ✓", apAndroid: "أندرويد (كروم)", apIos: "آيفون / آيباد (سفاري)", apDesktop: "الكمبيوتر (كروم / إيدج)",
+  apAndroidSteps: "اضغط «تثبيت التطبيق» — أو افتح قايمة ⋮ واختار «تثبيت التطبيق».", apIosSteps: "افتح الموقع من سفاري ← اضغط مشاركة ⎋ ← «إضافة إلى الشاشة الرئيسية» ← إضافة.",
+  apDesktopSteps: "اضغط أيقونة التثبيت ⊕ في شريط العنوان، أو اضغط «تثبيت التطبيق».", apScan: "امسح الكود عشان تفتحه على موبايلك",
+  apF: ["بيفتح ملء الشاشة زي أي تطبيق", "إشعارات الحصص والواجبات", "بيشتغل على النت الضعيف", "من غير متجر — ودايمًا محدّث"],
+  apBanner: "📱 نزّل تطبيق إتقان على موبايلك", apBannerBtn: "حمّل التطبيق"
+});
+document.head.insertAdjacentHTML("beforeend", `<style>
+.unav{border-top:1px solid var(--line);background:var(--card)}
+.unav .wrap{display:flex;gap:.35rem;overflow-x:auto;padding-block:.45rem;scrollbar-width:none}.unav .wrap::-webkit-scrollbar{display:none}
+.unav a{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;padding:.38rem .8rem;border-radius:999px;border:1px solid var(--line);font-size:.85rem;color:var(--fg);text-decoration:none;position:relative;flex:none}
+.unav a[aria-current=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.unav a .nb{background:var(--danger);color:#fff;border-radius:999px;font-size:.68rem;font-weight:800;padding:0 .38rem;line-height:1.35}
+.bnav{display:none}
+@media(max-width:820px){
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:900;background:var(--card);border-top:1px solid var(--line);padding:.3rem .2rem calc(.3rem + env(safe-area-inset-bottom))}
+  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:.15rem;font-size:.68rem;color:var(--muted);text-decoration:none;position:relative;padding:.25rem 0}
+  .bnav a i{font-size:1.15rem}.bnav a[aria-current=true]{color:var(--accent)}
+  .bnav a .nb{position:absolute;top:0;inset-inline-start:55%;background:var(--danger);color:#fff;border-radius:999px;font-size:.62rem;padding:0 .32rem}
+  body.has-bnav{padding-bottom:64px}body.has-bnav .ai-widget{bottom:76px!important}
+}
+.appcta{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 1.2rem;border-radius:16px;background:linear-gradient(135deg,#065f46,#047857 60%,#b45309);color:#fff}
+.appcta .btn{background:#fff;color:#065f46;border-color:#fff}
+.crf{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.8rem}
+.phone-mock{width:220px;height:440px;border-radius:34px;border:10px solid #111827;background:linear-gradient(160deg,#0b0f19,#064e3b);box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;color:#fff;margin:auto}
+.phone-mock .ico{width:84px;height:84px;border-radius:22px;background:#047857;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:800}
+</style>`);
+
+/* ---------- التوجيه للصفحات الجديدة ---------- */
+const _readHash12 = readHash;
+readHash = function () {
+  const h = (location.hash || "").replace(/^#\/?/, ""); const p = h.split("/");
+  if (p[0] === "room" && p[1] === "test" && /^[0-9a-f-]{36}$/i.test(p[2] || "")) { state.route = "room"; state.roomKind = "test"; state.roomId = p[2]; return; }
+  if (p[0] === "classroom" || p[0] === "app") { state.route = p[0]; return; }
+  _readHash12();
+};
+const _render12 = render;
+render = function () {
+  document.body.classList.toggle("has-bnav", !!(state.auth && state.auth.user) && state.route !== "room");
+  if (state.route === "classroom" || state.route === "app") {
+    if (RM.key || rmEl("rmRoot")) roomTeardown();
+    const app = document.getElementById("app"); if (!app) return;
+    app.innerHTML = renderHeader() + (state.route === "app" ? renderAppPage() : renderClassroomPage()) + renderFooter() + renderAIWidget();
+    return;
+  }
+  return _render12();
+};
+const _rmLoadInfo12 = rmLoadInfo;
+rmLoadInfo = async function () {
+  if (RM.kind === "test") { const el = rmEl("rmPreInfo"); if (el) el.innerHTML = `<b style="color:#e5e7eb">🧪 ${RL("testRoom")}</b>`; return; }
+  return _rmLoadInfo12();
+};
+const _rmTitle12 = rmTitle;
+rmTitle = function () { return RM.kind === "test" ? RL("testRoom") : _rmTitle12(); };
+function testRoomHref(uid) { return roomHref("test", uid || (state.auth.user && state.auth.user.id)); }
+
+/* ---------- شريط أقسامي (فوق) + شريط سفلي للموبايل ---------- */
+function navItems() {
+  const r = role(), msgs = Array.isArray(state.data.chatContacts) ? state.data.chatContacts.reduce((a, c) => a + (+c.unread || 0), 0) : 0;
+  const tab = (t, ic, lbl, nb) => ({ act: state.route === "dashboard" && state.dash.tab === t, go: `state.dash.tab='${t}';navigate('dashboard')`, ic, lbl, nb });
+  const page = (rt, ic, lbl, nb) => ({ act: state.route === rt, go: `navigate('${rt}')`, ic, lbl, nb });
+  const mine = { act: state.route === "home", go: "navigate('home')", ic: "fa-solid fa-house-user", lbl: L("nvMine") };
+  const notif = { act: false, go: "state.notif.open=true;render();window.scrollTo({top:0,behavior:'smooth'})", ic: "fa-solid fa-bell", lbl: L("hubNotifs"), nb: unreadCount() };
+  if (r === "student") return [mine, tab("lessons", "fa-solid fa-calendar-check", L("hubLessons")), page("classroom", "fa-solid fa-video", L("nvClassroom")), tab("messages", "fa-solid fa-comments", L("hubMessages"), msgs),
+    tab("homework", "fa-solid fa-book-open-reader", L("hubHomework")), tab("billing", "fa-solid fa-credit-card", L("hubBilling")), tab("mycerts", "fa-solid fa-award", L("hubCerts")),
+    tab("invite", "fa-solid fa-gift", L("hubInvite")), notif, page("profile", "fa-solid fa-user", L("hubProfile")), page("app", "fa-solid fa-mobile-screen-button", L("nvApp"))];
+  if (r === "teacher") return [mine, tab("calendar", "fa-regular fa-calendar", L("hubCalendar")), page("classroom", "fa-solid fa-video", L("nvClassroom")), tab("messages", "fa-solid fa-comments", L("hubMessages"), msgs),
+    tab("homework", "fa-solid fa-book-open-reader", L("hubHomework")), tab("mystudents", "fa-solid fa-user-graduate", L("hubStudents")), tab("dues", "fa-solid fa-sack-dollar", L("hubEarnings")),
+    tab("schedule", "fa-solid fa-clock", L("hubSchedule")), notif, page("profile", "fa-solid fa-user", L("hubProfile")), page("app", "fa-solid fa-mobile-screen-button", L("nvApp"))];
+  if (r === "owner") return [mine, tab("overview", "fa-solid fa-chart-pie", L("hubOverview")), page("classroom", "fa-solid fa-video", L("nvClassroom")), tab("chats", "fa-solid fa-comments", L("hubChats"), msgs),
+    tab("requests", "fa-solid fa-inbox", L("hubRequests")), tab("bookings", "fa-solid fa-star", L("hubBookings")), tab("reports", "fa-solid fa-sack-dollar", L("hubReports")),
+    tab("reviews", "fa-solid fa-thumbs-up", L("hubReviews")), tab("settings", "fa-solid fa-gear", L("hubSettings")), notif, page("app", "fa-solid fa-mobile-screen-button", L("nvApp"))];
+  return [mine, tab("children", "fa-solid fa-children", L("hubLessons")), page("classroom", "fa-solid fa-video", L("nvClassroom")), notif, page("profile", "fa-solid fa-user", L("hubProfile")), page("app", "fa-solid fa-mobile-screen-button", L("nvApp"))];
+}
+function userNavHtml() {
+  if (!state.auth || !state.auth.user || !state.auth.profile) return null;
+  if (role() !== "parent") useData("chatContacts", async () => { const { data, error } = await sb.rpc("my_chat_contacts"); if (error) throw error; return (data || []).sort((a, b) => (b.last_at || "").localeCompare(a.last_at || "")); });
+  const items = navItems();
+  const top = `<div class="unav"><div class="wrap">${items.map(i => `<a href="#" aria-current="${!!i.act}" onclick="${i.go};return false;"><i class="${i.ic}"></i>${esc(i.lbl)}${i.nb ? `<span class="nb">${i.nb > 9 ? "9+" : i.nb}</span>` : ""}</a>`).join("")}</div></div>`;
+  const pick = [items[0], items[1], items[2], items[3], { act: state.route === "dashboard" && !items.slice(1, 4).some(i => i.act), go: "navigate('dashboard')", ic: "fa-solid fa-grip", lbl: L("dashboard") }];
+  const bottom = `<nav class="bnav">${pick.map(i => `<a href="#" aria-current="${!!i.act}" onclick="${i.go};return false;"><i class="${i.ic}"></i><span>${esc(i.lbl)}</span>${i.nb ? `<span class="nb">${i.nb > 9 ? "9+" : i.nb}</span>` : ""}</a>`).join("")}</nav>`;
+  return { top, bottom };
+}
+const _renderHeader12 = renderHeader;
+renderHeader = function () {
+  let h = _renderHeader12();
+  const appBtn = IS_STANDALONE ? "" : `<button class="ibtn hide-sm" onclick="navigate('app')" title="${L("nvApp")}" style="color:var(--accent)"><i class="fa-solid fa-mobile-screen-button"></i></button>`;
+  const roomBtn = state.auth && state.auth.user ? `<button class="ibtn hide-sm" onclick="navigate('classroom')" title="${L("nvClassroom")}"><i class="fa-solid fa-video"></i></button>` : "";
+  h = h.replace(`<button class="btn btn-p hide-sm" onclick="navigate('booking')">`, roomBtn + appBtn + `<button class="btn btn-p hide-sm" onclick="navigate('booking')">`);
+  const nv = userNavHtml(); if (!nv) return h;
+  const i = h.lastIndexOf("</header>");
+  return i >= 0 ? h.slice(0, i) + nv.top + h.slice(i, i + 9) + nv.bottom + h.slice(i + 9) : h + nv.top + nv.bottom;
+};
+
+/* ---------- صفحة الفصل ---------- */
+function renderClassroomPage() {
+  const u = state.auth && state.auth.user;
+  const feats = L("crF") || [];
+  let mine = "";
+  if (u && state.auth.profile) {
+    const r = role(), isT = r === "teacher";
+    const ls = r === "owner" ? useData("crLessons", () => q(sb.from("lessons").select("id,start_time,end_time,track,student_id,teacher_id,meeting_url").eq("status", "scheduled").gte("end_time", new Date().toISOString()).order("start_time").limit(12)))
+      : useData("crLessons", () => q(sb.from("lessons").select("id,start_time,end_time,track,student_id,teacher_id,meeting_url").eq(isT ? "teacher_id" : "student_id", u.id).eq("status", "scheduled").gte("end_time", new Date().toISOString()).order("start_time").limit(12)));
+    const P = r === "student" ? { map: {} } : peopleMap();
+    const row = (l) => { const soon = new Date(l.start_time) - Date.now() < 30 * 60e3; return `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.4rem"><span><b>${esc(fmtDT(l.start_time))} – ${esc(fmtTime(l.end_time))}</b><br><span class="xs muted">${l.track ? esc(trackTitle(l.track)) : ""}${r !== "student" ? " · " + esc(personName(l.student_id, P.map)) : ""}${r === "owner" ? " · " + esc(personName(l.teacher_id, P.map)) : ""}</span></span>
+      <a class="btn ${soon ? "btn-p" : "btn-o"}" href="${esc(roomHref("lesson", l.id))}" target="_blank" rel="noopener">🎥 ${L("hubJoin")}</a></div>`; };
+    mine = `<div class="grid g2" style="align-items:start;margin-bottom:1.5rem">
+      <div class="card" style="border-color:var(--accent)"><h3 style="margin-bottom:.4rem">🧪 ${L("crTry")}</h3><p class="sm muted" style="margin-bottom:1rem">${L("crTryHint")}</p>
+        <a class="btn btn-p btn-lg" href="${esc(testRoomHref())}" target="_blank" rel="noopener">🎥 ${L("crTry")}</a></div>
+      <div class="card"><h3 style="margin-bottom:.6rem">📅 ${L("crUpcoming")}</h3>${!Array.isArray(ls) ? loadingBox() : ls.length ? ls.map(row).join("") : `<p class="muted sm">${L("crNone")}</p>`}</div></div>`;
+  } else {
+    mine = `<div class="card" style="text-align:center;margin-bottom:1.5rem"><p class="muted" style="margin-bottom:.8rem">${RL("loginFirst")}</p><button class="btn btn-p" onclick="lsSet('itqan_after_auth','classroom');navigate('login')">${RL("signIn")}</button></div>`;
+  }
+  return `<section class="sec"><div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto 1.6rem"><span class="badge badge-a">🎥 ${L("nvClassroom")}</span><h1 style="font-size:2rem;margin:.6rem 0">${L("crTitle")}</h1><p class="muted">${L("crSub")}</p></div>
+    ${mine}
+    <div class="crf">${feats.map(f => `<div class="card"><div style="font-size:1.8rem">${f[0]}</div><h3 style="margin:.4rem 0 .3rem;font-size:1.05rem">${esc(f[1])}</h3><p class="sm muted">${esc(f[2])}</p></div>`).join("")}</div>
+  </div></section>`;
+}
+
+/* ---------- صفحة التطبيق ---------- */
+function renderAppPage() {
+  const url = location.origin && location.origin.startsWith("http") ? location.origin + "/#/home" : "https://quran-academy-nine-dusky.vercel.app/#/home";
+  const qr = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=" + encodeURIComponent(url);
+  const canInstall = !!deferredInstall;
+  const card = (ic, t, s) => `<div class="card"><h3 style="margin-bottom:.4rem">${ic} ${t}</h3><p class="sm muted">${s}</p></div>`;
+  return `<section class="sec"><div class="wrap">
+    <div class="grid g2" style="align-items:center;gap:2rem">
+      <div><span class="badge badge-a">📱 ${L("nvApp")}</span><h1 style="font-size:2rem;margin:.6rem 0">${L("apTitle")}</h1><p class="muted" style="margin-bottom:1rem">${L("apSub")}</p>
+        <ul style="list-style:none;padding:0;margin:0 0 1.2rem;display:grid;gap:.4rem">${(L("apF") || []).map(f => `<li>✅ ${esc(f)}</li>`).join("")}</ul>
+        ${IS_STANDALONE ? `<div class="notice ok">${L("apInstalled")}</div>`
+          : `<button class="btn btn-p btn-lg" onclick="installApp12()"><i class="fa-solid fa-download"></i> ${L("apInstall")}</button>${!canInstall && IS_IOS ? `<p class="sm" style="margin-top:.6rem">🍏 ${L("apIosSteps")}</p>` : ""}`}</div>
+      <div style="text-align:center"><div class="phone-mock"><div class="ico">إ</div><b>${esc(I18N[state.lang].meta.siteName)}</b><span class="xs" style="opacity:.8">${esc(I18N[state.lang].meta.tagline || "")}</span></div>
+        <div class="hide-sm" style="margin-top:1.2rem"><img src="${qr}" width="160" height="160" alt="QR" style="border-radius:12px;background:#fff;padding:4px"><div class="xs muted">${L("apScan")}</div></div></div></div>
+    <div class="grid g3" style="margin-top:2rem">${card("🤖", L("apAndroid"), L("apAndroidSteps"))}${card("🍏", L("apIos"), L("apIosSteps"))}${card("💻", L("apDesktop"), L("apDesktopSteps"))}</div>
+  </div></section>`;
+}
+async function installApp12() {
+  if (deferredInstall) { deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch (e) {} deferredInstall = null; render(); return; }
+  if (IS_IOS) { alert(L("apIosSteps")); return; }
+  alert(/Android/i.test(navigator.userAgent) ? L("apAndroidSteps") : L("apDesktopSteps"));
+}
+function appCtaBanner() {
+  if (IS_STANDALONE) return "";
+  return `<section style="padding:1rem 0"><div class="wrap"><div class="appcta"><div><b style="font-size:1.15rem">${L("apBanner")}</b><div class="sm" style="opacity:.9">${L("apSub")}</div></div>
+    <button class="btn" onclick="navigate('app')"><i class="fa-solid fa-download"></i> ${L("apBannerBtn")}</button></div></div></section>`;
+}
+const _renderHome12 = renderHome;
+renderHome = function () {
+  const h = _renderHome12();
+  const i = h.indexOf("</section>");
+  return i >= 0 ? h.slice(0, i + 10) + appCtaBanner() + h.slice(i + 10) : appCtaBanner() + h;
+};
 
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
