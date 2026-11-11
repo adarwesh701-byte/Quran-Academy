@@ -113,6 +113,10 @@ label.l,.l{display:block;font-size:.8rem;font-weight:700;color:var(--muted);marg
 .hp{position:absolute;inset-inline-start:-9999px;width:0;height:0;overflow:hidden}
 fieldset{border:1px solid var(--line);border-radius:14px;padding:.8rem;margin:0;min-width:0}
 legend{padding-inline:.4rem;font-weight:800;color:var(--accent);font-size:.9rem}
+.bands{display:grid;gap:.5rem;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.bandbtn{border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:.55rem .4rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer}
+.bandbtn:hover{border-color:var(--accent)}
+.bandbtn[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .hour-grid{display:grid;gap:.4rem;grid-template-columns:repeat(auto-fill,minmax(75px,1fr));max-height:220px;overflow-y:auto;padding:.4rem;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .hourbtn{border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:.4rem;font:inherit;font-size:.75rem;font-weight:700;cursor:pointer;text-align:center}
 .hourbtn:hover{border-color:var(--accent)}
@@ -166,8 +170,8 @@ footer a:hover{color:var(--accent)}
 <noscript><p style="padding:2rem;text-align:center">يلزم تفعيل JavaScript لعرض هذا الموقع. / Please enable JavaScript.</p></noscript>
 <script>
 /* =====================================================================
-    ⚙️ الإعدادات — القسم القابل للتعديل
-    ===================================================================== */
+   ⚙️ الإعدادات — القسم القابل للتعديل
+   ===================================================================== */
 const CONFIG = {
   whatsapp: "201091121907",
   email: "",
@@ -201,7 +205,7 @@ const _r = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 const TEACHERS = [
   {
     id: "teacher-1", demo: true, tz: "Africa/Cairo",
-    name: { ar: "معلم المقامات والإجازات", en: "Maqamat & Ijaza Teacher", zh: " maqamat与ijaza教师", ru: "Преподаватель Макамат и Иджаза", ku: "Mamosteyê Maqamat û Îcazê", ms: "Pengajar Maqamat & Ijaza", id: "Pengajar Maqamat & Ijaza", tr: "Makam ve İcazet Eğitmeni", fr: "Enseignant Maqamat & Ijaza", de: "Maqamat & Ijaza Lehrer", es: "Profesor de Maqamat e Ijaza" },
+    name: { ar: "معلم المقامات والإجازات", en: "Maqamat & Ijaza Teacher", zh: "音调与ijaza教师", ru: "Преподаватель Макамат и Иджаза", ku: "Mamosteyê Maqamat û Îcazê", ms: "Pengajar Maqamat & Ijaza", id: "Pengajar Maqamat & Ijaza", tr: "Makam ve İcazet Eğitmeni", fr: "Enseignant Maqamat & Ijaza", de: "Maqamat & Ijaza Lehrer", es: "Profesor de Maqamat e Ijaza" },
     title: { ar: "مقامات وتلاوة وإجازات", en: "Maqamat, recitation & ijaza", zh: "音调、朗诵与ijaza", ru: "Макамат, чтение и иджаза", ku: "Maqamat, xwendin û îcazet", ms: "Maqamat, bacaan & ijaza", id: "Maqamat, tilawah & ijaza", tr: "Makamlar, kıraat ve icazet", fr: "Maqamat, recitation & ijaza", de: "Maqamat, Rezitation & Ijaza", es: "Maqamat, recitación e ijaza" },
     bio: { ar: "خبرة في الإجازات والمقامات وتجويد القرآن الكريم.", en: "Experience in ijazat, maqamat and Quran tajweed.", zh: "在ijaza、maqamat和古兰经tecvid方面经验丰富。", ru: "Опыт в иджазе, макамате и таджвиде Корана.", ku: "Tecrûbe di îcazet, maqamat û tecvîda Qur'anê de.", ms: "Pengalaman dalam ijaza, maqamat dan tajwid Al-Quran.", id: "Pengalaman dalam ijaza, maqamat dan tajweed Al-Quran.", tr: "İcazet, makam ve Kuran tecvidi alanında deneyim.", fr: "Expérience en ijazat, maqamat et tajweed du Coran.", de: "Erfahrung in Ijaza, Maqamat und Koran-Tajweed.", es: "Experiencia en ijazat, maqamat y tajweed del Corán." },
     tracks: ["ijaza", "maqamat", "tajweed", "hifz"], languages: ["ar", "en"],
@@ -224,7 +228,7 @@ const LIB = [
 ];
 
 /* =====================================================================
-    🌐 الترجمات الشاملة (تشمل العربية، الإنجليزية، الصينية، الروسية، الكردية، الملايوية، الإندونيسية، التركية، الفرنسية، الألمانية، الإسبانية)
+   🌐 الترجمات الشاملة (تشمل العربية، الإنجليزية، الصينية، الروسية، الكردية، الملايوية، الإندونيسية، التركية، الفرنسية، الألمانية، الإسبانية)
    ===================================================================== */
 const I18N = {
 ar: {
@@ -616,7 +620,7 @@ fr: {
     cta1: "Réserver un cours d'essai", cta2: "Parcourir les parcours", cta3: "Bibliothèque gratuite",
     points: ["Cours particuliers et collectifs en direct", "Horaires flexibles selon votre fuseau horaire", "Rapports de progression réguliers"] },
   sec: { tracks: "Parcours de l'Académie", tracksSub: "Choisissez le parcours adapté à votre niveau et objectif — cours d'essai disponible.", how: "Comment commencer ?", why: "Pourquoi nous choisir ?", teachers: "Nos enseignants experts",
-    testi: "Avis des étudiants", testiSoon: "Les avis apparaîtront ici après le lancement des premières promotions.", faq: "FAQ", ctaT: "Prêt à commencer ?", ctaD: "Réservez votre cours d'essai maintenant et nous vous trouverons l'enseignant idéal.",
+    testi: "Avis des étudiants", testiSoon: "Les avis apparaîtront ici après le lancement des premières promotions.", faq: "FAQ", ctaT: "Prêt à commencer ?", ctaD: "Réservez votre cours d'essai maintenant et nous vous trouverez l'enseignant idéal.",
     lib: "Commencer gratuitement", libSub: "Ressources gratuites dans chaque parcours avant de vous abonner." },
   how: [{ t: "Réserver un cours d'essai", d: "Choisissez votre parcours et un horaire adapté." }, { t: "Évaluation et jumelage", d: "Nous évaluons votre niveau et vous associons au meilleur enseignant." }, { t: "Démarrer votre planning", d: "Nous fixons vos sessions régulières et suivons vos progrès." }],
   why: [{ t: "Sanad authentique", d: "Apprentissage précis avec des enseignants spécialisés." }, { t: "Entraînement vocal pratique", d: "Application des maqamat avec correction directe." }, { t: "Flexibilité horaire", d: "Planning hebdomadaire adapté à votre fuseau horaire." }, { t: "Suivi continu", d: "Remarques post-cours et rapports périodiques." }],
@@ -748,7 +752,7 @@ es: {
 };
 
 /* =====================================================================
-    ⚙️ محرك التطبيق والذكاء الاصطناعي الخاص بالأكاديمية
+   ⚙️ محرك التطبيق والذكاء الاصطناعي الخاص بالأكاديمية
    ===================================================================== */
 let currentLang = localStorage.getItem('lang') || 'ar';
 let currentTheme = localStorage.getItem('theme') || 'dark';
