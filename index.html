@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v15";
+const UI_VERSION = "2026-11-12-v16";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -10481,6 +10481,382 @@ renderOwnerDash = function () {
   return h;
 };
 document.head.insertAdjacentHTML("beforeend", `<style>mark{background:#fde68a;color:#111;border-radius:3px;padding:0 2px}</style>`);
+
+/* ======================= v19: سلّم المقامات + آهات صوت بشري، طبقة صوتك، المشاهدات، آية لحد آية، الدفع والأرصدة زي Preply ======================= */
+Object.assign(UI.en, {
+  mqTitle: "Maqam ladders", mqSub: "Every maqam used in Quran recitation — main maqamat and their branches — with the qarar (tonic), the jawab (octave) and a synthesized human voice singing 'aah' on the ladder. Voice only, no instruments.",
+  mqFamily: "Family", mqQarar: "Qarar (tonic)", mqJawab: "Jawab (octave)", mqUse: "Often used for", mqBranches: "Branches", mqPlay: "Play", mqStop: "Stop", mqMale: "Male voice", mqFemale: "Female voice", mqMine: "My voice",
+  mqPatterns: ["Up & down the ladder", "Closing (qafla)", "Waves", "Jawab phrase", "Around the qarar", "Long aahs"], mqNew: "New aah (generated)", mqSpeed: "Speed", mqApprox: "Cents are approximate; quarter-tones vary between reciters and schools. Tap a step to hear it.",
+  mqDegree: "Degree", vrTitle: "Your voice range", vrSub: "Sing your lowest comfortable 'aah', then your highest. The aahs will then be sung at your own pitch for every maqam.", vrLow: "Record my lowest note", vrHigh: "Record my highest note",
+  vrListening: "Listening… hold an 'aah' for 3 seconds", vrResult: "Your range", vrQarar: "Your best qarar", vrNeed: "Record both notes first", vrPaid: "Aahs at your own voice pitch are a paid feature.", vrBuy: "Unlock for", vrOwnerPrice: "Price of 'aahs at your voice pitch'", vrSaved: "Saved ✓",
+  views: "views", ayFrom: "From ayah", ayTo: "To ayah", aySel: "Select", ayLoading: "Loading ayah pages…",
+  payCode: "Your payment code", payCodeHint: "Write this code in the transfer note (or send it with the receipt on WhatsApp) so your payment is matched automatically.", payWaCode: "Send the receipt on WhatsApp", payProof: "Upload a screenshot of the transfer", payProofOk: "Receipt uploaded ✓ — we'll confirm shortly.", payPaypalAuto: "Pay instantly with PayPal / card", payPaypalOk: "Payment confirmed ✓ — lessons were added to your balance.", payOr: "or pay manually",
+  ppTitle: "PayPal automatic payments", ppHint: "Payments made with this button are confirmed automatically and the lessons are added straight away.", ppClient: "Client ID", ppSecret: "Secret (stays private on the server)", ppMode: "Mode", ppSave: "Save PayPal", ppStatus: "Status", ppReady: "Connected ✓", ppNot: "Not connected", ppGuide: "How to get these keys",
+  balLessons: "lessons", balMoney: "balance", poTitle: "Withdraw my earnings", poAvail: "Available to withdraw", poAmount: "Amount", poMethod: "Method", poDetails: "Account / number / email", poSend: "Request withdrawal", poSent: "Withdrawal request sent ✓", poMine: "My withdrawal requests",
+  poOwner: "Teachers' withdrawal requests", poPay: "Mark as paid", poReject: "Reject", poNone: "No requests.", ldTitle: "Where this balance came from", proof: "Receipt", payCodeShort: "Code"
+});
+Object.assign(UI.ar, {
+  mqTitle: "سلّم المقامات", mqSub: "كل المقامات اللي بتتقرا بيها القرآن — الأساسية وفروعها — بالقرار والجواب، وصوت بشري مُولّد بيعمل آهات على السلم. صوت بس، من غير آلات.",
+  mqFamily: "العائلة", mqQarar: "القرار", mqJawab: "الجواب", mqUse: "غالبًا بيُستخدم في", mqBranches: "الفروع", mqPlay: "شغّل", mqStop: "وقف", mqMale: "صوت رجالي", mqFemale: "صوت حريمي", mqMine: "بصوتي",
+  mqPatterns: ["طلوع ونزول السلم", "القفلة", "تمويجة", "جملة في الجواب", "حوالين القرار", "آهات طويلة"], mqNew: "آهة جديدة (متولدة)", mqSpeed: "السرعة", mqApprox: "السنتات تقريبية — أرباع التون بتختلف بين القراء والمدارس. دوس على أي درجة تسمعها.",
+  mqDegree: "الدرجة", vrTitle: "طبقة صوتك", vrSub: "اعمل أوطى آهة مريحة ليك، وبعدين أعلى آهة. الآهات هتتعمل بطبقة صوتك إنت في كل مقام.", vrLow: "سجّل أوطى نغمة", vrHigh: "سجّل أعلى نغمة",
+  vrListening: "بسمعك… اعمل آهة ثابتة 3 ثواني", vrResult: "مساحة صوتك", vrQarar: "أنسب قرار ليك", vrNeed: "سجّل النغمتين الأول", vrPaid: "الآهات بطبقة صوتك ميزة مدفوعة.", vrBuy: "افتحها بـ", vrOwnerPrice: "سعر \"الآهات بطبقة صوتك\"", vrSaved: "اتحفظ ✓",
+  views: "مشاهدة", ayFrom: "من آية", ayTo: "لحد آية", aySel: "حدد", ayLoading: "بنجيب صفحات الآيات…",
+  payCode: "كود الدفع بتاعك", payCodeHint: "اكتب الكود ده في ملاحظة التحويل (أو ابعته مع الإيصال على الواتساب) عشان الدفع يتطابق مع طلبك.", payWaCode: "ابعت الإيصال على الواتساب", payProof: "ارفع صورة التحويل", payProofOk: "الإيصال اترفع ✓ — هنأكد قريب.", payPaypalAuto: "ادفع فورًا بـ PayPal / الكارت", payPaypalOk: "الدفع اتأكد ✓ — الحصص نزلت في رصيدك.", payOr: "أو ادفع يدوي",
+  ppTitle: "الدفع الأوتوماتيك بـ PayPal", ppHint: "أي دفع بالزرار ده بيتأكد لوحده والحصص بتنزل للطالب على طول.", ppClient: "Client ID", ppSecret: "Secret (بيفضل سري على السيرفر)", ppMode: "الوضع", ppSave: "احفظ PayPal", ppStatus: "الحالة", ppReady: "متوصل ✓", ppNot: "مش متوصل", ppGuide: "إزاي تجيب المفاتيح دي",
+  balLessons: "حصة", balMoney: "رصيد", poTitle: "سحب أرباحي", poAvail: "المتاح للسحب", poAmount: "المبلغ", poMethod: "الطريقة", poDetails: "الحساب / الرقم / الإيميل", poSend: "اطلب السحب", poSent: "طلب السحب اتبعت ✓", poMine: "طلبات السحب بتاعتي",
+  poOwner: "طلبات سحب المعلمين", poPay: "اتحولت ✓", poReject: "رفض", poNone: "مفيش طلبات.", ldTitle: "الرصيد ده جه منين", proof: "الإيصال", payCodeShort: "الكود"
+});
+Object.assign(UI.en.nkT, { payout_request: "💸 {name} asked to withdraw {amount} {currency}" });
+Object.assign(UI.ar.nkT, { payout_request: "💸 {name} طالب يسحب {amount} {currency}" });
+
+/* ---------- 1) بيانات المقامات ---------- */
+// sc = درجات السلم بالسنت من القرار، tonic = مكان القرار بالسنت من الرست (دو)
+const MQ = [
+  { id: "rast", ar: "رست", en: "Rast", fam: "rast", tonic: 0, sc: [0, 200, 350, 500, 700, 900, 1050, 1200], use: "آيات الأحكام والتشريع والقصص — مقام مهيب ومستقر", note: "في النزول السابعة غالبًا بتبقى عجم بدل الأوج" },
+  { id: "suznak", ar: "سوزناك", en: "Suznak", fam: "rast", tonic: 0, sc: [0, 200, 350, 500, 700, 800, 1100, 1200], use: "تلوين الرست بلمسة حجاز في العلوي" },
+  { id: "nairuz", ar: "نيروز", en: "Nairuz", fam: "rast", tonic: 0, sc: [0, 200, 350, 500, 700, 850, 1000, 1200], use: "رست مع جنس بياتي على النوا" },
+  { id: "mahur", ar: "ماهور", en: "Mahur", fam: "rast", tonic: 0, sc: [0, 200, 350, 500, 700, 900, 1100, 1200], use: "رست بسابعة ماهور — مشرق" },
+  { id: "yakah", ar: "يكاه", en: "Yakah", fam: "rast", tonic: -500, sc: [0, 200, 350, 500, 700, 900, 1050, 1200], use: "رست من قرار واطي (اليكاه)" },
+  { id: "bayati", ar: "بياتي", en: "Bayati", fam: "bayati", tonic: 200, sc: [0, 150, 300, 500, 700, 800, 1000, 1200], use: "الافتتاح والقفلة — خاشع ومريح، أشهر مقام في التلاوة" },
+  { id: "husseini", ar: "حسيني", en: "Husseini", fam: "bayati", tonic: 200, sc: [0, 150, 300, 500, 700, 850, 1000, 1200], use: "بياتي بجنس بياتي على الحسيني في العلوي" },
+  { id: "shuri", ar: "بياتي شوري", en: "Bayati Shuri", fam: "bayati", tonic: 200, sc: [0, 150, 300, 500, 600, 900, 1000, 1200], use: "بياتي مع حجاز على النوا — شجن وتأثر" },
+  { id: "saba", ar: "صبا", en: "Saba", fam: "saba", tonic: 200, sc: [0, 150, 300, 400, 700, 800, 1000, 1100], use: "آيات الحزن والوعيد والتذكير بالموت", note: "الصبا ملوش جواب ثابت — الدرجة الثامنة بتنزل نص تون" },
+  { id: "zamzam", ar: "صبا زمزم", en: "Saba Zamzam", fam: "saba", tonic: 200, sc: [0, 100, 300, 400, 700, 800, 1000, 1100], use: "صبا بثانية كرد — حزن أعمق" },
+  { id: "hijaz", ar: "حجاز", en: "Hijaz", fam: "hijaz", tonic: 200, sc: [0, 100, 400, 500, 700, 800, 1000, 1200], use: "الدعاء والآخرة والمواقف الروحانية" },
+  { id: "hijazkar", ar: "حجاز كار", en: "Hijazkar", fam: "hijaz", tonic: 0, sc: [0, 100, 400, 500, 700, 800, 1100, 1200], use: "حجاز من قرار الرست — مهيب" },
+  { id: "shadaraban", ar: "شد عربان", en: "Shad Araban", fam: "hijaz", tonic: -500, sc: [0, 100, 400, 500, 700, 800, 1100, 1200], use: "حجاز كار من قرار اليكاه" },
+  { id: "zanjaran", ar: "زنجران", en: "Zanjaran", fam: "hijaz", tonic: 0, sc: [0, 100, 400, 500, 700, 900, 1000, 1200], use: "حجاز مع عجم على الجهاركاه" },
+  { id: "hijazkarkurd", ar: "حجاز كار كرد", en: "Hijazkar Kurd", fam: "hijaz", tonic: 0, sc: [0, 100, 300, 500, 700, 800, 1000, 1200], use: "كرد من قرار الرست" },
+  { id: "nahawand", ar: "نهاوند", en: "Nahawand", fam: "nahawand", tonic: 0, sc: [0, 200, 300, 500, 700, 800, 1100, 1200], use: "القصص والمواقف العاطفية — رقيق", note: "في النزول السابعة بتبقى عجم" },
+  { id: "murassa", ar: "نهاوند مرصّع", en: "Nahawand Murassa", fam: "nahawand", tonic: 0, sc: [0, 200, 300, 500, 600, 900, 1000, 1200], use: "نهاوند مع حجاز على الجهاركاه" },
+  { id: "nakriz", ar: "نكريز", en: "Nakriz", fam: "nahawand", tonic: 0, sc: [0, 200, 300, 600, 700, 900, 1000, 1200], use: "نهاوند برابعة مرفوعة — شجن" },
+  { id: "farahfaza", ar: "فرحفزا", en: "Farahfaza", fam: "nahawand", tonic: -500, sc: [0, 200, 300, 500, 700, 800, 1000, 1200], use: "نهاوند من قرار اليكاه" },
+  { id: "sikah", ar: "سيكاه", en: "Sikah", fam: "sikah", tonic: 350, sc: [0, 150, 350, 550, 700, 850, 1050, 1200], use: "آيات الوصف والقصص — شجي" },
+  { id: "huzam", ar: "هزام", en: "Huzam", fam: "sikah", tonic: 350, sc: [0, 150, 350, 450, 750, 850, 1050, 1200], use: "سيكاه مع حجاز على النوا — تأثر وخشوع" },
+  { id: "iraq", ar: "عراق", en: "Iraq", fam: "sikah", tonic: -150, sc: [0, 150, 350, 500, 650, 850, 1050, 1200], use: "سيكاه من قرار العراق (واطي)" },
+  { id: "rahat", ar: "راحة الأرواح", en: "Rahat al-Arwah", fam: "sikah", tonic: -150, sc: [0, 150, 350, 450, 750, 850, 1050, 1200], use: "هزام من قرار العراق" },
+  { id: "ajam", ar: "عجم", en: "Ajam", fam: "ajam", tonic: -200, sc: [0, 200, 400, 500, 700, 900, 1100, 1200], use: "آيات البشرى والجنة — مُشرق" },
+  { id: "jiharkah", ar: "جهاركاه", en: "Jiharkah", fam: "ajam", tonic: 500, sc: [0, 200, 400, 500, 700, 900, 1050, 1200], use: "عجم بسابعة أوج — من قرار الجهاركاه" },
+  { id: "kurd", ar: "كرد", en: "Kurd", fam: "kurd", tonic: 200, sc: [0, 100, 300, 500, 700, 800, 1000, 1200], use: "رقيق وقريب من البياتي — للتلوين" },
+  { id: "lami", ar: "لامي", en: "Lami", fam: "kurd", tonic: 200, sc: [0, 100, 300, 500, 600, 800, 1000, 1200], use: "كرد بخامسة ناقصة" },
+  { id: "atharkurd", ar: "أثر كرد", en: "Athar Kurd", fam: "kurd", tonic: 0, sc: [0, 100, 300, 600, 700, 800, 1100, 1200], use: "كرد مع نكريز — قوي التأثير" }
+];
+const MQ_FAMS = ["bayati", "saba", "hijaz", "nahawand", "rast", "sikah", "ajam", "kurd"];
+const NOTE_NAMES = [[-700, "قرار حصار?"], [-500, "يكاه"], [-400, "قرار حصار"], [-300, "عشيران"], [-200, "عجم عشيران"], [-150, "عراق"], [-100, "كوشت"], [0, "رست"], [100, "زيركولاه"], [150, "تيك زيركولاه"], [200, "دوكاه"], [300, "كرد"], [350, "سيكاه"], [400, "بوسليك"], [450, "تيك بوسليك"], [500, "جهاركاه"], [550, "تيك جهاركاه"], [600, "حجاز"], [650, "تيك حجاز"], [700, "نوا"], [750, "تيك نوا"], [800, "حصار"], [850, "تيك حصار"], [900, "حسيني"], [1000, "عجم"], [1050, "أوج"], [1100, "ماهور"], [1150, "تيك ماهور"], [1200, "كردان"], [1300, "شهناز"], [1350, "تيك شهناز"], [1400, "محيّر"], [1500, "سنبلة"], [1550, "بزرك"], [1600, "حسيني شوري"], [1700, "ماهوران"], [1900, "جواب النوا"], [2100, "جواب الحسيني"]];
+function noteName(abs) { let best = null, d = 1e9; NOTE_NAMES.forEach(([c, n]) => { if (Math.abs(c - abs) < d) { d = Math.abs(c - abs); best = n; } }); return d <= 30 ? best.replace("?", "") : ""; }
+function mqName(m) { return state.lang === "ar" ? m.ar : m.en; }
+const famName = (f) => { const m = MQ.find(x => x.id === f); return m ? mqName(m) : f; };
+
+/* ---------- 2) صوت بشري مُولّد (آهات) ---------- */
+const AAH = { ac: null, nodes: [], timer: null };
+function aahCtx() { if (!AAH.ac) AAH.ac = new (window.AudioContext || window.webkitAudioContext)(); if (AAH.ac.state === "suspended") AAH.ac.resume(); return AAH.ac; }
+function aahStop() { (AAH.nodes || []).forEach(n => { try { n.stop ? n.stop() : n.disconnect(); } catch (e) {} }); AAH.nodes = []; clearTimeout(AAH.timer); AAH.playing = null; document.querySelectorAll(".mqstep.on").forEach(e => e.classList.remove("on")); const b = document.getElementById("mqStopBtn"); if (b) b.style.display = "none"; }
+// notes: [[cents from tonic, seconds], ...]
+function aahSing(notes, tonicHz, voice, onStep) {
+  aahStop(); const ac = aahCtx(); const t0 = ac.currentTime + .08;
+  const female = voice === "f";
+  // مصدر شبه الحنجرة: توافقيات بتقل تدريجيًا
+  const N = 40, re = new Float32Array(N), im = new Float32Array(N); for (let k = 1; k < N; k++) { im[k] = Math.pow(k, -1.25) * (k % 2 ? 1 : .8); }
+  const osc = ac.createOscillator(); osc.setPeriodicWave(ac.createPeriodicWave(re, im));
+  const vib = ac.createOscillator(); vib.frequency.value = 5.2 + Math.random() * .5; const vibG = ac.createGain(); vibG.gain.value = 0; vib.connect(vibG); vibG.connect(osc.frequency);
+  const F = female ? [[850, 1, 90], [1220, .55, 100], [2810, .3, 130], [3800, .12, 170]] : [[730, 1, 80], [1090, .5, 90], [2440, .28, 120], [3350, .12, 150]];
+  const env = ac.createGain(); env.gain.value = 0; const out = ac.createGain(); out.gain.value = .9;
+  const comp = ac.createDynamicsCompressor(); out.connect(comp); comp.connect(ac.destination);
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = female ? 5200 : 4200; env.connect(lp); lp.connect(out);
+  F.forEach(([f, g, bw]) => { const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = f / bw; const gg = ac.createGain(); gg.gain.value = g * 3.2; osc.connect(bp); bp.connect(gg); gg.connect(env); });
+  // نَفَس خفيف
+  const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), ch = nb.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  const ns = ac.createBufferSource(); ns.buffer = nb; ns.loop = true; const nbp = ac.createBiquadFilter(); nbp.type = "bandpass"; nbp.frequency.value = female ? 1500 : 1200; nbp.Q.value = .8; const ng = ac.createGain(); ng.gain.value = .035; ns.connect(nbp); nbp.connect(ng); ng.connect(env);
+  let t = t0; const hz = (c) => tonicHz * Math.pow(2, c / 1200);
+  osc.frequency.setValueAtTime(hz(notes[0][0]) * .97, t);
+  env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(.55, t + .18);
+  const marks = [];
+  notes.forEach(([c, d], i) => {
+    const f = hz(c);
+    osc.frequency.setTargetAtTime(f, t, i ? .045 : .06);
+    vibG.gain.cancelScheduledValues(t); vibG.gain.setValueAtTime(0, t); vibG.gain.linearRampToValueAtTime(f * (d > .6 ? .014 : .006), t + Math.min(.5, d * .7));
+    if (i) { env.gain.setTargetAtTime(.42, t - .03, .02); env.gain.setTargetAtTime(.55, t + .04, .05); }
+    marks.push([t, c]); t += d;
+  });
+  env.gain.setTargetAtTime(0, t - .08, .18);
+  [osc, vib, ns].forEach(n => { n.start(t0); n.stop(t + 1.2); });
+  AAH.nodes = [osc, vib, ns]; AAH.playing = true;
+  const startWall = performance.now(); const offset = t0 - ac.currentTime;
+  const tick = () => { if (!AAH.playing) return; const now = ac.currentTime; const cur = marks.filter(m => m[0] <= now).pop(); if (cur && onStep) onStep(cur[1]); if (now < t + .3) AAH.timer = setTimeout(tick, 60); else aahStop(); };
+  tick(); const b = document.getElementById("mqStopBtn"); if (b) b.style.display = "";
+}
+function mqDeg(m, i) { const sc = m.sc, n = sc.length - 1; const o = Math.floor(i / n), k = ((i % n) + n) % n; return sc[k] + o * (sc[n] || 1200); }
+function mqPattern(m, p, speed) {
+  const s = 1 / (speed || 1), D = (x) => x * s;
+  const seq = {
+    0: [[0, .9], [1, .45], [2, .45], [3, .45], [4, .7], [5, .45], [6, .45], [7, 1.1], [6, .4], [5, .4], [4, .6], [3, .4], [2, .4], [1, .45], [0, 1.6]],
+    1: [[4, .9], [3, .5], [2, .5], [3, .35], [2, .35], [1, .6], [0, 2]],
+    2: [[0, .5], [1, .35], [0, .35], [2, .45], [1, .35], [3, .45], [2, .35], [4, .7], [3, .35], [2, .35], [1, .45], [0, 1.4]],
+    3: [[4, .6], [5, .4], [6, .4], [7, 1.2], [8, .5], [7, .5], [6, .4], [5, .4], [4, 1.3]],
+    4: [[0, .8], [-1, .5], [0, .5], [1, .4], [2, .6], [1, .4], [0, .4], [-1, .4], [0, 1.6]],
+    5: [[0, 2], [2, .7], [4, 2], [3, .6], [2, .6], [1, .7], [0, 2.4]]
+  }[p] || [];
+  return seq.map(([i, d]) => [mqDeg(m, i), D(d)]);
+}
+function mqGenerate(m, seed, speed) {
+  let x = seed || Date.now(); const rnd = () => { x = (x * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff; };
+  const out = [[0, .8]]; let i = 0; const peak = 4 + Math.floor(rnd() * 4); const len = 14 + Math.floor(rnd() * 8);
+  for (let k = 0; k < len; k++) {
+    const goingUp = k < len * .55; let step = rnd() < .75 ? 1 : 2; if (rnd() < .3) step = -1;
+    i += goingUp ? step : -Math.abs(step); i = Math.max(-1, Math.min(peak + 1, i));
+    if (!goingUp && i <= 0 && k < len - 1) i = 1;
+    const d = [.3, .4, .5, .7, 1.1][Math.floor(rnd() * 5)];
+    out.push([i, d]); if (rnd() < .18) { out.push([i + 1, .14]); out.push([i, .3]); }
+  }
+  out.push([1, .5]); out.push([0, 2]);
+  return out.map(([k, d]) => [mqDeg(m, k), d / (speed || 1)]);
+}
+
+/* ---------- 3) طبقة الصوت (مدفوعة) ---------- */
+function hasFeature(f) { const r = role(); if (r === "owner" || r === "teacher") return true; const now = Date.now(); return myAccess().some(a => a.scope === "feature:" + f && (!a.expires_at || new Date(a.expires_at).getTime() > now)); }
+async function buyFeature(f) {
+  if (!state.auth.user) return navigate("signup");
+  const { data, error } = await sb.rpc("create_feature_order", { p_feature: f }); if (error) return toast(error.message.includes("not_for_sale") ? "—" : error.message, true);
+  invalidate("myOrders"); state.payKind = "order"; state.payOrderId = data; navigate("pay");
+}
+async function vrRecord(which) {
+  const st = state.mqv = state.mqv || {}; st.busy = which; render();
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const ac = new (window.AudioContext || window.webkitAudioContext)(); const an = ac.createAnalyser(); an.fftSize = 4096; ac.createMediaStreamSource(s).connect(an);
+    const buf = new Float32Array(an.fftSize), got = []; const t0 = performance.now();
+    await new Promise(res => { const loop = () => { an.getFloatTimeDomainData(buf); const f = tnPitch(buf, ac.sampleRate); if (f > 60 && f < 1100) got.push(f); if (performance.now() - t0 < 3200) requestAnimationFrame(loop); else res(); }; loop(); });
+    s.getTracks().forEach(t => t.stop()); ac.close();
+    if (got.length < 8) throw new Error(L("vrListening"));
+    got.sort((a, b) => a - b); const med = got[Math.floor(got.length / 2)];
+    const p = state.auth.profile; const patch = which === "low" ? { voice_low: Math.round(med * 10) / 10 } : { voice_high: Math.round(med * 10) / 10 };
+    await sb.from("profiles").update(patch).eq("id", state.auth.user.id); Object.assign(p, patch); toast(L("vrSaved"));
+  } catch (e) { toast(e.message || rmMediaErr(e), true); }
+  st.busy = null; render();
+}
+function myQarar() { const p = (state.auth && state.auth.profile) || {}; const lo = +p.voice_low, hi = +p.voice_high; if (!(lo > 0 && hi > lo)) return null;
+  let q_ = lo * Math.pow(2, 3 / 12); if (q_ * 2 > hi * Math.pow(2, -1 / 12)) q_ = Math.max(lo * Math.pow(2, 1 / 12), hi / 2 * Math.pow(2, -1 / 12)); return q_; }
+function hzNote(f) { const n = Math.round(12 * Math.log2(f / 440)) + 57; return ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"][((n % 12) + 12) % 12] + Math.floor(n / 12); }
+
+/* ---------- 4) صفحة سلّم المقامات ---------- */
+PAGES16.push("maqamat");
+state.mq = state.mq || { id: "bayati", voice: "m", speed: 1, mine: false };
+function mqTonicHz(m) {
+  if (state.mq.mine && hasFeature("aah")) { const q_ = myQarar(); if (q_) return q_; }
+  const base = state.mq.voice === "f" ? 261.63 : 130.81; // رست (دو) للرجالي C3 وللحريمي C4
+  let f = base * Math.pow(2, m.tonic / 1200); if (state.mq.voice !== "f" && f > 175) f /= 2; if (state.mq.voice === "f" && f > 350) f /= 2; return f;
+}
+function renderMaqamatPage() {
+  const m = MQ.find(x => x.id === state.mq.id) || MQ[0]; const fams = MQ_FAMS.map(f => [f, MQ.filter(x => x.fam === f)]);
+  const tHz = mqTonicHz(m); const n = m.sc.length - 1;
+  const top = m.sc[n], H = 360, y = (c) => 20 + (1 - c / top) * (H - 40);
+  const steps = m.sc.map((c, i) => { const abs = m.tonic + c, nm = noteName(abs); const iv = i ? c - m.sc[i - 1] : 0; const isQ = i === 0, isJ = i === n;
+    return `<g class="mqstep" data-c="${c}" onclick="mqNote(${c})" style="cursor:pointer"><line x1="70" x2="330" y1="${y(c)}" y2="${y(c)}" stroke="${isQ || isJ ? "#10b981" : "#64748b"}" stroke-width="${isQ || isJ ? 4 : 2}" stroke-linecap="round"/>
+      <circle cx="70" cy="${y(c)}" r="13" fill="${isQ || isJ ? "#10b981" : "#334155"}"/><text x="70" y="${y(c) + 4.5}" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">${isJ ? 8 : i + 1}</text>
+      <text x="345" y="${y(c) + 5}" fill="currentColor" font-size="14" font-weight="700">${esc(nm || "")}${isQ ? " · " + L("mqQarar") : isJ ? " · " + L("mqJawab") : ""}</text>
+      ${i ? `<text x="200" y="${(y(c) + y(m.sc[i - 1])) / 2 + 4}" text-anchor="middle" fill="#94a3b8" font-size="11">${iv === 100 ? "½" : iv === 150 ? "¾" : iv === 200 ? "1" : iv === 250 ? "1¼" : iv === 300 ? "1½" : iv === 50 ? "¼" : (iv / 200).toFixed(2)} · ${iv}¢</text>` : ""}</g>`; }).join("");
+  const fullAccess = hasFeature("aah"); const q_ = myQarar(); const pr = (setv("features", {}) || {}).aah || {};
+  const vr = !state.auth.user ? "" : `<div class="card" style="margin-top:1rem"><h3>🎤 ${L("vrTitle")} ${fullAccess ? "" : "🔒"}</h3><p class="sm muted" style="margin:.3rem 0 .8rem">${L("vrSub")}</p>
+    ${fullAccess ? `<div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn btn-o" ${state.mqv && state.mqv.busy ? "disabled" : ""} onclick="vrRecord('low')">⬇️ ${state.mqv && state.mqv.busy === "low" ? L("vrListening") : L("vrLow")}</button><button class="btn btn-o" ${state.mqv && state.mqv.busy ? "disabled" : ""} onclick="vrRecord('high')">⬆️ ${state.mqv && state.mqv.busy === "high" ? L("vrListening") : L("vrHigh")}</button></div>
+      ${q_ ? `<div class="kv" style="margin-top:.6rem"><span>${L("vrResult")}</span><b dir="ltr">${hzNote(+state.auth.profile.voice_low)} – ${hzNote(+state.auth.profile.voice_high)}</b></div><div class="kv"><span>${L("vrQarar")}</span><b dir="ltr">${hzNote(q_)} · ${q_.toFixed(0)} Hz</b></div>` : `<p class="xs muted" style="margin-top:.5rem">${L("vrNeed")}</p>`}`
+    : `<p class="sm">${L("vrPaid")}</p>${+pr.price > 0 ? `<button class="btn btn-p" style="margin-top:.6rem" onclick="buyFeature('aah')">🔓 ${L("vrBuy")} ${esc(money(pr.price, setv("currency", "USD")))}</button>` : ""}`}</div>`;
+  return pageWrap("🎼", L("mqTitle"), L("mqSub"), `<div class="mqfams">${fams.map(([f, list]) => `<div class="mqfam"><b class="xs muted">${esc(famName(f))}</b><div class="row" style="gap:.3rem;flex-wrap:wrap;margin-top:.25rem">${list.map(x => `<button class="chip ${x.id === m.id ? "on" : ""}" onclick="aahStop();state.mq.id='${x.id}';render()">${esc(mqName(x))}</button>`).join("")}</div></div>`).join("")}</div>
+    <div class="grid g2" style="align-items:start;margin-top:1rem">
+      <div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><h2 style="margin:0">🎼 ${esc(mqName(m))}</h2><span class="badge">${L("mqFamily")}: ${esc(famName(m.fam))}</span></div>
+        <svg viewBox="0 0 520 ${H}" width="100%" style="margin-top:.6rem;direction:ltr">${steps}</svg>
+        <div class="kv"><span>${L("mqQarar")}</span><b>${esc(noteName(m.tonic) || "")} <span class="xs muted" dir="ltr">${hzNote(tHz)}</span></b></div>
+        <div class="kv"><span>${L("mqJawab")}</span><b>${esc(noteName(m.tonic + m.sc[n]) || "")} <span class="xs muted" dir="ltr">${hzNote(tHz * Math.pow(2, m.sc[n] / 1200))}</span></b></div>
+        <div class="kv"><span>${L("mqUse")}</span><span class="sm">${esc(m.use || "")}</span></div>${m.note ? `<p class="xs muted" style="margin-top:.4rem">ℹ️ ${esc(m.note)}</p>` : ""}
+        <p class="xs muted" style="margin-top:.6rem">${L("mqApprox")}</p></div>
+      <div><div class="card"><h3 style="margin-bottom:.6rem">🗣️ آهات</h3>
+        <div class="row" style="gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">${[["m", "mqMale"], ["f", "mqFemale"]].map(([v, l]) => `<button class="chip ${state.mq.voice === v && !state.mq.mine ? "on" : ""}" onclick="state.mq.voice='${v}';state.mq.mine=false;render()">${L(l)}</button>`).join("")}
+          ${state.auth.user ? `<button class="chip ${state.mq.mine ? "on" : ""}" onclick="${fullAccess && q_ ? "state.mq.mine=true;render()" : "toast(L('" + (fullAccess ? "vrNeed" : "vrPaid") + "'),true)"}">🎤 ${L("mqMine")} ${fullAccess ? "" : "🔒"}</button>` : ""}</div>
+        <label class="l">${L("mqSpeed")}</label><input type="range" min="0.6" max="1.6" step="0.1" value="${state.mq.speed}" oninput="state.mq.speed=+this.value" style="width:100%">
+        <div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.6rem">${L("mqPatterns").map((p, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="mqPlay(${i})">▶ ${esc(p)}</button>`).join("")}
+          <button class="btn btn-p" onclick="mqPlay('gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" id="mqStopBtn" style="display:none;color:var(--danger)" onclick="aahStop()">⏹ ${L("mqStop")}</button></div></div>${vr}</div></div>`, 1200);
+}
+function mqHighlight(c) { document.querySelectorAll(".mqstep").forEach(e => { const v = +e.dataset.c; e.classList.toggle("on", Math.abs(((c % 1200) + 1200) % 1200 - v) < 1 || (c === 1200 && v === 1200)); }); }
+function mqPlay(p) { const m = MQ.find(x => x.id === state.mq.id); const notes = p === "gen" ? mqGenerate(m, Date.now(), state.mq.speed) : mqPattern(m, p, state.mq.speed); aahSing(notes, mqTonicHz(m), state.mq.voice, mqHighlight); }
+function mqNote(c) { const m = MQ.find(x => x.id === state.mq.id); aahSing([[c, 1.4]], mqTonicHz(m), state.mq.voice, mqHighlight); }
+document.head.insertAdjacentHTML("beforeend", `<style>.mqfams{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem}.mqfam{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.6rem .7rem}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:.3rem .7rem;font:600 .85rem Tajawal,sans-serif;cursor:pointer}.chip.on{background:var(--accent);color:var(--accent-fg,#fff);border-color:var(--accent)}
+.mqstep.on line{stroke:#f59e0b!important;stroke-width:6!important}.mqstep.on circle{fill:#f59e0b!important}</style>`);
+const _render19 = render;
+render = function () {
+  if (state.route === "maqamat") {
+    if (RM.key || rmEl("rmRoot")) roomTeardown(); const app = document.getElementById("app"); if (!app) return;
+    let body; try { body = renderMaqamatPage(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; }
+    app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); return;
+  }
+  if (AAH.playing) aahStop();
+  return _render19();
+};
+const _renderToolsPage19 = renderToolsPage;
+renderToolsPage = function () { return _renderToolsPage19().replace(`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">`, `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))"><a href="#" class="card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:.4rem;border-color:var(--accent)" onclick="go16('maqamat');return false;"><div style="font-size:2.2rem">🎼</div><b style="font-size:1.1rem">${esc(L("mqTitle"))}</b><span class="sm muted">${esc(L("mqSub"))}</span></a>`); };
+
+/* ---------- 5) المشاهدات ---------- */
+function viewOnce(kind, id) { let a = ""; try { a = localStorage.getItem("itqan_vid") || ""; if (!a) { a = Math.random().toString(36).slice(2); localStorage.setItem("itqan_vid", a); } } catch (e) {} sb.rpc("content_view", { p_kind: kind, p_id: id, p_anon: a }).then(() => {}, () => {}); }
+const _openContent19 = openContent; openContent = function (id) { viewOnce("content", id); return _openContent19.apply(this, arguments); };
+const _openSecure19 = openSecure; openSecure = function (id) { viewOnce("content", id); return _openSecure19.apply(this, arguments); };
+const _svOpenShowcase19 = svOpenShowcase; svOpenShowcase = function (id) { viewOnce("showcase", id); return _svOpenShowcase19.apply(this, arguments); };
+const _contentCard19 = contentCard;
+contentCard = function (c, manage) { const h = _contentCard19(c, manage); return c.views ? h.replace(/(<span class="badge">[^<]*<\/span>)/, `$1<span class="badge">👁 ${c.views} ${L("views")}</span>`) : h; };
+const _showcaseCard19 = showcaseCard;
+showcaseCard = function (p, manage) { const h = _showcaseCard19(p, manage); return p.views ? h.replace(/(<span class="badge[^"]*">)/, `<span class="badge">👁 ${p.views}</span>$1`) : h; };
+
+/* ---------- 6) خريطة الحفظ: سورة من آية لحد آية ---------- */
+const _renderHifzPage19 = renderHifzPage;
+renderHifzPage = function () {
+  const h = _renderHifzPage19();
+  return h.replace(/(<select class="in" style="width:auto" onchange="if\(this\.value!==''\)hzSelRange\('s',\+this\.value\);this\.value=''">)/, `<span class="row" style="gap:.25rem;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:.2rem .4rem"><select class="in" id="hz_as" style="width:auto">${SURAHS.map((n, i) => `<option value="${i + 1}">${i + 1}. ${n}</option>`).join("")}</select><input class="in" id="hz_af" type="number" min="1" value="1" style="width:4.2rem" title="${L("ayFrom")}" placeholder="${L("ayFrom")}"><input class="in" id="hz_at" type="number" min="1" style="width:4.2rem" title="${L("ayTo")}" placeholder="${L("ayTo")}"><button class="btn btn-o" onclick="hzSelAyahs()">${L("aySel")}</button></span>$1`);
+};
+const AY_PAGES = {};
+async function hzSelAyahs() {
+  const s = +document.getElementById("hz_as").value, f = Math.max(1, +document.getElementById("hz_af").value || 1), tv = +document.getElementById("hz_at").value;
+  try {
+    if (!AY_PAGES[s]) { toast(L("ayLoading")); const d = await (await fetch(`https://api.alquran.cloud/v1/surah/${s}`)).json(); AY_PAGES[s] = (d.data.ayahs || []).map(a => a.page); }
+    const pg = AY_PAGES[s]; const t = Math.min(pg.length, tv || pg.length); const set = new Set(state.hz.sel);
+    for (let i = f - 1; i < t; i++) set.add(pg[i]); state.hz.sel = [...set]; render();
+  } catch (e) { toast(e.message || "—", true); }
+}
+
+/* ---------- 7) الدفع: كود + واتساب + إيصال + PayPal أوتوماتيك ---------- */
+const _paymentBlock19 = paymentBlock;
+paymentBlock = function (rec, kind) {
+  const h = _paymentBlock19(rec, kind); const done = rec.payment_status === "paid" || rec.payment_status === "waived"; if (done) return h;
+  const code = rec.pay_code || ("IQ-" + String(rec.id).slice(0, 5).toUpperCase());
+  const wa = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(`دفعت ${rec.amount} ${rec.currency || ""} — كود الدفع: ${code}`)}`;
+  const pp = setv("paypal", {}) || {};
+  const box = `<div class="card" style="background:var(--bg);margin-bottom:1rem;border-color:var(--accent)"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem"><span>🔑 ${L("payCode")}</span>
+      <b class="mono" style="font-size:1.4rem;letter-spacing:.12rem;cursor:pointer" dir="ltr" onclick="navigator.clipboard&&navigator.clipboard.writeText('${code}').then(()=>toast('✓'))">${code} 📋</b></div><p class="xs muted" style="margin-top:.3rem">${L("payCodeHint")}</p>
+      <div class="row" style="gap:.4rem;margin-top:.6rem;flex-wrap:wrap"><a class="btn btn-o" target="_blank" rel="noopener" href="${wa}"><i class="fa-brands fa-whatsapp"></i> ${L("payWaCode")}</a>
+      <label class="btn btn-o" style="cursor:pointer">📎 ${L("payProof")}<input type="file" accept="image/*,application/pdf" style="display:none" onchange="payProof('${kind === "order" ? "order" : "booking"}','${rec.id}',this.files[0])"></label>${rec.proof_path ? `<span class="badge badge-a">✓ ${L("proof")}</span>` : ""}</div></div>`;
+  const ppBox = pp.clientId && (rec.currency || "USD") !== "EGP" ? `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.5rem">⚡ ${L("payPaypalAuto")}</h3><div id="ppBtns_${rec.id}" style="min-height:48px">${loadingBox()}</div><p class="xs muted" style="text-align:center;margin-top:.4rem">— ${L("payOr")} —</p></div>` : "";
+  if (ppBox) setTimeout(() => ppRender(rec, kind === "order" ? "order" : "booking"), 0);
+  return ppBox + box + h;
+};
+async function payProof(kind, id, f) {
+  if (!f) return; if (f.size > 8e6) return toast("8MB max", true);
+  const path = `${state.auth.user.id}/${kind}-${id}-${Date.now()}.${(f.name.split(".").pop() || "jpg").toLowerCase()}`;
+  const u = await sb.storage.from("payproofs").upload(path, f, { contentType: f.type }); if (u.error) return toast(u.error.message, true);
+  const { error } = await sb.rpc("set_payment_proof", { p_kind: kind, p_id: id, p_path: path }); if (error) return toast(error.message, true);
+  invalidate("myOrders", "myBookings"); toast(L("payProofOk")); render();
+}
+async function ppRender(rec, kind) {
+  const el = document.getElementById("ppBtns_" + rec.id); if (!el || el.dataset.done) return; el.dataset.done = "1";
+  const pp = setv("paypal", {}) || {}; const cur = (rec.currency || "USD").toUpperCase();
+  try {
+    const src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(pp.clientId)}&currency=${cur}&intent=capture`;
+    if (!window.paypal || window.__ppSrc !== src) { document.querySelectorAll('script[src^="https://www.paypal.com/sdk/js"]').forEach(s => s.remove()); window.paypal = undefined; await loadScriptOnce(src); window.__ppSrc = src; }
+    el.innerHTML = "";
+    window.paypal.Buttons({
+      style: { layout: "vertical", shape: "pill", label: "pay" },
+      createOrder: (d, actions) => actions.order.create({ purchase_units: [{ reference_id: rec.id, custom_id: rec.id, description: "Itqan Academy", amount: { currency_code: cur, value: (+rec.amount).toFixed(2) } }] }),
+      onApprove: async (d) => {
+        el.innerHTML = loadingBox();
+        const { data: s } = await sb.auth.getSession();
+        const r = await fetch(SB_URL + "/functions/v1/paypal-capture", { method: "POST", headers: { Authorization: "Bearer " + s.session.access_token, apikey: SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ kind, id: rec.id, paypal_order_id: d.orderID }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) { el.innerHTML = `<div class="err">${esc(j.error || "PayPal")}</div>`; return; }
+        confetti(2200); toast(L("payPaypalOk")); invalidate("myOrders", "myBookings", "balChip", "walletBal"); render();
+      },
+      onError: (e) => { el.innerHTML = `<div class="err">${esc(String(e && e.message || e))}</div>`; }
+    }).render(el);
+  } catch (e) { el.innerHTML = `<div class="xs muted">PayPal: ${esc(e.message || "")}</div>`; }
+}
+// الأونر: كود الدفع + الإيصال في جدول الطلبات
+const _ownerOrders19 = ownerOrders;
+ownerOrders = function (P) {
+  const h = _ownerOrders19(P); const o = state.data.ownerOrders; if (!Array.isArray(o) || !o.length) return h;
+  const parts = h.split("</td></tr>"); if (parts.length !== o.length + 1) return h;
+  return parts.map((p, i) => i < o.length ? p + `<div class="xs" style="margin-top:.3rem">${o[i].pay_code ? `<span class="badge mono">${esc(o[i].pay_code)}</span>` : ""}${o[i].proof_path ? ` <button class="btn btn-o" style="padding:.15rem .5rem" onclick="svOpen({title:'${L("proof")}',bucket:'payproofs',path:'${esc(o[i].proof_path)}'})">🧾 ${L("proof")}</button>` : ""}</div>` : p).join("</td></tr>");
+};
+// إعدادات PayPal + سعر الآهات
+function paypalSettingsCard() {
+  const st = useData("ppStatus", async () => { const { data } = await sb.rpc("owner_paypal_status"); return [data || {}]; });
+  const s = Array.isArray(st) ? st[0] : {}; const d = settingsDraft(); d.features = d.features || {}; d.features.aah = d.features.aah || {};
+  return `<div class="card" style="margin-bottom:1rem"><h3>⚡ ${L("ppTitle")}</h3><p class="sm muted" style="margin:.3rem 0 .8rem">${L("ppHint")}</p>
+    <div class="kv"><span>${L("ppStatus")}</span><b style="color:${s.client_id && s.has_secret ? "var(--accent)" : "var(--danger)"}">${s.client_id && s.has_secret ? L("ppReady") + " (" + esc(s.mode || "") + ")" : L("ppNot")}</b></div>
+    <div class="fgrid" style="margin-top:.5rem"><div><label class="l">${L("ppClient")}</label><input class="in" id="pp_c" dir="ltr" value="${esc(s.client_id || "")}"></div>
+      <div><label class="l">${L("ppSecret")}</label><input class="in" id="pp_s" dir="ltr" type="password" autocomplete="off" placeholder="${s.has_secret ? "••••••••" : ""}"></div>
+      <div><label class="l">${L("ppMode")}</label><select class="in" id="pp_m"><option value="sandbox" ${s.mode !== "live" ? "selected" : ""}>Sandbox (تجربة)</option><option value="live" ${s.mode === "live" ? "selected" : ""}>Live (حقيقي)</option></select></div></div>
+    <button class="btn btn-p" style="margin-top:.6rem" onclick="savePaypal()">${L("ppSave")}</button></div>
+    <div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.6rem">🎤 ${L("vrOwnerPrice")}</h3><div class="fgrid"><div><label class="l">${L("price")} (${esc(setv("currency", "USD"))})</label><input class="in" type="number" min="0" step="0.5" value="${esc(d.features.aah.price || "")}" oninput="sdSet('features.aah.price', +this.value)"></div>
+      <div><label class="l">⏳ days (فاضي = مدى الحياة)</label><input class="in" type="number" min="0" value="${esc(d.features.aah.days || "")}" oninput="sdSet('features.aah.days', this.value?+this.value:null)"></div></div><p class="xs muted" style="margin-top:.4rem">${L("setSaveAll")} ⬇️</p></div>`;
+}
+async function savePaypal() {
+  const c = document.getElementById("pp_c").value.trim(), s = document.getElementById("pp_s").value.trim(), m = document.getElementById("pp_m").value;
+  const { error } = await sb.rpc("owner_set_paypal", { p_client_id: c, p_secret: s, p_mode: m }); if (error) return toast(error.message, true);
+  sdSet("paypal", { clientId: c, mode: m }); await saveSettings(); invalidate("ppStatus"); toast(L("saved")); render();
+}
+const _ownerSettings19 = ownerSettings;
+ownerSettings = function () { const h = _ownerSettings19(); const i = h.indexOf(`<h3 style="margin-bottom:.8rem">💳 ${L("payMethodsMgr")}</h3>`); if (i < 0) return paypalSettingsCard() + h; const j = h.lastIndexOf(`<div class="card"`, i); return h.slice(0, j) + paypalSettingsCard() + h.slice(j); };
+// عنوان طلب الميزة
+const _planText19 = planText;
+planText = function (p) { if (p && (p.feature || /^feature:/.test(p.id || ""))) return { t: "🎤 " + L("vrTitle") + " — آهات بطبقة صوتك", d: p.days ? p.days + " ✓" : "∞", f: [] }; return _planText19(p); };
+
+/* ---------- 8) الرصيد فوق للطالب والمعلم ---------- */
+function balChip() {
+  if (!state.auth.user) return ""; const r = role(); if (!r || r === "owner") return "";
+  const b = useData("balChip", async () => {
+    if (r === "teacher") { const { data } = await sb.rpc("teacher_balance", { p_teacher: state.auth.user.id }); return [{ t: +data || 0 }]; }
+    if (r === "student" || r === "parent") { const [c, w] = await Promise.all([sb.rpc("credit_balance", { p_student: state.auth.user.id }), sb.rpc("wallet_balance", { p_user: null })]); return [{ c: +c.data || 0, w: +w.data || 0 }]; }
+    return [{}];
+  });
+  const x = Array.isArray(b) ? b[0] : null; if (!x) return ""; const cur = setv("currency", "USD");
+  if (r === "teacher") return `<button class="btn btn-o balchip" onclick="state.dash.tab='dues';navigate('dashboard')" title="${L("poAvail")}">💰 ${esc(money(x.t, cur))}</button>`;
+  if (r === "student" || r === "parent") return `<button class="btn btn-o balchip" onclick="state.dash.tab='billing';navigate('dashboard')">🎫 ${Math.round(x.c / 2 * 10) / 10} ${L("balLessons")}${x.w > 0 ? ` · 💰 ${esc(money(x.w, cur))}` : ""}</button>`;
+  return "";
+}
+const _renderHeader19 = renderHeader;
+renderHeader = function () { const h = _renderHeader19(); const c = balChip(); return c ? h.replace(/(<button class="btn btn-o appdl")/, c + "$1") : h; };
+document.head.insertAdjacentHTML("beforeend", `<style>.balchip{padding:.4rem .7rem;font-size:.82rem;white-space:nowrap;border-color:var(--gold,#f59e0b);color:var(--gold,#f59e0b)}@media(max-width:820px){.balchip{padding:.3rem .5rem;font-size:.75rem}}</style>`);
+
+/* ---------- 9) سحب أرباح المعلم ---------- */
+const _teacherDues19 = teacherDues;
+teacherDues = function () {
+  const h = _teacherDues19(); const st = state.data.tStats; if (!st || st.__error) return h;
+  const reqs = useData("myPayReqs", () => q(sb.from("payout_requests").select("*").eq("teacher_id", state.auth.user.id).order("created_at", { ascending: false }).limit(20)));
+  const pend = Array.isArray(reqs) ? reqs.filter(r => r.status === "pending").reduce((a, r) => a + +r.amount, 0) : 0;
+  const avail = Math.max(0, +st.balance - pend), cur = st.currency || "USD"; const meta = (Array.isArray(state.data.myMeta) ? state.data.myMeta[0] : state.data.myMeta) || {};
+  const card = `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>💸 ${L("poTitle")}</h3><div class="kv" style="margin:.4rem 0"><span>${L("poAvail")}</span><b class="accent" style="font-size:1.3rem">${esc(money(avail, cur))}</b></div>
+    <form class="fgrid" style="align-items:end" onsubmit="event.preventDefault();poSend(${avail})"><div><label class="l">${L("poAmount")}</label><input class="in" id="po_a" type="number" min="1" step="0.01" max="${avail}" value="${avail ? avail.toFixed(2) : ""}" required></div>
+      <div><label class="l">${L("poMethod")}</label><select class="in" id="po_mm">${["Vodafone Cash", "InstaPay", "PayPal", "Bank transfer", "Wise", "Payoneer"].map(x => `<option ${meta.payout_method === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>
+      <div><label class="l">${L("poDetails")}</label><input class="in" id="po_dd" required value="${esc(meta.payout_details || "")}"></div><button class="btn btn-p" ${avail > 0 ? "" : "disabled"}>${L("poSend")}</button></form>
+    ${Array.isArray(reqs) && reqs.length ? `<h4 style="margin:.8rem 0 .3rem">${L("poMine")}</h4>${reqs.map(r => `<div class="kv"><span class="sm">${esc(fmtDT(r.created_at))} · ${esc(r.method || "")}${r.owner_note ? ` · <span class="muted">${esc(r.owner_note)}</span>` : ""}</span><span><b>${esc(money(r.amount, r.currency))}</b> <span class="badge ${r.status === "paid" ? "badge-a" : r.status === "pending" ? "badge-g" : ""}">${esc(stt(r.status))}</span></span></div>`).join("")}` : ""}</div>`;
+  return card + h;
+};
+async function poSend(avail) {
+  const a = +document.getElementById("po_a").value; if (!(a > 0) || a > avail + 1e-9) return toast(L("insufficient") || "—", true);
+  const { error } = await sb.rpc("teacher_request_payout", { p_amount: a, p_method: document.getElementById("po_mm").value, p_details: document.getElementById("po_dd").value.trim() });
+  if (error) return toast(error.message.includes("exceeds") ? (L("insufficient") || error.message) : error.message, true);
+  invalidate("myPayReqs", "tStats", "balChip"); toast(L("poSent")); render();
+}
+// الأونر: طلبات السحب + تفاصيل رصيد كل معلم
+function ownerPayoutsCard(P) {
+  const reqs = useData("ownerPayReqs", () => q(sb.from("payout_requests").select("*").order("created_at", { ascending: false }).limit(60)));
+  if (!Array.isArray(reqs)) return "";
+  const pend = reqs.filter(r => r.status === "pending");
+  return `<div class="card" style="margin-bottom:1rem;${pend.length ? "border-color:var(--gold,#f59e0b)" : ""}"><h3 style="margin-bottom:.6rem">💸 ${L("poOwner")} ${pend.length ? `<span class="nbadge" style="position:static;display:inline-flex">${pend.length}</span>` : ""}</h3>
+    ${!reqs.length ? `<p class="muted sm">${L("poNone")}</p>` : reqs.slice(0, 25).map(r => `<div style="padding:.55rem 0;border-bottom:1px solid var(--line)"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><b>${esc(personName(r.teacher_id, P.map))} — ${esc(money(r.amount, r.currency))}</b><span class="badge ${r.status === "paid" ? "badge-a" : r.status === "pending" ? "badge-g" : ""}">${esc(stt(r.status))}</span></div>
+      <div class="xs muted">${esc(fmtDT(r.created_at))} · ${esc(r.method || "")} · <span class="mono" dir="ltr">${esc(r.details || "")}</span></div>
+      ${r.status === "pending" ? `<div class="row" style="gap:.3rem;margin-top:.35rem"><button class="btn btn-p" style="padding:.3rem .7rem" onclick="poDecide('${r.id}',true)">✓ ${L("poPay")}</button><button class="btn btn-o" style="padding:.3rem .7rem" onclick="poDecide('${r.id}',false)">${L("poReject")}</button></div>` : ""}</div>`).join("")}</div>`;
+}
+async function poDecide(id, paid) {
+  const note = prompt(paid ? (L("finMethod") + " / ref") : L("notes"), ""); if (note === null) return;
+  const { error } = await sb.rpc("owner_decide_payout", { p_id: id, p_paid: paid, p_note: note || null }); if (error) return toast(error.message, true);
+  Object.keys(state.data).forEach(k => { if (k.startsWith("fin:") || k.startsWith("tStatsO:") || k.startsWith("tLedgerO:")) delete state.data[k]; }); invalidate("ownerPayReqs"); toast(L("saved")); render();
+}
+const _ownerReports19 = ownerReports;
+ownerReports = function (P) { return ownerPayoutsCard(P) + _ownerReports19(P); };
+const _teacherStatsPanel19 = teacherStatsPanel;
+teacherStatsPanel = function (tid) {
+  const h = _teacherStatsPanel19(tid);
+  const led = useData("tLedgerO:" + tid, () => q(sb.from("teacher_ledger").select("*, lessons(start_time,student_id,attendance)").eq("teacher_id", tid).order("created_at", { ascending: false }).limit(80)));
+  const P = peopleMap(); const kn = { lesson: L("earnLesson"), payout: L("earnPayout"), bonus: L("earnBonus"), adjust: L("earnAdjust") };
+  return h + `<div style="margin-top:.8rem"><b class="sm">🧾 ${L("ldTitle")}</b><div style="max-height:320px;overflow:auto;margin-top:.4rem">${!Array.isArray(led) ? loadingBox() : !led.length ? `<p class="muted sm">${L("none")}</p>` : led.map(x => `<div class="kv" style="align-items:center"><span class="xs"><b>${esc(kn[x.kind] || x.kind)}</b>${x.lessons ? ` · ${esc(fmtDT(x.lessons.start_time))} · ${esc(personName(x.lessons.student_id, P.map))}` : ""}${x.kind === "lesson" ? ` · ${esc(money(x.gross, x.currency))} − ${(+x.commission_pct).toFixed(0)}%` : ""}${x.method ? " · " + esc(x.method) : ""}${x.note ? " · " + esc(x.note) : ""}<br><span class="muted">${esc(fmtDT(x.created_at))}</span></span><b style="color:${+x.amount < 0 ? "var(--danger)" : "var(--accent)"}">${+x.amount > 0 ? "+" : ""}${esc(money(x.amount, x.currency))}</b></div>`).join("")}</div></div>`;
+};
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
