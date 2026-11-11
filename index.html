@@ -7,10 +7,10 @@
 <meta name="description" content="أكاديمية أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين ومتابعة شخصية وحصة تجريبية.">
 <meta name="theme-color" content="#0b0f19">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://quran-academy-nine-dusky.vercel.app/icons/og-image.png">
-<meta property="og:url" content="https://quran-academy-nine-dusky.vercel.app/">
+<meta property="og:image" content="https://itqan-maqamat-academy.vercel.app/icons/og-image.png">
+<meta property="og:url" content="https://itqan-maqamat-academy.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://quran-academy-nine-dusky.vercel.app/">
+<link rel="canonical" href="https://itqan-maqamat-academy.vercel.app/">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -18,7 +18,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="إتقان">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"EducationalOrganization","name":"Itqan Academy — أكاديمية إتقان","url":"https://quran-academy-nine-dusky.vercel.app/","logo":"https://quran-academy-nine-dusky.vercel.app/icons/icon-512.png","description":"Online academy for Quran, Tajweed, vocal Maqamat, Ijaza and Arabic language.","availableLanguage":["ar","en","fr","de","es","tr","id","ms","ru","zh","ku"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"EducationalOrganization","name":"Itqan Academy — أكاديمية إتقان","url":"https://itqan-maqamat-academy.vercel.app/","logo":"https://itqan-maqamat-academy.vercel.app/icons/icon-512.png","description":"Online academy for Quran, Tajweed, vocal Maqamat, Ijaza and Arabic language.","availableLanguage":["ar","en","fr","de","es","tr","id","ms","ru","zh","ku"]}</script>
 <meta property="og:title" content="أكاديمية إتقان">
 <meta property="og:description" content="القرآن والتجويد والمقامات والإجازات واللغة العربية أونلاين.">
 <script>
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v14";
+const UI_VERSION = "2026-11-11-v15";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -5774,7 +5774,7 @@ Object.assign(UI.ar, {
   rm_myGroups: "حصصي الجماعية"
 });
 const RL = (k) => L("rm_" + k);
-function roomHref(kind, id) { return (location.origin && location.origin.startsWith("http") ? location.origin : "https://quran-academy-nine-dusky.vercel.app") + "/#/room/" + kind + "/" + id; }
+function roomHref(kind, id) { return (location.origin && location.origin.startsWith("http") ? location.origin : "https://itqan-maqamat-academy.vercel.app") + "/#/room/" + kind + "/" + id; }
 
 document.head.insertAdjacentHTML("beforeend", `<style id="rmCss">
 .rm{position:fixed;inset:0;z-index:5000;background:#0b1120;color:#e5e7eb;display:flex;flex-direction:column;font-family:Tajawal,system-ui,sans-serif}
@@ -7944,7 +7944,7 @@ function renderClassroomPage() {
 
 /* ---------- صفحة التطبيق ---------- */
 function renderAppPage() {
-  const url = location.origin && location.origin.startsWith("http") ? location.origin + "/#/home" : "https://quran-academy-nine-dusky.vercel.app/#/home";
+  const url = location.origin && location.origin.startsWith("http") ? location.origin + "/#/home" : "https://itqan-maqamat-academy.vercel.app/#/home";
   const qr = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=" + encodeURIComponent(url);
   const canInstall = !!deferredInstall;
   const card = (ic, t, s) => `<div class="card"><h3 style="margin-bottom:.4rem">${ic} ${t}</h3><p class="sm muted">${s}</p></div>`;
@@ -8190,7 +8190,7 @@ installApp12 = async function () {
 };
 renderAppPage = function () {
   const os = detectOS(), info = OS_INFO[os];
-  const url = location.origin && location.origin.startsWith("http") ? location.origin + "/#/app" : "https://quran-academy-nine-dusky.vercel.app/#/app";
+  const url = location.origin && location.origin.startsWith("http") ? location.origin + "/#/app" : "https://itqan-maqamat-academy.vercel.app/#/app";
   const qr = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=" + encodeURIComponent(url);
   const card = (k) => { const x = OS_INFO[k]; const me = k === os; return `<div class="card" style="${me ? "border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset" : ""}"><h3 style="margin-bottom:.4rem"><i class="${x.ic}"></i> ${esc(x.n())} ${me ? `<span class="badge badge-a">${L("apDetected")}</span>` : ""}</h3><p class="sm muted">${esc(x.s())}</p></div>`; };
   const help = state.appHelp ? `<div class="notice ok" style="margin-top:.8rem"><b><i class="${OS_INFO[state.appHelp].ic}"></i> ${esc(OS_INFO[state.appHelp].n())}:</b> ${esc(OS_INFO[state.appHelp].s())}</div>` : "";
@@ -10267,6 +10267,220 @@ myReviewCard = function () {
   if (!ok[0]) return `<div class="card" style="margin-top:1.2rem"><h3>⭐ ${L("rvMine")}</h3><p class="sm muted" style="margin-top:.4rem">🔒 ${L("rvOnlyPaid")}</p></div>`;
   return _myReviewCard17().replace(L("rvMineHint"), L("rvMineHint2"));
 };
+
+/* ======================= v18: شجرة الحفظ (وصل لفين + شهادة لكل جزء)، مقام مجاني واحد، الألعاب بفلوس، دردشة تواصل، علامة مائية، بحث في كلام الحصص ======================= */
+Object.assign(UI.en, {
+  hzReach: "Where the student is now", hzLast: "Last memorized", hzCurJuz: "Current juz", hzCerts: "Juz certificates", hzCertHint: "A certificate is issued automatically, in the student's name, for every juz completed.", hzNoCert: "Complete a juz to earn its certificate 🏅", hzPage: "page",
+  tnFreeTitle: "Choose your free maqam", tnFreeHint: "Free accounts can try one maqam. Subscribers get all maqamat.", tnFreePick: "Make it my free maqam", tnLocked: "🔒 Subscribers only", tnUnlock: "Unlock all maqamat",
+  gmPaid: "Guess-the-maqam is for subscribers.", gmPaidHint: "Subscribe to unlock all maqam listening exercises and the weekly leaderboard.", seePlans: "See plans",
+  ctChat: "Chat with us here", ctChatHint: "Send us a message from the site — we'll reply as soon as possible.", ctName: "Your name", ctContact: "Phone or email (to reply to you)", ctMsg: "Your message", ctSent: "Your message was sent ✓ — we'll reply soon.", ctOpenChat: "Open chat with the academy",
+  ctOwner: "Messages from the contact page", ctDone: "Done", trSearch: "Search what was said…", trAll: "Search all lessons' speech", trNone: "No matching speech.", trTitle: "Lesson speech (transcript)", trRecent: "Recent lessons with speech", trLines: "lines"
+});
+Object.assign(UI.ar, {
+  hzReach: "الطالب وصل لفين", hzLast: "آخر حاجة اتحفظت", hzCurJuz: "الجزء الحالي", hzCerts: "شهادات الأجزاء", hzCertHint: "كل جزء الطالب يخلّصه بتطلعله شهادة باسمه تلقائي.", hzNoCert: "خلّص جزء عشان تاخد شهادته 🏅", hzPage: "صفحة",
+  tnFreeTitle: "اختار مقامك المجاني", tnFreeHint: "الحساب المجاني يجرب مقام واحد بس. المشتركين ليهم كل المقامات.", tnFreePick: "خليه مقامي المجاني", tnLocked: "🔒 للمشتركين بس", tnUnlock: "افتح كل المقامات",
+  gmPaid: "لعبة خمّن المقام للمشتركين بس.", gmPaidHint: "اشترك عشان تفتح كل تمارين سماع المقامات وترتيب الأسبوع.", seePlans: "شوف الباقات",
+  ctChat: "كلّمنا هنا على الموقع", ctChatHint: "ابعتلنا رسالة من الموقع — هنرد عليك في أقرب وقت.", ctName: "اسمك", ctContact: "موبايل أو إيميل (عشان نرد عليك)", ctMsg: "رسالتك", ctSent: "رسالتك وصلت ✓ — هنرد عليك قريب.", ctOpenChat: "افتح الدردشة مع الأكاديمية",
+  ctOwner: "رسائل صفحة تواصل معنا", ctDone: "تم", trSearch: "ابحث في الكلام اللي اتقال…", trAll: "ابحث في كلام كل الحصص", trNone: "مفيش كلام مطابق.", trTitle: "كلام الحصة (التفريغ)", trRecent: "حصص فيها كلام متسجل", trLines: "سطر"
+});
+Object.assign(UI.en.nkT, { juz_cert: "🏅 Certificate ready: Juz {juz} memorized!", contact_new: "📩 New message from the contact page ({name})" });
+Object.assign(UI.ar.nkT, { juz_cert: "🏅 شهادتك جاهزة: إتمام حفظ الجزء {juz}!", contact_new: "📩 رسالة جديدة من صفحة تواصل معنا ({name})" });
+
+function isSub18() {
+  const r = role(); if (r === "owner" || r === "teacher") return true; if (!state.auth.user) return false;
+  const s = useData("isSub18", async () => { const { data } = await sb.rpc("is_subscriber", { p_user: state.auth.user.id }); return [!!data]; });
+  return Array.isArray(s) ? s[0] : null;
+}
+
+/* ---------- 1) شجرة الحفظ: وصل لفين + شهادة لكل جزء ---------- */
+function hzSid() {
+  const r = role(); if (state.pageArg) return state.pageArg; if (r === "student") return state.auth.user.id;
+  if (r === "parent") { const l = state.data.children; return Array.isArray(l) && l[0] ? l[0].student_id : null; }
+  const P = peopleMap(); const s = P.list.find(p => p.role === "student"); return s ? s.id : null;
+}
+const _renderHifzPage18 = renderHifzPage;
+renderHifzPage = function () {
+  const h = _renderHifzPage18(); if (!state.auth.user) return h;
+  const sid = hzSid(); const rows = sid && state.data["hz:" + sid]; if (!Array.isArray(rows)) return h;
+  const certs = useData("hzCerts:" + sid, () => q(sb.from("certificates").select("id,juz,code,issued_at").eq("student_id", sid).not("juz", "is", null)));
+  const map = {}; rows.forEach(x => map[x.page] = x);
+  const memRows = rows.filter(x => x.strength >= 2).sort((a, b) => (b.updated_at || "").localeCompare(a.updated_at || ""));
+  const last = memRows[0];
+  const juzPct = JUZ_PAGE.map((_, j) => { const [a, b] = juzRange(j); let n = 0; for (let p = a; p <= b; p++) if (map[p] && map[p].strength >= 3) n++; return Math.round(n / (b - a + 1) * 100); });
+  const cj = last ? JUZ_PAGE.reduce((acc, s, j) => s <= last.page ? j : acc, 0) : null;
+  const cmap = {}; (Array.isArray(certs) ? certs : []).forEach(c => cmap[c.juz] = c);
+  const reach = `<div class="hzreach">${last ? `<div>📍 <b>${L("hzLast")}:</b> ${esc(SURAHS[surahOfPage(last.page)])} — ${L("hzPage")} ${last.page}</div><div>📘 <b>${L("hzCurJuz")}:</b> ${cj + 1} <span class="badge badge-a">${juzPct[cj]}%</span></div>` : `<div class="muted">${L("hzNoDue")}</div>`}</div>`;
+  const rings = `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.3rem">🏅 ${L("hzCerts")}</h3><p class="xs muted" style="margin-bottom:.8rem">${L("hzCertHint")}</p>
+    <div class="hzjuz">${juzPct.map((p, j) => { const c = cmap[j + 1]; return `<button class="hzj2 ${c ? "done" : ""} ${cj === j ? "cur" : ""}" style="--p:${p}" title="${L("khJuz")} ${j + 1} · ${p}%" ${c ? `onclick="navigate('cert','${c.id}')"` : ""}><span>${c ? "🏅" : j + 1}</span></button>`; }).join("")}</div>
+    ${Array.isArray(certs) && !certs.length ? `<p class="sm muted" style="margin-top:.6rem">${L("hzNoCert")}</p>` : ""}</div>`;
+  return h.replace(`<h3>${L("hzTree")}</h3>`, `<h3>${L("hzTree")}</h3><div class="xs muted" style="margin-top:.2rem">${L("hzReach")}</div>${reach}`)
+    .replace(/(<div class="card" style="position:sticky|<div class="card"><div class="row" style="gap:\.6rem;flex-wrap:wrap;margin:\.6rem 0 1rem">)/, rings + "$1");
+};
+document.head.insertAdjacentHTML("beforeend", `<style>
+.hzreach{display:flex;flex-direction:column;gap:.25rem;margin:.6rem 0;padding:.6rem .8rem;border-radius:12px;background:rgba(16,185,129,.08);font-size:.9rem;text-align:start}
+.hzjuz{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:.45rem}
+.hzj2{aspect-ratio:1;border-radius:50%;border:0;padding:3px;cursor:default;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--line) 0)}
+.hzj2 span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:var(--card);font-weight:800;font-size:.8rem;color:var(--fg)}
+.hzj2.done{background:conic-gradient(#f59e0b 100%,#f59e0b 0);cursor:pointer}.hzj2.done span{font-size:1.2rem}.hzj2.cur{box-shadow:0 0 0 2px #2563eb}
+.certai{background-size:cover;background-position:center;position:relative;padding:4.2rem 3.4rem;border:0}
+.certai::before{content:"";position:absolute;inset:11%;background:radial-gradient(ellipse at center,rgba(255,253,247,.94) 60%,rgba(255,253,247,.75));border-radius:24px}
+.certai>*{position:relative}.certjuz{display:table;margin:.5rem auto;padding:.35rem 1.1rem;border-radius:999px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;font-weight:800;font-size:1.1rem}
+@media(max-width:600px){.certai{padding:2.6rem 1.4rem}.certai::before{inset:7%}}
+</style>`);
+function certAiBg(c) {
+  const seed = (c.juz || 1) * 7 + 3;
+  const prompt = "ornate islamic certificate frame border, gold arabesque and emerald geometric pattern, elegant illuminated manuscript style, empty light cream center for text, symmetrical, high detail, no text";
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1400&height=1000&nologo=true&seed=${seed}`;
+}
+const _certHtml18 = certHtml;
+certHtml = function (c) {
+  const h = _certHtml18(c);
+  if (!c.design || !/^juz/.test(c.design)) return h;
+  return h.replace(`<div class="cert" dir=`, `<div class="cert certai" style="background-image:url('${certAiBg(c)}')" dir=`)
+    .replace(`<div class="certname">`, `<div class="certjuz">📖 ${esc(L("khJuz"))} ${c.juz}</div><div class="certname">`);
+};
+
+/* ---------- 2) مُوالف المقامات: مقام واحد مجاني ---------- */
+const _renderTunerPage18 = renderTunerPage;
+renderTunerPage = function () {
+  if (!state.auth.user) return pageWrap("🎙️", L("tnTitle"), L("tnSub"), needLogin("tuner"));
+  const sub = isSub18(); if (sub === null) return pageWrap("🎙️", L("tnTitle"), L("tnSub"), loadingBox());
+  if (sub) return _renderTunerPage18();
+  const fm = (state.auth.profile || {}).free_maqam;
+  if (!fm) return pageWrap("🎙️", L("tnTitle"), L("tnSub"), `<div class="card"><h3>🎁 ${L("tnFreeTitle")}</h3><p class="sm muted" style="margin:.3rem 0 1rem">${L("tnFreeHint")}</p>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem">${MAQAMS.map(m => `<button class="btn btn-o btn-lg" onclick="tnPickFree('${m}')">🎙️ ${esc(maqamName(m))}</button>`).join("")}</div></div>`);
+  TN.maqam = fm;
+  return _renderTunerPage18()
+    .replace(/<select class="in" onchange="TN\.maqam=this\.value;tnDrawLadder\(\)">[\s\S]*?<\/select>/, `<select class="in" onchange="if(this.value!=='${fm}'){this.value='${fm}';toast(L('tnLocked'),true)}">${MAQAMS.map(m => `<option value="${m}" ${m === fm ? "selected" : ""} ${m === fm ? "" : "disabled"}>${m === fm ? "🎁 " : "🔒 "}${esc(maqamName(m))}</option>`).join("")}</select><button class="btn btn-o" style="margin-top:.4rem;width:100%" onclick="navigate('pricing')">🔓 ${L("tnUnlock")}</button>`);
+};
+async function tnPickFree(m) {
+  if (!confirm(`${maqamName(m)} — ${L("tnFreePick")}?`)) return;
+  const { data, error } = await sb.rpc("pick_free_maqam", { p_maqam: m }); if (error) return toast(error.message, true);
+  if (state.auth.profile) state.auth.profile.free_maqam = data; TN.maqam = data; render();
+}
+
+/* ---------- 3) لعبة خمّن المقام للمشتركين ---------- */
+const _renderGamePage18 = renderGamePage;
+renderGamePage = function () {
+  if (!state.auth.user) return _renderGamePage18();
+  const sub = isSub18(); if (sub === null) return pageWrap("🎧", L("gmTitle"), L("gmSub"), loadingBox());
+  if (sub) return _renderGamePage18();
+  return pageWrap("🎧", L("gmTitle"), L("gmSub"), `<div class="card" style="text-align:center;padding:2.5rem 1rem"><div style="font-size:3.5rem">🔒🎧</div><h3 style="margin:.6rem 0">${L("gmPaid")}</h3><p class="muted sm" style="margin-bottom:1rem">${L("gmPaidHint")}</p><button class="btn btn-p btn-lg" onclick="navigate('pricing')">${L("seePlans")}</button></div>`);
+};
+// علامة القفل على الكارت في صفحة الأدوات
+const _renderToolsPage18 = renderToolsPage;
+renderToolsPage = function () { return _renderToolsPage18().replace(`<b style="font-size:1.1rem">${esc(L("gmTitle"))}</b>`, `<b style="font-size:1.1rem">${esc(L("gmTitle"))} 🔒</b>`).replace(`<b style="font-size:1.1rem">${esc(L("tnTitle"))}</b>`, `<b style="font-size:1.1rem">${esc(L("tnTitle"))} 🎁</b>`); };
+
+/* ---------- 4) من نحن: إنستجرام وتيك توك ---------- */
+const _renderAbout18 = renderAbout;
+renderAbout = function () { const s = socialHtml(true); return s ? _renderAbout18().replace(/(<\/p>\s*<\/div>\s*<\/section>\s*)$/, `</p><h3 style="margin-top:.5rem">${L("ftFollow")}</h3>${s}</div></section>`) : _renderAbout18(); };
+
+/* ---------- 5) تواصل معنا: دردشة على الموقع + واتساب ---------- */
+const _renderContact18 = renderContact;
+renderContact = function () {
+  const h = _renderContact18(); const u = state.auth.user;
+  let owner = null;
+  if (u) { const cs = useData("chatContacts", async () => { const { data, error } = await sb.rpc("my_chat_contacts"); if (error) throw error; return (data || []).sort((a, b) => (b.last_at || "").localeCompare(a.last_at || "")); }); owner = Array.isArray(cs) ? cs.find(c => c.role === "owner") : null; }
+  const p = (state.auth && state.auth.profile) || {};
+  const box = `<div class="card" style="margin-top:1.5rem;max-width:46rem;margin-inline:auto"><h3>💬 ${L("ctChat")}</h3><p class="sm muted" style="margin:.3rem 0 .9rem">${L("ctChatHint")}</p>
+    ${owner && role() !== "owner" ? `<button class="btn btn-p btn-lg" onclick="openChatWith('${owner.id}')">💬 ${L("ctOpenChat")}</button>` :
+    `<form style="display:flex;flex-direction:column;gap:.55rem" onsubmit="event.preventDefault();ctSend()"><div class="fgrid"><div><label class="l">${L("ctName")}</label><input class="in" id="ct_n" required maxlength="120" value="${esc(p.real_name || "")}"></div>
+      <div><label class="l">${L("ctContact")}</label><input class="in" id="ct_c" dir="ltr" maxlength="160" value="${esc(p.phone || p.email || (u && u.email) || "")}"></div></div>
+      <div><label class="l">${L("ctMsg")}</label><textarea class="in" id="ct_m" rows="4" required maxlength="3000"></textarea></div><button class="btn btn-p">${L("send")}</button></form>`}</div>`;
+  return h.replace(/<\/section>\s*$/, `<div class="wrap">${box}</div></section>`);
+};
+async function ctSend() {
+  const g = (x) => document.getElementById(x).value.trim();
+  const { error } = await sb.from("contact_messages").insert({ name: g("ct_n"), contact: g("ct_c") || null, body: g("ct_m") });
+  if (error) return toast(error.message, true); document.getElementById("ct_m").value = ""; toast(L("ctSent"));
+}
+function ownerContactCard() {
+  const list = useData("ctAll", () => q(sb.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(50)));
+  if (!Array.isArray(list) || !list.length) return "";
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">📩 ${L("ctOwner")}</h3>${list.map(m => { const c = m.contact || ""; const ph = c.replace(/[^\d]/g, ""); const isMail = /@/.test(c);
+    return `<div style="padding:.6rem 0;border-bottom:1px solid var(--line);${m.status === "done" ? "opacity:.55" : ""}"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><b>${esc(m.name)}</b><span class="xs muted">${esc(fmtDT(m.created_at))}</span></div>
+      <div class="xs muted" dir="ltr" style="text-align:start">${esc(c)}</div><p class="sm" style="white-space:pre-wrap;margin:.3rem 0">${esc(m.body)}</p><div class="row" style="gap:.3rem;flex-wrap:wrap">
+      ${m.user_id ? `<button class="btn btn-o" style="padding:.3rem .7rem" onclick="openChatWith('${m.user_id}')">💬</button>` : ""}${ph.length >= 8 && !isMail ? `<a class="btn btn-o" style="padding:.3rem .7rem" target="_blank" rel="noopener" href="https://wa.me/${ph}"><i class="fa-brands fa-whatsapp"></i></a>` : ""}${isMail ? `<a class="btn btn-o" style="padding:.3rem .7rem" href="mailto:${esc(c)}">✉️</a>` : ""}
+      ${m.status !== "done" ? `<button class="btn btn-o" style="padding:.3rem .7rem" onclick="ctMark('${m.id}')">✓ ${L("ctDone")}</button>` : ""}<button class="ibtn" onclick="ctDel('${m.id}')">🗑️</button></div></div>`; }).join("")}</div>`;
+}
+async function ctMark(id) { await sb.from("contact_messages").update({ status: "done" }).eq("id", id); invalidate("ctAll"); render(); }
+async function ctDel(id) { if (!confirm(L("delete") + "?")) return; await sb.from("contact_messages").delete().eq("id", id); invalidate("ctAll"); render(); }
+
+/* ---------- 6) علامة مائية ضد التسريب ---------- */
+function wmText() {
+  const u = state.auth && state.auth.user, p = (state.auth && state.auth.profile) || {};
+  return [p.real_name || p.display_name, (u && u.email) || p.phone, u ? "ID " + u.id.slice(0, 8) : "", new Date().toISOString().slice(0, 10)].filter(Boolean).join(" · ").replace(/[<>&'"]/g, "");
+}
+svWatermarkCss = function () {
+  const t = wmText() || I18N[state.lang].meta.siteName;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="220"><text x="10" y="110" fill="#000" fill-opacity=".9" font-size="17" font-weight="700" font-family="sans-serif" transform="rotate(-22 210 110)">${t}</text></svg>`;
+  return `background-image:url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg).replace(/'/g, "%27")}')`;
+};
+function rmWatermark() {
+  const main = rmEl("rmMain"); if (!main || rmEl("rmWm")) return;
+  const t = wmText(); if (!t) return;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="460" height="240"><text x="10" y="120" fill="#fff" font-size="16" font-weight="700" font-family="sans-serif" transform="rotate(-20 230 120)">${t}</text></svg>`;
+  main.insertAdjacentHTML("beforeend", `<div id="rmWm" class="rmwm" style="background-image:url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg).replace(/'/g, "%27")}')"></div><div id="rmWm2" class="rmwm2">${esc(t)}</div>`);
+}
+const _rmLayout18 = rmLayout;
+rmLayout = function () { const r = _rmLayout18.apply(this, arguments); try { rmWatermark(); } catch (e) {} return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.svwm{opacity:.16!important}
+.rmwm{position:absolute;inset:0;pointer-events:none;z-index:8;opacity:.07;animation:svwmMove 18s linear infinite alternate}
+.rmwm2{position:absolute;pointer-events:none;z-index:9;color:rgba(255,255,255,.28);font:700 .78rem Tajawal,sans-serif;white-space:nowrap;animation:rmwmWalk 37s linear infinite;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+@keyframes rmwmWalk{0%{top:8%;left:6%}25%{top:70%;left:55%}50%{top:30%;left:70%}75%{top:85%;left:10%}100%{top:8%;left:6%}}
+</style>`);
+
+/* ---------- 7) كلام الحصة: كامل + بحث (للأونر) ---------- */
+function trHi(text, qq) { const t = esc(text); if (!qq) return t; const e = esc(qq).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); return t.replace(new RegExp(e, "gi"), (m) => `<mark>${m}</mark>`); }
+function trFilter(inp) {
+  const qq = inp.value.trim(); const box = inp.parentNode.querySelector(".trlines"); if (!box) return; let n = 0;
+  box.querySelectorAll(".trl").forEach(d => { const raw = d.dataset.t || ""; const ok = !qq || raw.toLowerCase().includes(qq.toLowerCase()); d.style.display = ok ? "" : "none"; if (ok) n++; d.querySelector(".tx").innerHTML = trHi(raw, qq); });
+  const c = inp.parentNode.querySelector(".trn"); if (c) c.textContent = qq ? (n ? n + " " + L("trLines") : L("trNone")) : "";
+}
+const _openLessonReport18 = openLessonReport;
+openLessonReport = async function (id, qq) {
+  await _openLessonReport18(id);
+  if (role() !== "owner") return;
+  const m = document.getElementById("lrModal"); if (!m) return;
+  const det = m.querySelector("details"); if (det) det.remove();
+  const { data } = await sb.from("room_transcripts").select("name,role,text,at").eq("room_kind", "lesson").eq("room_id", id).order("at");
+  const tr = data || [];
+  const card = m.querySelector(".card"); if (!card) return;
+  card.insertAdjacentHTML("beforeend", `<div style="margin-top:1.2rem"><h4 style="margin-bottom:.5rem">📝 ${L("trTitle")} (${tr.length} ${L("trLines")})</h4>
+    <input class="in" placeholder="🔎 ${L("trSearch")}" oninput="trFilter(this)" value="${esc(qq || "")}"><div class="xs muted trn" style="margin:.3rem 0"></div>
+    <div class="trlines" style="max-height:55vh;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:.4rem .7rem">${tr.length ? tr.map(x => `<div class="trl sm" data-t="${esc(x.text)}" style="padding:.35rem 0;border-bottom:1px solid var(--line)"><span class="xs muted">${esc(fmtTime(x.at))}</span> <b style="color:${x.role === "host" ? "var(--accent)" : "var(--gold)"}">${esc(x.name || "")}:</b> <span class="tx">${esc(x.text)}</span></div>`).join("") : `<p class="muted sm">${L("repNone")}</p>`}</div></div>`);
+  if (qq) { const inp = card.querySelector(".trlines").parentNode.querySelector("input"); trFilter(inp); }
+};
+function ownerTranscriptCard(P) {
+  const recent = useData("trRecent", async () => {
+    const { data } = await sb.from("room_transcripts").select("room_id,at").eq("room_kind", "lesson").order("at", { ascending: false }).limit(800);
+    const ids = [...new Set((data || []).map(x => x.room_id))].slice(0, 25); if (!ids.length) return [];
+    const { data: ls } = await sb.from("lessons").select("id,start_time,track,student_id,teacher_id").in("id", ids);
+    const cnt = {}; (data || []).forEach(x => cnt[x.room_id] = (cnt[x.room_id] || 0) + 1);
+    return (ls || []).map(l => Object.assign(l, { n: cnt[l.id] || 0 })).sort((a, b) => (b.start_time || "").localeCompare(a.start_time || ""));
+  });
+  const res = state.trRes;
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">📝 ${L("trAll")}</h3>
+    <form class="row" style="gap:.4rem" onsubmit="event.preventDefault();trSearchAll()"><input class="in" id="tr_q" style="flex:1" placeholder="🔎 ${L("trSearch")}" value="${esc(state.trQ || "")}"><button class="btn btn-p">🔎</button></form>
+    ${res ? `<div style="margin-top:.6rem">${res.length ? res.map(x => `<a href="#" class="kv" style="text-decoration:none;color:inherit;align-items:flex-start" onclick="openLessonReport('${x.room_id}',state.trQ);return false;"><span class="sm"><span class="xs muted">${esc(fmtDT(x.at))} · ${esc(x.name || "")}</span><br>${trHi(x.text.length > 220 ? x.text.slice(Math.max(0, x.text.toLowerCase().indexOf(state.trQ.toLowerCase()) - 80), Math.max(0, x.text.toLowerCase().indexOf(state.trQ.toLowerCase()) - 80) + 220) : x.text, state.trQ)}</span>▶</a>`).join("") : `<p class="muted sm">${L("trNone")}</p>`}</div>` : ""}
+    <h4 style="margin:1rem 0 .4rem">${L("trRecent")}</h4>${!Array.isArray(recent) ? loadingBox() : recent.length ? recent.map(l => `<div class="kv" style="align-items:center"><span class="sm"><b>${esc(fmtDT(l.start_time))}</b>${l.track ? " · " + esc(trackTitle(l.track)) : ""} · ${esc(personName(l.teacher_id, P.map))} ↔ ${esc(personName(l.student_id, P.map))} <span class="xs muted">(${l.n})</span></span><button class="btn btn-o" style="padding:.3rem .7rem" onclick="openLessonReport('${l.id}')">${L("repOpen")}</button></div>`).join("") : `<p class="muted sm">${L("repNone")}</p>`}</div>`;
+}
+async function trSearchAll() {
+  const qq = document.getElementById("tr_q").value.trim(); state.trQ = qq; if (qq.length < 2) { state.trRes = null; return render(); }
+  const { data, error } = await sb.from("room_transcripts").select("room_id,name,text,at").eq("room_kind", "lesson").ilike("text", "%" + qq.replace(/[%_]/g, "") + "%").order("at", { ascending: false }).limit(60);
+  if (error) return toast(error.message, true); state.trRes = data || []; render();
+}
+
+/* ---------- ربط في لوحة الأونر ---------- */
+const _renderOwnerDash18 = renderOwnerDash;
+renderOwnerDash = function () {
+  let h = _renderOwnerDash18(); const P = peopleMap();
+  if (state.dash.tab === "chats") h += ownerContactCard();
+  if (state.dash.tab === "reports") h += ownerTranscriptCard(P);
+  return h;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>mark{background:#fde68a;color:#111;border-radius:3px;padding:0 2px}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
