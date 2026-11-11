@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v13";
+const UI_VERSION = "2026-11-11-v14";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -8866,7 +8866,7 @@ async function svOpen(o) {
   const main = document.getElementById("svMain"); const wm = `<div class="svwm" style="${svWatermarkCss()}"></div>`;
   try {
     if (o.path) {
-      const r = await sb.storage.from(o.bucket).download(o.path);
+      const r = await secureDownload(o.bucket, o.path);
       if (r.error || !r.data) throw (r.error || new Error("denied"));
       if (!document.getElementById("svModal")) return;
       const blob = r.data, type = svType(blob.type, o.path, o.type);
@@ -9434,7 +9434,7 @@ async function gmNext() {
   state.gm.cur = cur; state.gm.answer = null; state.gm.opts = [cur.maqam, ...others].sort(() => Math.random() - .5);
   render();
   try {
-    const r = await sb.storage.from(cur.bucket).download(cur.path); if (r.error) throw r.error;
+    const r = await secureDownload(cur.bucket, cur.path); if (r.error) throw r.error;
     const u = URL.createObjectURL(r.data); if (state.gm.url) URL.revokeObjectURL(state.gm.url); state.gm.url = u;
     const el = document.getElementById("gmAudio"); if (el) el.innerHTML = `<audio src="${u}" controls autoplay controlsList="nodownload noplaybackrate" oncontextmenu="return false" style="width:100%"></audio>`;
   } catch (e) { const el = document.getElementById("gmAudio"); if (el) el.innerHTML = `<div class="err">${L("svDenied")}</div>`; }
@@ -9689,7 +9689,7 @@ async function hwWave(id) {
   await svOpen({ title: "🎧 " + L("hwFeedback") });
   const main = document.getElementById("svMain"); if (!main) return;
   try {
-    const r = await sb.storage.from("homework").download(s.file_path); if (r.error) throw r.error;
+    const r = await secureDownload("homework", s.file_path); if (r.error) throw r.error;
     const u = URL.createObjectURL(r.data); SV.urls.push(u);
     const isT = role() === "teacher" || role() === "owner";
     main.innerHTML = `<canvas id="hwCv" width="900" height="140" style="width:100%;height:140px;background:var(--bg);border-radius:12px;cursor:${isT ? "copy" : "pointer"}"></canvas>
@@ -9809,6 +9809,464 @@ async function tsLoad() {
 }
 function tsLevel(i) { const g = RM.game; g.level = i; g.shown = []; gameBroadcast(); gameRender(); }
 function tsReveal(i) { const g = RM.game; g.shown = (g.shown || []).concat(i); sfx("pop"); gameBroadcast(); gameRender(); }
+
+/* ======================= v17: ألعاب كتير، نت كل واحد، زووم، PDF على السبورة، تثبيت للكل، كمّل من اللي فات، لينك مشاركة، حماية التحميل ======================= */
+Object.assign(UI.en, {
+  rm_gBuzz: "⚡ Fastest finger", rm_gMem: "🃏 Memory cards", rm_gScr: "🧩 Order the ayah", rm_gHang: "🌷 Guess the word", rm_gTf: "✅ True or false", rm_gScore: "🏆 Team scores",
+  rm_bzGo: "Start round", rm_bzPress: "PRESS!", rm_bzWait: "Wait for the teacher…", rm_bzFirst: "First", rm_memSet: ["Letters", "Animals", "Fruits", "Tajweed"], rm_memNew: "New board", rm_memMoves: "moves",
+  rm_scrSrc: "Ayahs or your own sentence", rm_scrOwn: "…or type a sentence", rm_scrStart: "Start", rm_scrDone: "Well done! 🎉", rm_hgWord: "Secret word (students won't see the input)", rm_hgStart: "Start", rm_hgLeft: "petals left",
+  rm_tfQ: "Statement", rm_tfTrue: "True", rm_tfFalse: "False", rm_tfStart: "Ask", rm_tfReveal: "Reveal", rm_scTeams: "Team names (one per line)", rm_scDef: "Team A\nTeam B",
+  rm_netMe: "My internet", rm_netOf: "Internet of", rm_netWeak: "Weak internet at", rm_netMine: "Your own internet is weak — the problem is on your side",
+  rm_zoomIn: "Zoom in", rm_zoomOut: "Zoom out", rm_zoomReset: "Fit", rm_pdfBoard: "Put a PDF on the board (to write on it)", rm_pdfPages: "Adding pages…",
+  rm_spot: "Pinned for everyone", rm_resume: "Continue from last time", rm_resumeAt: "Board saved", rm_saveBoard: "Save board", rm_boardSaved: "Board saved ✓",
+  rm_invite: "Share class link", rm_inviteHint: "Students you send this link to can join this class any time until it expires — even outside the lesson time.", rm_inviteHours: "Valid for", rm_inviteMake: "Create link", rm_copied: "Link copied ✓",
+  joinTitle: "Joining class…", joinBad: "This link has expired or is invalid. Ask your teacher for a new one.",
+  ftFollow: "Follow us", setSocial: "Social media links", appDl: "Download the app", rvOnlyPaid: "Reviews open after you subscribe and attend at least one lesson.", rvMineHint2: "Your review is published right away. Thank you!",
+  scrProtect: "🔒 Protected — hidden while the window isn't active"
+});
+Object.assign(UI.ar, {
+  rm_gBuzz: "⚡ أسرع واحد", rm_gMem: "🃏 لعبة الذاكرة", rm_gScr: "🧩 رتّب الآية", rm_gHang: "🌷 خمّن الكلمة", rm_gTf: "✅ صح ولا غلط", rm_gScore: "🏆 نقط الفرق",
+  rm_bzGo: "ابدأ جولة", rm_bzPress: "اضغط!", rm_bzWait: "استنى المعلم…", rm_bzFirst: "الأول", rm_memSet: ["حروف", "حيوانات", "فواكه", "تجويد"], rm_memNew: "لوحة جديدة", rm_memMoves: "محاولة",
+  rm_scrSrc: "آيات أو جملة من عندك", rm_scrOwn: "…أو اكتب جملة", rm_scrStart: "ابدأ", rm_scrDone: "برافو! 🎉", rm_hgWord: "الكلمة السرية (الطلاب مش هيشوفوها)", rm_hgStart: "ابدأ", rm_hgLeft: "ورقة فاضلة",
+  rm_tfQ: "الجملة", rm_tfTrue: "صح", rm_tfFalse: "غلط", rm_tfStart: "اسأل", rm_tfReveal: "أظهر الإجابة", rm_scTeams: "أسماء الفرق (كل فريق في سطر)", rm_scDef: "فريق الأبطال\nفريق النجوم",
+  rm_netMe: "النت عندي", rm_netOf: "النت عند", rm_netWeak: "النت ضعيف عند", rm_netMine: "النت عندك إنت ضعيف — المشكلة من عندك",
+  rm_zoomIn: "تكبير", rm_zoomOut: "تصغير", rm_zoomReset: "ملء الشاشة", rm_pdfBoard: "حط PDF على السبورة (عشان تكتب عليه)", rm_pdfPages: "بنضيف الصفحات…",
+  rm_spot: "متثبّت للكل", rm_resume: "كمّل من اللي فات", rm_resumeAt: "السبورة محفوظة", rm_saveBoard: "احفظ السبورة", rm_boardSaved: "السبورة اتحفظت ✓",
+  rm_invite: "لينك الفصل للطالب", rm_inviteHint: "أي طالب تبعتله اللينك ده يقدر يدخل الفصل في أي وقت لحد ما اللينك يخلص — حتى لو بره ميعاد الحصة.", rm_inviteHours: "صالح لمدة", rm_inviteMake: "اعمل اللينك", rm_copied: "اتنسخ اللينك ✓",
+  joinTitle: "بندخلك الفصل…", joinBad: "اللينك ده خلص أو مش صحيح. اطلب لينك جديد من المعلم.",
+  ftFollow: "تابعنا", setSocial: "لينكات السوشيال ميديا", appDl: "حمّل التطبيق", rvOnlyPaid: "التقييم بيتفتح بعد ما تشترك وتحضر حصة واحدة على الأقل.", rvMineHint2: "رأيك بيتنشر على طول. شكرًا ليك!",
+  scrProtect: "🔒 محتوى محمي — بيتخفى لما الشاشة مش نشطة"
+});
+
+/* ---------- 1) الألعاب: شيل النرد + ألعاب جديدة ---------- */
+const GAMES17 = [["wheel", "gWheel"], ["buzz", "gBuzz"], ["quiz", "gQuiz", 1], ["tf", "gTf", 1], ["mem", "gMem"], ["scr", "gScr", 1], ["hang", "gHang", 1], ["tasmee", "gTasmee", 1], ["ttt", "gTtt"], ["score", "gScore", 1]];
+const _rmMenu17 = rmMenu;
+rmMenu = function (kind, el) {
+  _rmMenu17(kind, el);
+  if (kind !== "games") return;
+  const b = rmEl("rmMenuBox"); if (!b) return; const host = rmIsHost();
+  b.innerHTML = GAMES17.filter(g => host || !g[2]).map(([k, l]) => `<button onclick="rmMenuClose();gameStart('${k}')">${esc(RL(l))}</button>`).join("");
+};
+const MEM_SETS = [["ا", "ب", "ت", "ث", "ج", "ح", "خ", "د"], ["🐱", "🐶", "🐰", "🦁", "🐢", "🐘", "🐪", "🦋"], ["🍎", "🍌", "🍇", "🍊", "🍉", "🍓", "🍐", "🥝"], ["إظهار", "إدغام", "إخفاء", "إقلاب", "قلقلة", "مد", "غنة", "تفخيم"]];
+const _gameStart17 = gameStart;
+gameStart = function (kind) {
+  const by = RM.pid;
+  if (kind === "buzz") RM.game = { kind, round: 0, open: false, presses: [], by };
+  else if (kind === "mem") RM.game = memNew(1, by);
+  else if (kind === "scr") RM.game = { kind, setup: true, words: [], order: [], done: [], by };
+  else if (kind === "hang") RM.game = { kind, setup: true, word: "", tried: [], by };
+  else if (kind === "tf") RM.game = { kind, setup: true, q: "", ans: null, votes: {}, reveal: false, by };
+  else if (kind === "score") RM.game = { kind, teams: RL("scDef").split("\n").map(n => ({ n, p: 0 })), by };
+  else return _gameStart17(kind);
+  gameBroadcast(); gameRender();
+};
+function memNew(set, by) {
+  const items = MEM_SETS[set] || MEM_SETS[1]; const cards = items.concat(items).map((v, i) => ({ v, i })).sort(() => Math.random() - .5).map(c => c.v);
+  return { kind: "mem", set, cards, open: [], found: [], moves: 0, by: by || RM.pid };
+}
+const _gameRecv17 = gameRecv;
+gameRecv = function (p) {
+  const prev = RM.game, st = p && p.st;
+  if (st && prev && st.kind === prev.kind && st.kind === "buzz" && st.round === prev.round) {
+    const all = {}; (prev.presses || []).concat(st.presses || []).forEach(x => { if (!all[x.pid] || all[x.pid].t > x.t) all[x.pid] = x; }); st.presses = Object.values(all).sort((a, b) => a.t - b.t);
+  }
+  if (st && prev && st.kind === prev.kind && st.kind === "tf" && st.q === prev.q) { st.votes = Object.assign({}, prev.votes || {}, st.votes || {}); if (prev.reveal) st.reveal = true; if (prev.ans != null && st.ans == null) st.ans = prev.ans; }
+  return _gameRecv17(p);
+};
+const _gameRender17 = gameRender;
+gameRender = function (prev) {
+  const g = RM.game;
+  if (!g || !["buzz", "mem", "scr", "hang", "tf", "score"].includes(g.kind)) return _gameRender17(prev);
+  let el = rmEl("rmGame"); if (!el) { el = document.createElement("div"); el.id = "rmGame"; el.className = "rm-game"; (rmEl("rmRoot") || document.body).appendChild(el); }
+  const host = rmIsHost(), BTN = (on, txt, cls) => `<button class="rm-pbtn ${cls || ""}" style="padding:.5rem 1.1rem" onclick="${on}">${txt}</button>`;
+  let body = "", title = { buzz: "gBuzz", mem: "gMem", scr: "gScr", hang: "gHang", tf: "gTf", score: "gScore" }[g.kind];
+  if (g.kind === "buzz") {
+    const mine = (g.presses || []).find(x => x.pid === RM.pid);
+    body = `<div style="margin:.6rem 0">${g.open ? `<button class="rm-buzz" ${mine ? "disabled" : ""} onclick="bzPress()">${mine ? "✓" : RL("bzPress")}</button>` : `<div style="color:#94a3b8;padding:1.2rem 0">${RL("bzWait")}</div>`}</div>
+      <div>${(g.presses || []).map((x, i) => `<div style="padding:.35rem .6rem;border-radius:10px;margin:.2rem 0;background:${i === 0 ? "rgba(16,185,129,.25)" : "#1e293b"}">${i === 0 ? "🥇 " : (i + 1) + ". "}<b>${esc(x.name)}</b> <span style="color:#94a3b8;font-size:.8rem">${i ? "+" + ((x.t - g.presses[0].t) / 1000).toFixed(2) + "s" : ""}</span></div>`).join("")}</div>
+      ${host ? `<div style="margin-top:.6rem">${BTN("bzGo()", "⚡ " + RL("bzGo"), "p")}</div>` : ""}`;
+  } else if (g.kind === "mem") {
+    const done = g.found.length === g.cards.length;
+    body = `<div class="rm-mem">${g.cards.map((v, i) => { const up = g.open.includes(i) || g.found.includes(i); return `<button class="${up ? "up" : ""} ${g.found.includes(i) ? "ok" : ""}" onclick="memFlip(${i})">${up ? esc(v) : "؟"}</button>`; }).join("")}</div>
+      <div style="color:#94a3b8;font-size:.85rem;margin:.4rem 0">${g.moves} ${RL("memMoves")}${done ? " · 🎉" : ""}</div>
+      ${host ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center">${(RL("memSet") || []).map((n, i) => BTN(`RM.game=memNew(${i});gameBroadcast();gameRender()`, esc(n), g.set === i ? "p" : "")).join("")}</div>` : ""}`;
+  } else if (g.kind === "scr") {
+    if (g.setup) body = host ? `<div style="text-align:start"><label class="sm">${RL("surah")}</label><select class="rm-in" id="sc_s" style="margin:.3rem 0">${SURAHS.map((n, i) => `<option value="${i + 1}">${i + 1}. ${esc(n)}</option>`).join("")}</select>
+        <div style="display:flex;gap:.4rem"><input class="rm-in" id="sc_f" type="number" min="1" value="1" placeholder="${RL("from")}"><input class="rm-in" id="sc_t" type="number" min="1" value="1" placeholder="${RL("to")}"></div>
+        <input class="rm-in" id="sc_own" style="margin-top:.5rem" placeholder="${RL("scrOwn")}"><div style="margin-top:.6rem">${BTN("scrStart()", RL("scrStart"), "p")}</div></div>` : `<p style="color:#94a3b8">${RL("bzWait")}</p>`;
+    else {
+      const fin = g.done.length === g.words.length;
+      body = `<div dir="rtl" class="rm-scr-ans">${g.done.map(i => `<span>${esc(g.words[i])}</span>`).join(" ") || "&nbsp;"}</div>
+        ${fin ? `<div style="font-size:1.3rem;font-weight:800;margin:.6rem 0">${RL("scrDone")}</div>` : `<div dir="rtl" class="rm-scr-pool">${g.order.filter(i => !g.done.includes(i)).map(i => `<button onclick="scrPick(${i})">${esc(g.words[i])}</button>`).join("")}</div>`}
+        ${host ? `<div style="margin-top:.6rem">${BTN("RM.game.setup=true;gameBroadcast();gameRender()", "↺")}</div>` : ""}`;
+    }
+  } else if (g.kind === "hang") {
+    if (g.setup) body = host ? `<input class="rm-in" id="hg_w" type="password" autocomplete="off" placeholder="${RL("hgWord")}"><div style="margin-top:.6rem">${BTN("hgStart()", RL("hgStart"), "p")}</div>` : `<p style="color:#94a3b8">${RL("bzWait")}</p>`;
+    else {
+      const letters = [...g.word], wrong = g.tried.filter(c => !letters.includes(c)).length, left = 6 - wrong;
+      const won = letters.every(c => c === " " || g.tried.includes(c)), lost = left <= 0;
+      body = `<div style="font-size:2.2rem">${"🌸".repeat(Math.max(0, left))}${"🍂".repeat(Math.min(6, wrong))}</div><div style="color:#94a3b8;font-size:.8rem">${Math.max(0, left)} ${RL("hgLeft")}</div>
+        <div dir="rtl" style="font-size:2rem;letter-spacing:.35rem;margin:.8rem 0;font-weight:800">${letters.map(c => c === " " ? "&nbsp;&nbsp;" : (g.tried.includes(c) || lost) ? esc(c) : "_").join(" ")}</div>
+        ${won ? `<div style="font-size:1.3rem;font-weight:800">${RL("scrDone")}</div>` : lost ? `<div style="font-size:1.1rem">🍂</div>` : `<div dir="rtl" class="rm-keys">${"ابتثجحخدذرزسشصضطظعغفقكلمنهويءآأإةى".split("").map(c => `<button ${g.tried.includes(c) ? "disabled" : ""} onclick="hgTry('${c}')">${c}</button>`).join("")}</div>`}
+        ${host ? `<div style="margin-top:.6rem">${BTN("RM.game.setup=true;RM.game.tried=[];gameBroadcast();gameRender()", "↺")}</div>` : ""}`;
+    }
+  } else if (g.kind === "tf") {
+    if (g.setup) body = host ? `<textarea class="rm-in" id="tf_q" rows="3" placeholder="${RL("tfQ")}"></textarea><div style="display:flex;gap:.4rem;justify-content:center;margin-top:.6rem">${BTN("tfStart(true)", "✅ " + RL("tfTrue"), "p")}${BTN("tfStart(false)", "❌ " + RL("tfFalse"))}</div>` : `<p style="color:#94a3b8">${RL("bzWait")}</p>`;
+    else {
+      const vs = Object.values(g.votes || {}), t = vs.filter(v => v).length, f = vs.length - t, mine = (g.votes || {})[RM.pid];
+      const cls = (v) => g.reveal ? (g.ans === v ? "ok" : (mine === v ? "bad" : "")) : (mine === v ? "ok" : "");
+      body = `<h3 style="margin:.3rem 0 .8rem;white-space:pre-wrap">${esc(g.q)}</h3><div class="rm-quiz"><button class="${cls(true)}" onclick="tfVote(true)">✅ ${RL("tfTrue")}${host || g.reveal ? ` <span style="float:inline-end;color:#94a3b8">${t}</span>` : ""}</button><button class="${cls(false)}" onclick="tfVote(false)">❌ ${RL("tfFalse")}${host || g.reveal ? ` <span style="float:inline-end;color:#94a3b8">${f}</span>` : ""}</button></div>
+        ${host && !g.reveal ? `<div style="margin-top:.6rem">${BTN("tfReveal()", RL("tfReveal"), "p")}</div>` : ""}${host && g.reveal ? `<div style="margin-top:.6rem">${BTN("RM.game.setup=true;RM.game.reveal=false;RM.game.votes={};gameBroadcast();gameRender()", "↺")}</div>` : ""}`;
+    }
+  } else if (g.kind === "score") {
+    const max = Math.max(1, ...g.teams.map(t => t.p));
+    body = `${g.teams.map((t, i) => `<div style="display:flex;align-items:center;gap:.5rem;margin:.45rem 0"><b style="min-width:7rem;text-align:start">${t.p === max && t.p > 0 ? "👑 " : ""}${esc(t.n)}</b>
+        <div style="flex:1;height:22px;background:#1e293b;border-radius:11px;overflow:hidden"><div style="height:100%;width:${t.p / max * 100}%;background:linear-gradient(90deg,#10b981,#f59e0b);transition:width .4s"></div></div><b style="min-width:2.5rem">${t.p}</b>
+        ${host ? `<button class="rm-pbtn" onclick="scAdd(${i},-1)">−</button><button class="rm-pbtn p" onclick="scAdd(${i},1)">+</button>` : ""}</div>`).join("")}
+      ${host ? `<details style="margin-top:.6rem;text-align:start"><summary class="sm">✏️</summary><textarea class="rm-in" id="sc_t2" rows="3">${esc(g.teams.map(t => t.n).join("\n"))}</textarea>${BTN("scTeams()", "✓")}</details>` : ""}`;
+  }
+  const close = `<button class="rm-pbtn" onclick="${host ? "gameClose()" : "rmEl('rmGame').remove()"}">✕</button>`;
+  el.innerHTML = `<div style="width:min(${g.kind === "mem" ? 560 : 620}px,96vw)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><b>${esc(RL(title))}</b>${close}</div>${body}</div>`;
+};
+function gSend() { gameBroadcast(); gameRender(); }
+function bzGo() { const g = RM.game; g.round = (g.round || 0) + 1; g.open = true; g.presses = []; sfx("pop"); gSend(); }
+function bzPress() { const g = RM.game; if (!g.open || (g.presses || []).find(x => x.pid === RM.pid)) return; g.presses = (g.presses || []).concat({ pid: RM.pid, name: RM.myName || "—", t: Date.now() }).sort((a, b) => a.t - b.t); sfx(g.presses[0].pid === RM.pid ? "correct" : "pop"); gSend(); }
+function memFlip(i) {
+  const g = RM.game; if (g.found.includes(i) || g.open.includes(i)) return;
+  if (g.open.length >= 2) g.open = [];
+  g.open.push(i); sfx("pop");
+  if (g.open.length === 2) { g.moves++; const [a, b] = g.open; if (g.cards[a] === g.cards[b]) { g.found.push(a, b); g.open = []; sfx("correct"); if (g.found.length === g.cards.length) confetti(2200); } else setTimeout(() => { if (RM.game === g && g.open.length === 2) { g.open = []; gSend(); } }, 1000); }
+  gSend();
+}
+async function scrStart() {
+  const g = RM.game, own = (rmEl("sc_own").value || "").trim(); let words = [];
+  if (own) words = own.split(/\s+/);
+  else {
+    const s = +rmEl("sc_s").value, f = Math.max(1, +rmEl("sc_f").value || 1), t = Math.max(f, +rmEl("sc_t").value || f);
+    try { const d = await (await fetch(`https://api.alquran.cloud/v1/surah/${s}/quran-uthmani`)).json(); words = (d.data.ayahs || []).filter(a => a.numberInSurah >= f && a.numberInSurah <= Math.min(t, f + 2)).map(a => a.text.trim()).join(" ").split(/\s+/); } catch (e) { return toast(e.message || "—", true); }
+  }
+  words = words.slice(0, 40); if (!words.length) return;
+  g.words = words; g.order = words.map((_, i) => i).sort(() => Math.random() - .5); g.done = []; g.setup = false; gSend();
+}
+function scrPick(i) {
+  const g = RM.game, next = g.done.length;
+  if (g.words[i] === g.words[next]) { g.done.push(g.done.includes(i) ? g.order.find(j => !g.done.includes(j) && g.words[j] === g.words[next]) : i); sfx("pop"); if (g.done.length === g.words.length) { sfx("correct"); confetti(2200); } gSend(); }
+  else { sfx("wrong"); }
+}
+function hgStart() { const w = (rmEl("hg_w").value || "").trim().replace(/[ً-ْٰ]/g, ""); if (!w) return; const g = RM.game; g.word = w; g.tried = []; g.setup = false; gSend(); }
+function hgTry(c) { const g = RM.game; if (g.tried.includes(c)) return; g.tried.push(c); sfx([...g.word].includes(c) ? "correct" : "wrong"); if ([...g.word].every(x => x === " " || g.tried.includes(x))) confetti(2000); gSend(); }
+function tfStart(ans) { const g = RM.game, q = (rmEl("tf_q").value || "").trim(); if (!q) return; Object.assign(g, { q, ans: null, votes: {}, reveal: false, setup: false }); g._ans = ans; RM.tfAns = ans; gSend(); }
+function tfVote(v) { const g = RM.game; if (g.reveal) return; g.votes = Object.assign({}, g.votes, { [RM.pid]: v }); sfx("pop"); gSend(); }
+function tfReveal() { const g = RM.game; g.ans = RM.tfAns; g.reveal = true; delete g._ans; gSend(); const mine = g.votes[RM.pid]; if (mine != null) sfx(mine === g.ans ? "correct" : "wrong"); }
+function scAdd(i, d) { const g = RM.game; g.teams[i].p = Math.max(0, g.teams[i].p + d); sfx(d > 0 ? "correct" : "pop"); if (d > 0) confetti(900); gSend(); }
+function scTeams() { const g = RM.game; const names = rmEl("sc_t2").value.split("\n").map(s => s.trim()).filter(Boolean).slice(0, 8); g.teams = names.map(n => (g.teams.find(t => t.n === n) || { n, p: 0 })); gSend(); }
+// ما نبعتش إجابة صح/غلط قبل الإظهار
+const _gameBroadcast17 = gameBroadcast;
+gameBroadcast = function () { const g = RM.game; if (g && g.kind === "tf" && !g.reveal) { const c = Object.assign({}, g); delete c._ans; c.ans = null; return rmSend("game", { st: c }); } return _gameBroadcast17(); };
+// الطالب لما يجاله الإظهار
+const _gameRecv17b = gameRecv;
+gameRecv = function (p) { const before = RM.game && RM.game.reveal; _gameRecv17b(p); const g = RM.game; if (g && g.kind === "tf" && g.reveal && !before) { const mine = (g.votes || {})[RM.pid]; if (mine != null) { if (mine === g.ans) { sfx("correct"); confetti(1500); } else sfx("wrong"); } } };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rm-buzz{width:170px;height:170px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#fca5a5,#dc2626 60%,#7f1d1d);color:#fff;font:800 1.6rem Tajawal,sans-serif;box-shadow:0 10px 0 #7f1d1d,0 14px 30px rgba(0,0,0,.4);cursor:pointer}
+.rm-buzz:active{transform:translateY(6px);box-shadow:0 4px 0 #7f1d1d}.rm-buzz:disabled{background:#334155;box-shadow:none}
+.rm-mem{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem}.rm-mem button{aspect-ratio:1;border-radius:12px;border:0;background:linear-gradient(135deg,#047857,#065f46);color:#fff;font:800 1.6rem Tajawal,sans-serif;cursor:pointer;transition:transform .2s}
+.rm-mem button.up{background:#f8fafc;color:#0f172a;transform:rotateY(180deg) scaleX(-1)}.rm-mem button.ok{background:#bbf7d0;opacity:.75}
+.rm-scr-ans{min-height:3.2rem;padding:.6rem;border:2px dashed #334155;border-radius:12px;font:1.5rem 'Amiri',Tajawal,serif;line-height:2}.rm-scr-ans span{color:#34d399}
+.rm-scr-pool{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-top:.8rem}.rm-scr-pool button,.rm-keys button{border:1px solid #334155;background:#1e293b;color:#fff;border-radius:10px;padding:.35rem .7rem;font:1.2rem 'Amiri',Tajawal,serif;cursor:pointer}
+.rm-keys{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center}.rm-keys button{width:2.4rem;padding:.3rem 0}.rm-keys button:disabled{opacity:.3}
+.rm-zoom{transition:transform .15s}.rm-tile video.zoomed{cursor:zoom-out}
+</style>`);
+
+/* ---------- 2) النت عند كل واحد (أنا والطرف التاني) ---------- */
+RM.net = RM.net || {};
+async function rmSelfNet() {
+  let ms = null;
+  try { const t0 = performance.now(); const r = await fetch(location.origin + "/manifest.json?ping=" + Date.now(), { cache: "no-store" }); if (r.ok) ms = performance.now() - t0; } catch (e) {}
+  let bw = false, upLoss = 0;
+  for (const p of Object.values(RM.peers || {})) {
+    try { const st = await p.pc.getStats(); st.forEach(s => { if (s.type === "outbound-rtp" && s.kind === "video" && s.qualityLimitationReason === "bandwidth") bw = true; if (s.type === "remote-inbound-rtp" && s.fractionLost != null) upLoss = Math.max(upLoss, s.fractionLost * 100); }); } catch (e) {}
+  }
+  const c = navigator.connection;
+  let q = !navigator.onLine || ms == null ? 0 : ms > 1200 ? 1 : ms > 500 ? 2 : 3;
+  if (q > 1 && (bw || upLoss > 8)) q--;
+  if (q > 1 && c && /(^|-)2g$/.test(c.effectiveType || "")) q = 1;
+  RM.selfNet = { q, ms: ms == null ? null : Math.round(ms), down: c && c.downlink };
+  return RM.selfNet;
+}
+const _rmStats17 = rmStats;
+rmStats = async function () {
+  await _rmStats17();
+  if (!RM.joined) return;
+  const me = await rmSelfNet();
+  rmSend("net", { q: me.q, ms: me.ms, down: me.down });
+  if (rmIsHost() && RM.spotG !== undefined) rmSend("spot", { target: RM.spotG });
+  // تشخيص: مين عنده المشكلة
+  const now = Date.now();
+  if (me.q <= 1) { if (!RM.netWarnAt || now - RM.netWarnAt > 45000) { RM.netWarnAt = now; toast("📶 " + RL("netMine"), true); } }
+  else Object.entries(RM.net).forEach(([pid, n]) => { const p = RM.peers[pid]; if (!p || n.at < now - 12000) return; if (n.q <= 1 && (!n.warn || now - n.warn > 45000)) { n.warn = now; toast(`📶 ${RL("netWeak")} ${(p.meta && p.meta.name) || "—"}`, true); } });
+  rmLayout(); rmTopUpdate();
+};
+const _rmOnEv17 = rmOnEv;
+rmOnEv = function (p) {
+  if (p && RM.joined && p.from !== RM.pid) {
+    if (p.type === "net") { RM.net[p.from] = { q: p.q, ms: p.ms, down: p.down, at: Date.now(), warn: (RM.net[p.from] || {}).warn }; return; }
+    if (p.type === "spot" && (p.role === "host" || p.role === "owner")) { const was = RM.spot; RM.spot = p.target || null; if (was !== RM.spot) { rmLayout(); if (RM.spot) toast("📌 " + RL("spot")); } return; }
+  }
+  return _rmOnEv17(p);
+};
+const NETTXT = (q) => q >= 3 ? RL("qGood") : q === 2 ? RL("qFair") : q === 1 ? RL("qPoor") : "Offline";
+const _rmUpdTile17 = rmUpdTile;
+rmUpdTile = function (it) {
+  const el = _rmUpdTile17(it); if (it.kind === "screen") return el;
+  const bars = el.querySelector(".bars"); if (!bars) return el;
+  const n = it.me ? RM.selfNet : RM.net[it.id];
+  if (n && (it.me || n.at > Date.now() - 15000)) { bars.innerHTML = rmBarsHtml(n.q); bars.title = `${it.me ? RL("netMe") : RL("netOf") + " " + ((it.meta || {}).name || "")}: ${NETTXT(n.q)}${n.ms != null ? " · " + n.ms + " ms" : ""}`; }
+  return el;
+};
+const _rmTopUpdate17 = rmTopUpdate;
+rmTopUpdate = function () {
+  _rmTopUpdate17();
+  const el = rmEl("rmTop"); if (!el || !RM.joined) return;
+  const me = RM.selfNet; const peers = Object.entries(RM.net).filter(([pid, n]) => RM.peers[pid] && !(RM.peers[pid].meta || {}).hidden && n.at > Date.now() - 15000);
+  const chips = (me ? `<span class="rm-chip" title="${RL("netMe")}">${rmBarsHtml(me.q)} <span class="hide-sm">${RL("netMe")}</span></span>` : "")
+    + peers.slice(0, 4).map(([pid, n]) => `<span class="rm-chip" title="${RL("netOf")} ${esc((RM.peers[pid].meta || {}).name || "")}: ${NETTXT(n.q)}">${rmBarsHtml(n.q)} <span class="hide-sm">${esc(((RM.peers[pid].meta || {}).name || "").split(" ")[0])}</span></span>`).join("");
+  const inv = rmIsHost() ? `<button class="rm-pbtn" title="${RL("invite")}" onclick="rmInviteModal()">🔗</button>` : "";
+  const sp = el.querySelector('span[style="flex:1"]'); if (sp) sp.insertAdjacentHTML("afterend", chips + inv);
+};
+
+/* ---------- 3) التثبيت يظهر للكل ---------- */
+function spotLocal(g) { if (!g) return null; if (g === "wb") return "wb"; if (g === RM.pid) return "me"; if (g === RM.pid + ":screen") return "me:screen"; return g; }
+function spotGlobal(id) { if (!id) return null; if (id === "me") return RM.pid; if (id === "me:screen") return RM.pid + ":screen"; return id; }
+const _rmPin17 = rmPin;
+rmPin = function (id) {
+  _rmPin17(id);
+  if (rmIsHost()) { RM.spotG = spotGlobal(RM.pin); rmSend("spot", { target: RM.spotG }); if (RM.pin) toast("📌 " + RL("spot")); }
+};
+const _rmLayout17 = rmLayout;
+rmLayout = function () {
+  if (rmIsHost() || RM.pin || !RM.spot) return _rmLayout17();
+  RM.pin = spotLocal(RM.spot); try { return _rmLayout17(); } finally { RM.pin = null; }
+};
+
+/* ---------- 4) زووم: السبورة + الفيديو ---------- */
+WB.zoom = 1;
+const _wbResize17 = wbResize;
+wbResize = function () {
+  _wbResize17();
+  if (!WB.el || !WB.el.isConnected || (WB.zoom || 1) === 1) { const w = WB.el && WB.el.querySelector("#wbWrap"); if (w) { w.style.overflow = ""; w.style.display = ""; } if (WB.cv) WB.cv.style.margin = ""; return; }
+  const wrap = WB.el.querySelector("#wbWrap"), cv = WB.cv, z = WB.zoom;
+  const w = parseFloat(cv.style.width) * z, h = parseFloat(cv.style.height) * z, dpr = window.devicePixelRatio || 1;
+  wrap.style.overflow = "auto"; wrap.style.display = "block"; cv.style.display = "block"; cv.style.margin = "4px auto";
+  cv.style.width = Math.floor(w) + "px"; cv.style.height = Math.floor(h) + "px";
+  const k = Math.min(1, 7000 / (w * dpr)); const pw = Math.round(w * dpr * k), ph = Math.round(h * dpr * k);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  WB.scale = w / WB_W; wbDraw();
+};
+function wbZoom(f, cx, cy) {
+  const wrap = WB.el && WB.el.querySelector("#wbWrap"); if (!wrap) return;
+  const old = WB.zoom || 1, nz = f === 0 ? 1 : Math.max(1, Math.min(4, old * f)); if (nz === old) return;
+  const rx = cx == null ? .5 : cx, ry = cy == null ? .5 : cy;
+  const fx = (wrap.scrollLeft + wrap.clientWidth * rx) / (wrap.scrollWidth || 1), fy = (wrap.scrollTop + wrap.clientHeight * ry) / (wrap.scrollHeight || 1);
+  WB.zoom = nz; wbResize();
+  wrap.scrollLeft = fx * wrap.scrollWidth - wrap.clientWidth * rx; wrap.scrollTop = fy * wrap.scrollHeight - wrap.clientHeight * ry;
+  const z = WB.el.querySelector("#wbZ"); if (z) z.textContent = Math.round(nz * 100) + "%";
+}
+const _wbEl17 = wbEl;
+wbEl = function () {
+  const fresh = !WB.el; const el = _wbEl17();
+  if (fresh) {
+    const wrap = el.querySelector("#wbWrap");
+    wrap.addEventListener("wheel", (e) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); const r = wrap.getBoundingClientRect(); wbZoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); }, { passive: false });
+    let pinch = null;
+    wrap.addEventListener("touchstart", (e) => { if (e.touches.length === 2) { const [a, b] = e.touches; pinch = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); WB.cur = null; } }, { passive: true });
+    wrap.addEventListener("touchmove", (e) => { if (e.touches.length === 2 && pinch) { const [a, b] = e.touches; const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (Math.abs(d - pinch) > 12) { wbZoom(d / pinch); pinch = d; } } }, { passive: true });
+    wrap.addEventListener("touchend", () => { pinch = null; }, { passive: true });
+  }
+  return el;
+};
+const _wbToolbar17 = wbToolbar;
+wbToolbar = function () {
+  _wbToolbar17();
+  const b = WB.el && WB.el.querySelector("#wbBar"); if (!b || b.querySelector("#wbZ")) return;
+  const can = wbCanDraw();
+  const z = `<span class="sep"></span><button title="${RL("zoomOut")}" onclick="wbZoom(1/1.25)">−</button><span id="wbZ" style="font-size:.72rem;min-width:2.6rem;text-align:center;color:#cbd5e1;cursor:pointer" title="${RL("zoomReset")}" onclick="wbZoom(0)">${Math.round((WB.zoom || 1) * 100)}%</span><button title="${RL("zoomIn")}" onclick="wbZoom(1.25)">+</button>`
+    + (can ? `<button title="${RL("pdfBoard")}" onclick="wbPdfPick()" style="width:auto;padding:0 .4rem;font-size:.7rem;font-weight:700">📄✏️</button>` : "")
+    + (rmIsHost() ? `<button title="${RL("saveBoard")}" onclick="boardSave(true)">💾</button>` + (RM.saved && !RM.resumed ? `<button title="${RL("resume")}" onclick="boardResume()" style="width:auto;padding:0 .45rem;font-size:.72rem;font-weight:800;color:#fde68a">↩️ ${RL("resume")}</button>` : "") : "");
+  const sp = b.querySelector('span[style="flex:1"]'); if (sp) sp.insertAdjacentHTML("beforebegin", z); else b.insertAdjacentHTML("beforeend", z);
+};
+// زووم الفيديو: دبل كليك أو عجلة الماوس على الفيديو
+document.addEventListener("dblclick", (e) => {
+  const v = e.target && e.target.closest && e.target.closest(".rm-tile video, .rm-stage video"); if (!v) return;
+  if (v.classList.contains("zoomed")) { v.classList.remove("zoomed"); v.style.transform = ""; return; }
+  const r = v.getBoundingClientRect(); v.style.transformOrigin = `${((e.clientX - r.left) / r.width * 100).toFixed(1)}% ${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`;
+  v.classList.add("zoomed", "rm-zoom"); v.dataset.z = "2.2"; v.style.transform = (v.closest(".mirror") ? "scaleX(-1) " : "") + "scale(2.2)";
+}, true);
+document.addEventListener("wheel", (e) => {
+  const v = e.target && e.target.closest && e.target.closest(".rm-stage video"); if (!v) return;
+  e.preventDefault(); let z = +(v.dataset.z || 1) * (e.deltaY < 0 ? 1.12 : 1 / 1.12); z = Math.max(1, Math.min(5, z)); v.dataset.z = z;
+  const r = v.getBoundingClientRect(); if (z > 1.01) { v.style.transformOrigin = `${((e.clientX - r.left) / r.width * 100).toFixed(1)}% ${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`; v.classList.add("zoomed", "rm-zoom"); v.style.transform = (v.closest(".mirror") ? "scaleX(-1) " : "") + `scale(${z.toFixed(2)})`; } else { v.classList.remove("zoomed"); v.style.transform = ""; }
+}, { passive: false, capture: true });
+
+/* ---------- 5) PDF على السبورة للكتابة عليه ---------- */
+function wbPdfPick() { if (!wbCanDraw()) return; const i = document.createElement("input"); i.type = "file"; i.accept = "application/pdf"; i.onchange = () => { if (i.files[0]) wbPdfFile(i.files[0]); }; i.click(); }
+async function wbPdfFile(f) {
+  try {
+    toast(RL("pdfPages"));
+    await loadScriptOnce("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js");
+    const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    const doc = await lib.getDocument({ data: await f.arrayBuffer() }).promise; const n = Math.min(doc.numPages, 40);
+    for (let i = 1; i <= n; i++) {
+      const page = await doc.getPage(i); const base = page.getViewport({ scale: 1 }); const sc = Math.min(1500 / base.width, 860 / base.height) * 1.4;
+      const vp = page.getViewport({ scale: sc }); const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: cx, viewport: vp }).promise;
+      let q = .8, src = c.toDataURL("image/jpeg", q); while (src.length > 280000 && q > .3) { q -= .1; src = c.toDataURL("image/jpeg", q); }
+      const fit = Math.min(1580 / vp.width, 880 / vp.height), w = vp.width * fit, h = vp.height * fit;
+      const isBlank = wbPage().objs.length === 0 && i === 1;
+      if (!isBlank) wbAddPage();
+      const obj = { id: wbId(), k: "img", src, x: (WB_W - w) / 2, y: (WB_H - h) / 2, w, h, lock: true };
+      wbAdd(obj);
+    }
+    WB.tool = "pen"; wbToolbar(); wbCursor(); wbDraw();
+  } catch (e) { toast(e.message || String(e), true); }
+}
+
+/* ---------- 6) كمّل من اللي فات لكل طالب ---------- */
+async function boardKey() {
+  if (RM.boardKey) return RM.boardKey;
+  if (RM.kind === "lesson") { const { data } = await sb.from("lessons").select("student_id").eq("id", RM.id).maybeSingle(); RM.boardKey = data && data.student_id ? "s-" + data.student_id : "l-" + RM.id; }
+  else RM.boardKey = (RM.kind === "group" ? "g-" : "t-") + RM.id;
+  return RM.boardKey;
+}
+function boardPath(k) { return `${state.auth.user.id}/${k}.json`; }
+async function boardSave(manual) {
+  if (!rmIsHost() || !state.auth.user || RM.role === "owner") return;
+  const hasInk = WB.pages && WB.pages.some(p => p.objs.length); if (!hasInk) { if (manual) toast(RL("boardSaved")); return; }
+  const k = await boardKey();
+  const blob = new Blob([JSON.stringify({ v: 1, at: new Date().toISOString(), cur: wbPage().id, pages: WB.pages })], { type: "application/json" });
+  const { error } = await sb.storage.from("boards").upload(boardPath(k), blob, { upsert: true, contentType: "application/json" });
+  if (error) { if (manual) toast(error.message, true); return; }
+  RM.boardDirtyAt = 0; if (manual) toast(RL("boardSaved"));
+}
+async function boardCheck() {
+  if (!rmIsHost() || RM.role === "owner" || RM.saved !== undefined) return; RM.saved = null;
+  try { const k = await boardKey(); const r = await sb.storage.from("boards").download(boardPath(k)); if (r.error || !r.data) return; const d = JSON.parse(await r.data.text()); if (d && Array.isArray(d.pages) && d.pages.some(p => p.objs && p.objs.length)) { RM.saved = d; wbToolbar(); rmBanner17(`↩️ ${RL("resumeAt")}: ${fmtDT(d.at)}`, RL("resume"), "boardResume()"); } } catch (e) {}
+}
+function rmBanner17(txt, btn, on) { const b = rmEl("rmBanner"); if (!b) return; b.innerHTML = `<div style="position:absolute;top:3.4rem;left:50%;transform:translateX(-50%);z-index:30;background:#1e293b;border:1px solid #f59e0b;border-radius:12px;padding:.5rem .8rem;display:flex;gap:.6rem;align-items:center;color:#fde68a;font-size:.88rem">${esc(txt)}<button class="rm-pbtn p" onclick="${on};rmEl('rmBanner').innerHTML=''">${esc(btn)}</button><button class="rm-pbtn" onclick="rmEl('rmBanner').innerHTML=''">✕</button></div>`; }
+function boardResume() {
+  const d = RM.saved; if (!d) return;
+  WB.pages = d.pages.map(p => ({ id: p.id, bg: p.bg || "blank", objs: p.objs || [] })); WB.page = Math.max(0, WB.pages.findIndex(p => p.id === d.cur)); WB.undo = []; WB.redo = [];
+  RM.resumed = true; if (!WB.open) { WB.open = true; WB.hidden = false; } wbSendState(); rmRenderBar(); rmLayout(); wbToolbar(); wbDraw();
+}
+const _rmJoin17 = rmJoin;
+rmJoin = async function () {
+  const r = await _rmJoin17.apply(this, arguments);
+  RM.saved = undefined; RM.resumed = false; RM.boardKey = null; RM.net = {}; RM.spot = null; RM.spotG = undefined;
+  setTimeout(boardCheck, 1500);
+  if (RM.timers) RM.timers.push(setInterval(() => { if (rmIsHost() && RM.joined) boardSave(false); }, 90000));
+  return r;
+};
+const _roomLeave17 = roomLeave;
+roomLeave = function (force, msg) {
+  if (!force && !confirm(RL("leaveConfirm"))) return;
+  const p = rmIsHost() && RM.joined ? boardSave(false) : Promise.resolve();
+  Promise.race([p, new Promise(r => setTimeout(r, 2500))]).finally(() => _roomLeave17(true, msg));
+};
+
+/* ---------- 7) لينك الفصل للمشاركة (حصص في وقت تاني) ---------- */
+function rmInviteModal() {
+  const m = rmEl("rmModal"); if (!m) return;
+  m.innerHTML = `<div class="rm-game" onclick="if(event.target===this)this.parentNode.innerHTML=''"><div style="width:min(480px,94vw);text-align:start"><div style="display:flex;justify-content:space-between;align-items:center"><b>🔗 ${RL("invite")}</b><button class="rm-pbtn" onclick="rmEl('rmModal').innerHTML=''">✕</button></div>
+    <p class="sm" style="color:#94a3b8;margin:.5rem 0">${RL("inviteHint")}</p><label class="sm">${RL("inviteHours")}</label>
+    <select class="rm-in" id="inv_h" style="margin:.3rem 0 .7rem"><option value="3">3h</option><option value="24">24h</option><option value="72" selected>3 days</option><option value="168">7 days</option><option value="720">30 days</option></select>
+    <button class="rm-pbtn p" style="padding:.5rem 1.2rem" onclick="rmInviteMake()">${RL("inviteMake")}</button><div id="inv_out" style="margin-top:.7rem"></div></div></div>`;
+}
+async function rmInviteMake() {
+  const { data, error } = await sb.rpc("room_invite_create", { p_kind: RM.kind, p_id: RM.id, p_hours: +rmEl("inv_h").value });
+  if (error) return toast(error.message, true);
+  const link = roomHref("x", "x").replace(/#\/room\/x\/x$/, "#/join/" + data);
+  const o = rmEl("inv_out"); if (o) o.innerHTML = `<input class="rm-in" dir="ltr" readonly value="${esc(link)}" onclick="this.select()"><div style="display:flex;gap:.4rem;margin-top:.4rem"><button class="rm-pbtn p" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(link)}').then(()=>toast(RL('copied')))">📋</button><a class="rm-pbtn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(link)}"><i class="fa-brands fa-whatsapp"></i></a></div>`;
+  try { await navigator.clipboard.writeText(link); toast(RL("copied")); } catch (e) {}
+}
+const _readHash17 = readHash;
+readHash = function () { const p = (location.hash || "").replace(/^#\/?/, "").split("/"); if (p[0] === "join" && p[1]) { state.route = "join"; state.pageArg = p[1]; return; } _readHash17(); };
+const _render17 = render;
+render = function () {
+  if (state.route !== "join") return _render17();
+  const app = document.getElementById("app"); if (!app) return;
+  if (!state.auth.user) { app.innerHTML = renderHeader() + `<section class="sec"><div class="wrap" style="max-width:520px"><div class="card" style="text-align:center"><h2>🔗 ${L("joinTitle")}</h2><p class="muted" style="margin:.6rem 0 1rem">${RL("loginFirst")}</p><button class="btn btn-p" onclick="lsSet('itqan_after_hash', location.hash);navigate('login')">${RL("signIn")}</button></div></div></section>` + renderFooter(); return; }
+  app.innerHTML = renderHeader() + `<section class="sec"><div class="wrap" style="max-width:520px"><div class="card" style="text-align:center" id="joinBox"><h2>🔗 ${L("joinTitle")}</h2>${loadingBox()}</div></div></section>` + renderFooter();
+  const tok = state.pageArg;
+  if (state.joining === tok) return; state.joining = tok;
+  sb.rpc("room_invite_redeem", { p_token: tok }).then(({ data, error }) => {
+    state.joining = null;
+    if (error || !data) { const b = document.getElementById("joinBox"); if (b) b.innerHTML = `<h2>🔗</h2><div class="err">${L("joinBad")}</div>`; return; }
+    location.hash = "#/room/" + data.kind + "/" + data.id;
+  });
+};
+
+/* ---------- 8) حماية المحتوى من برامج التحميل ---------- */
+async function secureDownload(bucket, path) {
+  try {
+    const { data: s } = await sb.auth.getSession(); const tok = s && s.session && s.session.access_token; if (!tok) throw new Error("login");
+    const r = await fetch(SB_URL + "/functions/v1/secure-media", { method: "POST", headers: { Authorization: "Bearer " + tok, apikey: SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ bucket, path }) });
+    if (!r.ok) throw new Error(r.status === 403 || r.status === 401 ? "denied" : "HTTP " + r.status);
+    const key = Uint8Array.from(atob(r.headers.get("x-k") || ""), c => c.charCodeAt(0)); const type = r.headers.get("x-t") || "";
+    const buf = new Uint8Array(await r.arrayBuffer());
+    for (let i = 0; i < buf.length; i++) buf[i] ^= key[i & 31] ^ ((i * 131 + (i >>> 8)) & 255);
+    return { data: new Blob([buf], { type: type || "application/octet-stream" }), error: null };
+  } catch (e) {
+    if (e.message === "denied" || e.message === "login") return { data: null, error: e };
+    return sb.storage.from(bucket).download(path); // احتياطي لو الوظيفة مش متاحة
+  }
+}
+// المحتوى المحمي ميتحفظش ولا يتصوّر بسهولة
+function svShield(on) { const m = document.getElementById("svModal"); if (!m) return; m.classList.toggle("sv-shield", !!on); }
+window.addEventListener("blur", () => setTimeout(() => { const a = document.activeElement; if (a && a.tagName === "IFRAME") return; svShield(true); }, 0)); window.addEventListener("focus", () => svShield(false));
+document.addEventListener("visibilitychange", () => { svShield(document.hidden); if (document.hidden) document.querySelectorAll("#svModal video, #svModal audio").forEach(v => { try { v.pause(); } catch (e) {} }); });
+document.addEventListener("keyup", (e) => { if (e.key === "PrintScreen" && document.getElementById("svModal")) { try { navigator.clipboard.writeText(""); } catch (x) {} svShield(true); setTimeout(() => svShield(false), 1500); } });
+document.addEventListener("keydown", (e) => { const k = (e.key || "").toLowerCase(); if (document.getElementById("svModal") && ((e.metaKey && e.shiftKey && ["3", "4", "5", "s"].includes(k)) || (e.key === "PrintScreen"))) { svShield(true); setTimeout(() => svShield(false), 1500); } }, true);
+document.head.insertAdjacentHTML("beforeend", `<style>
+.sv-shield .svbody{filter:blur(28px) brightness(.4);pointer-events:none}.sv-shield .svbox::after{content:"${"🔒"}";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3rem}
+.svwm{animation:svwmMove 14s linear infinite alternate}@keyframes svwmMove{0%{background-position:0 0}100%{background-position:240px 160px}}
+</style>`);
+
+/* ---------- 9) زرار تحميل التطبيق ظاهر بالكلام ---------- */
+const _renderHeader17 = renderHeader;
+renderHeader = function () {
+  let h = _renderHeader17();
+  if (typeof IS_STANDALONE !== "undefined" && IS_STANDALONE) return h;
+  h = h.replace(/<button class="ibtn hide-sm" onclick="navigate\('app'\)"[^>]*>[\s\S]*?<\/button>/, `<button class="btn btn-o appdl" onclick="navigate('app')" title="${L("appDl")}"><i class="fa-solid fa-download"></i> <span>${L("appDl")}</span></button>`);
+  if (!/class="btn btn-o appdl"/.test(h)) h = h.replace(/(<nav class="nav">)/, `$1<a href="#" onclick="navigate('app');return false;"><i class="fa-solid fa-download"></i> ${L("appDl")}</a>`);
+  return h + `<div class="appdl-m"><button onclick="navigate('app')"><i class="fa-solid fa-mobile-screen-button"></i> ${L("appDl")} · <i class="fa-brands fa-android"></i> <i class="fa-brands fa-apple"></i> <i class="fa-brands fa-windows"></i></button></div>`;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.appdl{padding:.4rem .75rem;font-size:.82rem;white-space:nowrap;border-color:var(--accent);color:var(--accent)}
+.appdl-m{display:none}@media(max-width:820px){.appdl span{display:none}.appdl-m{display:block;padding:.35rem .8rem 0}.appdl-m button{width:100%;border:1px dashed var(--accent);background:rgba(16,185,129,.08);color:var(--accent);border-radius:12px;padding:.45rem;font:700 .85rem Tajawal,sans-serif;cursor:pointer}}
+@media(display-mode:standalone){.appdl,.appdl-m{display:none!important}}</style>`);
+
+/* ---------- 10) تيك توك وإنستجرام في تواصل معنا + الفوتر ---------- */
+const SOC17 = [["tiktok", "fa-brands fa-tiktok", "TikTok"], ["instagram", "fa-brands fa-instagram", "Instagram"], ["youtube", "fa-brands fa-youtube", "YouTube"], ["facebook", "fa-brands fa-facebook", "Facebook"], ["telegram", "fa-brands fa-telegram", "Telegram"]];
+function socialLinks() { const s = (state.settings && state.settings.social) || CONFIG.social || {}; return SOC17.filter(([k]) => s[k]).map(([k, ic, n]) => ({ k, ic, n, u: /^https?:\/\//.test(s[k]) ? s[k] : "https://" + s[k].replace(/^@/, k === "tiktok" ? "www.tiktok.com/@" : k === "instagram" ? "instagram.com/" : "") })); }
+function socialHtml(big) { const l = socialLinks(); if (!l.length) return ""; return `<div class="row" style="gap:.5rem;flex-wrap:wrap;${big ? "margin-top:1rem" : ""}">${l.map(x => `<a class="${big ? "btn btn-o" : "ibtn"}" href="${esc(x.u)}" target="_blank" rel="noopener" title="${x.n}"><i class="${x.ic}"></i>${big ? " " + x.n : ""}</a>`).join("")}</div>`; }
+const _renderContact17 = renderContact;
+renderContact = function () { const s = socialHtml(true); return s ? _renderContact17().replace(/(<\/a>\s*<\/div>\s*<\/section>\s*)$/, `</a>${s}</div></section>`) : _renderContact17(); };
+const _renderFooter17 = renderFooter;
+renderFooter = function () { const s = socialHtml(false); const h = _renderFooter17(); return s ? h.replace(/(<footer>\s*<div class="wrap">\s*<div>)/, `$1<div style="margin-bottom:.6rem"><b class="sm">${L("ftFollow")}</b>${s}</div>`) : h; };
+const _ownerSettings17 = ownerSettings;
+ownerSettings = function () {
+  const h = _ownerSettings17(); const d = settingsDraft(); d.social = d.social || {};
+  const card = `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.8rem">📱 ${L("setSocial")}</h3><div class="fgrid">${SOC17.map(([k, ic, n]) => `<div><label class="l"><i class="${ic}"></i> ${n}</label><input class="in" dir="ltr" value="${esc(d.social[k] || "")}" placeholder="https://… / @username" oninput="sdSet('social.${k}', this.value.trim())"></div>`).join("")}</div></div>`;
+  const i = h.indexOf(`<h3 style="margin-bottom:.8rem">${L("setPayments")}</h3>`); if (i < 0) return h + card;
+  const j = h.lastIndexOf(`<div class="card"`, i); return h.slice(0, j) + card + h.slice(j);
+};
+
+/* ---------- 11) التقييم للمشتركين اللي حضروا بس + ينشر على طول ---------- */
+const _myReviewCard17 = myReviewCard;
+myReviewCard = function () {
+  const ok = useData("canReview", async () => { const { data } = await sb.rpc("can_review"); return [!!data]; });
+  if (!Array.isArray(ok)) return "";
+  if (!ok[0]) return `<div class="card" style="margin-top:1.2rem"><h3>⭐ ${L("rvMine")}</h3><p class="sm muted" style="margin-top:.4rem">🔒 ${L("rvOnlyPaid")}</p></div>`;
+  return _myReviewCard17().replace(L("rvMineHint"), L("rvMineHint2"));
+};
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
