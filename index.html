@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v10";
+const UI_VERSION = "2026-11-11-v11";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -6177,7 +6177,7 @@ function rmRenderBar() {
     btn("rbHand", "fa-hand", RM.hand ? RL("lowerHand") : RL("hand"), RM.hand ? "on" : "", "rmToggleHand()"),
     btn("rbReact", "fa-face-smile", RL("react"), "", "rmMenu('react',this)"),
     btn("rbChat", "fa-comments", RL("chat"), RM.panel === "chat" ? "on" : "", "rmPanel('chat')", RM.unread ? `<i class="dot">${RM.unread}</i>` : ""),
-    btn("rbPeople", "fa-users", RL("people"), RM.panel === "people" ? "on" : "", "rmPanel('people')", host && hands ? `<i class="dot">✋${hands}</i>` : `<i class="dot" style="background:#334155">${Object.keys(RM.peers).length + 1}</i>`),
+    btn("rbPeople", "fa-users", RL("people"), RM.panel === "people" ? "on" : "", "rmPanel('people')", host && hands ? `<i class="dot">✋${hands}</i>` : `<i class="dot" style="background:#334155">${rmVisCount()}</i>`),
     host ? btn("rbAtt", "fa-clipboard-list", RL("attend"), RM.panel === "att" ? "on" : "", "rmPanel('att')") : "",
     host && rmCanRecord() ? btn("rbRec", "fa-circle", RM.rec ? RL("stopRec") : RL("rec"), RM.rec ? "off" : "", "rmToggleRec()") : "",
     btn("rbMore", "fa-ellipsis", RL("more"), "", "rmMenu('more',this)"),
@@ -6191,7 +6191,7 @@ function rmTopUpdate() {
   const q = RM.q; const qt = q == null ? "" : q >= 3 ? RL("qGood") : q === 2 ? RL("qFair") : q === 1 ? RL("qPoor") : RL("connecting");
   el.innerHTML = `<span class="t">🎓 ${esc(rmTitle())}</span><span class="rm-chip" id="rmTimer"></span>${anyRec ? `<span class="rm-chip rec" title="${RL("recOn")}">● REC</span>` : ""}<span style="flex:1"></span>
     ${q == null ? "" : `<span class="rm-chip" title="${esc(qt)}">${rmBarsHtml(q)} <span class="hide-sm">${esc(qt)}</span></span>`}
-    <span class="rm-chip"><i class="fa-solid fa-user-group"></i> ${Object.keys(RM.peers).length + 1}</span>
+    <span class="rm-chip"><i class="fa-solid fa-user-group"></i> ${rmVisCount()}</span>
     <button class="rm-pbtn hide-sm" title="${RL(RM.layout === "grid" ? "speaker" : "grid")}" onclick="rmSetLayout()"><i class="fa-solid ${RM.layout === "grid" ? "fa-user" : "fa-table-cells"}"></i></button>
     <button class="rm-pbtn" title="${RL("full")}" onclick="rmFullscreen()"><i class="fa-solid fa-expand"></i></button>`;
   rmTick();
@@ -6298,7 +6298,7 @@ function rmCreatePeer(pid) {
   const p = { id: pid, pc, polite: RM.pid > pid, makingOffer: false, ignoreOffer: false, srdAnswerPending: false, streams: {}, snd: {}, scr: [], meta: RM.members[pid] || {}, q: 0, chain: Promise.resolve(), pend: [] };
   RM.peers[pid] = p;
   ["audio", "video"].forEach(kind => {
-    const t = kind === "audio" ? RM.local.getAudioTracks()[0] : RM.camTrack;
+    const t = kind === "audio" ? RM.local.getAudioTracks()[0] : (RM.fxOut || RM.camTrack);
     p.snd[kind] = t ? pc.addTrack(t, RM.local) : pc.addTransceiver(kind, { direction: "sendrecv", streams: [RM.local] }).sender;
   });
   if (RM.screen) RM.screen.getTracks().forEach(t => p.scr.push(pc.addTrack(t, RM.screen)));
@@ -6364,7 +6364,7 @@ function rmOnPresence() {
   Object.keys(st).forEach(k => { const arr = st[k] || []; const m = arr[arr.length - 1]; if (m && m.pid) list[k] = m; });
   RM.members = list;
   if (!RM.joined) {
-    const w = rmEl("rmPreWho"); const names = Object.values(list).map(m => m.name + (m.role === "host" ? " (" + RL("host") + ")" : ""));
+    const w = rmEl("rmPreWho"); const names = Object.values(list).filter(m => !m.hidden).map(m => m.name + (m.role === "host" ? " (" + RL("host") + ")" : ""));
     if (w) w.textContent = names.length ? `🟢 ${RL("inClass")}: ${names.join("، ")}` : "";
     return;
   }
@@ -6383,9 +6383,9 @@ function rmOnJoinEv(key, arr) {
   const isNew = !RM.seen.has(key); RM.seen.add(key);
   if (!isNew || !RM.joined || key === RM.pid) return;
   const m = (arr && arr[0]) || {};
-  toast(`${m.name || ""} ${RL("joined")}`); rmBeep(740, .1);
+  if (!m.hidden) { toast(`${m.name || ""} ${RL("joined")}`); rmBeep(740, .1); }
   // تسليم حالة السبورة للقادم الجديد من قائد واحد فقط
-  const cands = Object.keys(RM.members).filter(k => k !== key).map(k => RM.members[k]);
+  const cands = Object.keys(RM.members).filter(k => k !== key).map(k => RM.members[k]).filter(c => !c.hidden);
   if (!cands.find(c => c.pid === RM.pid)) cands.push(rmMeta());
   cands.sort((a, b) => ((b.role === "host") - (a.role === "host")) || ((b.role === "owner") - (a.role === "owner")) || ((a.at || 0) - (b.at || 0)) || (a.pid < b.pid ? -1 : 1));
   if (cands[0] && cands[0].pid === RM.pid) setTimeout(() => wbSendState(key), 700);
@@ -6394,7 +6394,7 @@ function rmOnLeaveEv(key, arr) {
   setTimeout(() => {
     if (!RM.ch) return;
     const st = RM.ch.presenceState();
-    if (!st[key] || !st[key].length) { if (RM.seen.has(key) && RM.joined && key !== RM.pid) { const m = (arr && arr[0]) || {}; toast(`${m.name || ""} ${RL("left")}`); } RM.seen.delete(key); }
+    if (!st[key] || !st[key].length) { if (RM.seen.has(key) && RM.joined && key !== RM.pid) { const m = (arr && arr[0]) || {}; if (!m.hidden) toast(`${m.name || ""} ${RL("left")}`); } RM.seen.delete(key); }
   }, 80);
 }
 function rmOnEv(p) {
@@ -6445,8 +6445,8 @@ function rmLayoutSoon() { if (RM.lraf) return; RM.lraf = requestAnimationFrame((
 function rmLayout() {
   const stage = rmEl("rmStage"), strip = rmEl("rmStrip"), grid = rmEl("rmGrid");
   if (!stage || !RM.joined) return;
-  const items = [], me = rmMeta(), peers = Object.values(RM.peers);
-  if (!RM.prefs.hideSelf || !peers.length) items.push({ id: "me", kind: "cam", me: true, stream: RM.local, meta: me });
+  const items = [], me = rmMeta(), peers = Object.values(RM.peers).filter(p => !(p.meta && p.meta.hidden));
+  if (!RM.prefs.hideSelf || !peers.length) items.push({ id: "me", kind: "cam", me: true, stream: RM.fxStream || RM.local, meta: me });
   if (RM.screen) items.push({ id: "me:screen", kind: "screen", me: true, stream: RM.screen, meta: me });
   peers.forEach(p => {
     const m = p.meta || {};
@@ -6596,7 +6596,7 @@ async function rmChatSend() {
 }
 function rmPeopleHtml() {
   const host = rmIsHost();
-  const all = [Object.assign({ me: true, q: RM.q }, rmMeta())].concat(Object.values(RM.peers).map(p => Object.assign({}, p.meta || {}, { pid: p.id, q: p.q, rtt: p.rtt, relay: p.relay })));
+  const all = [Object.assign({ me: true, q: RM.q }, rmMeta())].concat(Object.values(RM.peers).filter(p => !(p.meta && p.meta.hidden)).map(p => Object.assign({}, p.meta || {}, { pid: p.id, q: p.q, rtt: p.rtt, relay: p.relay })));
   const ro = { host: 0, owner: 1, guest: 2 };
   all.sort((a, b) => ((b.hand ? 1 : 0) - (a.hand ? 1 : 0)) || ((a.hand || 0) - (b.hand || 0)) || ((ro[a.role] || 2) - (ro[b.role] || 2)) || String(a.name).localeCompare(String(b.name)));
   const hands = all.filter(x => x.hand).length;
@@ -8212,6 +8212,578 @@ appCtaBanner = function () {
   return `<section style="padding:1rem 0"><div class="wrap"><div class="appcta"><div><b style="font-size:1.15rem">${L("apBanner")}</b><div class="sm" style="opacity:.9">${L("apSync")}</div></div>
     <button class="btn" onclick="deferredInstall?installApp12():navigate('app')"><i class="${OS_INFO[os].ic}"></i> ${esc(tpl10(L("apFor"), { os: osLabel(os) }))}</button></div></div></section>`;
 };
+
+
+/* ======================= v14: الفصل 2 — سبورة ملء الشاشة، إشراف خفي، تفريغ نصي، مؤثرات للأطفال، ألعاب، مصحف، PDF ======================= */
+Object.assign(UI.en, {
+  rm_fx: "Effects", rm_fxFilter: "Video filter", rm_fxSticker: "Fun stickers", rm_fxBg: "Background", rm_fxNone: "None", rm_fxBlur: "Blur",
+  rm_fxF: { none: "Normal", warm: "Warm", cool: "Cool", bw: "Black & white", vintage: "Vintage", bright: "Bright", pop: "Cartoon pop" },
+  rm_fxS: { none: "None", crown: "👑 Crown", stars: "⭐ Stars", balloons: "🎈 Balloons", hearts: "💖 Hearts", frame: "🌈 Rainbow frame" },
+  rm_fxB: { none: "None", blur: "Blur", emerald: "Emerald", night: "Night sky", sunrise: "Sunrise" }, rm_fxLoading: "Loading background effect…", rm_fxFail: "Background effect isn't available on this device",
+  rm_fun: "Fun", rm_sounds: "Class sounds", rm_snd: { correct: "✅ Correct", wrong: "❌ Try again", applause: "👏 Applause", drum: "🥁 Drum roll", fanfare: "🎺 Celebration", bell: "🔔 Bell" },
+  rm_star: "Give a star", rm_starGot: "got a star! ⭐", rm_starAll: "Stars for everyone", rm_confetti: "🎉 Confetti",
+  rm_games: "Games", rm_gWheel: "🎡 Spin the wheel", rm_gDice: "🎲 Dice", rm_gTtt: "⭕ Tic-tac-toe", rm_gQuiz: "❓ Quick quiz", rm_spin: "Spin", rm_roll: "Roll",
+  rm_reset: "Reset", rm_close: "Close", rm_items: "Items (one per line)", rm_itemsDef: "Al-Fatiha\nAl-Ikhlas\nAl-Falaq\nAn-Nas\nAl-Kawthar\nAl-Asr",
+  rm_question: "Question", rm_options: "Answers (one per line)", rm_correctIdx: "Correct answer #", rm_start: "Start", rm_reveal: "Show the answer", rm_answers: "answers",
+  rm_turn: "Turn", rm_wins: "wins! 🎉", rm_draw: "Draw!",
+  rm_ayah: "Insert Quran ayahs", rm_surah: "Surah", rm_from: "From ayah", rm_to: "To ayah", rm_insert: "Insert", rm_ayahLoading: "Loading ayahs…",
+  rm_pdf: "Download board as PDF", rm_trOn: "Lesson transcript on", rm_trLang: "My speaking language (for the transcript)", rm_trOff: "Transcript off",
+  rm_oneLeft: "1 minute left", rm_timeUp: "Lesson time is over", rm_backup: "Send a backup link", rm_backupPrompt: "Paste a Zoom / Google Meet link to use if the classroom has trouble:",
+  rm_backupSent: "Backup link sent to the student ✓", rm_backupGot: "Your teacher sent a backup link", rm_openBackup: "Open backup link",
+  rm_hidden: "👁️ You are watching silently — participants can't see you", rm_showMe: "Show me to participants", rm_hideMe: "Watch silently",
+  rm_netYou: "Your network", copyLink: "Copy lesson link", backupLink: "Backup link",
+  repTitle: "Lesson report", repAuto: "Automatic report", repAi: "AI report", repMin: "Lesson length", repTeacherMin: "Teacher in class", repStudentMin: "Student in class",
+  repTalk: "Student speaking share", repLangs: "Languages", repSurahs: "Surahs mentioned", repMaqams: "Maqams", repTajweed: "Tajweed topics", repNone: "No classroom transcript for this lesson yet.",
+  repTopics: "Topics", repStrengths: "Strengths", repMistakes: "To improve", repHomework: "Suggested homework", repNext: "Next lesson", repTranscript: "Full transcript (owner only)",
+  repConcerns: "⚠️ Points for the academy", repList: "Lesson reports", repOpen: "Report", repAiOff: "AI reports are off — enable them in Settings when you choose an AI provider.",
+  crTips: "If the classroom doesn't work", crTipsList: ["Use Chrome or Edge (or Safari on iPhone) and allow the camera and microphone.", "Refresh the page or try another network (mobile data).", "Your teacher can send a backup Zoom/Meet link — it appears on the lesson card and in your notifications.", "Lessons may be supervised and transcribed automatically by the academy for quality and safety."],
+  policyMonitor: "Quality & safety: lessons in the academy classroom may be supervised by the academy administration and transcribed automatically. Transcripts are used only by the academy administration to review lesson quality, protect students and prepare lesson reports."
+});
+Object.assign(UI.ar, {
+  rm_fx: "مؤثرات", rm_fxFilter: "فلتر الفيديو", rm_fxSticker: "ملصقات مرحة", rm_fxBg: "الخلفية", rm_fxNone: "بدون", rm_fxBlur: "تمويه",
+  rm_fxF: { none: "عادي", warm: "دافئ", cool: "بارد", bw: "أبيض وأسود", vintage: "قديم", bright: "مضيء", pop: "كرتون" },
+  rm_fxS: { none: "بدون", crown: "👑 تاج", stars: "⭐ نجوم", balloons: "🎈 بالونات", hearts: "💖 قلوب", frame: "🌈 إطار ملون" },
+  rm_fxB: { none: "بدون", blur: "تمويه", emerald: "زمردي", night: "سماء الليل", sunrise: "شروق" }, rm_fxLoading: "بنحمّل مؤثر الخلفية…", rm_fxFail: "مؤثر الخلفية مش متاح على الجهاز ده",
+  rm_fun: "مرح", rm_sounds: "أصوات الفصل", rm_snd: { correct: "✅ صح", wrong: "❌ حاول تاني", applause: "👏 تصفيق", drum: "🥁 طبول", fanfare: "🎺 احتفال", bell: "🔔 جرس" },
+  rm_star: "ادّي نجمة", rm_starGot: "خد نجمة! ⭐", rm_starAll: "نجوم للكل", rm_confetti: "🎉 احتفال",
+  rm_games: "ألعاب", rm_gWheel: "🎡 عجلة الحظ", rm_gDice: "🎲 النرد", rm_gTtt: "⭕ إكس أو", rm_gQuiz: "❓ سؤال سريع", rm_spin: "لِف", rm_roll: "ارمي",
+  rm_reset: "من الأول", rm_close: "قفل", rm_items: "العناصر (كل واحد في سطر)", rm_itemsDef: "الفاتحة\nالإخلاص\nالفلق\nالناس\nالكوثر\nالعصر",
+  rm_question: "السؤال", rm_options: "الإجابات (كل إجابة في سطر)", rm_correctIdx: "رقم الإجابة الصح", rm_start: "ابدأ", rm_reveal: "اظهر الإجابة", rm_answers: "إجابة",
+  rm_turn: "الدور على", rm_wins: "كسب! 🎉", rm_draw: "تعادل!",
+  rm_ayah: "إدراج آيات من القرآن", rm_surah: "السورة", rm_from: "من آية", rm_to: "إلى آية", rm_insert: "إدراج", rm_ayahLoading: "بنحمّل الآيات…",
+  rm_pdf: "تحميل السبورة PDF", rm_trOn: "التفريغ النصي للحصة شغال", rm_trLang: "لغة كلامي (للتفريغ النصي)", rm_trOff: "التفريغ متوقف",
+  rm_oneLeft: "باقي دقيقة", rm_timeUp: "وقت الحصة خلص", rm_backup: "ابعت لينك احتياطي", rm_backupPrompt: "الصق لينك Zoom أو Google Meet يُستخدم لو الفصل فيه مشكلة:",
+  rm_backupSent: "اللينك الاحتياطي اتبعت للطالب ✓", rm_backupGot: "المعلم بعت لينك احتياطي", rm_openBackup: "افتح اللينك الاحتياطي",
+  rm_hidden: "👁️ إنت بتتابع بشكل خفي — المشاركين مش شايفينك", rm_showMe: "اظهر للمشاركين", rm_hideMe: "تابع بشكل خفي",
+  rm_netYou: "شبكتك", copyLink: "انسخ لينك الحصة", backupLink: "لينك احتياطي",
+  repTitle: "تقرير الحصة", repAuto: "التقرير التلقائي", repAi: "تقرير الذكاء الاصطناعي", repMin: "مدة الحصة", repTeacherMin: "المعلم في الفصل", repStudentMin: "الطالب في الفصل",
+  repTalk: "نسبة كلام الطالب", repLangs: "اللغات", repSurahs: "السور اللي اتذكرت", repMaqams: "المقامات", repTajweed: "موضوعات التجويد", repNone: "لسه مفيش تفريغ نصي للحصة دي.",
+  repTopics: "الموضوعات", repStrengths: "نقاط القوة", repMistakes: "محتاج تحسين", repHomework: "واجب مقترح", repNext: "الحصة الجاية", repTranscript: "التفريغ الكامل (للأونر بس)",
+  repConcerns: "⚠️ ملاحظات للأكاديمية", repList: "تقارير الحصص", repOpen: "التقرير", repAiOff: "تقارير الذكاء الاصطناعي متوقفة — فعّلها من الإعدادات لما تختار مزوّد ذكاء اصطناعي.",
+  crTips: "لو الفصل مش شغال", crTipsList: ["استخدم كروم أو إيدج (أو سفاري على الآيفون) واسمح بالكاميرا والمايك.", "اعمل تحديث للصفحة أو جرّب شبكة تانية (باقة الموبايل).", "المعلم يقدر يبعت لينك Zoom/Meet احتياطي — هيظهر على كارت الحصة وفي الإشعارات.", "الحصص ممكن تكون تحت إشراف الأكاديمية ويتعملها تفريغ نصي تلقائي للجودة والأمان."],
+  policyMonitor: "الجودة والأمان: الحصص في فصل الأكاديمية ممكن تكون تحت إشراف إدارة الأكاديمية ويتعملها تفريغ نصي تلقائي. التفريغ بيُستخدم من إدارة الأكاديمية بس لمراجعة جودة الحصص وحماية الطلاب وإعداد تقارير الحصص."
+});
+Object.assign(UI.en.nkT, { backup_link: "🛟 Your teacher sent a backup link for the lesson on {at}", lesson_report: "📊 The report for your lesson on {at} is ready", lesson_flag: "⚠️ Lesson on {at} needs a look: {text}" });
+Object.assign(UI.ar.nkT, { backup_link: "🛟 المعلم بعت لينك احتياطي لحصة {at}", lesson_report: "📊 تقرير حصة {at} جاهز", lesson_flag: "⚠️ حصة {at} محتاجة مراجعة: {text}" });
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rm-top{position:relative}#rmProg{position:absolute;left:0;bottom:-1px;height:3px;background:#10b981;transition:width 1s linear}#rmProg.warn{background:#f59e0b}
+.rm-main.wbmode{flex-direction:row}.rm-main.wbmode .rm-stage{order:1}
+.rm-main.wbmode .rm-strip{order:2;flex-direction:column;width:210px;height:auto;max-height:100%;overflow-y:auto}
+.rm-main.wbmode .rm-strip>*{width:100%!important;height:118px!important}
+@media(max-width:820px){.rm-main.wbmode .rm-strip{position:absolute;top:.5rem;inset-inline-end:.5rem;width:104px;z-index:6;gap:.3rem;max-height:60%}
+ .rm-main.wbmode .rm-strip>*{height:64px!important;border-radius:8px}.rm-main.wbmode .rm-strip .rm-lbl{display:none}}
+.rm-game{position:fixed;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.55)}
+.rm-game>div{background:#0f172a;border:1px solid #334155;border-radius:18px;padding:1.2rem;width:min(520px,94vw);max-height:90vh;overflow:auto;text-align:center}
+.rm-ttt{display:grid;grid-template-columns:repeat(3,84px);gap:6px;justify-content:center;margin:1rem auto}
+.rm-ttt button{height:84px;font-size:2.4rem;border-radius:12px;border:1px solid #334155;background:#111827;color:#fff;cursor:pointer}
+.rm-quiz button{display:block;width:100%;margin:.4rem 0;padding:.7rem;border-radius:12px;border:1px solid #334155;background:#111827;color:#e5e7eb;cursor:pointer;text-align:start;font-size:1rem}
+.rm-quiz button.ok{background:#065f46;border-color:#10b981}.rm-quiz button.bad{background:#7f1d1d}
+.rm-dice{font-size:6rem;line-height:1;margin:1rem 0}.rm-dice.roll{animation:rmShake .6s}
+@keyframes rmShake{0%{transform:rotate(0)}25%{transform:rotate(25deg) scale(1.1)}50%{transform:rotate(-25deg)}75%{transform:rotate(15deg) scale(1.1)}100%{transform:rotate(0)}}
+.rm-bigstar{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:8rem;z-index:40;animation:rmStar 2.4s ease-out forwards;pointer-events:none;text-align:center}
+.rm-bigstar small{display:block;font-size:1.2rem;background:rgba(0,0,0,.6);border-radius:10px;padding:.2rem .6rem;color:#fff}
+@keyframes rmStar{0%{transform:translate(-50%,-50%) scale(.2) rotate(-40deg);opacity:0}20%{transform:translate(-50%,-50%) scale(1.15) rotate(10deg);opacity:1}80%{opacity:1}100%{transform:translate(-50%,-80%) scale(1);opacity:0}}
+.rm-chipx{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .7rem;border-radius:999px;border:1px solid #334155;background:#111827;color:#e5e7eb;cursor:pointer;font-size:.85rem;margin:.2rem}
+.rm-chipx.on{background:#047857;border-color:#10b981}
+#lrModal{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
+#lrModal>.card{width:min(760px,96vw);max-height:90vh;overflow:auto}
+</style>`);
+
+/* ---------- عدّ المشاركين الظاهرين + الإشراف الخفي ---------- */
+function rmVisCount() { return Object.values(RM.peers || {}).filter(p => !(p.meta && p.meta.hidden)).length + 1; }
+function rmHidden() { return RM.role === "owner" && !(RM.prefs && RM.prefs.ownerVisible); }
+const _rmMeta14 = rmMeta;
+rmMeta = function () { const m = _rmMeta14(); if (rmHidden()) m.hidden = true; return m; };
+const _rmJoin14 = rmJoin;
+rmJoin = async function () {
+  await _rmJoin14();
+  if (!RM.joined) return;
+  if (rmHidden()) { try { if (RM.camTrack) await rmSetCam(false); rmSetMic(false); } catch (e) {} rmBanner(RL("hidden")); setTimeout(() => { if (RM.joined && rmHidden()) rmBanner(null); }, 6000); }
+  if (RM.prefs.fx) { RM.fx = Object.assign({ filter: "none", sticker: "none", bg: "none" }, RM.prefs.fx); if (fxActive()) fxStart(); }
+  trStart();
+  if (RM.kind === "lesson") { try { const { data } = await sb.from("lessons").select("backup_url").eq("id", RM.id).maybeSingle(); if (data && data.backup_url) RM.backupUrl = data.backup_url; } catch (e) {} }
+  rmTopUpdate();
+};
+function rmToggleVisible() { RM.prefs.ownerVisible = !RM.prefs.ownerVisible; rmSavePrefs(); rmMenuClose(); rmTrack(); rmBanner(rmHidden() ? RL("hidden") : null); rmLayout(); rmTopUpdate(); }
+
+/* ---------- السبورة ملء الشاشة + الفيديو في الجنب ---------- */
+const _rmLayout14 = rmLayout;
+rmLayout = function () {
+  _rmLayout14();
+  const main = rmEl("rmMain"), stage = rmEl("rmStage");
+  if (main && stage) { const on = !!stage.querySelector("#rmWb") && stage.style.display !== "none"; if (main.classList.contains("wbmode") !== on) { main.classList.toggle("wbmode", on); setTimeout(() => { try { wbResize(); } catch (e) {} }, 50); } }
+};
+
+/* ---------- الشبكة + التفريغ + التوقيت في الشريط العلوي ---------- */
+const _rmTopUpdate14 = rmTopUpdate;
+rmTopUpdate = function () {
+  _rmTopUpdate14();
+  const el = rmEl("rmTop"); if (!el || !RM.joined) return;
+  const c = navigator.connection;
+  const net = !Object.keys(RM.peers || {}).length ? `<span class="rm-chip hide-sm" title="${RL("netYou")}">📶 ${c && c.effectiveType ? esc(c.effectiveType) + (c.downlink ? " · " + c.downlink + " Mbps" : "") : (navigator.onLine ? "Online" : "Offline")}</span>` : "";
+  const rtt = Object.values(RM.peers || {}).map(p => p.rtt).filter(x => x != null);
+  const ms = rtt.length ? `<span class="rm-chip hide-sm">⏱ ${Math.round(Math.max(...rtt))} ms</span>` : "";
+  const tr = RM.sr ? `<span class="rm-chip" title="${RL("trOn")}">📝 <span class="hide-sm">${RL("trOn")}</span></span>` : "";
+  const hid = rmHidden() ? `<span class="rm-chip warn">👁️</span>` : "";
+  const bk = RM.backupUrl ? `<a class="rm-chip" style="text-decoration:none;color:#fde68a" href="${esc(RM.backupUrl)}" target="_blank" rel="noopener">🛟 <span class="hide-sm">${RL("openBackup")}</span></a>` : "";
+  el.querySelector('span[style="flex:1"]').insertAdjacentHTML("afterend", hid + tr + net + ms + bk);
+  el.insertAdjacentHTML("beforeend", `<div id="rmProg"></div>`);
+  rmTick();
+};
+const _rmTick14 = rmTick;
+rmTick = function () {
+  _rmTick14();
+  if (!RM.info || !RM.info.end || !RM.info.start) return;
+  const s = new Date(RM.info.start).getTime(), e = new Date(RM.info.end).getTime(), now = Date.now(), left = e - now;
+  const pb = rmEl("rmProg"); if (pb) { pb.style.width = Math.max(0, Math.min(100, (now - s) / (e - s) * 100)) + "%"; pb.className = left < 5 * 60e3 ? "warn" : ""; }
+  if (left <= 5 * 60e3 && left > 4 * 60e3 && !RM.al5) { RM.al5 = 1; sfx("alarm"); rmBanner("⏰ " + RL("fiveLeft")); setTimeout(() => rmBanner(rmHidden() ? RL("hidden") : null), 7000); }
+  if (left <= 60e3 && left > 20e3 && !RM.al1) { RM.al1 = 1; sfx("bell"); toast("⏰ " + RL("oneLeft")); }
+  if (left <= 0 && left > -60e3 && !RM.al0) { RM.al0 = 1; sfx("alarm"); rmBanner("🔔 " + RL("timeUp")); setTimeout(() => rmBanner(null), 9000); }
+};
+
+/* ---------- أصوات ومؤثرات للأطفال ---------- */
+function sfx(name) {
+  const ac = RM.ac; if (!ac) return;
+  try { if (ac.state === "suspended") ac.resume(); } catch (e) {}
+  const now = ac.currentTime;
+  const tone = (f, t0, d, type, vol) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = type || "sine"; o.frequency.value = f; g.gain.setValueAtTime(vol || .2, now + t0); g.gain.exponentialRampToValueAtTime(.001, now + t0 + d); o.connect(g); g.connect(ac.destination); o.start(now + t0); o.stop(now + t0 + d + .05); };
+  const noise = (t0, d, vol, fc) => { const len = Math.max(1, Math.floor(ac.sampleRate * d)); const b = ac.createBuffer(1, len, ac.sampleRate); const ch = b.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2); const s = ac.createBufferSource(); s.buffer = b; const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = fc || 1500; const g = ac.createGain(); g.gain.value = vol || .3; s.connect(f); f.connect(g); g.connect(ac.destination); s.start(now + t0); };
+  if (name === "correct") { tone(660, 0, .15); tone(990, .12, .35); }
+  else if (name === "wrong") { tone(180, 0, .45, "sawtooth", .12); tone(140, .15, .4, "sawtooth", .1); }
+  else if (name === "applause") { for (let i = 0; i < 34; i++) noise(Math.random() * 1.8, .07, .3, 1100 + Math.random() * 1800); }
+  else if (name === "drum") { for (let i = 0; i < 26; i++) noise(i * .045, .05, .22, 380); noise(1.2, .9, .45, 3200); }
+  else if (name === "fanfare") { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .13, .35, "triangle", .16)); tone(1047, .6, .7, "triangle", .2); tone(784, .6, .7, "triangle", .1); }
+  else if (name === "bell") { tone(880, 0, 1.4, "sine", .25); tone(1320, 0, .9, "sine", .08); }
+  else if (name === "alarm") { for (let i = 0; i < 3; i++) { tone(880, i * .38, .18, "square", .1); tone(660, i * .38 + .18, .16, "square", .08); } }
+  else if (name === "pop") tone(520, 0, .09);
+}
+function confetti(ms) {
+  const root = rmEl("rmRoot") || document.body; const c = document.createElement("canvas");
+  c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:45"; c.width = innerWidth; c.height = innerHeight; root.appendChild(c);
+  const ctx = c.getContext("2d"), cols = ["#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#a855f7", "#ec4899", "#facc15"];
+  const P = Array.from({ length: 160 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * .5, vx: (Math.random() - .5) * 4, vy: 2 + Math.random() * 4, r: 4 + Math.random() * 6, a: Math.random() * 6, va: (Math.random() - .5) * .3, col: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  const step = (t) => { ctx.clearRect(0, 0, c.width, c.height); P.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .05; p.a += p.va; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.col; ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); ctx.restore(); });
+    if (t - t0 < (ms || 3200)) requestAnimationFrame(step); else c.remove(); };
+  requestAnimationFrame(step);
+}
+function rmPlay(name, broadcast) { sfx(name); if (name === "fanfare" || name === "applause") confetti(); if (broadcast) rmSend("sfx", { name }); }
+function rmGiveStar(pid) {
+  const m = pid === "all" ? null : (RM.members[pid] || {});
+  rmSend("star", { to: pid }); rmStarShow(pid, m ? m.name : RL("starAll"));
+}
+function rmStarShow(pid, name) {
+  RM.stars = RM.stars || {};
+  if (pid === "all") Object.keys(RM.members || {}).forEach(k => { RM.stars[k] = (RM.stars[k] || 0) + 1; }); else RM.stars[pid] = (RM.stars[pid] || 0) + 1;
+  sfx("fanfare"); confetti(2600);
+  const d = document.createElement("div"); d.className = "rm-bigstar"; d.innerHTML = `⭐<small>${esc(name || "")} ${pid === "all" ? "" : RL("starGot")}</small>`; (rmEl("rmRoot") || document.body).appendChild(d); setTimeout(() => d.remove(), 2500);
+  rmLayout();
+}
+const _rmUpdTile14 = rmUpdTile;
+rmUpdTile = function (it) {
+  const el = _rmUpdTile14(it);
+  const n = RM.stars && RM.stars[it.me ? RM.pid : it.id]; if (n && it.kind !== "screen") el.querySelector(".rm-badges").insertAdjacentHTML("beforeend", `<span>⭐${n}</span>`);
+  return el;
+};
+const _rmPeopleHtml14 = rmPeopleHtml;
+rmPeopleHtml = function () {
+  let h = _rmPeopleHtml14();
+  if (rmIsHost()) h = h.replace(/onclick="rmPin\('([^']+)'\)">📌<\/button>/g, (m, pid) => m + `<button class="rm-pbtn" title="${RL("star")}" onclick="rmGiveStar('${pid}')">⭐</button>`);
+  return h;
+};
+
+/* ---------- قوائم إضافية (مؤثرات / مرح / ألعاب / لينك احتياطي) ---------- */
+const _rmRenderBar14 = rmRenderBar;
+rmRenderBar = function () {
+  _rmRenderBar14();
+  const b = rmEl("rmBar"); if (!b) return;
+  const more = rmEl("rbMore"); if (!more) return;
+  const mk = (id, ic, lbl, on) => `<button class="rm-btn" id="${id}" onclick="${on}" title="${esc(lbl)}"><i class="fa-solid ${ic}"></i><span>${esc(lbl)}</span></button>`;
+  more.insertAdjacentHTML("beforebegin", (rmHidden() ? "" : mk("rbFx", "fa-wand-magic-sparkles", RL("fx"), "rmFxModal()")) + mk("rbFun", "fa-face-laugh-beam", RL("fun"), "rmMenu('fun',this)") + mk("rbGames", "fa-gamepad", RL("games"), "rmMenu('games',this)"));
+};
+const _rmMenu14 = rmMenu;
+rmMenu = function (kind, el) {
+  if (kind === "fun" || kind === "games") {
+    const m = rmEl("rmMenu"); if (!m) return;
+    if (RM.menu === kind) return rmMenuClose();
+    RM.menu = kind; const host = rmIsHost(); let h = "";
+    if (kind === "fun") {
+      const snd = RL("snd") || {};
+      h = (host ? `<div style="font-size:.75rem;color:#94a3b8;padding:.2rem .6rem">${RL("sounds")}</div>` + Object.keys(snd).map(k => `<button onclick="rmPlay('${k}',true)">${esc(snd[k])}</button>`).join("")
+        + `<button onclick="rmGiveStar('all');rmMenuClose()">⭐ ${RL("starAll")}</button><button onclick="rmPlay('fanfare',true);rmMenuClose()">${RL("confetti")}</button>` : `<button onclick="rmPlay('correct',false)">${esc(snd.correct)}</button><button onclick="confetti()">${RL("confetti")}</button>`)
+        + `<div class="rm-react" style="padding:.3rem">${RM_EMOJI.map(e => `<button onclick="rmReact('${e}')">${e}</button>`).join("")}</div>`;
+    } else {
+      h = [["wheel", RL("gWheel")], ["dice", RL("gDice")], ["ttt", RL("gTtt")], ["quiz", RL("gQuiz")]].filter(x => host || x[0] !== "quiz").map(([k, l]) => `<button onclick="rmMenuClose();gameStart('${k}')">${esc(l)}</button>`).join("");
+    }
+    m.innerHTML = `<div class="rm-menu" id="rmMenuBox">${h}</div>`;
+    const box = rmEl("rmMenuBox"), r = el.getBoundingClientRect();
+    box.style.left = Math.max(8, Math.min(innerWidth - box.offsetWidth - 8, r.left + r.width / 2 - box.offsetWidth / 2)) + "px";
+    return;
+  }
+  _rmMenu14(kind, el);
+  if (kind === "more") {
+    const box = rmEl("rmMenuBox"); if (!box) return;
+    let extra = "";
+    if (rmIsHost() && RM.kind === "lesson" && RM.role !== "owner") extra += `<button onclick="rmSendBackup()"><i class="fa-solid fa-life-ring"></i> ${RL("backup")}</button>`;
+    if (RM.role === "owner") extra += `<button onclick="rmToggleVisible()"><i class="fa-solid ${rmHidden() ? "fa-eye" : "fa-eye-slash"}"></i> ${rmHidden() ? RL("showMe") : RL("hideMe")}</button>`;
+    box.insertAdjacentHTML("afterbegin", extra);
+  }
+};
+const _rmMenuClose14 = rmMenuClose;
+rmMenuClose = function () { _rmMenuClose14(); };
+document.addEventListener("pointerdown", (e) => { if (RM.menu && (RM.menu === "fun" || RM.menu === "games") && !e.target.closest(".rm-menu") && !e.target.closest("#rbFun,#rbGames")) rmMenuClose(); }, true);
+async function rmSendBackup() {
+  rmMenuClose();
+  const u = prompt(RL("backupPrompt"), RM.backupUrl || "https://meet.google.com/"); if (u === null) return;
+  const { error } = await sb.rpc("set_backup_link", { p_lesson: RM.id, p_url: u.trim() || null });
+  if (error) return toast(error.message, true);
+  RM.backupUrl = u.trim() || null; rmSend("backup", { url: RM.backupUrl }); toast(RL("backupSent")); rmTopUpdate();
+}
+const _rmOnEv14 = rmOnEv;
+rmOnEv = function (p) {
+  if (!RM.joined || !p || p.from === RM.pid) return;
+  const fromHost = p.role === "host" || p.role === "owner";
+  if (p.type === "sfx" && fromHost) return rmPlay(p.name, false);
+  if (p.type === "star" && fromHost) { const me = p.to === RM.pid; const nm = p.to === "all" ? RL("starAll") : (me ? RL("you") : ((RM.members[p.to] || {}).name || "")); return rmStarShow(p.to, nm); }
+  if (p.type === "game") return gameRecv(p);
+  if (p.type === "game_ans") return gameAns(p);
+  if (p.type === "backup") { RM.backupUrl = p.url; if (p.url) { toast("🛟 " + RL("backupGot")); } rmTopUpdate(); return; }
+  return _rmOnEv14(p);
+};
+
+/* ---------- مؤثرات الفيديو (فلاتر، ملصقات، خلفيات) ---------- */
+const FX_FILTERS = { none: "none", warm: "sepia(.25) saturate(1.35) brightness(1.05)", cool: "hue-rotate(-12deg) saturate(1.15) brightness(1.03)", bw: "grayscale(1) contrast(1.1)", vintage: "sepia(.6) contrast(1.1) brightness(.95)", bright: "brightness(1.25) contrast(1.05)", pop: "saturate(2.1) contrast(1.35)" };
+function fxActive() { const f = RM.fx || {}; return (f.filter && f.filter !== "none") || (f.sticker && f.sticker !== "none") || (f.bg && f.bg !== "none"); }
+function fxStop(keep) {
+  if (RM.fxStopFn) RM.fxStopFn(); RM.fxStopFn = null; clearTimeout(RM.fxTimer);
+  if (RM.fxOut) { try { RM.fxOut.stop(); } catch (e) {} }
+  if (RM.fxVideo) { try { RM.fxVideo.srcObject = null; } catch (e) {} }
+  RM.fxOut = null; RM.fxStream = null; RM.fxVideo = null; RM.fxSrc = null;
+  if (!keep && RM.joined) { rmReplace("video", RM.camTrack || null); rmLayout(); }
+}
+async function fxSeg() {
+  if (window.__itqanSeg) return window.__itqanSeg;
+  toast(RL("fxLoading"));
+  try {
+    if (!window.SelfieSegmentation) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js"; s.crossOrigin = "anonymous"; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const seg = new window.SelfieSegmentation({ locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
+    seg.setOptions({ modelSelection: 1 }); await seg.initialize();
+    window.__itqanSeg = seg; return seg;
+  } catch (e) { console.warn(e); toast(RL("fxFail"), true); return null; }
+}
+function fxBgFill(ctx, W, H, kind) {
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  if (kind === "emerald") { g.addColorStop(0, "#022c22"); g.addColorStop(.6, "#047857"); g.addColorStop(1, "#b45309"); }
+  else if (kind === "night") { g.addColorStop(0, "#020617"); g.addColorStop(1, "#1e3a8a"); }
+  else { g.addColorStop(0, "#fde68a"); g.addColorStop(.5, "#fb923c"); g.addColorStop(1, "#be185d"); }
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (kind === "night") { ctx.fillStyle = "rgba(255,255,255,.8)"; for (let i = 0; i < 70; i++) { const x = (i * 97) % W, y = (i * 53) % (H * .7); ctx.fillRect(x, y, 2, 2); } ctx.font = `${H * .16}px serif`; ctx.fillText("🌙", W * .78, H * .25); }
+}
+function fxSticker(ctx, W, H, k) {
+  const E = (e, x, y, s) => { ctx.font = `${s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e, x, y); };
+  const t = Date.now() / 600;
+  if (k === "crown") E("👑", W / 2, H * .1 + Math.sin(t) * 4, H * .2);
+  else if (k === "stars") for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + t / 3; E("⭐", W / 2 + Math.cos(a) * W * .45, H / 2 + Math.sin(a) * H * .44, H * .08); }
+  else if (k === "balloons") { E("🎈", W * .1, H * .78 - (t * 20 % 40), H * .18); E("🎈", W * .9, H * .74 - ((t * 20 + 20) % 40), H * .16); E("🎉", W * .5, H * .9, H * .1); }
+  else if (k === "hearts") { E("💖", W * .12, H * .14, H * .12); E("💖", W * .88, H * .14, H * .12); E("✨", W * .5, H * .08, H * .09); }
+  else if (k === "frame") { const g = ctx.createLinearGradient(0, 0, W, H); ["#ef4444", "#f59e0b", "#facc15", "#10b981", "#3b82f6", "#a855f7"].forEach((c, i) => g.addColorStop(i / 5, c)); ctx.strokeStyle = g; ctx.lineWidth = H * .035; ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, W - ctx.lineWidth, H - ctx.lineWidth); }
+}
+async function fxStart() {
+  fxStop(true);
+  const cam = RM.camTrack;
+  if (!cam || !fxActive()) { if (RM.joined) { rmReplace("video", cam || null); rmLayout(); } return; }
+  const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.srcObject = new MediaStream([cam]);
+  try { await v.play(); } catch (e) {}
+  const st = cam.getSettings ? cam.getSettings() : {}; const W = st.width || 1280, H = st.height || 720;
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const ctx = c.getContext("2d");
+  let seg = null, mask = null, alive = true;
+  if (RM.fx.bg && RM.fx.bg !== "none") { seg = await fxSeg(); if (seg) seg.onResults((r) => { mask = r.segmentationMask; }); }
+  if (!alive) return;
+  RM.fxStopFn = () => { alive = false; };
+  const f = FX_FILTERS[RM.fx.filter] || "none";
+  const draw = async () => {
+    if (!alive) return;
+    if (v.readyState >= 2) {
+      if (seg) { try { await seg.send({ image: v }); } catch (e) {} }
+      ctx.save(); ctx.clearRect(0, 0, W, H);
+      if (seg && mask) {
+        ctx.filter = "none"; ctx.drawImage(mask, 0, 0, W, H);
+        ctx.globalCompositeOperation = "source-in"; ctx.filter = f; ctx.drawImage(v, 0, 0, W, H);
+        ctx.globalCompositeOperation = "destination-over";
+        if (RM.fx.bg === "blur") { ctx.filter = (f === "none" ? "" : f + " ") + "blur(16px)"; ctx.drawImage(v, 0, 0, W, H); } else { ctx.filter = "none"; fxBgFill(ctx, W, H, RM.fx.bg); }
+        ctx.globalCompositeOperation = "source-over";
+      } else { ctx.filter = f; ctx.drawImage(v, 0, 0, W, H); }
+      ctx.restore();
+      if (RM.fx.sticker && RM.fx.sticker !== "none") fxSticker(ctx, W, H, RM.fx.sticker);
+    }
+    RM.fxTimer = setTimeout(draw, 1000 / 24);
+  };
+  draw();
+  const out = c.captureStream(24).getVideoTracks()[0];
+  RM.fxOut = out; RM.fxStream = new MediaStream([out]); RM.fxVideo = v; RM.fxSrc = cam;
+  rmReplace("video", out); rmLayout();
+}
+function rmFxModal() {
+  RM.fx = RM.fx || Object.assign({ filter: "none", sticker: "none", bg: "none" }, RM.prefs.fx || {});
+  const m = rmEl("rmModal"); if (!m) return;
+  const grp = (title, key, obj) => `<div style="margin-bottom:.8rem"><b class="sm">${title}</b><div>${Object.keys(obj).map(k => `<button class="rm-chipx ${RM.fx[key] === k ? "on" : ""}" onclick="rmFxSet('${key}','${k}')">${esc(obj[k])}</button>`).join("")}</div></div>`;
+  m.innerHTML = `<div class="rm-modal" onclick="if(event.target===this)rmEl('rmModal').innerHTML=''"><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem"><b>✨ ${RL("fx")}</b><button class="rm-pbtn" onclick="rmEl('rmModal').innerHTML=''">✕</button></div>
+    ${grp(RL("fxFilter"), "filter", RL("fxF"))}${grp(RL("fxSticker"), "sticker", RL("fxS"))}${grp(RL("fxBg"), "bg", RL("fxB"))}</div></div>`;
+}
+async function rmFxSet(key, val) { RM.fx = RM.fx || Object.assign({ filter: "none", sticker: "none", bg: "none" }, RM.prefs.fx || {}); RM.fx[key] = val; RM.prefs.fx = Object.assign({}, RM.fx); rmSavePrefs(); rmFxModal(); await fxStart(); }
+const _rmAfterLocalChange14 = rmAfterLocalChange;
+rmAfterLocalChange = function () {
+  _rmAfterLocalChange14();
+  if (!RM.joined) return;
+  if (fxActive && RM.fx && fxActive()) { if (RM.camTrack && RM.fxSrc !== RM.camTrack) fxStart(); else if (!RM.camTrack && RM.fxOut) fxStop(true); }
+  if (rmMicOn()) trStart(); else trStop();
+};
+const _roomTeardown14 = roomTeardown;
+roomTeardown = function () { try { trFlush(); trStop(); fxStop(true); } catch (e) {} const g = rmEl("rmGame"); if (g) g.remove(); return _roomTeardown14(); };
+
+/* ---------- التفريغ النصي (Web Speech) ---------- */
+const TR_LANGS = { ar: "ar-EG", en: "en-US", fr: "fr-FR", de: "de-DE", es: "es-ES", tr: "tr-TR", ru: "ru-RU", id: "id-ID", ms: "ms-MY", zh: "zh-CN", ku: "ar-IQ", ur: "ur-PK" };
+function trLangCode() { return RM.prefs && RM.prefs.trLang || TR_LANGS[state.lang] || "ar-EG"; }
+function trStart() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR || !RM.joined || RM.kind === "test" || RM.sr || RM.trBlocked || rmHidden() || (RM.prefs && RM.prefs.tr === false) || !rmMicOn()) return;
+  let r; try { r = new SR(); } catch (e) { return; }
+  r.lang = trLangCode(); r.continuous = true; r.interimResults = false; r.maxAlternatives = 1;
+  r.onresult = (e) => { for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) trPush(e.results[i][0].transcript); };
+  r.onerror = (e) => { if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "language-not-supported") RM.trBlocked = true; };
+  r.onend = () => { if (RM.sr === r) { RM.sr = null; rmTopUpdate(); if (RM.joined && !RM.trBlocked && rmMicOn()) setTimeout(trStart, 500); } };
+  try { r.start(); RM.sr = r; rmTopUpdate(); } catch (e) {}
+}
+function trStop() { const r = RM.sr; if (r) { RM.sr = null; try { r.onend = null; r.stop(); } catch (e) {} if (RM.joined) rmTopUpdate(); } }
+function trPush(t) { t = (t || "").trim(); if (!t) return; RM.trBuf = RM.trBuf || []; RM.trBuf.push(t); clearTimeout(RM.trT); RM.trT = setTimeout(trFlush, 3000); if (RM.trBuf.join(" ").length > 1500) trFlush(); }
+function trFlush() {
+  const b = RM.trBuf; if (!b || !b.length || !RM.kind || !RM.uid) return; RM.trBuf = [];
+  sb.from("room_transcripts").insert({ room_kind: RM.kind, room_id: RM.id, user_id: RM.uid, name: RM.myName, role: RM.role, lang: trLangCode(), text: b.join(" ").slice(0, 4000) }).then(() => {}, () => {});
+}
+const _rmSettings14 = rmSettings;
+rmSettings = async function () {
+  await _rmSettings14();
+  const box = document.querySelector("#rmModal .rm-modal>div"); if (!box || !(window.SpeechRecognition || window.webkitSpeechRecognition) || RM.kind === "test") return;
+  const cur = trLangCode();
+  const opts = [["ar-EG", "العربية (مصر)"], ["ar-SA", "العربية (السعودية)"], ["en-US", "English (US)"], ["en-GB", "English (UK)"], ["fr-FR", "Français"], ["de-DE", "Deutsch"], ["es-ES", "Español"], ["tr-TR", "Türkçe"], ["ru-RU", "Русский"], ["id-ID", "Bahasa Indonesia"], ["ms-MY", "Bahasa Melayu"], ["zh-CN", "中文"], ["ur-PK", "اردو"]];
+  box.insertAdjacentHTML("beforeend", `<div style="margin-top:.9rem"><label class="sm" style="display:block;margin-bottom:.3rem">📝 ${RL("trLang")}</label><select class="rm-sel" style="width:100%" onchange="RM.prefs.trLang=this.value;rmSavePrefs();trStop();RM.trBlocked=false;trStart()">${opts.map(o => `<option value="${o[0]}" ${o[0] === cur ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>`);
+};
+
+/* ---------- السبورة: مصحف + PDF + ألعاب ---------- */
+const SURAHS = "الفاتحة,البقرة,آل عمران,النساء,المائدة,الأنعام,الأعراف,الأنفال,التوبة,يونس,هود,يوسف,الرعد,إبراهيم,الحجر,النحل,الإسراء,الكهف,مريم,طه,الأنبياء,الحج,المؤمنون,النور,الفرقان,الشعراء,النمل,القصص,العنكبوت,الروم,لقمان,السجدة,الأحزاب,سبأ,فاطر,يس,الصافات,ص,الزمر,غافر,فصلت,الشورى,الزخرف,الدخان,الجاثية,الأحقاف,محمد,الفتح,الحجرات,ق,الذاريات,الطور,النجم,القمر,الرحمن,الواقعة,الحديد,المجادلة,الحشر,الممتحنة,الصف,الجمعة,المنافقون,التغابن,الطلاق,التحريم,الملك,القلم,الحاقة,المعارج,نوح,الجن,المزمل,المدثر,القيامة,الإنسان,المرسلات,النبأ,النازعات,عبس,التكوير,الانفطار,المطففين,الانشقاق,البروج,الطارق,الأعلى,الغاشية,الفجر,البلد,الشمس,الليل,الضحى,الشرح,التين,العلق,القدر,البينة,الزلزلة,العاديات,القارعة,التكاثر,العصر,الهمزة,الفيل,قريش,الماعون,الكوثر,الكافرون,النصر,المسد,الإخلاص,الفلق,الناس".split(",");
+const _wbToolbar14 = wbToolbar;
+wbToolbar = function () {
+  _wbToolbar14();
+  const b = WB.el && WB.el.querySelector("#wbBar"); if (!b) return;
+  const can = wbCanDraw();
+  const sp = b.querySelector('span[style="flex:1"]');
+  const html = `<span class="sep"></span><button title="${RL("ayah")}" ${can ? "" : "disabled"} onclick="wbAyahModal()">📖</button><button title="${RL("pdf")}" onclick="wbPdf()" style="width:auto;padding:0 .4rem;font-size:.72rem;font-weight:700">PDF</button><button title="${RL("games")}" onclick="rmMenu('games',this)">🎮</button>`;
+  if (sp) sp.insertAdjacentHTML("beforebegin", html); else b.insertAdjacentHTML("beforeend", html);
+};
+function wbAyahModal() {
+  const m = rmEl("rmModal"); if (!m) return;
+  m.innerHTML = `<div class="rm-modal" onclick="if(event.target===this)rmEl('rmModal').innerHTML=''"><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem"><b>📖 ${RL("ayah")}</b><button class="rm-pbtn" onclick="rmEl('rmModal').innerHTML=''">✕</button></div>
+    <label class="sm">${RL("surah")}</label><select class="rm-sel" id="ay_s" style="width:100%;margin:.3rem 0 .6rem">${SURAHS.map((n, i) => `<option value="${i + 1}" ${i === 66 ? "selected" : ""}>${i + 1}. ${n}</option>`).join("")}</select>
+    <div style="display:flex;gap:.5rem"><div style="flex:1"><label class="sm">${RL("from")}</label><input class="rm-in" id="ay_f" type="number" min="1" value="1"></div><div style="flex:1"><label class="sm">${RL("to")}</label><input class="rm-in" id="ay_t" type="number" min="1" value="5"></div></div>
+    <button class="rm-pbtn p" style="width:100%;margin-top:.9rem;padding:.6rem" onclick="wbInsertAyahs()">${RL("insert")}</button></div></div>`;
+}
+async function wbInsertAyahs() {
+  const s = +rmEl("ay_s").value, f = Math.max(1, +rmEl("ay_f").value || 1), t = Math.max(f, +rmEl("ay_t").value || f);
+  toast(RL("ayahLoading"));
+  try {
+    const r = await fetch(`https://api.alquran.cloud/v1/surah/${s}/quran-uthmani`); const d = await r.json();
+    const ay = (d.data && d.data.ayahs || []).filter(a => a.numberInSurah >= f && a.numberInSurah <= Math.min(t, f + 29));
+    if (!ay.length) throw new Error("—");
+    const ar = (n) => String(n).replace(/\d/g, x => "٠١٢٣٤٥٦٧٨٩"[x]);
+    const words = ay.map(a => a.text.trim() + " ﴿" + ar(a.numberInSurah) + "﴾").join(" ").split(/\s+/);
+    const size = 46, maxW = 1440, ctx = WB.ctx; ctx.save(); ctx.font = `${size}px Tajawal, serif`; ctx.direction = "rtl";
+    const lines = []; let line = "";
+    words.forEach(w => { const tt = line ? line + " " + w : w; if (ctx.measureText(tt).width > maxW && line) { lines.push(line); line = w; } else line = tt; }); if (line) lines.push(line);
+    const head = "سورة " + SURAHS[s - 1];
+    ctx.font = `bold 40px Tajawal, serif`; const hw = ctx.measureText(head).width; ctx.font = `${size}px Tajawal, serif`;
+    if (WB.pages[WB.page].objs.length) wbAddPage();
+    wbAdd({ id: wbId(), k: "text", x: (WB_W - hw) / 2, y: 40, t: head, c: "#047857", s: 40 });
+    lines.slice(0, 13).forEach((ln, i) => { const w = ctx.measureText(ln).width; wbAdd({ id: wbId(), k: "text", x: WB_W - 80 - w, y: 120 + i * size * 1.45, t: ln, c: "#111827", s: size }); });
+    ctx.restore();
+    rmEl("rmModal").innerHTML = "";
+  } catch (e) { toast(e.message || String(e), true); }
+}
+async function wbPdf() {
+  const enc = new TextEncoder(); const parts = []; let len = 0; const offs = [];
+  const push = (x) => { const b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const imgs = [];
+  for (const pg of WB.pages) {
+    await Promise.all(pg.objs.filter(o => o.k === "img").map(o => new Promise(r => { const im = wbImg(o); if (im.complete) r(); else { im.addEventListener("load", r); im.addEventListener("error", r); } })));
+    const c = document.createElement("canvas"); c.width = WB_W; c.height = WB_H; wbRender(c.getContext("2d"), 1, pg, false);
+    const b64 = c.toDataURL("image/jpeg", .9).split(",")[1]; const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    imgs.push(u);
+  }
+  const PW = 842, PH = Math.round(842 * WB_H / WB_W), N = imgs.length, total = 3 + 3 * N;
+  push("%PDF-1.4\n"); push(new Uint8Array([37, 226, 227, 207, 211, 10]));
+  const obj = (n, body) => { offs[n] = len; push(`${n} 0 obj\n`); if (typeof body === "string") push(body); else body(); push("\nendobj\n"); };
+  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2, `<< /Type /Pages /Kids [${imgs.map((_, i) => (3 + 3 * i) + " 0 R").join(" ")}] /Count ${N} >>`);
+  imgs.forEach((u, i) => {
+    const pn = 3 + 3 * i, cn = pn + 1, inum = pn + 2, cs = `q ${PW} 0 0 ${PH} 0 0 cm /Im${i} Do Q`;
+    obj(pn, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im${i} ${inum} 0 R >> >> /Contents ${cn} 0 R >>`);
+    obj(cn, `<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+    obj(inum, () => { push(`<< /Type /XObject /Subtype /Image /Width ${WB_W} /Height ${WB_H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${u.length} >>\nstream\n`); push(u); push("\nendstream"); });
+  });
+  const xref = len;
+  push(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for (let n = 1; n < total; n++) push(String(offs[n]).padStart(10, "0") + " 00000 n \n");
+  push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  rmDownload(new Blob(parts, { type: "application/pdf" }), `whiteboard-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+/* ---------- الألعاب (متزامنة للجميع) ---------- */
+function gameStart(kind) {
+  if (kind === "wheel") RM.game = { kind, items: RL("itemsDef").split("\n"), rot: 0, result: null };
+  else if (kind === "dice") RM.game = { kind, value: 1, at: 0 };
+  else if (kind === "ttt") RM.game = { kind, cells: Array(9).fill(""), turn: "X" };
+  else if (kind === "quiz") RM.game = { kind, q: "", opts: [], counts: [], reveal: false, correct: null, setup: true };
+  RM.game.by = RM.pid; gameBroadcast(); gameRender();
+}
+function gameBroadcast() { const g = RM.game; if (g && g.kind === "quiz" && !g.reveal) { const c = Object.assign({}, g); c.correct = null; rmSend("game", { st: c }); } else rmSend("game", { st: g }); }
+function gameRecv(p) {
+  const prev = RM.game; RM.game = p.st;
+  if (RM.game && RM.game.kind === "quiz" && prev && prev.kind === "quiz" && prev.mine != null && !RM.game.setup) RM.game.mine = prev.mine;
+  gameRender(prev);
+}
+function gameClose() { RM.game = null; rmSend("game", { st: null }); gameRender(); }
+function gameRender(prev) {
+  let el = rmEl("rmGame"); const g = RM.game;
+  if (!g) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "rmGame"; el.className = "rm-game"; (rmEl("rmRoot") || document.body).appendChild(el); }
+  const host = rmIsHost();
+  const close = `<button class="rm-pbtn" onclick="${host ? "gameClose()" : "rmEl('rmGame').remove()"}">✕</button>`;
+  let body = "";
+  if (g.kind === "wheel") {
+    const n = Math.max(1, g.items.length), seg = 360 / n, cols = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#a855f7", "#ec4899", "#14b8a6", "#eab308"];
+    const paths = g.items.map((it, i) => { const a0 = (i * seg - 90) * Math.PI / 180, a1 = ((i + 1) * seg - 90) * Math.PI / 180; const x0 = 150 + 140 * Math.cos(a0), y0 = 150 + 140 * Math.sin(a0), x1 = 150 + 140 * Math.cos(a1), y1 = 150 + 140 * Math.sin(a1); const am = ((i + .5) * seg - 90) * Math.PI / 180;
+      return `<path d="M150,150 L${x0},${y0} A140,140 0 ${seg > 180 ? 1 : 0},1 ${x1},${y1} Z" fill="${cols[i % cols.length]}"/><text x="${150 + 88 * Math.cos(am)}" y="${150 + 88 * Math.sin(am)}" fill="#fff" font-size="${n > 8 ? 11 : 14}" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(i + .5) * seg} ${150 + 88 * Math.cos(am)} ${150 + 88 * Math.sin(am)})">${esc(String(it).slice(0, 14))}</text>`; }).join("");
+    body = `<div style="position:relative;width:300px;height:300px;margin:.5rem auto"><div style="position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:2rem;z-index:2">🔻</div>
+      <svg id="rmWheel" viewBox="0 0 300 300" width="300" height="300" style="transform:rotate(${prev && prev.kind === "wheel" ? prev.rot || 0 : g.rot}deg);transition:transform 4.2s cubic-bezier(.17,.67,.2,1)">${paths}<circle cx="150" cy="150" r="18" fill="#0f172a" stroke="#fff" stroke-width="3"/></svg></div>
+      <div id="rmWheelRes" style="font-size:1.4rem;font-weight:800;min-height:2rem">${g.result != null && !(prev && prev.rot !== g.rot) ? "🎉 " + esc(g.items[g.result]) : ""}</div>
+      ${host ? `<textarea class="rm-in" id="gw_items" rows="3" style="margin:.5rem 0" placeholder="${RL("items")}">${esc(g.items.join("\n"))}</textarea>` : ""}
+      <button class="rm-pbtn p" style="padding:.6rem 1.4rem;font-size:1rem" onclick="wheelSpin()">🎡 ${RL("spin")}</button>`;
+  } else if (g.kind === "dice") {
+    body = `<div class="rm-dice ${prev && prev.at !== g.at ? "roll" : ""}">${"⚀⚁⚂⚃⚄⚅"[(g.value || 1) - 1]}</div><div style="font-size:1.6rem;font-weight:800;margin-bottom:.6rem">${g.value || ""}</div><button class="rm-pbtn p" style="padding:.6rem 1.4rem;font-size:1rem" onclick="diceRoll()">🎲 ${RL("roll")}</button>`;
+  } else if (g.kind === "ttt") {
+    const w = tttWinner(g.cells);
+    body = `<div class="sm" style="color:#94a3b8">${w ? (w === "draw" ? RL("draw") : `${w} ${RL("wins")}`) : `${RL("turn")}: <b style="color:#fff">${g.turn}</b> (${g.turn === "X" ? RL("host") : RL("guest")})`}</div>
+      <div class="rm-ttt">${g.cells.map((c, i) => `<button onclick="tttMove(${i})" style="color:${c === "X" ? "#10b981" : "#f59e0b"}">${c}</button>`).join("")}</div><button class="rm-pbtn" onclick="gameStart('ttt')">${RL("reset")}</button>`;
+  } else if (g.kind === "quiz") {
+    if (g.setup) body = host ? `<div style="text-align:start"><label class="sm">${RL("question")}</label><input class="rm-in" id="gq_q" style="margin:.3rem 0 .6rem"><label class="sm">${RL("options")}</label><textarea class="rm-in" id="gq_o" rows="4" style="margin:.3rem 0 .6rem"></textarea><label class="sm">${RL("correctIdx")}</label><input class="rm-in" id="gq_c" type="number" min="1" value="1" style="margin:.3rem 0 .8rem"></div><button class="rm-pbtn p" style="padding:.6rem 1.4rem" onclick="quizGo()">${RL("start")}</button>` : `<p style="color:#94a3b8">…</p>`;
+    else {
+      const total = (g.counts || []).reduce((a, b) => a + b, 0);
+      body = `<h3 style="margin:.2rem 0 .8rem">${esc(g.q)}</h3><div class="rm-quiz">${g.opts.map((o, i) => { const cls = g.reveal ? (i === g.correct ? "ok" : (g.mine === i ? "bad" : "")) : (g.mine === i ? "ok" : "");
+        return `<button class="${cls}" ${g.reveal || (host && RM.role !== "owner" && false) ? "" : ""} onclick="quizAnswer(${i})">${String.fromCharCode(65 + i)}. ${esc(o)}${host || g.reveal ? ` <span style="float:inline-end;color:#94a3b8">${(g.counts || [])[i] || 0}</span>` : ""}</button>`; }).join("")}</div>
+        <div class="sm" style="color:#94a3b8;margin:.4rem 0">${total} ${RL("answers")}</div>${host && !g.reveal ? `<button class="rm-pbtn p" style="padding:.5rem 1.2rem" onclick="quizReveal()">${RL("reveal")}</button>` : ""}`;
+    }
+  }
+  el.innerHTML = `<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><b>${esc(RL(g.kind === "wheel" ? "gWheel" : g.kind === "dice" ? "gDice" : g.kind === "ttt" ? "gTtt" : "gQuiz"))}</b>${close}</div>${body}</div>`;
+  if (g.kind === "wheel" && prev && prev.kind === "wheel" && prev.rot !== g.rot) {
+    requestAnimationFrame(() => { const w = rmEl("rmWheel"); if (w) w.style.transform = `rotate(${g.rot}deg)`; });
+    sfx("drum"); setTimeout(() => { const r = rmEl("rmWheelRes"); if (r && RM.game === g) { r.textContent = "🎉 " + g.items[g.result]; sfx("fanfare"); confetti(2000); } }, 4300);
+  }
+  if (g.kind === "dice" && prev && prev.at !== g.at) sfx("pop");
+}
+function wheelSpin() {
+  const g = RM.game; if (!g) return;
+  const t = rmEl("gw_items"); if (t) { const it = t.value.split("\n").map(s => s.trim()).filter(Boolean); if (it.length) g.items = it.slice(0, 16); }
+  const prev = JSON.parse(JSON.stringify(g)); const n = g.items.length, seg = 360 / n, res = Math.floor(Math.random() * n);
+  const base = Math.ceil((g.rot || 0) / 360) * 360; g.rot = base + 360 * 5 + (360 - (res + .5) * seg); g.result = res;
+  rmSend("game", { st: g }); gameRender(prev);
+}
+function diceRoll() { const g = RM.game; if (!g) return; const prev = Object.assign({}, g); g.value = 1 + Math.floor(Math.random() * 6); g.at = Date.now(); rmSend("game", { st: g }); gameRender(prev); }
+function tttWinner(c) { const L_ = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]; for (const [a, b, d] of L_) if (c[a] && c[a] === c[b] && c[a] === c[d]) return c[a]; return c.every(Boolean) ? "draw" : null; }
+function tttMove(i) {
+  const g = RM.game; if (!g || g.cells[i] || tttWinner(g.cells)) return;
+  const mine = rmIsHost() ? "X" : "O"; if (g.turn !== mine) return sfx("wrong");
+  g.cells[i] = mine; g.turn = mine === "X" ? "O" : "X"; sfx("pop");
+  const w = tttWinner(g.cells); if (w && w !== "draw") { sfx("fanfare"); confetti(2000); }
+  rmSend("game", { st: g }); gameRender();
+}
+function quizGo() {
+  const g = RM.game; const opts = rmEl("gq_o").value.split("\n").map(s => s.trim()).filter(Boolean).slice(0, 6);
+  if (!rmEl("gq_q").value.trim() || opts.length < 2) return toast(L("fillAll"), true);
+  Object.assign(g, { q: rmEl("gq_q").value.trim(), opts, correct: Math.max(0, Math.min(opts.length - 1, (+rmEl("gq_c").value || 1) - 1)), counts: opts.map(() => 0), answers: {}, reveal: false, setup: false });
+  gameBroadcast(); gameRender();
+}
+function quizAnswer(i) {
+  const g = RM.game; if (!g || g.reveal || g.setup) return;
+  if (rmIsHost()) return;
+  g.mine = i; sfx("pop"); rmSend("game_ans", { idx: i }); gameRender();
+}
+function gameAns(p) {
+  const g = RM.game; if (!g || g.kind !== "quiz" || g.by !== RM.pid || g.reveal) return;
+  g.answers = g.answers || {}; g.answers[p.from] = p.idx;
+  g.counts = g.opts.map((_, i) => Object.values(g.answers).filter(x => x === i).length);
+  gameBroadcast(); gameRender();
+}
+function quizReveal() { const g = RM.game; if (!g) return; g.reveal = true; rmSend("game", { st: g }); sfx("fanfare"); confetti(2200); gameRender(); }
+const _gameRecv0 = gameRecv;
+gameRecv = function (p) { _gameRecv0(p); const g = RM.game; if (g && g.kind === "quiz" && g.reveal && g.mine != null) { if (g.mine === g.correct) { sfx("correct"); confetti(2000); } else sfx("wrong"); } };
+
+/* ---------- خارج الفصل: لينك لكل حصة + لينك احتياطي + التقارير ---------- */
+const _upcomingLessonRow14 = upcomingLessonRow;
+upcomingLessonRow = function (l, canAct) {
+  const h = _upcomingLessonRow14(l, canAct);
+  if (l.status !== "scheduled") return h;
+  const link = roomHref("lesson", l.id);
+  const add = `<button class="btn btn-o" style="padding:.3rem .6rem" title="${L("copyLink")}" onclick="navigator.clipboard&&navigator.clipboard.writeText('${link}').then(()=>toast('✓'))">🔗</button>${l.backup_url ? `<a class="btn btn-o" style="padding:.3rem .6rem" href="${esc(l.backup_url)}" target="_blank" rel="noopener" title="${L("backupLink")}">🛟</a>` : ""}`;
+  return h.replace(`<span class="row" style="gap:.35rem">`, `<span class="row" style="gap:.35rem">${add}`);
+};
+async function openLessonReport(id) {
+  let m = document.getElementById("lrModal"); if (m) m.remove();
+  m = document.createElement("div"); m.id = "lrModal"; m.onclick = (e) => { if (e.target === m) m.remove(); };
+  m.innerHTML = `<div class="card">${L("loading")}</div>`; document.body.appendChild(m);
+  const [{ data: l }, ar] = await Promise.all([sb.from("lessons").select("id,start_time,end_time,track,ai_report").eq("id", id).maybeSingle(), sb.rpc("lesson_auto_report", { p_lesson: id })]);
+  const a = ar && ar.data || {}; const isOwner = role() === "owner";
+  let tr = null, pv = null;
+  if (isOwner) { const r1 = await sb.from("room_transcripts").select("name,role,text,at").eq("room_kind", "lesson").eq("room_id", id).order("at"); tr = r1.data || []; const r2 = await sb.from("lesson_ai_private").select("concerns").eq("lesson_id", id).maybeSingle(); pv = r2.data; }
+  const kv = (k, v) => v === "" || v == null || (Array.isArray(v) && !v.length) ? "" : `<div class="kv"><span class="muted">${k}</span><b>${Array.isArray(v) ? esc(v.join("، ")) : esc(String(v))}</b></div>`;
+  const ai = l && l.ai_report;
+  const list = (title, arr) => Array.isArray(arr) && arr.length ? `<h4 style="margin:.8rem 0 .3rem">${title}</h4><ul style="margin:0;padding-inline-start:1.2rem">${arr.map(x => `<li class="sm">${esc(x)}</li>`).join("")}</ul>` : "";
+  m.innerHTML = `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:.8rem"><h3>📊 ${L("repTitle")} — ${l ? esc(fmtDT(l.start_time)) : ""}</h3><button class="ibtn" onclick="document.getElementById('lrModal').remove()"><i class="fa-solid fa-xmark"></i></button></div>
+    <h4 style="margin-bottom:.4rem">⚙️ ${L("repAuto")}</h4>
+    ${a.empty ? `<p class="muted sm">${L("repNone")}</p>` : kv(L("repMin"), a.lesson_minutes != null ? a.lesson_minutes + " " + L("min") : "") + kv(L("repTeacherMin"), a.teacher_minutes != null ? a.teacher_minutes + " " + L("min") : "") + kv(L("repStudentMin"), a.student_minutes != null ? a.student_minutes + " " + L("min") : "") + kv(L("repTalk"), a.student_talk_pct != null ? a.student_talk_pct + "%" : "") + kv(L("repLangs"), a.languages) + kv(L("repSurahs"), a.surahs) + kv(L("repMaqams"), a.maqams) + kv(L("repTajweed"), a.tajweed)}
+    ${ai ? `<h4 style="margin:1.2rem 0 .4rem">🤖 ${L("repAi")}</h4><p class="sm" style="white-space:pre-wrap">${esc(state.lang === "ar" ? ai.summary_ar || ai.summary_en || "" : ai.summary_en || ai.summary_ar || "")}</p>${list(L("repTopics"), ai.topics)}${list(L("repStrengths"), ai.student_strengths)}${list(L("repMistakes"), ai.mistakes_to_fix)}${ai.homework_suggestion ? `<h4 style="margin:.8rem 0 .3rem">${L("repHomework")}</h4><p class="sm">${esc(ai.homework_suggestion)}</p>` : ""}${ai.next_lesson_plan ? `<h4 style="margin:.8rem 0 .3rem">${L("repNext")}</h4><p class="sm">${esc(ai.next_lesson_plan)}</p>` : ""}` : (isOwner ? `<p class="xs muted" style="margin-top:.8rem">${L("repAiOff")}</p>` : "")}
+    ${isOwner && pv && pv.concerns ? `<div class="err" style="margin-top:1rem"><b>${L("repConcerns")}:</b> ${esc(pv.concerns)}</div>` : ""}
+    ${isOwner ? `<details style="margin-top:1rem"><summary class="b">📝 ${L("repTranscript")} (${tr.length})</summary><div style="max-height:40vh;overflow:auto;margin-top:.5rem">${tr.map(x => `<div class="sm" style="padding:.3rem 0;border-bottom:1px solid var(--line)"><span class="xs muted">${esc(fmtTime(x.at))}</span> <b>${esc(x.name || "")}</b> <span class="badge">${esc(RL(x.role || "guest"))}</span><br>${esc(x.text)}</div>`).join("") || `<p class="muted sm">${L("repNone")}</p>`}</div></details>` : ""}
+  </div>`;
+}
+function lessonReportsCard(uid, isTeacher) {
+  const ls = useData("repLessons", () => q(sb.from("lessons").select("id,start_time,end_time,track,attendance,ai_report,student_id,teacher_id").eq(isTeacher ? "teacher_id" : "student_id", uid).lt("end_time", new Date().toISOString()).eq("attendance", "present").order("start_time", { ascending: false }).limit(12)));
+  if (!Array.isArray(ls) || !ls.length) return "";
+  const P = isTeacher ? peopleMap() : null;
+  return `<div class="card" style="margin-top:1.2rem"><h3 style="margin-bottom:.6rem">📊 ${L("repList")}</h3>${ls.map(l => `<div class="kv" style="align-items:center"><span class="sm"><b>${esc(fmtDT(l.start_time))}</b>${l.track ? " · " + esc(trackTitle(l.track)) : ""}${P ? " · " + esc(personName(l.student_id, P.map)) : ""}${l.ai_report ? " 🤖" : ""}</span><button class="btn btn-o" style="padding:.3rem .7rem" onclick="openLessonReport('${l.id}')">${L("repOpen")}</button></div>`).join("")}</div>`;
+}
+const _renderStudentDash14 = renderStudentDash;
+renderStudentDash = function () { let h = _renderStudentDash14(); if (!state.dash.tab || state.dash.tab === "lessons") h += lessonReportsCard(state.auth.user.id, false); return h; };
+const _renderTeacherDash14 = renderTeacherDash;
+renderTeacherDash = function () { let h = _renderTeacherDash14(); if (state.dash.tab === "homework") h += lessonReportsCard(state.auth.user.id, true); return h; };
+const _roomAttendanceBlock14 = roomAttendanceBlock;
+roomAttendanceBlock = function (kind, id, auto) {
+  let h = _roomAttendanceBlock14(kind, id, auto);
+  if (kind === "lesson" && h) h = h.replace(`<span class="row" style="gap:.3rem">`, `<span class="row" style="gap:.3rem"><button class="btn btn-o" style="padding:.25rem .6rem" onclick="openLessonReport('${id}')">📊 ${L("repOpen")}</button>${role() === "teacher" || role() === "owner" ? `<button class="btn btn-o" style="padding:.25rem .6rem" title="${L("backupLink")}" onclick="setBackupFromDash('${id}')">🛟</button>` : ""}`);
+  return h;
+};
+async function setBackupFromDash(id) {
+  const u = prompt(RL("backupPrompt"), "https://meet.google.com/"); if (u === null) return;
+  const { error } = await sb.rpc("set_backup_link", { p_lesson: id, p_url: u.trim() || null });
+  if (error) return toast(error.message, true); invalidateCal(); toast(RL("backupSent")); render();
+}
+const _renderClassroomPage14 = renderClassroomPage;
+renderClassroomPage = function () {
+  const h = _renderClassroomPage14();
+  const tips = `<div class="card" style="margin-top:1.5rem;border-color:var(--gold)"><h3 style="margin-bottom:.5rem">🛟 ${L("crTips")}</h3><ul style="margin:0;padding-inline-start:1.2rem">${(L("crTipsList") || []).map(t => `<li class="sm" style="margin:.25rem 0">${esc(t)}</li>`).join("")}</ul></div>`;
+  return h.replace(/<\/div><\/section>\s*$/, tips + "</div></section>");
+};
+const _renderPolicyPage14 = renderPolicyPage;
+renderPolicyPage = function () { const h = _renderPolicyPage14(); return h.replace(/<\/div><\/section>\s*$/, `<div class="card" style="margin-top:1rem"><p class="sm">🛡️ ${L("policyMonitor")}</p></div></div></section>`); };
 
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
