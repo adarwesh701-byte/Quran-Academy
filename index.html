@@ -1398,7 +1398,7 @@ function toggleHourSlot(dayIdx, hourStr) {
 const SB_URL = "https://ymycfxmigvvermsdnagm.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteWNmeG1pZ3Z2ZXJtc2RuYWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5NjU1NjYsImV4cCI6MjEwOTU0MTU2Nn0.V0PUmuhKM7EPVxi2rwvPPi1WdoOsXxJr-6-lyZVtm7g";
 let sb = null;
-try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error("Supabase init failed", e); }
+try { sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage } }); } catch (e) { console.error("Supabase init failed", e); }
 
 const BROWSER_TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; } })();
 
@@ -1606,7 +1606,8 @@ async function initAuth() {
   if (state.auth.user) startNotifs();
   if (role() === "owner") setTimeout(() => syncUiTranslations(false), 4000);
   if (state.auth.profile && state.auth.profile.lang !== state.lang && state.auth.user) sb.from("profiles").update({ lang: state.lang }).eq("id", state.auth.user.id);
-  sb.auth.onAuthStateChange(async (ev, session) => {
+  sb.auth.onAuthStateChange((ev, session) => { setTimeout(() => onAuthEvent(ev, session), 0); });
+  async function onAuthEvent(ev, session) {
     const prev = state.auth.user ? state.auth.user.id : null;
     state.auth.user = session ? session.user : null;
     if ((state.auth.user ? state.auth.user.id : null) !== prev) {
@@ -1620,7 +1621,7 @@ async function initAuth() {
       const np = prompt(L("newPassword"));
       if (np) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? error.message : L("saved"), !!error); }
     }
-  });
+  }
   await flushPendingBooking();
   await flushPendingPlan();
 }
@@ -3235,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v7";
+const UI_VERSION = "2026-11-11-v8";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -7657,6 +7658,134 @@ renderOwnerDash = function () {
   if (state.dash.tab === "students") { const card = scheduleBookerCard(P.list.filter(p => p.role === "student"), P.list.filter(p => p.role === "teacher" || p.role === "owner")); h = h.replace(/(<div class="tabs dtabs">[\s\S]*?<\/div>)/, (m0) => m0 + card); }
   return h;
 };
+
+
+/* ======================= v11: مساحتي على الصفحة الرئيسية ======================= */
+Object.assign(UI.en, {
+  hubTitle: "My space", hubHi: "Welcome back", hubNext: "Next lesson", hubNoNext: "No upcoming lessons", hubJoin: "Enter classroom", hubBook: "Book a lesson",
+  hubLessons: "My lessons", hubMessages: "Messages", hubHomework: "Homework", hubBilling: "Subscriptions & payments", hubCerts: "Certificates & materials",
+  hubInvite: "Invite friends", hubNotifs: "Notifications", hubLibrary: "Free content", hubProfile: "My profile", hubCalendar: "Calendar", hubStudents: "My students",
+  hubEarnings: "My earnings", hubSchedule: "My availability", hubOverview: "Overview", hubRequests: "Requests", hubBookings: "Trial bookings", hubChats: "Conversations",
+  hubReports: "Earnings & reports", hubReviews: "Reviews & refunds", hubSettings: "Settings", hubUnread: "unread", hubPending: "pending", hubCredits: "lessons left (25-min units)",
+  hubRecent: "Latest messages", hubOpenAll: "Open all", hubToReview: "to review", hubToday: "today", hubDash: "Full dashboard"
+});
+Object.assign(UI.ar, {
+  hubTitle: "مساحتي", hubHi: "أهلًا بيك", hubNext: "الحصة الجاية", hubNoNext: "مفيش حصص جاية", hubJoin: "ادخل الفصل", hubBook: "احجز حصة",
+  hubLessons: "حصصي", hubMessages: "الرسائل", hubHomework: "الواجبات", hubBilling: "الاشتراكات والدفع", hubCerts: "شهاداتي وموادي",
+  hubInvite: "ادعُ أصدقاءك", hubNotifs: "الإشعارات", hubLibrary: "المحتوى المجاني", hubProfile: "ملفي", hubCalendar: "الكاليندر", hubStudents: "طلابي",
+  hubEarnings: "أرباحي", hubSchedule: "مواعيدي المتاحة", hubOverview: "نظرة عامة", hubRequests: "الطلبات", hubBookings: "الحجوزات التجريبية", hubChats: "المحادثات",
+  hubReports: "الأرباح والتقارير", hubReviews: "الآراء والاسترداد", hubSettings: "الإعدادات", hubUnread: "غير مقروءة", hubPending: "مستني", hubCredits: "حصص متبقية (وحدة 25 دقيقة)",
+  hubRecent: "آخر الرسائل", hubOpenAll: "افتح الكل", hubToReview: "محتاج تصحيح", hubToday: "النهارده", hubDash: "لوحة التحكم الكاملة"
+});
+document.head.insertAdjacentHTML("beforeend", `<style>
+.hub{padding:1.6rem 0 .4rem}.hub .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem}
+.hub .tile{display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid var(--line);border-radius:16px;background:var(--card);cursor:pointer;text-decoration:none;color:var(--fg);position:relative;transition:transform .12s,border-color .12s}
+.hub .tile:hover{transform:translateY(-2px);border-color:var(--accent)}.hub .tile i.ic{font-size:1.35rem;color:var(--accent)}
+.hub .tile b{font-size:.95rem}.hub .tile small{color:var(--muted);font-size:.75rem}
+.hub .tile .cnt{position:absolute;top:.6rem;inset-inline-end:.6rem;background:var(--danger);color:#fff;border-radius:999px;font-size:.72rem;font-weight:800;padding:.05rem .45rem;min-width:1.4rem;text-align:center}
+.hub .tile .cnt.ok{background:var(--accent);color:var(--accent-fg)}
+.hub .next{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:1rem 1.2rem;border-radius:16px;background:linear-gradient(135deg,var(--accent),#065f46);color:#fff;margin-bottom:.9rem}
+.hub .next .btn{background:#fff;color:#065f46;border-color:#fff}
+@media(max-width:600px){.hub .tiles{grid-template-columns:repeat(2,1fr)}}
+</style>`);
+function hubGo(tab) { state.dash.tab = tab; navigate("dashboard"); }
+function hubTile(icon, title, sub, onclick, cnt, ok) {
+  return `<a class="tile" href="#" onclick="${onclick};return false;"><i class="ic ${icon}"></i><b>${esc(title)}</b>${sub ? `<small>${sub}</small>` : ""}${cnt ? `<span class="cnt ${ok ? "ok" : ""}">${esc(String(cnt))}</span>` : ""}</a>`;
+}
+function hubNextLesson(uid, isTeacher) {
+  const nx = useData("hubNext", () => q(sb.from("lessons").select("id,start_time,end_time,meeting_url,track,student_id,teacher_id").eq(isTeacher ? "teacher_id" : "student_id", uid).eq("status", "scheduled").gte("end_time", new Date().toISOString()).order("start_time").limit(1)));
+  if (!Array.isArray(nx)) return "";
+  const l = nx[0];
+  if (!l) return isTeacher ? "" : `<div class="next"><div><div class="xs" style="opacity:.85">${L("hubNext")}</div><b>${L("hubNoNext")}</b></div><button class="btn" onclick="hubGo('lessons')">${L("hubBook")}</button></div>`;
+  const P = isTeacher ? peopleMap() : null;
+  const soon = new Date(l.start_time) - Date.now() < 30 * 60e3;
+  const url = l.meeting_url || roomHref("lesson", l.id);
+  return `<div class="next"><div><div class="xs" style="opacity:.85">${L("hubNext")}${new Date(l.start_time).toDateString() === new Date().toDateString() ? " · " + L("hubToday") : ""}</div>
+    <b style="font-size:1.15rem">${esc(fmtDT(l.start_time))} – ${esc(fmtTime(l.end_time))}</b>${l.track ? `<div class="sm" style="opacity:.9">${esc(trackTitle(l.track))}${P ? " · " + esc(personName(l.student_id, P.map)) : ""}</div>` : P ? `<div class="sm" style="opacity:.9">${esc(personName(l.student_id, P.map))}</div>` : ""}</div>
+    <a class="btn" href="${esc(url)}" target="_blank" rel="noopener" style="${soon ? "" : "opacity:.9"}">🎥 ${L("hubJoin")}</a></div>`;
+}
+function hubRecentMsgs() {
+  const cs = useData("chatContacts", async () => { const { data, error } = await sb.rpc("my_chat_contacts"); if (error) throw error; return (data || []).sort((a, b) => (b.last_at || "").localeCompare(a.last_at || "")); });
+  if (!Array.isArray(cs) || !cs.length) return { html: "", unread: 0 };
+  const unread = cs.reduce((a, c) => a + (+c.unread || 0), 0);
+  const html = `<div class="card" style="margin-top:.9rem"><div class="row" style="justify-content:space-between;margin-bottom:.4rem"><b>💬 ${L("hubRecent")}</b><a href="#" class="xs accent" onclick="hubGo('${role() === "owner" ? "chats" : "messages"}');return false;">${L("hubOpenAll")}</a></div>
+    ${cs.slice(0, 3).map(c => `<a href="#" class="kv" style="text-decoration:none;color:inherit;align-items:center" onclick="openChatWith('${c.id}');return false;"><span><b class="sm">${esc(c.name || "—")}</b>${c.last_at ? ` <span class="xs muted">· ${esc(fmtDT(c.last_at))}</span>` : ""}</span>${+c.unread ? `<span class="nbadge" style="position:static;display:inline-flex">${c.unread}</span>` : `<i class="fa-solid fa-chevron-${state.lang === "ar" ? "left" : "right"} muted"></i>`}</a>`).join("")}</div>`;
+  return { html, unread };
+}
+function renderHub() {
+  if (!state.auth.ready || !state.auth.user || !state.auth.profile) return "";
+  const p = state.auth.profile, uid = state.auth.user.id, r = p.role;
+  const notif = unreadCount();
+  const msgs = r === "parent" ? { html: "", unread: 0 } : hubRecentMsgs();
+  let tiles = "", next = "";
+  if (r === "student") {
+    const cr = useData("hubCredits", async () => { const { data } = await sb.rpc("student_available_credits", { p_student: uid }); return [data || 0]; });
+    const hl = useData("hwLessons", () => q(sb.from("lessons").select("id,start_time,end_time,teacher_id,homework,homework_at,track").eq("student_id", uid).not("homework", "is", null).order("start_time", { ascending: false }).limit(40)));
+    const hs = useData("hwSubs", () => q(sb.from("homework_submissions").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+    const done = new Set(Array.isArray(hs) ? hs.map(s => s.lesson_id) : []);
+    const hwPending = Array.isArray(hl) ? hl.filter(l => (l.homework || "").trim() && !done.has(l.id)).length : 0;
+    const credits = Array.isArray(cr) ? cr[0] : null;
+    next = hubNextLesson(uid, false);
+    tiles = hubTile("fa-solid fa-calendar-check", L("hubLessons"), credits != null ? `${credits} ${L("hubCredits")}` : "", "hubGo('lessons')")
+      + hubTile("fa-solid fa-comments", L("hubMessages"), msgs.unread ? `${msgs.unread} ${L("hubUnread")}` : "", "hubGo('messages')", msgs.unread)
+      + hubTile("fa-solid fa-book-open-reader", L("hubHomework"), hwPending ? `${hwPending} ${L("hubPending")}` : "", "hubGo('homework')", hwPending)
+      + hubTile("fa-solid fa-credit-card", L("hubBilling"), "", "hubGo('billing')")
+      + hubTile("fa-solid fa-award", L("hubCerts"), "", "hubGo('mycerts')")
+      + hubTile("fa-solid fa-gift", L("hubInvite"), "", "hubGo('invite')")
+      + hubTile("fa-solid fa-bell", L("hubNotifs"), notif ? `${notif} ${L("hubUnread")}` : "", "state.notif.open=true;render();window.scrollTo({top:0,behavior:'smooth'})", notif)
+      + hubTile("fa-solid fa-book-quran", L("hubLibrary"), "", "navigate('library')")
+      + hubTile("fa-solid fa-user", L("hubProfile"), "", "navigate('profile')");
+  } else if (r === "teacher") {
+    const st = useData("tStats", async () => { const { data, error } = await sb.rpc("teacher_stats"); if (error) throw error; return data; });
+    const subs = useData("hwTSubs", () => q(sb.from("homework_submissions").select("*, lessons(start_time,student_id,teacher_id,homework)").order("created_at", { ascending: false }).limit(120)));
+    const toRev = Array.isArray(subs) ? subs.filter(s => !s.reviewed_at && s.lessons && s.lessons.teacher_id === uid).length : 0;
+    const bal = st && !st.__error && st.balance != null ? money(st.balance, st.currency) : "";
+    next = hubNextLesson(uid, true);
+    tiles = hubTile("fa-regular fa-calendar", L("hubCalendar"), st && st.upcoming != null ? `${st.upcoming} ⏭` : "", "hubGo('calendar')")
+      + hubTile("fa-solid fa-comments", L("hubMessages"), msgs.unread ? `${msgs.unread} ${L("hubUnread")}` : "", "hubGo('messages')", msgs.unread)
+      + hubTile("fa-solid fa-book-open-reader", L("hubHomework"), toRev ? `${toRev} ${L("hubToReview")}` : "", "hubGo('homework')", toRev)
+      + hubTile("fa-solid fa-user-graduate", L("hubStudents"), "", "hubGo('mystudents')")
+      + hubTile("fa-solid fa-sack-dollar", L("hubEarnings"), esc(bal), "hubGo('dues')")
+      + hubTile("fa-solid fa-clock", L("hubSchedule"), "", "hubGo('schedule')")
+      + hubTile("fa-solid fa-bell", L("hubNotifs"), notif ? `${notif} ${L("hubUnread")}` : "", "state.notif.open=true;render();window.scrollTo({top:0,behavior:'smooth'})", notif)
+      + hubTile("fa-solid fa-user", L("hubProfile"), "", "navigate('profile')");
+  } else if (r === "owner") {
+    const pend = Array.isArray(state.data.ownerReqs) ? state.data.ownerReqs.filter(x => x.status === "pending").length : 0;
+    tiles = hubTile("fa-solid fa-chart-pie", L("hubOverview"), "", "hubGo('overview')")
+      + hubTile("fa-solid fa-comments", L("hubChats"), msgs.unread ? `${msgs.unread} ${L("hubUnread")}` : "", "hubGo('chats')", msgs.unread)
+      + hubTile("fa-solid fa-inbox", L("hubRequests"), "", "hubGo('requests')", pend)
+      + hubTile("fa-solid fa-star", L("hubBookings"), "", "hubGo('bookings')")
+      + hubTile("fa-solid fa-sack-dollar", L("hubReports"), "", "hubGo('reports')")
+      + hubTile("fa-solid fa-thumbs-up", L("hubReviews"), "", "hubGo('reviews')")
+      + hubTile("fa-solid fa-bell", L("hubNotifs"), notif ? `${notif} ${L("hubUnread")}` : "", "state.notif.open=true;render();window.scrollTo({top:0,behavior:'smooth'})", notif)
+      + hubTile("fa-solid fa-gear", L("hubSettings"), "", "hubGo('settings')");
+  } else {
+    tiles = hubTile("fa-solid fa-children", L("hubLessons"), "", "hubGo('children')")
+      + hubTile("fa-solid fa-bell", L("hubNotifs"), notif ? `${notif} ${L("hubUnread")}` : "", "state.notif.open=true;render();window.scrollTo({top:0,behavior:'smooth'})", notif)
+      + hubTile("fa-solid fa-user", L("hubProfile"), "", "navigate('profile')");
+  }
+  return `<section class="hub"><div class="wrap">
+    <div class="row" style="justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem"><h2 style="font-size:1.35rem">👋 ${L("hubHi")}${state.lang === "ar" ? "،" : ","} ${esc(p.display_name || (p.real_name || "").split(" ")[0] || "")}</h2>
+      <a href="#" class="btn btn-o" onclick="navigate('dashboard');return false;"><i class="fa-solid fa-table-columns"></i> ${L("hubDash")}</a></div>
+    ${next}<div class="tiles">${tiles}</div>${msgs.html}</div></section>`;
+}
+const _renderHome11 = renderHome;
+renderHome = function () {
+  const hub = renderHub();
+  return hub ? hub + _renderHome11() : _renderHome11();
+};
+
+/* ---------- الجلسة تفضل محفوظة ---------- */
+// تحديث الجلسة عند الرجوع للتبويب، ومنع فقدان الجلسة بسبب انتهاء التوكن أثناء عدم النشاط
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && sb && sb.auth) {
+    try { sb.auth.startAutoRefresh && sb.auth.startAutoRefresh(); } catch (e) {}
+    sb.auth.getSession().then(({ data }) => {
+      const has = !!(data && data.session);
+      if (has && !state.auth.user) { state.auth.user = data.session.user; loadProfile().then(() => { startNotifs(); render(); }); }
+    }).catch(() => {});
+  }
+});
 
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
