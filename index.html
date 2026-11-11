@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v16";
+const UI_VERSION = "2026-11-12-v17";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -10561,7 +10561,7 @@ function aahSing(notes, tonicHz, voice, onStep) {
   const osc = ac.createOscillator(); osc.setPeriodicWave(ac.createPeriodicWave(re, im));
   const vib = ac.createOscillator(); vib.frequency.value = 5.2 + Math.random() * .5; const vibG = ac.createGain(); vibG.gain.value = 0; vib.connect(vibG); vibG.connect(osc.frequency);
   const F = female ? [[850, 1, 90], [1220, .55, 100], [2810, .3, 130], [3800, .12, 170]] : [[730, 1, 80], [1090, .5, 90], [2440, .28, 120], [3350, .12, 150]];
-  const env = ac.createGain(); env.gain.value = 0; const out = ac.createGain(); out.gain.value = .9;
+  const env = ac.createGain(); env.gain.value = 0; const out = ac.createGain(); out.gain.value = .9 * (AAH.vol == null ? 1 : AAH.vol);
   const comp = ac.createDynamicsCompressor(); out.connect(comp); comp.connect(ac.destination);
   const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = female ? 5200 : 4200; env.connect(lp); lp.connect(out);
   F.forEach(([f, g, bw]) => { const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = f / bw; const gg = ac.createGain(); gg.gain.value = g * 3.2; osc.connect(bp); bp.connect(gg); gg.connect(env); });
@@ -10856,6 +10856,477 @@ teacherStatsPanel = function (tid) {
   const led = useData("tLedgerO:" + tid, () => q(sb.from("teacher_ledger").select("*, lessons(start_time,student_id,attendance)").eq("teacher_id", tid).order("created_at", { ascending: false }).limit(80)));
   const P = peopleMap(); const kn = { lesson: L("earnLesson"), payout: L("earnPayout"), bonus: L("earnBonus"), adjust: L("earnAdjust") };
   return h + `<div style="margin-top:.8rem"><b class="sm">🧾 ${L("ldTitle")}</b><div style="max-height:320px;overflow:auto;margin-top:.4rem">${!Array.isArray(led) ? loadingBox() : !led.length ? `<p class="muted sm">${L("none")}</p>` : led.map(x => `<div class="kv" style="align-items:center"><span class="xs"><b>${esc(kn[x.kind] || x.kind)}</b>${x.lessons ? ` · ${esc(fmtDT(x.lessons.start_time))} · ${esc(personName(x.lessons.student_id, P.map))}` : ""}${x.kind === "lesson" ? ` · ${esc(money(x.gross, x.currency))} − ${(+x.commission_pct).toFixed(0)}%` : ""}${x.method ? " · " + esc(x.method) : ""}${x.note ? " · " + esc(x.note) : ""}<br><span class="muted">${esc(fmtDT(x.created_at))}</span></span><b style="color:${+x.amount < 0 ? "var(--danger)" : "var(--accent)"}">${+x.amount > 0 ? "+" : ""}${esc(money(x.amount, x.currency))}</b></div>`).join("")}</div></div>`;
+};
+
+/* ======================= v20: مسابقات كاملة، تفسير وحديث من مصادر موثقة، قصص مصورة بالذكاء الاصطناعي، أقسام المقامات، ترشيح المعلمين، دفع أوتوماتيك ======================= */
+Object.assign(UI.en, {
+  cmTitle: "Competitions", cmHero: "Quran & maqamat competitions — like the great mosque contests, online", cmHeroSub: "Join a competition, go through the qualifiers to the grand final, get scored by expert judges on every criterion, and win prizes. Finals are streamed live!",
+  cmJoin: "Join now", cmFee: "Entry fee", cmFree: "Free", cmPrizes: "Prizes", cmCriteria: "Scoring criteria", cmRounds: "Stages", cmBoard: "Leaderboard", cmLive: "Watch live", cmShare: "Share", cmDeadline: "Registration closes", cmStatus: { draft: "Draft", registration: "Registration open", running: "Qualifiers running", final: "Grand final", finished: "Finished" },
+  cmMine: "My entry", cmPending: "Waiting for payment", cmActive: "You're in ✓", cmElim: "Eliminated — thank you for taking part!", cmWinner: "🏆 Winner", cmSubmit: "Submit your recitation for this stage", cmSubmitted: "Submitted ✓ — judges will score it", cmRecord: "Record", cmStop: "Stop", cmUpload: "or upload a file",
+  cmNone: "No competitions right now — new ones are announced here.", cmRank: "Rank", cmScore: "Score", cmJudges: "judges", cmJudge: "Judging", cmScoreSave: "Save score", cmComment: "Comment to the contestant", cmNoSubs: "No submissions yet.",
+  cmOwner: "Competitions", cmNew: "New competition", cmEdit: "Edit", cmSave: "Save competition", cmTitleF: "Title", cmDesc: "Description", cmCat: "Category", cmCats: { hifz: "Memorization", tajweed: "Tajweed", maqamat: "Vocal maqamat", nasheed: "Nasheed / ibtihal", general: "General" },
+  cmPrizeLines: "Prizes (one per line: place | prize)", cmCritLines: "Criteria (one per line: name | max points)", cmRoundLines: "Stages (one per line: name | how many qualify | task)", cmLiveUrl: "Live stream link (YouTube / Facebook / TikTok)", cmMax: "Max contestants",
+  cmOpenRound: "Open stage", cmCloseRound: "Close stage & qualify the top", cmJudgesSel: "Judges (teachers)", cmEntries: "Contestants", cmFinalize: "Announce results", cmHome: "🏆 New competition — register now!", cmScoredBy: "Scored by",
+  stTitle: "Illustrated story", stHum: "Soft humming", stTafsir: "Al-Muyassar", stPlay: "Play", stPause: "Pause",
+  tfTitle: "Tafsir", tfSrc: "Tafsir source", tfTrans: "Translation of meanings", tfMore: "More ayahs", tfNote: "Texts are loaded live from Quran.com (tafsir and translations).", hdNote: "Hadith texts are loaded live from the open Hadith API (fawazahmed0). Detailed commentary (sharh) is added by our teachers.", hdBook: "Book", hdNum: "Hadith",
+  lockSec: "🔒 This page is for subscribers / buyers", unlockSec: "Unlock this section", libLogin: "Sign up free to open the library", libLoginSub: "All free lessons, stories and tools open right after you create a free account.",
+  recTitle: "Recommended teachers for your times", recHint: "The system matches your chosen times with each teacher's schedule. Pick one — the academy can still adjust.", recMatch: "match", recNone: "No teacher matches these times yet — the academy will assign one for you.",
+  apTitle: "Automatic confirmation of manual payments", apOn: "Confirm automatically when the student uploads a receipt + transaction number", apMax: "Maximum amount for auto-confirmation", apHint: "You can review and reverse any auto-confirmed payment from the Orders tab.", apBadge: "auto ✓", apRevoke: "Reverse",
+  payAutoHint: "Upload the receipt and type the transaction number — your lessons are added instantly.", refTitle: "Invite friends — earn {r} per friend", refText: "When a friend you invite subscribes to any package, {r} is added to your wallet. Use your wallet to open paid content or pay for a package.", refFriends: "friends joined", refPaid: "subscribed",
+  nsVerses: "Verses", nsGuide: "Melody guide (aahs in the maqam) — chant the verses on it", nsPlay: "Play the melody"
+});
+Object.assign(UI.ar, {
+  cmTitle: "المسابقات", cmHero: "مسابقات القرآن والمقامات — زي مسابقات المساجد الكبيرة، أونلاين", cmHeroSub: "اشترك في مسابقة، اطلع من التصفيات للنهائي، لجنة تحكيم بتديك درجة على كل معيار، والمراكز الأولى ليها جوائز. والنهائيات بتتذاع لايف!",
+  cmJoin: "اشترك دلوقتي", cmFee: "رسوم الاشتراك", cmFree: "مجاني", cmPrizes: "الجوائز", cmCriteria: "معايير التحكيم", cmRounds: "المراحل", cmBoard: "الترتيب", cmLive: "شاهد لايف", cmShare: "شارك", cmDeadline: "آخر ميعاد للتسجيل", cmStatus: { draft: "مسودة", registration: "التسجيل مفتوح", running: "التصفيات شغالة", final: "النهائي", finished: "انتهت" },
+  cmMine: "اشتراكي", cmPending: "مستني الدفع", cmActive: "إنت مشترك ✓", cmElim: "خرجت من المسابقة — شكرًا لمشاركتك!", cmWinner: "🏆 فائز", cmSubmit: "ابعت تلاوتك للمرحلة دي", cmSubmitted: "اتبعتت ✓ — لجنة التحكيم هتقيّمها", cmRecord: "سجّل", cmStop: "إيقاف", cmUpload: "أو ارفع ملف",
+  cmNone: "مفيش مسابقات دلوقتي — المسابقات الجديدة بتتعلن هنا.", cmRank: "المركز", cmScore: "الدرجة", cmJudges: "محكّم", cmJudge: "التحكيم", cmScoreSave: "احفظ الدرجة", cmComment: "تعليق للمتسابق", cmNoSubs: "لسه مفيش مشاركات.",
+  cmOwner: "المسابقات", cmNew: "مسابقة جديدة", cmEdit: "تعديل", cmSave: "احفظ المسابقة", cmTitleF: "اسم المسابقة", cmDesc: "الوصف", cmCat: "النوع", cmCats: { hifz: "حفظ", tajweed: "تجويد", maqamat: "مقامات صوتية", nasheed: "إنشاد وابتهال", general: "عامة" },
+  cmPrizeLines: "الجوائز (كل سطر: المركز | الجائزة)", cmCritLines: "معايير التحكيم (كل سطر: المعيار | الدرجة العظمى)", cmRoundLines: "المراحل (كل سطر: الاسم | عدد المتأهلين | المطلوب)", cmLiveUrl: "لينك البث المباشر (يوتيوب / فيسبوك / تيك توك)", cmMax: "أقصى عدد متسابقين",
+  cmOpenRound: "افتح المرحلة", cmCloseRound: "اقفل المرحلة وأهّل الأوائل", cmJudgesSel: "لجنة التحكيم (المعلمين)", cmEntries: "المتسابقين", cmFinalize: "أعلن النتيجة", cmHome: "🏆 مسابقة جديدة — سجّل دلوقتي!", cmScoredBy: "قيّمه",
+  stTitle: "قصة مصوّرة", stHum: "همهمة هادية", stTafsir: "التفسير الميسر", stPlay: "تشغيل", stPause: "إيقاف",
+  tfTitle: "التفسير", tfSrc: "مصدر التفسير", tfTrans: "ترجمة المعاني", tfMore: "آيات أكتر", tfNote: "النصوص بتتحمل مباشرة من Quran.com (التفاسير والترجمات).", hdNote: "نصوص الأحاديث بتتحمل مباشرة من مكتبة الأحاديث المفتوحة (fawazahmed0). الشرح التفصيلي بيضيفه معلمينا.", hdBook: "الكتاب", hdNum: "حديث",
+  lockSec: "🔒 الصفحة دي للمشتركين / اللي يشتريها", unlockSec: "افتح القسم ده", libLogin: "سجّل مجانًا عشان تفتح المكتبة", libLoginSub: "كل الدروس المجانية والقصص المصورة والأدوات بتفتح على طول بعد ما تعمل حساب مجاني.",
+  recTitle: "المعلمين المرشحين لمواعيدك", recHint: "النظام بيطابق المواعيد اللي اخترتها مع جدول كل معلم. اختار واحد — والأكاديمية ممكن تعدّل.", recMatch: "تطابق", recNone: "مفيش معلم مطابق للمواعيد دي لسه — الأكاديمية هتحددلك معلم.",
+  apTitle: "تأكيد الدفع اليدوي أوتوماتيك", apOn: "أكّد لوحده لما الطالب يرفع الإيصال + رقم العملية", apMax: "أقصى مبلغ للتأكيد التلقائي", apHint: "تقدر تراجع وتلغي أي دفع اتأكد تلقائي من تبويب الطلبات.", apBadge: "تلقائي ✓", apRevoke: "إلغاء",
+  payAutoHint: "ارفع الإيصال واكتب رقم العملية — حصصك هتنزل فورًا.", refTitle: "ادعُ صحابك — {r} لكل صاحب", refText: "لما صاحبك اللي دعيته يشترك في أي باقة، بينزل {r} في محفظتك. وتقدر تستخدم المحفظة تفتح بيها محتوى مدفوع أو تدفع باقة.", refFriends: "سجّلوا", refPaid: "اشتركوا",
+  nsVerses: "الأبيات", nsGuide: "لحن إرشادي (آهات على المقام) — أنشد الأبيات عليه", nsPlay: "شغّل اللحن"
+});
+Object.assign(UI.en.nkT, { comp_join: "🏆 New contestant: {name}", comp_active: "🏆 You're registered in the competition!", comp_qualified: "🎉 You qualified for: {round}", comp_eliminated: "Thank you for competing — see the results", comp_result: "🏆 Final results are out — your rank: {rank}", payment_revoked: "⚠️ A payment was reversed: {note}" });
+Object.assign(UI.ar.nkT, { comp_join: "🏆 متسابق جديد: {name}", comp_active: "🏆 اشتراكك في المسابقة اتأكد!", comp_qualified: "🎉 اتأهلت لـ: {round}", comp_eliminated: "شكرًا لمشاركتك — شوف النتايج", comp_result: "🏆 النتيجة النهائية ظهرت — مركزك: {rank}", payment_revoked: "⚠️ دفع اتلغى: {note}" });
+Object.assign(TABS10.en, { competitions: "Competitions", judging: "Judging" }); Object.assign(TABS10.ar, { competitions: "المسابقات", judging: "التحكيم" });
+Object.keys(UI).forEach(lg => { const t = UI[lg] && UI[lg].types; if (t) t.story = t.story || (lg === "ar" ? "قصة مصوّرة" : "Illustrated story"); });
+
+/* ---------- 1) العلامة المائية: في المحتوى المنشور بس، مش في الفصل ---------- */
+rmWatermark = function () { ["rmWm", "rmWm2"].forEach(id => { const e = rmEl(id); if (e) e.remove(); }); };
+
+/* ---------- 2) العارض: المحتوى كله يبان ويتظبط على حجم الشاشة ---------- */
+document.head.insertAdjacentHTML("beforeend", `<style>
+/* v20: الهيدر مايعديش عرض الشاشة أبدًا */
+html,body{overflow-x:hidden;max-width:100%}
+header .wrap{min-width:0}.nav{min-width:0;flex:1 1 auto;overflow-x:auto;scrollbar-width:none;mask-image:linear-gradient(to left,#000 92%,transparent)}.nav::-webkit-scrollbar{display:none}
+.tools{flex-shrink:0;min-width:0}
+@media(max-width:1500px){.appdl span{display:none}.appdl{padding:.4rem .55rem}}
+@media(max-width:1500px) and (min-width:1180px){.tools .btn-p.hide-sm{padding:.45rem .7rem;font-size:.82rem}}
+@media(max-width:1380px){.nav{display:none!important}.burger{display:inline-flex!important}}
+@media(max-width:1380px){.mnav.open{display:block!important}}
+@media(max-width:640px){.tools .appdl{display:none!important}.balchip{max-width:78px;overflow:hidden;text-overflow:ellipsis;padding:.3rem .4rem!important;font-size:.7rem!important}.tools{gap:.2rem}.tools select{max-width:64px}.tools .ibtn{width:34px;height:34px}}
+</style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.svm{padding:.5rem}.svbox{width:min(1100px,100%);max-width:100%}.svbody{overflow-x:hidden}
+.svmedia img,.svmedia video{max-width:100%;max-height:78vh;width:auto;height:auto;margin:0 auto;object-fit:contain}
+.svpage{max-width:100%}.svpage canvas{max-width:100%!important;height:auto!important}.svtext{overflow-wrap:anywhere;white-space:pre-wrap}
+@media(max-width:600px){.svm{padding:0}.svbox{border-radius:0;max-height:100vh;height:100vh}.svbody{padding:.6rem}}
+</style>`);
+
+/* ---------- 3) القصص المصوّرة (صور + فيديو بالذكاء الاصطناعي) ---------- */
+const ST_STYLE = ", cinematic soft light, peaceful, islamic art atmosphere, no people, no faces, no text, no letters";
+function stImg(p, seed, w, h) { return `https://image.pollinations.ai/prompt/${encodeURIComponent(p + ST_STYLE)}?width=${w || 1280}&height=${h || 720}&nologo=true&seed=${seed || 11}`; }
+const TR_IDS = { en: 85, fr: 31, de: 27, es: 83, tr: 77, ru: 79, id: 134, ms: 39, zh: 56, ku: 81 };
+const AYC = {};
+async function ayahData(key) {
+  if (AYC[key + state.lang]) return AYC[key + state.lang];
+  const tr = TR_IDS[state.lang]; const out = {};
+  try { const j = await (await fetch(`https://api.quran.com/api/v4/verses/by_key/${key}?fields=text_uthmani${tr ? "&translations=" + tr : ""}`)).json(); out.ar = j.verse.text_uthmani; out.tr = tr && j.verse.translations && j.verse.translations[0] ? htmlText(j.verse.translations[0].text) : ""; } catch (e) {}
+  if (state.lang === "ar") { try { const j = await (await fetch(`https://api.quran.com/api/v4/tafsirs/16/by_ayah/${key}`)).json(); out.tf = htmlText(j.tafsir.text); } catch (e) {} }
+  return (AYC[key + state.lang] = out);
+}
+function htmlText(h) { const d = document.createElement("div"); d.innerHTML = String(h || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<sup[\s\S]*?<\/sup>/gi, ""); return (d.textContent || "").replace(/\n{3,}/g, "\n\n").trim(); }
+const SP = {};
+function storyOpen(c) {
+  const st = c.story || {}; const slides = st.slides || []; if (!slides.length) return;
+  svClose(); const m = document.createElement("div"); m.id = "svModal"; m.className = "svm";
+  m.addEventListener("click", (e) => { if (e.target === m) storyClose(); });
+  m.innerHTML = `<div class="svbox" oncontextmenu="return false"><div class="svhead"><b>🎬 ${esc(ctTitleOf(c))}</b><span class="row" style="gap:.3rem"><button class="ibtn" id="spHum" title="${L("stHum")}" onclick="SP.hum=!SP.hum;spHum()">${st.hum ? "🔊" : "🔈"}</button><button class="ibtn" onclick="storyClose()"><i class="fa-solid fa-xmark"></i></button></span></div>
+    <div class="svbody" style="padding:0"><div class="spstage" id="spStage"></div><div class="row" style="justify-content:center;gap:.5rem;padding:.6rem"><button class="btn btn-o" onclick="spGo(-1)">◀</button><button class="btn btn-p" id="spPlay" onclick="spToggle()">⏸</button><button class="btn btn-o" onclick="spGo(1)">▶</button></div><div class="spdots" id="spDots"></div></div></div>`;
+  document.body.appendChild(m); document.body.classList.add("sv-open"); document.body.style.overflow = "hidden"; window.addEventListener("keydown", svKeys, true);
+  Object.assign(SP, { c, i: 0, playing: true, hum: !!st.hum, seed: (String(c.id).charCodeAt(0) || 7) });
+  spShow(); spHum();
+}
+function storyClose() { clearTimeout(SP.t); clearInterval(SP.hi); SP.playing = false; SP.c = null; AAH.vol = 1; aahStop(); svClose(); }
+async function spShow() {
+  const c = SP.c; if (!c) return; const sl = c.story.slides, s = sl[SP.i]; const el = document.getElementById("spStage"); if (!el) return;
+  const img = stImg(s.p, SP.seed + SP.i); const next = sl[SP.i + 1]; if (next) { const pre = new Image(); pre.src = stImg(next.p, SP.seed + SP.i + 1); }
+  el.innerHTML = `<div class="spimg" style="background-image:url('${img}')"></div><div class="spcap" id="spCap">${loadingBox()}</div><div class="svwm" style="${svWatermarkCss()}"></div>`;
+  document.getElementById("spDots").innerHTML = sl.map((_, i) => `<span class="${i === SP.i ? "on" : ""}" onclick="SP.i=${i};spShow()"></span>`).join("");
+  let html = "", dur = 8000;
+  if (s.a) { const d = await ayahData(s.a); if (SP.c !== c || sl[SP.i] !== s) return; html = `<div class="spay">${esc(d.ar || "")} <span class="spno">﴿${s.a.split(":")[1]}﴾</span></div>${d.tf ? `<div class="sptf">${esc(d.tf.length > 380 ? d.tf.slice(0, 380) + "…" : d.tf)}<small> — ${L("stTafsir")}</small></div>` : ""}${d.tr ? `<div class="sptf">${esc(d.tr)}</div>` : ""}`; dur = 6000 + Math.min(9000, ((d.tf || d.tr || "").length) * 45); }
+  else { const t = s.t || {}; html = `<div class="sptx">${esc(t[state.lang] || t.ar || t.en || "")}</div>${state.lang === "ar" && t.en ? "" : (t.ar && state.lang !== "ar" ? `<div class="sptf" dir="rtl">${esc(t.ar)}</div>` : "")}`; dur = 5000 + Math.min(8000, (t[state.lang] || t.ar || "").length * 50); }
+  const cap = document.getElementById("spCap"); if (cap) cap.innerHTML = html;
+  clearTimeout(SP.t); if (SP.playing) SP.t = setTimeout(() => spGo(1, true), dur);
+}
+function spGo(d, auto) { const n = SP.c.story.slides.length; let i = SP.i + d; if (i >= n) { if (auto) { SP.playing = false; const b = document.getElementById("spPlay"); if (b) b.textContent = "▶"; aahStop(); return; } i = n - 1; } SP.i = Math.max(0, i); spShow(); }
+function spToggle() { SP.playing = !SP.playing; const b = document.getElementById("spPlay"); if (b) b.textContent = SP.playing ? "⏸" : "▶"; if (SP.playing) { spShow(); spHum(); } else { clearTimeout(SP.t); aahStop(); } }
+function spHum() {
+  const b = document.getElementById("spHum"); if (b) b.textContent = SP.hum ? "🔊" : "🔈"; clearInterval(SP.hi);
+  if (!SP.hum || !SP.playing) { aahStop(); return; }
+  const m = MQ.find(x => x.id === "saba"), m2 = MQ.find(x => x.id === "bayati"); let k = 0;
+  const sing = () => { if (!SP.c || !SP.hum || !SP.playing) return; AAH.vol = .22; const mm = k++ % 2 ? m2 : m; aahSing(mqGenerate(mm, 77 + k, .55).map(([c, d]) => [c, d * 1.2]), 98, "m"); };
+  sing(); SP.hi = setInterval(() => { if (!AAH.playing) sing(); }, 1500);
+}
+document.head.insertAdjacentHTML("beforeend", `<style>
+.spstage{position:relative;aspect-ratio:16/9;max-height:72vh;width:100%;overflow:hidden;background:#000}
+.spimg{position:absolute;inset:-6%;background-size:cover;background-position:center;animation:spKB 16s ease-in-out infinite alternate}
+@keyframes spKB{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.12) translate(-2%,-2%)}}
+.spcap{position:absolute;left:0;right:0;bottom:0;padding:1.2rem 1.4rem 1rem;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.55) 70%,transparent);color:#fff;text-align:center;max-height:70%;overflow:auto}
+.spay{font:1.7rem/2 'Amiri','Tajawal',serif;direction:rtl;text-shadow:0 2px 8px rgba(0,0,0,.6)}.spno{color:#fbbf24;font-size:1.1rem}.sptf{font-size:.95rem;opacity:.93;margin-top:.4rem;line-height:1.7}.sptf small{opacity:.7}.sptx{font-size:1.25rem;font-weight:700;line-height:1.9}
+.spdots{display:flex;gap:.35rem;justify-content:center;padding:0 0 .8rem}.spdots span{width:9px;height:9px;border-radius:50%;background:var(--line);cursor:pointer}.spdots span.on{background:var(--accent);width:22px;border-radius:5px}
+@media(max-width:600px){.spay{font-size:1.25rem}.spcap{padding:.7rem}.sptf{font-size:.82rem}}
+</style>`);
+const _contentCard20 = contentCard;
+contentCard = function (c, manage) {
+  if (c.type === "story" && !c.cover_url && c.story && c.story.slides && c.story.slides[0]) c = Object.assign({}, c, { cover_url: stImg(c.story.slides[0].p, (String(c.id).charCodeAt(0) || 7), 800, 450) });
+  return _contentCard20(c, manage);
+};
+const _openContent20 = openContent;
+openContent = function (id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray)); const c = all.find(x => x && x.id === id && x.title);
+  if (c && c.type === "story") { if (!state.auth.user) return navigate("signup"); viewOnce("content", id); return storyOpen(c); }
+  return _openContent20.apply(this, arguments);
+};
+
+/* ---------- 4) المكتبة: بعد التسجيل بس + صفحات خاصة (تفسير، حديث، مقامات) + أقفال ---------- */
+const MAQ_FREE = { aah: ["bayati", "husseini", "hijazkar"], vtest: ["bayati", "husseini", "hijazkar"], nasheed: ["bayati", "rast"] };
+function secUnlocked(s) {
+  if (!s || !(+s.price > 0)) return true; const r = role(); if (r === "owner" || r === "teacher") return true;
+  const now = Date.now(); return myAccess().some(a => (!a.expires_at || new Date(a.expires_at).getTime() > now) && (a.scope === "all" || (a.scope === "section" && a.section_id === s.id)));
+}
+const _renderLibraryDb20 = renderLibraryDb;
+renderLibraryDb = function () {
+  if (!state.auth.user) {
+    const secs = sectionsData(); const roots = Array.isArray(secs) ? secs.filter(s => !s.parent_id && s.is_visible !== false) : [];
+    return `<div class="card" style="text-align:center;padding:2rem 1rem;margin-top:1.2rem;border-color:var(--accent)"><div style="font-size:2.6rem">📚🔐</div><h2 style="margin:.4rem 0">${L("libLogin")}</h2><p class="muted" style="margin-bottom:1rem">${L("libLoginSub")}</p><button class="btn btn-p btn-lg" onclick="lsSet('itqan_after_hash','#/library');navigate('signup')">${RL("signIn")} / ${I18N[state.lang].nav.trial || "Sign up"}</button></div>
+      <div class="libgrid" style="margin-top:1.2rem;opacity:.85">${roots.map(s => `<a class="libtile" href="#" onclick="lsSet('itqan_after_hash','#/library');navigate('signup');return false;" style="${s.cover_url ? `background-image:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.12)),url('${esc(s.cover_url)}')` : ""}"><span class="ic">${esc(s.icon || "📁")} 🔒</span><b>${esc(secTitle(s))}</b></a>`).join("")}</div>`;
+  }
+  let h = _renderLibraryDb20();
+  const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec) return h;
+  const cur = secs.find(s => s.id === state.libSec); if (!cur) return h;
+  const meta = cur.meta || {};
+  if (!secUnlocked(cur)) {
+    const lock = `<div class="card" style="text-align:center;padding:1.6rem;border-color:var(--gold,#f59e0b)"><div style="font-size:2.4rem">🔒</div><h3 style="margin:.4rem 0">${L("lockSec")}</h3><div class="row" style="gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-p" onclick="buyContent('section','${cur.id}')">🔓 ${L("unlockSec")} — ${esc(money(cur.price, setv("currency", "USD")))}</button><button class="btn btn-o" onclick="navigate('pricing')">${L("seePlans")}</button></div></div>`;
+    return h.split(`<div class="grid">`)[0].replace(`<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`, "") + lock;
+  }
+  let extra = "";
+  if (meta.kind === "surah") extra = tafsirReader(meta.surah, meta.ayahs);
+  else if (meta.kind === "hadith_book") extra = hadithReader(meta.hadith);
+  else if (meta.maqam && ["aah", "vtest", "nasheed", "murattal", "mujawwad"].includes(meta.kind)) extra = maqamPage(meta.kind, meta.maqam);
+  if (!extra) return h;
+  return h.replace(`<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`, "") + extra;
+};
+// قفل على البلاطات المدفوعة
+const _libTile20 = libTile;
+libTile = function (s, n, k) { let h = _libTile20(s, n, k); if (+s.price > 0 && !secUnlocked(s)) h = h.replace(`<span class="ic">${esc(s.icon || "📁")}</span>`, `<span class="ic">${esc(s.icon || "📁")} 🔒</span>`); return h; };
+
+/* --- قارئ التفسير --- */
+const TAFSIRS = [[91, "تفسير السعدي", "Al-Sa'di (Arabic)"], [14, "تفسير ابن كثير", "Ibn Kathir (Arabic)"], [15, "تفسير الطبري", "Al-Tabari (Arabic)"], [90, "تفسير القرطبي", "Al-Qurtubi (Arabic)"], [16, "التفسير الميسر", "Al-Muyassar (Arabic)"], [169, "ابن كثير (إنجليزي مختصر)", "Ibn Kathir (English, abridged)"], [170, "السعدي (روسي)", "Al-Sa'di (Russian)"], [157, "في ظلال القرآن (أردو)", "Fi Zilal al-Quran (Urdu)"]];
+state.tf = state.tf || { src: 91, page: 1 };
+function tafsirReader(surah, ayahs) {
+  const tf = state.tf; if (tf.surah !== surah) { tf.surah = surah; tf.page = 1; }
+  const tr = TR_IDS[state.lang]; const per = 6, pages = Math.ceil((ayahs || 7) / per);
+  const key = `tfr:${surah}:${tf.src}:${tf.page}:${state.lang}`;
+  const data = useData(key, async () => {
+    const [v, t] = await Promise.all([fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah}?fields=text_uthmani&per_page=${per}&page=${tf.page}${tr ? "&translations=" + tr : ""}`).then(r => r.json()), fetch(`https://api.quran.com/api/v4/tafsirs/${tf.src}/by_chapter/${surah}?per_page=${per}&page=${tf.page}`).then(r => r.json())]);
+    const tm = {}; (t.tafsirs || []).forEach(x => tm[x.verse_key] = htmlText(x.text));
+    return (v.verses || []).map(x => ({ key: x.verse_key, n: x.verse_number, ar: x.text_uthmani, tr: x.translations && x.translations[0] ? htmlText(x.translations[0].text) : "", tf: tm[x.verse_key] || "" }));
+  });
+  const opts = TAFSIRS.map(([id, ar, en]) => `<option value="${id}" ${tf.src === id ? "selected" : ""}>${esc(state.lang === "ar" ? ar : en)}</option>`).join("");
+  return `<div class="card" style="margin-top:1.2rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem"><h3>📖 ${L("tfTitle")} — ${esc(SURAHS[surah - 1] || "")}</h3>
+      <label class="row" style="gap:.4rem;align-items:center"><span class="sm">${L("tfSrc")}</span><select class="in" style="width:auto" onchange="state.tf.src=+this.value;render()">${opts}</select></label></div>
+    ${!Array.isArray(data) ? loadingBox() : data.map(a => `<div class="tfa"><div class="tfay">${esc(a.ar)} <span class="spno">﴿${a.n}﴾</span></div>${a.tr ? `<div class="sm" style="margin:.3rem 0;color:var(--accent)">${esc(a.tr)}</div>` : ""}${a.tf ? `<details ${data.length <= 3 ? "open" : ""}><summary class="sm b">${esc((TAFSIRS.find(x => x[0] === tf.src) || [])[state.lang === "ar" ? 1 : 2] || "")}</summary><div class="tftx">${esc(a.tf)}</div></details>` : ""}</div>`).join("")}
+    ${pages > 1 ? `<div class="row" style="gap:.3rem;flex-wrap:wrap;justify-content:center;margin-top:.8rem">${tf.page > 1 ? `<button class="btn btn-o" onclick="state.tf.page--;render()">◀</button>` : ""}<span class="sm" style="align-self:center">${tf.page} / ${pages}</span>${tf.page < pages ? `<button class="btn btn-p" onclick="state.tf.page++;render();window.scrollTo({top:0})">${L("tfMore")} ▶</button>` : ""}</div>` : ""}
+    <p class="xs muted" style="margin-top:.6rem">${L("tfNote")}</p></div>`;
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.tfa{padding:.9rem 0;border-bottom:1px solid var(--line)}.tfay{font:1.55rem/2.1 'Amiri','Tajawal',serif;direction:rtl;text-align:right}.tftx{white-space:pre-wrap;line-height:1.9;font-size:.95rem;margin-top:.4rem}</style>`);
+
+/* --- قارئ الحديث --- */
+const HD_BOOKS = { bukhari: [[1, "Revelation"], [2, "Belief"], [3, "Knowledge"], [4, "Ablutions (Wudu')"], [5, "Bathing (Ghusl)"], [6, "Menstrual Periods"], [7, "Tayammum"], [8, "Prayers (Salat)"], [9, "Times of the Prayers"], [10, "Call to Prayers (Adhaan)"], [11, "Friday Prayer"], [12, "Fear Prayer"], [13, "The Two Festivals (Eids)"], [14, "Witr Prayer"], [15, "Invoking Allah for Rain"], [16, "Eclipses"], [17, "Prostration During Recital of Qur'an"], [18, "Shortening the Prayers"], [19, "Prayer at Night (Tahajjud)"], [20, "Prayer at Masjid Makkah and Madinah"], [21, "Actions while Praying"], [22, "Forgetfulness in Prayer"], [23, "Funerals"], [24, "Zakat"], [25, "Hajj"], [26, "Umrah"], [27, "Pilgrims Prevented"], [28, "Hunting while on Pilgrimage"], [29, "Virtues of Madinah"], [30, "Fasting"], [31, "Taraweeh"], [32, "Night of Qadr"], [33, "I'tikaf"], [34, "Sales and Trade"], [35, "As-Salam"], [36, "Shuf'a"], [37, "Hiring"], [38, "Al-Hawaala"], [39, "Kafalah"], [40, "Representation"], [41, "Agriculture"], [42, "Distribution of Water"], [43, "Loans"], [44, "Khusoomaat"], [45, "Luqatah"], [46, "Oppressions"], [47, "Partnership"], [48, "Mortgaging"], [49, "Manumission of Slaves"], [50, "Makaatib"], [51, "Gifts"], [52, "Witnesses"], [53, "Peacemaking"], [54, "Conditions"], [55, "Wills"], [56, "Jihaad"], [57, "Khumus"], [58, "Jizyah"], [59, "Beginning of Creation"], [60, "Prophets"], [61, "Virtues of the Prophet and Companions"], [62, "Companions of the Prophet"], [63, "Merits of the Ansaar"], [64, "Al-Maghaazi"], [65, "Tafseer"], [66, "Virtues of the Qur'an"], [67, "Marriage"], [68, "Divorce"], [69, "Supporting the Family"], [70, "Food"], [71, "Aqiqa"], [72, "Hunting, Slaughtering"], [73, "Adaahi"], [74, "Drinks"], [75, "Patients"], [76, "Medicine"], [77, "Dress"], [78, "Good Manners (Al-Adab)"], [79, "Asking Permission"], [80, "Invocations"], [81, "Ar-Riqaq"], [82, "Al-Qadar"], [83, "Oaths and Vows"], [84, "Expiation for Oaths"], [85, "Inheritance"], [86, "Hudood"], [87, "Blood Money"], [88, "Apostates"], [89, "Coercion"], [90, "Tricks"], [91, "Dreams"], [92, "Afflictions and the End of the World"], [93, "Judgments"], [94, "Wishes"], [95, "Truthful Person's Information"], [96, "Holding Fast to the Qur'an and Sunnah"], [97, "Tawheed"]],
+  muslim: [[0, "Introduction"], [1, "Faith"], [2, "Purification"], [3, "Menstruation"], [4, "Prayers"], [5, "Mosques"], [6, "Prayer - Travellers"], [7, "Prayer - Friday"], [8, "Prayer - Two Eids"], [9, "Prayer - Rain"], [10, "Prayer - Eclipses"], [11, "Prayer - Funerals"], [12, "Zakat"], [13, "Fasting"], [14, "I'tikaf"], [15, "Pilgrimage"], [16, "Marriage"], [17, "Suckling"], [18, "Divorce"], [19, "Invoking Curses"], [20, "Emancipating Slaves"], [21, "Transactions"], [22, "Musaqah"], [23, "Inheritance"], [24, "Gifts"], [25, "Wills"], [26, "Vows"], [27, "Oaths"], [28, "Qasas and Diyat"], [29, "Legal Punishments"], [30, "Judicial Decisions"], [31, "Lost Property"], [32, "Jihad and Expeditions"], [33, "Government"], [34, "Hunting and Slaughter"], [35, "Sacrifices"], [36, "Drinks"], [37, "Clothes and Adornment"], [38, "Manners and Etiquette"], [39, "Greetings"], [40, "Correct Words"], [41, "Poetry"], [42, "Dreams"], [43, "Virtues"], [44, "Merits of the Companions"], [45, "Virtue and Kinship"], [46, "Destiny"], [47, "Knowledge"], [48, "Remembrance and Supplication"], [49, "Heart-Melting Traditions"], [50, "Repentance"], [51, "The Hypocrites"], [52, "Day of Judgment, Paradise and Hell"], [53, "Paradise"], [54, "Tribulations"], [55, "Zuhd"], [56, "Commentary on the Qur'an"]],
+  nawawi: [[1, "Forty Hadith of an-Nawawi"]] };
+const HD_LANG = { en: "eng", fr: "fra", id: "ind", ms: "ind", ru: "rus", tr: "tur" };
+state.hd = state.hd || {};
+function hadithReader(book) {
+  const hd = state.hd; if (hd.book !== book) { hd.book = book; hd.sec = HD_BOOKS[book][0][0]; hd.page = 1; }
+  const lang = HD_LANG[state.lang];
+  const data = useData(`hd:${book}:${hd.sec}:${state.lang}`, async () => {
+    const base = "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/";
+    const [a, t] = await Promise.all([fetch(`${base}ara-${book}/sections/${hd.sec}.min.json`).then(r => r.json()), lang ? fetch(`${base}${lang}-${book}/sections/${hd.sec}.min.json`).then(r => r.json()).catch(() => null) : null]);
+    const tm = {}; if (t) (t.hadiths || []).forEach(x => tm[x.hadithnumber] = x.text);
+    return (a.hadiths || []).filter(x => (x.text || "").trim()).map(x => ({ n: x.hadithnumber, ar: x.text, tr: tm[x.hadithnumber] || "", g: (x.grades || []).map(g => g.grade).join(" · ") }));
+  });
+  const per = 15, list = Array.isArray(data) ? data : [], pages = Math.ceil(list.length / per);
+  return `<div class="card" style="margin-top:1.2rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem"><h3>📜 ${L("hdBook")}</h3>
+      <select class="in" style="width:auto;max-width:100%" onchange="state.hd.sec=+this.value;state.hd.page=1;render()">${HD_BOOKS[book].map(([n, nm]) => `<option value="${n}" ${hd.sec === n ? "selected" : ""}>${n}. ${esc(nm)}</option>`).join("")}</select></div>
+    ${!Array.isArray(data) ? loadingBox() : list.slice((hd.page - 1) * per, hd.page * per).map(x => `<div class="tfa"><div class="xs muted">${L("hdNum")} ${x.n}${x.g ? " · " + esc(x.g) : ""}</div><div class="tftx" dir="rtl" style="font-size:1.08rem;font-family:'Amiri','Tajawal',serif">${esc(x.ar)}</div>${x.tr ? `<div class="tftx" style="color:var(--accent)">${esc(x.tr)}</div>` : ""}</div>`).join("")}
+    ${pages > 1 ? `<div class="row" style="gap:.3rem;justify-content:center;margin-top:.8rem">${hd.page > 1 ? `<button class="btn btn-o" onclick="state.hd.page--;render()">◀</button>` : ""}<span class="sm" style="align-self:center">${hd.page} / ${pages}</span>${hd.page < pages ? `<button class="btn btn-p" onclick="state.hd.page++;render()">▶</button>` : ""}</div>` : ""}
+    <p class="xs muted" style="margin-top:.6rem">${L("hdNote")}</p></div>`;
+}
+
+/* --- صفحات المقامات (آهات، اختبار صوت، أناشيد) --- */
+const POEMS = [
+  { t: "البردة — الإمام البوصيري", v: ["مَولايَ صَلِّ وَسَلِّمْ دائِمًا أَبَدًا ... عَلى حَبيبِكَ خَيرِ الخَلْقِ كُلِّهِمِ", "مُحَمَّدٌ سَيِّدُ الكَونَيْنِ وَالثَّقَلَيْنِ ... وَالفَريقَيْنِ مِن عُرْبٍ وَمِن عَجَمِ", "هُوَ الحَبيبُ الَّذي تُرجى شَفاعَتُهُ ... لِكُلِّ هَولٍ مِنَ الأَهوالِ مُقْتَحَمِ"] },
+  { t: "طلع البدر علينا — من الموروث", v: ["طَلَعَ البَدْرُ عَلَيْنا ... مِن ثَنِيّاتِ الوَداعْ", "وَجَبَ الشُّكْرُ عَلَيْنا ... ما دَعا لِلّهِ داعْ", "أَيُّها المَبْعوثُ فينا ... جِئْتَ بِالأَمْرِ المُطاعْ"] },
+  { t: "الإمام الشافعي", v: ["دَعِ الأَيّامَ تَفعَلُ ما تَشاءُ ... وَطِبْ نَفسًا إِذا حَكَمَ القَضاءُ", "وَلا تَجزَعْ لِحادِثَةِ اللَيالي ... فَما لِحَوادِثِ الدُنيا بَقاءُ"] },
+  { t: "حسان بن ثابت", v: ["وَأَحسَنُ مِنكَ لَم تَرَ قَطُّ عَيني ... وَأَجمَلُ مِنكَ لَم تَلِدِ النِساءُ", "خُلِقتَ مُبَرَّأً مِن كُلِّ عَيبٍ ... كَأَنَّكَ قَد خُلِقتَ كَما تَشاءُ"] },
+  { t: "أبو نواس — في التوبة", v: ["يا رَبِّ إِن عَظُمَت ذُنوبي كَثرَةً ... فَلَقَد عَلِمتُ بِأَنَّ عَفوَكَ أَعظَمُ", "إِن كانَ لا يَرجوكَ إِلّا مُحسِنٌ ... فَبِمَن يَلوذُ وَيَستَجيرُ المُجرِمُ"] },
+  { t: "الإمام الشافعي — في الرجاء", v: ["وَلَمّا قَسا قَلبي وَضاقَت مَذاهِبي ... جَعَلتُ الرَجا مِنّي لِعَفوِكَ سُلَّما", "تَعاظَمَني ذَنبي فَلَمّا قَرَنتُهُ ... بِعَفوِكَ رَبّي كانَ عَفوُكَ أَعظَما"] },
+  { t: "أبو العتاهية", v: ["إِلَهي لا تُعَذِّبني فَإِنّي ... مُقِرٌّ بِالَّذي قَد كانَ مِنّي"] }
+];
+function mqPremium() { const r = role(); if (r === "owner" || r === "teacher") return true; if (hasFeature("aah")) return true; return isSub18() === true; }
+function mqAllowed(kind, mid) { return (MAQ_FREE[kind] || []).includes(mid) || mqPremium(); }
+function maqamPage(kind, mid) {
+  const m = MQ.find(x => x.id === mid); if (!m) return "";
+  const n = m.sc.length - 1, info = `<div class="kv"><span>${L("mqQarar")}</span><b>${esc(noteName(m.tonic) || "")}</b></div><div class="kv"><span>${L("mqJawab")}</span><b>${esc(noteName(m.tonic + m.sc[n]) || "")}</b></div><div class="kv"><span>${L("mqUse")}</span><span class="sm">${esc(m.use || "")}</span></div>`;
+  if (kind === "aah") return `<div class="card" style="margin-top:1.2rem"><h3>🗣️ ${esc(mqName(m))}</h3>${info}<div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.7rem">${L("mqPatterns").map((p, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="mqPagePlay('${mid}',${i})">▶ ${esc(p)}</button>`).join("")}<button class="btn btn-p" onclick="mqPagePlay('${mid}','gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" onclick="state.mq.id='${mid}';go16('maqamat')">🎼 ${L("mqTitle")}</button></div></div>`;
+  if (kind === "vtest") return `<div class="card" style="margin-top:1.2rem;text-align:center"><h3>🎤 ${esc(mqName(m))}</h3>${info}<button class="btn btn-p btn-lg" style="margin-top:.8rem" onclick="TN.maqam='${MAQAMS.includes(mid) ? mid : "bayati"}';go16('tuner')">🎤 ${L("tnStart")}</button></div>`;
+  if (kind === "nasheed") { const p = POEMS[MQ.indexOf(m) % POEMS.length];
+    return `<div class="card" style="margin-top:1.2rem"><h3>🌙 ${esc(p.t)} — ${esc(mqName(m))}</h3><div class="nsv">${p.v.map(v => { const [a, b] = v.split(" ... "); return `<div class="nsl"><span>${esc(a)}</span><span>${esc(b || "")}</span></div>`; }).join("")}</div>
+      <p class="sm muted" style="margin:.8rem 0 .4rem">${L("nsGuide")}</p><button class="btn btn-p" onclick="mqPagePlay('${mid}',2)">▶ ${L("nsPlay")}</button> <button class="btn btn-o" onclick="mqPagePlay('${mid}','gen')">✨ ${L("mqNew")}</button></div>`; }
+  return `<div class="card" style="margin-top:1.2rem"><h3>🎼 ${esc(mqName(m))}</h3>${info}<button class="btn btn-o" style="margin-top:.6rem" onclick="state.mq.id='${mid}';go16('maqamat')">🎼 ${L("mqTitle")}</button></div>`;
+}
+function mqPagePlay(mid, p) { const m = MQ.find(x => x.id === mid); AAH.vol = 1; aahSing(p === "gen" ? mqGenerate(m, Date.now(), 1) : mqPattern(m, p, 1), mqTonicHz(m), state.mq.voice || "m"); }
+document.head.insertAdjacentHTML("beforeend", `<style>.nsv{display:flex;flex-direction:column;gap:.6rem;margin-top:.6rem}.nsl{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;font:1.3rem/2 'Amiri','Tajawal',serif;direction:rtl;text-align:center;background:var(--bg);border-radius:12px;padding:.5rem .8rem}@media(max-width:600px){.nsl{grid-template-columns:1fr;gap:0;font-size:1.1rem}}</style>`);
+
+// صفحة سلّم المقامات + المُوالف: 3 مقامات مجانية (1 أساسي + 2 فرعي) والباقي مدفوع
+const _mqPlay20 = mqPlay; mqPlay = function (p) { if (!mqAllowed("aah", state.mq.id)) return mqLockToast(); return _mqPlay20(p); };
+const _mqNote20 = mqNote; mqNote = function (c) { if (!mqAllowed("aah", state.mq.id)) return mqLockToast(); return _mqNote20(c); };
+function mqLockToast() { toast("🔒 " + L("lockSec"), true); setTimeout(() => { if (confirm(L("seePlans") + "?")) navigate("pricing"); }, 300); }
+const _renderMaqamatPage20 = renderMaqamatPage;
+renderMaqamatPage = function () {
+  let h = _renderMaqamatPage20(); if (mqPremium()) return h;
+  MQ.forEach(x => { if (!MAQ_FREE.aah.includes(x.id)) h = h.replace(`onclick="aahStop();state.mq.id='${x.id}';render()">${esc(mqName(x))}</button>`, `onclick="aahStop();state.mq.id='${x.id}';render()">🔒 ${esc(mqName(x))}</button>`); else h = h.replace(`onclick="aahStop();state.mq.id='${x.id}';render()">${esc(mqName(x))}</button>`, `onclick="aahStop();state.mq.id='${x.id}';render()">🎁 ${esc(mqName(x))}</button>`); });
+  return h;
+};
+renderTunerPage = function () {
+  if (!state.auth.user) return pageWrap("🎙️", L("tnTitle"), L("tnSub"), needLogin("tuner"));
+  if (mqPremium()) return _renderTunerPage18();
+  if (!MAQ_FREE.vtest.includes(TN.maqam) || !MAQAMS.includes(TN.maqam)) TN.maqam = "bayati";
+  return _renderTunerPage18().replace(/<select class="in" onchange="TN\.maqam=this\.value;tnDrawLadder\(\)">[\s\S]*?<\/select>/, `<select class="in" onchange="if(!MAQ_FREE.vtest.includes(this.value)){this.value=TN.maqam;mqLockToast()}else{TN.maqam=this.value;tnDrawLadder()}">${MAQAMS.map(x => `<option value="${x}" ${x === TN.maqam ? "selected" : ""}>${MAQ_FREE.vtest.includes(x) ? "🎁 " : "🔒 "}${esc(maqamName(x))}</option>`).join("")}</select>`);
+};
+if (!MAQAMS.includes("husseini")) MAQAMS.push("husseini", "hijazkar");
+MAQAM_SCALES.husseini = [0, 150, 300, 500, 700, 850, 1000, 1200]; MAQAM_SCALES.hijazkar = [0, 100, 400, 500, 700, 800, 1100, 1200];
+Object.keys(UI).forEach(lg => { const mm = UI[lg] && UI[lg].maqams; if (mm) { mm.husseini = mm.husseini || (lg === "ar" ? "حسيني" : "Husseini"); mm.hijazkar = mm.hijazkar || (lg === "ar" ? "حجاز كار" : "Hijazkar"); } });
+
+/* ---------- 5) دعوة الأصحاب: دولار لكل صاحب يشترك، من غير هدف ---------- */
+referralCard = function () {
+  const refs = useData("myRefs", async () => { const { data, error } = await sb.rpc("my_referrals"); if (error) throw error; return data || []; });
+  const w = walletBal(); const cfg = setv("referral", {}) || {}; const rw = money(cfg.reward != null ? cfg.reward : 1, setv("currency", "USD"));
+  const list = Array.isArray(refs) ? refs : []; const paid = list.filter(r => r.qualified).length; const link = refLink();
+  return `<div class="card invitecard"><h3 style="font-size:1.25rem">🤝 ${esc(L("refTitle").replace("{r}", rw))}</h3><p class="sm" style="margin:.4rem 0 1rem;opacity:.92">${esc(L("refText").split("{r}").join(rw))}</p>
+    <label class="l">${L("myLink")}</label><div class="row" style="gap:.4rem"><input class="in" id="refl" value="${esc(link)}" readonly style="flex:1;min-width:200px"><button class="btn btn-p" onclick="navigator.clipboard.writeText(document.getElementById('refl').value).then(()=>toast(L('copied')))">${L("copy")}</button><a class="btn btn-o" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(I18N[state.lang].meta.siteName + " — " + link)}"><i class="fa-brands fa-whatsapp"></i></a></div>
+    <div class="row" style="gap:1rem;margin-top:1rem;flex-wrap:wrap"><span>👥 <b>${list.length}</b> ${L("refFriends")}</span><span>✅ <b>${paid}</b> ${L("refPaid")}</span><span>💰 ${L("walletBal")}: <b>${Array.isArray(w) ? esc(money(w[0], setv("currency", "USD"))) : "…"}</b></span></div>
+    <div class="row" style="gap:.4rem;margin-top:.8rem;flex-wrap:wrap"><button class="btn btn-o" onclick="navigate('library')">📚 ${I18N[state.lang].nav.library}</button><button class="btn btn-o" onclick="navigate('pricing')">💳 ${I18N[state.lang].nav.pricing}</button></div></div>`;
+};
+
+/* ---------- 6) الدفع اليدوي أوتوماتيك ---------- */
+function autoPayCard() {
+  const d = settingsDraft(); d.autoPay = d.autoPay || { on: true, max: 100 };
+  return `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>⚡ ${L("apTitle")}</h3><label class="opt" style="padding:.5rem .8rem;margin:.6rem 0"><input type="checkbox" ${d.autoPay.on ? "checked" : ""} onchange="sdSet('autoPay.on', this.checked)"> <span class="sm b">${L("apOn")}</span></label>
+    <div style="max-width:16rem"><label class="l">${L("apMax")} (${esc(setv("currency", "USD"))})</label><input class="in" type="number" min="1" value="${esc(d.autoPay.max)}" oninput="sdSet('autoPay.max', +this.value)"></div><p class="xs muted" style="margin-top:.4rem">${L("apHint")}</p></div>`;
+}
+const _ownerSettings20 = ownerSettings;
+ownerSettings = function () { const h = _ownerSettings20(); const i = h.indexOf(`<h3>⚡ ${L("ppTitle")}</h3>`); if (i < 0) return autoPayCard() + h; const j = h.lastIndexOf(`<div class="card"`, i); return h.slice(0, j) + autoPayCard() + h.slice(j); };
+const _ownerOrders20 = ownerOrders;
+ownerOrders = function (P) {
+  const h = _ownerOrders20(P); const o = state.data.ownerOrders; if (!Array.isArray(o) || !o.length) return h;
+  const parts = h.split("</td></tr>"); if (parts.length !== o.length + 1) return h;
+  return parts.map((p, i) => i < o.length && o[i].auto_confirmed && o[i].payment_status === "paid" ? p + `<div class="xs" style="margin-top:.3rem"><span class="badge badge-g">⚡ ${L("apBadge")}</span> <button class="btn btn-o" style="padding:.15rem .5rem;color:var(--danger)" onclick="revokeOrder('${o[i].id}')">${L("apRevoke")}</button></div>` : p).join("</td></tr>");
+};
+async function revokeOrder(id) { const n = prompt(L("apRevoke") + " — " + L("notes"), ""); if (n === null) return; const { error } = await sb.rpc("owner_revoke_order", { p_id: id, p_note: n || null }); if (error) return toast(error.message, true); invalidate("ownerOrders"); toast(L("saved")); render(); }
+const _paymentBlock20 = paymentBlock;
+paymentBlock = function (rec, kind) { const h = _paymentBlock20(rec, kind); const ap = setv("autoPay", {}) || {}; return ap.on && kind === "order" && rec.payment_status !== "paid" ? h.replace(`<p class="xs muted" style="margin-top:.3rem">${L("payCodeHint")}</p>`, `<p class="xs muted" style="margin-top:.3rem">${L("payCodeHint")}</p><p class="sm b" style="margin-top:.3rem;color:var(--accent)">⚡ ${L("payAutoHint")}</p>`) : h; };
+const _submitOrderPayment20 = submitOrderPayment;
+submitOrderPayment = async function (oid) { await _submitOrderPayment20(oid); invalidate("balChip", "myOrders"); };
+const _planText20 = planText;
+planText = function (p) {
+  if (p && p.competition) return { t: "🏆 " + (locText(p.competition) || L("cmTitle")), d: "", f: [] };
+  const r = _planText20(p); if (p && p.track === "maqamat" && r && r.t && !/🎙️/.test(r.t)) r.t = "🎙️ " + r.t; return r;
+};
+
+/* ---------- 7) ترشيح المعلمين حسب القسم والمواعيد ---------- */
+const _renderBooking20 = renderBooking;
+renderBooking = function () {
+  const h = _renderBooking20(); const bk = state.booking; const slots = {}; Object.keys(bk.slots || {}).forEach(d => { if (bk.slots[d] && bk.slots[d].length) slots[d] = bk.slots[d]; });
+  if (!Object.keys(slots).length || !bk.track) return h;
+  const key = "rec:" + bk.track + ":" + JSON.stringify(slots);
+  const rec = useData(key, async () => { const { data, error } = await sb.rpc("recommend_teachers", { p_track: bk.track, p_slots: slots, p_tz: BROWSER_TZ }); if (error) throw error; return data || []; });
+  const list = Array.isArray(rec) ? rec.filter(t => t.matched > 0).slice(0, 4) : null;
+  const card = `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>👨‍🏫 ${L("recTitle")}</h3><p class="xs muted" style="margin:.3rem 0 .7rem">${L("recHint")}</p>
+    ${list === null ? loadingBox() : !list.length ? `<p class="sm muted">${L("recNone")}</p>` : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem">${list.map(t => `<button type="button" class="opt" style="flex-direction:column;align-items:flex-start;${bk.teacherId === t.teacher_id ? "border-color:var(--accent);background:rgba(16,185,129,.1)" : ""}" onclick="state.booking.teacherId='${t.teacher_id}';render()"><b>${bk.teacherId === t.teacher_id ? "✓ " : ""}${esc(t.name || "—")}</b><span class="xs muted">${Math.round(t.matched / Math.max(1, t.total) * 100)}% ${L("recMatch")}</span>${t.bio && (t.bio[state.lang] || t.bio.ar || t.bio.en) ? `<span class="xs">${esc(String(t.bio[state.lang] || t.bio.ar || t.bio.en).slice(0, 90))}</span>` : ""}</button>`).join("")}</div>`}</div>`;
+  return h.replace(/(<button class="btn btn-p btn-full btn-lg"[^>]*onclick="submitBooking\(\)")/, card + "$1");
+};
+const _bookingPayload20 = bookingPayload;
+bookingPayload = function () { const p = _bookingPayload20(); if (state.booking.teacherId) p.teacher_id = state.booking.teacherId; return p; };
+
+/* ---------- 8) المسابقات ---------- */
+PAGES16.push("competitions", "competition");
+function compT(o) { return locText(o) || (o && (o.ar || o.en)) || ""; }
+function compsData() { return useData("comps", () => q(sb.from("competitions").select("*").order("created_at", { ascending: false }))); }
+function liveEmbed(u) {
+  if (!u) return ""; const yt = ytId(u);
+  if (yt) return `<div class="svmedia"><iframe src="https://www.youtube-nocookie.com/embed/${yt}?autoplay=0&rel=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="aspect-ratio:16/9;width:100%;border:0;border-radius:12px"></iframe></div>`;
+  if (/facebook\.com|fb\.watch/.test(u)) return `<div class="svmedia"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="aspect-ratio:16/9;width:100%;border:0;border-radius:12px"></iframe></div>`;
+  return `<a class="btn btn-p btn-lg" href="${esc(u)}" target="_blank" rel="noopener">🔴 ${L("cmLive")}</a>`;
+}
+function compCard(c) {
+  const st = (L("cmStatus") || {})[c.status] || c.status; const cover = c.cover_url || stImg(`grand competition stage with golden trophy and lanterns, ${c.category} theme`, 5, 800, 450);
+  return `<a href="#" class="card" style="padding:0;overflow:hidden;text-decoration:none;color:inherit" onclick="go16('competition','${c.id}');return false;"><div style="height:150px;background:url('${cover}') center/cover"></div><div style="padding:.9rem"><span class="badge ${c.status === "registration" ? "badge-a" : "badge-g"}">${esc(st)}</span>
+    <h3 style="margin:.4rem 0">${esc(compT(c.title))}</h3><div class="row" style="gap:.8rem;flex-wrap:wrap" class="sm"><span>🎟️ ${+c.fee > 0 ? esc(money(c.fee, c.currency)) : L("cmFree")}</span>${(c.prizes || [])[0] ? `<span>🥇 ${esc(c.prizes[0].prize || "")}</span>` : ""}${c.reg_deadline ? `<span class="xs muted">⏳ ${esc(fmtDT(c.reg_deadline, { day: "numeric", month: "short" }))}</span>` : ""}</div></div></a>`;
+}
+function renderCompetitionsPage() {
+  const cs = compsData(); const list = Array.isArray(cs) ? cs.filter(c => c.status !== "draft") : null;
+  return `<section class="sec"><div class="wrap"><div class="cmhero"><div style="font-size:3rem">🏆</div><h1>${L("cmHero")}</h1><p>${L("cmHeroSub")}</p></div>
+    ${list === null ? loadingBox() : !list.length ? `<div class="card muted" style="text-align:center">${L("cmNone")}</div>` : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(compCard).join("")}</div>`}</div></section>`;
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.cmhero{text-align:center;padding:2.2rem 1rem;border-radius:22px;margin-bottom:1.4rem;color:#fff;background:linear-gradient(135deg,#064e3b,#047857 50%,#b45309);box-shadow:0 12px 40px rgba(4,120,87,.3)}.cmhero h1{font-size:1.9rem;margin:.4rem 0}.cmhero p{opacity:.92;max-width:44rem;margin:0 auto}
+.cmband{display:flex;align-items:center;gap:.8rem;justify-content:center;flex-wrap:wrap;padding:.7rem 1rem;border-radius:14px;background:linear-gradient(90deg,#b45309,#f59e0b);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(180,83,9,.35);animation:cmPulse 2.4s ease-in-out infinite}@keyframes cmPulse{50%{transform:scale(1.015)}}</style>`);
+function renderCompetitionPage() {
+  const id = state.pageArg; const cs = compsData(); if (!Array.isArray(cs)) return pageWrap("🏆", L("cmTitle"), "", loadingBox());
+  const c = cs.find(x => x.id === id); if (!c) return pageWrap("🏆", L("cmTitle"), "", `<div class="err">${L("cmNone")}</div>`);
+  const rounds = useData("cmR:" + id, () => q(sb.from("competition_rounds").select("*").eq("competition_id", id).order("idx")));
+  const board = useData("cmB:" + id, async () => { const { data } = await sb.rpc("comp_leaderboard", { p_comp: id, p_round: null }); return data || []; });
+  const u = state.auth.user; const mine = u ? useData("cmMe:" + id, () => q(sb.from("competition_entries").select("*").eq("competition_id", id).eq("user_id", u.id))) : null;
+  const me = Array.isArray(mine) ? mine[0] : null; const R = Array.isArray(rounds) ? rounds : [];
+  const curR = me ? R.find(r => r.idx === me.current_round) : null;
+  const mySub = me && curR ? useData("cmS:" + curR.id, () => q(sb.from("competition_submissions").select("*").eq("entry_id", me.id).eq("round_id", curR.id))) : null;
+  const myScores = me ? useData("cmMyS:" + me.id, () => q(sb.from("competition_scores").select("*").eq("entry_id", me.id))) : null;
+  const isJudge = u ? useData("cmJ:" + id, async () => { const { data } = await sb.rpc("is_comp_judge", { p_comp: id }); return [!!data]; }) : null;
+  const link = `${location.origin}/#/competition/${id}`, share = encodeURIComponent(compT(c.title) + " — " + link);
+  const live = c.live_url || (R.find(r => r.status === "open" && r.live_url) || {}).live_url;
+  let action = "";
+  if (!u) action = `<button class="btn btn-p btn-lg" onclick="lsSet('itqan_after_hash','#/competition/${id}');navigate('signup')">🏆 ${L("cmJoin")}</button>`;
+  else if (!me && c.status === "registration") action = `<button class="btn btn-p btn-lg" onclick="compJoin('${id}')">🏆 ${L("cmJoin")} ${+c.fee > 0 ? "— " + esc(money(c.fee, c.currency)) : ""}</button>`;
+  else if (me) {
+    action = `<div class="card" style="border-color:var(--accent)"><h3>🎫 ${L("cmMine")}</h3><p style="margin:.4rem 0">${me.status === "pending_payment" ? `${L("cmPending")} <button class="btn btn-p" onclick="state.payKind='order';state.payOrderId='${me.order_id}';navigate('pay')">${L("payNow")}</button>` : me.status === "active" ? L("cmActive") : me.status === "winner" ? L("cmWinner") + (me.final_rank ? " — " + L("cmRank") + " " + me.final_rank : "") : me.status === "eliminated" ? L("cmElim") : esc(me.status)}</p>
+      ${me.status === "active" && curR && curR.status === "open" ? `<div style="margin-top:.6rem"><b class="sm">📤 ${L("cmSubmit")}: ${esc(compT(curR.name))}</b>${curR.task ? `<p class="xs muted">${esc(curR.task)}</p>` : ""}
+        ${Array.isArray(mySub) && mySub[0] ? `<p class="sm" style="color:var(--accent)">${L("cmSubmitted")}</p>` : ""}
+        <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem"><button class="btn ${state.cmRec ? "btn-p" : "btn-o"}" onclick="cmRecord('${curR.id}')">${state.cmRec ? "⏹ " + L("cmStop") : "🎙️ " + L("cmRecord")}</button><label class="btn btn-o" style="cursor:pointer">📎 ${L("cmUpload")}<input type="file" accept="audio/*,video/*" style="display:none" onchange="cmUpload('${curR.id}',this.files[0])"></label></div></div>` : ""}
+      ${Array.isArray(myScores) && myScores.length ? `<div style="margin-top:.6rem">${myScores.map(s => `<div class="kv"><span class="sm">${esc(s.comment || "")}</span><b>${s.total}</b></div>`).join("")}</div>` : ""}</div>`;
+  }
+  return `<section class="sec"><div class="wrap" style="max-width:1100px"><div class="crumb"><a href="#" onclick="go16('competitions');return false;">🏆 ${L("cmTitle")}</a> / ${esc(compT(c.title))}</div>
+    <div class="cmhero" style="text-align:start;background-image:linear-gradient(135deg,rgba(6,78,59,.92),rgba(180,83,9,.88)),url('${c.cover_url || stImg("grand competition stage with golden trophy and lanterns", 5, 1200, 500)}');background-size:cover"><span class="badge" style="background:#fff;color:#065f46">${esc((L("cmStatus") || {})[c.status] || c.status)}</span><h1>${esc(compT(c.title))}</h1><p style="margin:0;white-space:pre-wrap">${esc(compT(c.description))}</p>
+      <div class="row" style="gap:.5rem;margin-top:1rem;flex-wrap:wrap">${action.startsWith("<button") ? action : ""}<a class="btn btn-o" style="background:#fff" target="_blank" rel="noopener" href="https://wa.me/?text=${share}"><i class="fa-brands fa-whatsapp"></i></a><a class="btn btn-o" style="background:#fff" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}"><i class="fa-brands fa-facebook"></i></a><a class="btn btn-o" style="background:#fff" target="_blank" rel="noopener" href="https://t.me/share/url?url=${encodeURIComponent(link)}"><i class="fa-brands fa-telegram"></i></a><a class="btn btn-o" style="background:#fff" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=${share}"><i class="fa-brands fa-x-twitter"></i></a></div></div>
+    ${live ? `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.6rem">🔴 ${L("cmLive")}</h3>${liveEmbed(live)}</div>` : ""}
+    ${!action.startsWith("<button") ? action : ""}
+    ${isJudge && isJudge[0] ? `<div class="card" style="margin:1rem 0">${judgePanel(c, R)}</div>` : ""}
+    <div class="grid g2" style="align-items:start;margin-top:1rem">
+      <div><div class="card" style="margin-bottom:1rem"><h3>🎁 ${L("cmPrizes")}</h3>${(c.prizes || []).map(p => `<div class="kv"><span>${["🥇", "🥈", "🥉"][(+p.place || 9) - 1] || "🏅"} ${esc(String(p.place))}</span><b>${esc(p.prize)}</b></div>`).join("") || "—"}</div>
+        <div class="card" style="margin-bottom:1rem"><h3>📏 ${L("cmCriteria")}</h3>${(c.criteria || []).map(k => `<div class="kv"><span>${esc(k.name)}</span><b>${k.max}</b></div>`).join("") || "—"}</div>
+        <div class="card"><h3>🪜 ${L("cmRounds")}</h3>${R.map(r => `<div class="kv" style="align-items:flex-start"><span><b>${r.idx}. ${esc(compT(r.name))}</b>${r.task ? `<br><span class="xs muted">${esc(r.task)}</span>` : ""}</span><span class="badge ${r.status === "open" ? "badge-a" : ""}">${esc(r.status)}${r.qualify_count ? " · " + r.qualify_count + " ✓" : ""}</span></div>`).join("") || "—"}${c.reg_deadline ? `<p class="xs muted" style="margin-top:.5rem">⏳ ${L("cmDeadline")}: ${esc(fmtDT(c.reg_deadline))}</p>` : ""}</div></div>
+      <div class="card"><h3 style="margin-bottom:.6rem">📊 ${L("cmBoard")}</h3>${!Array.isArray(board) ? loadingBox() : !board.length ? `<p class="muted sm">—</p>` : board.map(b => `<div class="kv" style="${me && b.entry_id === me.id ? "background:rgba(16,185,129,.1);border-radius:8px;padding-inline:.4rem" : ""}"><span>${b.final_rank ? ["🥇", "🥈", "🥉"][b.final_rank - 1] || b.final_rank : b.rnk}. <b>${esc(b.name || "—")}</b> <span class="xs muted">${b.country ? esc(countryName(b.country)) : ""}${b.status === "eliminated" ? " · ✗" : ""}</span></span><span><b class="accent">${b.avg_total}</b> <span class="xs muted">${b.judges} ${L("cmJudges")}</span></span></div>`).join("")}</div></div></div></section>`;
+}
+async function compJoin(id) {
+  const { data, error } = await sb.rpc("comp_join", { p_comp: id, p_name: null }); if (error) return toast(error.message.includes("closed") ? "⏳" : error.message, true);
+  invalidate("cmMe:" + id, "cmB:" + id); if (data && data.order && data.status === "pending_payment") { state.payKind = "order"; state.payOrderId = data.order; invalidate("myOrders"); return navigate("pay"); }
+  confetti(2000); toast(L("cmActive")); render();
+}
+async function cmUpload(rid, f) {
+  if (!f) return; const path = `${state.auth.user.id}/${rid}-${Date.now()}.${(f.name || "rec.webm").split(".").pop()}`;
+  const u = await sb.storage.from("competitions").upload(path, f, { contentType: f.type || "audio/webm" }); if (u.error) return toast(u.error.message, true);
+  const { error } = await sb.rpc("comp_submit", { p_round: rid, p_path: path, p_note: null }); if (error) return toast(error.message, true);
+  invalidate("cmS:" + rid); toast(L("cmSubmitted")); render();
+}
+async function cmRecord(rid) {
+  if (state.cmRec) { state.cmRec.stop(); return; }
+  try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); const mr = new MediaRecorder(s); const ch = []; mr.ondataavailable = (e) => e.data.size && ch.push(e.data);
+    mr.onstop = () => { s.getTracks().forEach(t => t.stop()); state.cmRec = null; cmUpload(rid, new File([new Blob(ch, { type: mr.mimeType || "audio/webm" })], "rec.webm", { type: mr.mimeType || "audio/webm" })); };
+    mr.start(); state.cmRec = mr; render(); } catch (e) { toast(rmMediaErr(e), true); }
+}
+function judgePanel(c, R) {
+  const open = R.filter(r => r.status === "open" || r.status === "judging"); if (!open.length) return `<h3>⚖️ ${L("cmJudge")}</h3><p class="muted sm">${L("cmNoSubs")}</p>`;
+  return `<h3>⚖️ ${L("cmJudge")}</h3>` + open.map(r => {
+    const subs = useData("cmJS:" + r.id, () => q(sb.from("competition_submissions").select("*, competition_entries(display_name,id)").eq("round_id", r.id).order("created_at")));
+    const mine = useData("cmJM:" + r.id, () => q(sb.from("competition_scores").select("*").eq("round_id", r.id).eq("judge_id", state.auth.user.id)));
+    const sm = {}; (Array.isArray(mine) ? mine : []).forEach(s => sm[s.entry_id] = s);
+    return `<h4 style="margin:.8rem 0 .4rem">${r.idx}. ${esc(compT(r.name))}</h4>${!Array.isArray(subs) ? loadingBox() : !subs.length ? `<p class="muted sm">${L("cmNoSubs")}</p>` : subs.map(s => { const e = s.competition_entries || {}; const my = sm[s.entry_id] || { scores: {} };
+      return `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b>${esc(e.display_name || "—")}</b><button class="btn btn-o" onclick="svOpen({title:'${esc(e.display_name || "")}',bucket:'competitions',path:'${esc(s.file_path)}',type:'audio'})">▶</button></div>
+        <form class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem;align-items:end" onsubmit="event.preventDefault();cmScore('${s.entry_id}','${r.id}',this)">${(c.criteria || []).map(k => `<label class="xs" style="display:flex;flex-direction:column">${esc(k.name)} (${k.max})<input class="in" style="width:5rem" type="number" min="0" max="${k.max}" step="0.5" name="${esc(k.key)}" value="${my.scores[k.key] != null ? my.scores[k.key] : ""}" required></label>`).join("")}
+          <input class="in" name="_c" placeholder="${L("cmComment")}" value="${esc(my.comment || "")}" style="flex:1;min-width:10rem"><button class="btn btn-p">${L("cmScoreSave")}${my.total != null && my.id ? " (" + my.total + ")" : ""}</button></form></div>`; }).join("")}`;
+  }).join("");
+}
+async function cmScore(eid, rid, f) {
+  const sc = {}; [...f.querySelectorAll("input[type=number]")].forEach(i => sc[i.name] = +i.value);
+  const { error } = await sb.rpc("comp_score", { p_entry: eid, p_round: rid, p_scores: sc, p_comment: f.querySelector("[name=_c]").value || null }); if (error) return toast(error.message, true);
+  Object.keys(state.data).forEach(k => { if (/^cm(JM|B):/.test(k)) delete state.data[k]; }); toast(L("saved")); render();
+}
+// الأونر: إدارة المسابقات
+function ownerCompetitionsTab(P) {
+  const cs = compsData(); const ed = state.cmEd;
+  const teachers = P.list.filter(p => p.role === "teacher" || p.role === "owner");
+  if (ed) {
+    const c = ed.id ? (Array.isArray(cs) ? cs.find(x => x.id === ed.id) : null) || {} : {};
+    const R = ed.id ? useData("cmR:" + ed.id, () => q(sb.from("competition_rounds").select("*").eq("competition_id", ed.id).order("idx"))) : [];
+    const J = ed.id ? useData("cmJL:" + ed.id, () => q(sb.from("competition_judges").select("*").eq("competition_id", ed.id))) : [];
+    const E = ed.id ? useData("cmE:" + ed.id, () => q(sb.from("competition_entries").select("*").eq("competition_id", ed.id).order("created_at"))) : [];
+    const lines = (a, f) => (a || []).map(f).join("\n");
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h3>🏆 ${ed.id ? L("cmEdit") : L("cmNew")}</h3><button class="btn btn-o" onclick="state.cmEd=null;render()">✕</button></div>
+      <form style="display:flex;flex-direction:column;gap:.6rem;margin-top:.6rem" onsubmit="event.preventDefault();cmSave('${ed.id || ""}')">
+        <div class="fgrid"><div><label class="l">${L("cmTitleF")} (ع)</label><input class="in" id="cm_t" required value="${esc((c.title || {}).ar || "")}"></div><div><label class="l">${L("cmTitleF")} (EN)</label><input class="in" id="cm_te" value="${esc((c.title || {}).en || "")}"></div>
+          <div><label class="l">${L("cmCat")}</label><select class="in" id="cm_c">${Object.entries(L("cmCats")).map(([k, v]) => `<option value="${k}" ${c.category === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></div>
+          <div><label class="l">${L("cmFee")} (${esc(setv("currency", "USD"))})</label><input class="in" id="cm_f" type="number" min="0" step="0.5" value="${esc(c.fee != null ? c.fee : 1)}"></div>
+          <div><label class="l">${L("cmDeadline")}</label><input class="in" id="cm_d" type="datetime-local" value="${c.reg_deadline ? new Date(new Date(c.reg_deadline).getTime() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16) : ""}"></div>
+          <div><label class="l">${L("cmMax")}</label><input class="in" id="cm_m" type="number" min="1" value="${esc(c.max_entries || "")}"></div>
+          <div><label class="l">${L("status")}</label><select class="in" id="cm_s">${Object.entries(L("cmStatus")).map(([k, v]) => `<option value="${k}" ${(c.status || "draft") === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></div></div>
+        <div><label class="l">${L("cmDesc")}</label><textarea class="in" id="cm_ds" rows="3">${esc((c.description || {}).ar || "")}</textarea></div>
+        <div class="fgrid"><div><label class="l">${L("cmPrizeLines")}</label><textarea class="in" id="cm_p" rows="4" placeholder="1 | 100$ + مصحف مُذهّب">${esc(lines(c.prizes, p => `${p.place} | ${p.prize}`))}</textarea></div>
+          <div><label class="l">${L("cmCritLines")}</label><textarea class="in" id="cm_k" rows="4" placeholder="أحكام التجويد | 40">${esc(lines(c.criteria, k => `${k.name} | ${k.max}`) || "الحفظ والإتقان | 40\nأحكام التجويد | 30\nجمال الصوت والأداء | 20\nالوقف والابتداء | 10")}</textarea></div></div>
+        <div><label class="l">${L("cmRoundLines")}</label><textarea class="in" id="cm_r" rows="4" placeholder="التصفيات الأولى | 20 | سجّل سورة الملك">${esc(lines(Array.isArray(R) ? R : [], r => `${compT(r.name)} | ${r.qualify_count || ""} | ${r.task || ""}`) || "التصفيات الأولى | 30 | سجّل تلاوة 3 دقايق من اختيارك\nنصف النهائي | 10 | سجّل الآيات المطلوبة\nالنهائي (لايف) |  | تلاوة مباشرة أمام اللجنة")}</textarea></div>
+        <div><label class="l">${L("cmLiveUrl")}</label><input class="in" id="cm_l" dir="ltr" value="${esc(c.live_url || "")}" placeholder="https://youtube.com/live/..."></div>
+        <button class="btn btn-p btn-lg">${L("cmSave")}</button></form>
+      ${ed.id ? `<div class="grid g2" style="align-items:start;margin-top:1rem"><div class="card" style="background:var(--bg)"><h4>⚖️ ${L("cmJudgesSel")}</h4>${teachers.map(t => { const on = Array.isArray(J) && J.some(j => j.user_id === t.id); return `<label class="opt" style="padding:.35rem .6rem;margin:.25rem 0"><input type="checkbox" ${on ? "checked" : ""} onchange="cmJudge('${ed.id}','${t.id}',this.checked)"> ${esc(t.real_name || t.email)}</label>`; }).join("")}</div>
+        <div class="card" style="background:var(--bg)"><h4>🪜 ${L("cmRounds")}</h4>${(Array.isArray(R) ? R : []).map(r => `<div class="kv" style="align-items:center;flex-wrap:wrap"><span><b>${r.idx}. ${esc(compT(r.name))}</b> <span class="badge">${esc(r.status)}</span></span><span class="row" style="gap:.3rem">${r.status === "pending" ? `<button class="btn btn-p" style="padding:.3rem .6rem" onclick="cmRound('${r.id}','open','${ed.id}')">▶ ${L("cmOpenRound")}</button>` : ""}${r.status === "open" || r.status === "judging" ? `<button class="btn btn-o" style="padding:.3rem .6rem" onclick="cmClose('${r.id}','${ed.id}')">🏁 ${L("cmCloseRound")}</button>` : ""}</span></div>`).join("")}
+          <h4 style="margin-top:.8rem">👥 ${L("cmEntries")} (${Array.isArray(E) ? E.length : 0})</h4>${(Array.isArray(E) ? E : []).map(e => `<div class="kv"><span class="sm">${esc(e.display_name || personName(e.user_id, P.map))}</span><span class="badge">${esc(e.status)} · ${e.current_round}</span></div>`).join("")}
+          <button class="btn btn-o" style="margin-top:.6rem" onclick="go16('competition','${ed.id}')">👁 ${L("open")}</button></div></div>` : ""}</div>`;
+  }
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h3>🏆 ${L("cmOwner")}</h3><button class="btn btn-p" onclick="state.cmEd={};render()">＋ ${L("cmNew")}</button></div>
+    ${!Array.isArray(cs) ? loadingBox() : !cs.length ? `<p class="muted sm" style="margin-top:.6rem">${L("cmNone")}</p>` : cs.map(c => `<div class="kv" style="align-items:center"><span><b>${esc(compT(c.title))}</b> <span class="badge">${esc((L("cmStatus") || {})[c.status] || c.status)}</span></span><span class="row" style="gap:.3rem"><button class="btn btn-o" onclick="state.cmEd={id:'${c.id}'};render()">${L("cmEdit")}</button><button class="btn btn-o" onclick="go16('competition','${c.id}')">👁</button></span></div>`).join("")}</div>`;
+}
+async function cmSave(id) {
+  const g = (x) => document.getElementById(x).value.trim(); const parse = (t) => t.split("\n").map(l => l.split("|").map(s => s.trim())).filter(a => a[0]);
+  const row = { title: { ar: g("cm_t"), en: g("cm_te") || g("cm_t") }, description: { ar: g("cm_ds"), en: g("cm_ds") }, category: g("cm_c"), fee: +g("cm_f") || 0, currency: setv("currency", "USD"), status: g("cm_s"),
+    reg_deadline: g("cm_d") ? new Date(g("cm_d")).toISOString() : null, max_entries: +g("cm_m") || null, live_url: g("cm_l") || null,
+    prizes: parse(g("cm_p")).map(([place, prize]) => ({ place, prize: prize || "" })), criteria: parse(g("cm_k")).map(([name, max], i) => ({ key: "k" + (i + 1), name, max: +max || 10 })) };
+  let cid = id;
+  if (id) { const { error } = await sb.from("competitions").update(row).eq("id", id); if (error) return toast(error.message, true); }
+  else { const { data, error } = await sb.from("competitions").insert(row).select("id").single(); if (error) return toast(error.message, true); cid = data.id; }
+  const rounds = parse(g("cm_r"));
+  for (let i = 0; i < rounds.length; i++) { const [name, qn, task] = rounds[i]; await sb.from("competition_rounds").upsert({ competition_id: cid, idx: i + 1, name: { ar: name, en: name }, qualify_count: +qn || null, task: task || null }, { onConflict: "competition_id,idx" }); }
+  invalidate("comps", "cmR:" + cid); state.cmEd = { id: cid }; toast(L("saved")); render();
+}
+async function cmJudge(cid, uid, on) { if (on) await sb.from("competition_judges").insert({ competition_id: cid, user_id: uid }); else await sb.from("competition_judges").delete().eq("competition_id", cid).eq("user_id", uid); invalidate("cmJL:" + cid); }
+async function cmRound(rid, st, cid) { const { error } = await sb.from("competition_rounds").update({ status: st }).eq("id", rid); if (error) return toast(error.message, true); await sb.from("competitions").update({ status: "running" }).eq("id", cid).in("status", ["registration", "draft"]); invalidate("cmR:" + cid, "comps"); render(); }
+async function cmClose(rid, cid) { if (!confirm(L("cmCloseRound") + "?")) return; const { data, error } = await sb.rpc("comp_close_round", { p_round: rid }); if (error) return toast(error.message, true); toast(`✓ ${data}`); invalidate("cmR:" + cid, "comps", "cmE:" + cid, "cmB:" + cid); render(); }
+const _renderOwnerDash20 = renderOwnerDash;
+renderOwnerDash = function () {
+  const tabs = ["overview", "calendar", "groups", "chats", "bookings", "requests", "orders", "users", "teacherApps", "teachers", "students", "homework", "competitions", "placement", "sponsors", "referrals", "reviews", "reports", "certs", "content", "settings", "schedule"];
+  if (state.dash.tab === "competitions") return dashTabs(tabs) + ownerCompetitionsTab(peopleMap());
+  return _renderOwnerDash20().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+};
+// الصفحات + روابط الدعاية
+const _render20 = render;
+render = function () {
+  if (state.route === "competitions" || state.route === "competition") {
+    if (RM.key || rmEl("rmRoot")) roomTeardown(); const app = document.getElementById("app"); if (!app) return;
+    let body; try { body = state.route === "competitions" ? renderCompetitionsPage() : renderCompetitionPage(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; }
+    app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); return;
+  }
+  return _render20();
+};
+const _renderHeader20 = renderHeader;
+renderHeader = function () { return _renderHeader20().replace(/(<nav class="nav">)/, `$1<a href="#" onclick="go16('competitions');return false;" style="color:#f59e0b;font-weight:800" ${state.route === "competitions" || state.route === "competition" ? 'aria-current="page"' : ""}>🏆 ${L("cmTitle")}</a>`).replace(/(<div class="mnav[^"]*">\s*<div class="wrap"[^>]*>)/, `$1<a href="#" onclick="state.menuOpen=false;go16('competitions');return false;" style="color:#f59e0b">🏆 ${L("cmTitle")}</a><a href="#" onclick="state.menuOpen=false;go16('maqamat');return false;">🎼 ${L("mqTitle")}</a><a href="#" onclick="state.menuOpen=false;go16('tools');return false;">🧰 ${L("nvTools")}</a>`); };
+const _renderHome20 = renderHome;
+renderHome = function () {
+  const h = _renderHome20(); const cs = compsData(); const open = Array.isArray(cs) ? cs.filter(c => c.status === "registration" || c.status === "running" || c.status === "final") : [];
+  const band = `<div class="wrap" style="padding-top:1rem"><div class="cmband" onclick="go16('${open[0] ? "competition','" + open[0].id : "competitions"}')">🏆 ${open[0] ? esc(L("cmHome")) + " — " + esc(compT(open[0].title)) : esc(L("cmHero"))} <span style="background:#fff;color:#b45309;border-radius:999px;padding:.2rem .8rem">${L("cmJoin")} ➜</span></div></div>`;
+  return band + h;
+};
+const _navItems20 = navItems;
+navItems = function () { const items = _navItems20(); items.splice(1, 0, { act: state.route === "competitions" || state.route === "competition", go: "go16('competitions')", ic: "fa-solid fa-trophy", lbl: L("cmTitle") }); return items; };
+const _renderTeacherDash20 = renderTeacherDash;
+renderTeacherDash = function () {
+  const h = _renderTeacherDash20();
+  const js = useData("myJudging", () => q(sb.from("competition_judges").select("competition_id, competitions(title,status)").eq("user_id", state.auth.user.id)));
+  if (!Array.isArray(js) || !js.length) return h;
+  return `<div class="card" style="margin-bottom:1rem;border-color:#f59e0b"><h3>⚖️ ${L("cmJudge")}</h3>${js.map(j => `<div class="kv"><span>${esc(compT((j.competitions || {}).title))}</span><button class="btn btn-p" onclick="go16('competition','${j.competition_id}')">⚖️ ${L("cmJudge")}</button></div>`).join("")}</div>` + h;
 };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
