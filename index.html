@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v12";
+const UI_VERSION = "2026-11-11-v13";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -9027,7 +9027,7 @@ renderLibraryDb = function () {
   const kids = {}; vis.forEach(s => { const pid = s.parent_id && ids.has(s.parent_id) ? s.parent_id : "_"; (kids[pid] = kids[pid] || []).push(s); });
   const memo = {};
   const count = (id) => memo[id] != null ? memo[id] : (memo[id] = (bySec[id] || []).length + (pBy[id] || []).length + (kids[id] || []).reduce((a, k) => a + count(k.id), 0));
-  const shown = (arr) => arr.filter(s => isOwner || count(s.id) > 0);
+  const shown = (arr) => arr; // v16: كل الأقسام تظهر حتى لو فاضية
   const cur = state.libSec && vis.find(s => s.id === state.libSec);
   if (!cur) {
     const roots = shown(kids["_"] || []);
@@ -9090,6 +9090,673 @@ const _renderOwnerDash15 = renderOwnerDash;
 renderOwnerDash = function () { const h = _renderOwnerDash15(); if (state.dash.tab === "content" && !state.autoCoverDone) setTimeout(autoCovers, 1500); return h; };
 const _addSection15 = addSection;
 addSection = async function () { await _addSection15(); setTimeout(() => { state.autoCoverDone = false; autoCovers(); }, 600); };
+
+
+/* ======================= v16: أدوات إبداعية — خريطة الحفظ، مُوالف المقامات، خمّن المقام، السند، الكفالة، ختمة العيلة، تحديد المستوى ======================= */
+Object.assign(UI.en, {
+  nvTools: "Tools", tlTitle: "Itqan tools", tlSub: "Tools made especially for Quran, tajweed and vocal maqamat — no music, ever.",
+  hzTitle: "Hifz map", hzSub: "The whole mushaf (604 pages). Colours show how strong each page is; the system plans your daily review.", hzToday: "Today's review", hzNoDue: "Nothing due today — great job!",
+  hzPages: "pages memorized", hzJuz: "juz completed", hzOfQuran: "of the Quran", hzSel: "selected", hzNew: "Memorized (new)", hzGood: "Reviewed — strong", hzHard: "Reviewed — hard", hzForgot: "Forgot",
+  hzClear: "Remove", hzSurah: "Select a surah", hzJuzSel: "Select a juz", hzSelDue: "Select all due pages", hzLegend: ["Not memorized", "Weak", "Needs work", "Good", "Strong", "Excellent"], hzDue: "due",
+  hzTree: "Memorization tree", hzOpen: "Hifz map", hzStudent: "Student",
+  tnTitle: "Maqam tuner", tnSub: "Recite or chant — see live where your voice is on the maqam ladder. Voice only, no instruments.", tnStart: "Start microphone", tnStop: "Stop",
+  tnSetTonic: "Set my current note as the tonic (qarar)", tnTonic: "Tonic", tnDeg: "Degree", tnCents: "cents", tnOn: "On the note ✓", tnHigh: "a little high ↑", tnLow: "a little low ↓", tnApprox: "Scales are approximate (quarter-tones simplified).",
+  gmTitle: "Guess the maqam", gmSub: "Listen to a recitation and choose its maqam. Earn points and climb the weekly board.", gmStart: "Start", gmNext: "Next", gmRight: "Correct! +10", gmWrong: "Not this time — it was", gmBoard: "This week's top", gmScore: "Your score", gmNoPool: "Not enough maqam-tagged recitations yet. The academy adds them in Content (choose a maqam for audio).",
+  skTitle: "Sponsor a student (sadaqa jariya)", skSub: "Give Quran lessons to a student who can't afford them. You get anonymous progress updates — the student's name stays private.",
+  skLessons: "Lessons (50 min)", skAlias: "Name to show (optional)", skAliasPh: "A well-wisher", skTotal: "Total", skPay: "How you paid", skRef: "Payment reference / note", skSend: "Confirm sponsorship",
+  skMine: "My sponsorships", skProgress: "Progress", skAttended: "lessons attended", skPagesM: "pages memorized", skHw: "homework done", skWaiting: "Waiting for assignment", skAsk: "Request a sponsorship", skAskHint: "If you can't afford lessons, tell us a little about yourself.", skAskSent: "Your request was sent — we'll contact you.",
+  skOwner: "Sponsorships", skReqs: "Sponsorship requests", skMarkPaid: "Mark as paid", skAssign: "Assign to student", skThanks: "Jazakum Allahu khayran! We'll confirm your payment soon.",
+  khTitle: "Family khatma", khSub: "Divide the 30 juz between family and friends and finish the Quran together.", khNew: "New khatma", khName: "Khatma name", khCreate: "Create", khMine: "My khatmas",
+  khShare: "Copy share link", khClaim: "I'll read it", khDone: "Done ✓", khAssign: "Assign a name", khJuz: "Juz", khComplete: "Khatma completed! 🎉",
+  plTitle: "Placement test (voice)", plSub: "Record about two minutes of recitation and answer a few questions — a teacher will recommend your level, teacher and package.", plAge: "Age group", plGoal: "Main goal", plHifz: "How much do you memorize?", plSelf: "Your tajweed level",
+  plRecord: "Record (2 min)", plStopRec: "Stop", plOrUpload: "or upload a recording", plSubmit: "Send my test", plSent: "Sent! You'll get your result soon.", plPending: "Under review", plResult: "Your result", plLevel: "Level", plRec: "Recommendation",
+  plOwner: "Placement tests", plSave: "Send result", plAges: ["Child (under 12)", "Teen (12–17)", "Adult"], plGoals: ["Memorization", "Tajweed", "Vocal maqamat", "Ijaza", "Arabic"], plSelfs: ["Beginner", "Intermediate", "Advanced"],
+  mfConfirm: "I confirm this is free of music and instruments", mfBadge: "No music", mfNeed: "Please confirm that the nasheed/ibtihal has no music.", ctMaqam: "Maqam (optional)",
+  snSanad: "Chain of transmission (sanad)", snChains: "Sanad chains", snName: "Chain name (e.g. Hafs from Asim)", snList: "Names from the teacher's sheikh upward (one per line)", snAdd: "Save chain", snTeacher: "Teacher name on the ijaza", snProphet: "The Messenger of Allah ﷺ",
+  prPrayer: "Prayer time", city: "City (for prayer times)", rmdn: "🌙 Ramadan Kareem — lessons after iftar and before suhoor are available.", wvTitle: "This week's voice", wvNone: "No recordings this week yet.",
+  mashallah: "Masha'Allah, barak Allahu feek! 🌟"
+});
+Object.assign(UI.ar, {
+  nvTools: "الأدوات", tlTitle: "أدوات إتقان", tlSub: "أدوات معمولة مخصوص للقرآن والتجويد والمقامات الصوتية — من غير موسيقى خالص.",
+  hzTitle: "خريطة الحفظ", hzSub: "المصحف كله (604 صفحة). الألوان بتوضح قوة حفظ كل صفحة، والنظام بيرتب لك مراجعة كل يوم.", hzToday: "مراجعة النهارده", hzNoDue: "مفيش مراجعة مطلوبة النهارده — ممتاز!",
+  hzPages: "صفحة محفوظة", hzJuz: "جزء مكتمل", hzOfQuran: "من القرآن", hzSel: "متحدد", hzNew: "حفظتها (جديد)", hzGood: "راجعتها — قوية", hzHard: "راجعتها — صعبة", hzForgot: "نسيتها",
+  hzClear: "إزالة", hzSurah: "اختار سورة", hzJuzSel: "اختار جزء", hzSelDue: "حدد كل المطلوب مراجعته", hzLegend: ["مش محفوظة", "ضعيفة", "محتاجة شغل", "جيدة", "قوية", "ممتازة"], hzDue: "مطلوب مراجعة",
+  hzTree: "شجرة الحفظ", hzOpen: "خريطة الحفظ", hzStudent: "الطالب",
+  tnTitle: "مُوالف المقامات", tnSub: "اقرأ أو أنشد — وشوف لايف صوتك فين على سُلّم المقام. صوت بشري بس، من غير آلات.", tnStart: "شغّل المايك", tnStop: "إيقاف",
+  tnSetTonic: "اعتبر نغمتي الحالية هي القرار", tnTonic: "القرار", tnDeg: "الدرجة", tnCents: "سنت", tnOn: "مظبوط ✓", tnHigh: "عالي شوية ↑", tnLow: "واطي شوية ↓", tnApprox: "السلالم تقريبية (أرباع التون مبسّطة).",
+  gmTitle: "خمّن المقام", gmSub: "اسمع التلاوة واختار مقامها. اجمع نقط واطلع في ترتيب الأسبوع.", gmStart: "ابدأ", gmNext: "اللي بعده", gmRight: "صح! +10", gmWrong: "مش المرة دي — كان", gmBoard: "الأوائل الأسبوع ده", gmScore: "نقطك", gmNoPool: "لسه مفيش تلاوات كفاية متحدد لها مقام. الأكاديمية بتضيفها من المحتوى (اختار مقام للملف الصوتي).",
+  skTitle: "اكفل طالب (صدقة جارية)", skSub: "ادفع حصص قرآن لطالب مش قادر. هيوصلك تقرير بتقدّمه من غير ما نكشف اسمه.",
+  skLessons: "عدد الحصص (50 دقيقة)", skAlias: "الاسم اللي يظهر (اختياري)", skAliasPh: "فاعل خير", skTotal: "الإجمالي", skPay: "دفعت إزاي", skRef: "رقم العملية / ملاحظة", skSend: "تأكيد الكفالة",
+  skMine: "كفالاتي", skProgress: "التقدّم", skAttended: "حصة حضرها", skPagesM: "صفحة حفظها", skHw: "واجب سلّمه", skWaiting: "مستني يتحدد الطالب", skAsk: "اطلب كفالة", skAskHint: "لو مش قادر على تمن الحصص، احكيلنا عنك شوية.", skAskSent: "طلبك اتبعت — هنتواصل معاك.",
+  skOwner: "الكفالات", skReqs: "طلبات الكفالة", skMarkPaid: "تأكيد الدفع", skAssign: "خصّصها لطالب", skThanks: "جزاكم الله خيرًا! هنأكد الدفع قريب.",
+  khTitle: "ختمة العيلة", khSub: "قسّم الـ 30 جزء على العيلة والأصحاب واختموا القرآن سوا.", khNew: "ختمة جديدة", khName: "اسم الختمة", khCreate: "إنشاء", khMine: "ختماتي",
+  khShare: "انسخ لينك المشاركة", khClaim: "أنا هقراه", khDone: "خلصته ✓", khAssign: "اكتب اسم", khJuz: "الجزء", khComplete: "تمت الختمة! 🎉",
+  plTitle: "اختبار تحديد المستوى بالصوت", plSub: "سجّل حوالي دقيقتين تلاوة وجاوب على كام سؤال — المعلم هيقترح عليك المستوى والمعلم والباقة المناسبة.", plAge: "الفئة العمرية", plGoal: "هدفك الأساسي", plHifz: "حافظ قد إيه؟", plSelf: "مستواك في التجويد",
+  plRecord: "سجّل (دقيقتين)", plStopRec: "إيقاف", plOrUpload: "أو ارفع تسجيل", plSubmit: "ابعت الاختبار", plSent: "اتبعت! النتيجة هتوصلك قريب.", plPending: "تحت المراجعة", plResult: "نتيجتك", plLevel: "المستوى", plRec: "الترشيح",
+  plOwner: "اختبارات تحديد المستوى", plSave: "ابعت النتيجة", plAges: ["طفل (أقل من 12)", "مراهق (12–17)", "كبير"], plGoals: ["الحفظ", "التجويد", "المقامات الصوتية", "الإجازة", "اللغة العربية"], plSelfs: ["مبتدئ", "متوسط", "متقدم"],
+  mfConfirm: "أؤكد إنه بدون موسيقى أو آلات", mfBadge: "بدون موسيقى", mfNeed: "أكد إن النشيد/الابتهال بدون موسيقى.", ctMaqam: "المقام (اختياري)",
+  snSanad: "سلسلة السند", snChains: "سلاسل السند", snName: "اسم السند (مثلًا: رواية حفص عن عاصم)", snList: "الأسماء من شيخ المعلم لفوق (كل اسم في سطر)", snAdd: "حفظ السند", snTeacher: "اسم المعلم على الإجازة", snProphet: "رسول الله ﷺ",
+  prPrayer: "وقت صلاة", city: "المدينة (لمواقيت الصلاة)", rmdn: "🌙 رمضان كريم — فيه حصص بعد الفطار وقبل السحور.", wvTitle: "صوت الأسبوع", wvNone: "لسه مفيش تسجيلات الأسبوع ده.",
+  mashallah: "ما شاء الله، بارك الله فيك! 🌟"
+});
+Object.assign(UI.en.nkT, { sponsor_new: "💚 New sponsorship", sponsor_request: "🤲 New sponsorship request", sponsored: "💚 A well-wisher sponsored {lessons} lessons for you", sponsor_assigned: "💚 Your sponsorship ({lessons} lessons) was given to a student — jazakum Allahu khayran",
+  weekly_voice: "🎧 This week's voice of {name} is ready", placement_new: "🧭 New placement test", placement_done: "🧭 Your placement result is ready: {level}" });
+Object.assign(UI.ar.nkT, { sponsor_new: "💚 كفالة جديدة", sponsor_request: "🤲 طلب كفالة جديد", sponsored: "💚 فاعل خير كفل لك {lessons} حصة", sponsor_assigned: "💚 كفالتك ({lessons} حصة) اتخصصت لطالب — جزاكم الله خيرًا",
+  weekly_voice: "🎧 صوت الأسبوع لـ {name} جاهز", placement_new: "🧭 اختبار تحديد مستوى جديد", placement_done: "🧭 نتيجة تحديد مستواك جاهزة: {level}" });
+Object.assign(TABS10.en, { sponsors: "Sponsorships", placement: "Placement tests", hifz: "Hifz map" });
+Object.assign(TABS10.ar, { sponsors: "الكفالات", placement: "تحديد المستوى", hifz: "خريطة الحفظ" });
+const _dashTabs16 = dashTabs;
+dashTabs = function (tabs) { let h = _dashTabs16(tabs); ["sponsors", "placement", "hifz"].forEach(k => { h = h.replace(">" + k + "</a>", ">" + T10(k) + "</a>"); }); return h; };
+["nasheed", "ibtihal"].forEach(t => { if (!CT_TYPES.includes(t)) CT_TYPES.push(t); });
+Object.keys(UI).forEach(lg => { const t = UI[lg] && UI[lg].types; if (t) { t.nasheed = t.nasheed || (lg === "ar" ? "نشيد (بدون موسيقى)" : "Nasheed (no music)"); t.ibtihal = t.ibtihal || (lg === "ar" ? "ابتهال (بدون موسيقى)" : "Ibtihal (no music)"); } });
+
+/* ---------- أصوات من غير موسيقى ---------- */
+const _sfx16 = sfx;
+sfx = function (name) {
+  if (name === "drum") return _sfx16("pop");
+  if (name === "fanfare" || name === "bell") { _sfx16("pop"); setTimeout(() => _sfx16("pop"), 140); return; }
+  return _sfx16(name);
+};
+UI.en.rm_snd = { correct: "✅ Correct", wrong: "❌ Try again", applause: "👏 Well done", mashallah: "🌟 Masha'Allah" };
+UI.ar.rm_snd = { correct: "✅ صح", wrong: "❌ حاول تاني", applause: "👏 أحسنت", mashallah: "🌟 ما شاء الله" };
+const _rmPlay16 = rmPlay;
+rmPlay = function (name, broadcast) {
+  if (name === "mashallah") { sfx("pop"); confetti(2200); const d = document.createElement("div"); d.className = "rm-bigstar"; d.style.fontSize = "3rem"; d.innerHTML = `🌟<small>${esc(L("mashallah"))}</small>`; (rmEl("rmRoot") || document.body).appendChild(d); setTimeout(() => d.remove(), 2500); if (broadcast) rmSend("sfx", { name }); return; }
+  return _rmPlay16(name, broadcast);
+};
+
+/* ---------- أقسام الموقع كلها ظاهرة (حتى لو فاضية) + زرعها من دورات الأكاديمية ---------- */
+async function seedTrackSections() {
+  if (role() !== "owner" || state.seededSecs || (state.settings || {}).secSeeded16) return; state.seededSecs = true;
+  try {
+    const { data: secs } = await sb.from("content_sections").select("id,title,parent_id");
+    const have = new Set(); (secs || []).forEach(s => Object.values(s.title || {}).forEach(v => have.add(String(v).toLowerCase())));
+    const icons = { ijaza: "📜", hifz: "📖", tajweed: "🕌", maqamat: "🎙️", tafseer: "📚", arabic: "✍️", egyptian: "🗣️" };
+    const rows = [];
+    TRACKS.forEach((k, i) => {
+      const title = {}; ALL_LANGS.forEach(lg => { const t = I18N[lg] && I18N[lg].tracks && I18N[lg].tracks[k] && I18N[lg].tracks[k].title; if (t) title[lg] = t; });
+      if (!title.en || have.has(title.en.toLowerCase())) return;
+      rows.push({ title, icon: icons[k] || "📁", sort: i, is_visible: true });
+    });
+    if (!have.has("nasheeds & ibtihalat (no music)") && !have.has("الأناشيد والابتهالات (بدون موسيقى)")) rows.push({ title: { ar: "الأناشيد والابتهالات (بدون موسيقى)", en: "Nasheeds & Ibtihalat (no music)" }, icon: "🌙", sort: 50, is_visible: true });
+    const st = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle(); const d = Object.assign({}, (st.data && st.data.data) || {}, { secSeeded16: true }); await sb.from("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() }); if (state.settings) state.settings.secSeeded16 = true;
+    if (rows.length) { await sb.from("content_sections").insert(rows); invSections(); state.autoCoverDone = false; setTimeout(autoCovers, 800); render(); }
+  } catch (e) { console.warn(e); }
+}
+const _renderOwnerDash16a = renderOwnerDash;
+renderOwnerDash = function () { if (state.dash.tab === "content" || state.dash.tab === "overview") setTimeout(seedTrackSections, 500); return _renderOwnerDash16a(); };
+const _renderLibrary16 = renderLibrary;
+renderLibrary = function () { if (role() === "owner") setTimeout(seedTrackSections, 500); return _renderLibrary16(); };
+/* ---------- نموذج المحتوى: مقام + بدون موسيقى ---------- */
+const _renderContentForm16 = renderContentForm;
+renderContentForm = function (opts) {
+  let h = _renderContentForm16(opts);
+  const extra = `<div class="fgrid"><div><label class="l">${L("ctMaqam")}</label><select class="in" id="ct_maqam"><option value="">—</option>${MAQAMS.map(m => `<option value="${m}">${esc(maqamName(m))}</option>`).join("")}</select></div>
+    <label class="opt" style="padding:.5rem .8rem"><input type="checkbox" id="ct_mf"> <span class="sm">🚫🎵 ${L("mfConfirm")}</span></label></div>`;
+  return h.replace(`<div><label class="l">${L("ctBodyOne")}</label>`, extra + `<div><label class="l">${L("ctBodyOne")}</label>`);
+};
+const _saveContent16 = saveContent;
+saveContent = async function () {
+  const g = (x) => document.getElementById(x);
+  const type = g("ct_type") ? g("ct_type").value : "", mq = g("ct_maqam") ? g("ct_maqam").value : "", mf = g("ct_mf") ? g("ct_mf").checked : false;
+  if ((type === "nasheed" || type === "ibtihal") && !mf) return toast(L("mfNeed"), true);
+  const t0 = new Date(Date.now() - 5000).toISOString();
+  await _saveContent16();
+  if ((mq || mf) && state.auth.user) {
+    const { data } = await sb.from("contents").select("id").eq("created_by", state.auth.user.id).gte("created_at", t0).order("created_at", { ascending: false }).limit(1);
+    if (data && data[0]) { await sb.from("contents").update({ maqam: mq || null, music_free: mf }).eq("id", data[0].id); invalidate("contentsAll", "libCt", "contentsMine"); render(); }
+  }
+};
+const _contentCard16 = contentCard;
+contentCard = function (c, manage) {
+  let h = _contentCard16(c, manage);
+  const b = (c.maqam ? `<span class="badge badge-a">🎙️ ${esc(maqamName(c.maqam))}</span>` : "") + (c.music_free ? `<span class="badge">🚫🎵 ${L("mfBadge")}</span>` : "");
+  return b ? h.replace(/(<span class="badge">[^<]*<\/span>)/, `$1${b}`) : h;
+};
+
+/* ---------- صفحات جديدة ---------- */
+const PAGES16 = ["tools", "hifz", "tuner", "maqam-game", "sponsor", "khatma", "placement"];
+const _readHash16 = readHash;
+readHash = function () {
+  const p = (location.hash || "").replace(/^#\/?/, "").split("/");
+  if (PAGES16.includes(p[0])) { state.route = p[0]; state.pageArg = p[1] ? decodeURIComponent(p[1]) : null; return; }
+  _readHash16();
+};
+function go16(route, arg) { state.route = route; state.pageArg = arg || null; try { history.pushState(null, "", "#/" + route + (arg ? "/" + arg : "")); } catch (e) {} window.scrollTo({ top: 0, behavior: "smooth" }); state.menuOpen = false; render(); }
+const _render16 = render;
+render = function () {
+  if (PAGES16.includes(state.route)) {
+    if (RM.key || rmEl("rmRoot")) roomTeardown();
+    if (state.route !== "tuner" && TN.on) tnStop();
+    const app = document.getElementById("app"); if (!app) return;
+    const fn = { tools: renderToolsPage, hifz: renderHifzPage, tuner: renderTunerPage, "maqam-game": renderGamePage, sponsor: renderSponsorPage, khatma: renderKhatmaPage, placement: renderPlacementPage }[state.route];
+    let body; try { body = fn(); } catch (e) { console.error(e); body = `<section class="sec"><div class="wrap"><div class="err">${esc(e.message)}</div></div></section>`; }
+    document.body.classList.toggle("has-bnav", !!(state.auth && state.auth.user));
+    app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget();
+    if (state.route === "tuner") tnAfterRender();
+    return;
+  }
+  if (TN.on) tnStop();
+  return _render16();
+};
+function pageWrap(icon, title, sub, inner, max) {
+  return `<section class="sec"><div class="wrap" style="max-width:${max || 1100}px"><div class="crumb"><a href="#" onclick="go16('tools');return false;">🧰 ${L("nvTools")}</a> / ${esc(title)}</div>
+    <h1 style="font-size:1.8rem;margin:.4rem 0">${icon} ${esc(title)}</h1><p class="muted" style="margin-bottom:1.2rem">${esc(sub)}</p>${inner}</div></section>`;
+}
+function needLogin(back) { return `<div class="card" style="text-align:center"><p class="muted" style="margin-bottom:.8rem">${RL("loginFirst")}</p><button class="btn btn-p" onclick="lsSet('itqan_after_hash','#/${back}');navigate('login')">${RL("signIn")}</button></div>`; }
+function renderToolsPage() {
+  const t = (ic, title, sub, go) => `<a href="#" class="card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:.4rem" onclick="${go};return false;"><div style="font-size:2.2rem">${ic}</div><b style="font-size:1.1rem">${esc(title)}</b><span class="sm muted">${esc(sub)}</span></a>`;
+  return `<section class="sec"><div class="wrap"><div style="text-align:center;max-width:720px;margin:0 auto 1.6rem"><span class="badge badge-a">🧰 ${L("nvTools")}</span><h1 style="font-size:2rem;margin:.5rem 0">${L("tlTitle")}</h1><p class="muted">${L("tlSub")}</p></div>
+    ${isRamadan() ? `<div class="notice ok" style="margin-bottom:1rem">${L("rmdn")}</div>` : ""}
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">
+      ${t("🗺️", L("hzTitle"), L("hzSub"), "go16('hifz')")}${t("🎙️", L("tnTitle"), L("tnSub"), "go16('tuner')")}${t("🎧", L("gmTitle"), L("gmSub"), "go16('maqam-game')")}
+      ${t("📖", L("khTitle"), L("khSub"), "go16('khatma')")}${t("🧭", L("plTitle"), L("plSub"), "go16('placement')")}${t("💚", L("skTitle"), L("skSub"), "go16('sponsor')")}
+      ${t("🎥", L("nvClassroom"), L("crSub"), "navigate('classroom')")}</div></div></section>`;
+}
+// زرار "الأدوات" في القائمة الرئيسية + شريط الأقسام
+const _renderHeader16 = renderHeader;
+renderHeader = function () {
+  let h = _renderHeader16();
+  const link = `<a href="#" onclick="go16('tools');return false;" ${PAGES16.includes(state.route) ? 'aria-current="page"' : ""}>🧰 ${L("nvTools")}</a>`;
+  h = h.replace(/(<nav class="nav">[\s\S]*?)(<\/nav>)/, `$1${link}$2`);
+  if (isRamadan()) h = h.replace(`<b>${I18N[state.lang].meta.siteName}</b>`, `<b>${I18N[state.lang].meta.siteName} 🌙</b>`);
+  return h;
+};
+const _navItems16 = navItems;
+navItems = function () {
+  const items = _navItems16(); const r = role();
+  const it = (route, ic, lbl) => ({ act: state.route === route, go: `go16('${route}')`, ic, lbl });
+  if (r === "student" || r === "parent") items.splice(2, 0, it("hifz", "fa-solid fa-map", L("hzTitle")));
+  items.splice(items.length - 1, 0, it("tools", "fa-solid fa-toolbox", L("nvTools")));
+  return items;
+};
+
+/* ---------- رمضان ---------- */
+function isRamadan() { try { return new Intl.DateTimeFormat("en-u-ca-islamic", { month: "numeric" }).format(new Date()).startsWith("9"); } catch (e) { return false; } }
+const _renderHome16 = renderHome;
+renderHome = function () { const h = _renderHome16(); return isRamadan() ? `<div class="wrap" style="padding-top:1rem"><div class="notice ok" style="text-align:center">${L("rmdn")}</div></div>` + h : h; };
+
+/* ---------- خريطة الحفظ ---------- */
+const SURAH_PAGE = [1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,542,545,549,551,553,554,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,585,586,587,587,589,590,591,591,592,593,594,595,595,596,596,597,597,598,598,599,599,600,600,601,601,601,602,602,602,603,603,603,604,604,604];
+const JUZ_PAGE = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+function surahOfPage(p) { let s = 0; for (let i = 0; i < 114; i++) if (SURAH_PAGE[i] <= p) s = i; return s; }
+function surahRange(i) { const a = SURAH_PAGE[i]; let b = 604; for (let j = i + 1; j < 114; j++) if (SURAH_PAGE[j] > a) { b = SURAH_PAGE[j] - (SURAH_PAGE[j] > a ? 1 : 0); break; } return [a, Math.max(a, b)]; }
+function juzRange(j) { return [JUZ_PAGE[j], j < 29 ? JUZ_PAGE[j + 1] - 1 : 604]; }
+const HZ_COL = ["#e5e7eb", "#fca5a5", "#fdba74", "#bef264", "#4ade80", "#15803d"];
+state.hz = { sel: [] };
+function renderHifzPage() {
+  if (!state.auth.user) return pageWrap("🗺️", L("hzTitle"), L("hzSub"), needLogin("hifz"));
+  const r = role(); let sid = state.pageArg || (r === "student" ? state.auth.user.id : null);
+  let picker = "";
+  if (r !== "student") {
+    const P = peopleMap(); let kids = [];
+    if (r === "parent") { const links = useData("children", () => q(sb.from("parent_links").select("student_id").eq("parent_id", state.auth.user.id))); kids = Array.isArray(links) ? links.map(x => ({ id: x.student_id, real_name: personName(x.student_id, P.map) })) : []; }
+    else kids = P.list.filter(p => p.role === "student");
+    if (!sid && kids.length) sid = kids[0].id;
+    picker = `<div class="row" style="gap:.5rem;margin-bottom:1rem"><label class="l" style="margin:0">${L("hzStudent")}</label><select class="in" style="width:auto" onchange="go16('hifz',this.value)">${kids.map(k => `<option value="${k.id}" ${k.id === sid ? "selected" : ""}>${esc(k.real_name || k.display_name || k.email || "—")}</option>`).join("")}</select></div>`;
+  }
+  if (!sid) return pageWrap("🗺️", L("hzTitle"), L("hzSub"), picker || `<div class="card muted">${L("none")}</div>`);
+  const rows = useData("hz:" + sid, () => q(sb.from("hifz_progress").select("*").eq("student_id", sid)));
+  if (!Array.isArray(rows)) return pageWrap("🗺️", L("hzTitle"), L("hzSub"), picker + loadingBox());
+  const map = {}; rows.forEach(x => map[x.page] = x);
+  const today = new Date().toISOString().slice(0, 10);
+  const due = rows.filter(x => x.next_review && x.next_review <= today).map(x => x.page).sort((a, b) => a - b);
+  const mem = rows.filter(x => x.strength >= 2).length;
+  const juzDone = JUZ_PAGE.map((_, j) => { const [a, b] = juzRange(j); for (let p = a; p <= b; p++) if (!map[p] || map[p].strength < 3) return 0; return 1; }).reduce((a, b) => a + b, 0);
+  const sel = new Set(state.hz.sel), canEdit = r !== "parent";
+  const dueSurahs = [...new Set(due.map(surahOfPage))].map(i => SURAHS[i]);
+  const grid = JUZ_PAGE.map((_, j) => { const [a, b] = juzRange(j); let cells = ""; for (let p = a; p <= b; p++) { const x = map[p]; const st = x ? x.strength : 0; const isDue = x && x.next_review && x.next_review <= today;
+      cells += `<span class="hzc" title="${p} · ${esc(SURAHS[surahOfPage(p)])}${x ? " · " + L("hzLegend")[st] : ""}${isDue ? " · " + L("hzDue") : ""}" style="background:${HZ_COL[st]};${isDue ? "box-shadow:0 0 0 2px #f59e0b;" : ""}${sel.has(p) ? "outline:2px solid #2563eb;outline-offset:1px;" : ""}" ${canEdit ? `onclick="hzToggle(${p})"` : ""}></span>`; }
+    return `<div class="hzrow"><span class="hzj">${j + 1}</span><div class="hzcells">${cells}</div></div>`; }).join("");
+  const act = canEdit ? `<div class="card" style="position:sticky;top:70px;z-index:5;margin-bottom:1rem"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center">
+      <b class="sm">${sel.size} ${L("hzSel")}</b>
+      <select class="in" style="width:auto" onchange="if(this.value!=='')hzSelRange('s',+this.value);this.value=''"><option value="">${L("hzSurah")}</option>${SURAHS.map((n, i) => `<option value="${i}">${i + 1}. ${n}</option>`).join("")}</select>
+      <select class="in" style="width:auto" onchange="if(this.value!=='')hzSelRange('j',+this.value);this.value=''"><option value="">${L("hzJuzSel")}</option>${JUZ_PAGE.map((_, j) => `<option value="${j}">${L("khJuz")} ${j + 1}</option>`).join("")}</select>
+      ${due.length ? `<button class="btn btn-o" onclick="state.hz.sel=${JSON.stringify(due)};render()">⏰ ${L("hzSelDue")} (${due.length})</button>` : ""}
+      ${sel.size ? `<button class="btn btn-p" onclick="hzApply('${sid}','new')">📗 ${L("hzNew")}</button><button class="btn btn-o" onclick="hzApply('${sid}','good')">💪 ${L("hzGood")}</button><button class="btn btn-o" onclick="hzApply('${sid}','hard')">😓 ${L("hzHard")}</button><button class="btn btn-o" onclick="hzApply('${sid}','forgot')">🔁 ${L("hzForgot")}</button><button class="btn btn-o" style="color:var(--danger)" onclick="hzApply('${sid}','clear')">${L("hzClear")}</button><button class="ibtn" onclick="state.hz.sel=[];render()">✕</button>` : ""}</div></div>` : "";
+  const legend = `<div class="row" style="gap:.6rem;flex-wrap:wrap;margin:.6rem 0 1rem">${L("hzLegend").map((l, i) => `<span class="xs"><span class="hzc" style="background:${HZ_COL[i]};display:inline-block;vertical-align:middle"></span> ${esc(l)}</span>`).join("")}<span class="xs"><span class="hzc" style="background:#4ade80;box-shadow:0 0 0 2px #f59e0b;display:inline-block;vertical-align:middle"></span> ${L("hzDue")}</span></div>`;
+  return pageWrap("🗺️", L("hzTitle"), L("hzSub"), `${picker}
+    <div class="grid g2" style="align-items:stretch;margin-bottom:1rem">
+      <div class="card" style="text-align:center"><h3>${L("hzTree")}</h3>${hifzTreeSvg(mem, juzDone)}<div class="row" style="justify-content:center;gap:1.2rem;margin-top:.4rem"><span><b class="accent" style="font-size:1.5rem">${mem}</b> <span class="xs muted">${L("hzPages")}</span></span><span><b style="font-size:1.5rem">${juzDone}</b> <span class="xs muted">${L("hzJuz")}</span></span><span><b style="font-size:1.5rem">${(mem / 6.04).toFixed(1)}%</b> <span class="xs muted">${L("hzOfQuran")}</span></span></div></div>
+      <div class="card"><h3 style="margin-bottom:.5rem">⏰ ${L("hzToday")} (${due.length})</h3>${due.length ? `<div class="row" style="gap:.35rem;flex-wrap:wrap">${dueSurahs.map(s => `<span class="badge badge-g">${esc(s)}</span>`).join("")}</div><p class="xs muted" style="margin-top:.5rem">${due.slice(0, 40).join("، ")}${due.length > 40 ? "…" : ""}</p>` : `<p class="muted">${L("hzNoDue")}</p>`}</div></div>
+    ${act}<div class="card">${legend}<div class="hzgrid" dir="rtl">${grid}</div></div>`, 1200);
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.hzgrid{display:flex;flex-direction:column;gap:4px}.hzrow{display:flex;gap:6px;align-items:center}.hzj{width:24px;font-size:.7rem;color:var(--muted);text-align:center;flex:none}.hzcells{display:flex;flex-wrap:wrap;gap:3px}.hzc{width:14px;height:14px;border-radius:3px;cursor:pointer;flex:none}@media(max-width:600px){.hzc{width:11px;height:11px}}</style>`);
+function hzToggle(p) { const s = new Set(state.hz.sel); s.has(p) ? s.delete(p) : s.add(p); state.hz.sel = [...s]; render(); }
+function hzSelRange(kind, i) { const [a, b] = kind === "s" ? surahRange(i) : juzRange(i); const s = new Set(state.hz.sel); for (let p = a; p <= b; p++) s.add(p); state.hz.sel = [...s]; render(); }
+async function hzApply(sid, grade) {
+  const pages = state.hz.sel.slice(); if (!pages.length) return;
+  const { error } = await sb.rpc("hifz_review", { p_student: sid, p_pages: pages, p_grade: grade });
+  if (error) return toast(error.message, true);
+  state.hz.sel = []; invalidate("hz:" + sid); if (grade === "good" || grade === "new") { confetti(1500); } toast(L("saved")); render();
+}
+function hifzTreeSvg(pages, juz) {
+  const rnd = (i) => { const x = Math.sin(i * 12.9898) * 43758.5453; return x - Math.floor(x); };
+  const leaves = Math.min(220, Math.round(pages / 604 * 220) + (pages ? 3 : 0));
+  let L_ = "";
+  for (let i = 0; i < leaves; i++) { const a = rnd(i) * Math.PI * 2, d = Math.sqrt(rnd(i + 99)) * 78; const x = 150 + Math.cos(a) * d * 1.15, y = 112 + Math.sin(a) * d * .8; L_ += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6" ry="3.6" fill="${["#22c55e", "#16a34a", "#4ade80", "#15803d"][i % 4]}" transform="rotate(${(rnd(i + 7) * 180).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`; }
+  let F = ""; for (let i = 0; i < juz; i++) { const a = rnd(i + 500) * Math.PI * 2, d = Math.sqrt(rnd(i + 900)) * 70; F += `<circle cx="${(150 + Math.cos(a) * d * 1.1).toFixed(1)}" cy="${(112 + Math.sin(a) * d * .75).toFixed(1)}" r="6" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>`; }
+  const grow = .55 + Math.min(1, pages / 120) * .45;
+  return `<svg viewBox="0 0 300 260" width="100%" style="max-width:320px"><ellipse cx="150" cy="248" rx="110" ry="9" fill="#a3a3a3" opacity=".25"/>
+    <g transform="translate(150 250) scale(${grow.toFixed(2)}) translate(-150 -250)"><path d="M142 250 C144 200 140 180 128 150 M158 250 C156 200 160 180 172 150 M150 250 L150 160" stroke="#92400e" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M150 175 L110 135 M150 165 L195 128 M150 150 L150 100" stroke="#92400e" stroke-width="6" stroke-linecap="round"/>
+    ${pages ? `<ellipse cx="150" cy="112" rx="100" ry="70" fill="#bbf7d0" opacity=".35"/>` : ""}${L_}${F}</g></svg>`;
+}
+
+/* ---------- مُوالف المقامات ---------- */
+const MAQAM_SCALES = { bayati: [0, 150, 300, 500, 700, 800, 1000, 1200], rast: [0, 200, 350, 500, 700, 900, 1050, 1200], saba: [0, 150, 300, 400, 700, 800, 1000, 1200], hijaz: [0, 100, 400, 500, 700, 800, 1000, 1200],
+  nahawand: [0, 200, 300, 500, 700, 800, 1100, 1200], sikah: [0, 150, 350, 500, 700, 850, 1050, 1200], jiharkah: [0, 200, 400, 500, 700, 900, 1050, 1200], kurd: [0, 100, 300, 500, 700, 800, 1000, 1200], ajam: [0, 200, 400, 500, 700, 900, 1100, 1200] };
+const TN = { on: false, maqam: "bayati", tonic: 146.83, hist: [] };
+function renderTunerPage() {
+  return pageWrap("🎙️", L("tnTitle"), L("tnSub"), `<div class="grid g2" style="align-items:start">
+    <div class="card"><div class="fgrid" style="align-items:end">
+      <div><label class="l">${L("maqam")}</label><select class="in" onchange="TN.maqam=this.value;tnDrawLadder()">${MAQAMS.map(m => `<option value="${m}" ${TN.maqam === m ? "selected" : ""}>${esc(maqamName(m))}</option>`).join("")}</select></div>
+      <div><label class="l">${L("tnTonic")} (Hz)</label><input class="in" id="tn_t" type="number" step="0.1" value="${TN.tonic.toFixed(1)}" onchange="TN.tonic=+this.value||TN.tonic;tnDrawLadder()"></div></div>
+      <div class="row" style="gap:.5rem;margin-top:.8rem;flex-wrap:wrap"><button class="btn btn-p" id="tn_btn" onclick="TN.on?tnStop():tnStart()">${TN.on ? "⏹ " + L("tnStop") : "🎙️ " + L("tnStart")}</button><button class="btn btn-o" onclick="tnSetTonic()">🎯 ${L("tnSetTonic")}</button></div>
+      <div style="text-align:center;margin-top:1.2rem"><div id="tn_deg" style="font-size:2.4rem;font-weight:800">—</div><div id="tn_msg" class="sm muted">&nbsp;</div>
+        <div style="position:relative;height:14px;background:var(--bg);border-radius:7px;margin:.8rem 0;overflow:hidden"><div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--accent)"></div><div id="tn_needle" style="position:absolute;top:0;bottom:0;width:10px;border-radius:5px;background:#f59e0b;left:calc(50% - 5px);transition:left .08s"></div></div>
+        <div class="xs muted" id="tn_hz">&nbsp;</div></div><p class="xs muted" style="margin-top:.8rem">${L("tnApprox")}</p></div>
+    <div class="card"><canvas id="tn_cv" width="560" height="360" style="width:100%;height:auto;background:var(--bg);border-radius:12px"></canvas></div></div>`, 1100);
+}
+function tnAfterRender() { tnDrawLadder(); }
+async function tnStart() {
+  try {
+    TN.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    TN.ac = new (window.AudioContext || window.webkitAudioContext)(); const src = TN.ac.createMediaStreamSource(TN.stream);
+    TN.an = TN.ac.createAnalyser(); TN.an.fftSize = 4096; src.connect(TN.an); TN.buf = new Float32Array(TN.an.fftSize); TN.on = true; TN.hist = [];
+    const b = document.getElementById("tn_btn"); if (b) b.innerHTML = "⏹ " + L("tnStop");
+    const loop = () => { if (!TN.on) return; TN.an.getFloatTimeDomainData(TN.buf); const f = tnPitch(TN.buf, TN.ac.sampleRate); tnShow(f); TN.raf = requestAnimationFrame(loop); };
+    loop();
+  } catch (e) { toast(rmMediaErr(e), true); }
+}
+function tnStop() { TN.on = false; cancelAnimationFrame(TN.raf); try { TN.stream && TN.stream.getTracks().forEach(t => t.stop()); TN.ac && TN.ac.close(); } catch (e) {} const b = document.getElementById("tn_btn"); if (b) b.innerHTML = "🎙️ " + L("tnStart"); }
+function tnPitch(buf, sr) {
+  let rms = 0; for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i]; rms = Math.sqrt(rms / buf.length); if (rms < .012) return -1;
+  const n = buf.length, minLag = Math.floor(sr / 900), maxLag = Math.floor(sr / 70); let best = -1, bestC = 0;
+  const c = new Float32Array(maxLag + 2);
+  for (let lag = minLag; lag <= maxLag; lag++) { let s = 0; for (let i = 0; i < n - lag; i++) s += buf[i] * buf[i + lag]; c[lag] = s; if (s > bestC) { bestC = s; best = lag; } }
+  if (best < 0) return -1;
+  for (let lag = minLag; lag < best; lag++) if (c[lag] > bestC * .9 && c[lag] >= c[lag - 1] && c[lag] >= c[lag + 1]) { best = lag; break; }
+  const y1 = c[best - 1] || 0, y2 = c[best], y3 = c[best + 1] || 0; const sh = (y3 - y1) / (2 * (2 * y2 - y1 - y3) || 1);
+  return sr / (best + (isFinite(sh) ? sh : 0));
+}
+function tnShow(f) {
+  const now = performance.now();
+  if (f > 0) {
+    TN.last = f; let cents = 1200 * Math.log2(f / TN.tonic); const oct = Math.floor(cents / 1200); let rel = cents - oct * 1200;
+    const sc = MAQAM_SCALES[TN.maqam] || MAQAM_SCALES.bayati; let bi = 0, bd = 1e9; sc.forEach((v, i) => { const d = rel - v; if (Math.abs(d) < Math.abs(bd)) { bd = d; bi = i; } });
+    const deg = bi === 7 ? 1 : bi + 1, dev = Math.round(bd);
+    const dEl = document.getElementById("tn_deg"); if (dEl) dEl.textContent = `${L("tnDeg")} ${deg}${oct ? (oct > 0 ? " ↑" : " ↓") : ""}`;
+    const m = document.getElementById("tn_msg"); if (m) { m.textContent = Math.abs(dev) <= 15 ? L("tnOn") : dev > 0 ? `${L("tnHigh")} (${dev} ${L("tnCents")})` : `${L("tnLow")} (${dev} ${L("tnCents")})`; m.style.color = Math.abs(dev) <= 15 ? "var(--accent)" : "var(--gold)"; }
+    const nd = document.getElementById("tn_needle"); if (nd) nd.style.left = `calc(${50 + Math.max(-50, Math.min(50, dev))}% - 5px)`;
+    const hz = document.getElementById("tn_hz"); if (hz) hz.textContent = f.toFixed(1) + " Hz";
+    TN.hist.push([now, cents]);
+  } else TN.hist.push([now, null]);
+  TN.hist = TN.hist.filter(x => now - x[0] < 8000);
+  tnDrawLadder();
+}
+function tnSetTonic() { if (TN.last > 0) { TN.tonic = TN.last; const i = document.getElementById("tn_t"); if (i) i.value = TN.tonic.toFixed(1); tnDrawLadder(); toast("🎯 " + TN.tonic.toFixed(1) + " Hz"); } else toast(L("tnStart"), true); }
+function tnDrawLadder() {
+  const cv = document.getElementById("tn_cv"); if (!cv) return; const ctx = cv.getContext("2d"); const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const sc = MAQAM_SCALES[TN.maqam] || MAQAM_SCALES.bayati, lo = -300, hi = 1500, y = (c) => H - 20 - (c - lo) / (hi - lo) * (H - 40);
+  ctx.font = "12px Tajawal, sans-serif"; ctx.textAlign = "left";
+  [-1, 0].forEach(o => sc.forEach((v, i) => { const c = v + o * 1200; if (c < lo || c > hi) return; ctx.strokeStyle = i === 0 || i === 7 ? "rgba(16,185,129,.8)" : "rgba(148,163,184,.35)"; ctx.lineWidth = i === 0 || i === 7 ? 2 : 1; ctx.beginPath(); ctx.moveTo(40, y(c)); ctx.lineTo(W - 8, y(c)); ctx.stroke(); ctx.fillStyle = "#94a3b8"; ctx.fillText(String(i === 7 ? 1 : i + 1), 14, y(c) + 4); }));
+  const now = performance.now(); ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 3; ctx.beginPath(); let on = false;
+  TN.hist.forEach(([t, c]) => { const x = 40 + (1 - (now - t) / 8000) * (W - 48); if (c == null || c < lo || c > hi) { on = false; return; } if (!on) { ctx.moveTo(x, y(c)); on = true; } else ctx.lineTo(x, y(c)); }); ctx.stroke();
+}
+
+/* ---------- لعبة خمّن المقام ---------- */
+state.gm = { score: 0 };
+function renderGamePage() {
+  if (!state.auth.user) return pageWrap("🎧", L("gmTitle"), L("gmSub"), needLogin("maqam-game"));
+  const pool = useData("gmPool", async () => {
+    const [a, b] = await Promise.all([sb.from("contents").select("id,title,maqam,file_path,cover_url").not("maqam", "is", null).eq("status", "published"), sb.from("showcase_posts").select("id,title,maqam,file_path,file_bucket,media_type").not("maqam", "is", null).eq("status", "published")]);
+    return [].concat((a.data || []).filter(c => c.file_path && c.maqam).map(c => { const [bk, ...r] = c.file_path.split("/"); return { maqam: c.maqam, bucket: bk, path: r.join("/") }; }),
+      (b.data || []).filter(p => p.file_path && p.maqam && p.media_type !== "pdf").map(p => ({ maqam: p.maqam, bucket: p.file_bucket || "academy_public", path: p.file_path })));
+  });
+  const board = useData("gmBoard", async () => { const { data } = await sb.rpc("maqam_leaderboard"); return data || []; });
+  const g = state.gm;
+  let main;
+  if (!Array.isArray(pool)) main = loadingBox();
+  else if (pool.length < 1) main = `<div class="notice">${L("gmNoPool")}</div>`;
+  else if (!g.cur) main = `<div style="text-align:center;padding:2rem 0"><div style="font-size:4rem">🎧</div><button class="btn btn-p btn-lg" onclick="gmNext()">${L("gmStart")}</button></div>`;
+  else main = `<div style="text-align:center"><div id="gmAudio" style="margin:1rem 0">${L("svLoading")}</div>
+      <div class="grid g2" style="gap:.6rem">${g.opts.map(m => { const cls = g.answer ? (m === g.cur.maqam ? "btn-p" : (m === g.answer ? "btn-o" : "btn-o")) : "btn-o"; return `<button class="btn ${cls} btn-lg" ${g.answer ? "disabled" : ""} onclick="gmAnswer('${m}')">${esc(maqamName(m))}${g.answer && m === g.answer && m !== g.cur.maqam ? " ✗" : ""}</button>`; }).join("")}</div>
+      ${g.answer ? `<div class="${g.answer === g.cur.maqam ? "notice ok" : "err"}" style="margin-top:1rem">${g.answer === g.cur.maqam ? L("gmRight") : `${L("gmWrong")} ${esc(maqamName(g.cur.maqam))}`}</div><button class="btn btn-p" style="margin-top:.8rem" onclick="gmNext()">${L("gmNext")} ➜</button>` : ""}</div>`;
+  return pageWrap("🎧", L("gmTitle"), L("gmSub"), `<div class="grid g2" style="align-items:start"><div class="card">${main}<p class="sm" style="margin-top:1rem">${L("gmScore")}: <b class="accent">${g.score}</b></p></div>
+    <div class="card"><h3 style="margin-bottom:.6rem">🏆 ${L("gmBoard")}</h3>${Array.isArray(board) && board.length ? board.map((x, i) => `<div class="kv"><span>${["🥇", "🥈", "🥉"][i] || i + 1 + "."} <b style="${x.me ? "color:var(--accent)" : ""}">${esc(x.name || "—")}</b></span><b>${x.score}</b></div>`).join("") : `<p class="muted sm">—</p>`}</div></div>`, 1000);
+}
+async function gmNext() {
+  const pool = state.data.gmPool; if (!Array.isArray(pool) || !pool.length) return;
+  const cur = pool[Math.floor(Math.random() * pool.length)];
+  const others = MAQAMS.filter(m => m !== cur.maqam).sort(() => Math.random() - .5).slice(0, 3);
+  state.gm.cur = cur; state.gm.answer = null; state.gm.opts = [cur.maqam, ...others].sort(() => Math.random() - .5);
+  render();
+  try {
+    const r = await sb.storage.from(cur.bucket).download(cur.path); if (r.error) throw r.error;
+    const u = URL.createObjectURL(r.data); if (state.gm.url) URL.revokeObjectURL(state.gm.url); state.gm.url = u;
+    const el = document.getElementById("gmAudio"); if (el) el.innerHTML = `<audio src="${u}" controls autoplay controlsList="nodownload noplaybackrate" oncontextmenu="return false" style="width:100%"></audio>`;
+  } catch (e) { const el = document.getElementById("gmAudio"); if (el) el.innerHTML = `<div class="err">${L("svDenied")}</div>`; }
+}
+async function gmAnswer(m) {
+  const g = state.gm; if (!g.cur || g.answer) return; g.answer = m;
+  const audio = document.querySelector("#gmAudio audio"); const keep = audio ? audio.outerHTML : "";
+  if (m === g.cur.maqam) { g.score += 10; confetti(1600); try { await sb.rpc("maqam_score_add", { p_points: 10 }); invalidate("gmBoard"); } catch (e) {} }
+  render();
+  const el = document.getElementById("gmAudio"); if (el && keep) el.innerHTML = keep;
+}
+
+/* ---------- كفالة طالب ---------- */
+function renderSponsorPage() {
+  const price = +setv("sponsorPrice", 8) || 8, cur = setv("currency", "USD");
+  const u = state.auth.user; const r = role();
+  const n = state.skN || 8;
+  const mine = u ? useData("skMine", () => q(sb.from("sponsorships").select("*").eq("donor_id", u.id).order("created_at", { ascending: false }))) : null;
+  const myReq = u && r === "student" ? useData("skReq", () => q(sb.from("sponsor_requests").select("*").eq("student_id", u.id))) : null;
+  const pm = pmList().filter(m => m.enabled && m.type !== "whatsapp");
+  const form = !u ? needLogin("sponsor") : `<div class="card"><h3 style="margin-bottom:.8rem">💚 ${L("skTitle")}</h3>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem">${[4, 8, 12, 24].map(k => `<button class="btn ${n === k ? "btn-p" : "btn-o"}" onclick="state.skN=${k};render()">${k}</button>`).join("")}<input class="in" type="number" min="1" max="200" value="${n}" style="width:6rem" onchange="state.skN=Math.max(1,Math.min(200,+this.value||1));render()"></div>
+    <div class="kv"><span>${L("skLessons")}</span><b>${n}</b></div><div class="kv"><span>${L("skTotal")}</span><b class="accent" style="font-size:1.3rem">${esc(money(n * price, cur))}</b></div>
+    <div style="margin:.8rem 0">${pm.map(m => `<div class="opt" style="flex-direction:column;align-items:flex-start;cursor:default;margin-bottom:.4rem"><b><i class="${PM_ICONS[m.type] || PM_ICONS.other}"></i> ${esc(m.name)}</b>${m.details ? `<span class="mono sm" dir="ltr">${esc(m.details)}</span>` : ""}${m.link ? `<a class="xs accent" href="${esc(m.link)}" target="_blank" rel="noopener">${esc(m.link)}</a>` : ""}</div>`).join("")}</div>
+    <form style="display:flex;flex-direction:column;gap:.5rem" onsubmit="event.preventDefault();skSend(${n},${n * price})">
+      <div><label class="l">${L("skAlias")}</label><input class="in" id="sk_a" placeholder="${L("skAliasPh")}"></div>
+      <div><label class="l">${L("skPay")}</label><select class="in" id="sk_m">${pm.map(m => `<option>${esc(m.name)}</option>`).join("")}</select></div>
+      <div><label class="l">${L("skRef")}</label><input class="in" id="sk_r" required></div>
+      <button class="btn btn-p btn-lg">💚 ${L("skSend")}</button></form></div>`;
+  const list = Array.isArray(mine) && mine.length ? `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">${L("skMine")}</h3>${mine.map(s => `<div class="kv" style="align-items:flex-start;flex-wrap:wrap"><span><b>${s.lessons} ${L("finLessons")}</b> · ${esc(money(s.amount, s.currency))}<br><span class="xs muted">${esc(fmtDT(s.created_at))}</span></span>
+      <span>${s.status === "assigned" ? `<button class="btn btn-o" onclick="skProgress('${s.id}')">📈 ${L("skProgress")}</button><div id="skp_${s.id}" class="xs" style="margin-top:.3rem"></div>` : `<span class="badge badge-g">${s.status === "paid" ? L("skWaiting") : esc(stt(s.status))}</span>`}</span></div>`).join("")}</div>` : "";
+  const ask = u && r === "student" ? `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.3rem">🤲 ${L("skAsk")}</h3><p class="xs muted" style="margin-bottom:.6rem">${L("skAskHint")}</p>
+    ${Array.isArray(myReq) && myReq.length ? `<span class="badge badge-g">${esc(stt(myReq[0].status))}</span>` : `<form style="display:flex;gap:.4rem" onsubmit="event.preventDefault();skAsk()"><textarea class="in" id="sk_q" rows="2" style="flex:1" required></textarea><button class="btn btn-o">${L("send")}</button></form>`}</div>` : "";
+  return pageWrap("💚", L("skTitle"), L("skSub"), `<div class="grid g2" style="align-items:start"><div>${form}${ask}</div><div>${list}<div class="card" style="text-align:center;margin-top:${list ? "1rem" : "0"}"><div style="font-size:3rem">🤲</div><p class="sm muted">«من دلّ على خير فله مثل أجر فاعله»</p></div></div></div>`, 1000);
+}
+async function skSend(n, amount) {
+  const g = (x) => document.getElementById(x).value.trim();
+  const { error } = await sb.from("sponsorships").insert({ donor_id: state.auth.user.id, donor_alias: g("sk_a") || null, lessons: n, amount, currency: setv("currency", "USD"), method: g("sk_m"), reference: g("sk_r") });
+  if (error) return toast(error.message, true); invalidate("skMine"); toast(L("skThanks")); render();
+}
+async function skAsk() { const { error } = await sb.from("sponsor_requests").insert({ student_id: state.auth.user.id, reason: document.getElementById("sk_q").value.trim() }); if (error) return toast(error.message, true); invalidate("skReq"); toast(L("skAskSent")); render(); }
+async function skProgress(id) {
+  const { data, error } = await sb.rpc("sponsorship_progress", { p_id: id }); const el = document.getElementById("skp_" + id); if (!el) return;
+  if (error) { el.textContent = error.message; return; }
+  el.innerHTML = data && data.assigned ? `📚 ${data.lessons_attended} ${L("skAttended")} · 📖 ${data.pages_memorized} ${L("skPagesM")} · 📝 ${data.homework_done} ${L("skHw")}${data.country ? " · " + esc(countryName(data.country)) : ""}` : L("skWaiting");
+}
+function ownerSponsorsTab(P) {
+  const sp = useData("skAll", () => q(sb.from("sponsorships").select("*").order("created_at", { ascending: false })));
+  const rq = useData("skReqAll", () => q(sb.from("sponsor_requests").select("*").order("created_at", { ascending: false })));
+  const st = P.list.filter(p => p.role === "student");
+  const reqIds = Array.isArray(rq) ? rq.filter(x => x.status === "pending").map(x => x.student_id) : [];
+  const opts = (sel) => st.map(s => `<option value="${s.id}" ${s.id === sel ? "selected" : ""}>${reqIds.includes(s.id) ? "🤲 " : ""}${esc(s.real_name || s.email)}</option>`).join("");
+  return `<div class="grid g2" style="align-items:start"><div class="card"><h3 style="margin-bottom:.6rem">💚 ${L("skOwner")}</h3>
+    ${!Array.isArray(sp) ? loadingBox() : !sp.length ? `<p class="muted sm">${L("none")}</p>` : sp.map(s => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b>${s.lessons} ${L("finLessons")} · ${esc(money(s.amount, s.currency))}</b><span class="badge">${esc(s.status)}</span></div>
+      <div class="xs muted">${esc(personName(s.donor_id, P.map))}${s.donor_alias ? " (" + esc(s.donor_alias) + ")" : ""} · ${esc(s.method || "")} · ${esc(s.reference || "")} · ${esc(fmtDT(s.created_at))}${s.student_id ? " → " + esc(personName(s.student_id, P.map)) : ""}</div>
+      ${s.status === "pending" ? `<button class="btn btn-o" style="margin-top:.4rem" onclick="skMarkPaid('${s.id}')">✓ ${L("skMarkPaid")}</button>` : ""}
+      ${s.status === "paid" ? `<div class="row" style="gap:.3rem;margin-top:.4rem"><select class="in" id="ska_${s.id}" style="flex:1">${opts(reqIds[0])}</select><button class="btn btn-p" onclick="skAssign('${s.id}')">${L("skAssign")}</button></div>` : ""}</div>`).join("")}</div>
+    <div class="card"><h3 style="margin-bottom:.6rem">🤲 ${L("skReqs")}</h3>${!Array.isArray(rq) ? loadingBox() : !rq.length ? `<p class="muted sm">${L("none")}</p>` : rq.map(x => `<div style="padding:.5rem 0;border-bottom:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b class="sm">${esc(personName(x.student_id, P.map))}</b><span class="badge">${esc(stt(x.status))}</span></div><p class="sm" style="white-space:pre-wrap">${esc(x.reason)}</p></div>`).join("")}
+    <div style="margin-top:1rem"><label class="l">${L("price")} / ${L("finLessons")} (50 ${L("min")}) — ${esc(setv("currency", "USD"))}</label><input class="in" type="number" min="1" value="${setv("sponsorPrice", 8)}" onchange="saveSetting16('sponsorPrice',+this.value)"></div></div></div>`;
+}
+async function skMarkPaid(id) { const { error } = await sb.from("sponsorships").update({ status: "paid" }).eq("id", id); if (error) return toast(error.message, true); invalidate("skAll"); render(); }
+async function skAssign(id) { const s = document.getElementById("ska_" + id).value; const { error } = await sb.rpc("owner_assign_sponsorship", { p_id: id, p_student: s }); if (error) return toast(error.message, true); invalidate("skAll", "skReqAll"); toast(L("saved")); render(); }
+async function saveSetting16(k, v) {
+  const { data } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle();
+  const d = Object.assign({}, (data && data.data) || state.settings || {}); d[k] = v;
+  const { error } = await sb.from("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() });
+  if (error) return toast(error.message, true); applySettings(d); state.setDraft = null; toast(L("saved")); render();
+}
+
+/* ---------- ختمة العيلة ---------- */
+function renderKhatmaPage() {
+  if (!state.auth.user) return pageWrap("📖", L("khTitle"), L("khSub"), needLogin("khatma" + (state.pageArg ? "/" + state.pageArg : "")));
+  const id = state.pageArg;
+  if (!id) {
+    const mine = useData("khMine", () => q(sb.from("khatmas").select("*").eq("created_by", state.auth.user.id).order("created_at", { ascending: false })));
+    return pageWrap("📖", L("khTitle"), L("khSub"), `<div class="grid g2" style="align-items:start"><div class="card"><h3 style="margin-bottom:.6rem">➕ ${L("khNew")}</h3>
+      <form class="row" style="gap:.4rem" onsubmit="event.preventDefault();khCreate()"><input class="in" id="kh_t" required placeholder="${L("khName")}" value="${isRamadan() ? "ختمة رمضان" : ""}" style="flex:1"><button class="btn btn-p">${L("khCreate")}</button></form></div>
+      <div class="card"><h3 style="margin-bottom:.6rem">${L("khMine")}</h3>${!Array.isArray(mine) ? loadingBox() : mine.length ? mine.map(k => `<a href="#" class="kv" style="text-decoration:none;color:inherit" onclick="go16('khatma','${k.id}');return false;"><b>📖 ${esc(k.title)}</b><span class="xs muted">${esc(fmtDT(k.created_at, { day: "numeric", month: "short" }))}${k.completed_at ? " ✅" : ""}</span></a>`).join("") : `<p class="muted sm">${L("none")}</p>`}</div></div>`);
+  }
+  const kh = useData("kh:" + id, async () => { const [a, b] = await Promise.all([sb.from("khatmas").select("*").eq("id", id).maybeSingle(), sb.from("khatma_parts").select("*").eq("khatma_id", id).order("juz")]); if (a.error) throw a.error; return [a.data, b.data || []]; });
+  if (!Array.isArray(kh)) return pageWrap("📖", L("khTitle"), L("khSub"), loadingBox());
+  const [k, parts] = kh; if (!k) return pageWrap("📖", L("khTitle"), L("khSub"), `<div class="err">${L("verifyBad")}</div>`);
+  const mine = k.created_by === state.auth.user.id, done = parts.filter(p => p.done).length, pct = Math.round(done / 30 * 100);
+  const link = `${location.origin}/#/khatma/${id}`;
+  return pageWrap("📖", k.title, L("khSub"), `<div class="card" style="margin-bottom:1rem;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap">
+      <svg viewBox="0 0 120 120" width="110"><circle cx="60" cy="60" r="50" stroke="var(--line)" stroke-width="12" fill="none"/><circle cx="60" cy="60" r="50" stroke="var(--accent)" stroke-width="12" fill="none" stroke-dasharray="${(pct / 100 * 314).toFixed(1)} 314" transform="rotate(-90 60 60)" stroke-linecap="round"/><text x="60" y="67" text-anchor="middle" font-size="24" font-weight="800" fill="currentColor">${pct}%</text></svg>
+      <div style="flex:1"><b style="font-size:1.2rem">${done} / 30 ${L("khJuz")}</b>${done === 30 ? `<div class="notice ok" style="margin-top:.4rem">${L("khComplete")}</div>` : ""}
+      <div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-o" onclick="navigator.clipboard&&navigator.clipboard.writeText('${link}').then(()=>toast('✓'))">🔗 ${L("khShare")}</button>
+      <a class="btn btn-o" href="https://wa.me/?text=${encodeURIComponent(k.title + " — " + link)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i></a></div></div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.6rem">${Array.from({ length: 30 }, (_, i) => { const p = parts.find(x => x.juz === i + 1) || { juz: i + 1 }; const meP = p.user_id === state.auth.user.id;
+      return `<div class="card" style="padding:.7rem;${p.done ? "background:rgba(16,185,129,.12);border-color:var(--accent)" : ""}"><div class="row" style="justify-content:space-between"><b>${L("khJuz")} ${i + 1}</b>${p.done ? "✅" : ""}</div>
+        <div class="sm" style="min-height:1.4rem">${esc(p.assignee || "—")}</div>
+        <div class="row" style="gap:.3rem;margin-top:.3rem;flex-wrap:wrap">${!p.assignee && !p.user_id ? `<button class="btn btn-o" style="padding:.25rem .5rem;font-size:.78rem" onclick="khClaim('${id}',${i + 1})">🙋 ${L("khClaim")}</button>` : ""}
+        ${(mine || meP) && !p.done ? `<button class="btn btn-p" style="padding:.25rem .5rem;font-size:.78rem" onclick="khSet('${id}',${i + 1},{done:true})">${L("khDone")}</button>` : ""}
+        ${mine ? `<button class="ibtn" title="${L("khAssign")}" onclick="khName('${id}',${i + 1})">✏️</button>` : ""}${(mine || meP) && p.done ? `<button class="ibtn" onclick="khSet('${id}',${i + 1},{done:false})">↺</button>` : ""}</div></div>`; }).join("")}</div>`);
+}
+async function khCreate() {
+  const t = document.getElementById("kh_t").value.trim(); if (!t) return;
+  const { data, error } = await sb.from("khatmas").insert({ title: t, created_by: state.auth.user.id }).select("id").single(); if (error) return toast(error.message, true);
+  await sb.from("khatma_parts").insert(Array.from({ length: 30 }, (_, i) => ({ khatma_id: data.id, juz: i + 1 })));
+  invalidate("khMine"); go16("khatma", data.id);
+}
+async function khClaim(id, juz) { const { error } = await sb.rpc("khatma_claim", { p_id: id, p_juz: juz, p_name: null }); if (error) return toast(error.message, true); invalidate("kh:" + id); render(); }
+async function khName(id, juz) { const n = prompt(L("khAssign")); if (n === null) return; await khSet(id, juz, { assignee: n.trim() || null }); }
+async function khSet(id, juz, patch) {
+  const { error } = await sb.from("khatma_parts").update(patch).eq("khatma_id", id).eq("juz", juz); if (error) return toast(error.message, true);
+  if (patch.done) { confetti(1500); const kh = state.data["kh:" + id]; if (Array.isArray(kh) && kh[1].filter(p => p.done || p.juz === juz).length === 30 && kh[0].created_by === state.auth.user.id) await sb.from("khatmas").update({ completed_at: new Date().toISOString() }).eq("id", id); }
+  invalidate("kh:" + id); render();
+}
+
+/* ---------- اختبار تحديد المستوى ---------- */
+state.pl = {};
+function renderPlacementPage() {
+  if (!state.auth.user) return pageWrap("🧭", L("plTitle"), L("plSub"), needLogin("placement"));
+  const mine = useData("plMine", () => q(sb.from("placement_tests").select("*").eq("user_id", state.auth.user.id).order("created_at", { ascending: false }).limit(1)));
+  const t = Array.isArray(mine) ? mine[0] : null; const pl = state.pl;
+  const sel = (id, arr) => `<select class="in" id="${id}">${arr.map(x => `<option>${esc(x)}</option>`).join("")}</select>`;
+  const res = t ? `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>${t.status === "reviewed" ? "🎉 " + L("plResult") : "⏳ " + L("plPending")}</h3>${t.status === "reviewed" ? `<div class="kv"><span>${L("plLevel")}</span><b>${esc(t.level || "")}</b></div><div class="kv"><span>${L("plRec")}</span><b>${esc(t.recommended || "")}</b></div>${t.note ? `<p class="sm" style="white-space:pre-wrap">${esc(t.note)}</p>` : ""}<button class="btn btn-p" style="margin-top:.6rem" onclick="navigate('pricing')">${I18N[state.lang].nav.pricing}</button>` : ""}</div>` : "";
+  return pageWrap("🧭", L("plTitle"), L("plSub"), res + `<div class="card"><form style="display:flex;flex-direction:column;gap:.7rem" onsubmit="event.preventDefault();plSubmit()">
+    <div class="fgrid"><div><label class="l">${L("plAge")}</label>${sel("pl_age", L("plAges"))}</div><div><label class="l">${L("plGoal")}</label>${sel("pl_goal", L("plGoals"))}</div><div><label class="l">${L("plSelf")}</label>${sel("pl_self", L("plSelfs"))}</div></div>
+    <div><label class="l">${L("plHifz")}</label><input class="in" id="pl_hifz" placeholder="جزء عمّ + سورة الملك"></div>
+    <div class="row" style="gap:.6rem;flex-wrap:wrap;align-items:center"><button type="button" class="btn ${pl.rec ? "btn-p" : "btn-o"}" onclick="plRec()">${pl.rec ? "⏹ " + L("plStopRec") + ` <span id="pl_tm">0:00</span>` : "🎙️ " + L("plRecord")}</button>
+      ${pl.blob ? `<audio controls src="${URL.createObjectURL(pl.blob)}" style="height:36px"></audio>` : ""}<span class="xs muted">${L("plOrUpload")}</span><input class="in" type="file" id="pl_file" accept="audio/*" style="max-width:260px"></div>
+    <button class="btn btn-p btn-lg" ${state.busy ? "disabled" : ""}>🧭 ${L("plSubmit")}</button></form></div>`, 900);
+}
+async function plRec() {
+  const pl = state.pl;
+  if (pl.rec) { pl.rec.stop(); return; }
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ audio: true }); const mr = new MediaRecorder(s); const ch = [];
+    mr.ondataavailable = (e) => e.data.size && ch.push(e.data);
+    mr.onstop = () => { s.getTracks().forEach(t => t.stop()); clearInterval(pl.tm); pl.blob = new Blob(ch, { type: mr.mimeType || "audio/webm" }); pl.rec = null; render(); };
+    mr.start(); pl.rec = mr; const t0 = Date.now(); render();
+    pl.tm = setInterval(() => { const el = document.getElementById("pl_tm"); const s_ = Math.floor((Date.now() - t0) / 1000); if (el) el.textContent = `${Math.floor(s_ / 60)}:${String(s_ % 60).padStart(2, "0")}`; if (s_ >= 150 && pl.rec) pl.rec.stop(); }, 500);
+  } catch (e) { toast(rmMediaErr(e), true); }
+}
+async function plSubmit() {
+  const g = (x) => document.getElementById(x); const f = g("pl_file").files[0] || state.pl.blob;
+  if (!f) return toast(L("fillAll"), true);
+  const answers = { age: g("pl_age").value, goal: g("pl_goal").value, self: g("pl_self").value, hifz: g("pl_hifz").value };
+  state.busy = true; render();
+  try {
+    const path = `${state.auth.user.id}/${Date.now()}.${(f.type || "").includes("mp4") ? "m4a" : (f.name || "rec.webm").split(".").pop()}`;
+    const u = await sb.storage.from("placement").upload(path, f, { contentType: f.type || "audio/webm" }); if (u.error) throw u.error;
+    const { error } = await sb.from("placement_tests").insert({ user_id: state.auth.user.id, file_path: path, answers }); if (error) throw error;
+    state.pl = {}; invalidate("plMine"); toast(L("plSent"));
+  } catch (e) { toast(e.message || String(e), true); }
+  state.busy = false; render();
+}
+function ownerPlacementTab(P) {
+  const list = useData("plAll", () => q(sb.from("placement_tests").select("*").order("created_at", { ascending: false }).limit(60)));
+  const plans = (state.settings && state.settings.plans || []).map(p => planName10(p, p.id));
+  return `<div class="card"><h3 style="margin-bottom:.6rem">🧭 ${L("plOwner")}</h3>${!Array.isArray(list) ? loadingBox() : !list.length ? `<p class="muted sm">${L("none")}</p>` : list.map(t => `<div style="padding:.7rem 0;border-bottom:1px solid var(--line)">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap"><b>${esc(personName(t.user_id, P.map))}</b><span class="badge ${t.status === "reviewed" ? "badge-a" : "badge-g"}">${esc(t.status === "reviewed" ? L("plResult") : L("plPending"))}</span></div>
+    <div class="xs muted">${esc(fmtDT(t.created_at))} · ${esc(Object.values(t.answers || {}).filter(Boolean).join(" · "))}</div>
+    <button class="btn btn-o" style="margin:.4rem 0" onclick="svOpen({title:'${L("plTitle")}',bucket:'placement',path:'${esc(t.file_path)}',type:'audio'})">🎧 ${L("open")}</button>
+    <div class="fgrid" style="align-items:end"><div><label class="l">${L("plLevel")}</label><select class="in" id="plv_${t.id}">${L("plSelfs").map(x => `<option ${t.level === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></div>
+      <div><label class="l">${L("plRec")}</label><input class="in" id="plr_${t.id}" list="pl_plans" value="${esc(t.recommended || "")}"></div></div>
+    <textarea class="in" id="pln_${t.id}" rows="2" style="margin-top:.4rem" placeholder="${L("notes")}">${esc(t.note || "")}</textarea><button class="btn btn-p" style="margin-top:.4rem" onclick="plReview('${t.id}')">${L("plSave")}</button></div>`).join("")}
+    <datalist id="pl_plans">${plans.map(p => `<option value="${esc(p)}">`).join("")}</datalist></div>`;
+}
+async function plReview(id) {
+  const g = (x) => document.getElementById(x + id).value;
+  const { error } = await sb.from("placement_tests").update({ status: "reviewed", level: g("plv_"), recommended: g("plr_"), note: g("pln_"), reviewed_by: state.auth.user.id }).eq("id", id);
+  if (error) return toast(error.message, true); invalidate("plAll"); toast(L("saved")); render();
+}
+
+/* ---------- سلسلة السند في الإجازات ---------- */
+function sanadData() { return useData("sanads", () => q(sb.from("sanad_chains").select("*").order("created_at"))); }
+const _ownerCerts16 = ownerCerts;
+ownerCerts = function (P) {
+  const ch = sanadData();
+  let h = _ownerCerts16(P);
+  h = h.replace(`<div><label class="l">${L("grade")}</label><input class="in" id="cf_grade"></div>`, `<div><label class="l">${L("grade")}</label><input class="in" id="cf_grade"></div>
+    <div><label class="l">${L("snSanad")}</label><select class="in" id="cf_sanad"><option value="">—</option>${(Array.isArray(ch) ? ch : []).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></div>
+    <div><label class="l">${L("snTeacher")}</label><input class="in" id="cf_teacher" value="${esc(role() === "teacher" ? ((state.auth.profile || {}).real_name || "") : "")}"></div>`);
+  if (role() !== "owner") return h;
+  return h + `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">🔗 ${L("snChains")}</h3>
+    ${(Array.isArray(ch) ? ch : []).map(c => `<details style="margin-bottom:.4rem"><summary class="b">${esc(c.name)} <span class="xs muted">(${c.chain.length})</span></summary><p class="sm" style="white-space:pre-wrap">${esc(c.chain.join(" ← "))}</p><button class="btn btn-o" style="color:var(--danger)" onclick="delSanad('${c.id}')">${L("delete")}</button></details>`).join("")}
+    <form style="display:flex;flex-direction:column;gap:.5rem;margin-top:.6rem" onsubmit="event.preventDefault();addSanad()"><input class="in" id="sn_n" required placeholder="${L("snName")}"><textarea class="in" id="sn_l" rows="6" required placeholder="${L("snList")}"></textarea><button class="btn btn-p">${L("snAdd")}</button></form></div>`;
+};
+async function addSanad() {
+  const chain = document.getElementById("sn_l").value.split("\n").map(s => s.trim()).filter(Boolean);
+  const { error } = await sb.from("sanad_chains").insert({ name: document.getElementById("sn_n").value.trim(), chain }); if (error) return toast(error.message, true); invalidate("sanads"); toast(L("saved")); render();
+}
+async function delSanad(id) { if (!confirm(L("delete") + "?")) return; await sb.from("sanad_chains").delete().eq("id", id); invalidate("sanads"); render(); }
+const _issueCert16 = issueCert;
+issueCert = async function () {
+  const sn = (document.getElementById("cf_sanad") || {}).value || null, tn = ((document.getElementById("cf_teacher") || {}).value || "").trim() || null;
+  const t0 = new Date(Date.now() - 5000).toISOString();
+  await _issueCert16();
+  if (sn || tn) { const { data } = await sb.from("certificates").select("id").eq("issued_by", state.auth.user.id).gte("created_at", t0).order("created_at", { ascending: false }).limit(1); if (data && data[0]) { await sb.from("certificates").update({ sanad_id: sn, teacher_name: tn }).eq("id", data[0].id); invalidate("certsAll"); } }
+};
+const _certHtml16 = certHtml;
+certHtml = function (c) {
+  const h = _certHtml16(c);
+  if (!c.sanad_id && !c.teacher_name) return h;
+  const ch = c.sanad_id ? useData("sanad:" + c.sanad_id, () => q(sb.from("sanad_chains").select("*").eq("id", c.sanad_id))) : [];
+  const chain = Array.isArray(ch) && ch[0] ? ch[0].chain : [];
+  const names = [c.student_name, c.teacher_name].filter(Boolean).concat(chain);
+  if (!/ﷺ|رسول الله|Prophet/.test(names[names.length - 1] || "")) names.push(L("snProphet"));
+  const block = `<div class="sanad"><div class="sanadh">🔗 ${L("snSanad")}${Array.isArray(ch) && ch[0] ? " — " + esc(ch[0].name) : ""}</div><div class="sanadl">${names.map((n, i) => `<span class="sanadn ${i === 0 ? "me" : i === names.length - 1 ? "top" : ""}">${esc(n)}</span>`).join(`<span class="sanada">←</span>`)}</div></div>`;
+  return h.replace(`<div class="certfoot">`, block + `<div class="certfoot">`);
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.sanad{margin:1rem auto;max-width:90%;border-top:1px dashed #b45309;padding-top:.8rem}.sanadh{font-weight:800;color:#b45309;margin-bottom:.5rem}.sanadl{display:flex;flex-wrap:wrap;gap:.25rem;justify-content:center;align-items:center;font-size:.82rem}.sanadn{padding:.15rem .5rem;border-radius:999px;border:1px solid #d6b36a;background:#fffbeb;color:#78350f}.sanadn.me{background:#047857;color:#fff;border-color:#047857}.sanadn.top{background:#b45309;color:#fff;border-color:#b45309}.sanada{color:#b45309}</style>`);
+
+/* ---------- مواقيت الصلاة على مواعيد الحجز ---------- */
+state.prayer = {};
+function prayerAddress() { const p = state.auth && state.auth.profile || {}; const c = (COUNTRIES.find(x => x[0] === (p.country || guessCountry())) || [])[1] || ""; return [p.city, c].filter(Boolean).join(", "); }
+function prayerData() {
+  const addr = prayerAddress(); if (!addr) return null;
+  const now = new Date(), key = addr + "|" + now.getFullYear() + "-" + (now.getMonth() + 1);
+  if (state.prayer[key] !== undefined) return state.prayer[key];
+  state.prayer[key] = null;
+  Promise.all([0, 1].map(k => { const d = new Date(now.getFullYear(), now.getMonth() + k, 1); return fetch(`https://api.aladhan.com/v1/calendarByAddress/${d.getFullYear()}/${d.getMonth() + 1}?address=${encodeURIComponent(addr)}`).then(r => r.json()).catch(() => null); }))
+    .then(res => { const out = []; res.forEach(r => (r && r.data || []).forEach(day => { const ts = +day.date.timestamp * 1000; const tz = day.meta && day.meta.timezone; ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].forEach(n => { const tm = (day.timings[n] || "").slice(0, 5); const [hh, mm] = tm.split(":").map(Number); if (isNaN(hh)) return;
+      const dt = zonedToUtc(day.date.gregorian.date, hh, mm, tz); if (dt) out.push([n, dt]); }); })); state.prayer[key] = out; render(); });
+  return null;
+}
+function zonedToUtc(ddmmyyyy, hh, mm, tz) {
+  try { const [d, m, y] = ddmmyyyy.split("-").map(Number); const guess = Date.UTC(y, m - 1, d, hh, mm); const f = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(guess));
+    const o = {}; f.forEach(p => o[p.type] = p.value); const asUtc = Date.UTC(+o.year, +o.month - 1, +o.day, +o.hour % 24, +o.minute); return guess - (asUtc - guess); } catch (e) { return null; }
+}
+const PR_AR = { Fajr: "الفجر", Dhuhr: "الظهر", Asr: "العصر", Maghrib: "المغرب", Isha: "العشاء" };
+function prayerConflict(iso, mins) {
+  const pd = prayerData(); if (!Array.isArray(pd)) return null;
+  const s = new Date(iso).getTime(), e = s + (mins || 50) * 60000;
+  const hit = pd.find(([, t]) => t < e && t + 20 * 60000 > s); return hit ? (state.lang === "ar" ? PR_AR[hit[0]] : hit[0]) : null;
+}
+function markPrayer(html, mins) {
+  return html.replace(/(<button class="(?:hourbtn|btn btn-o)"[^>]*?onclick="[a-zA-Z]+\('([0-9T:.\-+Z]+)'\)"[^>]*>)/g, (m, open, iso) => {
+    const p = prayerConflict(iso, mins); if (!p) return m;
+    return open.replace("<button ", `<button title="🕌 ${esc(L("prPrayer"))}: ${esc(p)}" style="opacity:.55;border-style:dashed" `) + "🕌 ";
+  });
+}
+const _slotPicker16 = slotPicker;
+slotPicker = function (tid, mins, excl, onPick) { return markPrayer(_slotPicker16(tid, mins, excl, onPick), +mins); };
+const _scheduleBookerCard16 = scheduleBookerCard;
+scheduleBookerCard = function (students, teachers) { return markPrayer(_scheduleBookerCard16(students, teachers), (state.sbk || {}).mins || 50); };
+const _renderProfilePage16 = renderProfilePage;
+renderProfilePage = function () {
+  const h = _renderProfilePage16(); const p = (state.auth && state.auth.profile) || {};
+  if (!state.auth.user) return h;
+  return h.replace(`<div><label class="l">${L("bio")}</label>`, `<div><label class="l">🕌 ${L("city")}</label><input class="in" id="pf_city" value="${esc(p.city || "")}" placeholder="Cairo"></div><div><label class="l">${L("bio")}</label>`);
+};
+const _saveProfile16 = saveProfile;
+saveProfile = async function () { const c = document.getElementById("pf_city"); if (c) { await sb.from("profiles").update({ city: c.value.trim() || null }).eq("id", state.auth.user.id); if (state.auth.profile) state.auth.profile.city = c.value.trim() || null; state.prayer = {}; } return _saveProfile16(); };
+
+/* ---------- تعليقات صوتية على الثانية (الواجبات) ---------- */
+async function hwWave(id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray)); const s = all.find(x => x && x.id === id && x.lesson_id); if (!s) return;
+  await svOpen({ title: "🎧 " + L("hwFeedback") });
+  const main = document.getElementById("svMain"); if (!main) return;
+  try {
+    const r = await sb.storage.from("homework").download(s.file_path); if (r.error) throw r.error;
+    const u = URL.createObjectURL(r.data); SV.urls.push(u);
+    const isT = role() === "teacher" || role() === "owner";
+    main.innerHTML = `<canvas id="hwCv" width="900" height="140" style="width:100%;height:140px;background:var(--bg);border-radius:12px;cursor:${isT ? "copy" : "pointer"}"></canvas>
+      <audio id="hwAu" src="${u}" controls controlsList="nodownload noplaybackrate" style="width:100%;margin-top:.6rem"></audio><p class="xs muted">${isT ? "🖱️ " + (state.lang === "ar" ? "اضغط على الموجة عشان تضيف تعليق في الثانية دي" : "Click the waveform to add a comment at that second") : ""}</p><div id="hwAnn"></div>`;
+    const buf = await (await (await fetch(u)).blob()).arrayBuffer();
+    const ac = new (window.AudioContext || window.webkitAudioContext)(); const ab = await ac.decodeAudioData(buf); ac.close();
+    const data = ab.getChannelData(0), cv = document.getElementById("hwCv"), ctx = cv.getContext("2d"), W = cv.width, H = cv.height, step = Math.ceil(data.length / W);
+    const peaks = []; for (let x = 0; x < W; x++) { let mx = 0; for (let i = x * step; i < Math.min(data.length, (x + 1) * step); i++) mx = Math.max(mx, Math.abs(data[i])); peaks.push(mx); }
+    const au = document.getElementById("hwAu"); let ann = (s.annotations || []).slice();
+    const draw = () => { ctx.clearRect(0, 0, W, H); const p = au.currentTime / ab.duration; peaks.forEach((v, x) => { ctx.fillStyle = x / W < p ? "#10b981" : "#94a3b8"; const h = Math.max(2, v * H * .9); ctx.fillRect(x, (H - h) / 2, 1, h); });
+      ann.forEach(a => { const x = a.t / ab.duration * W; ctx.fillStyle = "#f59e0b"; ctx.fillRect(x - 1, 0, 3, H); ctx.beginPath(); ctx.arc(x, 8, 7, 0, 7); ctx.fill(); }); };
+    const list = () => { document.getElementById("hwAnn").innerHTML = ann.slice().sort((a, b) => a.t - b.t).map((a, i) => `<div class="kv" style="cursor:pointer" onclick="document.getElementById('hwAu').currentTime=${Math.max(0, a.t - 1.5)};document.getElementById('hwAu').play()"><span><b class="accent">⏱ ${Math.floor(a.t / 60)}:${String(Math.floor(a.t % 60)).padStart(2, "0")}</b> ${esc(a.text)}</span>▶</div>`).join(""); };
+    draw(); list(); au.addEventListener("timeupdate", draw);
+    cv.addEventListener("click", async (e) => {
+      const rc = cv.getBoundingClientRect(); const x = (e.clientX - rc.left) / rc.width; const t = x * ab.duration;
+      const hit = ann.find(a => Math.abs(a.t - t) < ab.duration * .015);
+      if (hit && !isT) { au.currentTime = Math.max(0, hit.t - 1.5); au.play(); return; }
+      if (!isT) { au.currentTime = t; return; }
+      const txt = prompt(`⏱ ${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`); if (!txt) return;
+      ann.push({ t: Math.round(t * 10) / 10, text: txt.trim() }); const { error } = await sb.rpc("set_hw_annotations", { p_id: id, p_ann: ann }); if (error) return toast(error.message, true);
+      s.annotations = ann; draw(); list();
+    });
+  } catch (e) { main.innerHTML = `<div class="err">${esc(e.message || L("svDenied"))}</div>`; }
+}
+const _hwSubHtml16 = hwSubHtml;
+hwSubHtml = function (s) {
+  const h = _hwSubHtml16(s);
+  if (!s.file_path || !/audio|webm/.test(s.file_type || "")) return h;
+  const n = (s.annotations || []).length;
+  return h.replace(/<button class="btn btn-o" style="padding:\.25rem \.6rem;margin-top:\.3rem" onclick="hwOpenFile\([^)]*\)">[\s\S]*?<\/button>/, `<button class="btn btn-o" style="padding:.25rem .6rem;margin-top:.3rem" onclick="hwWave('${s.id}')">🎧 ${L("open")}${n ? ` · 💬 ${n}` : ""}</button>`);
+};
+
+/* ---------- صوت الأسبوع لولي الأمر ---------- */
+const _renderParentDash16 = renderParentDash;
+renderParentDash = function () {
+  const h = _renderParentDash16(); const uid = state.auth.user.id;
+  const links = useData("children", () => q(sb.from("parent_links").select("student_id").eq("parent_id", uid)));
+  const ids = Array.isArray(links) ? links.map(x => x.student_id) : [];
+  if (!ids.length) return h;
+  const subs = useData("wvSubs", () => q(sb.from("homework_submissions").select("*").in("student_id", ids).gte("created_at", new Date(Date.now() - 14 * 864e5).toISOString()).order("created_at", { ascending: false })));
+  const P = peopleMap();
+  const au = Array.isArray(subs) ? subs.filter(s => s.file_path && /audio|webm/.test(s.file_type || "")) : [];
+  return h + `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">🎧 ${L("wvTitle")}</h3>${au.length ? au.slice(0, 8).map(s => `<div class="kv" style="align-items:center"><span class="sm"><b>${esc(personName(s.student_id, P.map))}</b> · ${esc(fmtDT(s.created_at))}${s.grade ? ` · <span class="badge badge-a">${esc(s.grade)}</span>` : ""}</span><button class="btn btn-o" onclick="hwWave('${s.id}')">▶</button></div>`).join("") : `<p class="muted sm">${L("wvNone")}</p>`}
+    <div class="row" style="gap:.4rem;margin-top:.8rem;flex-wrap:wrap">${ids.map(id => `<button class="btn btn-o" onclick="go16('hifz','${id}')">🗺️ ${L("hzOpen")} — ${esc(personName(id, P.map))}</button>`).join("")}</div></div>`;
+};
+
+/* ---------- ربط في لوحات التحكم ---------- */
+const _renderOwnerDash16 = renderOwnerDash;
+renderOwnerDash = function () {
+  const tabs = ["overview", "calendar", "groups", "chats", "bookings", "requests", "orders", "users", "teacherApps", "teachers", "students", "homework", "placement", "sponsors", "referrals", "reviews", "reports", "certs", "content", "settings", "schedule"];
+  const P = peopleMap();
+  if (state.dash.tab === "sponsors") return dashTabs(tabs) + ownerSponsorsTab(P);
+  if (state.dash.tab === "placement") return dashTabs(tabs) + ownerPlacementTab(P);
+  return _renderOwnerDash16().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+};
+const _renderTeacherDash16 = renderTeacherDash;
+renderTeacherDash = function () {
+  let h = _renderTeacherDash16();
+  if (state.dash.tab === "mystudents") { const P = peopleMap(); h += `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">🗺️ ${L("hzTitle")}</h3><div class="row" style="gap:.4rem;flex-wrap:wrap">${P.list.filter(p => p.role === "student").map(s => `<button class="btn btn-o" onclick="go16('hifz','${s.id}')">${esc(s.real_name || s.display_name)}</button>`).join("")}</div></div>`; }
+  return h;
+};
+const _renderHub16 = renderHub;
+renderHub = function () {
+  let h = _renderHub16(); if (!h) return h;
+  const extra = hubTile("fa-solid fa-map", L("hzTitle"), "", "go16('hifz')") + hubTile("fa-solid fa-toolbox", L("nvTools"), "", "go16('tools')");
+  return h.replace(`<div class="tiles">`, `<div class="tiles">${role() === "owner" ? hubTile("fa-solid fa-toolbox", L("nvTools"), "", "go16('tools')") : extra}`);
+};
 
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
