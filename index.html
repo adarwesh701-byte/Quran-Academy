@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-11-v11";
+const UI_VERSION = "2026-11-11-v12";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -8784,6 +8784,312 @@ renderClassroomPage = function () {
 };
 const _renderPolicyPage14 = renderPolicyPage;
 renderPolicyPage = function () { const h = _renderPolicyPage14(); return h.replace(/<\/div><\/section>\s*$/, `<div class="card" style="margin-top:1rem"><p class="sm">🛡️ ${L("policyMonitor")}</p></div></div></section>`); };
+
+
+/* ======================= v15: عارض آمن لكل المحتوى، تلخيصات PDF، مكتبة بالمجلدات، أغلفة تلقائية ======================= */
+Object.assign(UI.en, {
+  svLoading: "Opening securely…", svDenied: "This content is available to academy subscribers only.", svNoPreview: "This file type can't be shown securely — please upload it as PDF, audio, video or image.",
+  svProtected: "🔒 Protected content — available inside the academy only", svPage: "page", svEmbedNote: "If nothing appears, the source doesn't allow playing inside other sites.",
+  libAll: "All sections", libItems: "items", libSubs: "sections", libStudent: "Student summaries & recitations", libEmpty: "Nothing here yet.", noSection: "Without a section", moveTo: "Move to section",
+  shareSec: "Section (where it appears)", shareFileHint: "Audio, video, PDF summary or image", shareSubsOnly: "Sharing is available to subscribed students only."
+});
+Object.assign(UI.ar, {
+  svLoading: "بنفتح المحتوى بأمان…", svDenied: "المحتوى ده متاح لمشتركين الأكاديمية بس.", svNoPreview: "نوع الملف ده مينفعش يتعرض بشكل آمن — ارفعه PDF أو صوت أو فيديو أو صورة.",
+  svProtected: "🔒 محتوى محمي — متاح جوه الأكاديمية بس", svPage: "صفحة", svEmbedNote: "لو مفيش حاجة ظهرت، المصدر مش بيسمح بالتشغيل جوه مواقع تانية.",
+  libAll: "كل الأقسام", libItems: "عنصر", libSubs: "قسم", libStudent: "تلخيصات وتلاوات الطلاب", libEmpty: "لسه مفيش حاجة هنا.", noSection: "من غير قسم", moveTo: "انقل لقسم",
+  shareSec: "القسم (اللي يظهر فيه)", shareFileHint: "صوت أو فيديو أو تلخيص PDF أو صورة", shareSubsOnly: "المشاركة متاحة للطلاب المشتركين بس."
+});
+if (UI.en.cats) UI.en.cats.summary = "Lesson summary (PDF)";
+if (UI.ar.cats) UI.ar.cats.summary = "تلخيص درس (PDF)";
+if (!SC_CATS.includes("summary")) SC_CATS.splice(0, 0, "summary");
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.svm{position:fixed;inset:0;z-index:4500;background:rgba(2,6,23,.82);display:flex;align-items:center;justify-content:center;padding:1rem;user-select:none;-webkit-user-select:none}
+.svbox{background:var(--card);border:1px solid var(--line);border-radius:18px;width:min(980px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden}
+.svhead{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1rem;border-bottom:1px solid var(--line)}
+.svbody{overflow:auto;padding:1rem;position:relative;flex:1}
+.svwm{position:absolute;inset:0;pointer-events:none;opacity:.13;z-index:3}
+.svpage{position:relative;margin:0 auto 1rem;box-shadow:0 4px 18px rgba(0,0,0,.25);background:#fff;width:fit-content}
+.svpage canvas{display:block;max-width:100%}
+.svmedia{position:relative}.svmedia video,.svmedia audio,.svmedia img,.svmedia iframe{width:100%;border-radius:12px;display:block}
+.svmedia iframe{aspect-ratio:16/9;border:0}
+.svtext{white-space:pre-wrap;padding:0 1rem 1rem;line-height:1.8}
+@media print{body.sv-open *{display:none!important}}
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+.libtile{position:relative;height:175px;border-radius:18px;overflow:hidden;color:#fff;text-decoration:none;display:flex;flex-direction:column;justify-content:flex-end;padding:1rem;background:linear-gradient(135deg,#064e3b,#047857 55%,#b45309);background-size:cover;background-position:center;transition:transform .15s,box-shadow .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.libtile:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.libtile .ic{font-size:1.8rem}.libtile b{font-size:1.1rem;text-shadow:0 1px 6px rgba(0,0,0,.5)}.libtile small{opacity:.9;font-size:.78rem}
+.libcrumb{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.8rem 0}.libcrumb a{color:var(--accent);text-decoration:none;font-weight:700}
+.libhead{border-radius:20px;min-height:170px;padding:1.4rem;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:1.2rem;background-size:cover;background-position:center}
+</style>`);
+
+/* ---------- العارض الآمن ---------- */
+const SV = { urls: [] };
+function loadScriptOnce(src) { return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement("script"); s.src = src; s.crossOrigin = "anonymous"; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+function svWatermarkCss() {
+  const t = ((state.auth && state.auth.user && state.auth.user.email) || I18N[state.lang].meta.siteName) + " · " + new Date().toISOString().slice(0, 10);
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180'><text x='10' y='100' fill='%23000' font-size='16' font-family='sans-serif' transform='rotate(-22 180 90)'>${t.replace(/[<>&'"]/g, "")}</text></svg>`;
+  return `background-image:url("data:image/svg+xml;utf8,${svg.replace(/#/g, "%23")}")`;
+}
+function svKeys(e) {
+  if (!document.getElementById("svModal")) return;
+  const k = (e.key || "").toLowerCase();
+  if (e.key === "Escape") { svClose(); return; }
+  if ((e.ctrlKey || e.metaKey) && ["s", "p", "c", "u"].includes(k)) { e.preventDefault(); e.stopPropagation(); }
+}
+function svClose() {
+  const m = document.getElementById("svModal"); if (m) m.remove();
+  SV.urls.forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} }); SV.urls = []; SV.doc = null;
+  document.body.classList.remove("sv-open"); document.body.style.overflow = "";
+  window.removeEventListener("keydown", svKeys, true);
+}
+function svType(mime, path, hint) {
+  const p = (path || "").toLowerCase(); mime = mime || "";
+  if (/pdf/.test(mime) || p.endsWith(".pdf")) return "pdf";
+  if (/^audio\//.test(mime) || /\.(mp3|m4a|wav|ogg|aac|opus)$/.test(p)) return "audio";
+  if (/^video\//.test(mime) || /\.(mp4|mov|webm|mkv|m4v)$/.test(p)) return /^audio\//.test(mime) ? "audio" : (hint === "audio" ? "audio" : "video");
+  if (/^image\//.test(mime) || /\.(png|jpe?g|gif|webp|svg)$/.test(p)) return "image";
+  return "file";
+}
+function ytId(u) { const m = /(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/.exec(u || ""); return m ? m[1] : null; }
+async function svOpen(o) {
+  svClose();
+  const m = document.createElement("div"); m.id = "svModal"; m.className = "svm";
+  m.addEventListener("click", (e) => { if (e.target === m) svClose(); });
+  m.innerHTML = `<div class="svbox" oncontextmenu="return false" oncopy="return false" oncut="return false" ondragstart="return false">
+    <div class="svhead"><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(o.title || "")}</b><span class="xs muted">${L("svProtected")}</span></div>
+      <span class="row" style="gap:.3rem" id="svTools"></span><button class="ibtn" onclick="svClose()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="svbody" id="svBody">${o.cover && !o.path && !o.url ? `<div style="height:200px;border-radius:14px;margin-bottom:1rem;background:url('${esc(o.cover)}') center/cover"></div>` : ""}<div id="svMain" class="muted sm">${o.path || o.url ? L("svLoading") : ""}</div>
+      ${o.body ? `<div class="svtext">${esc(o.body)}</div>` : ""}</div></div>`;
+  document.body.appendChild(m); document.body.classList.add("sv-open"); document.body.style.overflow = "hidden";
+  window.addEventListener("keydown", svKeys, true);
+  const main = document.getElementById("svMain"); const wm = `<div class="svwm" style="${svWatermarkCss()}"></div>`;
+  try {
+    if (o.path) {
+      const r = await sb.storage.from(o.bucket).download(o.path);
+      if (r.error || !r.data) throw (r.error || new Error("denied"));
+      if (!document.getElementById("svModal")) return;
+      const blob = r.data, type = svType(blob.type, o.path, o.type);
+      if (type === "pdf") return svPdf(await blob.arrayBuffer());
+      if (type === "file") { main.innerHTML = `<div class="notice">${L("svNoPreview")}</div>`; return; }
+      const u = URL.createObjectURL(blob); SV.urls.push(u);
+      if (type === "audio") main.innerHTML = `<div class="svmedia" style="padding:2rem 0">${o.cover ? `<div style="height:220px;border-radius:14px;margin-bottom:1rem;background:url('${esc(o.cover)}') center/cover"></div>` : `<div style="font-size:4rem;text-align:center">🎧</div>`}<audio src="${u}" controls autoplay controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio></div>`;
+      else if (type === "video") main.innerHTML = `<div class="svmedia"><video src="${u}" controls autoplay playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false" style="max-height:72vh;background:#000"></video>${wm}</div>`;
+      else main.innerHTML = `<div class="svmedia"><img src="${u}" alt="" draggable="false">${wm}</div>`;
+      return;
+    }
+    if (o.url) {
+      const id = ytId(o.url);
+      const src = id ? `https://www.youtube-nocookie.com/embed/${id}?modestbranding=1&rel=0&playsinline=1` : o.url;
+      main.innerHTML = `<div class="svmedia"><iframe src="${esc(src)}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>${id ? "" : `<p class="xs muted" style="margin-top:.4rem">${L("svEmbedNote")}</p>`}`;
+      return;
+    }
+  } catch (e) { main.innerHTML = `<div class="err">${L("svDenied")}</div>`; }
+}
+async function svPdf(buf) {
+  const main = document.getElementById("svMain"); if (!main) return;
+  try {
+    await loadScriptOnce("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js");
+    const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    const doc = await lib.getDocument({ data: buf }).promise; SV.doc = doc; SV.zoom = SV.zoom || 1;
+    const tools = document.getElementById("svTools");
+    if (tools) tools.innerHTML = `<button class="ibtn" onclick="SV.zoom=Math.max(.5,SV.zoom-.2);svPdfRender()">−</button><span class="xs" id="svZ">${Math.round(SV.zoom * 100)}%</span><button class="ibtn" onclick="SV.zoom=Math.min(3,SV.zoom+.2);svPdfRender()">+</button><span class="xs muted">${doc.numPages} ${L("svPage")}</span>`;
+    await svPdfRender();
+  } catch (e) { main.innerHTML = `<div class="err">${esc(e.message || String(e))}</div>`; }
+}
+async function svPdfRender() {
+  const doc = SV.doc, main = document.getElementById("svMain"); if (!doc || !main) return;
+  const z = document.getElementById("svZ"); if (z) z.textContent = Math.round(SV.zoom * 100) + "%";
+  const token = SV.tok = (SV.tok || 0) + 1;
+  main.innerHTML = ""; main.className = "";
+  const avail = Math.max(280, main.clientWidth || 900) - 8, dpr = window.devicePixelRatio || 1;
+  for (let i = 1; i <= Math.min(doc.numPages, 300); i++) {
+    if (SV.tok !== token || !document.getElementById("svModal")) return;
+    const page = await doc.getPage(i);
+    const base = page.getViewport({ scale: 1 }); const scale = avail / base.width * SV.zoom;
+    const vp = page.getViewport({ scale: scale * dpr });
+    const wrap = document.createElement("div"); wrap.className = "svpage";
+    const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; c.style.width = (vp.width / dpr) + "px"; c.style.height = (vp.height / dpr) + "px";
+    wrap.appendChild(c); wrap.insertAdjacentHTML("beforeend", `<div class="svwm" style="${svWatermarkCss()}"></div>`);
+    main.appendChild(wrap);
+    await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+  }
+}
+
+/* ---------- كل فتح للمحتوى يمر بالعارض الآمن ---------- */
+openContent = async function (id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray));
+  const c = all.find(x => x && x.id === id && x.title); if (!c) return;
+  const body = ctBodyOf(c), title = ctTitleOf(c);
+  if (c.file_path) { const [bucket, ...rest] = c.file_path.split("/"); return svOpen({ title, bucket, path: rest.join("/"), body, cover: c.cover_url, type: c.type }); }
+  if (c.url) return svOpen({ title, url: c.url, body, cover: c.cover_url });
+  return svOpen({ title, body, cover: c.cover_url });
+};
+openSecure = async function (id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray));
+  const c = all.find(x => x && x.id === id && x.title);
+  const { data, error } = await sb.from("content_secure").select("*").eq("content_id", id).maybeSingle();
+  if (error || !data) return toast(error ? error.message : L("locked"), true);
+  const body = (data.body_i18n || {})[state.lang] || (data.body_i18n || {}).ar || (data.body_i18n || {}).en || "";
+  const title = c ? ctTitleOf(c) : "";
+  if (data.file_path) { const [bucket, ...rest] = data.file_path.split("/"); return svOpen({ title, bucket, path: rest.join("/"), body, cover: c && c.cover_url, type: c && c.type }); }
+  if (data.url) return svOpen({ title, url: data.url, body });
+  return svOpen({ title, body, cover: c && c.cover_url });
+};
+
+/* ---------- مشاركات الطلاب: PDF + أقسام + للمشتركين بس ---------- */
+async function amSubscriber() {
+  if (!state.auth.user) return false;
+  if (role() === "owner" || role() === "teacher") return true;
+  const s = state.data.amSub; if (Array.isArray(s)) return !!s[0];
+  const { data } = await sb.rpc("is_subscriber", { p_user: state.auth.user.id }); state.data.amSub = [!!data]; return !!data;
+}
+async function svOpenShowcase(id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray));
+  const p = all.find(x => x && x.id === id && x.category); if (!p) return;
+  if (!state.auth.user) { lsSet("itqan_after_auth", "library"); return navigate("login"); }
+  if (!(await amSubscriber()) && p.student_id !== state.auth.user.id) { toast(L("svDenied"), true); return; }
+  const title = locText(p.title), body = locText(p.body);
+  if (p.file_path) return svOpen({ title, bucket: p.file_bucket || "academy_public", path: p.file_path, body, type: p.media_type });
+  if (p.url) return svOpen({ title, url: p.url, body });
+}
+mediaHtml = function (p) {
+  if (!p.file_path && !p.url) return "";
+  const ic = p.media_type === "pdf" ? "📄" : p.media_type === "video" ? "🎬" : p.media_type === "image" ? "🖼️" : p.url ? "▶️" : "🎧";
+  return `<button class="btn btn-o btn-full" onclick="svOpenShowcase('${p.id}')">${ic} ${L("open")}</button>`;
+};
+const _shareForm15 = shareForm;
+shareForm = function () {
+  sectionsData();
+  let h = _shareForm15();
+  h = h.replace(`accept="audio/*,video/*"`, `accept="audio/*,video/*,application/pdf,image/*"`)
+    .replace(`<label class="l">${L("shareFile")}</label>`, `<label class="l">${L("shareFile")} <span class="xs muted">— ${L("shareFileHint")}</span></label>`)
+    .replace(`<div><label class="l">${L("ctTitleOne")}</label><input class="in" id="sh_title"`, `<div><label class="l">${L("shareSec")}</label><select class="in" id="sh_sec" onchange="lsSet('itqan_sh_sec',this.value)"><option value="">—</option>${secOptions(lsGet("itqan_sh_sec") || "")}</select></div><div><label class="l">${L("ctTitleOne")}</label><input class="in" id="sh_title"`);
+  return h;
+};
+submitShare = async function () {
+  const g = (x) => document.getElementById(x);
+  const t = g("sh_title").value.trim(); if (!t) return toast(L("fillAll"), true);
+  const f = g("sh_file").files[0]; const url = g("sh_url").value.trim();
+  if (!f && !url) return toast(L("fillAll"), true);
+  if (!(await amSubscriber())) return toast(L("shareSubsOnly"), true);
+  state.busy = true; render();
+  try {
+    const src = detectLang(t); const desc = g("sh_desc") ? g("sh_desc").value.trim() : "";
+    const [title, body] = await Promise.all([translateAll(t, src), desc ? translateAll(desc, detectLang(desc)) : Promise.resolve({})]);
+    if (!Object.keys(title).length) title[src || state.lang] = t;
+    const cat = state.shareCat || g("sh_cat").value;
+    const row = { student_id: state.auth.user.id, student_name: "-", category: cat, maqam: cat === "recitation_maqam" ? g("sh_maqam").value : null, title, body, url: url || null, section_id: (g("sh_sec") && g("sh_sec").value) || null };
+    if (f) {
+      const path = `${state.auth.user.id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+      const { error } = await sb.storage.from("showcase").upload(path, f, { upsert: false, contentType: f.type });
+      if (error) throw error;
+      row.file_path = path; row.file_bucket = "showcase";
+      row.media_type = /pdf/.test(f.type) || /\.pdf$/i.test(f.name) ? "pdf" : (f.type || "").split("/")[0];
+    }
+    const ins = await sb.from("showcase_posts").insert(row).select("status").single();
+    if (ins.error) throw ins.error;
+    toast(ins.data.status === "published" ? L("sharePublished") : L("sharePending"));
+    invalidate("myShares", "showcase", "modShares");
+  } catch (e) { toast(/row-level|policy/i.test(e.message || "") ? L("shareSubsOnly") : errMsg(e), true); }
+  state.busy = false; render();
+};
+
+/* ---------- المكتبة بنظام المجلدات ---------- */
+const _readHash15 = readHash;
+readHash = function () {
+  _readHash15();
+  const p = (location.hash || "").replace(/^#\/?/, "").split("/");
+  if (p[0] === "library") state.libSec = /^[0-9a-f-]{36}$/i.test(p[1] || "") ? p[1] : null;
+};
+const _navigate15 = navigate;
+navigate = function (route, param) { if (route === "library" && param === undefined) state.libSec = null; return _navigate15(route, param); };
+function libOpen(id) {
+  state.libSec = id || null; state.route = "library";
+  try { history.pushState(null, "", "#/library" + (id ? "/" + id : "")); } catch (e) {}
+  window.scrollTo({ top: 0, behavior: "smooth" }); render();
+}
+function libTile(s, n, k) {
+  return `<a class="libtile" href="#" onclick="libOpen('${s.id}');return false;" style="${s.cover_url ? `background-image:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.12)),url('${esc(s.cover_url)}')` : ""}">
+    <span class="ic">${esc(s.icon || "📁")}</span><b>${esc(secTitle(s))}</b><small>${n} ${L("libItems")}${k ? ` · ${k} ${L("libSubs")}` : ""}</small></a>`;
+}
+renderLibraryDb = function () {
+  if (!sb) return "";
+  const secs = sectionsData();
+  const list = useData("libCt", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "public").order("created_at", { ascending: false })));
+  const posts = useData("showcase", () => q(sb.from("showcase_posts").select("*").eq("status", "published").order("created_at", { ascending: false }).limit(60)));
+  if (list === null || secs === null) return loadingBox();
+  if (list.__error || secs.__error) return errBox(list.__error ? list : secs);
+  const isOwner = role() === "owner";
+  const vis = secs.filter(x => x.is_visible !== false || isOwner), ids = new Set(vis.map(s => s.id));
+  const bySec = {}; list.forEach(c => { (bySec[c.section_id && ids.has(c.section_id) ? c.section_id : "_"] = bySec[c.section_id && ids.has(c.section_id) ? c.section_id : "_"] || []).push(c); });
+  const pBy = {}; (Array.isArray(posts) ? posts : []).forEach(p => { if (p.section_id) (pBy[p.section_id] = pBy[p.section_id] || []).push(p); });
+  const kids = {}; vis.forEach(s => { const pid = s.parent_id && ids.has(s.parent_id) ? s.parent_id : "_"; (kids[pid] = kids[pid] || []).push(s); });
+  const memo = {};
+  const count = (id) => memo[id] != null ? memo[id] : (memo[id] = (bySec[id] || []).length + (pBy[id] || []).length + (kids[id] || []).reduce((a, k) => a + count(k.id), 0));
+  const shown = (arr) => arr.filter(s => isOwner || count(s.id) > 0);
+  const cur = state.libSec && vis.find(s => s.id === state.libSec);
+  if (!cur) {
+    const roots = shown(kids["_"] || []);
+    const orphan = bySec["_"] || [];
+    if (!roots.length && !orphan.length) return `<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`;
+    return `<div class="libgrid" style="margin-top:1.5rem">${roots.map(s => libTile(s, count(s.id), shown(kids[s.id] || []).length)).join("")}</div>
+      ${orphan.length ? `<h3 style="margin:2rem 0 1rem">📂 ${L("noSection")}</h3><div class="grid">${orphan.map(c => contentCard(c, false)).join("")}</div>` : ""}${renderContentViewer()}`;
+  }
+  const chain = []; let x = cur; const guard = new Set();
+  while (x && !guard.has(x.id)) { guard.add(x.id); chain.unshift(x); x = x.parent_id ? vis.find(s => s.id === x.parent_id) : null; }
+  const subs = shown(kids[cur.id] || []), items = bySec[cur.id] || [], sp = pBy[cur.id] || [];
+  return `<div class="libcrumb"><a href="#" onclick="libOpen(null);return false;">📚 ${L("libAll")}</a>${chain.map((s, i) => ` <span class="muted">/</span> ${i === chain.length - 1 ? `<b>${esc(secTitle(s))}</b>` : `<a href="#" onclick="libOpen('${s.id}');return false;">${esc(secTitle(s))}</a>`}`).join("")}</div>
+    <div class="libhead" style="background-image:${cur.cover_url ? `linear-gradient(to top,rgba(0,0,0,.75),rgba(0,0,0,.1)),url('${esc(cur.cover_url)}')` : "linear-gradient(135deg,#064e3b,#047857 55%,#b45309)"}">
+      <div style="font-size:2.2rem">${esc(cur.icon || "📁")}</div><h2 style="font-size:1.7rem;margin:0">${esc(secTitle(cur))}</h2><span class="sm" style="opacity:.9">${count(cur.id)} ${L("libItems")}${subs.length ? ` · ${subs.length} ${L("libSubs")}` : ""}</span></div>
+    ${subs.length ? `<div class="libgrid" style="margin-bottom:1.5rem">${subs.map(s => libTile(s, count(s.id), shown(kids[s.id] || []).length)).join("")}</div>` : ""}
+    ${items.length ? `<div class="grid">${items.map(c => contentCard(c, false)).join("")}</div>` : ""}
+    ${sp.length ? `<h3 style="margin:2rem 0 1rem">🎓 ${L("libStudent")}</h3><div class="grid">${sp.map(p => showcaseCard(p, false)).join("")}</div>` : ""}
+    ${!subs.length && !items.length && !sp.length ? `<div class="card muted" style="text-align:center">${L("libEmpty")}</div>` : ""}${renderContentViewer()}`;
+};
+const _renderShowcasePublic15 = renderShowcasePublic;
+renderShowcasePublic = function () { return state.route === "library" && state.libSec ? "" : _renderShowcasePublic15(); };
+
+/* ---------- محتوى الأونر مرتب تحت أقسامه ---------- */
+ownerContent = function (P) {
+  const all = useData("contentsAll", () => q(sb.from("contents").select("*").order("created_at", { ascending: false })));
+  const secs = sectionsData();
+  let grouped;
+  if (all === null || secs === null) grouped = loadingBox();
+  else if (all.__error) grouped = errBox(all);
+  else {
+    const sl = Array.isArray(secs) ? secs : []; const ids = new Set(sl.map(s => s.id));
+    const card = (c) => contentCard(c, true);
+    const orphans = all.filter(c => !c.section_id || !ids.has(c.section_id));
+    grouped = secTree(sl).map(({ s, d }) => { const items = all.filter(c => c.section_id === s.id);
+      return `<details ${items.length ? "open" : ""} style="margin-bottom:.7rem;margin-inline-start:${d * 1.2}rem;border:1px solid var(--line);border-radius:14px;padding:.5rem .8rem;background:var(--card)">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:.6rem">${s.cover_url ? `<span style="width:46px;height:30px;border-radius:7px;background:url('${esc(s.cover_url)}') center/cover;flex:none"></span>` : ""}<b>${d ? "↳ " : ""}${esc((s.icon || "📁") + " " + secTitle(s))}</b><span class="badge">${items.length}</span></summary>
+        ${items.length ? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:.6rem">${items.map(card).join("")}</div>` : ""}</details>`; }).join("")
+      + (orphans.length ? `<details open style="border:1px dashed var(--danger);border-radius:14px;padding:.5rem .8rem"><summary class="b" style="cursor:pointer">⚠️ ${L("noSection")} (${orphans.length})</summary>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:.6rem">${orphans.map(c => card(c).replace(/<\/div>\s*$/, `<select class="in" style="margin-top:.4rem" onchange="if(this.value)setContent('${c.id}',{section_id:this.value})"><option value="">${L("moveTo")}…</option>${secOptions("")}</select></div>`)).join("")}</div></details>` : "");
+    if (!all.length) grouped = `<p class="muted sm">${L("none")}</p>`;
+  }
+  return renderSectionsManager() + `<div class="grid" style="grid-template-columns:minmax(300px,1fr) 2fr;align-items:start">
+    ${renderContentForm({ students: P.list.filter(p => p.role === "student") })}<div>${grouped}</div></div>`;
+};
+
+/* ---------- أغلفة تلقائية بالذكاء الاصطناعي لكل قسم ومحتوى ---------- */
+async function autoCovers() {
+  if (state.autoCoverRunning || role() !== "owner") return;
+  state.autoCoverRunning = true; state.autoCoverDone = true;
+  try {
+    const [a, b] = await Promise.all([sb.from("content_sections").select("id,title,cover_url").is("cover_url", null).limit(25), sb.from("contents").select("id,title,cover_url").is("cover_url", null).limit(30)]);
+    const jobs = [...(a.data || []).map(s => ["content_sections", s]), ...(b.data || []).map(c => ["contents", c])];
+    if (!jobs.length) return;
+    toast(`🎨 ${L("aiMaking")} (${jobs.length})`);
+    for (const [tbl, x] of jobs) { const url = await genAiImage(enTitle(x.title)); await sb.from(tbl).update({ cover_url: url }).eq("id", x.id); }
+    invSections(); invalidate("contentsAll", "libCt", "contentsMine"); toast(L("aiDone")); render();
+  } catch (e) { console.warn(e); } finally { state.autoCoverRunning = false; }
+}
+const _renderOwnerDash15 = renderOwnerDash;
+renderOwnerDash = function () { const h = _renderOwnerDash15(); if (state.dash.tab === "content" && !state.autoCoverDone) setTimeout(autoCovers, 1500); return h; };
+const _addSection15 = addSection;
+addSection = async function () { await _addSection15(); setTimeout(() => { state.autoCoverDone = false; autoCovers(); }, 600); };
 
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
