@@ -17,6 +17,7 @@ try {
   document.documentElement.setAttribute('data-theme', 'dark');
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -169,6 +170,31 @@ footer a:hover{color:var(--accent)}
 .crumb a{text-decoration:none}.crumb a:hover{color:var(--accent)}
 .sched li{display:flex;justify-content:space-between;gap:1rem;padding:.4rem 0;border-bottom:1px dashed var(--line);font-size:.9rem}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+
+/* ===== لوحات التحكم والكاليندر ===== */
+.toast{position:fixed;bottom:1.2rem;inset-inline-start:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);padding:.7rem 1.2rem;border-radius:12px;font-weight:700;z-index:999;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+[dir=rtl] .toast{transform:translateX(50%)}
+.toast-err{background:var(--danger);color:#fff}
+.calbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem;align-items:center}
+.calw{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:.5rem;overflow-x:auto}
+.cald{border:1px solid var(--line);border-radius:12px;padding:.5rem;min-height:180px;background:var(--bg);display:flex;flex-direction:column;gap:.35rem}
+.cald.today,.calmc.today{border-color:var(--accent)}
+.caldh{display:flex;justify-content:space-between;align-items:baseline;gap:.3rem;border-bottom:1px dashed var(--line);padding-bottom:.3rem}
+.avail{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:8px;padding:.2rem .4rem}
+.calm{display:grid;grid-template-columns:repeat(7,minmax(90px,1fr));gap:.3rem;overflow-x:auto}
+.calmh{text-align:center;padding:.3rem}
+.calmc{border:1px solid var(--line);border-radius:10px;min-height:92px;padding:.3rem;background:var(--bg);display:flex;flex-direction:column;gap:.2rem}
+.calmc.out{opacity:.45}
+.lchip{display:block;width:100%;text-align:start;border:0;border-inline-start:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--card));color:var(--fg);border-radius:8px;padding:.3rem .45rem;font:inherit;font-size:.78rem;cursor:pointer;line-height:1.35}
+.lchip.ls-trial{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,var(--card))}
+.lchip.ls-done{opacity:.6}
+.lchip.ls-cancel{text-decoration:line-through;opacity:.5;border-color:var(--danger)}
+.lchip.sel{outline:2px solid var(--accent)}
+.lmore{border:0;background:transparent;color:var(--accent);cursor:pointer;font:inherit}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
+textarea.in{resize:vertical}
+select[multiple].in{padding:.3rem}
+@media (max-width:760px){.grid[style*="2fr"]{grid-template-columns:1fr!important}}
 </style>
 </head>
 <body>
@@ -185,8 +211,10 @@ const CONFIG = {
   social: { tiktok: "", instagram: "", youtube: "", facebook: "", telegram: "" },
   bookingEndpoint: "",
   pricesArePlaceholder: true,
+  // 💳 رسوم الحصة التجريبية (مبلغ رمزي لضمان الجدية) — غيّرها براحتك
+  trial: { fee: 5, currency: "USD", deductible: true },
   payments: {
-    stripeLinks: { pack4: "", pack8: "", pack12: "", group: "" },
+    stripeLinks: { trial: "", pack4: "", pack8: "", pack12: "", group: "" },
     paypalMe: "",
     bank: { holder: "", bankName: "", iban: "", swift: "" },
     instapay: ""
@@ -825,6 +853,7 @@ function setTheme(th) {
 function navigate(route, param) {
   state.route = route;
   if (param) state.track = param;
+  try { history.pushState(null, "", "#/" + route + (route === "track-detail" && state.track ? "/" + state.track : "")); } catch (e) {}
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.menuOpen = false;
   render();
@@ -849,7 +878,6 @@ function renderHeader() {
         <a href="#" onclick="navigate('home');return false;" ${state.route==='home'?'aria-current="page"':''}>${tr.home}</a>
         <a href="#" onclick="navigate('tracks');return false;" ${state.route==='tracks'?'aria-current="page"':''}>${tr.tracks}</a>
         <a href="#" onclick="navigate('maqamat');return false;" ${state.route==='maqamat'?'aria-current="page"':''}>${tr.maqamat}</a>
-        <a href="#" onclick="navigate('teachers');return false;" ${state.route==='teachers'?'aria-current="page"':''}>${tr.teachers}</a>
         <a href="#" onclick="navigate('library');return false;" ${state.route==='library'?'aria-current="page"':''}>${tr.library}</a>
         <a href="#" onclick="navigate('pricing');return false;" ${state.route==='pricing'?'aria-current="page"':''}>${tr.pricing}</a>
         <a href="#" onclick="navigate('about');return false;" ${state.route==='about'?'aria-current="page"':''}>${tr.about}</a>
@@ -862,6 +890,9 @@ function renderHeader() {
         <button class="ibtn" onclick="setTheme(state.theme==='dark'?'light':'dark')" title="${tr.theme}">
           <i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i>
         </button>
+        ${state.auth && state.auth.user
+          ? `<button class="ibtn" onclick="navigate('dashboard')" title="${L('dashboard')}"><i class="fa-solid fa-user"></i></button>`
+          : `<button class="btn btn-o hide-sm" onclick="state.authMsg=null;navigate('login')">${L('login')}</button>`}
         <button class="btn btn-p hide-sm" onclick="navigate('booking')">${tr.trial}</button>
         <button class="ibtn burger" onclick="state.menuOpen=!state.menuOpen;render()" aria-label="${tr.menu}">
           <i class="fa-solid ${state.menuOpen?'fa-xmark':'fa-bars'}"></i>
@@ -873,13 +904,15 @@ function renderHeader() {
         <a href="#" onclick="navigate('home');return false;">${tr.home}</a>
         <a href="#" onclick="navigate('tracks');return false;">${tr.tracks}</a>
         <a href="#" onclick="navigate('maqamat');return false;">${tr.maqamat}</a>
-        <a href="#" onclick="navigate('teachers');return false;">${tr.teachers}</a>
         <a href="#" onclick="navigate('library');return false;">${tr.library}</a>
         <a href="#" onclick="navigate('pricing');return false;">${tr.pricing}</a>
         <a href="#" onclick="navigate('about');return false;">${tr.about}</a>
         <a href="#" onclick="navigate('contact');return false;">${tr.contact}</a>
         <div style="margin-top:.7rem">
           <button class="btn btn-p btn-full" onclick="navigate('booking')">${tr.trial}</button>
+          ${state.auth && state.auth.user
+            ? `<button class="btn btn-o btn-full" style="margin-top:.5rem" onclick="navigate('dashboard')">${L('dashboard')}</button>`
+            : `<button class="btn btn-o btn-full" style="margin-top:.5rem" onclick="state.authMsg=null;navigate('login')">${L('login')}</button>`}
         </div>
       </div>
     </div>
@@ -909,7 +942,6 @@ function renderFooter() {
         <ul>
           <li><a href="#" onclick="navigate('pricing');return false;">${tr.pr.title}</a></li>
           <li><a href="#" onclick="navigate('booking');return false;">${tr.nav.trial}</a></li>
-          <li><a href="#" onclick="navigate('teachers');return false;">${tr.nav.teachers}</a></li>
         </ul>
       </div>
     </div>
@@ -932,7 +964,7 @@ function renderAIWidget() {
         <button class="ibtn" style="background:transparent;border:0;color:inherit" onclick="state.aiOpen=false;render()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="ai-body" id="aiChatBody">
-        ${state.aiMessages.map(m => `<div class="ai-msg ${m.sender}">${m.text}</div>`).join('')}
+        ${state.aiMessages.map(m => `<div class="ai-msg ${m.sender}">${esc(m.text)}</div>`).join('')}
       </div>
       <div class="ai-footer">
         <input type="text" id="aiInput" placeholder="اكتب سؤالك هنا..." value="${state.aiInput}" oninput="state.aiInput=this.value" onkeydown="if(event.key==='Enter')sendAIMessage()">
@@ -1091,7 +1123,6 @@ function renderTrackDetail() {
   const tk = state.track || "ijaza";
   const data = tr.tracks[tk] || tr.tracks.ijaza;
   const tpts = tr.tp;
-  const tchs = TEACHERS.filter(t => t.tracks.includes(tk));
 
   return `
   <section class="sec">
@@ -1128,20 +1159,13 @@ function renderTrackDetail() {
         
         <div>
           <div class="card" style="position:sticky;top:5rem">
-            <h3 style="margin-bottom:1rem">${tpts.teachers}</h3>
-            ${tchs.length === 0 ? `<p class="muted sm">${tpts.none}</p>` : tchs.map(tc => `
-              <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:1rem">
-                <div class="avatar">${tc.name[state.lang]?.[0] || 'م'}</div>
-                <div>
-                  <div class="b sm">${tc.name[state.lang] || tc.name.ar}</div>
-                  <div class="xs muted">${tc.title[state.lang] || tc.title.ar}</div>
-                </div>
-              </div>
-            `).join('')}
+            <h3 style="margin-bottom:.6rem">${data.title}</h3>
+            <p class="muted sm">${tr.hero.desc}</p>
             <button class="btn btn-p btn-full" style="margin-top:1rem" onclick="state.booking.track='${tk}';navigate('booking')">${tr.common.bookTrial}</button>
           </div>
         </div>
       </div>
+      ${renderTrackContent(tk)}
     </div>
   </section>`;
 }
@@ -1210,12 +1234,10 @@ function renderLibrary() {
           <div class="card" style="display:flex;flex-direction:column">
             <span class="badge badge-g" style="align-self:flex-start;margin-bottom:.8rem">${l.track}</span>
             <h3 style="margin-bottom:.8rem">${l.title[state.lang] || l.title.ar}</h3>
-            <div style="margin-top:auto">
-              <button class="btn btn-o btn-full" onclick="alert('جارٍ فتح المحتوى المجاني...')">${tr.lib.open}</button>
-            </div>
           </div>
         `).join('')}
       </div>
+      ${renderLibraryDb()}
     </div>
   </section>`;
 }
@@ -1282,6 +1304,8 @@ function renderContact() {
 function renderBooking() {
   const tr = I18N[state.lang];
   const bk = state.booking;
+  const me = state.auth && state.auth.profile;
+  if (me) { if (!bk.name) bk.name = me.real_name || ""; if (!bk.email) bk.email = me.email || ""; }
 
   return `
   <section class="sec">
@@ -1295,11 +1319,11 @@ function renderBooking() {
         <div class="fgrid" style="margin-bottom:1rem">
           <div>
             <label class="l">${tr.bk.l.name}</label>
-            <input class="in" type="text" value="${bk.name}" oninput="state.booking.name=this.value" placeholder="الاسم الكامل">
+            <input class="in" type="text" value="${esc(bk.name)}" oninput="state.booking.name=this.value" placeholder="الاسم الكامل">
           </div>
           <div>
             <label class="l">${tr.bk.l.email}</label>
-            <input class="in" type="email" value="${bk.email}" oninput="state.booking.email=this.value" placeholder="example@domain.com">
+            <input class="in" type="email" value="${esc(bk.email)}" oninput="state.booking.email=this.value" placeholder="example@domain.com">
           </div>
         </div>
         <div class="fgrid" style="margin-bottom:1rem">
@@ -1337,13 +1361,7 @@ function renderBooking() {
           </div>
           <div>
             <label class="l">${tr.bk.l.tz}</label>
-            <select class="in" onchange="state.booking.tz=this.value">
-              <option value="Africa/Cairo">Cairo (GMT+2)</option>
-              <option value="Asia/Riyadh">Riyadh (GMT+3)</option>
-              <option value="Asia/Dubai">Dubai (GMT+4)</option>
-              <option value="Europe/London">London (GMT+0)</option>
-              <option value="America/New_York">New York (GMT-5)</option>
-            </select>
+            <input class="in" value="${BROWSER_TZ}" disabled>
           </div>
         </div>
       </div>
@@ -1372,7 +1390,13 @@ function renderBooking() {
         </div>
       </div>
 
-      <button class="btn btn-p btn-full btn-lg" onclick="submitBooking()">${tr.bk.submit}</button>
+      ${state.auth && state.auth.user ? '' : `
+      <div class="card" style="margin-bottom:1.5rem">
+        <label class="l">${L('password')}</label>
+        <input class="in" id="bk_pw" type="password" minlength="6" autocomplete="new-password" value="${esc(state.booking.pw || '')}" oninput="state.booking.pw=this.value">
+        <p class="xs muted" style="margin-top:.5rem">${L('bookAccNote')} ${L('haveAcc')} <a href="#" class="accent b" onclick="navigate('login');return false;">${L('login')}</a></p>
+      </div>`}
+      <button class="btn btn-p btn-full btn-lg" ${state.busy ? 'disabled' : ''} onclick="submitBooking()">${state.busy ? L('loading') : tr.bk.submit}</button>
     </div>
   </section>`;
 }
@@ -1391,51 +1415,1085 @@ function toggleHourSlot(dayIdx, hourStr) {
   render();
 }
 
-function submitBooking() {
-  const bk = state.booking;
-  const tr = I18N[state.lang];
-  if (!bk.trialDate) {
-    alert(tr.bk.err.trial);
-    return;
-  }
-  let hasSlots = false;
-  Object.keys(bk.slots).forEach(d => {
-    if (bk.slots[d].length > 0) hasSlots = true;
-  });
-  if (!hasSlots) {
-    alert(tr.bk.err.slots);
-    return;
-  }
+/* =====================================================================
+    🔐 نظام الحسابات ولوحات التحكم — أكاديمية إتقان (Supabase)
+   ===================================================================== */
+const SB_URL = "https://ymycfxmigvvermsdnagm.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteWNmeG1pZ3Z2ZXJtc2RuYWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5NjU1NjYsImV4cCI6MjEwOTU0MTU2Nn0.V0PUmuhKM7EPVxi2rwvPPi1WdoOsXxJr-6-lyZVtm7g";
+let sb = null;
+try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error("Supabase init failed", e); }
 
-  let slotsText = "";
-  Object.keys(bk.slots).forEach(d => {
-    if (bk.slots[d].length > 0) {
-      slotsText += `\n• ${I18N[state.lang].days[d]}: ${bk.slots[d].join(', ')}`;
+const BROWSER_TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; } })();
+
+Object.assign(state, {
+  auth: { ready: false, user: null, profile: null },
+  authMode: "login",
+  authMsg: null,
+  dash: { tab: null },
+  cal: { view: "week", anchor: new Date(), teacherId: "", lessons: null, key: "", selected: null },
+  data: {},
+  payBookingId: null,
+  busy: false
+});
+state.booking.tz = BROWSER_TZ;
+
+/* ---------- نصوص الواجهة الجديدة ---------- */
+const UI = {
+  ar: {
+    login: "تسجيل الدخول", signup: "إنشاء حساب", logout: "تسجيل الخروج", dashboard: "لوحتي",
+    email: "البريد الإلكتروني", password: "كلمة المرور", fullName: "الاسم الكامل", phone: "رقم الهاتف",
+    haveAcc: "عندك حساب؟", noAcc: "ليس لديك حساب؟", forgot: "نسيت كلمة المرور؟",
+    resetSent: "أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك.",
+    checkEmail: "أرسلنا رسالة تأكيد إلى بريدك. افتحها ثم سجّل الدخول، وسيتم إكمال حجزك تلقائيًا.",
+    accExists: "هذا البريد مسجل بالفعل. سجّل الدخول للمتابعة.",
+    pwShort: "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+    fillAll: "من فضلك أكمل كل البيانات المطلوبة.",
+    authTitle: "حسابك في الأكاديمية", authSub: "سجّل الدخول لمتابعة حصصك ومحتواك.",
+    bookAccNote: "سيتم إنشاء حساب لك بهذا البريد لمتابعة حجزك وحصصك.",
+    loading: "جارٍ التحميل...", save: "حفظ", saved: "تم الحفظ ✓", cancel: "إلغاء", delete: "حذف", add: "إضافة",
+    error: "حدث خطأ، حاول مرة أخرى.", yes: "نعم", none: "لا يوجد شيء بعد.",
+    tzNote: "المواعيد معروضة بتوقيتك",
+    // pay
+    payTitle: "خطوة أخيرة لتأكيد حصتك التجريبية",
+    paySub: "حصتك محجوزة مبدئيًا. أكّد الحجز برسوم رمزية لنضمن لك وقت المعلم كاملًا.",
+    payWhy: "لماذا رسوم رمزية؟", payWhyText: "لأن وقت معلمينا ثمين، نحجز الحصة التجريبية فقط للطلاب الجادين. الرسوم رمزية جدًا مقارنة بقيمة الحصة.",
+    payDeduct: "يُخصم هذا المبلغ بالكامل من أول باقة تشترك فيها.",
+    payFee: "رسوم تأكيد الحصة التجريبية",
+    payMethods: "اختر طريقة الدفع", payConfirmTitle: "دفعت؟ أكّد هنا", payRef: "رقم العملية / اسم المحوِّل / آخر 4 أرقام",
+    payMethod: "طريقة الدفع", paySubmit: "أرسلت الدفع — أكّد حجزي",
+    paySubmitted: "استلمنا تأكيد الدفع ✅ سنراجع العملية ونرسل لك موعد الحصة النهائي ورابطها.",
+    payPaid: "تم تأكيد الدفع ✅ حصتك التجريبية مؤكدة.",
+    payWa: "ادفع عبر التواصل على واتساب", payOpen: "ادفع الآن",
+    promoTitle: "لماذا أكاديمية إتقان؟",
+    promo: [
+      ["🎓", "سند متصل وإجازات معتمدة", "تعلّم على يد متخصصين بسند متصل، مع إمكانية الحصول على إجازة."],
+      ["🧭", "متابعة شخصية", "خطة لكل طالب حسب مستواه وهدفه، مع تقارير ومتابعة مستمرة."],
+      ["🕐", "مواعيد مرنة 24 ساعة", "اختر الأيام والساعات المناسبة لك من أي مكان في العالم."],
+      ["🎵", "المقامات الصوتية", "تحسين الصوت والأداء والخشوع في التلاوة بطريقة علمية."],
+      ["📚", "محتوى مجاني ومكتبة", "شروحات ومواد مساعدة في كل مسار، بعضها مدعوم بالذكاء الاصطناعي."],
+      ["🌍", "طلاب من حول العالم", "بيئة تعليمية دولية بلغات متعددة."]
+    ],
+    bookingSummary: "ملخص حجزك", trialTime: "موعد الحصة التجريبية", track: "المسار", status: "الحالة",
+    // statuses
+    st: { pending: "قيد المراجعة", confirmed: "مؤكد", cancelled: "ملغي", unpaid: "بانتظار الدفع", submitted: "دفع قيد المراجعة", paid: "مدفوع", waived: "معفى",
+          scheduled: "مجدولة", completed: "تمت", draft: "مسودة", published: "منشور", archived: "مؤرشف", public: "عام", restricted: "خاص بطلاب محددين" },
+    // student
+    stuHello: "أهلًا", myBookings: "حجوزاتي", myLessons: "حصصي القادمة", myMaterials: "موادي الخاصة", payNow: "أكمل الدفع",
+    join: "دخول الحصة", noLessons: "لا توجد حصص قادمة بعد. سنرسل لك الموعد بعد تأكيد الحجز.",
+    // teacher
+    tOnbTitle: "مرحبًا بك في فريق الأكاديمية 👋", tOnbSub: "اختر الساعات المتاحة لك في كل يوم من أيام الأسبوع. يمكنك تعديلها لاحقًا في أي وقت.",
+    tabs: { overview: "نظرة عامة", bookings: "الحجوزات التجريبية", teachers: "المعلمون", students: "الطلاب", calendar: "الكاليندر", content: "المحتوى", schedule: "مواعيدي", mystudents: "طلابي" },
+    week: "أسبوع", month: "شهر", today: "اليوم", prev: "السابق", next: "التالي",
+    allTeachers: "كل المعلمين", teacher: "المعلم", student: "الطالب", available: "متاح",
+    addLesson: "إضافة حصة", date: "التاريخ", time: "الوقت", duration: "المدة (دقيقة)", repeat: "تكرار أسبوعي (عدد الأسابيع)", meeting: "رابط الحصة (Zoom/Meet)",
+    lessonDetails: "تفاصيل الحصة", markDone: "تمت", markCancel: "إلغاء الحصة", notes: "ملاحظات",
+    addTeacher: "إضافة معلم بالبريد الإلكتروني", addTeacherHint: "لو المعلم عنده حساب سيتحول فورًا لمعلم، ولو لم يسجل بعد سيصبح معلمًا تلقائيًا أول ما يسجل بهذا البريد.",
+    promoted: "تم تحويل الحساب إلى معلم ✓", invited: "تمت إضافة الدعوة ✓ — سيصبح معلمًا أول ما يسجل بهذا البريد.",
+    invites: "دعوات بانتظار التسجيل", removeTeacher: "إلغاء صفة المعلم", active: "نشط", inactive: "موقوف", slots: "ساعة متاحة/أسبوع",
+    assignTeacher: "تعيين معلم", confirmPay: "تأكيد الدفع", markWaived: "إعفاء", createTrial: "جدولة الحصة مع المعلم", cancelBooking: "إلغاء الحجز",
+    weekly: "المواعيد الأسبوعية المفضلة", ref: "مرجع الدفع",
+    ovStudents: "الطلاب", ovTeachers: "المعلمون", ovPending: "حجوزات بانتظار الدفع", ovReview: "مدفوعات للمراجعة", ovWeek: "حصص هذا الأسبوع",
+    // content
+    ctTitle: "العنوان", ctTitleEn: "العنوان بالإنجليزية (اختياري)", ctTrack: "القسم / المسار", ctType: "النوع", ctAI: "معمول بالذكاء الاصطناعي",
+    ctBody: "النص / الشرح", ctUrl: "رابط (يوتيوب أو ملف خارجي)", ctFile: "أو ارفع ملف", ctVis: "لمن؟", ctStatus: "النشر", ctTargets: "الطلاب المستهدفون",
+    ctPublish: "نشر", ctDraft: "مسودة", ctUnpublish: "إلغاء النشر", ctTeacherNote: "المحتوى العام من المعلم يُحفظ كمسودة حتى يوافق عليه المالك. المحتوى الخاص بطلابك يُنشر مباشرة.",
+    general: "عام",
+    aiSection: "محتوى بالذكاء الاصطناعي 🤖", humanSection: "شروحات المعلمين 👨‍🏫", trackContent: "محتوى هذا المسار", open: "افتح",
+    aiBadge: "AI", humanBadge: "شرح بشري", reviewed: "تمت مراجعته",
+    types: { article: "مقال", pdf: "PDF", video: "فيديو", audio: "صوت", image: "صورة", link: "رابط" },
+    privateNote: "هذه الصفحة خاصة — لا يراها غيرك."
+  },
+  en: {
+    login: "Log in", signup: "Sign up", logout: "Log out", dashboard: "My dashboard",
+    email: "Email", password: "Password", fullName: "Full name", phone: "Phone",
+    haveAcc: "Already have an account?", noAcc: "Don't have an account?", forgot: "Forgot password?",
+    resetSent: "We sent a password reset link to your email.",
+    checkEmail: "We sent a confirmation email. Open it, then log in — your booking will be completed automatically.",
+    accExists: "This email is already registered. Please log in.",
+    pwShort: "Password must be at least 6 characters.",
+    fillAll: "Please complete all required fields.",
+    authTitle: "Your academy account", authSub: "Log in to follow your lessons and materials.",
+    bookAccNote: "An account will be created with this email so you can follow your booking and lessons.",
+    loading: "Loading...", save: "Save", saved: "Saved ✓", cancel: "Cancel", delete: "Delete", add: "Add",
+    error: "Something went wrong, please try again.", yes: "Yes", none: "Nothing here yet.",
+    tzNote: "Times are shown in your time zone",
+    payTitle: "One last step to confirm your trial lesson",
+    paySub: "Your lesson is provisionally reserved. Confirm it with a small fee so we can reserve the teacher's time for you.",
+    payWhy: "Why a small fee?", payWhyText: "Our teachers' time is valuable, so trial lessons are reserved for committed students. The fee is tiny compared to the lesson's value.",
+    payDeduct: "The full amount is deducted from your first package.",
+    payFee: "Trial confirmation fee",
+    payMethods: "Choose a payment method", payConfirmTitle: "Paid? Confirm here", payRef: "Transaction ID / sender name / last 4 digits",
+    payMethod: "Payment method", paySubmit: "I've paid — confirm my booking",
+    paySubmitted: "Payment confirmation received ✅ We'll review it and send you the final lesson time and link.",
+    payPaid: "Payment confirmed ✅ Your trial lesson is confirmed.",
+    payWa: "Pay via WhatsApp", payOpen: "Pay now",
+    promoTitle: "Why Itqan Academy?",
+    promo: [
+      ["🎓", "Connected chain & certified ijaza", "Learn from specialists with a connected chain, with the option to earn an ijaza."],
+      ["🧭", "Personal follow-up", "A plan for every student based on level and goals, with continuous follow-up."],
+      ["🕐", "Flexible 24/7 schedule", "Choose the days and hours that suit you, from anywhere in the world."],
+      ["🎵", "Vocal maqamat", "Improve your voice, performance and focus in recitation, scientifically."],
+      ["📚", "Free content & library", "Explanations and materials in every track, some AI-assisted."],
+      ["🌍", "Students worldwide", "An international learning environment in many languages."]
+    ],
+    bookingSummary: "Your booking", trialTime: "Trial lesson time", track: "Track", status: "Status",
+    st: { pending: "Under review", confirmed: "Confirmed", cancelled: "Cancelled", unpaid: "Awaiting payment", submitted: "Payment under review", paid: "Paid", waived: "Waived",
+          scheduled: "Scheduled", completed: "Completed", draft: "Draft", published: "Published", archived: "Archived", public: "Public", restricted: "Selected students only" },
+    stuHello: "Welcome", myBookings: "My bookings", myLessons: "Upcoming lessons", myMaterials: "My private materials", payNow: "Complete payment",
+    join: "Join lesson", noLessons: "No upcoming lessons yet. We'll send you the time once your booking is confirmed.",
+    tOnbTitle: "Welcome to the academy team 👋", tOnbSub: "Choose your available hours for each day of the week. You can change them any time.",
+    tabs: { overview: "Overview", bookings: "Trial bookings", teachers: "Teachers", students: "Students", calendar: "Calendar", content: "Content", schedule: "My schedule", mystudents: "My students" },
+    week: "Week", month: "Month", today: "Today", prev: "Prev", next: "Next",
+    allTeachers: "All teachers", teacher: "Teacher", student: "Student", available: "Available",
+    addLesson: "Add lesson", date: "Date", time: "Time", duration: "Duration (min)", repeat: "Repeat weekly (number of weeks)", meeting: "Meeting link (Zoom/Meet)",
+    lessonDetails: "Lesson details", markDone: "Done", markCancel: "Cancel lesson", notes: "Notes",
+    addTeacher: "Add a teacher by email", addTeacherHint: "If the teacher has an account it becomes a teacher immediately; otherwise it will become a teacher as soon as they sign up with this email.",
+    promoted: "Account converted to teacher ✓", invited: "Invite added ✓ — they'll become a teacher when they sign up with this email.",
+    invites: "Pending invites", removeTeacher: "Remove teacher role", active: "Active", inactive: "Paused", slots: "available hours/week",
+    assignTeacher: "Assign teacher", confirmPay: "Confirm payment", markWaived: "Waive", createTrial: "Schedule with teacher", cancelBooking: "Cancel booking",
+    weekly: "Preferred weekly times", ref: "Payment reference",
+    ovStudents: "Students", ovTeachers: "Teachers", ovPending: "Bookings awaiting payment", ovReview: "Payments to review", ovWeek: "Lessons this week",
+    ctTitle: "Title", ctTitleEn: "Title in Arabic (optional)", ctTrack: "Section / track", ctType: "Type", ctAI: "AI-generated",
+    ctBody: "Text / explanation", ctUrl: "Link (YouTube or external file)", ctFile: "or upload a file", ctVis: "Visible to", ctStatus: "Publishing", ctTargets: "Target students",
+    ctPublish: "Publish", ctDraft: "Draft", ctUnpublish: "Unpublish", ctTeacherNote: "Public content from teachers is saved as a draft until the owner approves it. Content for your own students is published directly.",
+    general: "General",
+    aiSection: "AI-generated content 🤖", humanSection: "Teacher explanations 👨‍🏫", trackContent: "Content in this track", open: "Open",
+    aiBadge: "AI", humanBadge: "Human", reviewed: "Reviewed",
+    types: { article: "Article", pdf: "PDF", video: "Video", audio: "Audio", image: "Image", link: "Link" },
+    privateNote: "This page is private — only you can see it."
+  }
+};
+function L(k) {
+  const d = UI[state.lang] || UI.en;
+  return d[k] !== undefined ? d[k] : (UI.en[k] !== undefined ? UI.en[k] : (UI.ar[k] !== undefined ? UI.ar[k] : k));
+}
+function stt(s) { return (L("st") || {})[s] || s; }
+function esc(v) {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function locale() { return (I18N[state.lang] && I18N[state.lang].locale) || state.lang || "en"; }
+function fmtDT(iso, opts) {
+  try { return new Intl.DateTimeFormat(locale(), opts || { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso)); }
+  catch (e) { return new Date(iso).toLocaleString(); }
+}
+function fmtTime(iso) { return fmtDT(iso, { hour: "2-digit", minute: "2-digit" }); }
+function trackTitle(k) { const tr = I18N[state.lang]; return (tr.tracks && tr.tracks[k] && tr.tracks[k].title) || (k === "general" ? L("general") : k); }
+function ctTitleOf(c) { const t = c.title || {}; return t[state.lang] || t.ar || t.en || Object.values(t)[0] || "—"; }
+function toast(msg, isErr) {
+  let el = document.getElementById("toast");
+  if (!el) { el = document.createElement("div"); el.id = "toast"; document.body.appendChild(el); }
+  el.className = isErr ? "toast toast-err" : "toast";
+  el.textContent = msg; el.style.display = "block";
+  clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = "none"; }, 4500);
+}
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+function role() { return state.auth.profile ? state.auth.profile.role : null; }
+function invalidate(...keys) { keys.forEach(k => delete state.data[k]); }
+
+/* ---------- تحميل البيانات بشكل كسول (lazy) ---------- */
+function useData(key, loader) {
+  const d = state.data[key];
+  if (d === undefined) {
+    state.data[key] = null; // loading
+    Promise.resolve().then(loader).then(v => { state.data[key] = v == null ? [] : v; render(); })
+      .catch(e => { console.error(key, e); state.data[key] = { __error: e.message || String(e) }; render(); });
+    return null;
+  }
+  return d;
+}
+function loadingBox() { return `<div class="card muted sm" style="text-align:center">${L("loading")}</div>`; }
+function errBox(d) { return `<div class="err">${esc(L("error"))} ${esc(d.__error || "")}</div>`; }
+async function q(p) { const { data, error } = await p; if (error) throw error; return data; }
+
+/* ---------- المصادقة ---------- */
+async function loadProfile() {
+  const u = state.auth.user;
+  if (!u) { state.auth.profile = null; return; }
+  let { data } = await sb.from("profiles").select("*").eq("id", u.id).maybeSingle();
+  state.auth.profile = data || null;
+  if (data && (!data.timezone || data.timezone === "UTC") && BROWSER_TZ !== "UTC") {
+    await sb.from("profiles").update({ timezone: BROWSER_TZ }).eq("id", u.id);
+    data.timezone = BROWSER_TZ;
+  }
+}
+async function initAuth() {
+  if (!sb) { state.auth.ready = true; render(); return; }
+  const { data } = await sb.auth.getSession();
+  state.auth.user = data.session ? data.session.user : null;
+  await loadProfile();
+  state.auth.ready = true;
+  render();
+  sb.auth.onAuthStateChange(async (ev, session) => {
+    const prev = state.auth.user ? state.auth.user.id : null;
+    state.auth.user = session ? session.user : null;
+    if ((state.auth.user ? state.auth.user.id : null) !== prev) {
+      state.data = {};
+      await loadProfile();
+      if (state.auth.user) await flushPendingBooking();
+      render();
+    }
+    if (ev === "PASSWORD_RECOVERY") {
+      const np = prompt(state.lang === "ar" ? "اكتب كلمة المرور الجديدة" : "Enter a new password");
+      if (np) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? error.message : L("saved"), !!error); }
     }
   });
+  await flushPendingBooking();
+}
+async function doLogin() {
+  const email = (document.getElementById("au_email").value || "").trim();
+  const pw = document.getElementById("au_pw").value || "";
+  if (!email || !pw) return toast(L("fillAll"), true);
+  state.busy = true; render();
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  state.busy = false;
+  if (error) { toast(error.message, true); render(); return; }
+  navigate(state.payBookingId ? "pay" : "dashboard");
+}
+async function doSignup() {
+  const name = (document.getElementById("au_name").value || "").trim();
+  const email = (document.getElementById("au_email").value || "").trim();
+  const phone = (document.getElementById("au_phone").value || "").trim();
+  const pw = document.getElementById("au_pw").value || "";
+  if (!name || !email || !pw) return toast(L("fillAll"), true);
+  if (pw.length < 6) return toast(L("pwShort"), true);
+  state.busy = true; render();
+  const res = await signUpUser({ name, email, phone, pw });
+  state.busy = false;
+  if (res === "session") navigate("dashboard");
+  else render();
+}
+async function signUpUser({ name, email, phone, pw }) {
+  const { data, error } = await sb.auth.signUp({
+    email, password: pw,
+    options: { data: { full_name: name, phone, timezone: BROWSER_TZ }, emailRedirectTo: location.origin + location.pathname }
+  });
+  if (error) {
+    if (/registered|exists/i.test(error.message)) { state.authMsg = { t: L("accExists"), err: true }; state.authMode = "login"; state.route = "login"; }
+    else toast(error.message, true);
+    return "error";
+  }
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    state.authMsg = { t: L("accExists"), err: true }; state.authMode = "login"; state.route = "login"; return "exists";
+  }
+  if (!data.session) { state.authMsg = { t: L("checkEmail") }; state.authMode = "login"; state.route = "login"; return "confirm"; }
+  return "session";
+}
+async function doReset() {
+  const email = (document.getElementById("au_email").value || "").trim();
+  if (!email) return toast(L("fillAll"), true);
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  toast(error ? error.message : L("resetSent"), !!error);
+}
+async function doLogout() { await sb.auth.signOut(); state.data = {}; navigate("home"); }
 
-  const msg = `السلام عليكم، أريد تأكيد حجز حصة تجريبية في أكاديمية إتقان:%0A- الاسم: ${bk.name}%0A- البريد: ${bk.email}%0A- الهاتف: ${bk.phoneCode}${bk.phone}%0A- المسار: ${bk.track}%0A- موعد الحصة التجريبية: ${bk.trialDate}%0A- المواعيد الأسبوعية المتاحة:${slotsText}`;
-  
-  const waUrl = `https://wa.me/${CONFIG.whatsapp}?text=${msg}`;
-  
-  document.getElementById('app').innerHTML = `
-    <section class="sec">
-      <div class="wrap" style="max-width:42rem;text-align:center">
-        <div class="card">
-          <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
-          <h2 style="margin-bottom:.8rem">${tr.bk.ok.title}</h2>
-          <p class="muted sm" style="margin-bottom:1.5rem">${tr.bk.ok.descWa}</p>
-          <a class="btn btn-p btn-lg btn-full" href="${waUrl}" target="_blank">
-            <i class="fa-brands fa-whatsapp"></i> ${tr.bk.ok.wa}
-          </a>
-          <div style="margin-top:1rem">
-            <button class="btn btn-o btn-full" onclick="navigate('home')">${tr.common.home}</button>
-          </div>
+function renderAuth() {
+  const mode = state.route === "signup" ? "signup" : "login";
+  const m = state.authMsg;
+  return `
+  <section class="sec">
+    <div class="wrap" style="max-width:28rem">
+      <div class="card">
+        <div style="text-align:center;margin-bottom:1.2rem">
+          <div class="logo" style="justify-content:center;display:flex;margin-bottom:.6rem"><i>${I18N[state.lang].meta.letter || "إ"}</i></div>
+          <h1 style="font-size:1.5rem">${mode === "login" ? L("login") : L("signup")}</h1>
+          <p class="muted sm">${L("authSub")}</p>
+        </div>
+        ${m ? `<div class="${m.err ? "err" : "notice ok"}" style="margin-bottom:1rem">${esc(m.t)}</div>` : ""}
+        <form onsubmit="event.preventDefault();${mode === "login" ? "doLogin()" : "doSignup()"}" style="display:flex;flex-direction:column;gap:.8rem">
+          ${mode === "signup" ? `
+            <div><label class="l">${L("fullName")}</label><input class="in" id="au_name" autocomplete="name" required></div>
+            <div><label class="l">${L("phone")}</label><input class="in" id="au_phone" type="tel" autocomplete="tel" placeholder="+20..."></div>` : ""}
+          <div><label class="l">${L("email")}</label><input class="in" id="au_email" type="email" autocomplete="email" required></div>
+          <div><label class="l">${L("password")}</label><input class="in" id="au_pw" type="password" autocomplete="${mode === "login" ? "current-password" : "new-password"}" required minlength="6"></div>
+          <button class="btn btn-p btn-full btn-lg" ${state.busy ? "disabled" : ""}>${state.busy ? L("loading") : (mode === "login" ? L("login") : L("signup"))}</button>
+        </form>
+        <div style="margin-top:1rem;text-align:center" class="sm">
+          ${mode === "login"
+            ? `<a href="#" onclick="doReset();return false;" class="muted">${L("forgot")}</a><br>${L("noAcc")} <a href="#" class="accent b" onclick="state.authMsg=null;navigate('signup');return false;">${L("signup")}</a>`
+            : `${L("haveAcc")} <a href="#" class="accent b" onclick="state.authMsg=null;navigate('login');return false;">${L("login")}</a>`}
         </div>
       </div>
-    </section>
-  `;
+    </div>
+  </section>`;
 }
+
+/* ---------- الحجز التجريبي (يحفظ في قاعدة البيانات) ---------- */
+function bookingPayload() {
+  const bk = state.booking;
+  const slots = {};
+  Object.keys(bk.slots).forEach(d => { if (bk.slots[d] && bk.slots[d].length) slots[d] = bk.slots[d].slice(); });
+  return {
+    full_name: bk.name.trim(), email: bk.email.trim(), phone: `${bk.phoneCode}${bk.phone}`.trim(),
+    track: bk.track, trial_timestamp: new Date(bk.trialDate).toISOString(), student_timezone: BROWSER_TZ,
+    weekly_slots: slots, amount: CONFIG.trial.fee, currency: CONFIG.trial.currency
+  };
+}
+async function insertBooking(payload) {
+  const row = Object.assign({}, payload, { student_id: state.auth.user.id });
+  const { data, error } = await sb.from("bookings").insert(row).select("id").single();
+  if (error) throw error;
+  invalidate("myBookings", "ownerBookings");
+  return data.id;
+}
+async function flushPendingBooking() {
+  const raw = lsGet("itqan_pending_booking");
+  if (!raw || !state.auth.user) return;
+  lsSet("itqan_pending_booking", null);
+  try {
+    const p = JSON.parse(raw);
+    if (p.email && state.auth.user.email && p.email.toLowerCase() !== state.auth.user.email.toLowerCase()) return;
+    state.payBookingId = await insertBooking(p);
+    state.route = "pay"; render();
+  } catch (e) { console.error(e); toast(L("error"), true); }
+}
+async function submitBooking() {
+  const bk = state.booking;
+  const tr = I18N[state.lang];
+  if (!sb) return toast(L("error"), true);
+  if (!bk.name.trim() || !bk.email.trim() || !bk.phone.trim()) return toast(L("fillAll"), true);
+  if (!bk.trialDate) return toast(tr.bk.err.trial, true);
+  if (!Object.keys(bk.slots).some(d => bk.slots[d].length)) return toast(tr.bk.err.slots, true);
+  const payload = bookingPayload();
+  const pw = state.booking.pw || "";
+  if (!state.auth.user && pw.length < 6) return toast(L("pwShort"), true);
+  state.busy = true; render();
+  try {
+    if (!state.auth.user) {
+      lsSet("itqan_pending_booking", JSON.stringify(payload));
+      const r = await signUpUser({ name: payload.full_name, email: payload.email, phone: payload.phone, pw });
+      state.booking.pw = "";
+      state.busy = false;
+      if (r !== "session") { if (r !== "confirm") lsSet("itqan_pending_booking", JSON.stringify(payload)); render(); return; }
+      // session: onAuthStateChange will flush the pending booking
+      await flushPendingBooking();
+      return;
+    }
+    state.payBookingId = await insertBooking(payload);
+    state.busy = false;
+    navigate("pay");
+  } catch (e) { state.busy = false; render(); toast(e.message || L("error"), true); }
+}
+
+/* ---------- صفحة الدفع (بعد الحجز التجريبي) ---------- */
+function paymentOptions() {
+  const p = CONFIG.payments || {};
+  const fee = CONFIG.trial.fee, cur = CONFIG.trial.currency;
+  const opts = [];
+  if (p.stripeLinks && p.stripeLinks.trial) opts.push({ id: "card", icon: "fa-regular fa-credit-card", label: "Visa / Mastercard / Apple Pay", href: p.stripeLinks.trial });
+  if (p.paypalMe) opts.push({ id: "paypal", icon: "fa-brands fa-paypal", label: "PayPal", href: `https://paypal.me/${encodeURIComponent(p.paypalMe)}/${fee}${cur}` });
+  if (p.instapay) opts.push({ id: "instapay", icon: "fa-solid fa-mobile-screen", label: "InstaPay (مصر)", text: p.instapay });
+  if (p.bank && p.bank.iban) opts.push({ id: "bank", icon: "fa-solid fa-building-columns", label: "Bank transfer", text: `${p.bank.holder || ""} — ${p.bank.bankName || ""}\nIBAN: ${p.bank.iban}${p.bank.swift ? "\nSWIFT: " + p.bank.swift : ""}` });
+  opts.push({ id: "whatsapp", icon: "fa-brands fa-whatsapp", label: L("payWa"), href: `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent("Trial lesson payment - Itqan Academy")}` });
+  return opts;
+}
+function renderPay() {
+  if (!state.auth.user) { state.route = "login"; return renderAuth(); }
+  const id = state.payBookingId;
+  const list = useData("myBookings", () => q(sb.from("bookings").select("*").eq("student_id", state.auth.user.id).order("created_at", { ascending: false })));
+  if (list === null) return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
+  if (list.__error) return `<section class="sec"><div class="wrap">${errBox(list)}</div></section>`;
+  const b = list.find(x => x.id === id) || list[0];
+  if (!b) { return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`; }
+  const tr = I18N[state.lang];
+  const fee = b.amount || CONFIG.trial.fee, cur = b.currency || CONFIG.trial.currency;
+  const opts = paymentOptions();
+  const done = b.payment_status === "paid" || b.payment_status === "waived";
+  return `
+  <section class="hero" style="padding-bottom:1.5rem">
+    <div class="wrap" style="max-width:56rem;text-align:center">
+      <span class="badge badge-g" style="margin-bottom:.8rem">${tr.meta.siteName}</span>
+      <h1 style="font-size:2rem">${L("payTitle")}</h1>
+      <p class="lead muted" style="margin-top:.6rem">${L("paySub")}</p>
+    </div>
+  </section>
+  <section class="sec" style="padding-top:0">
+    <div class="wrap" style="max-width:56rem">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start">
+        <div class="card">
+          <h3 style="margin-bottom:.8rem">${L("bookingSummary")}</h3>
+          <div class="kv"><span class="muted">${L("track")}</span><b>${esc(trackTitle(b.track))}</b></div>
+          <div class="kv"><span class="muted">${L("trialTime")}</span><b>${esc(fmtDT(b.trial_timestamp))}</b></div>
+          <div class="kv"><span class="muted">${L("status")}</span><b>${esc(stt(b.payment_status))}</b></div>
+          <div style="text-align:center;margin:1.4rem 0 .4rem">
+            <div class="muted sm">${L("payFee")}</div>
+            <div style="font-size:2.6rem;font-weight:800" class="accent">${esc(fee)} ${esc(cur)}</div>
+            ${CONFIG.trial.deductible ? `<div class="badge badge-a">${L("payDeduct")}</div>` : ""}
+          </div>
+          <div class="notice" style="margin-top:1rem"><b>${L("payWhy")}</b><br><span style="font-weight:500">${L("payWhyText")}</span></div>
+        </div>
+        <div class="card">
+          ${done ? `<div class="notice ok">${L("payPaid")}</div>` : b.payment_status === "submitted" ? `<div class="notice ok">${L("paySubmitted")}</div>` : ""}
+          ${done ? "" : `
+          <h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>
+          <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem">
+            ${opts.map(o => o.href
+              ? `<a class="btn btn-o btn-full" style="justify-content:flex-start" href="${esc(o.href)}" target="_blank" rel="noopener"><i class="${o.icon}"></i> ${esc(o.label)}</a>`
+              : `<div class="opt" style="flex-direction:column;cursor:default"><b><i class="${o.icon}"></i> ${esc(o.label)}</b><div class="mono sm" style="white-space:pre-wrap">${esc(o.text)}</div></div>`).join("")}
+          </div>
+          <h3 style="margin-bottom:.6rem">${L("payConfirmTitle")}</h3>
+          <form onsubmit="event.preventDefault();submitPayment('${b.id}')" style="display:flex;flex-direction:column;gap:.7rem">
+            <div><label class="l">${L("payMethod")}</label>
+              <select class="in" id="pay_method">${opts.map(o => `<option value="${o.id}" ${b.payment_method === o.id ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select></div>
+            <div><label class="l">${L("payRef")}</label><input class="in" id="pay_ref" value="${esc(b.payment_ref || "")}" required></div>
+            <button class="btn btn-p btn-full btn-lg" ${state.busy ? "disabled" : ""}>${L("paySubmit")}</button>
+          </form>`}
+          <button class="btn btn-o btn-full" style="margin-top:.8rem" onclick="navigate('dashboard')">${L("dashboard")}</button>
+        </div>
+      </div>
+
+      <div class="stitle" style="margin-top:3rem;text-align:center">${L("promoTitle")}</div>
+      <div class="grid" style="margin-top:1.2rem">
+        ${L("promo").map(p => `<div class="card"><div style="font-size:2rem">${p[0]}</div><h3 style="margin:.4rem 0">${p[1]}</h3><p class="muted sm">${p[2]}</p></div>`).join("")}
+      </div>
+      <div class="card" style="margin-top:1.5rem;text-align:center">
+        <div class="b" style="margin-bottom:.6rem">${tr.nav.tracks}</div>
+        <div class="pills" style="display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center">
+          ${TRACKS.map(k => `<span class="badge badge-a">${TRACK_EMOJI[k]} ${esc(tr.tracks[k].title)}</span>`).join("")}
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+async function submitPayment(bid) {
+  const method = document.getElementById("pay_method").value;
+  const ref = (document.getElementById("pay_ref").value || "").trim();
+  if (!ref) return toast(L("fillAll"), true);
+  state.busy = true; render();
+  const { error } = await sb.rpc("submit_trial_payment", { p_booking: bid, p_method: method, p_ref: ref });
+  state.busy = false;
+  if (error) { toast(error.message, true); render(); return; }
+  invalidate("myBookings", "ownerBookings");
+  toast(L("paySubmitted"));
+  render();
+}
+
+/* ---------- الكاليندر (أسبوع / شهر) ---------- */
+function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function weekStart(d) { const x = startOfDay(d); const back = (x.getDay() + 1) % 7; return addDays(x, -back); } // يبدأ السبت
+function calRange() {
+  const c = state.cal;
+  if (c.view === "week") { const s = weekStart(c.anchor); return [s, addDays(s, 7)]; }
+  const first = new Date(c.anchor.getFullYear(), c.anchor.getMonth(), 1);
+  const s = weekStart(first);
+  return [s, addDays(s, 42)];
+}
+function calShift(n) {
+  const c = state.cal;
+  if (n === 0) c.anchor = new Date();
+  else if (c.view === "week") c.anchor = addDays(c.anchor, 7 * n);
+  else c.anchor = new Date(c.anchor.getFullYear(), c.anchor.getMonth() + n, 1);
+  c.selected = null; render();
+}
+function setCalView(v) { state.cal.view = v; state.cal.selected = null; render(); }
+function getCalLessons() {
+  const [s, e] = calRange();
+  const tid = state.cal.teacherId;
+  const key = `cal:${s.toISOString()}:${e.toISOString()}:${tid}`;
+  return useData(key, () => {
+    let qq = sb.from("lessons").select("*").gte("start_time", s.toISOString()).lt("start_time", e.toISOString()).order("start_time");
+    if (tid) qq = qq.eq("teacher_id", tid);
+    return q(qq);
+  });
+}
+function invalidateCal() { Object.keys(state.data).forEach(k => { if (k.startsWith("cal:")) delete state.data[k]; }); }
+function peopleMap() {
+  const ppl = useData("people", () => q(sb.from("profiles").select("id,real_name,display_name,email,phone,role,timezone,created_at").order("created_at", { ascending: false })));
+  const m = {};
+  if (Array.isArray(ppl)) ppl.forEach(p => { m[p.id] = p; });
+  return { list: Array.isArray(ppl) ? ppl : [], map: m, loading: ppl === null };
+}
+function personName(id, map) { const p = map[id]; return p ? (p.real_name || p.display_name || p.email) : "—"; }
+function availFor(teacherId) {
+  if (!teacherId) return null;
+  const a = useData("avail:" + teacherId, () => q(sb.from("teacher_availability").select("day_of_week,hour").eq("teacher_id", teacherId).eq("is_available", true)));
+  if (!Array.isArray(a)) return null;
+  const by = {}; a.forEach(r => { (by[r.day_of_week] = by[r.day_of_week] || []).push(r.hour); });
+  Object.values(by).forEach(v => v.sort((x, y) => x - y));
+  return by;
+}
+function compactHours(hours) {
+  if (!hours || !hours.length) return "";
+  const out = []; let s = hours[0], p = hours[0];
+  for (let i = 1; i <= hours.length; i++) {
+    const h = hours[i];
+    if (h === p + 1) { p = h; continue; }
+    out.push(s === p ? `${s}:00` : `${s}–${p + 1}:00`);
+    s = p = h;
+  }
+  return out.join("، ");
+}
+function lessonChip(l, map, compact) {
+  const isOwner = role() === "owner";
+  const who = isOwner ? `${personName(l.student_id, map)} · ${personName(l.teacher_id, map)}` : personName(l.student_id, map);
+  const cls = l.status === "cancelled" ? "ls-cancel" : l.status === "completed" ? "ls-done" : l.is_trial ? "ls-trial" : "";
+  return `<button class="lchip ${cls} ${state.cal.selected === l.id ? "sel" : ""}" onclick="state.cal.selected='${l.id}';render()">
+    <b>${esc(fmtTime(l.start_time))}</b>${compact ? "" : ` ${esc(who)}`}${!compact && l.track ? ` <span class="xs">· ${esc(trackTitle(l.track))}</span>` : ""}</button>`;
+}
+function renderCalendar(opts) {
+  opts = opts || {};
+  const c = state.cal;
+  const lessons = getCalLessons();
+  const { map } = peopleMap();
+  const [s] = calRange();
+  const tr = I18N[state.lang];
+  const avail = availFor(c.teacherId || (role() === "teacher" ? state.auth.user.id : ""));
+  const title = c.view === "week"
+    ? `${fmtDT(s, { day: "numeric", month: "short" })} – ${fmtDT(addDays(s, 6), { day: "numeric", month: "short", year: "numeric" })}`
+    : fmtDT(c.anchor, { month: "long", year: "numeric" });
+  const today = startOfDay(new Date()).getTime();
+  const dayLessons = (d) => Array.isArray(lessons) ? lessons.filter(l => startOfDay(l.start_time).getTime() === d.getTime()) : [];
+  let body;
+  if (lessons === null) body = loadingBox();
+  else if (lessons.__error) body = errBox(lessons);
+  else if (c.view === "week") {
+    body = `<div class="calw">${Array.from({ length: 7 }, (_, i) => {
+      const d = addDays(s, i); const ls = dayLessons(d);
+      const av = avail && avail[d.getDay()];
+      return `<div class="cald ${d.getTime() === today ? "today" : ""}">
+        <div class="caldh"><b>${esc(tr.days[d.getDay()])}</b><span class="xs muted">${esc(fmtDT(d, { day: "numeric", month: "short" }))}</span></div>
+        ${av ? `<div class="xs avail">${L("available")}: ${esc(compactHours(av))}</div>` : ""}
+        ${ls.map(l => lessonChip(l, map, false)).join("") || `<div class="xs muted" style="padding:.3rem">—</div>`}
+      </div>`;
+    }).join("")}</div>`;
+  } else {
+    const month = c.anchor.getMonth();
+    body = `<div class="calm">${[6, 0, 1, 2, 3, 4, 5].map(i => `<div class="calmh xs b">${esc(tr.days[i])}</div>`).join("")}
+      ${Array.from({ length: 42 }, (_, i) => {
+        const d = addDays(s, i); const ls = dayLessons(d);
+        return `<div class="calmc ${d.getMonth() !== month ? "out" : ""} ${d.getTime() === today ? "today" : ""}">
+          <div class="xs b">${d.getDate()}</div>
+          ${ls.slice(0, 3).map(l => lessonChip(l, map, true)).join("")}
+          ${ls.length > 3 ? `<button class="xs lmore" onclick="state.cal.view='week';state.cal.anchor=new Date(${d.getTime()});render()">+${ls.length - 3}</button>` : ""}
+        </div>`;
+      }).join("")}</div>`;
+  }
+  const sel = Array.isArray(lessons) && c.selected ? lessons.find(l => l.id === c.selected) : null;
+  return `
+  <div class="card" style="padding:1rem">
+    <div class="calbar">
+      <div class="row" style="gap:.4rem">
+        <button class="btn btn-o" onclick="calShift(-1)" aria-label="${L("prev")}"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="btn btn-o" onclick="calShift(0)">${L("today")}</button>
+        <button class="btn btn-o" onclick="calShift(1)" aria-label="${L("next")}"><i class="fa-solid fa-chevron-left"></i></button>
+        <b style="margin-inline-start:.5rem">${esc(title)}</b>
+      </div>
+      <div class="row" style="gap:.4rem">
+        ${opts.teacherPicker || ""}
+        <div class="tabs" style="margin:0">
+          <a href="#" aria-current="${c.view === "week"}" onclick="setCalView('week');return false;">${L("week")}</a>
+          <a href="#" aria-current="${c.view === "month"}" onclick="setCalView('month');return false;">${L("month")}</a>
+        </div>
+      </div>
+    </div>
+    <div class="xs muted" style="margin:.4rem 0 .8rem">${L("tzNote")}: ${esc(BROWSER_TZ)}</div>
+    ${body}
+    ${sel ? renderLessonDetails(sel, map) : ""}
+  </div>`;
+}
+function renderLessonDetails(l, map) {
+  const isOwner = role() === "owner";
+  return `<div class="card" style="margin-top:1rem;background:var(--bg)">
+    <div class="row" style="justify-content:space-between"><h3>${L("lessonDetails")}</h3>
+      <button class="ibtn" onclick="state.cal.selected=null;render()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="kv"><span class="muted">${L("time")}</span><b>${esc(fmtDT(l.start_time))} – ${esc(fmtTime(l.end_time))}</b></div>
+    <div class="kv"><span class="muted">${L("student")}</span><b>${esc(personName(l.student_id, map))}</b></div>
+    ${isOwner ? `<div class="kv"><span class="muted">${L("teacher")}</span><b>${esc(personName(l.teacher_id, map))}</b></div>` : ""}
+    ${l.track ? `<div class="kv"><span class="muted">${L("track")}</span><b>${esc(trackTitle(l.track))}</b></div>` : ""}
+    <div class="kv"><span class="muted">${L("status")}</span><b>${esc(stt(l.status))}${l.is_trial ? " · Trial" : ""}</b></div>
+    <div style="margin-top:.8rem"><label class="l">${L("meeting")}</label><input class="in" id="ld_url" value="${esc(l.meeting_url || "")}"></div>
+    <div style="margin-top:.6rem"><label class="l">${L("notes")}</label><textarea class="in" id="ld_notes" rows="2">${esc(l.notes || "")}</textarea></div>
+    <div class="row" style="margin-top:.8rem;gap:.5rem">
+      ${l.meeting_url ? `<a class="btn btn-p" href="${esc(l.meeting_url)}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
+      <button class="btn btn-o" onclick="updateLesson('${l.id}',{})">${L("save")}</button>
+      <button class="btn btn-o" onclick="updateLesson('${l.id}',{status:'completed'})">${L("markDone")}</button>
+      <button class="btn btn-o" onclick="updateLesson('${l.id}',{status:'cancelled'})">${L("markCancel")}</button>
+      ${isOwner ? `<button class="btn btn-o" style="color:var(--danger)" onclick="deleteLesson('${l.id}')">${L("delete")}</button>` : ""}
+    </div>
+  </div>`;
+}
+async function updateLesson(id, patch) {
+  const url = document.getElementById("ld_url"), notes = document.getElementById("ld_notes");
+  const p = Object.assign({ meeting_url: url ? url.value.trim() || null : undefined, notes: notes ? notes.value : undefined }, patch);
+  const { error } = await sb.from("lessons").update(p).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidateCal(); invalidate("myLessons"); toast(L("saved")); render();
+}
+async function deleteLesson(id) {
+  if (!confirm(L("delete") + "?")) return;
+  const { error } = await sb.from("lessons").delete().eq("id", id);
+  if (error) return toast(error.message, true);
+  state.cal.selected = null; invalidateCal(); render();
+}
+
+/* ---------- محرر المواعيد الأسبوعية للمعلم ---------- */
+function getMyAvail() {
+  const uid = state.auth.user.id;
+  if (!state.schedDraft) {
+    const by = availFor(uid);
+    if (!by) return null;
+    state.schedDraft = {}; for (let d = 0; d < 7; d++) state.schedDraft[d] = (by[d] || []).slice();
+  }
+  return state.schedDraft;
+}
+function toggleSched(d, h) {
+  const a = state.schedDraft[d]; const i = a.indexOf(h);
+  if (i > -1) a.splice(i, 1); else { a.push(h); a.sort((x, y) => x - y); }
+  render();
+}
+function schedFillDay(d, on) { state.schedDraft[d] = on ? Array.from({ length: 24 }, (_, i) => i) : []; render(); }
+async function saveSchedule() {
+  const uid = state.auth.user.id;
+  const rows = [];
+  Object.keys(state.schedDraft).forEach(d => state.schedDraft[d].forEach(h => rows.push({ teacher_id: uid, day_of_week: +d, hour: h, is_available: true })));
+  state.busy = true; render();
+  try {
+    await q(sb.from("teacher_availability").delete().eq("teacher_id", uid));
+    if (rows.length) await q(sb.from("teacher_availability").insert(rows));
+    await sb.from("profiles").update({ timezone: BROWSER_TZ }).eq("id", uid);
+    invalidate("avail:" + uid); state.schedDraft = null;
+    toast(L("saved"));
+  } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+}
+function renderScheduleEditor() {
+  const tr = I18N[state.lang];
+  const draft = getMyAvail();
+  if (!draft) return loadingBox();
+  return `<div class="card">
+    <p class="muted sm" style="margin-bottom:1rem">${L("tOnbSub")} <b>(${esc(BROWSER_TZ)})</b></p>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      ${[6, 0, 1, 2, 3, 4, 5].map(d => `
+        <fieldset>
+          <legend>${esc(tr.days[d])} <span class="xs muted">(${draft[d].length})</span>
+            <a href="#" class="xs accent" onclick="schedFillDay(${d},true);return false;">24h</a> ·
+            <a href="#" class="xs muted" onclick="schedFillDay(${d},false);return false;">✕</a></legend>
+          <div class="hour-grid">
+            ${Array.from({ length: 24 }, (_, h) => `<button type="button" class="hourbtn" aria-pressed="${draft[d].includes(h)}" onclick="toggleSched(${d},${h})">${String(h).padStart(2, "0")}:00</button>`).join("")}
+          </div>
+        </fieldset>`).join("")}
+    </div>
+    <button class="btn btn-p btn-full btn-lg" style="margin-top:1.2rem" ${state.busy ? "disabled" : ""} onclick="saveSchedule()">${L("save")}</button>
+  </div>`;
+}
+
+/* ---------- المحتوى ---------- */
+const CT_TYPES = ["article", "pdf", "video", "audio", "image", "link"];
+function renderContentForm(opts) {
+  const isOwner = role() === "owner";
+  const students = opts.students || [];
+  return `<div class="card">
+    <h3 style="margin-bottom:.8rem">${L("add")}</h3>
+    ${isOwner ? "" : `<div class="notice">${L("ctTeacherNote")}</div>`}
+    <form onsubmit="event.preventDefault();saveContent()" style="display:flex;flex-direction:column;gap:.7rem">
+      <div class="fgrid">
+        <div><label class="l">${L("ctTitle")}</label><input class="in" id="ct_title" required></div>
+        <div><label class="l">${L("ctTitleEn")}</label><input class="in" id="ct_title2"></div>
+      </div>
+      <div class="fgrid">
+        <div><label class="l">${L("ctTrack")}</label><select class="in" id="ct_track">${TRACKS.map(k => `<option value="${k}">${esc(trackTitle(k))}</option>`).join("")}<option value="general">${L("general")}</option></select></div>
+        <div><label class="l">${L("ctType")}</label><select class="in" id="ct_type">${CT_TYPES.map(t => `<option value="${t}">${esc(L("types")[t])}</option>`).join("")}</select></div>
+      </div>
+      <label class="opt"><input type="checkbox" id="ct_ai"> <span><b>${L("ctAI")}</b></span></label>
+      <div><label class="l">${L("ctBody")}</label><textarea class="in" id="ct_body" rows="4"></textarea></div>
+      <div class="fgrid">
+        <div><label class="l">${L("ctUrl")}</label><input class="in" id="ct_url" type="url" placeholder="https://"></div>
+        <div><label class="l">${L("ctFile")}</label><input class="in" id="ct_file" type="file"></div>
+      </div>
+      <div class="fgrid">
+        <div><label class="l">${L("ctVis")}</label><select class="in" id="ct_vis" onchange="document.getElementById('ct_tg').style.display=this.value==='restricted'?'block':'none'">
+          <option value="public">${stt("public")}</option><option value="restricted" ${isOwner ? "" : "selected"}>${stt("restricted")}</option></select></div>
+        <div><label class="l">${L("ctStatus")}</label><select class="in" id="ct_status"><option value="published">${L("ctPublish")}</option><option value="draft">${L("ctDraft")}</option></select></div>
+      </div>
+      <div id="ct_tg" style="display:${isOwner ? "none" : "block"}"><label class="l">${L("ctTargets")}</label>
+        <select class="in" id="ct_targets" multiple size="5">${students.map(s => `<option value="${s.id}">${esc(s.real_name || s.email)}</option>`).join("")}</select></div>
+      <button class="btn btn-p btn-full" ${state.busy ? "disabled" : ""}>${state.busy ? L("loading") : L("save")}</button>
+    </form>
+  </div>`;
+}
+async function saveContent() {
+  const g = id => document.getElementById(id);
+  const title = g("ct_title").value.trim(); if (!title) return toast(L("fillAll"), true);
+  const t2 = g("ct_title2").value.trim();
+  const titleObj = { [state.lang === "ar" ? "ar" : state.lang]: title }; if (t2) titleObj[state.lang === "ar" ? "en" : "ar"] = t2;
+  let vis = g("ct_vis").value, status = g("ct_status").value;
+  if (role() !== "owner" && vis === "public") status = "draft";
+  const targets = Array.from(g("ct_targets").selectedOptions).map(o => o.value);
+  const row = {
+    title: titleObj, track: g("ct_track").value, type: g("ct_type").value, is_ai_generated: g("ct_ai").checked,
+    content_body: g("ct_body").value || null, url: g("ct_url").value.trim() || null, visibility: vis, status,
+    target_student_ids: vis === "restricted" ? targets : [], created_by: state.auth.user.id
+  };
+  state.busy = true; render();
+  try {
+    const f = g("ct_file") && g("ct_file").files[0];
+    if (f) {
+      const bucket = vis === "public" ? "academy_public" : "academy_materials";
+      const path = `${state.auth.user.id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+      const { error } = await sb.storage.from(bucket).upload(path, f, { upsert: false });
+      if (error) throw error;
+      row.file_path = `${bucket}/${path}`;
+    }
+    await q(sb.from("contents").insert(row));
+    invalidate("contentsMine", "contentsAll"); Object.keys(state.data).forEach(k => { if (k.startsWith("trackCt:") || k === "libCt") delete state.data[k]; });
+    toast(L("saved"));
+  } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+}
+async function setContent(id, patch) {
+  const { error } = await sb.from("contents").update(patch).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidate("contentsMine", "contentsAll", "libCt"); render();
+}
+async function delContent(id) {
+  if (!confirm(L("delete") + "?")) return;
+  const { error } = await sb.from("contents").delete().eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidate("contentsMine", "contentsAll", "libCt"); render();
+}
+async function openContent(id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray));
+  const c = all.find(x => x && x.id === id && x.title);
+  if (!c) return;
+  if (c.file_path) {
+    const [bucket, ...rest] = c.file_path.split("/"); const path = rest.join("/");
+    if (bucket === "academy_public") { window.open(sb.storage.from(bucket).getPublicUrl(path).data.publicUrl, "_blank"); return; }
+    const { data, error } = await sb.storage.from(bucket).createSignedUrl(path, 3600);
+    if (error) return toast(error.message, true);
+    window.open(data.signedUrl, "_blank"); return;
+  }
+  if (c.url) { window.open(c.url, "_blank"); return; }
+  state.viewContent = c; render();
+}
+function contentCard(c, manage) {
+  const ai = c.is_ai_generated;
+  return `<div class="card" style="display:flex;flex-direction:column;gap:.5rem">
+    <div class="row" style="gap:.35rem">
+      <span class="badge ${ai ? "badge-g" : "badge-a"}">${ai ? "🤖 " + L("aiBadge") : "👨‍🏫 " + L("humanBadge")}</span>
+      <span class="badge">${esc(L("types")[c.type] || c.type)}</span>
+      ${manage ? `<span class="badge">${esc(stt(c.status))}</span><span class="badge">${esc(stt(c.visibility))}</span><span class="badge">${esc(trackTitle(c.track))}</span>` : ""}
+    </div>
+    <h3 style="font-size:1.05rem">${esc(ctTitleOf(c))}</h3>
+    ${c.content_body ? `<p class="muted sm" style="white-space:pre-wrap">${esc(c.content_body.slice(0, 180))}${c.content_body.length > 180 ? "…" : ""}</p>` : ""}
+    <div class="row" style="margin-top:auto;gap:.4rem">
+      ${(c.file_path || c.url || (c.content_body && c.content_body.length > 180)) ? `<button class="btn btn-o" onclick="openContent('${c.id}')">${L("open")}</button>` : ""}
+      ${manage ? `
+        ${c.status === "published" ? `<button class="btn btn-o" onclick="setContent('${c.id}',{status:'draft'})">${L("ctUnpublish")}</button>`
+          : (role() === "owner" || c.visibility === "restricted") ? `<button class="btn btn-p" onclick="setContent('${c.id}',{status:'published'})">${L("ctPublish")}</button>` : ""}
+        <button class="btn btn-o" style="color:var(--danger)" onclick="delContent('${c.id}')">${L("delete")}</button>` : ""}
+    </div>
+  </div>`;
+}
+function renderContentViewer() {
+  const c = state.viewContent; if (!c) return "";
+  return `<div class="modal" onclick="if(event.target===this){state.viewContent=null;render()}"><div class="card" style="max-width:44rem;width:100%;max-height:85vh;overflow:auto">
+    <div class="row" style="justify-content:space-between;margin-bottom:.8rem"><h3>${esc(ctTitleOf(c))}</h3><button class="ibtn" onclick="state.viewContent=null;render()"><i class="fa-solid fa-xmark"></i></button></div>
+    <p style="white-space:pre-wrap">${esc(c.content_body || "")}</p></div></div>`;
+}
+/* محتوى كل قسم: جزء بالذكاء الاصطناعي وجزء شروحات بشرية */
+function renderTrackContent(tk) {
+  if (!sb) return "";
+  const list = useData("trackCt:" + tk, () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "public").eq("track", tk).order("created_at", { ascending: false })));
+  if (list === null) return loadingBox();
+  if (list.__error) return "";
+  const ai = list.filter(c => c.is_ai_generated), hu = list.filter(c => !c.is_ai_generated);
+  const col = (title, arr) => `<div><h3 style="margin-bottom:.8rem">${title}</h3>${arr.length ? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${arr.map(c => contentCard(c, false)).join("")}</div>` : `<p class="muted sm">${L("none")}</p>`}</div>`;
+  return `<div class="card" style="margin-top:1.5rem">
+    <h2 style="font-size:1.4rem;margin-bottom:1.2rem">${L("trackContent")}</h2>
+    <div style="display:flex;flex-direction:column;gap:1.5rem">${col(L("humanSection"), hu)}${col(L("aiSection"), ai)}</div>
+  </div>`;
+}
+function renderLibraryDb() {
+  if (!sb) return "";
+  const list = useData("libCt", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "public").order("created_at", { ascending: false })));
+  if (list === null) return loadingBox();
+  if (list.__error || !list.length) return "";
+  const groups = {}; list.forEach(c => { (groups[c.track] = groups[c.track] || []).push(c); });
+  return Object.keys(groups).map(tk => `<div style="margin-top:2rem"><h2 style="font-size:1.3rem;margin-bottom:1rem">${TRACK_EMOJI[tk] || "📁"} ${esc(trackTitle(tk))}</h2>
+    <div class="grid">${groups[tk].map(c => contentCard(c, false)).join("")}</div></div>`).join("");
+}
+
+/* ---------- لوحة التحكم ---------- */
+function renderDashboard() {
+  if (!state.auth.ready) return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
+  if (!state.auth.user) { state.route = "login"; return renderAuth(); }
+  const pr = state.auth.profile;
+  if (!pr) return `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
+  let inner;
+  if (pr.role === "owner") inner = renderOwnerDash();
+  else if (pr.role === "teacher") inner = renderTeacherDash();
+  else inner = renderStudentDash();
+  return `<section class="sec"><div class="wrap" style="max-width:1200px">
+    <div class="row" style="justify-content:space-between;margin-bottom:1rem">
+      <div><h1 style="font-size:1.7rem">${L("stuHello")}، ${esc(pr.real_name || pr.display_name || "")}</h1>
+      ${pr.role !== "student" ? `<div class="xs muted"><i class="fa-solid fa-lock"></i> ${L("privateNote")}</div>` : ""}</div>
+      <button class="btn btn-o" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> ${L("logout")}</button>
+    </div>
+    ${inner}
+  </div></section>${renderContentViewer()}`;
+}
+function dashTabs(tabs) {
+  if (!state.dash.tab || !tabs.includes(state.dash.tab)) state.dash.tab = tabs[0];
+  return `<div class="tabs">${tabs.map(t => `<a href="#" aria-current="${state.dash.tab === t}" onclick="state.dash.tab='${t}';state.cal.selected=null;render();return false;">${L("tabs")[t]}</a>`).join("")}</div>`;
+}
+
+/* ===== الطالب ===== */
+function renderStudentDash() {
+  const uid = state.auth.user.id;
+  const bks = useData("myBookings", () => q(sb.from("bookings").select("*").eq("student_id", uid).order("created_at", { ascending: false })));
+  const les = useData("myLessons", () => q(sb.from("lessons").select("id,start_time,end_time,status,meeting_url,track,is_trial").eq("student_id", uid).gte("end_time", new Date().toISOString()).order("start_time").limit(30)));
+  const mats = useData("myMats", () => q(sb.from("contents").select("*").eq("status", "published").eq("visibility", "restricted").contains("target_student_ids", [uid]).order("created_at", { ascending: false })));
+  const sec = (t, body) => `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.8rem">${t}</h3>${body}</div>`;
+  const bkBody = bks === null ? L("loading") : bks.__error ? errBox(bks) : !bks.length
+    ? `<p class="muted sm">${L("none")}</p><button class="btn btn-p" style="margin-top:.6rem" onclick="navigate('booking')">${I18N[state.lang].nav.trial}</button>`
+    : bks.map(b => `<div class="kv" style="align-items:center;flex-wrap:wrap">
+        <span><b>${esc(trackTitle(b.track))}</b><br><span class="xs muted">${esc(fmtDT(b.trial_timestamp))}</span></span>
+        <span class="row" style="gap:.4rem"><span class="badge">${esc(stt(b.status))}</span><span class="badge ${b.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(b.payment_status))}</span>
+        ${b.payment_status === "unpaid" && b.status !== "cancelled" ? `<button class="btn btn-p" onclick="state.payBookingId='${b.id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`).join("");
+  const lesBody = les === null ? L("loading") : les.__error ? errBox(les) : !les.length ? `<p class="muted sm">${L("noLessons")}</p>`
+    : les.map(l => `<div class="kv" style="align-items:center"><span><b>${esc(fmtDT(l.start_time))}</b>${l.track ? ` · ${esc(trackTitle(l.track))}` : ""}<br><span class="xs muted">${esc(stt(l.status))}</span></span>
+        ${l.meeting_url && l.status !== "cancelled" ? `<a class="btn btn-p" href="${esc(l.meeting_url)}" target="_blank" rel="noopener">${L("join")}</a>` : ""}</div>`).join("");
+  const matBody = mats === null ? L("loading") : mats.__error ? errBox(mats) : !mats.length ? `<p class="muted sm">${L("none")}</p>`
+    : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mats.map(c => contentCard(c, false)).join("")}</div>`;
+  return sec(L("myLessons"), lesBody) + sec(L("myBookings"), bkBody) + sec(L("myMaterials"), matBody);
+}
+
+/* ===== المعلم ===== */
+function renderTeacherDash() {
+  const uid = state.auth.user.id;
+  const av = availFor(uid);
+  if (av === null) return loadingBox();
+  if (!Object.keys(av).length && !state.dash.tab) {
+    return `<div class="card" style="margin-bottom:1rem;text-align:center"><h2>${L("tOnbTitle")}</h2></div>${renderScheduleEditor()}`;
+  }
+  const tabs = dashTabs(["calendar", "schedule", "mystudents", "content"]);
+  const t = state.dash.tab;
+  let body = "";
+  if (t === "calendar") body = renderCalendar();
+  else if (t === "schedule") body = renderScheduleEditor();
+  else if (t === "mystudents") {
+    const { list, loading } = peopleMap();
+    const st = list.filter(p => p.role === "student");
+    body = `<div class="card">${loading ? L("loading") : st.length ? st.map(s => `<div class="kv"><b>${esc(s.real_name || s.display_name)}</b><span class="xs muted">${esc(s.timezone || "")}</span></div>`).join("") : `<p class="muted sm">${L("none")}</p>`}</div>`;
+  } else if (t === "content") {
+    const { list } = peopleMap();
+    const mine = useData("contentsMine", () => q(sb.from("contents").select("*").eq("created_by", uid).order("created_at", { ascending: false })));
+    body = `<div class="grid" style="grid-template-columns:minmax(300px,1fr) 2fr;align-items:start">
+      ${renderContentForm({ students: list.filter(p => p.role === "student") })}
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${mine === null ? loadingBox() : mine.__error ? errBox(mine) : mine.map(c => contentCard(c, true)).join("") || `<p class="muted sm">${L("none")}</p>`}</div></div>`;
+  }
+  return tabs + body;
+}
+
+/* ===== المالك (الأونر) ===== */
+function renderOwnerDash() {
+  const tabs = dashTabs(["overview", "bookings", "calendar", "teachers", "students", "content", "schedule"]);
+  const t = state.dash.tab;
+  const P = peopleMap();
+  let body = "";
+  if (t === "overview") body = ownerOverview(P);
+  else if (t === "bookings") body = ownerBookings(P);
+  else if (t === "calendar") body = ownerCalendar(P);
+  else if (t === "teachers") body = ownerTeachers(P);
+  else if (t === "students") body = ownerStudents(P);
+  else if (t === "content") body = ownerContent(P);
+  else if (t === "schedule") body = renderScheduleEditor();
+  return tabs + body;
+}
+function ownerBookingsData() { return useData("ownerBookings", () => q(sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(300))); }
+function ownerOverview(P) {
+  const b = ownerBookingsData();
+  const ws = weekStart(new Date());
+  const wk = useData("ovWeek", () => q(sb.from("lessons").select("id").gte("start_time", ws.toISOString()).lt("start_time", addDays(ws, 7).toISOString())));
+  const n = (v) => v === null || v === undefined ? "…" : v;
+  const bl = Array.isArray(b) ? b : [];
+  const cards = [
+    [L("ovStudents"), n(P.loading ? null : P.list.filter(p => p.role === "student").length), "students"],
+    [L("ovTeachers"), n(P.loading ? null : P.list.filter(p => p.role === "teacher").length), "teachers"],
+    [L("ovPending"), n(b === null ? null : bl.filter(x => x.payment_status === "unpaid" && x.status !== "cancelled").length), "bookings"],
+    [L("ovReview"), n(b === null ? null : bl.filter(x => x.payment_status === "submitted").length), "bookings"],
+    [L("ovWeek"), n(Array.isArray(wk) ? wk.length : null), "calendar"]
+  ];
+  return `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${cards.map(c => `
+    <div class="card card-h" style="cursor:pointer" onclick="state.dash.tab='${c[2]}';render()"><div class="muted sm">${c[0]}</div><div style="font-size:2.2rem;font-weight:800" class="accent">${c[1]}</div></div>`).join("")}</div>`;
+}
+function teacherOptions(P, sel) {
+  return P.list.filter(p => p.role === "teacher" || p.role === "owner").map(p => `<option value="${p.id}" ${sel === p.id ? "selected" : ""}>${esc(p.real_name || p.email)}${p.role === "owner" ? " ★" : ""}</option>`).join("");
+}
+function ownerBookings(P) {
+  const b = ownerBookingsData();
+  if (b === null) return loadingBox();
+  if (b.__error) return errBox(b);
+  if (!b.length) return `<div class="card muted">${L("none")}</div>`;
+  const tr = I18N[state.lang];
+  return b.map(x => `<div class="card" style="margin-bottom:1rem">
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:1rem">
+      <div>
+        <h3>${esc(x.full_name)} <span class="badge">${esc(trackTitle(x.track))}</span></h3>
+        <div class="xs muted">${esc(x.email)} · <a href="https://wa.me/${esc((x.phone || "").replace(/\D/g, ""))}" target="_blank" class="accent">${esc(x.phone)}</a> · ${esc(x.student_timezone || "")}</div>
+      </div>
+      <div class="row" style="gap:.35rem"><span class="badge">${esc(stt(x.status))}</span><span class="badge ${x.payment_status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(x.payment_status))}</span></div>
+    </div>
+    <div class="kv"><span class="muted">${L("trialTime")}</span><b>${esc(fmtDT(x.trial_timestamp))}</b></div>
+    <div class="kv"><span class="muted">${L("weekly")}</span><span class="sm">${Object.keys(x.weekly_slots || {}).map(d => `${esc(tr.days[d])}: ${esc((x.weekly_slots[d] || []).join(", "))}`).join(" | ") || "—"}</span></div>
+    ${x.payment_ref || x.payment_method ? `<div class="kv"><span class="muted">${L("ref")}</span><b class="mono">${esc(x.payment_method || "")} — ${esc(x.payment_ref || "")}</b></div>` : ""}
+    <div class="kv"><span class="muted">${L("payFee")}</span><b>${esc(x.amount ?? "")} ${esc(x.currency || "")}</b></div>
+    <div class="row" style="gap:.5rem;margin-top:.8rem;align-items:flex-end">
+      ${x.payment_status !== "paid" ? `<button class="btn btn-p" onclick="ownerBooking('${x.id}',{payment_status:'paid',paid_at:new Date().toISOString()})">${L("confirmPay")}</button>
+        <button class="btn btn-o" onclick="ownerBooking('${x.id}',{payment_status:'waived'})">${L("markWaived")}</button>` : ""}
+      ${x.status !== "cancelled" ? `
+        <div><label class="l xs">${L("assignTeacher")}</label><select class="in" id="bt_${x.id}">${teacherOptions(P, x.teacher_id)}</select></div>
+        <div><label class="l xs">${L("duration")}</label><select class="in" id="bd_${x.id}"><option>30</option><option>45</option><option>60</option></select></div>
+        <button class="btn btn-o" onclick="scheduleTrial('${x.id}')">${L("createTrial")}</button>
+        <button class="btn btn-o" style="color:var(--danger)" onclick="ownerBooking('${x.id}',{status:'cancelled'})">${L("cancelBooking")}</button>` : ""}
+    </div>
+  </div>`).join("");
+}
+async function ownerBooking(id, patch) {
+  const { error } = await sb.from("bookings").update(patch).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidate("ownerBookings"); toast(L("saved")); render();
+}
+async function scheduleTrial(id) {
+  const b = (state.data.ownerBookings || []).find(x => x.id === id);
+  const tid = document.getElementById("bt_" + id).value;
+  const dur = +document.getElementById("bd_" + id).value || 30;
+  if (!b || !tid) return toast(L("fillAll"), true);
+  if (!b.student_id) return toast("No student account", true);
+  try {
+    const st = new Date(b.trial_timestamp);
+    await q(sb.from("lessons").insert({ student_id: b.student_id, teacher_id: tid, start_time: st.toISOString(), end_time: new Date(st.getTime() + dur * 60000).toISOString(), is_trial: true, track: b.track, booking_id: b.id }));
+    await q(sb.from("student_teacher_assignments").upsert({ student_id: b.student_id, teacher_id: tid, assigned_by: state.auth.user.id, status: "active" }, { onConflict: "student_id,teacher_id" }));
+    await q(sb.from("bookings").update({ teacher_id: tid, status: "confirmed" }).eq("id", id));
+    invalidate("ownerBookings"); invalidateCal(); toast(L("saved")); render();
+  } catch (e) { toast(e.message, true); }
+}
+function ownerCalendar(P) {
+  const picker = `<select class="in" style="width:auto" onchange="state.cal.teacherId=this.value;state.cal.selected=null;render()">
+    <option value="">${L("allTeachers")}</option>${teacherOptions(P, state.cal.teacherId)}</select>`;
+  const students = P.list.filter(p => p.role === "student");
+  const today = new Date(); const ds = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  return renderCalendar({ teacherPicker: picker }) + `
+  <div class="card" style="margin-top:1.2rem">
+    <h3 style="margin-bottom:.8rem">${L("addLesson")}</h3>
+    <form onsubmit="event.preventDefault();addLessons()" class="fgrid" style="align-items:end">
+      <div><label class="l">${L("teacher")}</label><select class="in" id="al_t" required>${teacherOptions(P, state.cal.teacherId)}</select></div>
+      <div><label class="l">${L("student")}</label><select class="in" id="al_s" required>${students.map(s => `<option value="${s.id}">${esc(s.real_name || s.email)}</option>`).join("")}</select></div>
+      <div><label class="l">${L("track")}</label><select class="in" id="al_tr">${TRACKS.map(k => `<option value="${k}">${esc(trackTitle(k))}</option>`).join("")}</select></div>
+      <div><label class="l">${L("date")}</label><input class="in" type="date" id="al_d" value="${ds}" required></div>
+      <div><label class="l">${L("time")}</label><input class="in" type="time" id="al_h" value="18:00" required></div>
+      <div><label class="l">${L("duration")}</label><select class="in" id="al_m"><option>30</option><option>45</option><option selected>60</option><option>90</option></select></div>
+      <div><label class="l">${L("repeat")}</label><input class="in" type="number" id="al_w" value="1" min="1" max="52"></div>
+      <div><label class="l">${L("meeting")}</label><input class="in" id="al_u" type="url" placeholder="https://"></div>
+      <button class="btn btn-p" ${state.busy ? "disabled" : ""}>${L("add")}</button>
+    </form>
+  </div>`;
+}
+async function addLessons() {
+  const g = id => document.getElementById(id).value;
+  const tid = g("al_t"), sid = g("al_s");
+  if (!tid || !sid) return toast(L("fillAll"), true);
+  const start = new Date(`${g("al_d")}T${g("al_h")}`);
+  const mins = +g("al_m"), weeks = Math.min(52, Math.max(1, +g("al_w") || 1));
+  const rows = Array.from({ length: weeks }, (_, i) => {
+    const s = addDays(start, 7 * i);
+    return { teacher_id: tid, student_id: sid, track: g("al_tr"), start_time: s.toISOString(), end_time: new Date(s.getTime() + mins * 60000).toISOString(), meeting_url: g("al_u").trim() || null };
+  });
+  state.busy = true; render();
+  try {
+    await q(sb.from("lessons").insert(rows));
+    await q(sb.from("student_teacher_assignments").upsert({ student_id: sid, teacher_id: tid, assigned_by: state.auth.user.id, status: "active" }, { onConflict: "student_id,teacher_id" }));
+    invalidateCal(); invalidate("ovWeek"); state.cal.anchor = start; toast(L("saved"));
+  } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+}
+function ownerTeachers(P) {
+  const inv = useData("invites", () => q(sb.from("teacher_invites").select("*").order("created_at", { ascending: false })));
+  const meta = useData("tmeta", () => q(sb.from("teachers_meta").select("*")));
+  const allAv = useData("allAvail", () => q(sb.from("teacher_availability").select("teacher_id")));
+  const metaMap = {}; if (Array.isArray(meta)) meta.forEach(m => metaMap[m.id] = m);
+  const avCount = {}; if (Array.isArray(allAv)) allAv.forEach(a => avCount[a.teacher_id] = (avCount[a.teacher_id] || 0) + 1);
+  const teachers = P.list.filter(p => p.role === "teacher");
+  return `<div class="grid" style="grid-template-columns:minmax(280px,1fr) 2fr;align-items:start">
+    <div class="card">
+      <h3 style="margin-bottom:.6rem">${L("addTeacher")}</h3>
+      <p class="xs muted" style="margin-bottom:.8rem">${L("addTeacherHint")}</p>
+      <form onsubmit="event.preventDefault();addTeacher()" style="display:flex;gap:.5rem;flex-direction:column">
+        <input class="in" id="nt_email" type="email" placeholder="teacher@email.com" required>
+        <button class="btn btn-p">${L("add")}</button>
+      </form>
+      ${Array.isArray(inv) && inv.length ? `<h4 style="margin:1rem 0 .4rem">${L("invites")}</h4>${inv.map(i => `<div class="kv"><span class="sm">${esc(i.email)}</span><button class="ibtn" onclick="delInvite('${esc(i.email)}')"><i class="fa-solid fa-xmark"></i></button></div>`).join("")}` : ""}
+    </div>
+    <div class="card">
+      ${P.loading ? L("loading") : !teachers.length ? `<p class="muted sm">${L("none")}</p>` : teachers.map(tc => {
+        const m = metaMap[tc.id] || {}; const activeT = m.is_active !== false;
+        return `<div class="kv" style="align-items:center;flex-wrap:wrap">
+          <span><b>${esc(tc.real_name || tc.display_name)}</b><br><span class="xs muted">${esc(tc.email)} · ${esc(tc.timezone || "")} · ${avCount[tc.id] || 0} ${L("slots")}</span></span>
+          <span class="row" style="gap:.35rem">
+            <button class="btn btn-o" onclick="state.cal.teacherId='${tc.id}';state.dash.tab='calendar';render()"><i class="fa-regular fa-calendar"></i> ${L("tabs").calendar}</button>
+            <button class="btn btn-o" onclick="toggleTeacherActive('${tc.id}',${!activeT})">${activeT ? L("active") : L("inactive")}</button>
+            <button class="btn btn-o" style="color:var(--danger)" onclick="setRole('${tc.id}','student')">${L("removeTeacher")}</button>
+          </span></div>`;
+      }).join("")}
+    </div></div>`;
+}
+async function addTeacher() {
+  const email = document.getElementById("nt_email").value.trim();
+  if (!email) return;
+  const { data, error } = await sb.rpc("owner_add_teacher", { p_email: email });
+  if (error) return toast(error.message, true);
+  toast(data === "promoted" ? L("promoted") : L("invited"));
+  invalidate("people", "invites", "tmeta"); render();
+}
+async function delInvite(email) { await sb.from("teacher_invites").delete().eq("email", email); invalidate("invites"); render(); }
+async function setRole(uid, r) {
+  if (!confirm(L("removeTeacher") + "?")) return;
+  const { error } = await sb.rpc("owner_set_role", { p_user: uid, p_role: r });
+  if (error) return toast(error.message, true);
+  invalidate("people"); render();
+}
+async function toggleTeacherActive(id, val) {
+  const { error } = await sb.from("teachers_meta").upsert({ id, is_active: val });
+  if (error) return toast(error.message, true);
+  invalidate("tmeta"); render();
+}
+function ownerStudents(P) {
+  const st = P.list.filter(p => p.role === "student");
+  const asg = useData("asg", () => q(sb.from("student_teacher_assignments").select("*").eq("status", "active")));
+  const byS = {}; if (Array.isArray(asg)) asg.forEach(a => (byS[a.student_id] = byS[a.student_id] || []).push(a.teacher_id));
+  if (P.loading) return loadingBox();
+  if (!st.length) return `<div class="card muted">${L("none")}</div>`;
+  return `<div class="card">${st.map(s => `<div class="kv" style="align-items:center;flex-wrap:wrap">
+    <span><b>${esc(s.real_name || s.display_name)}</b><br><span class="xs muted">${esc(s.email)} ${s.phone ? "· " + esc(s.phone) : ""} · ${esc(s.timezone || "")}</span>
+      ${(byS[s.id] || []).length ? `<br><span class="xs accent">${L("teacher")}: ${(byS[s.id] || []).map(t => esc(personName(t, P.map))).join("، ")}</span>` : ""}</span>
+    <span class="row" style="gap:.35rem"><select class="in" style="width:auto" id="as_${s.id}">${teacherOptions(P, "")}</select>
+      <button class="btn btn-o" onclick="assignTeacher('${s.id}')">${L("assignTeacher")}</button></span>
+  </div>`).join("")}</div>`;
+}
+async function assignTeacher(sid) {
+  const tid = document.getElementById("as_" + sid).value;
+  const { error } = await sb.from("student_teacher_assignments").upsert({ student_id: sid, teacher_id: tid, assigned_by: state.auth.user.id, status: "active" }, { onConflict: "student_id,teacher_id" });
+  if (error) return toast(error.message, true);
+  invalidate("asg"); toast(L("saved")); render();
+}
+function ownerContent(P) {
+  const all = useData("contentsAll", () => q(sb.from("contents").select("*").order("created_at", { ascending: false })));
+  return `<div class="grid" style="grid-template-columns:minmax(300px,1fr) 2fr;align-items:start">
+    ${renderContentForm({ students: P.list.filter(p => p.role === "student") })}
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${all === null ? loadingBox() : all.__error ? errBox(all) : all.map(c => contentCard(c, true)).join("") || `<p class="muted sm">${L("none")}</p>`}</div></div>`;
+}
+
+/* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
+const HASH_ROUTES = ["home", "tracks", "track-detail", "maqamat", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay"];
+function readHash() {
+  const h = (location.hash || "").replace(/^#\/?/, "");
+  if (!h || h.includes("=")) return;
+  const [r, p] = h.split("/");
+  if (HASH_ROUTES.includes(r)) { state.route = r; if (p) state.track = decodeURIComponent(p); }
+}
+window.addEventListener("popstate", () => { readHash(); render(); });
+
 
 /* ---------- المحرك الرئيسي للتوجيه والعرض ---------- */
 function render() {
@@ -1449,12 +2507,14 @@ function render() {
   else if (r === 'tracks') content += renderTracksList();
   else if (r === 'track-detail') content += renderTrackDetail();
   else if (r === 'maqamat') content += renderMaqamat();
-  else if (r === 'teachers') content += renderTeachers();
   else if (r === 'library') content += renderLibrary();
   else if (r === 'pricing') content += renderPricing();
   else if (r === 'about') content += renderAbout();
   else if (r === 'contact') content += renderContact();
   else if (r === 'booking') content += renderBooking();
+  else if (r === 'login' || r === 'signup') content += renderAuth();
+  else if (r === 'dashboard') content += renderDashboard();
+  else if (r === 'pay') content += renderPay();
   else content += renderHome();
 
   content += renderFooter();
@@ -1467,7 +2527,9 @@ function render() {
 document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.setAttribute('dir', I18N[state.lang].dir);
   document.documentElement.setAttribute('lang', state.lang);
+  readHash();
   render();
+  initAuth().catch(e => { console.error(e); state.auth.ready = true; render(); });
 });
 </script>
 </body>
