@@ -197,6 +197,11 @@ select[multiple].in{padding:.3rem}
 @media (max-width:760px){.grid[style*="2fr"]{grid-template-columns:1fr!important}}
 .tbl{width:100%;border-collapse:collapse;font-size:.88rem}.tbl th,.tbl td{padding:.6rem .5rem;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}.tbl th{color:var(--muted);font-size:.78rem}
 details summary{list-style:revert}
+.nbadge{position:absolute;top:-4px;inset-inline-end:-4px;background:var(--danger);color:#fff;border-radius:999px;font-size:.65rem;font-weight:800;min-width:1.1rem;height:1.1rem;display:flex;align-items:center;justify-content:center;padding:0 .25rem}
+.npanel{position:absolute;top:calc(100% + .5rem);inset-inline-end:0;width:min(360px,90vw);background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);z-index:300;overflow:hidden}
+.nitem{display:block;padding:.65rem .8rem;border-bottom:1px solid var(--line);text-decoration:none}
+.nitem.unread{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.nitem:hover{background:var(--bg)}
 </style>
 </head>
 <body>
@@ -855,6 +860,7 @@ function navigate(route, param) {
   try { history.pushState(null, "", "#/" + route + (route === "track-detail" && state.track ? "/" + state.track : "")); } catch (e) {}
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.menuOpen = false;
+  if (state.notif) state.notif.open = false;
   render();
 }
 
@@ -889,7 +895,7 @@ function renderHeader() {
           <i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i>
         </button>
         ${state.auth && state.auth.user
-          ? `<button class="ibtn" onclick="navigate('dashboard')" title="${L('dashboard')}"><i class="fa-solid fa-user"></i></button>`
+          ? `${renderBell()}<button class="ibtn" onclick="navigate('dashboard')" title="${L('dashboard')}"><i class="fa-solid fa-user"></i></button>`
           : `<button class="btn btn-o hide-sm" onclick="state.authMsg=null;navigate('login')">${L('login')}</button>`}
         <button class="btn btn-p hide-sm" onclick="navigate('booking')">${tr.trial}</button>
         <button class="ibtn burger" onclick="state.menuOpen=!state.menuOpen;render()" aria-label="${tr.menu}">
@@ -1562,13 +1568,15 @@ async function initAuth() {
   await loadProfile();
   state.auth.ready = true;
   render();
+  if (state.auth.user) startNotifs();
   sb.auth.onAuthStateChange(async (ev, session) => {
     const prev = state.auth.user ? state.auth.user.id : null;
     state.auth.user = session ? session.user : null;
     if ((state.auth.user ? state.auth.user.id : null) !== prev) {
       state.data = {};
       await loadProfile();
-      if (state.auth.user) { await flushPendingBooking(); await flushPendingPlan(); }
+      if (state.auth.user) { startNotifs(); await flushPendingBooking(); await flushPendingPlan(); }
+      else { state.notif.list = []; if (state.notif.channel) { try { sb.removeChannel(state.notif.channel); } catch (e) {} state.notif.channel = null; } }
       render();
     }
     if (ev === "PASSWORD_RECOVERY") {
@@ -1870,7 +1878,7 @@ function lessonChip(l, map, compact) {
   const who = isOwner ? `${personName(l.student_id, map)} · ${personName(l.teacher_id, map)}` : personName(l.student_id, map);
   const cls = l.status === "cancelled" ? "ls-cancel" : l.status === "completed" ? "ls-done" : l.is_trial ? "ls-trial" : "";
   return `<button class="lchip ${cls} ${state.cal.selected === l.id ? "sel" : ""}" onclick="state.cal.selected='${l.id}';render()">
-    <b>${esc(fmtTime(l.start_time))}</b>${compact ? "" : ` ${esc(who)}`}${!compact && l.track ? ` <span class="xs">· ${esc(trackTitle(l.track))}</span>` : ""}</button>`;
+    <b>${esc(fmtTime(l.start_time))}</b>${{ present: " ✅", student_absent: " ❌", teacher_absent: " ⚠️", excused: " ↩️" }[l.attendance] || ""}${compact ? "" : ` ${esc(who)}`}${!compact && l.track ? ` <span class="xs">· ${esc(trackTitle(l.track))}</span>` : ""}</button>`;
 }
 function renderCalendar(opts) {
   opts = opts || {};
@@ -1943,13 +1951,14 @@ function renderLessonDetails(l, map) {
     ${isOwner ? `<div class="kv"><span class="muted">${L("teacher")}</span><b>${esc(personName(l.teacher_id, map))}</b></div>` : ""}
     ${l.track ? `<div class="kv"><span class="muted">${L("track")}</span><b>${esc(trackTitle(l.track))}</b></div>` : ""}
     <div class="kv"><span class="muted">${L("status")}</span><b>${esc(stt(l.status))}${l.is_trial ? " · Trial" : ""}</b></div>
+    <div class="kv"><span class="muted">${L("attendance")}</span><b>${esc(attName(l.attendance || "pending"))}</b></div>
+    ${attendanceButtons(l)}
     <div style="margin-top:.8rem"><label class="l">${L("meeting")}</label><input class="in" id="ld_url" value="${esc(l.meeting_url || "")}"></div>
     <div style="margin-top:.6rem"><label class="l">${L("notes")}</label><textarea class="in" id="ld_notes" rows="2">${esc(l.notes || "")}</textarea></div>
     <div class="row" style="margin-top:.8rem;gap:.5rem">
       ${l.meeting_url ? `<a class="btn btn-p" href="${esc(l.meeting_url)}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
       <button class="btn btn-o" onclick="updateLesson('${l.id}',{})">${L("save")}</button>
-      <button class="btn btn-o" onclick="updateLesson('${l.id}',{status:'completed'})">${L("markDone")}</button>
-      <button class="btn btn-o" onclick="updateLesson('${l.id}',{status:'cancelled'})">${L("markCancel")}</button>
+      ${isOwner ? `<button class="btn btn-o" onclick="updateLesson('${l.id}',{status:'cancelled'})">${L("markCancel")}</button>` : ""}
       ${isOwner ? `<button class="btn btn-o" style="color:var(--danger)" onclick="deleteLesson('${l.id}')">${L("delete")}</button>` : ""}
     </div>
   </div>`;
@@ -2195,7 +2204,7 @@ function renderDashboard() {
 }
 function dashTabs(tabs) {
   if (!state.dash.tab || !tabs.includes(state.dash.tab)) state.dash.tab = tabs[0];
-  return `<div class="tabs">${tabs.map(t => `<a href="#" aria-current="${state.dash.tab === t}" onclick="state.dash.tab='${t}';state.cal.selected=null;render();return false;">${L("tabs")[t] || L2(t)}</a>`).join("")}</div>`;
+  return `<div class="tabs">${tabs.map(t => `<a href="#" aria-current="${state.dash.tab === t}" onclick="state.dash.tab='${t}';state.cal.selected=null;render();return false;">${L("tabs")[t] || (L("tabs2") || {})[t] || L3(t)}</a>`).join("")}</div>`;
 }
 
 /* ===== الطالب ===== */
@@ -2233,7 +2242,7 @@ function renderTeacherDash() {
   if (!Object.keys(av).length && !state.dash.tab) {
     return `<div class="card" style="margin-bottom:1rem;text-align:center"><h2>${L("tOnbTitle")}</h2></div>${renderScheduleEditor()}`;
   }
-  const tabs = dashTabs(["calendar", "schedule", "mystudents", "content"]);
+  const tabs = needAttendanceList() + dashTabs(["calendar", "schedule", "mystudents", "content"]);
   const t = state.dash.tab;
   let body = "";
   if (t === "calendar") body = renderCalendar();
@@ -2254,17 +2263,19 @@ function renderTeacherDash() {
 
 /* ===== المالك (الأونر) ===== */
 function renderOwnerDash() {
-  const tabs = dashTabs(["overview", "bookings", "orders", "calendar", "teachers", "students", "content", "settings", "schedule"]);
+  const tabs = dashTabs(["overview", "calendar", "bookings", "orders", "users", "teachers", "students", "reports", "content", "settings", "schedule"]);
   const t = state.dash.tab;
   const P = peopleMap();
   let body = "";
-  if (t === "overview") body = ownerOverview(P);
+  if (t === "overview") body = needAttendanceList() + ownerOverview(P) + todayLessonsCard();
   else if (t === "bookings") body = ownerBookings(P);
   else if (t === "calendar") body = ownerCalendar(P);
   else if (t === "teachers") body = ownerTeachers(P);
   else if (t === "students") body = ownerStudents(P);
   else if (t === "content") body = ownerContent(P);
   else if (t === "orders") body = ownerOrders(P);
+  else if (t === "users") body = ownerUsers(P);
+  else if (t === "reports") body = ownerReports(P);
   else if (t === "settings") body = ownerSettings();
   else if (t === "schedule") body = renderScheduleEditor();
   return tabs + body;
@@ -2991,6 +3002,270 @@ ku: {
   subscribe: "Niha bibe abone", lessonsPerWeek: "ders/hefte", mostPopular: "Herî tê xwestin", general: "Giştî", plan: "Pakêt", amount: "Mîqdar"
 }
 });
+
+
+/* =====================================================================
+    🔔 الإشعارات + 👥 الصلاحيات + ✅ الحضور والغياب
+   ===================================================================== */
+Object.assign(UI.ar, {
+  notifs: "الإشعارات", markAllRead: "تحديد الكل كمقروء", noNotifs: "لا توجد إشعارات.", enablePush: "فعّل تنبيهات المتصفح",
+  tabs3: { users: "المستخدمون والصلاحيات", reports: "تقارير الحضور" },
+  roleOwner: "مالك (أونر)", roleTeacher: "معلم", roleStudent: "طالب", changeRole: "تغيير الصلاحية",
+  roleConfirm: "تأكيد تغيير صلاحية هذا الحساب إلى: ", ownerWarn: "تنبيه: المالك يتحكم في كل شيء مثلك تمامًا (الأسعار، المدفوعات، المستخدمين).",
+  inviteTitle: "إضافة شخص بالبريد بصلاحية محددة", inviteHint: "لو عنده حساب تتغير صلاحيته فورًا، ولو لم يسجل بعد ستُطبق الصلاحية أول ما يسجل بهذا البريد.",
+  updated: "تم تحديث الصلاحية ✓", search: "بحث بالاسم أو البريد", you: "أنت",
+  todayLessons: "حصص اليوم", upcoming: "الحصص القادمة", needAttendance: "حصص تحتاج تسجيل الحضور",
+  att: { pending: "لم يُسجل", present: "حضر الطالب ✅", student_absent: "غاب الطالب ❌", teacher_absent: "اعتذار المعلم ⚠️", excused: "غياب بعذر" },
+  attTitle: "تسجيل الحضور", attendance: "الحضور",
+  repMonth: "الشهر", repPresent: "حصص تمت", repStudentAbs: "غياب طلاب", repTeacherAbs: "اعتذار معلم", repPending: "لم تُسجل", repTotal: "الإجمالي", repHours: "ساعات التدريس",
+  nk: {
+    new_user: (d) => `مستخدم جديد سجّل: ${d.name || ""} (${d.email || ""})`,
+    new_booking: (d) => `حجز حصة تجريبية جديد من ${d.name || ""} — ${trackTitle(d.track)}`,
+    new_order: (d) => `طلب اشتراك جديد من ${d.name || ""} — ${money(d.amount, d.currency)}`,
+    payment_submitted: (d) => `${d.name || ""} أرسل تأكيد دفع (${money(d.amount, d.currency)}) — راجعه`,
+    payment_confirmed: () => `تم تأكيد الدفع ✅`,
+    lesson_created: (d) => `حصة جديدة${d.name ? " مع " + d.name : ""}: ${fmtDT(d.at)}`,
+    lesson_cancelled: (d) => `تم إلغاء حصة ${fmtDT(d.at)}${d.name ? " (" + d.name + ")" : ""}`,
+    lesson_rescheduled: (d) => `تغيير موعد حصة${d.name ? " مع " + d.name : ""} إلى ${fmtDT(d.at)}`,
+    lesson_reminder: (d) => `⏰ حصتك${d.name ? " مع " + d.name : ""} تبدأ خلال ساعة (${fmtTime(d.at)})`,
+    lesson_link: (d) => `تمت إضافة رابط حصة ${fmtDT(d.at)}`,
+    attendance_due: (d) => `سجّل حضور حصة ${fmtDT(d.at)}${d.name ? " مع " + d.name : ""}`,
+    attendance: (d) => `${d.teacher || ""}: ${(UI.ar.att[d.attendance] || d.attendance)} — ${d.student || ""} (${fmtDT(d.at)})`,
+    role_changed: (d) => `تم تغيير صلاحية حسابك إلى: ${roleName(d.role)}`
+  }
+});
+Object.assign(UI.en, {
+  notifs: "Notifications", markAllRead: "Mark all as read", noNotifs: "No notifications.", enablePush: "Enable browser alerts",
+  tabs3: { users: "Users & roles", reports: "Attendance reports" },
+  roleOwner: "Owner", roleTeacher: "Teacher", roleStudent: "Student", changeRole: "Change role",
+  roleConfirm: "Confirm changing this account's role to: ", ownerWarn: "Note: an owner controls everything just like you (prices, payments, users).",
+  inviteTitle: "Add someone by email with a role", inviteHint: "If they have an account, the role changes immediately; otherwise it applies as soon as they sign up with this email.",
+  updated: "Role updated ✓", search: "Search by name or email", you: "You",
+  todayLessons: "Today's lessons", upcoming: "Upcoming lessons", needAttendance: "Lessons needing attendance",
+  att: { pending: "Not recorded", present: "Student attended ✅", student_absent: "Student absent ❌", teacher_absent: "Teacher absent ⚠️", excused: "Excused absence" },
+  attTitle: "Record attendance", attendance: "Attendance",
+  repMonth: "Month", repPresent: "Completed", repStudentAbs: "Student absences", repTeacherAbs: "Teacher absences", repPending: "Not recorded", repTotal: "Total", repHours: "Teaching hours",
+  nk: {
+    new_user: (d) => `New user signed up: ${d.name || ""} (${d.email || ""})`,
+    new_booking: (d) => `New trial booking from ${d.name || ""} — ${trackTitle(d.track)}`,
+    new_order: (d) => `New subscription order from ${d.name || ""} — ${money(d.amount, d.currency)}`,
+    payment_submitted: (d) => `${d.name || ""} submitted a payment (${money(d.amount, d.currency)}) — review it`,
+    payment_confirmed: () => `Payment confirmed ✅`,
+    lesson_created: (d) => `New lesson${d.name ? " with " + d.name : ""}: ${fmtDT(d.at)}`,
+    lesson_cancelled: (d) => `Lesson cancelled: ${fmtDT(d.at)}${d.name ? " (" + d.name + ")" : ""}`,
+    lesson_rescheduled: (d) => `Lesson${d.name ? " with " + d.name : ""} moved to ${fmtDT(d.at)}`,
+    lesson_reminder: (d) => `⏰ Your lesson${d.name ? " with " + d.name : ""} starts within an hour (${fmtTime(d.at)})`,
+    lesson_link: (d) => `A meeting link was added for your lesson on ${fmtDT(d.at)}`,
+    attendance_due: (d) => `Record attendance for the lesson on ${fmtDT(d.at)}${d.name ? " with " + d.name : ""}`,
+    attendance: (d) => `${d.teacher || ""}: ${(UI.en.att[d.attendance] || d.attendance)} — ${d.student || ""} (${fmtDT(d.at)})`,
+    role_changed: (d) => `Your account role was changed to: ${roleName(d.role)}`
+  }
+});
+/* إشعارات الطالب بباقي اللغات */
+const NK_STUDENT = {
+  fr: { notifs: "Notifications", markAllRead: "Tout marquer comme lu", noNotifs: "Aucune notification.", enablePush: "Activer les alertes du navigateur",
+        lesson_created: "Nouveau cours : ", lesson_cancelled: "Cours annulé : ", lesson_rescheduled: "Cours déplacé au ", lesson_reminder: "⏰ Votre cours commence dans moins d'une heure : ", lesson_link: "Lien ajouté pour le cours du ", payment_confirmed: "Paiement confirmé ✅", role_changed: "Le rôle de votre compte a changé : " },
+  de: { notifs: "Benachrichtigungen", markAllRead: "Alle als gelesen markieren", noNotifs: "Keine Benachrichtigungen.", enablePush: "Browser-Hinweise aktivieren",
+        lesson_created: "Neue Stunde: ", lesson_cancelled: "Stunde abgesagt: ", lesson_rescheduled: "Stunde verschoben auf ", lesson_reminder: "⏰ Deine Stunde beginnt in weniger als einer Stunde: ", lesson_link: "Link hinzugefügt für die Stunde am ", payment_confirmed: "Zahlung bestätigt ✅", role_changed: "Deine Kontorolle wurde geändert: " },
+  es: { notifs: "Notificaciones", markAllRead: "Marcar todo como leído", noNotifs: "No hay notificaciones.", enablePush: "Activar avisos del navegador",
+        lesson_created: "Nueva clase: ", lesson_cancelled: "Clase cancelada: ", lesson_rescheduled: "Clase movida al ", lesson_reminder: "⏰ Tu clase empieza en menos de una hora: ", lesson_link: "Se añadió el enlace de la clase del ", payment_confirmed: "Pago confirmado ✅", role_changed: "El rol de tu cuenta cambió a: " },
+  tr: { notifs: "Bildirimler", markAllRead: "Tümünü okundu say", noNotifs: "Bildirim yok.", enablePush: "Tarayıcı uyarılarını aç",
+        lesson_created: "Yeni ders: ", lesson_cancelled: "Ders iptal edildi: ", lesson_rescheduled: "Ders şu saate alındı: ", lesson_reminder: "⏰ Dersin bir saat içinde başlıyor: ", lesson_link: "Ders bağlantısı eklendi: ", payment_confirmed: "Ödeme onaylandı ✅", role_changed: "Hesap rolün değişti: " },
+  id: { notifs: "Notifikasi", markAllRead: "Tandai semua dibaca", noNotifs: "Tidak ada notifikasi.", enablePush: "Aktifkan peringatan browser",
+        lesson_created: "Kelas baru: ", lesson_cancelled: "Kelas dibatalkan: ", lesson_rescheduled: "Kelas dipindah ke ", lesson_reminder: "⏰ Kelas Anda dimulai dalam satu jam: ", lesson_link: "Tautan kelas ditambahkan untuk ", payment_confirmed: "Pembayaran dikonfirmasi ✅", role_changed: "Peran akun Anda diubah menjadi: " },
+  ms: { notifs: "Pemberitahuan", markAllRead: "Tanda semua sudah dibaca", noNotifs: "Tiada pemberitahuan.", enablePush: "Aktifkan amaran pelayar",
+        lesson_created: "Kelas baharu: ", lesson_cancelled: "Kelas dibatalkan: ", lesson_rescheduled: "Kelas dipindahkan ke ", lesson_reminder: "⏰ Kelas anda bermula dalam masa sejam: ", lesson_link: "Pautan kelas ditambah untuk ", payment_confirmed: "Pembayaran disahkan ✅", role_changed: "Peranan akaun anda ditukar kepada: " },
+  ru: { notifs: "Уведомления", markAllRead: "Отметить все прочитанными", noNotifs: "Нет уведомлений.", enablePush: "Включить уведомления браузера",
+        lesson_created: "Новый урок: ", lesson_cancelled: "Урок отменён: ", lesson_rescheduled: "Урок перенесён на ", lesson_reminder: "⏰ Ваш урок начнётся в течение часа: ", lesson_link: "Добавлена ссылка на урок ", payment_confirmed: "Оплата подтверждена ✅", role_changed: "Роль вашего аккаунта изменена: " },
+  zh: { notifs: "通知", markAllRead: "全部标为已读", noNotifs: "暂无通知。", enablePush: "开启浏览器提醒",
+        lesson_created: "新课程：", lesson_cancelled: "课程已取消：", lesson_rescheduled: "课程已改至：", lesson_reminder: "⏰ 您的课程将在一小时内开始：", lesson_link: "已添加上课链接：", payment_confirmed: "付款已确认 ✅", role_changed: "您的账户角色已更改为：" },
+  ku: { notifs: "Agahdarî", markAllRead: "Hemûyan wek xwendî nîşan bide", noNotifs: "Agahdarî tune.", enablePush: "Hişyariyên gerokê çalak bike",
+        lesson_created: "Dersa nû: ", lesson_cancelled: "Ders hate betalkirin: ", lesson_rescheduled: "Ders hate guhertin bo ", lesson_reminder: "⏰ Dersa te di nav saetekê de dest pê dike: ", lesson_link: "Girêdana dersê hate zêdekirin: ", payment_confirmed: "Dayîn hate pejirandin ✅", role_changed: "Rola hesabê te hate guhertin: " }
+};
+Object.keys(NK_STUDENT).forEach(lg => {
+  const m = NK_STUDENT[lg];
+  UI[lg] = UI[lg] || {};
+  Object.assign(UI[lg], { notifs: m.notifs, markAllRead: m.markAllRead, noNotifs: m.noNotifs, enablePush: m.enablePush,
+    nk: {
+      lesson_created: (d) => m.lesson_created + fmtDT(d.at), lesson_cancelled: (d) => m.lesson_cancelled + fmtDT(d.at),
+      lesson_rescheduled: (d) => m.lesson_rescheduled + fmtDT(d.at), lesson_reminder: (d) => m.lesson_reminder + fmtTime(d.at),
+      lesson_link: (d) => m.lesson_link + fmtDT(d.at), payment_confirmed: () => m.payment_confirmed, role_changed: (d) => m.role_changed + roleName(d.role)
+    } });
+});
+function L3(k) { return (L("tabs3") || {})[k] || k; }
+function roleName(r) { return r === "owner" ? L("roleOwner") : r === "teacher" ? L("roleTeacher") : L("roleStudent"); }
+function attName(a) { return ((UI[state.lang] || {}).att || UI.en.att)[a] || UI.en.att[a] || a; }
+function notifText(n) {
+  const fns = (UI[state.lang] || {}).nk || {};
+  const f = fns[n.kind] || UI.en.nk[n.kind];
+  try { return f ? f(n.data || {}) : n.kind; } catch (e) { return n.kind; }
+}
+
+/* ---------- الإشعارات: تحميل + لحظي + تنبيه المتصفح ---------- */
+state.notif = { list: [], open: false, channel: null };
+async function loadNotifs() {
+  if (!state.auth.user) { state.notif.list = []; return; }
+  const { data } = await sb.from("notifications").select("*").eq("user_id", state.auth.user.id).order("created_at", { ascending: false }).limit(40);
+  state.notif.list = data || [];
+}
+function subscribeNotifs() {
+  if (!sb || !state.auth.user) return;
+  if (state.notif.channel) { try { sb.removeChannel(state.notif.channel); } catch (e) {} state.notif.channel = null; }
+  const uid = state.auth.user.id;
+  state.notif.channel = sb.channel("notif-" + uid)
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (payload) => {
+      const n = payload.new; state.notif.list.unshift(n);
+      toast("🔔 " + notifText(n));
+      try { if (window.Notification && Notification.permission === "granted" && document.hidden) new Notification(I18N[state.lang].meta.siteName, { body: notifText(n) }); } catch (e) {}
+      // حدّث البيانات المرتبطة
+      invalidateCal(); invalidate("ownerBookings", "ownerOrders", "people", "myLessons", "myBookings", "myOrders", "ovToday", "needAtt");
+      render();
+    }).subscribe();
+}
+async function startNotifs() { await loadNotifs(); subscribeNotifs(); render(); }
+function unreadCount() { return state.notif.list.filter(n => !n.read_at).length; }
+async function markAllRead() {
+  const ids = state.notif.list.filter(n => !n.read_at).map(n => n.id);
+  if (!ids.length) return;
+  const now = new Date().toISOString();
+  state.notif.list.forEach(n => { if (!n.read_at) n.read_at = now; });
+  render();
+  await sb.from("notifications").update({ read_at: now }).in("id", ids);
+}
+async function enablePush() {
+  try { const p = await Notification.requestPermission(); if (p === "granted") toast(L("saved")); } catch (e) {}
+  render();
+}
+function renderBell() {
+  if (!state.auth || !state.auth.user) return "";
+  const c = unreadCount();
+  return `<span style="position:relative;display:inline-block">
+    <button class="ibtn" onclick="state.notif.open=!state.notif.open;render()" aria-label="${L("notifs")}"><i class="fa-solid fa-bell"></i>
+      ${c ? `<span class="nbadge">${c > 9 ? "9+" : c}</span>` : ""}</button>
+    ${state.notif.open ? `<div class="npanel">
+      <div class="row" style="justify-content:space-between;padding:.6rem .8rem;border-bottom:1px solid var(--line)">
+        <b>${L("notifs")}</b><a href="#" class="xs accent" onclick="markAllRead();return false;">${L("markAllRead")}</a></div>
+      ${window.Notification && Notification.permission === "default" ? `<a href="#" class="xs accent" style="display:block;padding:.5rem .8rem" onclick="enablePush();return false;">🔔 ${L("enablePush")}</a>` : ""}
+      <div style="max-height:60vh;overflow:auto">
+        ${state.notif.list.length ? state.notif.list.map(n => `<a href="#" class="nitem ${n.read_at ? "" : "unread"}" onclick="state.notif.open=false;navigate('dashboard');return false;">
+          <div class="sm">${esc(notifText(n))}</div><div class="xs muted">${esc(fmtDT(n.created_at))}</div></a>`).join("")
+          : `<div class="muted sm" style="padding:1rem">${L("noNotifs")}</div>`}
+      </div></div>` : ""}
+  </span>`;
+}
+
+/* ---------- الحضور والغياب ---------- */
+async function setAttendance(id, a) {
+  const { error } = await sb.from("lessons").update({ attendance: a }).eq("id", id);
+  if (error) return toast(error.message, true);
+  invalidateCal(); invalidate("needAtt", "ovToday"); Object.keys(state.data).forEach(k => { if (k.startsWith("report:")) delete state.data[k]; }); toast(L("saved")); render();
+}
+function attendanceButtons(l) {
+  if (l.is_trial === undefined && !l.id) return "";
+  const can = role() === "owner" || (state.auth.user && l.teacher_id === state.auth.user.id);
+  if (!can) return "";
+  const opts = ["present", "student_absent", "teacher_absent", "excused"];
+  return `<div style="margin-top:.8rem"><label class="l">${L("attTitle")} — <span class="muted">${esc(attName(l.attendance || "pending"))}</span></label>
+    <div class="row" style="gap:.4rem">${opts.map(a => `<button class="btn ${l.attendance === a ? "btn-p" : "btn-o"}" onclick="setAttendance('${l.id}','${a}')">${esc(attName(a))}</button>`).join("")}</div></div>`;
+}
+function needAttendanceList() {
+  const uid = state.auth.user.id;
+  const list = useData("needAtt", () => {
+    let qq = sb.from("lessons").select("*").eq("attendance", "pending").neq("status", "cancelled").lt("end_time", new Date().toISOString()).order("start_time", { ascending: false }).limit(50);
+    if (role() !== "owner") qq = qq.eq("teacher_id", uid);
+    return q(qq);
+  });
+  if (!Array.isArray(list) || !list.length) return "";
+  const { map } = peopleMap();
+  return `<div class="card" style="margin-bottom:1rem;border-color:var(--gold)">
+    <h3 style="margin-bottom:.6rem">⚠️ ${L("needAttendance")} (${list.length})</h3>
+    ${list.slice(0, 10).map(l => `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.4rem">
+      <span><b>${esc(fmtDT(l.start_time))}</b> · ${esc(personName(l.student_id, map))}${role() === "owner" ? ` · <span class="muted">${esc(personName(l.teacher_id, map))}</span>` : ""}</span>
+      <span class="row" style="gap:.3rem">${["present", "student_absent", "teacher_absent"].map(a => `<button class="btn btn-o" style="padding:.35rem .7rem;font-size:.8rem" onclick="setAttendance('${l.id}','${a}')">${esc(attName(a))}</button>`).join("")}</span>
+    </div>`).join("")}
+  </div>`;
+}
+function todayLessonsCard() {
+  const s = startOfDay(new Date()), e = addDays(s, 1);
+  const list = useData("ovToday", () => q(sb.from("lessons").select("*").gte("start_time", s.toISOString()).lt("start_time", addDays(s, 7).toISOString()).order("start_time").limit(60)));
+  const { map } = peopleMap();
+  if (!Array.isArray(list)) return loadingBox();
+  const today = list.filter(l => new Date(l.start_time) < e), later = list.filter(l => new Date(l.start_time) >= e);
+  const row = (l) => `<div class="kv" style="align-items:center"><span><b>${esc(fmtTime(l.start_time))}</b> ${new Date(l.start_time) >= e ? `<span class="xs muted">${esc(fmtDT(l.start_time, { weekday: "short", day: "numeric", month: "short" }))}</span>` : ""}
+      · ${esc(personName(l.student_id, map))} <span class="muted">· ${esc(personName(l.teacher_id, map))}</span>${l.is_trial ? ` <span class="badge badge-g">Trial</span>` : ""}</span>
+      <span class="badge">${esc(l.status === "scheduled" ? attName(l.attendance || "pending") : stt(l.status))}</span></div>`;
+  return `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:1rem;align-items:start">
+    <div class="card"><h3 style="margin-bottom:.6rem">📅 ${L("todayLessons")} (${today.length})</h3>${today.map(row).join("") || `<p class="muted sm">${L("none")}</p>`}</div>
+    <div class="card"><h3 style="margin-bottom:.6rem">🗓️ ${L("upcoming")}</h3>${later.slice(0, 12).map(row).join("") || `<p class="muted sm">${L("none")}</p>`}</div>
+  </div>`;
+}
+
+/* ---------- تقارير الحضور الشهرية لكل معلم ---------- */
+function ownerReports(P) {
+  const m = state.repMonth || (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })();
+  state.repMonth = m;
+  const [y, mo] = m.split("-").map(Number);
+  const s = new Date(y, mo - 1, 1), e = new Date(y, mo, 1);
+  const list = useData("report:" + m, () => q(sb.from("lessons").select("teacher_id,attendance,status,start_time,end_time").gte("start_time", s.toISOString()).lt("start_time", e.toISOString())));
+  if (!Array.isArray(list)) return list === null ? loadingBox() : errBox(list);
+  const by = {};
+  list.forEach(l => {
+    const r = by[l.teacher_id] = by[l.teacher_id] || { present: 0, student_absent: 0, teacher_absent: 0, pending: 0, total: 0, mins: 0 };
+    r.total++; const a = l.attendance || "pending";
+    if (a === "excused") r.student_absent++; else r[a] = (r[a] || 0) + 1;
+    if (a === "present") r.mins += (new Date(l.end_time) - new Date(l.start_time)) / 60000;
+  });
+  return `<div class="card" style="overflow-x:auto">
+    <div class="row" style="gap:.6rem;margin-bottom:1rem"><label class="l" style="margin:0">${L("repMonth")}</label>
+      <input class="in" type="month" style="width:auto" value="${m}" onchange="state.repMonth=this.value;render()"></div>
+    <table class="tbl"><thead><tr><th>${L("teacher")}</th><th>${L("repPresent")}</th><th>${L("repHours")}</th><th>${L("repStudentAbs")}</th><th>${L("repTeacherAbs")}</th><th>${L("repPending")}</th><th>${L("repTotal")}</th></tr></thead>
+    <tbody>${Object.keys(by).map(tid => { const r = by[tid]; return `<tr><td><b>${esc(personName(tid, P.map))}</b></td><td class="accent b">${r.present}</td><td>${(r.mins / 60).toFixed(1)}</td><td>${r.student_absent}</td><td style="color:var(--danger)">${r.teacher_absent}</td><td>${r.pending}</td><td>${r.total}</td></tr>`; }).join("") || `<tr><td colspan="7" class="muted">${L("none")}</td></tr>`}</tbody></table>
+  </div>`;
+}
+
+/* ---------- المستخدمون والصلاحيات ---------- */
+function ownerUsers(P) {
+  const qy = (state.userQ || "").toLowerCase();
+  const inv = useData("invites", () => q(sb.from("teacher_invites").select("*").order("created_at", { ascending: false })));
+  const list = P.list.filter(u => !qy || (u.real_name || "").toLowerCase().includes(qy) || (u.email || "").toLowerCase().includes(qy));
+  const me = state.auth.user.id;
+  const roleSel = (u) => u.id === me ? `<span class="badge badge-a">${L("roleOwner")} · ${L("you")}</span>`
+    : `<select class="in" style="width:auto" onchange="changeRole('${u.id}',this.value,this)">${["student", "teacher", "owner"].map(r => `<option value="${r}" ${u.role === r ? "selected" : ""}>${roleName(r)}</option>`).join("")}</select>`;
+  return `<div class="grid" style="grid-template-columns:minmax(280px,1fr) 2fr;align-items:start">
+    <div class="card">
+      <h3 style="margin-bottom:.5rem">${L("inviteTitle")}</h3>
+      <p class="xs muted" style="margin-bottom:.8rem">${L("inviteHint")}</p>
+      <form onsubmit="event.preventDefault();inviteUser()" style="display:flex;flex-direction:column;gap:.5rem">
+        <input class="in" id="iv_email" type="email" placeholder="name@email.com" required>
+        <select class="in" id="iv_role"><option value="teacher">${L("roleTeacher")}</option><option value="owner">${L("roleOwner")}</option><option value="student">${L("roleStudent")}</option></select>
+        <button class="btn btn-p">${L("add")}</button>
+      </form>
+      <p class="xs" style="margin-top:.8rem;color:var(--gold)">${L("ownerWarn")}</p>
+      ${Array.isArray(inv) && inv.length ? `<h4 style="margin:1rem 0 .4rem">${L("invites")}</h4>${inv.map(i => `<div class="kv"><span class="sm">${esc(i.email)} <span class="badge">${esc(roleName(i.role || "teacher"))}</span></span><button class="ibtn" onclick="delInvite('${esc(i.email)}')"><i class="fa-solid fa-xmark"></i></button></div>`).join("")}` : ""}
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <input class="in" placeholder="${L("search")}" value="${esc(state.userQ || "")}" oninput="state.userQ=this.value;clearTimeout(window._uq);window._uq=setTimeout(()=>{render();const e=document.getElementById('uq');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},250)" id="uq" style="margin-bottom:.8rem">
+      ${P.loading ? L("loading") : `<table class="tbl"><thead><tr><th>${L("fullName")}</th><th>${L("email")}</th><th>${L("changeRole")}</th></tr></thead><tbody>
+        ${list.map(u => `<tr><td><b>${esc(u.real_name || u.display_name || "")}</b><div class="xs muted">${esc(fmtDT(u.created_at, { day: "numeric", month: "short", year: "numeric" }))}</div></td>
+          <td class="sm">${esc(u.email || "")}${u.phone ? `<div class="xs muted">${esc(u.phone)}</div>` : ""}</td><td>${roleSel(u)}</td></tr>`).join("")}
+      </tbody></table>`}
+    </div></div>`;
+}
+async function changeRole(uid, r, sel) {
+  if (!confirm(L("roleConfirm") + roleName(r) + (r === "owner" ? "\n\n" + L("ownerWarn") : ""))) { invalidate("people"); render(); return; }
+  const { error } = await sb.rpc("owner_set_role", { p_user: uid, p_role: r });
+  if (error) { toast(error.message, true); invalidate("people"); render(); return; }
+  invalidate("people", "tmeta"); toast(L("updated")); render();
+}
+async function inviteUser() {
+  const email = document.getElementById("iv_email").value.trim(), r = document.getElementById("iv_role").value;
+  if (!email) return;
+  if (r === "owner" && !confirm(L("roleConfirm") + roleName(r) + "\n\n" + L("ownerWarn"))) return;
+  const { data, error } = await sb.rpc("owner_invite", { p_email: email, p_role: r });
+  if (error) return toast(error.message, true);
+  toast(data === "updated" ? L("updated") : L("invited"));
+  invalidate("people", "invites", "tmeta"); render();
+}
 
 /* ---------- أقسام المحتوى (يحددها المالك) ---------- */
 function renderSectionsManager() {
