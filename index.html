@@ -4837,7 +4837,7 @@ renderPay = function () {
 /* عنوان الطلب حسب نوعه */
 const _planText2 = planText;
 planText = function (p) {
-  if (["content", "all_access", "section", "group"].includes(p.id)) {
+  if (["content", "all_access", "section", "group"].includes(p.id) && !("price" in p) && !p.isTrial) {
     const t = p.title ? locText(p.title) : "";
     const base = p.id === "all_access" ? L("allAccessTitle") : p.id === "section" ? L("sectionUnlock") : p.id === "group" ? L("tabs6").groups : L("buy");
     return { t: t ? `${base}: ${t}` : base, d: p.days ? `${p.days} ✓` : "", f: [] };
