@@ -301,6 +301,8 @@ details summary{list-style:revert}
 .achb{font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:rgba(255,255,255,.12);opacity:.55;border:1px dashed rgba(255,255,255,.4)}
 .achb.on{opacity:1;background:rgba(255,255,255,.25);border-style:solid;font-weight:700}
 @media (max-width:760px){.hs-grid{grid-template-columns:repeat(2,1fr)}.hs-n{font-size:1.35rem}}
+.chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--line);border-radius:999px;padding:.35rem .75rem;cursor:pointer;font-size:.85rem;background:var(--bg)}
+.chip:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--bg))}
 </style>
 </head>
 <body>
@@ -1038,6 +1040,7 @@ function renderFooter() {
           <li><a href="#" onclick="navigate('pricing');return false;">${tr.pr.title}</a></li>
           <li><a href="#" onclick="navigate('booking');return false;">${tr.nav.trial}</a></li>
           <li><a href="#" onclick="navigate('policy');return false;">${esc(L('policyLink'))}</a></li>
+          <li><a href="#" onclick="navigate('teach');return false;">👨‍🏫 ${esc(L('teachLink'))}</a></li>
         </ul>
       </div>
     </div>
@@ -5303,8 +5306,405 @@ renderDashboard = function () {
   return _renderDashboard2().replace(`<button class="btn btn-o" onclick="doLogout()">`, `<button class="btn btn-o" onclick="navigate('profile')"><i class="fa-solid fa-user-pen"></i> ${L6("profile")}</button> <button class="btn btn-o" onclick="doLogout()">`);
 };
 
+
+/* =====================================================================
+    v4: Teach with us (applications), teacher certificates & Google Calendar,
+        country / currency / payment preferences, prices in the student's currency
+   ===================================================================== */
+const COUNTRIES = [
+  ["EG","Egypt","EGP"],["SA","Saudi Arabia","SAR"],["AE","United Arab Emirates","AED"],["KW","Kuwait","KWD"],["QA","Qatar","QAR"],["BH","Bahrain","BHD"],["OM","Oman","OMR"],
+  ["JO","Jordan","JOD"],["LB","Lebanon","USD"],["IQ","Iraq","IQD"],["SY","Syria","USD"],["PS","Palestine","ILS"],["YE","Yemen","USD"],["LY","Libya","LYD"],["TN","Tunisia","TND"],
+  ["DZ","Algeria","DZD"],["MA","Morocco","MAD"],["SD","Sudan","USD"],["GB","United Kingdom","GBP"],["US","United States","USD"],["CA","Canada","CAD"],["AU","Australia","AUD"],
+  ["DE","Germany","EUR"],["FR","France","EUR"],["IT","Italy","EUR"],["ES","Spain","EUR"],["NL","Netherlands","EUR"],["BE","Belgium","EUR"],["AT","Austria","EUR"],["IE","Ireland","EUR"],
+  ["SE","Sweden","SEK"],["NO","Norway","NOK"],["DK","Denmark","DKK"],["CH","Switzerland","CHF"],["TR","Türkiye","TRY"],["PK","Pakistan","PKR"],["IN","India","INR"],["BD","Bangladesh","BDT"],
+  ["ID","Indonesia","IDR"],["MY","Malaysia","MYR"],["SG","Singapore","SGD"],["CN","China","CNY"],["RU","Russia","RUB"],["NG","Nigeria","NGN"],["ZA","South Africa","ZAR"],["KE","Kenya","KES"],
+  ["BA","Bosnia","BAM"],["AL","Albania","ALL"],["IR","Iran","USD"],["AF","Afghanistan","USD"],["OTHER","Other","USD"]
+];
+const TZ_COUNTRY = { "Africa/Cairo": "EG", "Asia/Riyadh": "SA", "Asia/Dubai": "AE", "Asia/Kuwait": "KW", "Asia/Qatar": "QA", "Asia/Bahrain": "BH", "Asia/Muscat": "OM", "Asia/Amman": "JO",
+  "Asia/Baghdad": "IQ", "Africa/Tripoli": "LY", "Africa/Tunis": "TN", "Africa/Algiers": "DZ", "Africa/Casablanca": "MA", "Europe/London": "GB", "America/New_York": "US", "America/Chicago": "US",
+  "America/Los_Angeles": "US", "America/Toronto": "CA", "Australia/Sydney": "AU", "Europe/Berlin": "DE", "Europe/Paris": "FR", "Europe/Rome": "IT", "Europe/Madrid": "ES", "Europe/Amsterdam": "NL",
+  "Europe/Brussels": "BE", "Europe/Vienna": "AT", "Europe/Dublin": "IE", "Europe/Stockholm": "SE", "Europe/Oslo": "NO", "Europe/Copenhagen": "DK", "Europe/Zurich": "CH", "Europe/Istanbul": "TR",
+  "Asia/Karachi": "PK", "Asia/Kolkata": "IN", "Asia/Dhaka": "BD", "Asia/Jakarta": "ID", "Asia/Kuala_Lumpur": "MY", "Asia/Singapore": "SG", "Asia/Shanghai": "CN", "Europe/Moscow": "RU",
+  "Africa/Lagos": "NG", "Africa/Johannesburg": "ZA", "Africa/Nairobi": "KE", "Europe/Sarajevo": "BA", "Europe/Tirane": "AL" };
+function guessCountry() { return TZ_COUNTRY[BROWSER_TZ] || "OTHER"; }
+function countryCur(c) { const x = COUNTRIES.find(r => r[0] === c); return x ? x[2] : "USD"; }
+function countryName(c) { const x = COUNTRIES.find(r => r[0] === c); if (!x) return c || ""; try { return new Intl.DisplayNames([state.lang], { type: "region" }).of(x[0]) || x[1]; } catch (e) { return x[1]; } }
+const ALL_CURS = Array.from(new Set(COUNTRIES.map(c => c[2]).concat(["USD", "EUR", "GBP"]))).sort();
+
+Object.assign(UI.ar, {
+  tabs7: { teacherApps: "طلبات المعلمين", certs: "الشهادات", payout: "استلام المستحقات" },
+  country: "الدولة", currency: "العملة", payPrefs: "وسائل الدفع المناسبة لك", payPrefsHint: "اختر وسيلة أو أكثر",
+  approx: "تقريبًا", chargedIn: "يتم الدفع بـ", showPricesIn: "عرض الأسعار بـ",
+  teachTitle: "انضم إلى فريق معلمي أكاديمية إتقان", teachSub: "قدّم طلبك وارفع ما يوضح خبرتك. سيراجع فريق الأكاديمية طلبك ويتواصل معك.",
+  teachLink: "انضم كمعلم", applyNeedAcc: "أنشئ حسابك أولًا ثم أكمل طلبك.", appPersonal: "بياناتك", appTeaching: "التدريس",
+  appTracks: "الدورات/الأقسام التي ستُدرّسها", appTeachLangs: "لغة الشرح", appSamples: "عينة لكل دورة اخترتها", sampleAr: "عينة بالعربية", sampleEn: "عينة بالإنجليزية",
+  appDocs: "الشهادات والإجازات", appCerts: "الشهادات (يمكن رفع أكثر من ملف)", appIjaza: "الإجازة", appVoice: "تسجيل بصوتك (تلاوة)", appVideo: "فيديو شرح جزء من التجويد",
+  appVideoEn: "جزء من الشرح بالإنجليزية", record: "🎙️ سجّل الآن", stopRec: "⏹ إيقاف", recorded: "تم التسجيل ✓", experience: "خبرتك في التدريس",
+  appPayout: "استلام المستحقات", payoutMethod: "طريقة استلام الفلوس", payoutDetails: "تفاصيل الاستلام (رقم المحفظة / الحساب / الإيميل)",
+  nationalId: "رقم البطاقة / الهوية", idFront: "صورة وجه البطاقة", privateFiles: "🔒 هذه البيانات لا يراها إلا إدارة الأكاديمية.",
+  submitApp: "إرسال الطلب", uploading: "جارٍ رفع الملفات...", appSent: "تم إرسال طلبك ✅ سنراجعه ونبلغك بالنتيجة.",
+  appStatus: "حالة طلبك", appPending: "قيد المراجعة ⏳", appApproved: "تم قبولك ✅ — ادخل لوحتك وحدد جدولك", appRejected: "لم يتم قبول الطلب", updateApp: "تحديث الطلب",
+  approve: "قبول", reject: "رفض", notePrompt: "ملاحظة للمعلم (اختياري):", files: "الملفات", noApps: "لا توجد طلبات.",
+  gcalTitle: "ربط حصصك بتقويم جوجل", gcalText: "اشترك في تقويمك الخاص ليظهر كل حصصك تلقائيًا في Google Calendar أو تقويم الآيفون أو Outlook.",
+  gcalBtn: "إضافة إلى Google Calendar", gcalCopy: "نسخ رابط التقويم", gcalNote: "الرابط سري وخاص بك — لا تشاركه.", addToGcal: "📅 أضف لتقويمي",
+  payoutSaved: "تم حفظ بيانات الاستلام ✓", inviteText: "شارك رابطك الخاص. عندما يشترك صديقك في أي باقة حصص تحصل على {r} رصيدًا داخل حسابك في الأكاديمية تستخدمه في الحصص أو المحتوى، وعند {g} أصدقاء مشتركين تحصل على هدية مجانية تختارها!"
+});
+Object.assign(UI.en, {
+  tabs7: { teacherApps: "Teacher applications", certs: "Certificates", payout: "Payout details" },
+  country: "Country", currency: "Currency", payPrefs: "Payment methods that suit you", payPrefsHint: "Choose one or more",
+  approx: "approx.", chargedIn: "Charged in", showPricesIn: "Show prices in",
+  teachTitle: "Join the Itqan Academy teaching team", teachSub: "Send your application and upload anything that shows your experience. The academy team will review it and get back to you.",
+  teachLink: "Teach with us", applyNeedAcc: "Create your account first, then complete your application.", appPersonal: "Your details", appTeaching: "Teaching",
+  appTracks: "Courses/sections you will teach", appTeachLangs: "Teaching language", appSamples: "A sample for each course you chose", sampleAr: "Arabic sample", sampleEn: "English sample",
+  appDocs: "Certificates & ijazat", appCerts: "Certificates (you can upload several files)", appIjaza: "Ijaza", appVoice: "Your voice (recitation recording)", appVideo: "Video explaining a tajweed topic",
+  appVideoEn: "Part of the explanation in English", record: "🎙️ Record now", stopRec: "⏹ Stop", recorded: "Recorded ✓", experience: "Your teaching experience",
+  appPayout: "Receiving payments", payoutMethod: "How you receive money", payoutDetails: "Payment details (wallet / account / email)",
+  nationalId: "National ID number", idFront: "Photo of the front of your ID", privateFiles: "🔒 Only the academy management can see this information.",
+  submitApp: "Submit application", uploading: "Uploading files...", appSent: "Your application was sent ✅ We'll review it and let you know.",
+  appStatus: "Your application", appPending: "Under review ⏳", appApproved: "You're accepted ✅ — open your dashboard and set your schedule", appRejected: "Application not accepted", updateApp: "Update application",
+  approve: "Approve", reject: "Reject", notePrompt: "Note to the teacher (optional):", files: "Files", noApps: "No applications.",
+  gcalTitle: "Connect your lessons to Google Calendar", gcalText: "Subscribe to your private calendar so all your lessons appear automatically in Google Calendar, Apple Calendar or Outlook.",
+  gcalBtn: "Add to Google Calendar", gcalCopy: "Copy calendar link", gcalNote: "This link is private to you — don't share it.", addToGcal: "📅 Add to my calendar",
+  payoutSaved: "Payout details saved ✓", inviteText: "Share your personal link. When a friend subscribes to any lesson package you get {r} as balance inside your academy account to use for lessons or content, and at {g} subscribed friends you get a free gift of your choice!"
+});
+Object.assign(UI.ar.nkT, { teacher_application: "طلب انضمام معلم جديد من {name}", application_approved: "🎉 تم قبولك معلمًا في الأكاديمية! ادخل لوحتك وحدد جدولك", application_rejected: "لم يتم قبول طلبك هذه المرة. {note}" });
+Object.assign(UI.en.nkT, { teacher_application: "New teacher application from {name}", application_approved: "🎉 You're accepted as a teacher! Open your dashboard and set your schedule", application_rejected: "Your application wasn't accepted this time. {note}" });
+function L7(k) { return (L("tabs7") || {})[k] || L6(k); }
+
+/* ---------- العملة: أسعار بعملة الطالب ---------- */
+let FX = null;
+(function loadFx() {
+  try { const c = JSON.parse(lsGet("itqan_fx") || "null"); if (c && Date.now() - c.t < 12 * 3600e3) { FX = c.r; return; } } catch (e) {}
+  fetch("https://open.er-api.com/v6/latest/USD").then(r => r.json()).then(j => { if (j && j.rates) { FX = j.rates; lsSet("itqan_fx", JSON.stringify({ t: Date.now(), r: FX })); render(); } }).catch(() => {});
+})();
+function displayCur() {
+  const p = state.auth && state.auth.profile;
+  return (p && p.currency) || lsGet("itqan_cur") || countryCur(guessCountry()) || "USD";
+}
+function convert(v, from, to) {
+  if (!FX || from === to) return null;
+  const rf = from === "USD" ? 1 : FX[from], rt = FX[to];
+  if (!rf || !rt) return null;
+  return (+v / rf) * rt;
+}
+function fmtCur(v, c) {
+  try { return new Intl.NumberFormat(locale(), { style: "currency", currency: c, maximumFractionDigits: v >= 100 ? 0 : 2 }).format(v); } catch (e) { return `${Math.round(v)} ${c}`; }
+}
+/* money2: السعر بعملة الطالب + الأصلي صغير */
+function money2(v, c) {
+  c = (c || "USD").toUpperCase();
+  const to = displayCur();
+  const conv = convert(v, c, to);
+  if (conv == null) return esc(money(v, c));
+  return `${esc(fmtCur(conv, to))} <span class="xs muted" style="font-weight:500">(${esc(money(v, c))})</span>`;
+}
+function curSelector() {
+  return `<div class="row" style="gap:.4rem;justify-content:center;margin-bottom:1rem"><span class="sm muted">${L("showPricesIn")}</span>
+    <select class="in" style="width:auto" onchange="setDispCur(this.value)">${ALL_CURS.map(c => `<option value="${c}" ${c === displayCur() ? "selected" : ""}>${c}</option>`).join("")}</select></div>`;
+}
+async function setDispCur(c) {
+  lsSet("itqan_cur", c);
+  if (state.auth && state.auth.user) { await sb.from("profiles").update({ currency: c }).eq("id", state.auth.user.id); await loadProfile(); }
+  render();
+}
+/* تطبيق العملة على صفحة الأسعار والمحتوى والحصص الجماعية */
+const _renderPricing2 = renderPricing;
+renderPricing = function () {
+  let h = _renderPricing2();
+  PLANS.forEach(p => { if (!p.price) return; const m = esc(money(p.price, p.currency)); h = h.split(`<div class="price" style="margin-bottom:.4rem">${m}`).join(`<div class="price" style="margin-bottom:.4rem">${money2(p.price, p.currency)}`); });
+  return h.replace('<div class="grid">', curSelector() + '<div class="grid">');
+};
+const _groupCard1 = groupCard;
+groupCard = function (g, seats) { const per = +g.total_price / Math.max(1, g.capacity); return _groupCard1(g, seats).replace(`<b class="accent" style="font-size:1.4rem">${esc(money(per, g.currency))}</b>`, `<b class="accent" style="font-size:1.3rem">${money2(per, g.currency)}</b>`); };
+const _contentCard2 = contentCard;
+contentCard = function (c, manage) { const h = _contentCard2(c, manage); return manage ? h : h.replace(`<b class="accent" style="font-size:1.2rem">${esc(money(c.price, c.currency))}</b>`, `<b class="accent" style="font-size:1.1rem">${money2(c.price, c.currency)}</b>`); };
+const _paymentBlock1 = paymentBlock;
+paymentBlock = function (rec, kind) {
+  const h = _paymentBlock1(rec, kind);
+  const conv = convert(rec.amount, rec.currency, displayCur());
+  const note = conv != null ? `<div class="notice" style="margin-bottom:1rem">${L("chargedIn")} <b>${esc(money(rec.amount, rec.currency))}</b> · ${L("approx")} <b>${esc(fmtCur(conv, displayCur()))}</b></div>` : "";
+  return note + h;
+};
+/* ترتيب وسائل الدفع حسب تفضيل الطالب */
+const _paymentOptions1 = paymentOptions;
+paymentOptions = function () {
+  const pref = (state.auth && state.auth.profile && state.auth.profile.pay_methods) || [];
+  const list = _paymentOptions1();
+  if (!pref.length) return list;
+  return list.slice().sort((a, b) => (pref.includes(b.id) ? 1 : 0) - (pref.includes(a.id) ? 1 : 0));
+};
+
+/* ---------- التسجيل: الدولة والعملة ووسائل الدفع ---------- */
+function countrySelect(id, sel, onchange) {
+  return `<select class="in" id="${id}" ${onchange ? `onchange="${onchange}"` : ""}>${COUNTRIES.map(c => `<option value="${c[0]}" ${c[0] === sel ? "selected" : ""}>${esc(countryName(c[0]))}</option>`).join("")}</select>`;
+}
+function currencySelect(id, sel) { return `<select class="in" id="${id}">${ALL_CURS.map(c => `<option value="${c}" ${c === sel ? "selected" : ""}>${c}</option>`).join("")}</select>`; }
+function payPrefChips(sel) {
+  const ms = pmList().filter(m => m.enabled || m.type === "whatsapp");
+  const all = ms.length > 1 ? ms : pmList();
+  return `<div class="row" style="gap:.35rem;flex-wrap:wrap" id="pp_box">${all.map(m => `<label class="chip"><input type="checkbox" value="${esc(m.id)}" ${(sel || []).includes(m.id) ? "checked" : ""}> <i class="${PM_ICONS[m.type] || PM_ICONS.other}"></i> ${esc(m.type === "whatsapp" ? "WhatsApp" : m.name)}</label>`).join("")}</div>`;
+}
+function readPayPrefs() { return Array.from(document.querySelectorAll("#pp_box input:checked")).map(i => i.value); }
+const _renderAuth1 = renderAuth;
+renderAuth = function () {
+  const h = _renderAuth1();
+  if (state.route !== "signup") return h;
+  const c = guessCountry();
+  const extra = `<div class="fgrid">
+      <div><label class="l">${L("country")}</label>${countrySelect("au_country", c, "document.getElementById('au_cur').value=countryCur(this.value)")}</div>
+      <div><label class="l">${L("currency")}</label>${currencySelect("au_cur", countryCur(c))}</div></div>
+    <div><label class="l">${L("payPrefs")} <span class="xs muted">— ${L("payPrefsHint")}</span></label>${payPrefChips([])}</div>`;
+  return h.replace(`<div><label class="l">${L("email")}</label>`, extra + `<div><label class="l">${L("email")}</label>`);
+};
+const _signUpUser0 = signUpUser;
+signUpUser = async function (o) {
+  const g = (x) => document.getElementById(x);
+  const country = g("au_country") ? g("au_country").value : guessCountry();
+  const currency = g("au_cur") ? g("au_cur").value : countryCur(country);
+  const pay = g("pp_box") ? readPayPrefs() : [];
+  lsSet("itqan_cur", currency);
+  const orig = sb.auth.signUp.bind(sb.auth);
+  sb.auth.signUp = (args) => { args.options = args.options || {}; args.options.data = Object.assign({}, args.options.data, { country, currency, pay_methods: pay }); return orig(args); };
+  try { return await _signUpUser0(o); } finally { sb.auth.signUp = orig; }
+};
+/* الملف الشخصي: الدولة والعملة ووسائل الدفع */
+const _renderProfilePage1 = renderProfilePage;
+renderProfilePage = function () {
+  const h = _renderProfilePage1();
+  const p = (state.auth && state.auth.profile) || {};
+  if (!state.auth.user) return h;
+  const extra = `<div class="fgrid">
+      <div><label class="l">${L("country")}</label>${countrySelect("pf_country", p.country || guessCountry(), "document.getElementById('pf_cur').value=countryCur(this.value)")}</div>
+      <div><label class="l">${L("currency")}</label>${currencySelect("pf_cur", p.currency || countryCur(p.country || guessCountry()))}</div></div>
+    <div><label class="l">${L("payPrefs")}</label>${payPrefChips(p.pay_methods || [])}</div>`;
+  return h.replace(`<div><label class="l">${L("bio")}</label>`, extra + `<div><label class="l">${L("bio")}</label>`);
+};
+const _saveProfile0 = saveProfile;
+saveProfile = async function () {
+  const g = (x) => document.getElementById(x);
+  if (g("pf_country")) { await sb.from("profiles").update({ country: g("pf_country").value, currency: g("pf_cur").value, pay_methods: readPayPrefs() }).eq("id", state.auth.user.id); lsSet("itqan_cur", g("pf_cur").value); }
+  return _saveProfile0();
+};
+
+/* ---------- صفحة "انضم كمعلم" ---------- */
+state.app = { files: {}, rec: null };
+function myApplication() { return state.auth.user ? useData("myApp", () => q(sb.from("teacher_applications").select("*").eq("user_id", state.auth.user.id))) : null; }
+function fileInput(key, accept, multiple) {
+  const got = state.app.files[key];
+  return `<input class="in" type="file" ${accept ? `accept="${accept}"` : ""} ${multiple ? "multiple" : ""} onchange="state.app.files['${key}']=Array.from(this.files)">
+    ${got && got.length ? `<div class="xs accent">✓ ${got.map(f => esc(f.name)).join(", ")}</div>` : ""}`;
+}
+let _mediaRec = null, _recChunks = [];
+async function toggleRec() {
+  if (_mediaRec && _mediaRec.state === "recording") { _mediaRec.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _recChunks = []; _mediaRec = new MediaRecorder(stream);
+    _mediaRec.ondataavailable = (e) => _recChunks.push(e.data);
+    _mediaRec.onstop = () => { stream.getTracks().forEach(t => t.stop()); const blob = new Blob(_recChunks, { type: _mediaRec.mimeType || "audio/webm" }); state.app.files.voiceRec = [new File([blob], "voice-recording.webm", { type: blob.type })]; state.app.recUrl = URL.createObjectURL(blob); render(); };
+    _mediaRec.start(); state.app.recording = true; render();
+  } catch (e) { toast(e.message, true); }
+}
+function renderTeachPage() {
+  const tr = I18N[state.lang];
+  const head = `<section class="hero" style="padding-bottom:1rem"><div class="wrap" style="max-width:52rem;text-align:center">
+    <span class="badge badge-g" style="margin-bottom:.8rem">👨‍🏫 ${L("teachLink")}</span>
+    <h1 style="font-size:2rem">${L("teachTitle")}</h1><p class="lead muted" style="margin:.6rem auto 0">${L("teachSub")}</p></div></section>`;
+  if (!state.auth.user) {
+    lsSet("itqan_after_auth", "teach");
+    return head + `<section class="sec" style="padding-top:1rem"><div class="wrap" style="max-width:30rem"><div class="notice">${L("applyNeedAcc")}</div>
+      <div class="row" style="gap:.5rem"><button class="btn btn-p btn-full" onclick="state.authMsg=null;navigate('signup')">${L("signup")}</button><button class="btn btn-o btn-full" onclick="navigate('login')">${L("login")}</button></div></div></section>`;
+  }
+  const ex = myApplication();
+  if (ex === null) return head + `<section class="sec"><div class="wrap">${loadingBox()}</div></section>`;
+  const a = Array.isArray(ex) && ex[0];
+  if (a && !state.app.editing) {
+    const st = a.status === "approved" ? L("appApproved") : a.status === "rejected" ? L("appRejected") : L("appPending");
+    return head + `<section class="sec" style="padding-top:1rem"><div class="wrap" style="max-width:40rem"><div class="card" style="text-align:center">
+      <h2 style="font-size:1.3rem;margin-bottom:.6rem">${L("appStatus")}</h2><div class="badge ${a.status === "approved" ? "badge-a" : "badge-g"}" style="font-size:1rem;padding:.4rem 1rem">${esc(st)}</div>
+      ${a.owner_note ? `<p class="muted" style="margin-top:.8rem">${esc(a.owner_note)}</p>` : ""}
+      ${a.status === "approved" ? `<button class="btn btn-p" style="margin-top:1rem" onclick="navigate('dashboard')">${L("dashboard")}</button>` : a.status === "pending" ? `<button class="btn btn-o" style="margin-top:1rem" onclick="state.app.editing=true;render()">${L("updateApp")}</button>` : ""}
+    </div></div></section>`;
+  }
+  const p = state.auth.profile || {};
+  const d = state.app.draft = state.app.draft || { tracks: (a && a.tracks) || [], teach_langs: (a && a.teach_langs) || ["ar"] };
+  const chip = (arr, v, label) => `<label class="chip"><input type="checkbox" ${d[arr].includes(v) ? "checked" : ""} onchange="toggleAppArr('${arr}','${v}',this.checked)"> ${esc(label)}</label>`;
+  const sec = (t, body) => `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.8rem">${t}</h3>${body}</div>`;
+  return head + `<section class="sec" style="padding-top:1rem"><div class="wrap" style="max-width:52rem">
+    <form onsubmit="event.preventDefault();submitApplication()">
+    ${sec("👤 " + L("appPersonal"), `<div class="fgrid">
+      <div><label class="l">${L("fullName")}</label><input class="in" id="ap_name" required value="${esc((a && a.full_name) || p.real_name || "")}"></div>
+      <div><label class="l">${L("phone")}</label><input class="in" id="ap_phone" type="tel" value="${esc((a && a.phone) || p.phone || "")}"></div>
+      <div><label class="l">${L("country")}</label>${countrySelect("ap_country", (a && a.country) || p.country || guessCountry())}</div>
+      <div><label class="l">${L("nativeLang")}</label>${langSelect("ap_native", (a && a.native_lang) || p.native_lang, false)}</div>
+      <div><label class="l">${L("spokenLangs")}</label>${langSelect("ap_langs", (a && a.spoken_langs) || p.spoken_langs || [], true)}</div>
+    </div>`)}
+    ${sec("📚 " + L("appTeaching"), `<label class="l">${L("appTracks")}</label><div class="row" style="gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem">${TRACKS.map(k => chip("tracks", k, trackTitle(k))).join("")}</div>
+      <label class="l">${L("appTeachLangs")}</label><div class="row" style="gap:.35rem;margin-bottom:.8rem">${chip("teach_langs", "ar", L("langAr"))}${chip("teach_langs", "en", L("langEn"))}</div>
+      ${d.tracks.length ? `<label class="l">${L("appSamples")}</label>${d.tracks.map(k => `<div class="card" style="background:var(--bg);margin-bottom:.5rem;padding:.8rem"><b class="sm">${esc(trackTitle(k))}</b>
+        <div class="fgrid" style="margin-top:.4rem">${d.teach_langs.includes("ar") ? `<div><label class="l xs">${L("sampleAr")}</label>${fileInput("sample_ar_" + k, "audio/*,video/*,application/pdf")}</div>` : ""}
+        ${d.teach_langs.includes("en") ? `<div><label class="l xs">${L("sampleEn")}</label>${fileInput("sample_en_" + k, "audio/*,video/*,application/pdf")}</div>` : ""}</div></div>`).join("")}` : ""}
+      <div style="margin-top:.6rem"><label class="l">${L("bio")}</label><textarea class="in" id="ap_bio" rows="3">${esc((a && a.bio) || "")}</textarea></div>
+      <div style="margin-top:.6rem"><label class="l">${L("experience")}</label><textarea class="in" id="ap_exp" rows="3">${esc((a && a.experience) || "")}</textarea></div>`)}
+    ${sec("🎓 " + L("appDocs"), `<div class="fgrid">
+      <div><label class="l">${L("appCerts")}</label>${fileInput("certs", "image/*,application/pdf", true)}</div>
+      <div><label class="l">${L("appIjaza")}</label>${fileInput("ijaza", "image/*,application/pdf", true)}</div>
+      <div><label class="l">${L("appVoice")}</label>${fileInput("voice", "audio/*")}
+        <button type="button" class="btn btn-o" style="margin-top:.4rem" onclick="toggleRec()">${_mediaRec && _mediaRec.state === "recording" ? L("stopRec") : L("record")}</button>
+        ${state.app.recUrl ? `<div class="xs accent">${L("recorded")}</div><audio controls src="${state.app.recUrl}" style="width:100%"></audio>` : ""}</div>
+      <div><label class="l">${L("appVideo")}</label>${fileInput("video", "video/*")}</div>
+      ${d.teach_langs.includes("en") ? `<div><label class="l">${L("appVideoEn")}</label>${fileInput("video_en", "video/*,audio/*")}</div>` : ""}
+    </div>`)}
+    ${sec("💳 " + L("appPayout"), `<p class="xs muted" style="margin-bottom:.6rem">${L("privateFiles")}</p><div class="fgrid">
+      <div><label class="l">${L("payoutMethod")}</label><select class="in" id="ap_pm">${["Vodafone Cash", "InstaPay", "Bank transfer", "PayPal", "Wise", "Payoneer", "Western Union", "USDT", "Other"].map(x => `<option ${a && a.payout_method === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>
+      <div><label class="l">${L("payoutDetails")}</label><input class="in" id="ap_pd" value="${esc((a && a.payout_details) || "")}"></div>
+      <div><label class="l">${L("nationalId")}</label><input class="in" id="ap_nid" autocomplete="off" value="${esc((a && a.national_id) || "")}"></div>
+      <div><label class="l">${L("idFront")}</label>${fileInput("id_front", "image/*")}</div>
+    </div>`)}
+    <button class="btn btn-p btn-full btn-lg" ${state.busy ? "disabled" : ""}>${state.busy ? L("uploading") : L("submitApp")}</button>
+    </form></div></section>`;
+}
+function toggleAppArr(arr, v, on) { const a = state.app.draft[arr]; const i = a.indexOf(v); if (on && i < 0) a.push(v); if (!on && i > -1) a.splice(i, 1); render(); }
+async function submitApplication() {
+  const g = (x) => document.getElementById(x);
+  const uid = state.auth.user.id; const d = state.app.draft;
+  const name = g("ap_name").value.trim(); if (!name) return toast(L("fillAll"), true);
+  const vals = { full_name: name, phone: g("ap_phone").value.trim() || null, country: g("ap_country").value, native_lang: g("ap_native").value || null,
+    spoken_langs: Array.from(g("ap_langs").selectedOptions).map(o => o.value), tracks: d.tracks, teach_langs: d.teach_langs,
+    bio: g("ap_bio").value.trim() || null, experience: g("ap_exp").value.trim() || null, payout_method: g("ap_pm").value, payout_details: g("ap_pd").value.trim() || null,
+    national_id: g("ap_nid").value.trim() || null, updated_at: new Date().toISOString() };
+  state.busy = true; render();
+  try {
+    const ex = Array.isArray(state.data.myApp) && state.data.myApp[0];
+    const files = ex ? (ex.files || []).slice() : [];
+    for (const [key, list] of Object.entries(state.app.files)) {
+      for (const f of (list || [])) {
+        const path = `${uid}/${Date.now()}-${key}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+        const up = await sb.storage.from("teacher_apps").upload(path, f, { contentType: f.type });
+        if (up.error) throw up.error;
+        if (key === "id_front") vals.id_front_path = path;
+        else { const m = key.match(/^sample_(ar|en)_(.+)$/); files.push({ kind: m ? "sample" : (key === "voiceRec" ? "voice" : key), lang: m ? m[1] : (key === "video_en" ? "en" : null), track: m ? m[2] : null, path, name: f.name, type: f.type }); }
+      }
+    }
+    vals.files = files;
+    if (ex) await q(sb.from("teacher_applications").update(vals).eq("id", ex.id));
+    else await q(sb.from("teacher_applications").insert(Object.assign({ user_id: uid }, vals)));
+    state.app = { files: {}, rec: null }; invalidate("myApp"); toast(L("appSent"));
+  } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+}
+
+/* المالك: مراجعة طلبات المعلمين */
+function ownerTeacherApps() {
+  const list = useData("teacherApps", () => q(sb.from("teacher_applications").select("*").order("created_at", { ascending: false })));
+  if (!Array.isArray(list)) return list === null ? loadingBox() : errBox(list);
+  if (!list.length) return `<div class="card muted">${L("noApps")}</div>`;
+  return list.map(a => `<div class="card" style="margin-bottom:1rem">
+    <div class="row" style="justify-content:space-between"><h3>${esc(a.full_name)}</h3><span class="badge ${a.status === "approved" ? "badge-a" : "badge-g"}">${esc(a.status === "approved" ? L("appApproved").split("—")[0] : a.status === "rejected" ? L("appRejected") : L("appPending"))}</span></div>
+    <div class="xs muted">${esc(fmtDT(a.created_at))} · ${esc(a.phone || "")} · ${esc(countryName(a.country))}</div>
+    <div class="kv"><span class="muted">${L("nativeLang")}</span><span>${esc(LANG_LIST[a.native_lang] || "—")} · ${esc(langNames(a.spoken_langs))}</span></div>
+    <div class="kv"><span class="muted">${L("appTracks")}</span><span>${esc((a.tracks || []).map(trackTitle).join(L("listSep")) || "—")}</span></div>
+    <div class="kv"><span class="muted">${L("appTeachLangs")}</span><span>${esc((a.teach_langs || []).map(x => x === "en" ? L("langEn") : L("langAr")).join(L("listSep")))}</span></div>
+    ${a.bio ? `<div class="kv"><span class="muted">${L("bio")}</span><span style="white-space:pre-wrap">${esc(a.bio)}</span></div>` : ""}
+    ${a.experience ? `<div class="kv"><span class="muted">${L("experience")}</span><span style="white-space:pre-wrap">${esc(a.experience)}</span></div>` : ""}
+    <div class="kv"><span class="muted">${L("payoutMethod")}</span><span>${esc(a.payout_method || "—")} — ${esc(a.payout_details || "")}</span></div>
+    <div class="kv"><span class="muted">${L("nationalId")}</span><span class="mono">${esc(a.national_id || "—")}</span></div>
+    <div style="margin-top:.6rem"><b class="sm">${L("files")}:</b><div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.3rem">
+      ${(a.files || []).map((f, i) => `<button class="btn btn-o" style="padding:.3rem .7rem" onclick="openAppFile('${esc(f.path)}','${esc(f.type || "")}')">📎 ${esc(({ certs: L("appCerts"), ijaza: L("appIjaza"), voice: L("appVoice"), video: L("appVideo"), video_en: L("appVideoEn"), sample: f.lang === "en" ? L("sampleEn") : L("sampleAr") })[f.kind] || f.kind)}${f.track ? " · " + esc(trackTitle(f.track)) : ""}${f.lang ? " · " + esc(f.lang) : ""}</button>`).join("") || "—"}
+      ${a.id_front_path ? `<button class="btn btn-o" style="padding:.3rem .7rem" onclick="openAppFile('${esc(a.id_front_path)}','image')">🪪 ${L("idFront")}</button>` : ""}</div></div>
+    ${state.appPreview && state.appPreview.app === a.id ? state.appPreview.html : ""}
+    ${a.status === "pending" ? `<div class="row" style="gap:.4rem;margin-top:.8rem"><button class="btn btn-p" onclick="reviewApp('${a.id}',true)">✅ ${L("approve")}</button><button class="btn btn-o" style="color:var(--danger)" onclick="reviewApp('${a.id}',false)">${L("reject")}</button></div>` : ""}
+  </div>`).join("");
+}
+async function openAppFile(path, type) {
+  const { data, error } = await sb.storage.from("teacher_apps").createSignedUrl(path, 600);
+  if (error) return toast(error.message, true);
+  const u = data.signedUrl;
+  const html = /audio/.test(type) || /\.(webm|mp3|m4a|wav|ogg)$/i.test(path) && !/video/.test(type) ? `<audio controls src="${esc(u)}" style="width:100%;margin-top:.6rem"></audio>`
+    : /video/.test(type) ? `<video controls src="${esc(u)}" style="width:100%;max-height:360px;margin-top:.6rem;border-radius:10px"></video>`
+    : /image/.test(type) || /\.(png|jpe?g|webp|gif)$/i.test(path) ? `<img src="${esc(u)}" alt="" style="max-width:100%;margin-top:.6rem;border-radius:10px">`
+    : `<a class="btn btn-o" href="${esc(u)}" target="_blank" rel="noopener" style="margin-top:.6rem">${L("open")}</a>`;
+  const app = (state.data.teacherApps || []).find(a => (a.files || []).some(f => f.path === path) || a.id_front_path === path);
+  state.appPreview = { app: app && app.id, html }; render();
+}
+async function reviewApp(id, ok) {
+  const note = prompt(L("notePrompt")) || null;
+  const { error } = await sb.rpc("review_teacher_application", { p_id: id, p_approve: ok, p_note: note });
+  if (error) return toast(error.message, true);
+  invalidate("teacherApps", "people", "tmeta"); toast(L("saved")); render();
+}
+
+/* ---------- المعلم: جوجل كالندر + بيانات الاستلام + الشهادات ---------- */
+function gcalCard() {
+  const tk = useData("calToken", async () => { const { data, error } = await sb.rpc("my_calendar_token"); if (error) throw error; return [data]; });
+  if (!Array.isArray(tk) || !tk[0]) return "";
+  const url = `${SB_URL}/functions/v1/calendar?t=${tk[0]}`;
+  const gurl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(url.replace(/^https:/, "webcal:"))}`;
+  return `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.4rem">📅 ${L("gcalTitle")}</h3><p class="xs muted" style="margin-bottom:.6rem">${L("gcalText")}</p>
+    <div class="row" style="gap:.4rem"><a class="btn btn-p" href="${esc(gurl)}" target="_blank" rel="noopener"><i class="fa-brands fa-google"></i> ${L("gcalBtn")}</a>
+    <button class="btn btn-o" onclick="navigator.clipboard.writeText('${esc(url)}').then(()=>toast(L('copied')))">${L("gcalCopy")}</button></div>
+    <p class="xs" style="margin-top:.4rem;color:var(--gold)">${L("gcalNote")}</p></div>`;
+}
+function payoutCard() {
+  const m = myMeta(); const x = Array.isArray(m) && m[0] ? m[0] : {};
+  return `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.6rem">💳 ${L7("payout")}</h3>
+    <form class="fgrid" style="align-items:end" onsubmit="event.preventDefault();savePayout()">
+      <div><label class="l">${L("payoutMethod")}</label><select class="in" id="po_m">${["Vodafone Cash", "InstaPay", "Bank transfer", "PayPal", "Wise", "Payoneer", "Western Union", "USDT", "Other"].map(v => `<option ${x.payout_method === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+      <div><label class="l">${L("payoutDetails")}</label><input class="in" id="po_d" value="${esc(x.payout_details || "")}"></div>
+      <button class="btn btn-o">${L("save")}</button></form></div>`;
+}
+async function savePayout() {
+  const { error } = await sb.rpc("teacher_set_payout", { p_method: document.getElementById("po_m").value, p_details: document.getElementById("po_d").value });
+  if (error) return toast(error.message, true);
+  invalidate("myMeta"); toast(L("payoutSaved")); render();
+}
+const _renderTeacherDash3 = renderTeacherDash;
+renderTeacherDash = function () {
+  const tabs = ["calendar", "messages", "share", "certs", "schedule", "mystudents", "dues", "content"];
+  const t = state.dash.tab;
+  if (t === "certs") return needAttendanceList() + dashTabs(tabs) + ownerCerts(peopleMap());
+  let h = _renderTeacherDash3();
+  h = h.replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (t === "schedule") h = h.replace(/(<div class="tabs dtabs">[\s\S]*?<\/div>)/, `$1${gcalCard()}`);
+  if (t === "dues") h += payoutCard();
+  return h;
+};
+const _dashTabs2 = dashTabs;
+dashTabs = function (tabs) { return _dashTabs2(tabs).replace(/>([a-zA-Z]+)<\/a>/g, (m, k) => ">" + L7(k) + "</a>"); };
+const _renderOwnerDash3 = renderOwnerDash;
+renderOwnerDash = function () {
+  const tabs = ["overview", "calendar", "groups", "chats", "bookings", "requests", "orders", "users", "teacherApps", "teachers", "students", "referrals", "reports", "certs", "content", "settings", "schedule"];
+  if (state.dash.tab === "teacherApps") return dashTabs(tabs) + ownerTeacherApps();
+  let h = _renderOwnerDash3().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (state.dash.tab === "schedule") h = h.replace(/(<div class="tabs dtabs">[\s\S]*?<\/div>)/, `$1${gcalCard()}`);
+  if (state.dash.tab === "teachers") {
+    const meta = state.data.tmeta; const P = peopleMap();
+    if (Array.isArray(meta)) h += `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">💳 ${L7("payout")}</h3>${meta.filter(m => m.payout_method || m.payout_details).map(m => `<div class="kv"><b class="sm">${esc(personName(m.id, P.map))}</b><span class="sm">${esc(m.payout_method || "")} — ${esc(m.payout_details || "")}</span></div>`).join("") || `<p class="muted sm">${L("none")}</p>`}</div>`;
+  }
+  return h;
+};
+
+/* الطالب: أضف الحصة لتقويم جوجل */
+function gcalLessonLink(l) {
+  const f = (d) => new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const u = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(I18N[state.lang].meta.siteName + (l.track ? " · " + trackTitle(l.track) : ""))}&dates=${f(l.start_time)}/${f(l.end_time)}&details=${encodeURIComponent(l.meeting_url || "")}`;
+  return `<a class="btn btn-o" style="padding:.3rem .6rem" href="${esc(u)}" target="_blank" rel="noopener" title="${esc(L("addToGcal"))}">📅</a>`;
+}
+const _upcomingLessonRow1 = upcomingLessonRow;
+upcomingLessonRow = function (l, canAct) {
+  const h = _upcomingLessonRow1(l, canAct);
+  if (l.status !== "scheduled") return h;
+  return h.replace(`<span class="row" style="gap:.35rem">`, `<span class="row" style="gap:.35rem">${gcalLessonLink(l)}`);
+};
+
+/* بعد التسجيل/الدخول ارجع لصفحة "انضم كمعلم" */
+const _doLogin1 = doLogin;
+doLogin = async function () { const after = lsGet("itqan_after_auth"); await _doLogin1(); if (after && state.auth.user) { lsSet("itqan_after_auth", null); navigate(after); } };
+const _doSignup1 = doSignup;
+doSignup = async function () { const after = lsGet("itqan_after_auth"); await _doSignup1(); if (after && state.auth.user) { lsSet("itqan_after_auth", null); navigate(after); } };
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
-const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile"];
+const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
   const h = (location.hash || "").replace(/^#\/?/, "");
   if (!h || h.includes("=")) return;
@@ -5337,6 +5737,7 @@ function render() {
   else if (r === 'verify') content += renderVerifyPage();
   else if (r === 'policy') content += renderPolicyPage();
   else if (r === 'profile') content += renderProfilePage();
+  else if (r === 'teach') content += renderTeachPage();
   else content += renderHome();
 
   content += renderFooter();
