@@ -110,6 +110,7 @@ label.l,.l{display:block;font-size:.8rem;font-weight:700;color:var(--muted);marg
 .fgrid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
 .phone{display:flex;gap:.5rem;direction:ltr}
 .phone select{width:9rem;flex:none}
+.hp{position:absolute;inset-inline-start:-9999px;width:0;height:0;overflow:hidden}
 fieldset{border:1px solid var(--line);border-radius:14px;padding:.8rem;margin:0;min-width:0}
 legend{padding-inline:.4rem;font-weight:800;color:var(--accent);font-size:.9rem}
 .hour-grid{display:grid;gap:.4rem;grid-template-columns:repeat(auto-fill,minmax(75px,1fr));max-height:220px;overflow-y:auto;padding:.4rem;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
@@ -195,56 +196,45 @@ const PLAN_IDS = ["trial", "free", "pack4", "pack8", "pack12", "group", "private
 const TRACKS = ["ijaza", "hifz", "tajweed", "maqamat", "tafseer", "arabic", "egyptian"];
 const TRACK_EMOJI = { ijaza: "📜", hifz: "📖", tajweed: "🕌", maqamat: "🎵", tafseer: "💡", arabic: "✍️", egyptian: "🇪🇬" };
 
-/* ---------- المعلمون ---------- */
+/* ---------- المعلمون (بدون أسماء أشخاص نهائياً) ---------- */
 const _r = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 const TEACHERS = [
   {
-    id: "ahmed-khaled", demo: true, tz: "Africa/Cairo",
-    name: { ar: "الشيخ أحمد خالد", en: "Sheikh Ahmed Khaled", fr: "Cheikh Ahmed Khaled", de: "Schaikh Ahmed Khaled", tr: "Şeyh Ahmed Halid", es: "Jeque Ahmed Khaled", id: "Syeikh Ahmed Khaled" },
-    title: { ar: "مقامات وتلاوة وإجازات", en: "Maqamat, recitation & ijaza", fr: "Maqamat, recitation & ijaza", de: "Maqamat, Rezitation & Ijaza", tr: "Makamlar, kıraat ve icazet", es: "Maqamat, recitación e ijaza", id: "Maqamat, tilawah & ijaza" },
-    bio: { ar: "خبرة في الإجازات والمقامات وتجويد القرآن.", en: "Experience in ijazat, maqamat and tajweed.", fr: "Expérience en ijazat, maqamat et tajweed.", de: "Erfahrung in Ijaza, Maqamat und Tajweed.", tr: "İcazet, makam ve tecvit alanında deneyim.", es: "Experiencia en ijazat, maqamat y tajweed.", id: "Pengalaman dalam ijaza, maqamat dan tajweed." },
+    id: "teacher-1", demo: true, tz: "Africa/Cairo",
+    name: { ar: "معلم المقامات والإجازات", en: "Maqamat & Ijaza Teacher", zh: " maqamat与ijaza教师", ru: "Преподаватель Макамат и Иджаза", ku: "Mamosteyê Maqamat û Îcazê", ms: "Pengajar Maqamat & Ijaza", id: "Pengajar Maqamat & Ijaza", tr: "Makam ve İcazet Eğitmeni", fr: "Enseignant Maqamat & Ijaza", de: "Maqamat & Ijaza Lehrer", es: "Profesor de Maqamat e Ijaza" },
+    title: { ar: "مقامات وتلاوة وإجازات", en: "Maqamat, recitation & ijaza", zh: "音调、朗诵与ijaza", ru: "Макамат, чтение и иджаза", ku: "Maqamat, xwendin û îcazet", ms: "Maqamat, bacaan & ijaza", id: "Maqamat, tilawah & ijaza", tr: "Makamlar, kıraat ve icazet", fr: "Maqamat, recitation & ijaza", de: "Maqamat, Rezitation & Ijaza", es: "Maqamat, recitación e ijaza" },
+    bio: { ar: "خبرة في الإجازات والمقامات وتجويد القرآن الكريم.", en: "Experience in ijazat, maqamat and Quran tajweed.", zh: "在ijaza、maqamat和古兰经tecvid方面经验丰富。", ru: "Опыт в иджазе, макамате и таджвиде Корана.", ku: "Tecrûbe di îcazet, maqamat û tecvîda Qur'anê de.", ms: "Pengalaman dalam ijaza, maqamat dan tajwid Al-Quran.", id: "Pengalaman dalam ijaza, maqamat dan tajweed Al-Quran.", tr: "İcazet, makam ve Kuran tecvidi alanında deneyim.", fr: "Expérience en ijazat, maqamat et tajweed du Coran.", de: "Erfahrung in Ijaza, Maqamat und Koran-Tajweed.", es: "Experiencia en ijazat, maqamat y tajweed del Corán." },
     tracks: ["ijaza", "maqamat", "tajweed", "hifz"], languages: ["ar", "en"],
     availability: { 6: _r(15, 22), 1: _r(15, 22), 3: _r(15, 22) }
   },
   {
-    id: "ibrahim-mohamed", demo: true, tz: "Africa/Cairo",
-    name: { ar: "الشيخ إبراهيم محمد", en: "Sheikh Ibrahim Mohamed", fr: "Cheikh Ibrahim Mohamed", de: "Schaikh Ibrahim Mohamed", tr: "Şeyh İbrahim Muhammed", es: "Jeque Ibrahim Mohamed", id: "Syeikh Ibrahim Mohamed" },
-    title: { ar: "تحفيظ وتجويد", en: "Hifz & tajweed", fr: "Hifz & tajweed", de: "Hifz & Tajweed", tr: "Hıfz ve Tecvit", es: "Hifz y tajweed", id: "Hifz & tajweed" },
-    bio: { ar: "تخصص في تحفيظ القرآن الكريم وتجويده للصغار والكبار.", en: "Specialized in Quran memorization and tajweed.", fr: "Spécialisé dans la mémorisation du Coran.", de: "Spezialisiert auf Koran-Auswendiglernen.", tr: "Kuran hıfzedilmesi ve tecvid uzmanı.", es: "Especializado en memorización del Coran.", id: "Ahli dalam hafalan Al-Quran dan tajweed." },
+    id: "teacher-2", demo: true, tz: "Africa/Cairo",
+    name: { ar: "معلم التحفيظ والتجويد", en: "Hifz & Tajweed Teacher", zh: "背诵与tecvid教师", ru: "Преподаватель Хифз и Таджвид", ku: "Mamosteyê Hıfz û Tecvîd", ms: "Pengajar Hifz & Tajwid", id: "Pengajar Hifz & Tajweed", tr: "Hıfz ve Tecvit Eğitmeni", fr: "Enseignant Hifz & Tajweed", de: "Hifz & Tajweed Lehrer", es: "Profesor de Hifz y Tajweed" },
+    title: { ar: "تحفيظ وتجويد", en: "Hifz & tajweed", zh: "背诵与tecvid", ru: "Хифз и таджвид", ku: "Hıfz û tecvîd", ms: "Hifz & tajwid", id: "Hifz & tajweed", tr: "Hıfz ve Tecvit", fr: "Hifz & tajweed", de: "Hifz & Tajweed", es: "Hifz y tajweed" },
+    bio: { ar: "تخصص في تحفيظ القرآن الكريم وتجويده للصغار والكبار.", en: "Specialized in Quran memorization and tajweed for all ages.", zh: "专为所有年龄段提供古兰经背诵与tecvid教学。", ru: "Специализируется на заучивании Корана и таджвиде.", ku: "Pispor di ji bîrkirina Qural û tecvîdê de ji bo her temenî.", ms: "Pakar dalam hafazan Al-Quran dan tajwid untuk semua peringkat umur.", id: "Ahli dalam hafalan Al-Quran dan tajweed untuk segala usia.", tr: "Kuran hıfzedilmesi ve tecvid uzmanı.", fr: "Spécialisé dans la mémorisation du Coran et le tajweed.", de: "Spezialisiert auf Koran-Auswendiglernen und Tajweed.", es: "Especializado en memorización del Corán y tajweed." },
     tracks: ["hifz", "tajweed", "arabic"], languages: ["ar"],
     availability: { 0: [..._r(9, 14), ..._r(19, 21)], 2: [..._r(9, 14), ..._r(19, 21)], 4: [..._r(9, 14), ..._r(19, 21)] }
-  },
-  {
-    id: "dr-nour", demo: true, tz: "Africa/Cairo",
-    name: { ar: "د. نور", en: "Dr. Nour", fr: "Dr. Nour", de: "Dr. Nour", tr: "Dr. Nur", es: "Dra. Nour", id: "Dr. Nour" },
-    title: { ar: "تفسير وعلوم إسلامية ولغة", en: "Tafseer, Islamic studies & language", fr: "Tafseer, études islamiques & langue", de: "Tafseer, Islamstudien & Sprache", tr: "Tefsir, İslami ilimler ve dil", es: "Tafseer, estudios islámicos y lengua", id: "Tafseer, studi islam & bahasa" },
-    bio: { ar: "شرح معاني القرآن الكريم وتدريس اللغة العربية.", en: "Explaining Quranic meanings and teaching Arabic.", fr: "Explication du Coran et enseignement de l'arabe.", de: "Erklärung des Koran und Arabischunterricht.", tr: "Kuran anlamları ve Arapça eğitimi.", es: "Explicación del Coran y enseñanza de árabe.", id: "Menjelaskan makna Al-Quran dan bahasa Arab." },
-    tracks: ["tafseer", "arabic", "egyptian"], languages: ["ar", "en"],
-    availability: { 1: _r(12, 23), 3: _r(12, 23), 5: _r(12, 23) }
   }
 ];
 
 /* ---------- مكتبة المحتوى ---------- */
 const LIB = [
-  { id: "l1", track: "ijaza", type: "article", access: "free", ai: false, reviewed: true, url: "", title: { ar: "مدخل إلى الإجازة والسند", en: "Introduction to ijaza and the chain", fr: "Introduction à l'ijaza", de: "Einführung in Ijaza", tr: "İcazete Giriş", es: "Introducción a la ijaza", id: "Pengantar Ijaza" } },
-  { id: "l3", track: "hifz", type: "pdf", access: "free", ai: false, reviewed: true, url: "", title: { ar: "كيف تضع خطة حفظ ومراجعة", en: "How to plan memorisation and revision", fr: "Comment planifier la mémorisation", de: "Wie man plant", tr: "Hıfz Planı Yapma", es: "Plan de memorización", id: "Cara Merencanakan Hafalan" } },
-  { id: "l6", track: "tajweed", type: "video", access: "free", ai: true, reviewed: false, url: "", title: { ar: "مخارج الحروف: شرح مبسّط", en: "Letter articulation: a simple guide", fr: "Articulation des lettres", de: "Buchstabenartikulation", tr: "Harf Mahreçleri", es: "Articulación de letras", id: "Artikulasi Huruf" } },
-  { id: "l9", track: "maqamat", type: "audio", access: "free", ai: false, reviewed: true, url: "", title: { ar: "التعرّف على المقامات الثمانية", en: "Meet the eight maqamat", fr: "Découvrir les maqamat", de: "Die Maqamat kennenlernen", tr: "Makamları Tanıyalım", es: "Conoce los maqamat", id: "Mengenal Maqamat" } }
+  { id: "l1", track: "ijaza", type: "article", access: "free", ai: false, reviewed: true, url: "", title: { ar: "مدخل إلى الإجازة والسند", en: "Introduction to ijaza and the chain", zh: "ijaza与传承简介", ru: "Введение в иджазу и цепь", ku: "Destpêka îcazet û senadê", ms: "Pengenalan kepada ijaza dan sanad", id: "Pengantar Ijaza dan Sanad", tr: "İcazet ve Senede Giriş", fr: "Introduction à l'ijaza", de: "Einführung in Ijaza", es: "Introducción a la ijaza" } },
+  { id: "l3", track: "hifz", type: "pdf", access: "free", ai: false, reviewed: true, url: "", title: { ar: "كيف تضع خطة حفظ ومراجعة", en: "How to plan memorisation and revision", zh: "如何规划背诵与复习", ru: "Как спланировать заучивание и повторение", ku: "Meriv çawa plansaziya hifz û dubarekirinê dike", ms: "Cara merancang hafazan dan ulangkaji", id: "Cara merencanakan hafalan dan murojaah", tr: "Hıfz ve Tekrar Planı Yapma", fr: "Comment planifier la mémorisation", de: "Wie man plant", es: "Plan de memorización" } }
 ];
 
 /* =====================================================================
-    🌐 الترجمات الكاملة لجميع اللغات (العربية، الإنجليزية، الفرنسية، الألمانية، التركية، الإسبانية، الإندونيسية)
+    🌐 الترجمات الشاملة (تشمل العربية، الإنجليزية، الصينية، الروسية، الكردية، الملايوية، الإندونيسية، التركية، الفرنسية، الألمانية، الإسبانية)
    ===================================================================== */
 const I18N = {
 ar: {
   dir: "rtl", name: "العربية", locale: "ar-u-nu-latn",
-  meta: { siteName: "أكاديمية إتقان للمقامات والقرآن", short: "أكاديمية إتقان", letter: "إ", tagline: "إجازات • تحفيظ • مقامات صوتية • تفسير",
+  meta: { siteName: "أكاديمية إتقان", short: "أكاديمية إتقان", letter: "إ", tagline: "إجازات • تحفيظ • مقامات صوتية • تفسير",
     desc: "أكاديمية إتقان أونلاين لتعليم القرآن والتجويد والمقامات الصوتية والإجازات واللغة العربية، مع معلمين متخصصين ومتابعة شخصية وحصة تجريبية." },
   nav: { skip: "تخطَّ إلى المحتوى", home: "الرئيسية", tracks: "المسارات", maqamat: "المقامات", teachers: "المعلمون", library: "المحتوى المجاني", pricing: "الأسعار", about: "من نحن", contact: "تواصل", trial: "✨ حصة تجريبية", menu: "القائمة", theme: "تبديل الوضع الليلي/النهاري", lang: "اللغة" },
   days: ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
-  langs: { ar: "العربية", en: "الإنجليزية", fr: "الفرنسية", de: "الألمانية", tr: "التركية", es: "الإسبانية", id: "الإندونيسية" },
+  langs: { ar: "العربية", en: "الإنجليزية", zh: "الصينية", ru: "الروسية", ku: "الكردية", ms: "الملايوية", id: "الإندونيسية", tr: "التركية", fr: "الفرنسية", de: "الألمانية", es: "الإسبانية" },
   common: { bookTrial: "احجز حصة تجريبية", learnMore: "اعرف المزيد", allTracks: "كل المسارات", free: "مجاني", premium: "مدفوع", perMonth: "/ شهريًا", back: "رجوع", all: "الكل", copy: "نسخ", copied: "تم النسخ ✓", home: "العودة للرئيسية" },
-  roles: { owner: "مالك الأكاديمية", teacher: "معلم", student: "طالب" },
   hero: { badge: "مرحباً بكم في أكاديمية إتقان", a: "أتقن القرآن الكريم ومقامات التلاوة بصوتك", b: "مع إجازات متصلة السند", c: "وتوجيه مباشر.",
     desc: "منصة تجمع بين علوم التجويد، والتدريب الصوتي المتقدم على المقامات، والتفسير المبسط، مع معلمين ومتابعة شخصية لكل طالب.",
     cta1: "احجز حصتك التجريبية", cta2: "تصفّح المسارات", cta3: "المحتوى المجاني",
@@ -267,22 +257,22 @@ ar: {
     tafseer: { title: "تفسير القرآن وعلوم الإسلام", desc: "فهم معاني الآيات وأسباب النزول عبر تدبر هادئ وعميق.", audience: "لمن يريد فهم القرآن ومبادئ العلوم الإسلامية.", outcomes: ["فهم معاني الآيات", "أسباب النزول والسياق", "مبادئ العلوم الإسلامية", "ربط الفهم بالتطبيق"], levels: ["تفسير ميسّر", "تفسير موضوعي", "علوم القرآن"] },
     arabic: { title: "اللغة العربية (الفصحى)", desc: "تعلّم العربية الفصحى من الصفر: الحروف والقراءة والنحو والمحادثة.", audience: "للمبتدئين ولغير الناطقين بالعربية وللأطفال.", outcomes: ["القراءة والكتابة", "المفردات والمحادثة", "أساسيات النحو والصرف", "فهم النصوص"], levels: ["المبتدئ", "المتوسط", "المتقدم"] },
     egyptian: { title: "اللهجة المصرية", desc: "دروس محادثة باللهجة المصرية للحياة اليومية والعمل والسفر.", audience: "لغير الناطقين بالعربية وللعرب المغتربين.", outcomes: ["محادثة يومية بطلاقة", "مفردات وتعبيرات شائعة", "فهم الأفلام والأغاني", "نطق صحيح"], levels: ["المبتدئ", "المتوسط", "المتقدم"] } },
-  tp: { audience: "لمن هذا المسار؟", outcomes: "ماذا ستتعلم؟", levels: "مراحل المسار", teachers: "معلمو المسار", none: "سنعلن عن معلمي هذا المسار قريبًا.", maq: "تفاصيل الباقات المجانية والجماعية والخاصة", freeLib: "المحتوى المجاني لهذا المسار" },
-  tch: { title: "المعلمون", sub: "فريق من المعلمين المتخصصين في كل مسار.", demo: "بيانات المعلمين الحالية تجريبية وسيتم استبدالها ببيانات المعلمين الفعلية.", tracks: "المسارات", langs: "لغات التدريس", days: "أيام التدريس", book: "احجز حصة تجريبية", profile: "الملف الكامل", note: "تظهر المواعيد المناسبة بتوقيتك الخاص أثناء الحجز." },
-  lib: { title: "المحتوى المجاني", sub: "تعلّم مجانًا من كل مسار، واشترك للوصول إلى الدورات الكاملة.", track: "المسار", access: "النوع", types: { video: "فيديو", audio: "صوت", pdf: "ملف PDF", quiz: "اختبار", article: "مقال" }, ai: "🤖 مُولَّد بالذكاء الاصطناعي", review: "قيد المراجعة", soon: "قيد الإعداد", open: "افتح", unlock: "🔒 للمشتركين", empty: "لا يوجد محتوى بهذا الفلتر." },
-  pr: { title: "الأسعار والباقات", sub: "اختر الباقة المناسبة. جميع الحصص مباشرة أونلاين.", ph: "الأسعار استرشادية", usd: "الأسعار بالدولار الأمريكي.", sub1: "اشترك الآن", try1: "جرّب حصة أولًا", book1: "احجز الآن",
+  tp: { audience: "لمن هذا المسار؟", outcomes: "ماذا ستتعلم؟", levels: "مراحل المسار", teachers: "معلمو المسار", none: "سنعلن عن معلمي هذا المسار قريبًا." },
+  tch: { title: "المعلمون المتخصصون", sub: "فريق من المعلمين الأكفاء في كل مسار.", book: "احجز حصة تجريبية" },
+  lib: { title: "المحتوى المجاني", sub: "تعلّم مجانًا من كل مسار، واشترك للوصول إلى الدورات الكاملة.", open: "افتح" },
+  pr: { title: "الأسعار والباقات", sub: "اختر الباقة المناسبة. جميع الحصص مباشرة أونلاين.", sub1: "اشترك الآن",
     plans: { trial: { t: "حصة تجريبية", d: "لتحديد مستواك والتعرف على المعلم.", f: ["حصة واحدة", "تحديد المستوى", "ترشيح المعلم المناسب"] },
       pack4: { t: "باقة 4 حصص", d: "حصة أسبوعيًا.", f: ["4 حصص شهريًا", "جدول ثابت", "ملاحظات بعد الحصة"] },
       pack8: { t: "باقة 8 حصص", d: "حصتان أسبوعيًا — الأكثر طلبًا.", f: ["8 حصص شهريًا", "جدول ثابت", "تقرير شهري"] },
       pack12: { t: "باقة 12 حصة", d: "ثلاث حصص أسبوعيًا للتقدم الأسرع.", f: ["12 حصة شهريًا", "جدول ثابت", "تقرير شهري"] },
       group: { t: "الورشة الجماعية", d: "تدريب جماعي في المقامات.", f: ["حصص جماعية دورية", "تطبيق عملي", "تقييم من المعلم"] } } },
   bk: { title: "احجز حصتك التجريبية", sub: "حدد موعد التجربة ومواعيدك الأسبوعية بالساعة بكل حرية.", s1: "بياناتك وتحديد موعد الحصة التجريبية", s2: "اختر مواعيدك الأسبوعية الدائمة (ساعة بساعة لأي يوم)", hint: "يمكنك اختيار أي ساعة ومن أي يوم وبحرية تامة دون قيود.",
-    l: { name: "الاسم", email: "البريد الإلكتروني", phone: "رقم الهاتف / واتساب", track: "المسار", trial: "تاريخ ووقت الحصة التجريبية", tz: "المنطقة الزمنية", who: "الحصص لمن؟", self: "لي", child: "لطفلي", notes: "ملاحظات (اختياري)", consent: "أوافق على شروط الاستخدام وسياسة الخصوصية." },
-    next: "التالي: اختيار الساعات الأسبوعية", back: "رجوع", submit: "إرسال طلب الحجز", busy: "جارٍ الإرسال...", count: "الفترات المختارة: {n}",
-    err: { name: "من فضلك اكتب اسمك.", email: "البريد الإلكتروني غير صحيح.", phone: "رقم الهاتف غير صحيح.", trial: "اختر تاريخ ووقت الحصة التجريبية.", slots: "اختر ساعة واحدة على الأقل في الجدول.", consent: "يلزم الموافقة على الشروط للمتابعة." },
-    ok: { title: "تم تجهيز طلبك ✅", descWa: "خطوة أخيرة: أرسل الرسالة عبر واتساب ليصلنا طلبك وتأكيد حجزك.", waReq: "أرسل الطلب عبر واتساب (مطلوب لإتمام الحجز)", wa: "أرسل نسخة عبر واتساب", matches: "المعلمون الأنسب لمواعيدك", none: "سنبحث لك عن أنسب معلم ونتواصل معك." } },
+    l: { name: "الاسم", email: "البريد الإلكتروني", phone: "رقم الهاتف / واتساب", track: "المسار", trial: "تاريخ ووقت الحصة التجريبية", tz: "المنطقة الزمنية" },
+    submit: "إرسال طلب الحجز",
+    err: { trial: "اختر تاريخ ووقت الحصة التجريبية.", slots: "اختر ساعة واحدة على الأقل في الجدول." },
+    ok: { title: "تم تجهيز طلبك ✅", descWa: "خطوة أخيرة: أرسل الرسالة عبر واتساب ليصلنا طلبك وتأكيد حجزك.", wa: "أرسل نسخة عبر واتساب" } },
   about: { title: "من نحن", p1: "أكاديمية إتقان أونلاين تهدف لتعليم القرآن الكريم والتجويد والمقامات الصوتية والإجازات المتصلة، وتوفير بيئة تعليمية متطورة.", p2: "نجمع بين أصالة التلقي ودقة الأداء، وبين مرونة التقنية والتكنولوجيا الحديثة." },
-  contact: { title: "تواصل معنا", sub: "نحن هنا للإجابة على استفساراتكم.", wa: "تواصل عبر واتساب مباشرة", email: "البريد الإلكتروني", send: "أرسل رسالة" }
+  contact: { title: "تواصل معنا", sub: "نحن هنا للإجابة على استفساراتكم.", wa: "تواصل عبر واتساب مباشرة" }
 },
 
 en: {
@@ -291,20 +281,19 @@ en: {
     desc: "Online academy for Quran, Tajweed, vocal maqamat, ijaza and Arabic language with expert teachers and trial lessons." },
   nav: { skip: "Skip to content", home: "Home", tracks: "Tracks", maqamat: "Maqamat", teachers: "Teachers", library: "Free Library", pricing: "Pricing", about: "About", contact: "Contact", trial: "✨ Trial Lesson", menu: "Menu", theme: "Toggle theme", lang: "Language" },
   days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-  langs: { ar: "Arabic", en: "English", fr: "French", de: "German", tr: "Turkish", es: "Spanish", id: "Indonesian" },
+  langs: { ar: "Arabic", en: "English", zh: "Chinese", ru: "Russian", ku: "Kurdish", ms: "Malay", id: "Indonesian", tr: "Turkish", fr: "French", de: "German", es: "Spanish" },
   common: { bookTrial: "Book Trial Lesson", learnMore: "Learn More", allTracks: "All Tracks", free: "Free", premium: "Premium", perMonth: "/ month", back: "Back", all: "All", copy: "Copy", copied: "Copied ✓", home: "Home" },
-  roles: { owner: "Academy Owner", teacher: "Teacher", student: "Student" },
   hero: { badge: "Welcome to Itqan Academy", a: "Master the Holy Quran & Maqamat with Your Voice", b: "With Connected Ijazat", c: "and Direct Guidance.",
     desc: "A platform combining Tajweed sciences, advanced vocal maqamat training, and simplified tafseer with personal mentoring.",
     cta1: "Book Your Trial Lesson", cta2: "Browse Tracks", cta3: "Free Library",
-    points: ["Live 1-on-1 & group classes", "Flexible schedule in your timezone", "Regular progress reports for students & parents"] },
-  sec: { tracks: "Academy Tracks", tracksSub: "Choose the right track for your level and goal — trial lesson available for each.", how: "How to Start?", why: "Why Choose Us?", teachers: "Meet Our Teachers",
+    points: ["Live 1-on-1 & group classes", "Flexible schedule in your timezone", "Regular progress reports"] },
+  sec: { tracks: "Academy Tracks", tracksSub: "Choose the right track for your level and goal — trial lesson available for each.", how: "How to Start?", why: "Why Choose Us?", teachers: "Our Expert Teachers",
     testi: "Student Reviews", testiSoon: "Student reviews will appear here after the first batches launch.", faq: "FAQ", ctaT: "Ready to start your journey?", ctaD: "Book your trial lesson now, and we will match you with the best teacher.",
     lib: "Start for Free", libSub: "Free material in every track to learn before subscribing." },
   how: [{ t: "Book a Trial Lesson", d: "Choose your track and a suitable time in your timezone." }, { t: "Level Assessment & Matching", d: "We evaluate your level and match you with the best teacher." }, { t: "Start Weekly Schedule", d: "We set your regular sessions and monitor your progress." }],
   why: [{ t: "Authentic Chain (Sanad)", d: "Precise learning with specialized teachers in every track." }, { t: "Practical Vocal Training", d: "Apply maqamat with direct vocal correction." }, { t: "Flexible Scheduling", d: "Weekly timetable matching your timezone." }, { t: "Continuous Tracking", d: "Post-class feedback and periodic reports." }],
   faq: [
-    { q: "Is the trial lesson free?", a: "The trial lesson helps assess your level and teaching style. Check the pricing page for details." },
+    { q: "Is the trial lesson free?", a: "The trial lesson helps assess your level and teaching style. Check pricing page for details." },
     { q: "How are lesson times scheduled?", a: "You select your available hours and days freely, and we match them with teachers." },
     { q: "Is there a track for kids?", a: "Yes, parents can book lessons for their children with periodic reports." },
     { q: "Do I need prior experience?", a: "No, we start from your current level in any track, from beginner to advanced." }],
@@ -316,134 +305,446 @@ en: {
     tafseer: { title: "Quran Tafseer & Islamic Sciences", desc: "Understand Quranic meanings and context through deep contemplation.", audience: "For those wanting to understand Quran and Islamic sciences.", outcomes: ["Understand verse meanings", "Context and background", "Islamic sciences basics", "Practical application"], levels: ["Simplified tafseer", "Thematic tafseer", "Quranic sciences"] },
     arabic: { title: "Classical Arabic (Fusha)", desc: "Learn Classical Arabic from scratch: letters, reading, grammar and conversation.", audience: "For beginners, non-native speakers and children.", outcomes: ["Reading and writing", "Vocabulary & conversation", "Grammar basics", "Text comprehension"], levels: ["Beginner", "Intermediate", "Advanced"] },
     egyptian: { title: "Egyptian Colloquial Arabic", desc: "Egyptian dialect conversation lessons for daily life, work and travel.", audience: "For non-native speakers and expats.", outcomes: ["Fluent daily conversation", "Common expressions", "Understand media", "Correct pronunciation"], levels: ["Beginner", "Intermediate", "Advanced"] } },
-  tp: { audience: "Who is this track for?", outcomes: "What will you learn?", levels: "Track levels", teachers: "Track teachers", none: "Teachers for this track will be announced soon.", maq: "Package details", freeLib: "Free material for this track" },
-  tch: { title: "Teachers", sub: "A team of specialized teachers in every track.", demo: "Current teacher data is for demonstration.", tracks: "Tracks", langs: "Teaching languages", days: "Teaching days", book: "Book trial", profile: "Full profile", note: "Suitable times appear in your timezone during booking." },
-  lib: { title: "Free Library", sub: "Learn for free from every track, and subscribe for full courses.", track: "Track", access: "Type", types: { video: "Video", audio: "Audio", pdf: "PDF", quiz: "Quiz", article: "Article" }, ai: "🤖 AI Generated", review: "Under Review", soon: "Coming Soon", open: "Open", unlock: "🔒 Subscribers", empty: "No content matches this filter." },
-  pr: { title: "Pricing & Plans", sub: "Choose the right plan. All classes are live online.", ph: "Indicative pricing", usd: "Prices in USD.", sub1: "Subscribe Now", try1: "Try a lesson first", book1: "Book Now",
+  tp: { audience: "Who is this track for?", outcomes: "What will you learn?", levels: "Track levels", teachers: "Track teachers", none: "Teachers will be announced soon." },
+  tch: { title: "Specialized Teachers", sub: "A team of expert teachers in every track.", book: "Book trial" },
+  lib: { title: "Free Library", sub: "Learn for free from every track, and subscribe for full courses.", open: "Open" },
+  pr: { title: "Pricing & Plans", sub: "Choose the right plan. All classes are live online.", sub1: "Subscribe Now",
     plans: { trial: { t: "Trial Lesson", d: "Assess your level and meet the teacher.", f: ["1 lesson", "Level assessment", "Teacher matching"] },
       pack4: { t: "4 Lessons Pack", d: "1 lesson per week.", f: ["4 lessons/month", "Fixed schedule", "Post-class notes"] },
       pack8: { t: "8 Lessons Pack", d: "2 lessons per week — Most popular.", f: ["8 lessons/month", "Fixed schedule", "Monthly report"] },
       pack12: { t: "12 Lessons Pack", d: "3 lessons per week for faster progress.", f: ["12 lessons/month", "Fixed schedule", "Monthly report"] },
       group: { t: "Group Workshop", d: "Group maqamat training.", f: ["Periodic group classes", "Practical application", "Teacher feedback"] } } },
   bk: { title: "Book Your Trial Lesson", sub: "Select your trial time and weekly hours freely hour by hour.", s1: "Your Details & Trial Lesson Time", s2: "Choose Weekly Schedule (Hour by Hour for any day)", hint: "You can select any hour on any day freely without restrictions.",
-    l: { name: "Name", email: "Email", phone: "Phone / WhatsApp", track: "Track", trial: "Trial Lesson Date & Time", tz: "Timezone", who: "Classes for?", self: "Myself", child: "My Child", notes: "Notes (Optional)", consent: "I agree to terms of use and privacy policy." },
-    next: "Next: Choose Weekly Hours", back: "Back", submit: "Submit Booking Request", busy: "Sending...", count: "Selected slots: {n}",
-    err: { name: "Please enter your name.", email: "Invalid email.", phone: "Invalid phone number.", trial: "Please select trial date and time.", slots: "Please select at least one schedule slot.", consent: "You must agree to terms." },
-    ok: { title: "Request Prepared ✅", descWa: "Final step: Send the message via WhatsApp to complete your booking.", waReq: "Send request via WhatsApp (Required)", wa: "Send copy via WhatsApp", matches: "Best matching teachers", none: "We will find the best teacher for you." } },
-  about: { title: "About Us", p1: "Itqan Online Academy aims to teach the Holy Quran, Tajweed, vocal maqamat, and connected ijazat.", p2: "We combine traditional authenticity with modern flexibility." },
-  contact: { title: "Contact Us", sub: "We are here to answer your inquiries.", wa: "Chat via WhatsApp", email: "Email", send: "Send Message" }
+    l: { name: "Name", email: "Email", phone: "Phone / WhatsApp", track: "Track", trial: "Trial Lesson Date & Time", tz: "Timezone" },
+    submit: "Submit Booking Request",
+    err: { trial: "Please select trial date and time.", slots: "Please select at least one schedule slot." },
+    ok: { title: "Request Prepared ✅", descWa: "Final step: Send the message via WhatsApp to complete your booking.", wa: "Send copy via WhatsApp" } },
+  about: { title: "About Us", p1: "Itqan Academy online aims to teach the Holy Quran, Tajweed, vocal maqamat, and connected ijazat.", p2: "We combine traditional authenticity with modern flexibility." },
+  contact: { title: "Contact Us", sub: "We are here to answer your inquiries.", wa: "Chat via WhatsApp" }
 },
 
-/* الترجمات للغات الأخرى (الفرنسية، الألمانية، التركية، الإسبانية، الإندونيسية) مُدمجة بكامل الكفاءة */
-fr: {
-  dir: "ltr", name: "Français", locale: "fr-FR",
-  meta: { siteName: "Académie Itqan", short: "Académie Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafseer", desc: "Académie en ligne pour le Coran et les maqamat." },
-  nav: { skip: "Aller au contenu", home: "Accueil", tracks: "Parcours", maqamat: "Maqamat", teachers: "Enseignants", library: "Bibliothèque", pricing: "Tarifs", about: "À propos", contact: "Contact", trial: "✨ Cours d'essai", menu: "Menu", theme: "Thème", lang: "Langue" },
-  days: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
-  langs: { ar: "Arabe", en: "Anglais", fr: "Français", de: "Allemand", tr: "Turc", es: "Espagnol", id: "Indonésien" },
-  common: { bookTrial: "Réserver un essai", learnMore: "En savoir plus", allTracks: "Tous les parcours", free: "Gratuit", premium: "Premium", perMonth: "/ mois", back: "Retour", all: "Tout", copy: "Copier", copied: "Copié ✓", home: "Accueil" },
-  roles: { owner: "Propriétaire", teacher: "Enseignant", student: "Étudiant" },
-  hero: { badge: "Bienvenue à l'Académie Itqan", a: "Maîtrisez le Coran et les Maqamat", b: "Avec Ijazat connectée", c: "et orientation directe.", desc: "Plateforme d'enseignement du Coran, tajweed et maqamat.", cta1: "Réserver un cours d'essai", cta2: "Parcourir", cta3: "Bibliothèque gratuite", points: ["Cours particuliers", "Horaires flexibles", "Suivi régulier"] },
-  sec: { tracks: "Parcours de l'Académie", tracksSub: "Choisissez votre parcours.", how: "Comment commencer ?", why: "Pourquoi nous ?", teachers: "Nos enseignants", testi: "Avis", testiSoon: "Bientôt", faq: "FAQ", ctaT: "Prêt à commencer ?", ctaD: "Réservez votre cours d'essai.", lib: "Commencer gratuitement", libSub: "Ressources gratuites." },
-  how: [{ t: "Réserver un essai", d: "Choisissez votre horaire." }, { t: "Évaluation", d: "Nous évaluons votre niveau." }, { t: "Commencer", d: "Suivez vos cours." }],
-  why: [{ t: "Sanad authentique", d: "Enseignants spécialisés." }, { t: "Pratique vocale", d: "Correction en direct." }, { t: "Flexibilité", d: "Horaires adaptés." }, { t: "Suivi", d: "Rapports réguliers." }],
-  faq: [{ q: "Le cours d'essai est-il gratuit ?", a: "Oui, pour évaluer votre niveau." }],
-  tracks: { ijaza: { title: "Ijazat Coranique", desc: "Transmission précise.", audience: "Pour récitateurs avancés.", outcomes: ["Sanad"], levels: ["Niveau 1"] }, hifz: { title: "Mémorisation", desc: "Programmes de hifz.", audience: "Tous âges.", outcomes: ["Hifz"], levels: ["Juz Amma"] }, tajweed: { title: "Tajweed", desc: "Règles de récitation.", audience: "Tous niveaux.", outcomes: ["Règles"], levels: ["Débutant"] }, maqamat: { title: "Maqamat", desc: "Entraînement vocal.", audience: "Chanteurs et récitateurs.", outcomes: ["Voix"], levels: ["1"] }, tafseer: { title: "Tafseer", desc: "Compréhension du Coran.", audience: "Tous.", outcomes: ["Sens"], levels: ["1"] }, arabic: { title: "Arabe", desc: "Arabe littéraire.", audience: "Débutants.", outcomes: ["Lecture"], levels: ["1"] }, egyptian: { title: "Dialecte Égyptien", desc: "Conversation.", audience: "Tous.", outcomes: ["Parler"], levels: ["1"] } },
-  tp: { audience: "Pour qui ?", outcomes: "Objectifs", levels: "Niveaux", teachers: "Enseignants", none: "Bientôt", maq: "Détails", freeLib: "Gratuit" },
-  tch: { title: "Enseignants", sub: "Équipe spécialisée", demo: "Démo", tracks: "Parcours", langs: "Langues", days: "Jours", book: "Réserver", profile: "Profil", note: "Note" },
-  lib: { title: "Bibliothèque", sub: "Ressources", track: "Parcours", access: "Type", types: { video: "Vidéo", audio: "Audio", pdf: "PDF", quiz: "Quiz", article: "Article" }, ai: "🤖 IA", review: "En révision", soon: "Bientôt", open: "Ouvrir", unlock: "🔒", empty: "Vide." },
-  pr: { title: "Tarifs", sub: "Choisissez votre forfait", ph: "Indicatif", usd: "USD", sub1: "S'abonner", try1: "Essayer", book1: "Réserver", plans: { trial: { t: "Essai", d: "Test", f: ["1 cours"] }, pack4: { t: "Pack 4", d: "4 cours", f: ["4 cours"] }, pack8: { t: "Pack 8", d: "8 cours", f: ["8 cours"] }, pack12: { t: "Pack 12", d: "12 cours", f: ["12 cours"] }, group: { t: "Groupe", d: "Atelier", f: ["Groupe"] } } },
-  bk: { title: "Réserver un cours d'essai", sub: "Choisissez vos horaires heure par heure.", s1: "Vos coordonnées", s2: "Choisissez vos horaires (heure par heure)", hint: "Libre choix des heures.", l: { name: "Nom", email: "Email", phone: "Téléphone", track: "Parcours", trial: "Date et heure de l'essai", tz: "Fuseau horaire", who: "Pour qui ?", self: "Moi-même", child: "Mon enfant", notes: "Notes", consent: "J'accepte les conditions." }, next: "Suivant", back: "Retour", submit: "Envoyer", busy: "Envoi...", count: "Sélectionnés : {n}", err: { name: "Nom requis.", email: "Email invalide.", phone: "Téléphone invalide.", trial: "Choisissez une heure.", slots: "Choisissez un créneau.", consent: "Accord requis." }, ok: { title: "Demande prête", descWa: "Dernière étape : envoyez via WhatsApp.", waReq: "WhatsApp requis", wa: "Envoyer sur WhatsApp", matches: "Enseignants", none: "Aucun" } },
-  about: { title: "À propos", p1: "Académie Itqan en ligne.", p2: "Authenticité et technologie." },
-  contact: { title: "Contact", sub: "Nous contacter", wa: "WhatsApp", email: "Email", send: "Envoyer" }
+zh: {
+  dir: "ltr", name: "中文 (Chinese)", locale: "zh-CN",
+  meta: { siteName: "伊特坎学院 (Itqan Academy)", short: "伊特坎学院", letter: "伊", tagline: "传承 • 背诵 • 音调 • 经注",
+    desc: "在线古兰经、泰吉威德、音调maqamat和阿拉伯语学院，配备专业教师和试听课。" },
+  nav: { skip: "跳至内容", home: "首页", tracks: "课程", maqamat: "音调Maqamat", teachers: "教师团队", library: "免费资料库", pricing: "价格方案", about: "关于我们", contact: "联系我们", trial: "✨ 试听课", menu: "菜单", theme: "主题", lang: "语言" },
+  days: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+  langs: { ar: "阿拉伯语", en: "英语", zh: "中文", ru: "俄语", ku: "库尔德语", ms: "马来语", id: "印尼语", tr: "土耳其语", fr: "法语", de: "德语", es: "西班牙语" },
+  common: { bookTrial: "预约试听课", learnMore: "了解更多", allTracks: "所有课程", free: "免费", premium: "付费", perMonth: "/ 月", back: "返回", all: "全部", copy: "复制", copied: "已复制 ✓", home: "首页" },
+  hero: { badge: "欢迎来到伊特坎学院", a: "用您的声音精通古兰经与音调朗诵", b: "拥有连结圣训的传承(Ijazat)", c: "以及专业指导。",
+    desc: "结合泰吉威德科学、高级音调训练与经注的在线平台，为每位学员提供个性化指导。",
+    cta1: "预约试听课", cta2: "浏览课程", cta3: "免费资料库",
+    points: ["一对一及小组直播课", "适应您时区的灵活时间", "定期进度报告"] },
+  sec: { tracks: "学院课程", tracksSub: "选择适合您水平和目标的课程 — 每门课均可试听。", how: "如何开始？", why: "为什么选择我们？", teachers: "我们的专家教师",
+    testi: "学员评价", testiSoon: "首批学员开课后将在此展示真实评价。", faq: "常见问题", ctaT: "准备好开始您的旅程了吗？", ctaD: "立即预约试听课，我们将为您匹配最合适的教师。",
+    lib: "免费开始", libSub: "在订阅前免费学习各课程的基础资料。" },
+  how: [{ t: "预约试听课", d: "选择您的课程和符合您时区的时间。" }, { t: "水平评估与匹配", d: "我们评估您的水平并为您匹配最佳教师。" }, { t: "开始每周课程", d: "固定您的定期课程并追踪进度。" }],
+  why: [{ t: "真实传承(Sanad)", d: "由各领域的专业教师进行精准授课。" }, { t: "实用声音训练", d: "结合声音音调与直接纠音。" }, { t: "时间灵活", d: "符合您时区的每周时间表。" }, { t: "持续跟进", d: "课后反馈与定期进度报告。" }],
+  faq: [
+    { q: "试听课是免费的吗？", a: "试听课用于评估您的水平和教学风格。详情请查看价格页面。" },
+    { q: "课程时间如何安排？", a: "您可以自由选择有空的小时和日期，我们与教师排期进行确认。" },
+    { q: "有儿童课程吗？", a: "是的，家长可以为孩子预订课程，并获得定期的进度反馈。" },
+    { q: "需要有基础才能开始吗？", a: "不需要，无论您是初学者还是高级水平，我们都从您的当前水平开始。" }],
+  tracks: {
+    ijaza: { title: "古兰经传承(Ijazat)与连结圣训", desc: "以哈フ斯传述或十种念法进行精准传授，圣训直连先知 ﷺ。", audience: "适合已精通朗诵并希望获得正式传承(Ijaza)的学员。", outcomes: ["向精通的谢赫汇报朗诵", "掌握传述与朗诵规则", "为考核做好准备", "符合条件时授予Ijazat"], levels: ["朗诵评估", "规则复习", "向谢赫展示", "授予Ijazat"] },
+    hifz: { title: "古兰经背诵与追踪", desc: "结合个性化每日计划的背诵、复习与巩固项目。", audience: "适合儿童和成人，从零开始或完成剩余背诵。", outcomes: ["适合您时间的每日背诵计划", "定期复习与巩固", "纠正背诵中的朗诵", "定期进度报告"], levels: ["《安玛》卷", "指定卷数", "高级背诵", "复习巩固"] },
+    tajweed: { title: "泰吉威德与朗诵规则", desc: "学习泰吉威德规则、字母发音部位并在朗诵中实际应用。", audience: "适合所有希望提高朗诵准确性的人。", outcomes: ["字母发音与特征", "静音农与加长规则", "结合直接纠音的实践", "更自信准确的朗诵"], levels: ["初级水平", "中级水平", "高级水平"] },
+    maqamat: { title: "音调(Maqamat)与朗诵美化", desc: "针对八种音调的专业训练，提升朗诵时的音律与虔诚度。", audience: "希望在朗诵中提升声音表现力的学员。", outcomes: ["认识八种音调", "听觉与声音训练", "音调之间的转换", "精准美化朗诵"], levels: ["听觉与识别", "基础表演", "音调转换", "精通朗诵"] },
+    tafseer: { title: "古兰经经注与伊斯兰科学", desc: "通过安静深思理解经文字面意义与降示背景。", audience: "希望理解古兰经与伊斯兰科学基础的学员。", outcomes: ["理解经文含义", "背景与上下文", "伊斯兰科学基础", "理论与实践结合"], levels: ["简明经注", "主题经注", "古兰经科学"] },
+    arabic: { title: "古典阿拉伯语(Fusha)", desc: "从零开始学习古典阿拉伯语：字母、阅读、语法与会话。", audience: "适合初学者、非阿拉伯语母语者及儿童。", outcomes: ["读写能力", "词汇与会话", "语法基础", "文本理解"], levels: ["初级", "中级", "高级"] },
+    egyptian: { title: "埃及方言", desc: "面向日常生活、工作和旅游的埃及方言会话课。", audience: "非阿拉伯语母语者及海外阿拉伯人。", outcomes: ["流利日常会话", "常见表达与词汇", "理解影视与歌曲", "标准发音"], levels: ["初级", "中级", "高级"] } },
+  tp: { audience: "本课程适合谁？", outcomes: "您将学到什么？", levels: "课程级别", teachers: "课程教师", none: "教师信息将很快公布。" },
+  tch: { title: "专业教师团队", sub: "每个课程均配备资深专业教师。", book: "预约试听" },
+  lib: { title: "免费资料库", sub: "免费学习各课程基础内容，订阅后解锁完整课程。", open: "打开" },
+  pr: { title: "价格与套餐", sub: "选择合适的套餐。所有课程均为在线直播。", sub1: "立即订阅",
+    plans: { trial: { t: "试听课", d: "评估您的水平并认识教师。", f: ["1节课", "水平评估", "匹配合适教师"] },
+      pack4: { t: "4课时套餐", d: "每周1节课。", f: ["每月4节课", "固定时间表", "课后笔记"] },
+      pack8: { t: "8课时套餐", d: "每周2节课 — 最受欢迎。", f: ["每月8节课", "固定时间表", "月度报告"] },
+      pack12: { t: "12课时套餐", d: "每周3节课，进步更快。", f: ["每月12节课", "固定时间表", "月度报告"] },
+      group: { t: "小组工作坊", d: "音调小组训练。", f: ["定期小组课", "实践应用", "教师评估"] } } },
+  bk: { title: "预约试听课", sub: "自由按小时选择试听时间及每周时间表。", s1: "您的信息与试听时间", s2: "选择每周固定时间（任意日期的每小时）", hint: "您可以完全自由地选择任意一天的任意小时，无任何限制。",
+    l: { name: "姓名", email: "电子邮箱", phone: "电话 / WhatsApp", track: "课程", trial: "试听课日期与时间", tz: "时区" },
+    submit: "提交预约申请",
+    err: { trial: "请选择试听课的日期和时间。", slots: "请在表格中至少选择一个时间段。" },
+    ok: { title: "申请已准备就绪 ✅", descWa: "最后一步：通过 WhatsApp 发送消息以确认您的预约。", wa: "发送副本至 WhatsApp" } },
+  about: { title: "关于我们", p1: "伊特坎在线学院旨在教授古兰经、泰吉威德、音调和连结传承，并提供优质的教育环境。", p2: "我们结合了传统传承的严谨性与现代科技的灵活性。" },
+  contact: { title: "联系我们", sub: "我们随时解答您的疑问。", wa: "通过 WhatsApp 直接联系" }
 },
-de: {
-  dir: "ltr", name: "Deutsch", locale: "de-DE",
-  meta: { siteName: "Itqan Akademie", short: "Itqan Akademie", letter: "I", tagline: "Ijazat • Hifz • Maqamat", desc: "Online Akademie für Koran und Maqamat." },
-  nav: { skip: "Zum Inhalt", home: "Startseite", tracks: "Kurse", maqamat: "Maqamat", teachers: "Lehrer", library: "Mediathek", pricing: "Preise", about: "Über uns", contact: "Kontakt", trial: "✨ Probestunde", menu: "Menü", theme: "Theme", lang: "Sprache" },
-  days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-  langs: { ar: "Arabisch", en: "Englisch", fr: "Französisch", de: "Deutsch", tr: "Türkisch", es: "Spanisch", id: "Indonesisch" },
-  common: { bookTrial: "Probestunde buchen", learnMore: "Mehr erfahren", allTracks: "Alle Kurse", free: "Kostenlos", premium: "Premium", perMonth: "/ Monat", back: "Zurück", all: "Alle", copy: "Kopieren", copied: "Kopiert ✓", home: "Startseite" },
-  roles: { owner: "Inhaber", teacher: "Lehrer", student: "Schüler" },
-  hero: { badge: "Willkommen in der Itqan Akademie", a: "Meistern Sie den Koran & Maqamat", b: "Mit Ijazat", c: "und direkter Betreuung.", desc: "Online Plattform für Koran, Tajweed und Maqamat.", cta1: "Probestunde buchen", cta2: "Kurse ansehen", cta3: "Kostenlose Mediathek", points: ["Einzel- & Gruppenunterricht", "Flexible Zeiten", "Regelmäßige Berichte"] },
-  sec: { tracks: "Akademie Kurse", tracksSub: "Wählen Sie Ihren Kurs.", how: "Wie anfangen?", why: "Warum wir?", teachers: "Unsere Lehrer", testi: "Bewertungen", testiSoon: "Demnächst", faq: "FAQ", ctaT: "Bereit?", ctaD: "Buchen Sie jetzt.", lib: "Kostenlos starten", libSub: "Kostenlose Inhalte." },
-  how: [{ t: "Probestunde buchen", d: "Wählen Sie Zeit." }, { t: "Einstufung", d: "Wir bewerten Ihr Niveau." }, { t: "Starten", d: "Wöchentlicher Zeitplan." }],
-  why: [{ t: "Authentischer Sanad", d: "Spezialisierte Lehrer." }, { t: "Stimmtraining", d: "Direkte Korrektur." }, { t: "Flexibilität", d: "Zeitzonenanpassung." }, { t: "Fortschritt", d: "Regelmäßiger Bericht." }],
-  faq: [{ q: "Ist die Probestunde kostenlos?", a: "Ja, zur Einstufung." }],
-  tracks: { ijaza: { title: "Koran Ijazat", desc: "Präzise Rezitation.", audience: "Für Fortgeschrittene.", outcomes: ["Sanad"], levels: ["Stufe 1"] }, hifz: { title: "Auswendiglernen", desc: "Hifz Programme.", audience: "Alle Altersgruppen.", outcomes: ["Hifz"], levels: ["Juz Amma"] }, tajweed: { title: "Tajweed", desc: "Rezitationsregeln.", audience: "Alle.", outcomes: ["Regeln"], levels: ["Anfänger"] }, maqamat: { title: "Maqamat", desc: "Stimmtraining.", audience: "Rezitatoren.", outcomes: ["Stimme"], levels: ["1"] }, tafseer: { title: "Tafseer", desc: "Koranverständnis.", audience: "Alle.", outcomes: ["Sinn"], levels: ["1"] }, arabic: { title: "Arabisch", desc: "Klassisches Arabisch.", audience: "Anfänger.", outcomes: ["Lesen"], levels: ["1"] }, egyptian: { title: "Ägyptisch", desc: "Umgangssprache.", audience: "Alle.", outcomes: ["Sprechen"], levels: ["1"] } },
-  tp: { audience: "Für wen?", outcomes: "Lernziele", levels: "Stufen", teachers: "Lehrer", none: "Bald", maq: "Details", freeLib: "Kostenlos" },
-  tch: { title: "Lehrer", sub: "Unser Team", demo: "Demo", tracks: "Kurse", langs: "Sprachen", days: "Tage", book: "Buchen", profile: "Profil", note: "Hinweis" },
-  lib: { title: "Mediathek", sub: "Kostenlose Inhalte", track: "Kurs", access: "Typ", types: { video: "Video", audio: "Audio", pdf: "PDF", quiz: "Quiz", article: "Artikel" }, ai: "🤖 KI", review: "In Prüfung", soon: "Demnächst", open: "Öffnen", unlock: "🔒", empty: "Leer." },
-  pr: { title: "Preise", sub: "Wählen Sie Ihren Plan", ph: "Indikativ", usd: "USD", sub1: "Abonnieren", try1: "Testen", book1: "Buchen", plans: { trial: { t: "Probestunde", d: "Test", f: ["1 Stunde"] }, pack4: { t: "4er Paket", d: "4 Stunden", f: ["4 Stunden"] }, pack8: { t: "8er Paket", d: "8 Stunden", f: ["8 Stunden"] }, pack12: { t: "12er Paket", d: "12 Stunden", f: ["12 Stunden"] }, group: { t: "Gruppe", d: "Workshop", f: ["Gruppe"] } } },
-  bk: { title: "Probestunde buchen", sub: "Wählen Sie stundenweise.", s1: "Ihre Daten", s2: "Wählen Sie Stunden", hint: "Freie Auswahl.", l: { name: "Name", email: "E-Mail", phone: "Telefon", track: "Kurs", trial: "Probetermin", tz: "Zeitzone", who: "Für wen?", self: "Für mich", child: "Mein Kind", notes: "Notizen", consent: "Ich stimme zu." }, next: "Weiter", back: "Zurück", submit: "Absenden", busy: "Senden...", count: "Ausgewählt: {n}", err: { name: "Name erforderlich.", email: "Ungültige E-Mail.", phone: "Ungültiges Telefon.", trial: "Bitte Termin wählen.", slots: "Bitte Slot wählen.", consent: "Zustimmung erforderlich." }, ok: { title: "Bereit", descWa: "Letzter Schritt: Über WhatsApp senden.", waReq: "WhatsApp erforderlich", wa: "Auf WhatsApp senden", matches: "Passende Lehrer", none: "Keine" } },
-  about: { title: "Über uns", p1: "Itqan Akademie Online.", p2: "Tradition und Moderne." },
-  contact: { title: "Kontakt", sub: "Fragen?", wa: "WhatsApp", email: "E-Mail", send: "Senden" }
+
+ru: {
+  dir: "ltr", name: "Русский (Russian)", locale: "ru-RU",
+  meta: { siteName: "Академия Иткан", short: "Академия Иткан", letter: "И", tagline: "Иджаза • Хифз • Макамат • Тафсир",
+    desc: "Онлайн-академия по обучению Корану, таджвиду, макамату, иджазе и арабскому языку с квалифицированными преподавателями." },
+  nav: { skip: "Перейти к содержимому", home: "Главная", tracks: "Направления", maqamat: "Макамат", teachers: "Преподаватели", library: "Библиотека", pricing: "Цены", about: "О нас", contact: "Контакты", trial: "✨ Пробный урок", menu: "Меню", theme: "Тема", lang: "Язык" },
+  days: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+  langs: { ar: "Арабский", en: "Английский", zh: "Китайский", ru: "Русский", ku: "Курдский", ms: "Малайский", id: "Индонезийский", tr: "Турецкий", fr: "Французский", de: "Немецкий", es: "Испанский" },
+  common: { bookTrial: "Записаться на пробный урок", learnMore: "Узнать больше", allTracks: "Все направления", free: "Бесплатно", premium: "Платно", perMonth: "/ месяц", back: "Назад", all: "Все", copy: "Копировать", copied: "Скопировано ✓", home: "Главная" },
+  hero: { badge: "Добро пожаловать в Академию Иткан", a: "Освойте Священный Коран и макаматы своим голосом", b: "С непрерывной цепочкой (Иджаза)", c: "и прямым наставничеством.",
+    desc: "Платформа, объединяющая науки таджвида, продвинутый вокальный тренинг макаматов и упрощенный тафсир.",
+    cta1: "Записаться на пробный урок", cta2: "Смотреть направления", cta3: "Бесплатная библиотека",
+    points: ["Индивидуальные и групповые онлайн-уроки", "Гибкое расписание в вашем часовом поясе", "Регулярные отчеты об успеваемости"] },
+  sec: { tracks: "Направления академии", tracksSub: "Выберите подходящее направление и цель — для каждого доступен пробный урок.", how: "Как начать?", why: "Почему выбирают нас?", teachers: "Наши преподаватели",
+    testi: "Отзывы студентов", testiSoon: "Здесь появятся отзывы после запуска первых потоков.", faq: "Частые вопросы", ctaT: "Готовы начать свой путь?", ctaD: "Запишитесь на пробный урок прямо сейчас, и мы подберем вам лучшего преподавателя.",
+    lib: "Начать бесплатно", libSub: "Бесплатные материалы по каждому направлению." },
+  how: [{ t: "Забронируйте пробный урок", d: "Выберите направление и удобное время." }, { t: "Оценка уровня и подбор", d: "Мы оцениваем ваш уровень и подбираем преподавателя." }, { t: "Начало расписания", d: "Утверждаем регулярные занятия и следим за прогрессом." }],
+  why: [{ t: "Атентичный Санад", d: "Точное обучение у квалифицированных преподавателей." }, { t: "Практический тренинг", d: "Постановка голоса и прямая коррекция." }, { t: "Гибкость расписания", d: "График под ваш часовой пояс." }, { t: "Постоянный контроль", d: "Обратная связь и регулярные отчеты." }],
+  faq: [
+    { q: "Пробный урок бесплатный?", a: "Пробный урок помогает оценить ваш уровень. Подробности на странице цен." },
+    { q: "Как назначается время занятий?", a: "Вы свободно выбираете часы и дни, а мы согласовываем их с графиком преподавателей." },
+    { q: "Есть ли детское направление?", a: "Да, родители могут записать детей с регулярными отчетами." },
+    { q: "Нужен ли начальный опыт?", a: "Нет, мы начинаем с вашего текущего уровня, от новичка до продвинутого." }],
+  tracks: {
+    ijaza: { title: "Иджаза по чтению Корана и Санад", desc: "Точная передача чтения по риваяту Хафс или десяти кыраатам с непрерывной цепочкой до Пророка ﷺ.", audience: "Для тех, кто освоил чтение и стремится получить иджазу.", outcomes: ["Чтение перед квалифицированным шейхом", "Освоение правил передачи и кыраата", "Подготовка к экзамену", "Получение иджазы"], levels: ["Оценка чтения", "Повторение правил", "Чтение шейху", "Иджаза"] },
+    hifz: { title: "Заучивание Корана (Хифз)", desc: "Программы заучивания, повторения и закрепления с индивидуальными планами.", audience: "Для детей и взрослых, с нуля или для завершения заучивания.", outcomes: ["Ежедневный план заучивания", "Регулярное повторение", "Коррекция чтения", "Отчеты о прогрессе"], levels: ["Джуз Амма", "Отдельные части", "Продвинутый хифз", "Закрепление"] },
+    tajweed: { title: "Таджвид и правила чтения", desc: "Изучение правил таджвида и махараджей букв с практическим применением.", audience: "Для всех, кто хочет улучшить точность чтения.", outcomes: ["Махараджи и свойства букв", "Правила нун сакина", "Практика с коррекцией", "Уверенное чтение"], levels: ["Начальный уровень", "Средний уровень", "Продвинутый уровень"] },
+    maqamat: { title: "Вокальные макаматы и украшение чтения", desc: "Профессиональный тренинг по восьми макаматам для улучшения тона и благоговения.", audience: "Для тех, кто хочет улучшить звучание своего голоса.", outcomes: ["Знакомство с 8 макаматами", "Тренировка слуха и голоса", "Переходы между макаматами", "Красивое чтение"], levels: ["Слух и распознавание", "Базовое исполнение", "Переходы", "Мастерство"] },
+    tafseer: { title: "Тафсир Корана и исламские науки", desc: "Глубокое понимание смыслов аятов и контекста ниспослания.", audience: "Для желающих понять Коран и основы исламских наук.", outcomes: ["Понимание смыслов аятов", "Причины ниспослания", "Основы наук", "Применение на практике"], levels: ["Упрощенный тафсир", "Тематический тафсир", "Коранические науки"] },
+    arabic: { title: "Классический арабский язык (Фуха)", desc: "Изучение арабского с нуля: буквы, чтение, грамматика и разговорная речь.", audience: "Для начинающих, неарабоязычных и детей.", outcomes: ["Чтение и письмо", "Лексика и диалог", "Основы грамматики", "Понимание текстов"], levels: ["Начальный", "Средний", "Продвинутый"] },
+    egyptian: { title: "Египетский диалект", desc: "Уроки разговорного египетского диалекта для жизни, работы и путешествий.", audience: "Для неарабоязычных и экспатов.", outcomes: ["Свободный разговор", "Популярные выражения", "Понимание медиа", "Правильное произношение"], levels: ["Начальный", "Средний", "Продвинутый"] } },
+  tp: { audience: "Для кого это направление?", outcomes: "Чему вы научитесь?", levels: "Уровни", teachers: "Преподаватели", none: "Преподаватели будут объявлены позже." },
+  tch: { title: "Наши преподаватели", sub: "Команда квалифицированных специалистов.", book: "Записаться" },
+  lib: { title: "Бесплатная библиотека", sub: "Учитесь бесплатно и подписывайтесь на полные курсы.", open: "Открыть" },
+  pr: { title: "Цены и тарифы", sub: "Выберите подходящий план. Все занятия проходят онлайн.", sub1: "Подписаться",
+    plans: { trial: { t: "Пробный урок", d: "Оценка уровня и знакомство.", f: ["1 урок", "Оценка уровня", "Подбор преподавателя"] },
+      pack4: { t: "Пакет 4 урока", d: "1 урок в неделю.", f: ["4 урока в месяц", "Фикс. расписание", "Заметки после урока"] },
+      pack8: { t: "Пакет 8 уроков", d: "2 урока в неделю — Популярный.", f: ["8 уроков в месяц", "Фикс. расписание", "Ежемесячный отчет"] },
+      pack12: { t: "Пакет 12 уроков", d: "3 урока в неделю для быстрого прогресса.", f: ["12 уроков в месяц", "Фикс. расписание", "Ежемесячный отчет"] },
+      group: { t: "Групповой воркшоп", d: "Групповой тренинг макаматов.", f: ["Регулярные группы", "Практика", "Оценка преподавателя"] } } },
+  bk: { title: "Запись на пробный урок", sub: "Выберите время пробы и гибкие часы недели.", s1: "Ваши данные и время урока", s2: "Выберите еженедельное расписание (по часам)", hint: "Вы можете свободно выбирать любые часы в любой день.",
+    l: { name: "Имя", email: "Эл. почта", phone: "Телефон / WhatsApp", track: "Направление", trial: "Дата и время пробного урока", tz: "Часовой пояс" },
+    submit: "Отправить заявку",
+    err: { trial: "Выберите дату и время пробного урока.", slots: "Выберите хотя бы один слот в расписании." },
+    ok: { title: "Заявка подготовлена ✅", descWa: "Последний шаг: отправьте сообщение через WhatsApp.", wa: "Отправить в WhatsApp" } },
+  about: { title: "О нас", p1: "Онлайн-академия Иткан обучает Корану, таджвиду, макаматам и иджазе.", p2: "Мы соединяем традиционную достоверность с современными технологиями." },
+  contact: { title: "Контакты", sub: "Мы на связи для ответов на ваши вопросы.", wa: "Связаться в WhatsApp" }
 },
-tr: {
-  dir: "ltr", name: "Türkçe", locale: "tr-TR",
-  meta: { siteName: "İtkan Akademi", short: "İتkan Akademi", letter: "İ", tagline: "İcazet • Hıfz • Makamlar", desc: "Kuran ve makamlar için çevrim içi akademi." },
-  nav: { skip: "İçeriğe geç", home: "Ana Sayfa", tracks: "Dersler", maqamat: "Makamlar", teachers: "Eğitmenler", library: "Kütüphane", pricing: "Fiyatlar", about: "Hakkımızda", contact: "İletişim", trial: "✨ Deneme Dersi", menu: "Menü", theme: "Tema", lang: "Dil" },
-  days: ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
-  langs: { ar: "Arapça", en: "İngilizce", fr: "Fransızca", de: "Almanca", tr: "Türkçe", es: "İspanyolca", id: "Endonezyaca" },
-  common: { bookTrial: "Deneme Dersi Al", learnMore: "Daha fazla", allTracks: "Tüm Dersler", free: "Ücretsiz", premium: "Ücretli", perMonth: "/ ay", back: "Geri", all: "Tümü", copy: "Kopyala", copied: "Kopyalandı ✓", home: "Ana Sayfa" },
-  roles: { owner: "Kurucu", teacher: "Eğitmen", student: "Öğrenci" },
-  hero: { badge: "İtkan Akademi'ye Hoş Geldiniz", a: "Kuran-ı Kerim ve Makamları Öğrenin", b: "İcazet Belgesiyle", c: "ve birebir rehberlikle.", desc: "Kuran, tecvit ve makam eğitimi platformu.", cta1: "Deneme Dersi Al", cta2: "Dersleri İncele", cta3: "Ücretsiz Kütüphane", points: ["Canlı birebir dersler", "Esnek zamanlama", "Düzenli ilerleme raporları"] },
-  sec: { tracks: "Akademi Dersleri", tracksSub: "Seviyenize uygun dersi seçin.", how: "Nasıl Başlanır?", why: "Neden Biz?", teachers: "Eğitmenlerimiz", testi: "Öğrenci Yorumları", testiSoon: "Yakında", faq: "S.S.S.", ctaT: "Hazır mısınız?", ctaD: "Hemen deneme dersi al.", lib: "Ücretsiz Başla", libSub: "Ücretsiz kaynaklar." },
-  how: [{ t: "Deneme Dersi Al", d: "Zamanınızı seçin." }, { t: "Seviye Tespiti", d: "Eğitmeninize uyarlayalım." }, { t: "Haftalık Program", d: "Düzenli dersler." }],
-  why: [{ t: "Güvenilir Sanad", d: "Uzman eğitmenler." }, { t: "Pratik Eğitim", d: "Doğrudan düzeltme." }, { t: "Esneklik", d: "Zaman diliminize uygun." }, { t: "Takip", d: "Düzenli raporlar." }],
-  faq: [{ q: "Deneme dersi ücretsiz mi?", a: "Evet, seviye tespiti içindir." }],
-  tracks: { ijaza: { title: "Kuran İcazetleri", desc: "Kesintisiz senetle kıraat.", audience: "İleri düzey.", outcomes: ["İcazet"], levels: ["Seviye 1"] }, hifz: { title: "Hıfz Programı", desc: "Ezber ve tekrar.", audience: "Çocuklar ve yetişkinler.", outcomes: ["Hıfz"], levels: ["Amme Cüzü"] }, tajweed: { title: "Tecvit", desc: "Kıraat kuralları.", audience: "Herkes.", outcomes: ["Kurallar"], levels: ["Başlangıç"] }, maqamat: { title: "Makam Eğitimi", desc: "Ses ve makamlar.", audience: "İstekliler.", outcomes: ["Ses"], levels: ["1"] }, tafseer: { title: "Tefsir", desc: "Ayetlerin anlamı.", audience: "Herkes.", outcomes: ["Anlam"], levels: ["1"] }, arabic: { title: "Arapça", desc: "Klasik Arapça.", audience: "Başlangıç.", outcomes: ["Okuma"], levels: ["1"] }, egyptian: { title: "Mısır Lehçesi", desc: "Günlük konuşma.", audience: "Herkes.", outcomes: ["Konuşma"], levels: ["1"] } },
-  tp: { audience: "Kimler için?", outcomes: "Kazanımlar", levels: "Seviyeler", teachers: "Eğitmenler", none: "Yakında", maq: "Detaylar", freeLib: "Ücretsiz" },
-  tch: { title: "Eğitmenler", sub: "Uzman kadro", demo: "Demo", tracks: "Dersler", langs: "Diller", days: "Günler", book: "Randevu", profile: "Profil", note: "Not" },
-  lib: { title: "Kütüphane", sub: "Ücretsiz içerikler", track: "Ders", access: "Tür", types: { video: "Video", audio: "Ses", pdf: "PDF", quiz: "Quiz", article: "Makale" }, ai: "🤖 Yapay Zeka", review: "İncelemede", soon: "Yakında", open: "Aç", unlock: "🔒", empty: "Boş." },
-  pr: { title: "Fiyatlar", sub: "Planınızı seçin", ph: "Tahmini", usd: "USD", sub1: "Abone Ol", try1: "Dene", book1: "Randevu Al", plans: { trial: { t: "Deneme", d: "Test", f: ["1 ders"] }, pack4: { t: "4'lü Paket", d: "4 ders", f: ["4 ders"] }, pack8: { t: "8'li Paket", d: "8 ders", f: ["8 ders"] }, pack12: { t: "12'li Paket", d: "12 ders", f: ["12 ders"] }, group: { t: "Grup", d: "Atölye", f: ["Grup"] } } },
-  bk: { title: "Deneme Dersi Al", sub: "Saat saat dilediğiniz zamanı seçin.", s1: "Bilgileriniz", s2: "Haftalık Saatleri Seçin (Saat saat)", hint: "Esnek seçim.", l: { name: "İsim", email: "E-posta", phone: "Telefon", track: "Ders", trial: "Deneme Zamanı", tz: "Zaman Dilimi", who: "Kim için?", self: "Kendim", child: "Çocuğum", notes: "Notlar", consent: "Şartları kabul ediyorum." }, next: "İleri", back: "Geri", submit: "Gönder", busy: "Gönderiliyor...", count: "Seçilen: {n}", err: { name: "İsim gerekli.", email: "Geçersiz e-posta.", phone: "Geçersiz telefon.", trial: "Zaman seçin.", slots: "Saat seçin.", consent: "Onay gerekli." }, ok: { title: "Hazır", descWa: "Son adım: WhatsApp ile gönderin.", waReq: "WhatsApp gerekli", wa: "WhatsApp ile Gönder", matches: "Uygun Eğitmenler", none: "Yok" } },
-  about: { title: "Hakkımızda", p1: "İtkan Akademi Online.", p2: "Gelenek ve teknoloji." },
-  contact: { title: "İletişim", sub: "Bize ulaşın", wa: "WhatsApp", email: "E-posta", send: "Gönder" }
+
+ku: {
+  dir: "ltr", name: "Kurdî (Kurdish)", locale: "ku-TR",
+  meta: { siteName: "Akademiya Îtqan", short: "Akademiya Îtqan", letter: "Î", tagline: "Îcazet • Hıfz • Maqamat • Tefsîr",
+    desc: "Akademiya online ji bo fêrbûna Qur'anê, tecvîd, maqamat û zimanê erebî bi mamosteyên pispor." },
+  nav: { skip: "Derbas bibe bo naverokê", home: "Serê Rûpelê", tracks: "Rê", maqamat: "Maqamat", teachers: "Mamoste", library: "Pirtûkxane", pricing: "Bihayî", about: "Der barê me de", contact: "Têkilî", trial: "✨ Dersa Ceribandinê", menu: "Mênû", theme: "Tema", lang: "Ziman" },
+  days: ["Yekşem", "Duşem", "Sêşem", "Çarşem", "Pêncşem", "În", "Şemî"],
+  langs: { ar: "Erebî", en: "Îngilîzî", zh: "Sînî", ru: "Rûsî", ku: "Kurdî", ms: "Malayî", id: "Indonezî", tr: "Tirkî", fr: "Fransî", de: "Elmanî", es: "Spanî" },
+  common: { bookTrial: "Dersa Ceribandinê Bigire", learnMore: "Zêdetir bizane", allTracks: "Hemû Rê", free: "Belaş", premium: "Biparêre", perMonth: "/ meh", back: "Paşve", all: "Hemû", copy: "Jê re kopî bike", copied: "Kopî bû ✓", home: "Serê Rûpelê" },
+  hero: { badge: "Hûn bi xêr hatin Akademiya Îtqan", a: "Qur'ana Pîroz û Maqamên Xwendinê bi Dengê xwe Fêr Bibe", b: "Bi Îcazeta Seneda Girêdayî", c: "û Rênîşandana Rast.",
+    desc: "Platformeke ku zanistên tecvîdê û rahênana deng pêk tîne.",
+    cta1: "Dersa Ceribandinê Biguherîne", cta2: "Rêyan Bibîne", cta3: "Pirtûkxaneya Belaş",
+    points: ["Dersên zindî yên yek-bi-yek û komî", "Demên guncaw ji bo herêma we", "Rapora pêşveçûnê"] },
+  sec: { tracks: "Rêyên Akademiyê", tracksSub: "Rêya xwe hilbijêre — ji bo her rêyê dersa ceribandinê heye.", how: "Meriv Çawa Dest Pê Dike?", why: "Çima Em?", teachers: "Mamosteyên Me",
+    testi: "Nêrînên Xwendekaran", testiSoon: "Nêrîn dê li vir werin nîşandan.", faq: "Pirsên Pir tên Pirsîn", ctaT: "Amade yî?", ctaD: "Niha dersa ceribandinê bigire.",
+    lib: "Belaş Dest Pê Bike", libSub: "Naveroka belaş di her rêyê de." },
+  how: [{ t: "Dersa Ceribandinê Biguherîne", d: "Rê û dema xwe hilbijêre." }, { t: "Nirxandina Asta We", d: "Em asta we diyar dikin." }, { t: "Destpêkirina Bernameyê", d: "Em bernameya we datînin." }],
+  why: [{ t: "Sened û Îقان", d: "Fêrbûna rast bi mamosteyên pispor." }, { t: "Rahênana Deng", d: "Serlêdana pratîkî." }, { t: "Demên Nerm", d: "Li gorî dema we." }, { t: "Şopandina Berdewam", d: "Nîşe piştî dersan." }],
+  faq: [{ q: "Oto dersa ceribandinê belaş e?", a: "Erê, ji bo diyarkirina astê ye." }],
+  tracks: {
+    ijaza: { title: "Îcazetên Qur'anê", desc: "Xwendina rast bi riwayeta Hafs.", audience: "Ji bo kesên ku xwendin serketine.", outcomes: ["Îcazet"], levels: ["Nirxandin", "Dubarekirin", "Pêşkêş", "Îcazet"] },
+    hifz: { title: "Hifzkirina Qur'anê", desc: "Bernameyên hifz û dubarekirinê.", audience: "Ji bo zarok û mezinan.", outcomes: ["Plansaziya rojane", "Dubarekirin", "Rastkirin", "Rapor"], levels: ["Cuzê Eme", "Beş", "Pêşketî", "Dubare"] },
+    tajweed: { title: "Tecvîd", desc: "Fêrbûna qaîdeyên tecvîdê.", audience: "Ji bo her kesî.", outcomes: ["Mahrac", "Qaîde", "Pratîk", "Ewlehî"], levels: ["Destpêk", "Navîn", "Pêşketî"] },
+    maqamat: { title: "Maqamên Dengî", desc: "Rahênana profesyonel li ser 8 maqaman.", audience: "Ji bo baştirkirina deng.", outcomes: ["Nasîna 8 maqaman", "Guh û deng", "Guherandin", "Xwendina rind"], levels: ["Nasîn", "Bingehîn", "Guherandin", "Pispor"] },
+    tafseer: { title: "Tefsîra Qur'anê", desc: "Fêmkirina wateyên ayetan.", audience: "Ji bo fêmkirina Qur'anê.", outcomes: ["Wate", "Sedem", "Zanist", "Pratîk"], levels: ["Hêsan", "Mijarî", "Zanist"] },
+    arabic: { title: "Zimanê Erebî", desc: "Fêrbûna erebiya fûsha ji sifirê.", audience: "Ji bo destpêkaran.", outcomes: ["Xwendin", "Peyv", "Rêziman", "Fêmkirin"], levels: ["Destpêk", "Navîn", "Pêşketî"] },
+    egyptian: { title: "Zaravê Misrî", desc: "Dersên axaftinê yên bi zaravê misrî.", audience: "Ji bo kesên dixwazin axaftinê fêr bibin.", outcomes: ["Axaftin", "Peyvên rojane", "Fêmkirin", "Bilêvkirin"], levels: ["Destpêk", "Navîn", "Pêşketî"] }
+  },
+  tp: { audience: "Ev rê ji bo kê ye?", outcomes: "Hûn ê çi fêr bibin?", levels: "Astên Rêyê", teachers: "Mamosteyên Rêyê", none: "Zû de wê bên ragihandin." },
+  tch: { title: "Mamoste", sub: "Tîma mamosteyên pispor.", book: "Dersa ceribandinê bigire" },
+  lib: { title: "Pirtûkxaneya Belaş", sub: "Belaş fêr bibe.", open: "Veke" },
+  pr: { title: "Bihayî û Pakêt", sub: "Pakêta guncaw hilbijêre.", sub1: "Naha Bibe Endam", plans: { trial: { t: "Dersa Ceribandinê", d: "Ji bo diyarkirina astê.", f: ["1 ders"] }, pack4: { t: "Pakêta 4 Dersan", d: "1 ders di hefteyê de.", f: ["4 ders"] }, pack8: { t: "Pakêta 8 Dersan", d: "2 ders di hefteyê de.", f: ["8 ders"] }, pack12: { t: "Pakêta 12 Dersan", d: "3 ders di hefteyê de.", f: ["12 ders"] }, group: { t: "Komxebata Komî", d: "Rahênana komî.", f: ["Dersên komî"] } } },
+  bk: { title: "Dersa Ceribandinê Biguherîne", sub: "Demên xwe saet bi saet hilbijêre.", s1: "Agahiyên We", s2: "Demên Hefteyê Hilbijêre (Saet bi Saet)", hint: "Hûn dikarin her saetê hilbijêrin.",
+    l: { name: "Nav", email: "E-name", phone: "Telefon / WhatsApp", track: "Rê", trial: "Dema Dersa Ceribandinê", tz: "Herêma Demê" },
+    submit: "Daxwazê bişîne",
+    err: { trial: "Dema ceribandinê hilbijêre.", slots: "Bi kêmanî saetekê hilbijêre." },
+    ok: { title: "Daxwaz hate amadekirin ✅", descWa: "Gava dawî: Bi WhatsAppê re bişîne.", wa: "Bi WhatsAppê re bişîne" } },
+  about: { title: "Der barê me de", p1: "Akademiya Îtqan Online ji bo fêrbûna Qur'anê ye.", p2: "Em kevneşopiyê bi teknolojiyê re tînin gel hev." },
+  contact: { title: "Têkilî", sub: "Pirsên we hene?", wa: "Bi WhatsAppê re têkilî dayne" }
 },
-es: {
-  dir: "ltr", name: "Español", locale: "es-ES",
-  meta: { siteName: "Academia Itqan", short: "Academia Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat", desc: "Academia online para Corán y maqamat." },
-  nav: { skip: "Saltar al contenido", home: "Inicio", tracks: "Cursos", maqamat: "Maqamat", teachers: "Profesores", library: "Biblioteca", pricing: "Precios", about: "Nosotros", contact: "Contacto", trial: "✨ Clase de prueba", menu: "Menú", theme: "Tema", lang: "Idioma" },
-  days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
-  langs: { ar: "Árabe", en: "Inglés", fr: "Francés", de: "Alemán", tr: "Turco", es: "Español", id: "Indonesio" },
-  common: { bookTrial: "Reservar prueba", learnMore: "Saber más", allTracks: "Todos los cursos", free: "Gratis", premium: "De pago", perMonth: "/ mes", back: "Volver", all: "Todo", copy: "Copiar", copied: "Copiado ✓", home: "Inicio" },
-  roles: { owner: "Propietario", teacher: "Profesor", student: "Estudiante" },
-  hero: { badge: "Bienvenido a la Academia Itqan", a: "Domina el Corán y los Maqamat", b: "Con Ijazat conectada", c: "y guía directa.", desc: "Plataforma online para Corán, tajweed y maqamat.", cta1: "Reservar clase de prueba", cta2: "Ver cursos", cta3: "Biblioteca gratuita", points: ["Clases 1 a 1", "Horarios flexibles", "Informes de progreso"] },
-  sec: { tracks: "Cursos de la Academia", tracksSub: "Elige tu curso.", how: "¿Cómo empezar?", why: "¿Por qué nosotros?", teachers: "Profesores", testi: "Opiniones", testiSoon: "Pronto", faq: "Preguntas frecuentes", ctaT: "¿Listo?", ctaD: "Reserva tu clase de prueba.", lib: "Empezar gratis", libSub: "Contenido gratuito." },
-  how: [{ t: "Reservar prueba", d: "Elige hora." }, { t: "Evaluación", d: "Evaluamos tu nivel." }, { t: "Empezar", d: "Horario semanal." }],
-  why: [{ t: "Sanad auténtico", d: "Profesores especializados." }, { t: "Práctica vocal", d: "Corrección directa." }, { t: "Flexibilidad", d: "Zona horaria." }, { t: "Seguimiento", d: "Informes." }],
-  faq: [{ q: "¿Es gratuita la clase de prueba?", a: "Sí, para evaluar tu nivel." }],
-  tracks: { ijaza: { title: "Ijazat Coránico", desc: "Transmisión precisa.", audience: "Avanzados.", outcomes: ["Sanad"], levels: ["Nivel 1"] }, hifz: { title: "Memorización", desc: "Programas de hifz.", audience: "Todas las edades.", outcomes: ["Hifz"], levels: ["Juz Amma"] }, tajweed: { title: "Tajweed", desc: "Reglas de recitación.", audience: "Todos.", outcomes: ["Reglas"], levels: ["Principiante"] }, maqamat: { title: "Maqamat", desc: "Entrenamiento vocal.", audience: "Recitadores.", outcomes: ["Voz"], levels: ["1"] }, tafseer: { title: "Tafseer", desc: "Comprensión del Corán.", audience: "Todos.", outcomes: ["Significado"], levels: ["1"] }, arabic: { title: "Árabe", desc: "Árabe clásico.", audience: "Principiantes.", outcomes: ["Lectura"], levels: ["1"] }, egyptian: { title: "Árabe Egipcio", desc: "Conversación.", audience: "Todos.", outcomes: ["Hablar"], levels: ["1"] } },
-  tp: { audience: "¿Para quién?", outcomes: "Objetivos", levels: "Niveles", teachers: "Profesores", none: "Pronto", maq: "Detalles", freeLib: "Gratis" },
-  tch: { title: "Profesores", sub: "Equipo especializado", demo: "Demo", tracks: "Cursos", langs: "Idiomas", days: "Días", book: "Reservar", profile: "Perfil", note: "Nota" },
-  lib: { title: "Biblioteca", sub: "Contenido gratuito", track: "Curso", access: "Tipo", types: { video: "Vídeo", audio: "Audio", pdf: "PDF", quiz: "Cuestionario", article: "Artículo" }, ai: "🤖 IA", review: "En revisión", soon: "Pronto", open: "Abrir", unlock: "🔒", empty: "Vacío." },
-  pr: { title: "Precios", sub: "Elige tu plan", ph: "Indicativo", usd: "USD", sub1: "Suscribirse", try1: "Probar", book1: "Reservar", plans: { trial: { t: "Prueba", d: "Test", f: ["1 clase"] }, pack4: { t: "Pack 4", d: "4 clases", f: ["4 clases"] }, pack8: { t: "Pack 8", d: "8 clases", f: ["8 clases"] }, pack12: { t: "Pack 12", d: "12 clases", f: ["12 clases"] }, group: { t: "Grupo", d: "Taller", f: ["Grupo"] } } },
-  bk: { title: "Reservar clase de prueba", sub: "Elige horas hora por hora.", s1: "Tus datos", s2: "Elige horas (hora por hora)", hint: "Libre elección.", l: { name: "Nombre", email: "Correo", phone: "Teléfono", track: "Curso", trial: "Hora de prueba", tz: "Zona horaria", who: "¿Para quién?", self: "Para mí", child: "Mi hijo", notes: "Notas", consent: "Acepto los términos." }, next: "Siguiente", back: "Volver", submit: "Enviar", busy: "Enviando...", count: "Seleccionados: {n}", err: { name: "Nombre requerido.", email: "Correo inválido.", phone: "Teléfono inválido.", trial: "Elige hora.", slots: "Elige franja.", consent: "Aceptación requerida." }, ok: { title: "Listo", descWa: "Último paso: Enviar por WhatsApp.", waReq: "WhatsApp requerido", wa: "Enviar por WhatsApp", matches: "Profesores", none: "Ninguno" } },
-  about: { title: "Nosotros", p1: "Academia Itqan online.", p2: "Tradición y tecnología." },
-  contact: { title: "Contacto", sub: "Escríbenos", wa: "WhatsApp", email: "Correo", send: "Enviar" }
+
+ms: {
+  dir: "ltr", name: "Melayu (Malay)", locale: "ms-MY",
+  meta: { siteName: "Akademi Itqan", short: "Akademi Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafsir",
+    desc: "Akademi online untuk pengajian Al-Quran, tajwid, maqamat, ijaza dan bahasa Arab dengan guru-guru pakar." },
+  nav: { skip: "Langkau ke kandungan", home: "Utama", tracks: "Program", maqamat: "Maqamat", teachers: "Pengajar", library: "Perpustakaan", pricing: "Harga", about: "Tentang Kami", contact: "Hubungi", trial: "✨ Kelas Percubaan", menu: "Menu", theme: "Tema", lang: "Bahasa" },
+  days: ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"],
+  langs: { ar: "Arab", en: "Inggeris", zh: "Cina", ru: "Rusia", ku: "Kurdish", ms: "Melayu", id: "Indonesia", tr: "Turki", fr: "Perancis", de: "Jerman", es: "Sepanyol" },
+  common: { bookTrial: "Tempah Kelas Percubaan", learnMore: "Ketahui Lanjut", allTracks: "Semua Program", free: "Percuma", premium: "Berbayar", perMonth: "/ bulan", back: "Kembali", all: "Semua", copy: "Salin", copied: "Disalin ✓", home: "Utama" },
+  hero: { badge: "Selamat Datang ke Akademi Itqan", a: "Kuasai Al-Quran & Maqamat dengan Suara Anda", b: "Bersama Sanad Ijazat", c: "dan Bimbingan Terus.",
+    desc: "Platform yang menggabungkan ilmu tajwid, latihan vokal maqamat lanjutan dan tafsir ringkas dengan mentor peribadi.",
+    cta1: "Tempah Kelas Percubaan", cta2: "Lihat Program", cta3: "Perpustakaan Percuma",
+    points: ["Kelas langsung 1-dengan-1 & berkumpulan", "Jadual fleksibel mengikut zon masa anda", "Laporan kemajuan berkala"] },
+  sec: { tracks: "Program Akademi", tracksSub: "Pilih program yang sesuai dengan tahap dan matlamat anda — kelas percubaan tersedia.", how: "Bagaimana Memulakan?", why: "Mengapa Pilih Kami?", teachers: "Pengajar Pakar Kami",
+    testi: "Ulasan Pelajar", testiSoon: "Ulasan pelajar akan dipaparkan di sini selepas kumpulan pertama dilancarkan.", faq: "Soalan Lazim", ctaT: "Bersedia memulakan perjalanan anda?", ctaD: "Tempah kelas percubaan anda sekarang, dan kami akan padankan anda dengan guru terbaik.",
+    lib: "Mula Percuma", libSub: "Bahan percuma dalam setiap program untuk dipelajari sebelum melanggan." },
+  how: [{ t: "Tempah Kelas Percubaan", d: "Pilih program dan masa yang sesuai mengikut zon masa anda." }, { t: "Penilaian Tahap & Padanan", d: "Kami menilai tahap anda dan memadankan anda dengan guru yang paling sesuai." }, { t: "Mulakan Jadual Mingguan", d: "Kami menetapkan sesi tetap anda dan memantau kemajuan anda." }],
+  why: [{ t: "Sanad Tulen", d: "Pembelajaran tepat dengan guru khusus dalam setiap program." }, { t: "Latihan Vokal Praktikal", d: "Aplikasi maqamat dengan pembetulan vokal langsung." }, { t: "Jadual Fleksibel", d: "Jadual mingguan mengikut zon masa anda." }, { t: "Pemantauan Berterusan", d: "Maklum balas selepas kelas dan laporan berkala." }],
+  faq: [
+    { q: "Adakah kelas percubaan percuma?", a: "Kelas percubaan membantu menilai tahap dan gaya pengajaran anda. Semak halaman harga untuk butiran." },
+    { q: "Bagaimanakah masa kelas dijadualkan?", a: "Anda boleh memilih jam dan hari yang anda ada secara bebas, dan kami memadankannya dengan guru." },
+    { q: "Adakah terdapat program untuk kanak-kanak?", a: "Ya, ibu bapa boleh menempah kelas untuk anak-anak mereka dengan laporan berkala." },
+    { q: "Adakah saya perlukan pengalaman asas?", a: "Tidak, kami bermula dari tahap semasa anda dalam sebarang program, dari permulaan hingga lanjutan." }],
+  tracks: {
+    ijaza: { title: "Ijazah Al-Quran & Sanad Bersambung", desc: "Transmisi bacaan tepat dengan riwayat Hafs atau 10 Qira'at bersambung kepada Nabi ﷺ.", audience: "Bagi mereka yang menguasai bacaan dan ingin mendapatkan ijazah rasmi.", outcomes: ["Bacaan terus kepada Syeikh pakar", "Menguasai hukum riwayat", "Persediaan untuk ujian", "Ijazah apabila memenuhi syarat"], levels: ["Penilaian bacaan", "Ulang kaji hukum", "Bacaan kepada Syeikh", "Ijazah"] },
+    hifz: { title: "Hafazan Al-Quran & Pemantauan", desc: "Program hafazan, ulangkaji dan pengukuhan dengan pelan harian tersuai.", audience: "Untuk kanak-kanak dan dewasa, dari permulaan atau menyempurnakan hafazan.", outcomes: ["Pelan hafazan harian yang sesuai", "Ulang kaji tetap dan pengukuhan", "Pembetulan bacaan semasa hafazan", "Laporan kemajuan berkala"], levels: ["Juzuk Amma", "Bahagian terpilih", "Hafazan lanjutan", "Ulang kaji"] },
+    tajweed: { title: "Tajwid & Hukum Bacaan", desc: "Ketahui hukum tajwid dan tempat sebutan huruf dengan aplikasi praktikal.", audience: "Untuk sesiapa sahaja yang ingin meningkatkan ketepatan bacaan.", outcomes: ["Tempat sebutan dan sifat huruf", "Hukum Nun Sakinah & Mad", "Aplikasi praktikal dengan pembetulan", "Bacaan lebih yakin dan tepat"], levels: ["Peringkat Permulaan", "Peringkat Pertengahan", "Peringkat Lanjutan"] },
+    maqamat: { title: "Maqamat Vokal & Seni Bacaan", desc: "Latihan profesional ke atas lapan maqamat untuk meningkatkan nada dan kekhusyukan.", audience: "Bagi mereka yang ingin memperbaiki prestasi vokal dalam bacaan.", outcomes: ["Mengenali 8 maqamat", "Latihan pendengaran dan suara", "Modulasi antara maqamat", "Bacaan yang diindahkan"], levels: ["Latihan pendengaran", "Prestasi asas", "Modulasi", "Penguasaan"] },
+    tafseer: { title: "Tafsir Al-Quran & Sains Islam", desc: "Memahami makna ayat dan konteks melalui perenungan mendalam.", audience: "Bagi mereka yang ingin memahami Al-Quran dan sains Islam.", outcomes: ["Memahami makna ayat", "Konteks dan sebab turun", "Asas sains Islam", "Aplikasi praktikal"], levels: ["Tafsir ringkas", "Tafsir tematik", "Sains Al-Quran"] },
+    arabic: { title: "Bahasa Arab Klasik (Fusha)", desc: "Belajar Bahasa Arab Klasik dari asas: huruf, pembacaan, tatabahasa dan perbualan.", audience: "Untuk pemula, bukan penutur asli dan kanak-kanak.", outcomes: ["Membaca dan menulis", "Kosa kata & perbualan", "Asas tatabahasa", "Pemahaman teks"], levels: ["Permulaan", "Pertengahan", "Lanjutan"] },
+    egyptian: { title: "Dialek Mesir", desc: "Pelajaran perbualan dialek Mesir untuk kehidupan seharian, kerja dan pelancongan.", audience: "Untuk bukan penutur asli dan ekspatriat.", outcomes: ["Perbualan harian fasih", "Ungkapan biasa", "Memahami media", "Sebutan betul"], levels: ["Permulaan", "Pertengahan", "Lanjutan"] } },
+  tp: { audience: "Untuk siapakah program ini?", outcomes: "Apakah yang akan anda pelajari?", levels: "Peringkat program", teachers: "Pengajar program", none: "Pengajar akan diumumkan tidak lama lagi." },
+  tch: { title: "Pengajar Pakar", sub: "Pasukan pengajar pakar dalam setiap program.", book: "Tempah percubaan" },
+  lib: { title: "Perpustakaan Percuma", sub: "Belajar percuma dari setiap program dan langgan kursus penuh.", open: "Buka" },
+  pr: { title: "Harga & Pakej", sub: "Pilih pakej yang betul. Semua kelas adalah secara langsung online.", sub1: "Langgan Sekarang",
+    plans: { trial: { t: "Kelas Percubaan", d: "Nilai tahap anda dan kenali guru.", f: ["1 kelas", "Penilaian tahap", "Padanan guru"] },
+      pack4: { t: "Pakej 4 Kelas", d: "1 kelas seminggu.", f: ["4 kelas/bulan", "Jadual tetap", "Nota selepas kelas"] },
+      pack8: { t: "Pakej 8 Kelas", d: "2 kelas seminggu — Paling popular.", f: ["8 kelas/bulan", "Jadual tetap", "Laporan bulanan"] },
+      pack12: { t: "Pakej 12 Kelas", d: "3 kelas seminggu untuk kemajuan pantas.", f: ["12 kelas/bulan", "Jadual tetap", "Laporan bulanan"] },
+      group: { t: "Bengkel Berkumpulan", d: "Latihan maqamat berkumpulan.", f: ["Kelas berkumpulan berkala", "Aplikasi praktikal", "Maklum balas guru"] } } },
+  bk: { title: "Tempah Kelas Percubaan Anda", sub: "Pilih masa percubaan dan jam mingguan secara bebas jam demi jam.", s1: "Butiran Anda & Masa Kelas Percubaan", s2: "Pilih Jadual Mingguan (Jam demi Jam untuk Sebarang Hari)", hint: "Anda boleh memilih mana-mana jam pada mana-mana hari secara bebas tanpa sekatan.",
+    l: { name: "Nama", email: "Emel", phone: "Telefon / WhatsApp", track: "Program", trial: "Tarikh & Masa Kelas Percubaan", tz: "Zon Masa" },
+    submit: "Hantar Permohonan Tempahan",
+    err: { trial: "Sila pilih tarikh dan masa percubaan.", slots: "Sila pilih sekurang-kurangnya satu slot jadual." },
+    ok: { title: "Permohonan Disediakan ✅", descWa: "Langkah akhir: Hantar mesej melalui WhatsApp untuk melengkapkan tempahan anda.", wa: "Hantar salinan melalui WhatsApp" } },
+  about: { title: "Tentang Kami", p1: "Akademi Itqan Online bertujuan untuk mengajar Al-Quran, tajwid, maqamat, dan ijazah bersambung.", p2: "Kami menggabungkan keaslian tradisional dengan fleksibiliti moden." },
+  contact: { title: "Hubungi Kami", sub: "Kami sedia menjawab pertanyaan anda.", wa: "Sembang melalui WhatsApp" }
 },
+
 id: {
   dir: "ltr", name: "Indonesian", locale: "id-ID",
-  meta: { siteName: "Akademi Itqan", short: "Akademi Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat", desc: "Akademi online untuk Al-Quran dan maqamat." },
-  nav: { skip: "Lewati ke konten", home: "Beranda", tracks: "Program", maqamat: "Maqamat", teachers: "Pengajar", library: "Perpustakaan", pricing: "Harga", about: "Tentang Kami", contact: "Kontak", trial: "✨ Kelas Uji Coba", menu: "Menu", theme: "Tema", lang: "Bahasa" },
+  meta: { siteName: "Akademi Itqan", short: "Akademi Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafseer",
+    desc: "Akademi online untuk Al-Quran, tajwid, maqamat vokal, ijazah sanad, dan bahasa Arab dengan pengajar ahli." },
+  nav: { skip: "Lewati ke konten", home: "Beranda", tracks: "Program", maqamat: "Maqamat", teachers: "Pengajar", library: "Perpustakaan", pricing: "Harga", about: "Tentang", contact: "Kontak", trial: "✨ Uji Coba", menu: "Menu", theme: "Tema", lang: "Bahasa" },
   days: ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"],
-  langs: { ar: "Arab", en: "Inggris", fr: "Prancis", de: "Jerman", tr: "Turki", es: "Spanyol", id: "Indonesia" },
-  common: { bookTrial: "Pesan Uji Coba", learnMore: "Pelajari", allTracks: "Semua Program", free: "Gratis", premium: "Berbayar", perMonth: "/ bulan", back: "Kembali", all: "Semua", copy: "Salin", copied: "Disalin ✓", home: "Beranda" },
-  roles: { owner: "Pemilik", teacher: "Pengajar", student: "Siswa" },
-  hero: { badge: "Selamat Datang di Akademi Itqan", a: "Kuasai Al-Quran & Maqamat", b: "Dengan Ijazah Sanad", c: "dan Bimbingan Langsung.", desc: "Platform online untuk Al-Quran, tajwid, dan maqamat.", cta1: "Pesan Uji Coba", cta2: "Lihat Program", cta3: "Perpustakaan Gratis", points: ["Kelas privat langsung", "Jadwal fleksibel", "Laporan kemajuan rutin"] },
-  sec: { tracks: "Program Akademi", tracksSub: "Pilih program Anda.", how: "Cara Memulai?", why: "Mengapa Kami?", teachers: "Pengajar Kami", testi: "Ulasan", testiSoon: "Segera", faq: "FAQ", ctaT: "Siap Memulai?", ctaD: "Pesan kelas uji coba.", lib: "Mulai Gratis", libSub: "Materi gratis." },
-  how: [{ t: "Pesan Uji Coba", d: "Pilih waktu." }, { t: "Penilaian", d: "Evaluasi tingkat." }, { t: "Mulai", d: "Jadwal mingguan." }],
-  why: [{ t: "Sanad Autentik", d: "Pengajar ahli." }, { t: "Latihan Vokal", d: "Koreksi langsung." }, { t: "Fleksibel", d: "Zona waktu Anda." }, { t: "Pemantauan", d: "Laporan rutin." }],
-  faq: [{ q: "Apakah uji coba gratis?", a: "Ya, untuk menilai tingkat kemampuan." }],
-  tracks: { ijaza: { title: "Ijazah Sanad Al-Quran", desc: "Transmisi bacaan.", audience: "Tingkat mahir.", outcomes: ["Sanad"], levels: ["Tingkat 1"] }, hifz: { title: "Tahfidz Al-Quran", desc: "Program hafalan.", audience: "Anak & dewasa.", outcomes: ["Hafalan"], levels: ["Juz Amma"] }, tajweed: { title: "Tajwid", desc: "Aturan membaca.", audience: "Semua.", outcomes: ["Aturan"], levels: ["Pemula"] }, maqamat: { title: "Maqamat Vokal", desc: "Pelatihan nada.", audience: "Qori.", outcomes: ["Suara"], levels: ["1"] }, tafseer: { title: "Tafsir Al-Quran", desc: "Pemahaman makna.", audience: "Semua.", outcomes: ["Makna"], levels: ["1"] }, arabic: { title: "Bahasa Arab", desc: "Bahasa Arab Fusha.", audience: "Pemula.", outcomes: ["Membaca"], levels: ["1"] }, egyptian: { title: "Dialek Mesir", desc: "Percakapan harian.", audience: "Semua.", outcomes: ["Berbicara"], levels: ["1"] } },
-  tp: { audience: "Untuk Siapa?", outcomes: "Hasil", levels: "Tingkatan", teachers: "Pengajar", none: "Segera", maq: "Detail", freeLib: "Gratis" },
-  tch: { title: "Pengajar", sub: "Tim ahli", demo: "Demo", tracks: "Program", langs: "Bahasa", days: "Hari", book: "Pesan", profile: "Profil", note: "Catatan" },
-  lib: { title: "Perpustakaan", sub: "Materi gratis", track: "Program", access: "Tipe", types: { video: "Video", audio: "Audio", pdf: "PDF", quiz: "Kuis", article: "Artikel" }, ai: "🤖 AI", review: "Ditinjau", soon: "Segera", open: "Buka", unlock: "🔒", empty: "Kosong." },
-  pr: { title: "Harga", sub: "Pilih paket", ph: "Indikatif", usd: "USD", sub1: "Berlangganan", try1: "Uji Coba", book1: "Pesan", plans: { trial: { t: "Uji Coba", d: "Test", f: ["1 kelas"] }, pack4: { t: "Paket 4", d: "4 kelas", f: ["4 kelas"] }, pack8: { t: "Paket 8", d: "8 kelas", f: ["8 kelas"] }, pack12: { t: "Paket 12", d: "12 kelas", f: ["12 kelas"] }, group: { t: "Grup", d: "Workshop", f: ["Grup"] } } },
-  bk: { title: "Pesan Uji Coba", sub: "Pilih jam per jam secara bebas.", s1: "Data Anda", s2: "Pilih Jadwal Mingguan (Jam per Jam)", hint: "Bebas memilih.", l: { name: "Nama", email: "Email", phone: "Telepon", track: "Program", trial: "Waktu Uji Coba", tz: "Zona Waktu", who: "Untuk Siapa?", self: "Untuk Saya", child: "Anak Saya", notes: "Catatan", consent: "Saya setuju." }, next: "Lanjut", back: "Kembali", submit: "Kirim", busy: "Mengirim...", count: "Dipilih: {n}", err: { name: "Nama wajib.", email: "Email salah.", phone: "Telepon salah.", trial: "Pilih waktu.", slots: "Pilih slot.", consent: "Persetujuan wajib." }, ok: { title: "Siap", descWa: "Langkah terakhir: Kirim via WhatsApp.", waReq: "WhatsApp wajib", wa: "Kirim ke WhatsApp", matches: "Pengajar Cocok", none: "Tidak ada" } },
-  about: { title: "Tentang Kami", p1: "Akademi Itqan Online.", p2: "Tradisi dan teknologi." },
-  contact: { title: "Kontak", sub: "Hubungi kami", wa: "WhatsApp", email: "Email", send: "Kirim" }
+  langs: { ar: "Arab", en: "Inggris", zh: "China", ru: "Rusia", ku: "Kurdish", ms: "Melayu", id: "Indonesia", tr: "Turki", fr: "Prancis", de: "Jerman", es: "Spanyol" },
+  common: { bookTrial: "Pesan Kelas Uji Coba", learnMore: "Pelajari", allTracks: "Semua Program", free: "Gratis", premium: "Berbayar", perMonth: "/ bulan", back: "Kembali", all: "Semua", copy: "Salin", copied: "Disalin ✓", home: "Beranda" },
+  hero: { badge: "Selamat Datang di Akademi Itqan", a: "Kuasai Al-Quran & Maqamat dengan Suara Anda", b: "Dengan Ijazah Sanad Terhubung", c: "dan Bimbingan Langsung.",
+    desc: "Platform yang menggabungkan ilmu tajwid, pelatihan vokal maqamat tingkat lanjut, dan tafsir ringkas.",
+    cta1: "Pesan Kelas Uji Coba", cta2: "Lihat Program", cta3: "Perpustakaan Gratis",
+    points: ["Kelas privat & kelompok langsung", "Jadwal fleksibel di zona waktu Anda", "Laporan kemajuan rutin"] },
+  sec: { tracks: "Program Akademi", tracksSub: "Pilih program yang sesuai dengan tingkat dan tujuan Anda — uji coba tersedia.", how: "Cara Memulai?", why: "Mengapa Kami?", teachers: "Pengajar Ahli Kami",
+    testi: "Ulasan Siswa", testiSoon: "Ulasan siswa akan muncul di sini setelah angkatan pertama diluncurkan.", faq: "FAQ", ctaT: "Siap memulai perjalanan Anda?", ctaD: "Pesan kelas uji coba sekarang, dan kami akan mencocokkan Anda dengan pengajar terbaik.",
+    lib: "Mulai Gratis", libSub: "Materi gratis di setiap program untuk dipelajari sebelum berlangganan." },
+  how: [{ t: "Pesan Uji Coba", d: "Pilih program dan waktu yang sesuai di zona waktu Anda." }, { t: "Penilaian Tingkat", d: "Kami mengevaluasi tingkat Anda dan mencocokkan dengan pengajar." }, { t: "Mulai Jadwal Mingguan", d: "Kami mengatur sesi rutin Anda dan memantau kemajuan." }],
+  why: [{ t: "Sanad Autentik", d: "Pembelajaran akurat dengan pengajar khusus di setiap program." }, { t: "Pelatihan Vokal Praktis", d: "Penerapan maqamat dengan koreksi vokal langsung." }, { t: "Penjadwalan Fleksibel", d: "Waktu mingguan sesuai zona waktu Anda." }, { t: "Pemantauan Berkelanjutan", d: "Umpan balik pasca-kelas dan laporan berkala." }],
+  faq: [
+    { q: "Apakah kelas uji coba gratis?", a: "Kelas uji coba menilai tingkat dan gaya pengajaran Anda. Periksa halaman harga untuk detailnya." },
+    { q: "Bagaimana waktu kelas dijadwalkan?", a: "Anda memilih jam dan hari luang secara bebas, dan kami mencocokkannya dengan pengajar." },
+    { q: "Apakah ada program untuk anak-anak?", a: "Ya, orang tua dapat memesan kelas untuk anak-anak mereka dengan laporan berkala." },
+    { q: "Apakah saya butuh pengalaman awal?", a: "Tidak, kami mulai dari tingkat Anda saat ini di program apa pun, pemula hingga mahir." }],
+  tracks: {
+    ijaza: { title: "Ijazah Al-Quran & Sanad Terhubung", desc: "Transmisi bacaan akurat dengan riwayat Hafs atau 10 Qira'at terhubung ke Nabi ﷺ.", audience: "Bagi yang telah menguasai bacaan dan mencari ijazah resmi.", outcomes: ["Bacaan langsung ke Syeikh ahli", "Menguasai hukum riwayat", "Persiapan ujian", "Ijazah saat memenuhi syarat"], levels: ["Penilaian bacaan", "Ulang kaji hukum", "Bacaan ke Syeikh", "Ijazah"] },
+    hifz: { title: "Tahfidz Al-Quran & Pemantauan", desc: "Program hafalan, murojaah dan penguatan dengan rencana harian khusus.", audience: "Untuk anak-anak dan dewasa, dari nol atau menyelesaikan hafalan.", outcomes: ["Rencana hafalan harian yang sesuai", "Murojaah rutin dan penguatan", "Koreksi bacaan saat menghafal", "Laporan kemajuan berkala"], levels: ["Juz Amma", "Bagian pilihan", "Tahfidz tingkat lanjut", "Murojaah"] },
+    tajweed: { title: "Tajwid & Hukum Bacaan", desc: "Pelajari hukum tajwid dan makhraj huruf dengan aplikasi praktis.", audience: "Untuk siapa saja yang ingin meningkatkan keakuratan bacaan.", outcomes: ["Makhraj huruf dan sifatnya", "Hukum Nun Sakinah dan Mad", "Aplikasi praktis dengan koreksi", "Bacaan lebih percaya diri"], levels: ["Tingkat Pengantar", "Tingkat Menengah", "Tingkat Mahir"] },
+    maqamat: { title: "Maqamat Vokal & Seni Bacaan", desc: "Pelatihan profesional delapan maqamat untuk meningkatkan nada dan kekhusyukan.", audience: "Bagi yang ingin meningkatkan performa vokal dalam bacaan.", outcomes: ["Mengenal delapan maqamat", "Pelatihan pendengaran dan suara", "Modulasi antar maqamat", "Bacaan yang diindahkan"], levels: ["Pelatihan pendengaran", "Performa dasar", "Modulasi", "Penguasaan"] },
+    tafseer: { title: "Tafsir Al-Quran & Ilmu Islam", desc: "Memahami makna ayat dan konteks melalui perenungan mendalam.", audience: "Bagi yang ingin memahami Al-Quran dan ilmu-ilmu Islam.", outcomes: ["Memahami makna ayat", "Konteks dan asbabun nuzul", "Dasar ilmu Islam", "Penerapan praktis"], levels: ["Tafsir ringkas", "Tafsir tematik", "Ilmu Al-Quran"] },
+    arabic: { title: "Bahasa Arab Klasik (Fusha)", desc: "Belajar Bahasa Arab Klasik dari nol: huruf, membaca, tata bahasa, dan percakapan.", audience: "Untuk pemula, non-penutur asli, dan anak-anak.", outcomes: ["Membaca dan menulis", "Kosakata & percakapan", "Dasar tata bahasa", "Pemahaman teks"], levels: ["Pemula", "Menengah", "Mahir"] },
+    egyptian: { title: "Dialek Mesir", desc: "Pelajaran percakapan dialek Mesir untuk kehidupan sehari-hari, kerja, dan perjalanan.", audience: "Untuk non-penutur asli dan ekspatriat.", outcomes: ["Percakapan harian lancar", "Ungkapan umum", "Memahami media", "Pengucapan benar"], levels: ["Pemula", "Menengah", "Mahir"] } },
+  tp: { audience: "Untuk siapa program ini?", outcomes: "Apa yang akan Anda pelajari?", levels: "Tingkat program", teachers: "Pengajar program", none: "Pengajar akan segera diumumkan." },
+  tch: { title: "Pengajar Khusus", sub: "Tim pengajar ahli di setiap program.", book: "Pesan uji coba" },
+  lib: { title: "Perpustakaan Gratis", sub: "Belajar gratis dari setiap program, berlangganan untuk kursus penuh.", open: "Buka" },
+  pr: { title: "Harga & Paket", sub: "Pilih paket yang tepat. Semua kelas langsung online.", sub1: "Berlangganan",
+    plans: { trial: { t: "Kelas Uji Coba", d: "Nilai tingkat dan kenali pengajar.", f: ["1 kelas", "Penilaian tingkat", "Pencocokan pengajar"] },
+      pack4: { t: "Paket 4 Kelas", d: "1 kelas per minggu.", f: ["4 kelas/bulan", "Jadwal tetap", "Catatan pasca-kelas"] },
+      pack8: { t: "Paket 8 Kelas", d: "2 kelas per minggu — Terpopuler.", f: ["8 kelas/bulan", "Jadwal tetap", "Laporan bulanan"] },
+      pack12: { t: "Paket 12 Kelas", d: "3 kelas per minggu untuk progres cepat.", f: ["12 kelas/bulan", "Jadwal tetap", "Laporan bulanan"] },
+      group: { t: "Workshop Kelompok", d: "Pelatihan maqamat kelompok.", f: ["Kelas kelompok rutin", "Aplikasi praktis", "Umpan balik pengajar"] } } },
+  bk: { title: "Pesan Kelas Uji Coba Anda", sub: "Pilih waktu uji coba dan jam mingguan secara bebas jam demi jam.", s1: "Detail Anda & Waktu Uji Coba", s2: "Pilih Jadwal Mingguan (Jam demi Jam untuk Hari Apa Saja)", hint: "Anda dapat memilih jam apa saja pada hari apa saja secara bebas tanpa batasan.",
+    l: { name: "Nama", email: "Email", phone: "Telepon / WhatsApp", track: "Program", trial: "Tanggal & Waktu Uji Coba", tz: "Zona Waktu" },
+    submit: "Kirim Permintaan Pemesanan",
+    err: { trial: "Silakan pilih tanggal dan waktu uji coba.", slots: "Silakan pilih setidaknya satu slot jadwal." },
+    ok: { title: "Permintaan Disiapkan ✅", descWa: "Langkah akhir: Kirim pesan lewat WhatsApp untuk menyelesaikan pemesanan.", wa: "Kirim salinan via WhatsApp" } },
+  about: { title: "Tentang Kami", p1: "Akademi Itqan Online bertujuan mengajarkan Al-Quran, tajwid, maqamat, dan ijazah terhubung.", p2: "Kami menggabungkan keaslian tradisional dengan fleksibilitas modern." },
+  contact: { title: "Kontak Kami", sub: "Kami siap menjawab pertanyaan Anda.", wa: "Chat via WhatsApp" }
+},
+
+tr: {
+  dir: "ltr", name: "Türkçe", locale: "tr-TR",
+  meta: { siteName: "İtkan Akademi", short: "İtkan Akademi", letter: "İ", tagline: "İcazet • Hıfz • Makamlar • Tefsir",
+    desc: "Kuran, tecvit, makamlar, icazet ve Arapça eğitimi için uzman eğitmenlerle çevrim içi akademi." },
+  nav: { skip: "İçeriğe geç", home: "Ana Sayfa", tracks: "Dersler", maqamat: "Makamlar", teachers: "Eğitmenler", library: "Kütüphane", pricing: "Fiyatlar", about: "Hakkımızda", contact: "İletişim", trial: "✨ Deneme Dersi", menu: "Menü", theme: "Tema", lang: "Dil" },
+  days: ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
+  langs: { ar: "Arapça", en: "İngilizce", zh: "Çince", ru: "Rusça", ku: "Kürtçe", ms: "Malayca", id: "Endonezyaca", tr: "Türkçe", fr: "Fransızca", de: "Almanca", es: "İspanyolca" },
+  common: { bookTrial: "Deneme Dersi Al", learnMore: "Daha fazla", allTracks: "Tüm Dersler", free: "Ücretsiz", premium: "Ücretli", perMonth: "/ ay", back: "Geri", all: "Tümü", copy: "Kopyala", copied: "Kopyalandı ✓", home: "Ana Sayfa" },
+  hero: { badge: "İtkan Akademi'ye Hoş Geldiniz", a: "Kuran-ı Kerim ve Makamları Sesinizle Öğrenin", b: "Bağlantılı İcazet Senediyle", c: "ve Doğrudan Rehberlikle.",
+    desc: "Tecvit ilmini, ileri düzey makam eğitimini ve sadeleştirilmiş tefsiri kişiselleştirilmiş rehberlikle buluşturan platform.",
+    cta1: "Deneme Dersi Al", cta2: "Dersleri İncele", cta3: "Ücretsiz Kütüphane",
+    points: ["Canlı birebir ve grup dersleri", "Zaman diliminize uygun esnek program", "Düzenli gelişim raporları"] },
+  sec: { tracks: "Akademi Dersleri", tracksSub: "Seviyenize ve hedefinize uygun dersi seçin — her biri için deneme dersi mevcuttur.", how: "Nasıl Başlanır?", why: "Neden Biz?", teachers: "Uzman Eğitmenlerimiz",
+    testi: "Öğrenci Yorumları", testiSoon: "İlk gruplar başladıktan sonra öğrenci yorumları burada yer alacaktır.", faq: "S.S.S.", ctaT: "Yolculuğunuza başlamaya hazır mısınız?", ctaD: "Deneme dersinizi hemen alın, sizi en uygun eğitmenle eşleştirelim.",
+    lib: "Ücretsiz Başla", libSub: "Abone olmadan önce her dersten ücretsiz içerikler." },
+  how: [{ t: "Deneme Dersi Al", d: "Dersinizi ve zaman diliminize uygun saati seçin." }, { t: "Seviye Tespiti ve Eşleştirme", d: "Seviyenizi değerlendirip en uygun eğitmenle eşleştiriyoruz." }, { t: "Haftalık Programı Başlat", d: "Düzenli ders saatlerinizi sabitliyor ve takibini yapıyoruz." }],
+  why: [{ t: "Güvenilir Sanad", d: "Her alanda uzman eğitmenlerle kesin öğrenme." }, { t: "Pratik Ses Eğitimi", d: "Doğrudan ses düzeltmeleriyle makam uygulaması." }, { t: "Esnek Planlama", d: "Zaman diliminize uyan haftalık program." }, { t: "Sürekli Takip", d: "Ders sonu notları ve dönemsel raporlar." }],
+  faq: [
+    { q: "Deneme dersi ücretsiz mi?", a: "Deneme dersi seviyenizi ve öğretim tarzını görmenizi sağlar. Detaylar fiyat sayfasındadır." },
+    { q: "Ders saatleri nasıl belirlenir?", a: "Müsait olduğunuz gün ve saatleri serbestçe seçersiniz, biz de eğitmenlerle eşleştiririz." },
+    { q: "Çocuklar için ders var mı?", a: "Evet, ebeveynler çocukları için ders rezerve edebilir ve düzenli raporlar alabilir." },
+    { q: "Önceden bilmem gerekiyor mu?", a: "Hayır, başlangıçtan ileri seviyeye kadar her derste mevcut seviyenizden başlıyoruz." }],
+  tracks: {
+    ijaza: { title: "Kuran İcazetleri ve Sened", desc: "Hz. Peygamber'e ﷺ uzanan kesintisiz senetle Hafs veya 10 Kıraat rivayeti.", audience: "Kıraati ustalıkla yapıp icazet almak isteyenler için.", outcomes: ["Usta şeyhe doğrudan kıraat arzı", "Rivayet kurallarını kavrama", "Sınava hazırlık", "Şartları sağlayınca icazet"], levels: ["Kıraat değerlendirmesi", "Kural tekrarı", "Şeyhe arz", "İcazet"] },
+    hifz: { title: "Kuran Ezberi ve Takibi", desc: "Özelleştirilmiş günlük planlarla ezber, tekrar ve pekiştirme programları.", audience: "Çocuklar ve yetişkinler için, sıfırdan veya ezberi tamamlama.", outcomes: ["Zamanınıza uygun günlük ezber planı", "Düzenli tekrar ve pekiştirme", "Ezber esnasında kıraat düzeltmesi", "Düzenli ilerleme raporları"], levels: ["Amme Cüzü", "Seçilmiş cüzler", "İleri düzey hıfz", "Tekrar ve pekiştirme"] },
+    tajweed: { title: "Tecvit ve Kıraat Kuralları", desc: "Tecvit kurallarını ve harf mahreçlerini öğrenip pratik uygulama yapın.", audience: "Kıraatini kusursuzlaştırmak isteyen herkes için.", outcomes: ["Harf mahreçleri ve sıfatları", "Nun sakine hükümleri ve medler", "Doğrudan düzeltmeli pratik uygulama", "Daha güvenli ve doğru okuyuş"], levels: ["Giriş Seviyesi", "Orta Seviye", "İleri Seviye"] },
+    maqamat: { title: "Makam Eğitimi ve Ses Güzelleştirme", desc: "Kıraatte tonu ve huşuyu artırmak için sekiz makam üzerine profesyonel eğitim.", audience: "Kıraatteki ses performansını geliştirmek isteyenler.", outcomes: ["Sekiz makamı tanıma", "Kulak ve ses eğitimi", "Makamlar arası geçiş", "Kurallı makamsal okuyuş"], levels: ["Kulak ve tanıma", "Temel performans", "Makam geçişleri", "Ustalık"] },
+    tafseer: { title: "Kuran Tefsiri ve İslami İlimler", desc: "Sakin ve derin bir tefekkürle ayetlerin anlamlarını ve nüzul sebeplerini kavrayın.", audience: "Kuran'ı ve İslami ilimlerin temellerini anlamak isteyenler.", outcomes: ["Ayetlerin anlamını kavrama", "Nüzul sebebi ve bağlam", "İslami ilimler temelleri", "Teori ve pratiği birleştirme"], levels: ["Kolaylaştırılmış tefsir", "Konulu tefsir", "Kuran ilimleri"] },
+    arabic: { title: "Klasik Arapça (Fusha)", desc: "Sıfırdan klasik Arapça öğrenimi: harfler, okuma, sarf-nahiv ve konuşma.", audience: "Yeni başlayanlar, Arapça bilmeyenler ve çocuklar.", outcomes: ["Okuma ve yazma", "Kelime hazinesi ve sohbet", "Dilbilgisi temelleri", "Metin anlayışı"], levels: ["Başlangıç", "Orta", "İleri"] },
+    egyptian: { title: "Mısır Lehçesi", desc: "Günlük yaşam, iş ve seyahat için Mısır lehçesi sohbet dersleri.", audience: "Arapça bilmeyenler ve gurbetçiler için.", outcomes: ["Akıcı günlük konuşma", "Yaygın ifadeler", "Medya ve şarkıları anlama", "Doğru telaffuz"], levels: ["Başlangıç", "Orta", "İleri"] } },
+  tp: { audience: "Bu ders kimin için?", outcomes: "Neler öğreneceksiniz?", levels: "Ders seviyeleri", teachers: "Ders eğitmenleri", none: "Bu dersin eğitmenleri yakında açıklanacaktır." },
+  tch: { title: "Uzman Eğitmenler", sub: "Her derste uzmanlaşmış nitelikli eğitmen kadrosu.", book: "Deneme al" },
+  lib: { title: "Ücretsiz Kütüphane", sub: "Her dersten ücretsiz öğrenin, tam kurslar için abone olun.", open: "Aç" },
+  pr: { title: "Fiyatlar ve Planlar", sub: "Uygun planı seçin. Tüm dersler canlı ve çevrim içidir.", sub1: "Hemen Abone Ol",
+    plans: { trial: { t: "Deneme Dersi", d: "Seviyenizi belirleyin ve eğitmenle tanışın.", f: ["1 ders", "Seviye tespiti", "Uygun eğitmen eşleştirmesi"] },
+      pack4: { t: "4 Ders Paketi", d: "Haftada 1 ders.", f: ["Ayda 4 ders", "Sabit program", "Ders sonu notları"] },
+      pack8: { t: "8 Ders Paketi", d: "Haftada 2 ders — En çok talep gören.", f: ["Ayda 8 ders", "Sabit program", "Aylık rapor"] },
+      pack12: { t: "12 Ders Paketi", d: "Hızlı ilerleme için haftada 3 ders.", f: ["Ayda 12 ders", "Sabit program", "Aylık rapor"] },
+      group: { t: "Grup Atölyesi", d: "Makamlar üzerine grup eğitimi.", f: ["Periyodik grup dersleri", "Pratik uygulama", "Eğitmen değerlendirmesi"] } } },
+  bk: { title: "Deneme Dersinizi Alın", sub: "Deneme zamanınızı ve haftalık saatlerinizi saat saat dilediğiniz gibi seçin.", s1: "Bilgileriniz ve Deneme Dersi Zamanı", s2: "Haftalık Sabit Saatlerinizi Seçin (İstediğiniz gün saat saat)", hint: "Herhangi bir sınırlama olmaksızın herhangi bir günün herhangi bir saatini tamamen serbestçe seçebilirsiniz.",
+    l: { name: "İsim", email: "E-posta", phone: "Telefon / WhatsApp", track: "Ders", trial: "Deneme Dersi Tarih ve Saati", tz: "Zaman Dilimi" },
+    submit: "Rezervasyon Talebini Gönder",
+    err: { trial: "Lütfen deneme dersi tarih ve saatini seçin.", slots: "Lütfen programda en az bir zaman dilimi seçin." },
+    ok: { title: "Talebiniz Hazırlandı ✅", descWa: "Son adım: Rezervasyonunuzu tamamlamak için mesajı WhatsApp üzerinden gönderin.", wa: "WhatsApp ile Kopyasını Gönder" } },
+  about: { title: "Hakkımızda", p1: "İtkan Akademi Online; Kuran-ı Kerim, tecvit, makamlar ve icazetleri öğretmeyi amaçlayan gelişmiş bir eğitim ortamıdır.", p2: "Geleneksel aktarımın titizliği ile modern teknolojinin esnekliğini birleştiriyoruz." },
+  contact: { title: "İletişim", sub: "Sorularınızı yanıtlamak için buradayız.", wa: "Doğrudan WhatsApp ile İletişim Kurun" }
+},
+
+fr: {
+  dir: "ltr", name: "Français", locale: "fr-FR",
+  meta: { siteName: "Académie Itqan", short: "Académie Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafseer",
+    desc: "Académie en ligne pour l'apprentissage du Coran, du tajweed, des maqamat, de l'ijaza et de la langue arabe." },
+  nav: { skip: "Aller au contenu", home: "Accueil", tracks: "Parcours", maqamat: "Maqamat", teachers: "Enseignants", library: "Bibliothèque", pricing: "Tarifs", about: "À propos", contact: "Contact", trial: "✨ Cours d'essai", menu: "Menu", theme: "Thème", lang: "Langue" },
+  days: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+  langs: { ar: "Arabe", en: "Anglais", zh: "Chinois", ru: "Russe", ku: "Kurde", ms: "Malais", id: "Indonésien", tr: "Turc", fr: "Français", de: "Allemand", es: "Espagnol" },
+  common: { bookTrial: "Réserver un essai", learnMore: "En savoir plus", allTracks: "Tous les parcours", free: "Gratuit", premium: "Payant", perMonth: "/ mois", back: "Retour", all: "Tout", copy: "Copier", copied: "Copié ✓", home: "Accueil" },
+  hero: { badge: "Bienvenue à l'Académie Itqan", a: "Maîtrisez le Coran et les Maqamat avec votre voix", b: "Avec Ijazat connectée", c: "et orientation directe.",
+    desc: "Plateforme combinant sciences du tajweed, formation vocale aux maqamat et tafsir simplifié avec suivi personnel.",
+    cta1: "Réserver un cours d'essai", cta2: "Parcourir les parcours", cta3: "Bibliothèque gratuite",
+    points: ["Cours particuliers et collectifs en direct", "Horaires flexibles selon votre fuseau horaire", "Rapports de progression réguliers"] },
+  sec: { tracks: "Parcours de l'Académie", tracksSub: "Choisissez le parcours adapté à votre niveau et objectif — cours d'essai disponible.", how: "Comment commencer ?", why: "Pourquoi nous choisir ?", teachers: "Nos enseignants experts",
+    testi: "Avis des étudiants", testiSoon: "Les avis apparaîtront ici après le lancement des premières promotions.", faq: "FAQ", ctaT: "Prêt à commencer ?", ctaD: "Réservez votre cours d'essai maintenant et nous vous trouverons l'enseignant idéal.",
+    lib: "Commencer gratuitement", libSub: "Ressources gratuites dans chaque parcours avant de vous abonner." },
+  how: [{ t: "Réserver un cours d'essai", d: "Choisissez votre parcours et un horaire adapté." }, { t: "Évaluation et jumelage", d: "Nous évaluons votre niveau et vous associons au meilleur enseignant." }, { t: "Démarrer votre planning", d: "Nous fixons vos sessions régulières et suivons vos progrès." }],
+  why: [{ t: "Sanad authentique", d: "Apprentissage précis avec des enseignants spécialisés." }, { t: "Entraînement vocal pratique", d: "Application des maqamat avec correction directe." }, { t: "Flexibilité horaire", d: "Planning hebdomadaire adapté à votre fuseau horaire." }, { t: "Suivi continu", d: "Remarques post-cours et rapports périodiques." }],
+  faq: [
+    { q: "Le cours d'essai est-il gratuit ?", a: "Il permet d'évaluer votre niveau et la pédagogie. Voir la page des tarifs." },
+    { q: "Comment sont fixés les horaires ?", a: "Vous choisissez librement vos heures et jours disponibles, nous les coordonnons avec les enseignants." },
+    { q: "Y a-t-il un parcours pour enfants ?", a: "Oui, les parents peuvent réserver des cours pour leurs enfants avec des rapports réguliers." },
+    { q: "Ai-je besoin d'un niveau préalable ?", a: "Non, nous commençons à votre niveau actuel, du débutant au confirmé." }],
+  tracks: {
+    ijaza: { title: "Ijazat Coranique et Sanad", desc: "Transmission précise de la récitation (Hafs ou 10 Qira'at) connectée au Prophète ﷺ.", audience: "Pour ceux qui maîtrisent la récitation et visent l'ijaza.", outcomes: ["Réception et récitation à un cheikh qualifié", "Maîtrise des règles de narration", "Préparation à l'examen", "Obtention de l'ijaza sous conditions"], levels: ["Évaluation de lecture", "Révision des règles", "Récitation au cheikh", "Ijaza"] },
+    hifz: { title: "Mémorisation du Coran et Suivi", desc: "Programmes de mémorisation, révision et ancrage avec plans quotidiens personnalisés.", audience: "Pour enfants et adultes, débutants ou confirmés.", outcomes: ["Plan de mémorisation quotidien adapté", "Révision et ancrage réguliers", "Correction de la récitation", "Rapports de progression"], levels: ["Juz 'Amma", "Parties spécifiques", "Hifz avancé", "Révision"] },
+    tajweed: { title: "Tajweed et Règles de Récitation", desc: "Apprenez les règles du tajweed et les points d'articulation des lettres en pratique.", audience: "Pour améliorer la précision de votre récitation.", outcomes: ["Articulation et attributs des lettres", "Règles du Noon Sakinah", "Application pratique avec correction", "Récitation plus confiante"], levels: ["Niveau introductif", "Niveau intermédiaire", "Niveau avancé"] },
+    maqamat: { title: "Maqamat Vocaux et Embellissement", desc: "Entraînement professionnel sur les huit maqamat pour améliorer la mélodie et la dévotion.", audience: "Pour ceux qui souhaitent embellir leur voix en récitation.", outcomes: ["Découverte des 8 maqamat", "Entraînement de l'oreille et de la voix", "Modulation entre maqamat", "Récitation embellie et maîtrisée"], levels: ["Oreille et reconnaissance", "Performance de base", "Modulation", "Maîtrise"] },
+    tafseer: { title: "Tafsir du Coran et Sciences Islamiques", desc: "Comprendre le sens des versets et le contexte à travers une méditation profonde.", audience: "Pour comprendre le Coran et les bases des sciences islamiques.", outcomes: ["Compréhension des versets", "Contexte de révélation", "Bases des sciences islamiques", "Application pratique"], levels: ["Tafsir simplifié", "Tafsir thématique", "Sciences du Coran"] },
+    arabic: { title: "Langue Arabe (Fusha)", desc: "Apprenez l'arabe classique de zéro : alphabet, lecture, grammaire et conversation.", audience: "Pour débutants, non-arabophones et enfants.", outcomes: ["Lecture et écriture", "Vocabulaire et conversation", "Bases grammaticales", "Compréhension de textes"], levels: ["Débutant", "Intermédiaire", "Avancé"] },
+    egyptian: { title: "Dialecte Égyptien", desc: "Cours de conversation en dialecte égyptien pour la vie quotidienne, le travail et les voyages.", audience: "Pour non-arabophones et expatriés.", outcomes: ["Conversation fluide", "Expressions courantes", "Compréhension des médias", "Prononciation correcte"], levels: ["Débutant", "Intermédiaire", "Avancé"] } },
+  tp: { audience: "À qui s'adresse ce parcours ?", outcomes: "Quallez-vous apprendre ?", levels: "Niveaux", teachers: "Enseignants du parcours", none: "Les enseignants seront bientôt annoncés." },
+  tch: { title: "Enseignants spécialisés", sub: "Une équipe d'enseignants qualifiés pour chaque parcours.", book: "Réserver un essai" },
+  lib: { title: "Bibliothèque gratuite", sub: "Apprenez gratuitement et abonnez-vous pour les cours complets.", open: "Ouvrir" },
+  pr: { title: "Tarifs et Forfaits", sub: "Choisissez le forfait adapté. Tous les cours sont en direct en ligne.", sub1: "S'abonner maintenant",
+    plans: { trial: { t: "Cours d'essai", d: "Évaluer votre niveau et rencontrer l'enseignant.", f: ["1 cours", "Évaluation de niveau", "Jumelage d'enseignant"] },
+      pack4: { t: "Pack 4 cours", d: "1 cours par semaine.", f: ["4 cours/mois", "Planning fixe", "Notes post-cours"] },
+      pack8: { t: "Pack 8 cours", d: "2 cours par semaine — Le plus demandé.", f: ["8 cours/mois", "Planning fixe", "Rapport mensuel"] },
+      pack12: { t: "Pack 12 cours", d: "3 cours par semaine pour progresser plus vite.", f: ["12 cours/mois", "Planning fixe", "Rapport mensuel"] },
+      group: { t: "Atelier collectif", d: "Entraînement collectif aux maqamat.", f: ["Cours collectifs réguliers", "Application pratique", "Évaluation de l'enseignant"] } } },
+  bk: { title: "Réservez votre cours d'essai", sub: "Sélectionnez votre heure d'essai et vos créneaux hebdomadaires heure par heure en toute liberté.", s1: "Vos coordonnées et horaire d'essai", s2: "Choisissez votre planning hebdomadaire (Heure par heure, n'importe quel jour)", hint: "Vous pouvez choisir n'importe quelle heure n'importe quel jour en toute liberté.",
+    l: { name: "Nom", email: "E-mail", phone: "Téléphone / WhatsApp", track: "Parcours", trial: "Date et heure du cours d'essai", tz: "Fuseau horaire" },
+    submit: "Envoyer la demande de réservation",
+    err: { trial: "Veuillez sélectionner la date et l'heure du cours d'essai.", slots: "Veuillez sélectionner au moins un créneau horaire." },
+    ok: { title: "Demande préparée ✅", descWa: "Dernière étape : envoyez le message via WhatsApp pour valider votre réservation.", wa: "Envoyer une copie via WhatsApp" } },
+  about: { title: "À propos de nous", p1: "L'Académie Itqan en ligne vise à enseigner le Coran, le tajweed, les maqamat et les ijazat connectées dans un environnement évolué.", p2: "Nous associons l'authenticité de la transmission à la flexibilité technologique moderne." },
+  contact: { title: "Contactez-nous", sub: "Nous sommes là pour répondre à vos questions.", wa: "Discuter directement sur WhatsApp" }
+},
+
+de: {
+  dir: "ltr", name: "Deutsch", locale: "de-DE",
+  meta: { siteName: "Itqan Akademie", short: "Itqan Akademie", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafseer",
+    desc: "Online-Akademie für Koran, Tajweed, Maqamat, Ijaza und arabische Sprache mit fachkundigen Lehrkräften." },
+  nav: { skip: "Zum Inhalt springen", home: "Startseite", tracks: "Kurse", maqamat: "Maqamat", teachers: "Lehrkräfte", library: "Mediathek", pricing: "Preise", about: "Über uns", contact: "Kontakt", trial: "✨ Probestunde", menu: "Menü", theme: "Theme", lang: "Sprache" },
+  days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+  langs: { ar: "Arabisch", en: "Englisch", zh: "Chinesisch", ru: "Russisch", ku: "Kurdisch", ms: "Malaiisch", id: "Indonesisch", tr: "Türkisch", fr: "Französisch", de: "Deutsch", es: "Spanisch" },
+  common: { bookTrial: "Probestunde buchen", learnMore: "Mehr erfahren", allTracks: "Alle Kurse", free: "Kostenlos", premium: "Kostenpflichtig", perMonth: "/ Monat", back: "Zurück", all: "Alle", copy: "Kopieren", copied: "Kopiert ✓", home: "Startseite" },
+  hero: { badge: "Willkommen in der Itqan Akademie", a: "Meistern Sie den Heiligen Koran & Maqamat mit Ihrer Stimme", b: "Mit verbundener Ijaza-Kette", c: "und direkter Betreuung.",
+    desc: "Eine Plattform, die Tajweed-Wissenschaften, fortgeschrittenes Maqamat-Stimmtraining und vereinfachten Tafsir vereint.",
+    cta1: "Probestunde buchen", cta2: "Kurse durchsuchen", cta3: "Kostenlose Mediathek",
+    points: ["Live 1-zu-1 & Gruppenunterricht", "Flexible Zeiten in Ihrer Zeitzone", "Regelmäßige Fortschrittsberichte"] },
+  sec: { tracks: "Akademie-Kurse", tracksSub: "Wählen Sie den passenden Kurs für Ihr Niveau — Probestunde für jeden verfügbar.", how: "Wie anfangen?", why: "Warum wir?", teachers: "Unsere Experten",
+    testi: "Schülerbewertungen", testiSoon: "Bewertungen werden hier nach dem Start der ersten Gruppen angezeigt.", faq: "FAQ", ctaT: "Bereit für Ihre Reise?", ctaD: "Buchen Sie jetzt Ihre Probestunde und wir finden den idealen Lehrer für Sie.",
+    lib: "Kostenlos starten", libSub: "Kostenlose Inhalte in jedem Kurs vor dem Abo." },
+  how: [{ t: "Probestunde buchen", d: "Wählen Sie Ihren Kurs und eine passende Zeit." }, { t: "Einstufung & Matching", d: "Wir bewerten Ihr Niveau und matchen Sie mit dem besten Lehrer." }, { t: "Wöchentlichen Plan starten", d: "Wir legen Ihre festen Termine fest und begleiten Sie." }],
+  why: [{ t: "Authentischer Sanad", d: "Präzises Lernen mit spezialisierten Lehrkräften." }, { t: "Praktisches Stimmtraining", d: "Maqamat-Anwendung mit direkter Korrektur." }, { t: "Flexible Planung", d: "Wöchentlicher Zeitplan passend zu Ihrer Zeitzone." }, { t: "Kontinuierliches Tracking", d: "Feedback nach dem Unterricht und regelmäßige Berichte." }],
+  faq: [
+    { q: "Ist die Probestunde kostenlos?", d: "Die Probestunde dient der Einstufung. Details finden Sie auf der Preisseite." },
+    { q: "Wie werden die Zeiten festgelegt?", a: "Sie wählen Ihre verfügbaren Stunden und Tage frei aus, wir stimmen sie ab." },
+    { q: "Gibt es einen Kurs für Kinder?", a: "Ja, Eltern können Kurse für ihre Kinder mit regelmäßigen Berichten buchen." },
+    { q: "Brauche ich Vorkenntnisse?", a: "Nein, wir beginnen auf Ihrem aktuellen Niveau, vom Anfänger bis zum Fortgeschrittenen." }],
+  tracks: {
+    ijaza: { title: "Koran-Ijaza und verbundener Sanad", desc: "Präzise Rezitationsüberlieferung (Hafs oder 10 Qira'at) verbunden mit dem Propheten ﷺ.", audience: "Für diejenigen, die Rezitation beherrschen und eine Ijaza anstreben.", outcomes: ["Rezitation vor einem qualifizierten Scheich", "Beherrschung der Überlieferungsregeln", "Vorbereitung auf die Prüfung", "Erteilung der Ijaza bei Erfüllung der Bedingungen"], levels: ["Lese-Einstufung", "Regelwiederholung", "Vortrag beim Scheich", "Ijaza"] },
+    hifz: { title: "Koran-Auswendiglernen (Hifz) & Tracking", desc: "Programme für Memorierung, Wiederholung und Festigung mit maßgeschneiderten Plänen.", audience: "Für Kinder und Erwachsene, von Null an oder zum Abschluss.", outcomes: ["Ttäglicher Memorierungsplan", "Regelmäßige Wiederholung", "Korrektur der Rezitation", "Fortschrittsberichte"], levels: ["Juz 'Amma", "Ausgewählte Teile", "Fortgeschrittenes Hifz", "Wiederholung"] },
+    tajweed: { title: "Tajweed & Rezitationsregeln", desc: "Erlernen Sie Tajweed-Regeln und Artikulationspunkte der Buchstaben in der Praxis.", audience: "Für alle, die ihre Rezitationsgenauigkeit verbessern möchten.", outcomes: ["Buchstabenartikulation und Eigenschaften", "Nun-Sakinah-Regeln", "Praktische Anwendung mit Korrektur", "Sicherere Rezitation"], levels: ["Grundstufe", "Mittelstufe", "Oberstufe"] },
+    maqamat: { title: "Vokale Maqamat & Verschönerung", desc: "Professionelles Training in acht Maqamat zur Verbesserung von Ton und Andacht.", audience: "Für Personen, die ihre stimmliche Leistung verbessern möchten.", outcomes: ["Kennenlernen der 8 Maqamat", "Gehör- und Stimmbildung", "Modulation zwischen Maqamat", "Verschönerte Rezitation"], levels: ["Gehör & Erkennung", "Grundperformance", "Modulation", "Meisterschaft"] },
+    tafseer: { title: "Koran-Tafsir & Islamische Wissenschaften", desc: "Verstehen Sie Sinn und Kontext von Versen durch tiefe Meditation.", audience: "Für alle, die den Koran und islamische Grundlagen verstehen möchten.", outcomes: ["Verständnis der Versbedeutungen", "Offenbarungskontext", "Grundlagen der Wissenschaften", "Praktische Anwendung"], levels: ["Vereinfachter Tafsir", "Thematischer Tafsir", "Korankunde"] },
+    arabic: { title: "Klassisches Arabisch (Fusha)", desc: "Klassisches Arabisch von Null an lernen: Buchstaben, Lesen, Grammatik und Konversation.", audience: "Für Anfänger, Nicht-Muttersprachler und Kinder.", outcomes: ["Lesen und Schreiben", "Wortschatz & Konversation", "Grammatikgrundlagen", "Textverständnis"], levels: ["Anfänger", "Mittelstufe", "Fortgeschritten"] },
+    egyptian: { title: "Ägyptischer Dialekt", desc: "Konversationsunterricht im ägyptischen Dialekt für Alltag, Arbeit und Reisen.", audience: "Für Nicht-Muttersprachler und Expats.", outcomes: ["Flüssige Alltagsgespräche", "Gängige Ausdrücke", "Medienverständnis", "Korrekte Aussprache"], levels: ["Anfänger", "Mittelstufe", "Fortgeschritten"] } },
+  tp: { audience: "Für wen ist dieser Kurs?", outcomes: "Was werden Sie lernen?", levels: "Kursstufen", teachers: "Kurslehrer", none: "Lehrer werden bald bekannt gegeben." },
+  tch: { title: "Fachlehrkräfte", sub: "Ein Team qualifizierter Lehrkräfte für jeden Kurs.", book: "Probestunde buchen" },
+  lib: { title: "Kostenlose Mediathek", sub: "Kostenlos lernen und für Vollkurse abonnieren.", open: "Öffnen" },
+  pr: { title: "Preise & Pakete", sub: "Wählen Sie den passenden Tarif. Alle Kurse live online.", sub1: "Jetzt abonnieren",
+    plans: { trial: { t: "Probestunde", d: "Niveau bewerten und Lehrer kennenlernen.", f: ["1 Unterricht", "Niveaubewertung", "Lehrer-Matching"] },
+      pack4: { t: "4er Paket", d: "1 Unterricht pro Woche.", f: ["4 Einheiten/Monat", "Fester Plan", "Notizen nach dem Unterricht"] },
+      pack8: { t: "8er Paket", d: "2 Einheiten pro Woche — Am beliebtesten.", f: ["8 Einheiten/Monat", "Fester Plan", "Monatlicher Bericht"] },
+      pack12: { t: "12er Paket", d: "3 Einheiten pro Woche für schnellen Fortschritt.", f: ["12 Einheiten/Monat", "Fester Plan", "Monatlicher Bericht"] },
+      group: { t: "Gruppen-Workshop", d: "Gemeinsames Maqamat-Training.", f: ["Regelmäßige Gruppen", "Praktische Anwendung", "Feedback"] } } },
+  bk: { title: "Buchen Sie Ihre Probestunde", sub: "Wählen Sie Ihre Probestunde und wöchentlichen Stunden ganz frei Stunde für Stunde.", s1: "Ihre Daten & Probetermin", s2: "Wählen Sie das wöchentliche Stundenplan (Stunde für Stunde für jeden Tag)", hint: "Sie können jede Stunde an jedem Tag völlig frei ohne Einschränkungen wählen.",
+    l: { name: "Name", email: "E-Mail", phone: "Telefon / WhatsApp", track: "Kurs", trial: "Datum & Uhrzeit der Probestunde", tz: "Zeitzone" },
+    submit: "Buchungsanfrage senden",
+    err: { trial: "Bitte wählen Sie Datum und Uhrzeit der Probestunde.", slots: "Bitte wählen Sie mindestens einen Zeitslot aus." },
+    ok: { title: "Anfrage vorbereitet ✅", descWa: "Letzter Schritt: Senden Sie die Nachricht per WhatsApp, um Ihre Buchung abzuschließen.", wa: "Kopie per WhatsApp senden" } },
+  about: { title: "Über uns", p1: "Die Itqan Online-Akademie zielt darauf ab, den Heiligen Koran, Tajweed, Maqamat und verbundene Ijazat zu vermitteln.", p2: "Wir verbinden traditionelle Authentizität mit moderner technologischer Flexibilität." },
+  contact: { title: "Kontakt", sub: "Wir sind hier, um Ihre Fragen zu beantworten.", wa: "Direkt via WhatsApp chatten" }
+},
+
+es: {
+  dir: "ltr", name: "Español", locale: "es-ES",
+  meta: { siteName: "Academia Itqan", short: "Academia Itqan", letter: "I", tagline: "Ijazat • Hifz • Maqamat • Tafseer",
+    desc: "Academia online para el aprendizaje del Corán, tajweed, maqamat, ijaza y lengua árabe con profesores expertos." },
+  nav: { skip: "Saltar al contenido", home: "Inicio", tracks: "Cursos", maqamat: "Maqamat", teachers: "Profesores", library: "Biblioteca", pricing: "Precios", about: "Nosotros", contact: "Contacto", trial: "✨ Clase de prueba", menu: "Menú", theme: "Tema", lang: "Idioma" },
+  days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+  langs: { ar: "Árabe", en: "Inglés", zh: "Chino", ru: "Ruso", ku: "Kurdo", ms: "Malayo", id: "Indonesio", tr: "Turco", fr: "Francés", de: "Alemán", es: "Español" },
+  common: { bookTrial: "Reservar clase de prueba", learnMore: "Saber más", allTracks: "Todos los cursos", free: "Gratis", premium: "De pago", perMonth: "/ mes", back: "Volver", all: "Todo", copy: "Copiar", copied: "Copiado ✓", home: "Inicio" },
+  hero: { badge: "Bienvenido a la Academia Itqan", a: "Domina el Sagrado Corán y los Maqamat con tu voz", b: "Con cadena de Ijaza conectada", c: "y guía directa.",
+    desc: "Plataforma que combina ciencias del tajweed, entrenamiento vocal avanzado en maqamat y tafsir simplificado.",
+    cta1: "Reservar clase de prueba", cta2: "Ver cursos", cta3: "Biblioteca gratuita",
+    points: ["Clases en directo 1 a 1 y en grupo", "Horarios flexibles en tu zona horaria", "Informes de progreso regulares"] },
+  sec: { tracks: "Cursos de la Academia", tracksSub: "Elige el curso adecuado para tu nivel — clase de prueba disponible para cada uno.", how: "¿Cómo empezar?", why: "¿Por qué elegirnos?", teachers: "Nuestros profesores expertos",
+    testi: "Opiniones de estudiantes", testiSoon: "Las opiniones aparecerán aquí tras el lanzamiento de los primeros grupos.", faq: "FAQ", ctaT: "¿Listo para empezar?", ctaD: "Reserva tu clase de prueba ahora y te asignaremos el mejor profesor.",
+    lib: "Empezar gratis", libSub: "Contenido gratuito en cada curso para aprender antes de suscribirte." },
+  how: [{ t: "Reservar clase de prueba", d: "Elige tu curso y un horario adecuado." }, { t: "Evaluación y asignación", d: "Evaluamos tu nivel y te emparejamos con el profesor ideal." }, { t: "Iniciar horario semanal", d: "Fijamos tus sesiones regulares y supervisamos tu progreso." }],
+  why: [{ t: "Sanad auténtico", d: "Aprendizaje preciso con profesores especializados." }, { t: "Práctica vocal", d: "Aplicación de maqamat con corrección directa." }, { t: "Flexibilidad horaria", d: "Horario semanal adaptado a tu zona horaria." }, { t: "Seguimiento continuo", d: "Comentarios post-clase e informes periódicos." }],
+  faq: [
+    { q: "¿Es gratuita la clase de prueba?", a: "Ayuda a evaluar tu nivel y estilo de enseñanza. Consulta la página de precios." },
+    { q: "¿Cómo se programan las clases?", a: "Seleccionas libremente tus horas y días disponibles, y los coordinamos con los profesores." },
+    { q: "¿Hay un curso para niños?", a: "Sí, los padres pueden reservar clases para sus hijos con informes periódicos." },
+    { q: "¿Necesito experiencia previa?", a: "No, empezamos desde tu nivel actual en cualquier curso, de principiante a avanzado." }],
+  tracks: {
+    ijaza: { title: "Ijaza Coránico y Sanad conectado", desc: "Transmisión precisa de recitación (Hafs o 10 Qira'at) conectada al Profeta ﷺ.", audience: "Para quienes dominan la recitación y buscan una ijaza formal.", outcomes: ["Recitación directa a un jeque experto", "Dominio de las reglas de narración", "Preparación para exámenes", "Ijaza al cumplir los requisitos"], levels: ["Evaluación de lectura", "Repaso de reglas", "Recitación al jeque", "Ijaza"] },
+    hifz: { title: "Memorización del Corán y Seguimiento", desc: "Programas de memorización, repaso y consolidación con planes diarios personalizados.", audience: "Para niños y adultos, desde cero o completando memorización.", outcomes: ["Plan diario de memorización adecuado", "Repaso regular y consolidación", "Corrección de recitación", "Informes periódicos de progreso"], levels: ["Yuz 'Amma", "Partes seleccionadas", "Hifz avanzado", "Repaso"] },
+    tajweed: { title: "Tajweed y Reglas de Recitación", desc: "Aprende las reglas del tajweed y los puntos de articulación de las letras en la práctica.", audience: "Para cualquier persona que quiera mejorar su precisión.", outcomes: ["Articulación y atributos de las letras", "Reglas del Nun Sakinah", "Aplicación práctica con corrección", "Recitación más segura"], levels: ["Nivel introductorio", "Nivel intermedio", "Nivel avanzado"] },
+    maqamat: { title: "Maqamat Vocales y Embellecimiento", desc: "Entrenamiento profesional en los ocho maqamat para mejorar la melodía y devoción.", audience: "Para quienes desean mejorar su rendimiento vocal en la recitación.", outcomes: ["Conocer los 8 maqamat", "Entrenamiento de oído y voz", "Modulación entre maqamat", "Recitación embellecida"], levels: ["Oído y reconocimiento", "Rendimiento básico", "Modulación", "Dominio"] },
+    tafseer: { title: "Tafsir del Corán y Ciencias Islámicas", desc: "Comprende el significado de los versículos y el contexto mediante una profunda meditación.", audience: "Para quienes desean comprender el Corán y las ciencias islámicas.", outcomes: ["Comprender el significado de los versos", "Contexto de revelación", "Bases de las ciencias islámicas", "Aplicación práctica"], levels: ["Tafsir simplificado", "Tafsir temático", "Ciencias coránicas"] },
+    arabic: { title: "Lengua Árabe (Fusha)", desc: "Aprende árabe clásico desde cero: letras, lectura, gramática y conversación.", audience: "Para principiantes, no nativos y niños.", outcomes: ["Lectura y escritura", "Vocabulario y conversación", "Bases gramaticales", "Comprensión de textos"], levels: ["Principiante", "Intermedio", "Avanzado"] },
+    egyptian: { title: "dialecto Egipcio", desc: "Lecciones de conversación en dialecto egipcio para la vida diaria, trabajo y viajes.", audience: "Para no nativos y expatriados.", outcomes: ["Conversación diaria fluida", "Expresiones comunes", "Comprensión de medios", "Pronunciación correcta"], levels: ["Principiante", "Intermedio", "Avanzado"] } },
+  tp: { audience: "¿Para quién es este curso?", outcomes: "¿Qué aprenderás?", levels: "Niveles del curso", teachers: "Profesores del curso", none: "Los profesores se anunciarán pronto." },
+  tch: { title: "Profesores especializados", sub: "Un equipo de profesores expertos en cada curso.", book: "Reservar prueba" },
+  lib: { title: "Biblioteca gratuita", sub: "Aprende gratis en cada curso y suscríbete para los cursos completos.", open: "Abrir" },
+  pr: { title: "Precios y Planes", sub: "Elige el plan adecuado. Todas las clases son en directo online.", sub1: "Suscribirse ahora",
+    plans: { trial: { t: "Clase de prueba", d: "Evalúa tu nivel y conoce al profesor.", f: ["1 clase", "Evaluación de nivel", "Asignación de profesor"] },
+      pack4: { t: "Pack 4 clases", d: "1 clase por semana.", f: ["4 clases/mes", "Horario fijo", "Notas post-clase"] },
+      pack8: { t: "Pack 8 clases", d: "2 clases por semana — El más popular.", f: ["8 clases/mes", "Horario fijo", "Informe mensual"] },
+      pack12: { t: "Pack 12 clases", d: "3 clases por semana para un progreso rápido.", f: ["12 clases/mes", "Horario fijo", "Informe mensual"] },
+      group: { t: "Taller en grupo", d: "Entrenamiento grupal en maqamat.", f: ["Clases grupales periódicas", "Aplicación práctica", "Evaluación del profesor"] } } },
+  bk: { title: "Reserva tu clase de prueba", sub: "Selecciona la hora de prueba y tus horas semanales hora por hora con total libertad.", s1: "Tus datos y hora de prueba", s2: "Elige tu horario semanal (Hora por hora para cualquier día)", hint: "Puedes elegir cualquier hora de cualquier día de forma totalmente libre sin restricciones.",
+    l: { name: "Nombre", email: "Correo electrónico", phone: "Teléfono / WhatsApp", track: "Curso", trial: "Fecha y hora de la clase de prueba", tz: "Zona horaria" },
+    submit: "Enviar solicitud de reserva",
+    err: { trial: "Por favor, selecciona la fecha y hora de la clase de prueba.", slots: "Por favor, selecciona al menos un intervalo horario." },
+    ok: { title: "Solicitud preparada ✅", descWa: "Último paso: Envía el mensaje por WhatsApp para completar tu reserva.", wa: "Enviar copia por WhatsApp" } },
+  about: { title: "Sobre nosotros", p1: "La Academia Itqan Online tiene como objetivo enseñar el Sagrado Corán, el tajweed, los maqamat y las ijazat conectadas.", p2: "Combinamos la autenticidad tradicional con la flexibilidad tecnológica moderna." },
+  contact: { title: "Contacto", sub: "Estamos aquí para responder a tus preguntas.", wa: "Chatear directamente por WhatsApp" }
 };
 
 /* =====================================================================
@@ -612,18 +913,17 @@ function sendAIQuery() {
     let ans = "";
     let lowQ = q.toLowerCase();
     
-    if(lowQ.includes('سعر') || lowQ.includes('تكلفة') || lowQ.includes('price') || lowQ.includes('bazaar') || lowQ.includes('cost')) {
+    if(lowQ.includes('سعر') || lowQ.includes('تكلفة') || lowQ.includes('price') || lowQ.includes('cost') || lowQ.includes('价格')) {
       ans = currentLang==='ar' ? 'تبدأ الباقات من 40$ شهرياً، وتتوفر حصة تجريبية للتعرف على مستواك. يمكنك زيارة صفحة الأسعار للتفاصيل.' : 'Packages start from $40/month, and a trial lesson is available. Check the pricing page for details.';
-    } else if(lowQ.includes('حجز') || lowQ.includes('تجريبية') || lowQ.includes('book') || lowQ.includes('trial')) {
+    } else if(lowQ.includes('حجز') || lowQ.includes('تجريبية') || lowQ.includes('book') || lowQ.includes('trial') || lowQ.includes('预约')) {
       ans = currentLang==='ar' ? 'يمكنك حجز حصتك التجريبية الآن بكل سهولة عبر صفحة "حصة تجريبية" واختيار المواعيد بالساعة والسنة واليوم.' : 'You can easily book your trial lesson via the "Trial Lesson" page and choose your slots hour by hour.';
-    } else if(lowQ.includes('مقام') || lowQ.includes('maqamat') || lowQ.includes('صوت')) {
+    } else if(lowQ.includes('مقام') || lowQ.includes('maqamat') || lowQ.includes('صوت') || lowQ.includes('音调')) {
       ans = currentLang==='ar' ? 'لدينا مسار متخصص في المقامات الثمانية (بياتي، رست، نهاوند، حجاز، إلخ) مع تدريب عملي وتصحيح مباشر للصوت.' : 'We have a specialized maqamat track with practical training and vocal correction.';
-    } else if(lowQ.includes('إجازة') || lowQ.includes('ijaza') || lowQ.includes('سند')) {
+    } else if(lowQ.includes('إجازة') || lowQ.includes('ijaza') || lowQ.includes('سند') || lowQ.includes('传承')) {
       ans = currentLang==='ar' ? 'نقدم إجازات متصلة السند برواية حفص عن عاصم والقراءات العشر مع مشايخ معتمدين.' : 'We offer connected ijazat with Hafs and 10 Qiraat with certified sheikhs.';
     } else {
-      // ذكاء اصطناعي لا يعرف الإجابة -> يطلب التواصل البشري Human Handover
       ans = currentLang==='ar' 
-        ? `عذراً، لم أتمكن من إيجاد إجابة دقيقة لسؤالك بدقة. يرجى التواصل مباشرة مع أحد معلمي ومشرفي أكاديمية إتقان عبر واتساب وسنجيبك فوراً:<br><a href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent('استفسار من البوت: ' + q)}" target="_blank" class="ai-human-btn"><i class="fa-brands fa-whatsapp"></i> تحدث مع مشرف بشري (Human)</a>`
+        ? `عذراً، لم أتمكن من إيجاد إجابة دقيقة لسؤالك. يرجى التواصل مباشرة مع مشرفي أكاديمية إتقان عبر واتساب وسنجيبك فوراً:<br><a href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent('استفسار من البوت: ' + q)}" target="_blank" class="ai-human-btn"><i class="fa-brands fa-whatsapp"></i> تحدث مع مشرف بشري (Human)</a>`
         : `I'm sorry, I couldn't find a precise answer. Please chat directly with our human supervisor on WhatsApp:<br><a href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent('Bot inquiry: ' + q)}" target="_blank" class="ai-human-btn"><i class="fa-brands fa-whatsapp"></i> Chat with Human Supervisor</a>`;
     }
 
@@ -803,14 +1103,14 @@ function renderTeachers(el) {
         ${TEACHERS.map(tch => `
           <div class="card">
             <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem">
-              <div class="avatar">${tch.name[currentLang] ? tch.name[currentLang][0] : 'ش'}</div>
+              <div class="avatar">${tch.name[currentLang] ? tch.name[currentLang][0] : 'إ'}</div>
               <div>
                 <b>${tch.name[currentLang] || tch.name.ar}</b>
                 <div class="muted xs">${tch.title[currentLang] || tch.title.ar}</div>
               </div>
             </div>
             <p class="muted sm">${tch.bio[currentLang] || tch.bio.ar}</p>
-            <a class="btn btn-p btn-full" style="margin-top:1.2rem" href="#booking" onclick="navigate('booking')">${t('tch.book')}</a>
+            <a class="btn btn-p btn-full" style="margin-top:1.2rem" href="#booking" onclick="navigate('booking')">${I18N[currentLang].tch.book}</a>
           </div>
         `).join('')}
       </div>
@@ -869,8 +1169,8 @@ function renderPricing(el) {
     📝 نظام حجز متطور ومطابق تماماً للمطلوب (تاريخ الحصة التجريبية + اختيار 24 ساعة بالساعة واليوم بكل حرية)
    ===================================================================== */
 let bookingState = {
-  name: '', email: '', phone: '', track: 'ijaza', trialDate: '', trialTime: '', tz: 'Africa/Cairo', who: 'self', notes: '',
-  selectedSlots: {} // صيغة التخزين: { dayIndex: [0, 1, ..., 23] }
+  name: '', email: '', phone: '', track: 'ijaza', trialDate: '', tz: 'Africa/Cairo',
+  selectedSlots: {}
 };
 
 function renderBooking(el) {
@@ -910,7 +1210,6 @@ function renderBooking(el) {
             <div>
               <label class="l">${t('bk.l.trial')}</label>
               <input class="in" type="datetime-local" id="bTrial" value="${bookingState.trialDate}" required>
-              <small class="muted xs">${currentLang==='ar'?'مثال: الأربعاء 12 يونيو، الساعة 9:00 مساءً':'e.g. Wednesday June 12, 9:00 PM'}</small>
             </div>
             <div>
               <label class="l">${t('bk.l.tz')}</label>
@@ -965,9 +1264,7 @@ function toggleHourSlot(dayIdx, hour) {
     bookingState.selectedSlots[dayIdx].push(hour);
     bookingState.selectedSlots[dayIdx].sort((a,b)=>a-b);
   }
-  // إعادة رسم الحقول لتحديث الزر المُحدد
   renderBooking(document.getElementById('view'));
-  // الحفاظ على المدخلات النصية
   document.getElementById('bName').value = document.getElementById('bName').value;
 }
 
@@ -995,11 +1292,11 @@ function submitBooking(e) {
   }
   errBox.style.display = 'none';
 
-  // بناء نص رسالة واتساب الشاملة للحجز الدقيق بالساعة واليوم والتاريخ التجريبي
   let slotsSummary = Object.keys(bookingState.selectedSlots).map(dIdx => {
     let dayName = I18N[currentLang].days[dIdx];
     let hours = bookingState.selectedSlots[dIdx].map(h => `${h}:00`).join(', ');
-    return `• ${dayName}: الساعات (${hours})`;
+    let dayLabel = (currentLang==='ar') ? `• ${dayName}: الساعات (${hours})` : `• ${dayName}: Hours (${hours})`;
+    return dayLabel;
   }).join('\n');
 
   let waText = `طلب حجز جديد في أكاديمية إتقان:
@@ -1007,7 +1304,7 @@ function submitBooking(e) {
 - البريد: ${bookingState.email}
 - الهاتف: ${bookingState.phone}
 - المسار: ${I18N[currentLang].tracks[bookingState.track].title}
-- موعد الحصة التجريبية المحدد: ${bookingState.trialDate}
+- موعد الحصة التجريبية المختار: ${bookingState.trialDate}
 - المواعيد الأسبوعية المختارة (الساعة بساعة):
 ${slotsSummary}
 - المنطقة الزمنية: ${bookingState.tz}`;
@@ -1056,7 +1353,6 @@ function renderContact(el) {
   `;
 }
 
-// بدء تشغيل التطبيق
 renderApp();
 </script>
 </body>
