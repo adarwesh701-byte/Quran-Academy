@@ -283,6 +283,24 @@ details summary{list-style:revert}
 .chatin{display:flex;gap:.5rem;padding:.6rem;border-top:1px solid var(--line)}.chatin textarea{flex:1;resize:none}
 .show-sm{display:none}
 @media (max-width:760px){.chatwrap{grid-template-columns:1fr}.chatlist{border:0}.hide-sm{display:none!important}.show-sm{display:inline-flex}.cmsg{max-width:90%}}
+
+.paidcard{border-color:color-mix(in srgb,var(--violet) 45%,var(--line))}
+.allaccess{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;background:linear-gradient(120deg,color-mix(in srgb,var(--violet) 35%,var(--card)),color-mix(in srgb,var(--accent) 25%,var(--card)));border:0}
+.wmark{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:rgba(255,255,255,.22);transform:rotate(-18deg);text-shadow:0 0 2px rgba(0,0,0,.3);animation:wm 18s linear infinite}
+@keyframes wm{0%{transform:translate(-20%,-20%) rotate(-18deg)}50%{transform:translate(20%,20%) rotate(-18deg)}100%{transform:translate(-20%,-20%) rotate(-18deg)}}
+.secure{user-select:none;-webkit-user-select:none}
+.groupcard{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.invitecard,.invitebanner{background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 22%,var(--card)),color-mix(in srgb,var(--accent) 18%,var(--card)));border:0}
+.invitebanner{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.pbar{height:12px;border-radius:999px;background:var(--bg);overflow:hidden;margin-top:.4rem;border:1px solid var(--line)}
+.pbar span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:999px;transition:width .6s}
+.hero-st{border-radius:18px;padding:1.3rem;margin-bottom:1.2rem;color:#fff;background:radial-gradient(circle at 15% 20%,rgba(255,255,255,.18),transparent 40%),linear-gradient(135deg,#047857,#065f46 55%,#b45309);box-shadow:0 12px 30px rgba(4,120,87,.25)}
+.hs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;text-align:center}
+.hs-n{font-size:1.7rem;font-weight:800;line-height:1.2}.hs-l{font-size:.78rem;opacity:.9}
+.hs-ach{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+.achb{font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:rgba(255,255,255,.12);opacity:.55;border:1px dashed rgba(255,255,255,.4)}
+.achb.on{opacity:1;background:rgba(255,255,255,.25);border-style:solid;font-weight:700}
+@media (max-width:760px){.hs-grid{grid-template-columns:repeat(2,1fr)}.hs-n{font-size:1.35rem}}
 </style>
 </head>
 <body>
@@ -1630,7 +1648,7 @@ async function doSignup() {
 async function signUpUser({ name, email, phone, pw }) {
   const { data, error } = await sb.auth.signUp({
     email, password: pw,
-    options: { data: { full_name: name, phone, timezone: BROWSER_TZ }, emailRedirectTo: location.origin + location.pathname }
+    options: { data: { full_name: name, phone, timezone: BROWSER_TZ, ref: lsGet("itqan_ref") || "", lang: state.lang }, emailRedirectTo: location.origin + location.pathname }
   });
   if (error) {
     if (/registered|exists/i.test(error.message)) { state.authMsg = { t: L("accExists"), err: true }; state.authMode = "login"; state.route = "login"; }
@@ -1740,17 +1758,6 @@ async function submitBooking() {
 }
 
 /* ---------- صفحة الدفع (بعد الحجز التجريبي) ---------- */
-function paymentOptions() {
-  const p = CONFIG.payments || {};
-  const fee = CONFIG.trial.fee, cur = CONFIG.trial.currency;
-  const opts = [];
-  if (p.stripeLinks && p.stripeLinks.trial) opts.push({ id: "card", icon: "fa-regular fa-credit-card", label: "Visa / Mastercard / Apple Pay", href: p.stripeLinks.trial });
-  if (p.paypalMe) opts.push({ id: "paypal", icon: "fa-brands fa-paypal", label: "PayPal", href: `https://paypal.me/${encodeURIComponent(p.paypalMe)}/${fee}${cur}` });
-  if (p.instapay) opts.push({ id: "instapay", icon: "fa-solid fa-mobile-screen", label: "InstaPay", text: p.instapay });
-  if (p.bank && p.bank.iban) opts.push({ id: "bank", icon: "fa-solid fa-building-columns", label: "Bank transfer", text: `${p.bank.holder || ""} — ${p.bank.bankName || ""}\nIBAN: ${p.bank.iban}${p.bank.swift ? "\nSWIFT: " + p.bank.swift : ""}` });
-  opts.push({ id: "whatsapp", icon: "fa-brands fa-whatsapp", label: L("payWa"), href: `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent("Trial lesson payment - Itqan Academy")}` });
-  return opts;
-}
 function renderPay() {
   if (!state.auth.user) { state.route = "login"; return renderAuth(); }
   if (state.payKind === "order") return renderPayOrder();
@@ -4281,7 +4288,7 @@ function shareForm() {
         <div><label class="l">${L("category")}</label><select class="in" id="sh_cat" onchange="state.shareCat=this.value;document.getElementById('sh_mq').style.display=this.value==='recitation_maqam'?'block':'none'">${SC_CATS.map(k => `<option value="${k}" ${k === c ? "selected" : ""}>${esc(catName(k))}</option>`).join("")}</select></div>
         <div id="sh_mq" style="display:${c === "recitation_maqam" ? "block" : "none"}"><label class="l">${L("maqam")}</label><select class="in" id="sh_maqam">${MAQAMS.map(m => `<option value="${m}">${esc(L("maqamOf"))} ${esc(maqamName(m))}</option>`).join("")}</select></div>
       </div>
-      <div><label class="l">${L("ctTitleOne")}</label><input class="in" id="sh_title" required placeholder="سورة الملك — الآيات 1-10"></div>
+      <div><label class="l">${L("ctTitleOne")}</label><input class="in" id="sh_title" required placeholder="Surah Al-Mulk 1-10"></div>
       <div><label class="l">${L("shareDesc")}</label><textarea class="in" id="sh_desc" rows="2"></textarea></div>
       <div class="fgrid">
         <div><label class="l">${L("shareFile")}</label><input class="in" id="sh_file" type="file" accept="audio/*,video/*"></div>
@@ -4315,7 +4322,7 @@ async function submitShare() {
     if (ins.error) throw ins.error;
     toast(ins.data.status === "published" ? L("sharePublished") : L("sharePending"));
     invalidate("myShares", "showcase");
-  } catch (e) { toast(e.message, true); }
+  } catch (e) { toast(errMsg(e), true); }
   state.busy = false; render();
 }
 async function deleteShare(id) { if (!confirm(L("delete") + "?")) return; await sb.from("showcase_posts").delete().eq("id", id); invalidate("myShares", "showcase", "modShares"); render(); }
@@ -4575,8 +4582,729 @@ ownerSettings = function () {
   return rules + html;
 };
 
+
+/* =====================================================================
+    v3: English default, Academy Courses, profile & languages, qualifications,
+        paid/secure content & all-access, group classes, referrals & wallet,
+        payment methods manager, student hero & achievements
+   ===================================================================== */
+const COURSES_NAME = { ar: "دورات الأكاديمية", en: "Academy Courses", fr: "Cours de l'Académie", de: "Kurse der Akademie", es: "Cursos de la Academia",
+  tr: "Akademi Kursları", id: "Kursus Akademi", ms: "Kursus Akademi", ru: "Курсы Академии", zh: "学院课程", ku: "Kursên Akademiyê" };
+ALL_LANGS.forEach(lg => { const d = I18N[lg]; if (!d) return; const n = COURSES_NAME[lg] || COURSES_NAME.en; if (d.nav) d.nav.tracks = n; if (d.sec) d.sec.tracks = n; });
+
+const LANG_LIST = { ar: "العربية", en: "English", fr: "Français", de: "Deutsch", es: "Español", tr: "Türkçe", id: "Bahasa Indonesia", ms: "Bahasa Melayu",
+  ru: "Русский", zh: "中文", ku: "Kurdî", ur: "اردو", fa: "فارسی", hi: "हिन्दी", bn: "বাংলা", it: "Italiano", nl: "Nederlands", pt: "Português", so: "Soomaali", sw: "Kiswahili", ha: "Hausa", bs: "Bosanski", sq: "Shqip", ps: "پښتو" };
+
+Object.assign(UI.ar, {
+  tabs6: { profile: "ملفي", groups: "الحصص الجماعية", referrals: "الإحالات والمكافآت", invite: "ادعُ أصدقاءك", mygroups: "حصصي الجماعية", wallet: "المحفظة" },
+  profileTitle: "ملفي الشخصي", nativeLang: "اللغة الأصلية (الأم)", spokenLangs: "اللغات التي أتحدثها", bio: "نبذة عني", qualifications: "المؤهلات والإجازات",
+  qTitle: "المؤهل / الإجازة", qIssuer: "الجهة / الشيخ", qYear: "السنة", addQual: "إضافة مؤهل", academyQuals: "مؤهلات الأكاديمية واعتماداتها",
+  academyQualsHint: "تظهر للجميع في صفحة «من نحن» والصفحة الرئيسية. اكتب كل مؤهل في سطر (بأي لغة — يترجم تلقائيًا).",
+  speaks: "يتحدث", native: "اللغة الأم",
+  // content access
+  accFree: "مجاني", accPaid: "مدفوع", accLessons: "لطلاب الحصص فقط", contentAccess: "نوع الوصول", price: "السعر", teaser: "وصف/مقدمة تظهر للجميع",
+  cover: "صورة غلاف (اختياري)", buy: "اشترِ", unlock: "افتح", owned: "متاح لك ✓", locked: "🔒 مدفوع",
+  allAccessTitle: "اشتراك كل محتوى الأكاديمية", allAccessText: "افتح كل الدروس والمواد المدفوعة في كل الأقسام لمدة {d} يوم.", subscribeAll: "اشترك الآن",
+  sectionUnlock: "افتح القسم كاملًا", sectionPrice: "سعر فتح القسم كاملًا (0 = غير متاح)", allAccessPrice: "سعر اشتراك كل المحتوى", allAccessDays: "مدة الاشتراك (أيام)",
+  defaultContentPrice: "السعر المبدئي لأي محتوى مدفوع",
+  grantAccess: "منح وصول للمحتوى", grantAll: "كل المحتوى", grantSection: "قسم محدد", grantDays: "عدد الأيام (فارغ = دائم)", granted: "تم منح الوصول ✓", accessList: "صلاحيات الوصول",
+  secureNote: "🔒 محتوى محمي — مخصص لحسابك فقط", revoke: "إلغاء",
+  // groups
+  groupTitle: "حصص جماعية بسعر أقل", groupsSub: "انضم لحصة جماعية مباشرة مع معلم متخصص — السعر الإجمالي يُقسم على الطلاب.", lessonLang: "لغة الدرس",
+  seatsLeft: "مقاعد متبقية", perStudent: "للطالب", totalPrice: "السعر الإجمالي للحصة", capacity: "عدد الطلاب (يُقسم عليه السعر)", joinGroup: "انضم",
+  full: "مكتملة", createGroup: "إنشاء حصة جماعية", groupLink: "رابط الحصة الجماعية", enrolled: "المسجلون", noGroups: "لا توجد حصص جماعية قادمة حاليًا.",
+  langAr: "عربي", langEn: "English",
+  // referrals & wallet
+  inviteTitle: "ادعُ أصدقاءك واكسب 🎁", inviteText: "شارك رابطك الخاص. لكل صديق يشترك تحصل على {r} في محفظتك، وعند {g} أصدقاء تحصل على هدية مجانية تختارها!",
+  myLink: "رابطك الخاص", copy: "نسخ", copied: "تم النسخ ✓", share: "مشاركة", progress: "تقدمك", friendsJoined: "انضموا", friendsQualified: "اشتركوا",
+  chooseGift: "اختر هديتك", gifts: { lesson25: "حصة مجانية 25 دقيقة", lesson50: "حصة مجانية 50 دقيقة", all_access_30: "شهر مجاني لكل المحتوى" },
+  wallet: "المحفظة", walletBal: "رصيد المحفظة", payWallet: "ادفع من المحفظة", insufficient: "رصيد المحفظة لا يكفي.",
+  referrer: "الطالب", referredCount: "سجلوا عن طريقه", qualifiedCount: "اشتركوا فعليًا", giftChoice: "الهدية المختارة", giveGift: "امنح الهدية", giftGiven: "تم منح الهدية ✓",
+  walletAdjust: "إضافة/خصم من المحفظة", refReward: "مكافأة كل إحالة (في المحفظة)", refGoal: "عدد الأصدقاء للهدية", homeInvite: "ادعُ أصدقاءك للأكاديمية واحصل على حصص مجانية",
+  // showcase rule
+  subsOnly: "رفع المشاركات متاح للطلاب المشتركين فقط. اشترك في باقة أو احجز حصتك التجريبية لتفتح هذه الميزة.", teacherPost: "👨‍🏫 مشاركة معلم",
+  // payments
+  payMethodsMgr: "وسائل الدفع", pmName: "الاسم الظاهر", pmLink: "رابط الدفع (اختياري)", pmDetails: "التفاصيل / التعليمات (رقم حساب، محفظة…)", pmEnabled: "مفعّلة", addPm: "إضافة وسيلة دفع",
+  // student hero
+  heroLessons: "حصص مكتملة", heroHours: "ساعات تعلم", heroBalance: "رصيد الحصص", heroWallet: "المحفظة", achievements: "إنجازاتي",
+  ach: { first: "أول حصة 🌱", ten: "10 حصص 🔥", fifty: "50 حصة 🏆", poster: "أول مشاركة 🎙️", inviter: "سفير الأكاديمية 🤝", cert: "شهادة 🎓" },
+  keepGoing: "واصل التقدم! كل حصة تقربك من هدفك."
+});
+Object.assign(UI.en, {
+  tabs6: { profile: "My profile", groups: "Group classes", referrals: "Referrals & rewards", invite: "Invite friends", mygroups: "My group classes", wallet: "Wallet" },
+  profileTitle: "My profile", nativeLang: "Native language", spokenLangs: "Languages I speak", bio: "About me", qualifications: "Qualifications & ijazat",
+  qTitle: "Qualification / ijaza", qIssuer: "Institution / sheikh", qYear: "Year", addQual: "Add qualification", academyQuals: "Academy qualifications & accreditations",
+  academyQualsHint: "Shown publicly on the About page and the home page. One qualification per line (any language — auto-translated).",
+  speaks: "Speaks", native: "Native",
+  accFree: "Free", accPaid: "Paid", accLessons: "Lesson students only", contentAccess: "Access type", price: "Price", teaser: "Public description / intro",
+  cover: "Cover image (optional)", buy: "Buy", unlock: "Unlock", owned: "Available to you ✓", locked: "🔒 Paid",
+  allAccessTitle: "All-access academy subscription", allAccessText: "Unlock every paid lesson and material in all sections for {d} days.", subscribeAll: "Subscribe now",
+  sectionUnlock: "Unlock the whole section", sectionPrice: "Price to unlock the whole section (0 = not for sale)", allAccessPrice: "All-access subscription price", allAccessDays: "Subscription length (days)",
+  defaultContentPrice: "Default price for paid content",
+  grantAccess: "Grant content access", grantAll: "All content", grantSection: "Specific section", grantDays: "Days (empty = permanent)", granted: "Access granted ✓", accessList: "Access rights",
+  secureNote: "🔒 Protected content — for your account only", revoke: "Revoke",
+  groupTitle: "Group classes at a lower price", groupsSub: "Join a live group class with a specialist teacher — the total price is split between students.", lessonLang: "Lesson language",
+  seatsLeft: "seats left", perStudent: "per student", totalPrice: "Total class price", capacity: "Number of students (price is split by this)", joinGroup: "Join",
+  full: "Full", createGroup: "Create a group class", groupLink: "Group class link", enrolled: "Enrolled", noGroups: "No upcoming group classes right now.",
+  langAr: "Arabic", langEn: "English",
+  inviteTitle: "Invite friends & earn 🎁", inviteText: "Share your personal link. For every friend who subscribes you get {r} in your wallet, and at {g} friends you get a free gift of your choice!",
+  myLink: "Your personal link", copy: "Copy", copied: "Copied ✓", share: "Share", progress: "Your progress", friendsJoined: "joined", friendsQualified: "subscribed",
+  chooseGift: "Choose your gift", gifts: { lesson25: "Free 25-minute lesson", lesson50: "Free 50-minute lesson", all_access_30: "Free month of all content" },
+  wallet: "Wallet", walletBal: "Wallet balance", payWallet: "Pay from wallet", insufficient: "Your wallet balance is not enough.",
+  referrer: "Student", referredCount: "signed up via them", qualifiedCount: "actually subscribed", giftChoice: "Chosen gift", giveGift: "Give gift", giftGiven: "Gift given ✓",
+  walletAdjust: "Add/deduct wallet", refReward: "Reward per referral (wallet)", refGoal: "Friends needed for the gift", homeInvite: "Invite your friends to the academy and get free lessons",
+  subsOnly: "Posting is available to subscribed students only. Subscribe to a package or book your trial lesson to unlock it.", teacherPost: "👨‍🏫 Teacher post",
+  payMethodsMgr: "Payment methods", pmName: "Display name", pmLink: "Payment link (optional)", pmDetails: "Details / instructions (account no., wallet…)", pmEnabled: "Enabled", addPm: "Add payment method",
+  heroLessons: "Lessons completed", heroHours: "Hours learned", heroBalance: "Lesson balance", heroWallet: "Wallet", achievements: "My achievements",
+  ach: { first: "First lesson 🌱", ten: "10 lessons 🔥", fifty: "50 lessons 🏆", poster: "First post 🎙️", inviter: "Academy ambassador 🤝", cert: "Certificate 🎓" },
+  keepGoing: "Keep going! Every lesson brings you closer to your goal."
+});
+Object.assign(UI.ar.nkT, { content_new: "محتوى جديد في الأكاديمية: {title}", group_new: "حصة جماعية جديدة: {title} — {at} ({language}) بسعر {price} للطالب",
+  group_moved: "تغيّر موعد الحصة الجماعية «{title}» إلى {at}", group_cancelled: "تم إلغاء الحصة الجماعية «{title}»", group_joined: "تم تأكيد اشتراكك في الحصة الجماعية ✅",
+  group_reminder: "⏰ حصتك الجماعية «{title}» تبدأ خلال ساعة", group_enrolled: "{name} اشترك في حصة جماعية", referral_signup: "🎉 {name} سجّل عن طريق رابطك!",
+  referral_qualified: "إحالة ناجحة: {name} اشترك", wallet_credit: "💰 تمت إضافة {amount} إلى محفظتك", gift_granted: "🎁 تم منحك هديتك: {gift}", access_granted: "🔓 تم فتح محتوى جديد لك" });
+Object.assign(UI.en.nkT, { content_new: "New academy content: {title}", group_new: "New group class: {title} — {at} ({language}) at {price} per student",
+  group_moved: "The group class “{title}” moved to {at}", group_cancelled: "The group class “{title}” was cancelled", group_joined: "Your group class seat is confirmed ✅",
+  group_reminder: "⏰ Your group class “{title}” starts within an hour", group_enrolled: "{name} joined a group class", referral_signup: "🎉 {name} signed up with your link!",
+  referral_qualified: "Successful referral: {name} subscribed", wallet_credit: "💰 {amount} was added to your wallet", gift_granted: "🎁 Your gift was granted: {gift}", access_granted: "🔓 New content was unlocked for you" });
+function L6(k) { return (L("tabs6") || {})[k] || (L("tabs5") || {})[k] || k; }
+const _notifText1 = notifText;
+notifText = function (n) {
+  const d = Object.assign({}, n.data || {});
+  if (d.title && typeof d.title === "object") d.title = locText(d.title);
+  if (d.language) d.language = d.language === "en" ? L("langEn") : L("langAr");
+  if (d.price != null && d.currency) d.price = money(d.price, d.currency);
+  if (d.gift) d.gift = (L("gifts") || {})[d.gift] || d.gift;
+  return _notifText1(Object.assign({}, n, { data: d }));
+};
+
+/* ---------- 1) الإنجليزي افتراضيًا ---------- */
+(function () {
+  let saved = null; try { saved = localStorage.getItem("lang"); } catch (e) {}
+  if (!saved) { state.lang = "en"; }
+  document.documentElement.setAttribute("dir", I18N[state.lang].dir); document.documentElement.setAttribute("lang", state.lang);
+})();
+/* رابط الإحالة ?ref=CODE */
+(function () { try { const m = location.search.match(/[?&]ref=([A-Za-z0-9]+)/); if (m) lsSet("itqan_ref", m[1].toUpperCase()); } catch (e) {} })();
+
+/* ---------- 2) الملف الشخصي ---------- */
+function langSelect(id, sel, multiple) {
+  return `<select class="in" id="${id}" ${multiple ? "multiple size='6'" : ""}>${multiple ? "" : `<option value="">—</option>`}${Object.entries(LANG_LIST).map(([k, v]) => `<option value="${k}" ${(multiple ? (sel || []).includes(k) : sel === k) ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+}
+function langNames(arr) { return (arr || []).map(k => LANG_LIST[k] || k).join(L("listSep")); }
+function renderProfilePage() {
+  if (!state.auth.user) { state.route = "login"; return renderAuth(); }
+  const p = state.auth.profile || {};
+  const isT = p.role === "teacher" || p.role === "owner";
+  const quals = state.qualDraft || (state.qualDraft = JSON.parse(JSON.stringify(p.qualifications || [])));
+  return `<section class="sec"><div class="wrap" style="max-width:48rem">
+    <div class="row" style="justify-content:space-between;margin-bottom:1rem"><h1 style="font-size:1.6rem">👤 ${L("profileTitle")}</h1><button class="btn btn-o" onclick="navigate('dashboard')">${L("dashboard")}</button></div>
+    <form class="card" onsubmit="event.preventDefault();saveProfile()" style="display:flex;flex-direction:column;gap:.8rem">
+      <div class="fgrid">
+        <div><label class="l">${L("fullName")}</label><input class="in" id="pf_name" value="${esc(p.real_name || "")}" required></div>
+        <div><label class="l">${L("phone")}</label><input class="in" id="pf_phone" value="${esc(p.phone || "")}"></div>
+      </div>
+      <div class="fgrid">
+        <div><label class="l">${L("nativeLang")}</label>${langSelect("pf_native", p.native_lang, false)}</div>
+        <div><label class="l">${L("spokenLangs")}</label>${langSelect("pf_langs", p.spoken_langs, true)}<div class="xs muted">Ctrl / ⌘ + click</div></div>
+      </div>
+      <div><label class="l">${L("bio")}</label><textarea class="in" id="pf_bio" rows="3">${esc(p.bio || "")}</textarea></div>
+      ${isT ? `<div><label class="l">${L("qualifications")}</label>
+        ${quals.map((q, i) => `<div class="row" style="gap:.3rem;margin-bottom:.35rem"><input class="in" style="flex:2" value="${esc(q.title || "")}" placeholder="${L("qTitle")}" oninput="state.qualDraft[${i}].title=this.value">
+          <input class="in" style="flex:1.4" value="${esc(q.issuer || "")}" placeholder="${L("qIssuer")}" oninput="state.qualDraft[${i}].issuer=this.value">
+          <input class="in" style="width:5.5rem" value="${esc(q.year || "")}" placeholder="${L("qYear")}" oninput="state.qualDraft[${i}].year=this.value">
+          <button type="button" class="ibtn" style="color:var(--danger)" onclick="state.qualDraft.splice(${i},1);render()"><i class="fa-solid fa-trash"></i></button></div>`).join("")}
+        <button type="button" class="btn btn-o" onclick="state.qualDraft.push({});render()">＋ ${L("addQual")}</button></div>` : ""}
+      <button class="btn btn-p btn-lg">${L("save")}</button>
+    </form>
+    ${p.role === "student" ? `<div style="margin-top:1rem">${referralCard()}</div>` : ""}
+  </div></section>`;
+}
+async function saveProfile() {
+  const g = (x) => document.getElementById(x);
+  const patch = { real_name: g("pf_name").value.trim(), display_name: g("pf_name").value.trim().split(" ")[0], phone: g("pf_phone").value.trim() || null,
+    native_lang: g("pf_native").value || null, spoken_langs: Array.from(g("pf_langs").selectedOptions).map(o => o.value), bio: g("pf_bio").value.trim() || null };
+  if (state.qualDraft && (role() === "teacher" || role() === "owner")) patch.qualifications = state.qualDraft.filter(q => (q.title || "").trim());
+  const { error } = await sb.from("profiles").update(patch).eq("id", state.auth.user.id);
+  if (error) return toast(error.message, true);
+  await loadProfile(); state.qualDraft = null; invalidate("people"); toast(L("saved")); render();
+}
+function qualsHtml(qs) { return (qs || []).length ? `<ul class="checks" style="margin-top:.4rem">${qs.map(q => `<li class="sm">${esc(q.title || "")}${q.issuer ? " — " + esc(q.issuer) : ""}${q.year ? " (" + esc(q.year) + ")" : ""}</li>`).join("")}</ul>` : ""; }
+
+/* ---------- 3) مؤهلات الأكاديمية (عامة) ---------- */
+function academyQualsBlock() {
+  const qs = (state.settings && state.settings.academyQuals) || [];
+  if (!qs.length) return "";
+  return `<div class="card" style="margin-top:1.5rem"><h2 style="font-size:1.3rem;margin-bottom:.8rem">🎓 ${L("academyQuals")}</h2>
+    <ul class="checks">${qs.map(q => `<li>${esc(locText(q))}</li>`).join("")}</ul></div>`;
+}
+const _renderAbout0 = renderAbout;
+renderAbout = function () { return _renderAbout0().replace(/<\/div>\s*<\/section>\s*$/, academyQualsBlock() + "</div></section>"); };
+const _renderHome0 = renderHome;
+renderHome = function () {
+  const tr = I18N[state.lang];
+  const qs = academyQualsBlock();
+  const invite = `<section class="sec" style="padding-top:0"><div class="wrap"><div class="card invitebanner"><div><h2 style="font-size:1.35rem">🎁 ${L("homeInvite")}</h2>
+    <p class="muted sm" style="margin-top:.3rem">${esc(L("inviteText").replace("{r}", money((state.settings && state.settings.referral && state.settings.referral.reward) || 2, (state.settings && state.settings.currency) || "USD")).replace("{g}", (state.settings && state.settings.referral && state.settings.referral.goal) || 5))}</p></div>
+    <button class="btn btn-g btn-lg" onclick="${state.auth && state.auth.user ? "state.dash.tab='invite';navigate('dashboard')" : "navigate('signup')"}">${L("tabs6").invite}</button></div></div></section>`;
+  const groups = groupsPublicBlock(true);
+  return _renderHome0() + (groups ? `<section class="sec" style="padding-top:0"><div class="wrap">${groups}</div></section>` : "") + (qs ? `<section class="sec" style="padding-top:0"><div class="wrap">${qs}</div></section>` : "") + invite;
+};
+
+/* ---------- 4) وسائل الدفع (يتحكم فيها المالك) ---------- */
+const PM_DEFAULTS = [
+  { id: "card", type: "card", name: "Visa / Mastercard / Apple Pay / Google Pay", enabled: false, link: "", details: "" },
+  { id: "paypal", type: "paypal", name: "PayPal", enabled: false, link: "", details: "" },
+  { id: "instapay", type: "instapay", name: "InstaPay", enabled: false, link: "", details: "" },
+  { id: "vodafone_cash", type: "wallet", name: "Vodafone Cash / محافظ إلكترونية", enabled: false, link: "", details: "" },
+  { id: "bank", type: "bank", name: "Bank transfer / تحويل بنكي", enabled: false, link: "", details: "" },
+  { id: "wise", type: "wise", name: "Wise", enabled: false, link: "", details: "" },
+  { id: "payoneer", type: "payoneer", name: "Payoneer", enabled: false, link: "", details: "" },
+  { id: "western_union", type: "wu", name: "Western Union / MoneyGram", enabled: false, link: "", details: "" },
+  { id: "crypto", type: "crypto", name: "USDT (TRC20)", enabled: false, link: "", details: "" },
+  { id: "whatsapp", type: "whatsapp", name: "WhatsApp", enabled: true, link: "", details: "" }
+];
+const PM_ICONS = { card: "fa-regular fa-credit-card", paypal: "fa-brands fa-paypal", instapay: "fa-solid fa-mobile-screen", wallet: "fa-solid fa-wallet", bank: "fa-solid fa-building-columns",
+  wise: "fa-solid fa-money-bill-transfer", payoneer: "fa-solid fa-p", wu: "fa-solid fa-globe", crypto: "fa-brands fa-bitcoin", whatsapp: "fa-brands fa-whatsapp", other: "fa-solid fa-coins" };
+function pmList() {
+  const s = state.settings || {};
+  if (Array.isArray(s.paymentMethods)) return s.paymentMethods;
+  // ترحيل من الإعدادات القديمة
+  const p = s.payments || {};
+  return PM_DEFAULTS.map(m => {
+    const x = Object.assign({}, m);
+    if (m.id === "paypal" && p.paypalMe) { x.enabled = true; x.link = `https://paypal.me/${p.paypalMe}`; }
+    if (m.id === "instapay" && p.instapay) { x.enabled = true; x.details = p.instapay; }
+    if (m.id === "card" && p.stripeTrial) { x.enabled = true; x.link = p.stripeTrial; }
+    if (m.id === "bank" && p.bank && p.bank.iban) { x.enabled = true; x.details = `${p.bank.holder || ""} — ${p.bank.bankName || ""}\nIBAN: ${p.bank.iban}${p.bank.swift ? "\nSWIFT: " + p.bank.swift : ""}`; }
+    return x;
+  });
+}
+function paymentOptions() {
+  const out = pmList().filter(m => m.enabled).map(m => {
+    let href = m.link || "";
+    if (m.type === "whatsapp") href = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent("Payment - Itqan Academy")}`;
+    return { id: m.id, icon: PM_ICONS[m.type] || PM_ICONS.other, label: m.type === "whatsapp" ? L("payWa") : m.name, href: href || null, text: m.details || "" };
+  });
+  return out.length ? out : [{ id: "whatsapp", icon: PM_ICONS.whatsapp, label: L("payWa"), href: `https://wa.me/${CONFIG.whatsapp}` }];
+}
+function pmManagerCard() {
+  const d = settingsDraft();
+  if (!Array.isArray(d.paymentMethods)) d.paymentMethods = JSON.parse(JSON.stringify(pmList()));
+  return `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.8rem">💳 ${L("payMethodsMgr")}</h3>
+    ${d.paymentMethods.map((m, i) => `<div class="card" style="background:var(--bg);margin-bottom:.6rem;padding:.8rem">
+      <div class="row" style="justify-content:space-between;gap:.5rem"><label class="opt" style="padding:.35rem .7rem"><input type="checkbox" ${m.enabled ? "checked" : ""} onchange="sdSet('paymentMethods.${i}.enabled', this.checked)"> <span class="sm b"><i class="${PM_ICONS[m.type] || PM_ICONS.other}"></i> ${L("pmEnabled")}</span></label>
+        <span class="row" style="gap:.3rem"><button type="button" class="ibtn" onclick="pmMove(${i},-1)"><i class="fa-solid fa-arrow-up"></i></button><button type="button" class="ibtn" onclick="pmMove(${i},1)"><i class="fa-solid fa-arrow-down"></i></button>
+        <button type="button" class="ibtn" style="color:var(--danger)" onclick="settingsDraft().paymentMethods.splice(${i},1);render()"><i class="fa-solid fa-trash"></i></button></span></div>
+      <div class="fgrid" style="margin-top:.5rem">
+        <div><label class="l">${L("pmName")}</label><input class="in" value="${esc(m.name || "")}" oninput="sdSet('paymentMethods.${i}.name', this.value)"></div>
+        <div><label class="l">${L("pmLink")}</label><input class="in" type="url" value="${esc(m.link || "")}" placeholder="https://" oninput="sdSet('paymentMethods.${i}.link', this.value)"></div>
+      </div>
+      <div style="margin-top:.5rem"><label class="l">${L("pmDetails")}</label><textarea class="in" rows="2" oninput="sdSet('paymentMethods.${i}.details', this.value)">${esc(m.details || "")}</textarea></div>
+    </div>`).join("")}
+    <div class="row" style="gap:.5rem"><button type="button" class="btn btn-o" onclick="settingsDraft().paymentMethods.push({id:'pm'+Date.now().toString(36),type:'other',name:'',enabled:true,link:'',details:''});render()">＋ ${L("addPm")}</button>
+    <button type="button" class="btn btn-p" onclick="saveSettings()">${L("setSaveAll")}</button></div></div>`;
+}
+function pmMove(i, d) { const a = settingsDraft().paymentMethods; const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; render(); }
+
+/* ---------- 5) المحفظة في صفحات الدفع ---------- */
+function walletBal() { return useData("walletBal", async () => { const { data } = await sb.rpc("wallet_balance", { p_user: null }); return [+data || 0]; }); }
+function walletPayBtn(kind, id, amount, cur) {
+  const w = walletBal(); if (!Array.isArray(w)) return "";
+  if (w[0] <= 0) return "";
+  return `<div class="card" style="background:var(--bg);margin-bottom:1rem"><div class="row" style="justify-content:space-between"><span>💰 ${L("walletBal")}: <b>${esc(money(w[0], cur))}</b></span>
+    <button class="btn btn-g" ${w[0] < amount ? "disabled" : ""} onclick="payWallet('${kind}','${id}')">${L("payWallet")}</button></div></div>`;
+}
+async function payWallet(kind, id) {
+  const { error } = await sb.rpc("pay_with_wallet", { p_kind: kind, p_id: id });
+  if (error) return toast(error.message.includes("insufficient") ? L("insufficient") : error.message, true);
+  invalidate("walletBal", "myOrders", "myBookings"); toast(L("payPaid")); render();
+}
+const _paymentBlock0 = paymentBlock;
+paymentBlock = function (rec, kind) {
+  const done = rec.payment_status === "paid" || rec.payment_status === "waived";
+  return (done ? "" : walletPayBtn(kind === "order" ? "order" : "booking", rec.id, +rec.amount, rec.currency)) + _paymentBlock0(rec, kind);
+};
+const _renderPay0 = renderPay;
+renderPay = function () {
+  const html = _renderPay0();
+  if (state.payKind === "order" || !state.auth.user || !Array.isArray(state.data.myBookings)) return html;
+  const b = state.data.myBookings.find(x => x.id === state.payBookingId) || state.data.myBookings[0];
+  if (!b || b.payment_status === "paid" || b.payment_status === "waived") return html;
+  return html.replace(`<h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>`, walletPayBtn("booking", b.id, +b.amount, b.currency) + `<h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>`);
+};
+
+/* عنوان الطلب حسب نوعه */
+const _planText2 = planText;
+planText = function (p) {
+  if (["content", "all_access", "section", "group"].includes(p.id)) {
+    const t = p.title ? locText(p.title) : "";
+    const base = p.id === "all_access" ? L("allAccessTitle") : p.id === "section" ? L("sectionUnlock") : p.id === "group" ? L("tabs6").groups : L("buy");
+    return { t: t ? `${base}: ${t}` : base, d: p.days ? `${p.days} ✓` : "", f: [] };
+  }
+  return _planText2(p);
+};
+
+/* ---------- 6) المحتوى: مجاني / مدفوع / لطلاب الحصص ---------- */
+function myAccess() { if (!state.auth.user) return []; const a = useData("myAccess", () => q(sb.from("content_access").select("*").eq("user_id", state.auth.user.id))); return Array.isArray(a) ? a : []; }
+function canSee(c) {
+  if (c.access !== "paid") return true;
+  const r = role(); if (r === "owner" || r === "teacher") return true;
+  const now = Date.now();
+  return myAccess().some(a => (!a.expires_at || new Date(a.expires_at).getTime() > now) && (a.scope === "all" || (a.scope === "section" && a.section_id === c.section_id) || (a.scope === "item" && a.content_id === c.id)));
+}
+async function buyContent(kind, id) {
+  if (!state.auth.user) { navigate("signup"); return; }
+  const { data, error } = await sb.rpc("create_purchase", { p_kind: kind, p_ref: id || null });
+  if (error) return toast(error.message, true);
+  invalidate("myOrders"); state.payKind = "order"; state.payOrderId = data; navigate("pay");
+}
+const _contentCard1 = contentCard;
+contentCard = function (c, manage) {
+  if (manage || c.access !== "paid") {
+    let h = _contentCard1(c, manage);
+    if (manage && c.access === "paid") h = h.replace('<div class="row" style="gap:.35rem">', `<div class="row" style="gap:.35rem"><span class="badge badge-g">${L("locked")} · ${esc(money(c.price, c.currency))}</span>`);
+    return h;
+  }
+  const ok = canSee(c);
+  const teaser = locText(c.teaser) || "";
+  return `<div class="card paidcard" style="display:flex;flex-direction:column;gap:.5rem">
+    ${c.cover_url ? `<img src="${esc(c.cover_url)}" alt="" style="width:100%;height:150px;object-fit:cover;border-radius:12px">` : ""}
+    <div class="row" style="gap:.35rem"><span class="badge">${esc(L("types")[c.type] || c.type)}</span>${ok ? `<span class="badge badge-a">${L("owned")}</span>` : `<span class="badge badge-g">${L("locked")}</span>`}</div>
+    <h3 style="font-size:1.05rem">${esc(ctTitleOf(c))}</h3>
+    ${teaser ? `<p class="muted sm">${esc(teaser)}</p>` : ""}
+    <div class="row" style="margin-top:auto;gap:.4rem;justify-content:space-between">
+      ${ok ? `<button class="btn btn-p" onclick="openSecure('${c.id}')">${L("open")}</button>` : `<b class="accent" style="font-size:1.2rem">${esc(money(c.price, c.currency))}</b><button class="btn btn-p" onclick="buyContent('content','${c.id}')">${L("buy")}</button>`}
+    </div></div>`;
+};
+async function openSecure(id) {
+  const all = [].concat(...Object.values(state.data).filter(Array.isArray));
+  const c = all.find(x => x && x.id === id && x.title);
+  const { data, error } = await sb.from("content_secure").select("*").eq("content_id", id).maybeSingle();
+  if (error || !data) return toast(error ? error.message : L("locked"), true);
+  let src = null;
+  if (data.file_path) {
+    const [bucket, ...rest] = data.file_path.split("/");
+    const r = await sb.storage.from(bucket).createSignedUrl(rest.join("/"), 600);
+    if (r.error) return toast(r.error.message, true);
+    src = r.data.signedUrl;
+  }
+  state.secureView = { c, body: (data.body_i18n || {})[state.lang] || (data.body_i18n || {}).ar || (data.body_i18n || {}).en || "", src, url: data.url, type: c ? c.type : "" };
+  render();
+}
+function secureViewer() {
+  const v = state.secureView; if (!v) return "";
+  const wm = esc((state.auth.user && state.auth.user.email) || "");
+  let media = "";
+  if (v.src) {
+    if (v.type === "video") media = `<video src="${esc(v.src)}" controls controlsList="nodownload noremoteplayback noplaybackrate" disablePictureInPicture oncontextmenu="return false" style="width:100%;border-radius:12px;max-height:60vh"></video>`;
+    else if (v.type === "audio") media = `<audio src="${esc(v.src)}" controls controlsList="nodownload" oncontextmenu="return false" style="width:100%"></audio>`;
+    else if (v.type === "image") media = `<img src="${esc(v.src)}" alt="" draggable="false" oncontextmenu="return false" style="max-width:100%;border-radius:12px">`;
+    else media = `<iframe src="${esc(v.src)}#toolbar=0&navpanes=0" style="width:100%;height:65vh;border:0;border-radius:12px"></iframe>`;
+  } else if (v.url) media = `<a class="btn btn-p" href="${esc(v.url)}" target="_blank" rel="noopener">${L("open")}</a>`;
+  return `<div class="modal" onclick="if(event.target===this){state.secureView=null;render()}"><div class="card secure" style="max-width:56rem;width:100%;max-height:92vh;overflow:auto;position:relative" oncontextmenu="return false" oncopy="return false">
+    <div class="row" style="justify-content:space-between;margin-bottom:.6rem"><h3>${esc(v.c ? ctTitleOf(v.c) : "")}</h3><button class="ibtn" onclick="state.secureView=null;render()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="xs muted" style="margin-bottom:.6rem">${L("secureNote")}</div>
+    <div style="position:relative">${media}<div class="wmark">${wm}</div></div>
+    ${v.body ? `<p style="white-space:pre-wrap;margin-top:.8rem;user-select:none">${esc(v.body)}</p>` : ""}
+  </div></div>`;
+}
+const _renderContentViewer1 = renderContentViewer;
+renderContentViewer = function () { return _renderContentViewer1() + secureViewer(); };
+
+/* نموذج المحتوى: نوع الوصول + السعر + الوصف العام + الغلاف */
+const _renderContentForm1 = renderContentForm;
+renderContentForm = function (opts) {
+  let h = _renderContentForm1(opts);
+  const dp = setv("defaultContentPrice", 1.5);
+  const extra = `<div class="fgrid">
+      <div><label class="l">${L("contentAccess")}</label><select class="in" id="ct_access" onchange="document.getElementById('ct_pw').style.display=this.value==='paid'?'block':'none'">
+        <option value="free">${L("accFree")}</option><option value="paid">${L("accPaid")}</option></select></div>
+      <div id="ct_pw" style="display:none"><label class="l">${L("price")} (${esc(setv("currency", "USD"))})</label><input class="in" id="ct_price" type="number" min="0" step="0.5" value="${dp}"></div>
+    </div>
+    <div><label class="l">${L("teaser")}</label><input class="in" id="ct_teaser"></div>
+    <div><label class="l">${L("cover")}</label><input class="in" id="ct_cover" type="file" accept="image/*"></div>`;
+  return h.replace(`<div><label class="l">${L("ctBodyOne")}</label>`, extra + `<div><label class="l">${L("ctBodyOne")}</label>`);
+};
+const _saveContent1 = saveContent;
+saveContent = async function () {
+  const g = id => document.getElementById(id);
+  const access = g("ct_access") ? g("ct_access").value : "free";
+  const vis = g("ct_vis").value;
+  if (access === "free" || vis === "restricted") return _saveContent1();
+  // محتوى مدفوع: البيانات الحساسة في جدول محمي وملف خاص
+  const titleRaw = g("ct_title").value.trim(); if (!titleRaw) return toast(L("fillAll"), true);
+  if (!g("ct_section") || !g("ct_section").value) return toast(L("noSections"), true);
+  const bodyRaw = g("ct_body").value || ""; const teaserRaw = (g("ct_teaser").value || "").trim();
+  const f = g("ct_file") && g("ct_file").files[0]; const cov = g("ct_cover") && g("ct_cover").files[0];
+  let status = g("ct_status").value; if (role() !== "owner") status = "draft";
+  state.busy = true; render();
+  try {
+    const src = detectLang(titleRaw + " " + bodyRaw);
+    const [title, body, teaser] = await Promise.all([translateAll(titleRaw, src), bodyRaw.trim() ? translateAll(bodyRaw, src) : {}, teaserRaw ? translateAll(teaserRaw, src) : {}]);
+    if (!Object.keys(title).length) title[src || state.lang] = titleRaw;
+    let cover_url = null;
+    if (cov) { const pth = `covers/${Date.now()}-${cov.name.replace(/[^\w.\-]+/g, "_")}`; const u = await sb.storage.from("academy_public").upload(pth, cov); if (u.error) throw u.error; cover_url = sb.storage.from("academy_public").getPublicUrl(pth).data.publicUrl; }
+    const row = { title, teaser, cover_url, section_id: g("ct_section").value, track: g("ct_track").value || null, type: g("ct_type").value, visibility: "public", status: "draft",
+      access: "paid", price: +g("ct_price").value || 0, currency: setv("currency", "USD"), created_by: state.auth.user.id, is_ai_generated: false };
+    const ins = await sb.from("contents").insert(row).select("id").single(); if (ins.error) throw ins.error;
+    const sec = { content_id: ins.data.id, body_i18n: body, url: g("ct_url").value.trim() || null };
+    if (f) { const pth = `${state.auth.user.id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_")}`; const u = await sb.storage.from("academy_materials").upload(pth, f); if (u.error) throw u.error; sec.file_path = `academy_materials/${pth}`; }
+    await q(sb.from("content_secure").insert(sec));
+    if (status === "published") await q(sb.from("contents").update({ status: "published" }).eq("id", ins.data.id));
+    invalidate("contentsMine", "contentsAll", "libCt"); toast(L("translated"));
+  } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+};
+
+/* المكتبة: بانر الاشتراك الشامل + فتح الأقسام */
+function allAccessBanner() {
+  const aa = setv("allAccess", { price: 15, days: 30 });
+  if (!aa || !(+aa.price > 0)) return "";
+  const has = myAccess().some(a => a.scope === "all" && (!a.expires_at || new Date(a.expires_at) > new Date()));
+  return `<div class="card allaccess"><div><h2 style="font-size:1.3rem">⭐ ${L("allAccessTitle")}</h2><p class="sm" style="margin-top:.3rem;opacity:.9">${esc(L("allAccessText").replace("{d}", aa.days || 30))}</p></div>
+    ${has ? `<span class="badge badge-a">${L("owned")}</span>` : `<div style="text-align:center"><div style="font-size:1.8rem;font-weight:800">${esc(money(aa.price, setv("currency", "USD")))}</div><button class="btn btn-g" onclick="buyContent('all_access')">${L("subscribeAll")}</button></div>`}</div>`;
+}
+const _renderLibraryDb1 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb1();
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : [];
+  secs.forEach(sc => {
+    if (!(+sc.price > 0)) return;
+    const has = myAccess().some(a => (a.scope === "all" || (a.scope === "section" && a.section_id === sc.id)) && (!a.expires_at || new Date(a.expires_at) > new Date()));
+    const marker = `<h2 style="font-size:1.35rem;margin-bottom:1rem">${esc(sc.icon || "📁")} ${esc(secTitle(sc))}</h2>`;
+    h = h.replace(marker, `<div class="row" style="justify-content:space-between;margin-bottom:1rem">${marker.replace("margin-bottom:1rem", "margin:0")}${has ? `<span class="badge badge-a">${L("owned")}</span>` : `<button class="btn btn-o" onclick="buyContent('section','${sc.id}')">🔓 ${L("sectionUnlock")} — ${esc(money(sc.price, setv("currency", "USD")))}</button>`}</div>`);
+  });
+  return allAccessBanner() + h;
+};
+/* إدارة سعر فتح القسم */
+const _renderSectionsManager1 = renderSectionsManager;
+renderSectionsManager = function () {
+  let h = _renderSectionsManager1();
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : [];
+  secs.forEach(sc => {
+    const key = `onclick="updSection('${sc.id}',{is_visible:`;
+    h = h.replace(key, `title="${esc(L("sectionPrice"))}" style="display:none" data-x="1" ` + key);
+    h = h.replace(`<button class="btn btn-o" title="${esc(L("sectionPrice"))}" style="display:none" data-x="1" ${key}`,
+      `<input class="in" style="width:6rem" type="number" min="0" step="0.5" title="${esc(L("sectionPrice"))}" placeholder="💲" value="${sc.price || 0}" onchange="updSection('${sc.id}',{price:+this.value||0})"><button class="btn btn-o" ${key}`);
+  });
+  return h;
+};
+
+/* منح وصول للمحتوى (للطلاب المشتركين من برة) */
+function accessGrantCard(P) {
+  const st = P.list.filter(p => p.role === "student" || p.role === "parent");
+  const secs = Array.isArray(state.data.sections) ? state.data.sections : (sectionsData() || []);
+  const acc = useData("accessAll", () => q(sb.from("content_access").select("*").order("created_at", { ascending: false }).limit(300)));
+  return `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.8rem">🔓 ${L("grantAccess")}</h3>
+    <form class="fgrid" style="align-items:end" onsubmit="event.preventDefault();grantAccess()">
+      <div><label class="l">${L("student")}</label><select class="in" id="ga_u">${st.map(s => `<option value="${s.id}">${esc(s.real_name || s.email)} — ${esc(s.email || "")}</option>`).join("")}</select></div>
+      <div><label class="l">${L("contentAccess")}</label><select class="in" id="ga_scope" onchange="document.getElementById('ga_secw').style.display=this.value==='section'?'block':'none'"><option value="all">${L("grantAll")}</option><option value="section">${L("grantSection")}</option></select></div>
+      <div id="ga_secw" style="display:none"><label class="l">${L("ctSection")}</label><select class="in" id="ga_sec">${(Array.isArray(secs) ? secs : []).map(sc => `<option value="${sc.id}">${esc((sc.icon || "") + " " + secTitle(sc))}</option>`).join("")}</select></div>
+      <div><label class="l">${L("grantDays")}</label><input class="in" id="ga_days" type="number" min="1"></div>
+      <button class="btn btn-p">${L("grantAccess")}</button>
+    </form>
+    ${Array.isArray(acc) && acc.length ? `<h4 style="margin:1rem 0 .4rem">${L("accessList")}</h4>${acc.map(a => { const sc = (Array.isArray(secs) ? secs : []).find(x => x.id === a.section_id);
+      return `<div class="kv"><span class="sm"><b>${esc(personName(a.user_id, P.map))}</b> — ${a.scope === "all" ? L("grantAll") : a.scope === "section" ? esc(sc ? secTitle(sc) : L("grantSection")) : L("buy")}
+        <span class="xs muted">${a.expires_at ? "→ " + esc(fmtDT(a.expires_at, { day: "numeric", month: "short", year: "numeric" })) : "∞"} · ${esc(a.source)}</span></span>
+        <button class="ibtn" style="color:var(--danger)" title="${L("revoke")}" onclick="revokeAccess('${a.id}')"><i class="fa-solid fa-xmark"></i></button></div>`; }).join("")}` : ""}
+  </div>`;
+}
+async function grantAccess() {
+  const g = (x) => document.getElementById(x).value;
+  const scope = g("ga_scope"); const days = +g("ga_days");
+  const row = { user_id: g("ga_u"), scope, section_id: scope === "section" ? g("ga_sec") : null, expires_at: days ? new Date(Date.now() + days * 864e5).toISOString() : null, source: "grant", granted_by: state.auth.user.id };
+  const { error } = await sb.from("content_access").insert(row);
+  if (error) return toast(error.message, true);
+  invalidate("accessAll"); toast(L("granted")); render();
+}
+async function revokeAccess(id) { await sb.from("content_access").delete().eq("id", id); invalidate("accessAll"); render(); }
+
+/* ---------- 7) الحصص الجماعية ---------- */
+function groupsData() { return useData("groups", () => q(sb.from("group_sessions").select("*").gte("start_time", new Date(Date.now() - 3 * 3600e3).toISOString()).neq("status", "cancelled").order("start_time").limit(30))); }
+function seatsData(list) {
+  return useData("groupSeats", async () => { const out = {}; await Promise.all(list.map(async g => { const { data } = await sb.rpc("group_seats", { p_group: g.id }); out[g.id] = data || 0; })); return [out]; });
+}
+function groupCard(g, seats) {
+  const per = +g.total_price / Math.max(1, g.capacity);
+  const left = g.capacity - (seats[g.id] || 0);
+  return `<div class="card groupcard" style="display:flex;flex-direction:column;gap:.45rem">
+    <div class="row" style="gap:.35rem"><span class="badge badge-a">👥 ${L("tabs6").groups}</span><span class="badge">${L("lessonLang")}: ${g.language === "en" ? L("langEn") : L("langAr")}</span>${g.track ? `<span class="badge">${esc(trackTitle(g.track))}</span>` : ""}</div>
+    <h3 style="font-size:1.1rem">${esc(locText(g.title))}</h3>
+    ${locText(g.description) ? `<p class="muted sm">${esc(locText(g.description))}</p>` : ""}
+    <div class="sm">🗓 <b>${esc(fmtDT(g.start_time))}</b> · ${Math.round((new Date(g.end_time) - new Date(g.start_time)) / 60000)} ${L("min")}</div>
+    <div class="row" style="justify-content:space-between;margin-top:auto"><span><b class="accent" style="font-size:1.4rem">${esc(money(per, g.currency))}</b> <span class="xs muted">${L("perStudent")}</span></span>
+      <span class="xs ${left <= 2 ? "" : "muted"}" style="${left <= 2 ? "color:var(--gold);font-weight:700" : ""}">${left > 0 ? `${left} ${L("seatsLeft")}` : L("full")}</span></div>
+    ${left > 0 && g.status === "open" ? `<button class="btn btn-p btn-full" onclick="buyContent('group','${g.id}')">${L("joinGroup")}</button>` : ""}
+  </div>`;
+}
+function groupsPublicBlock(compact) {
+  if (!sb) return "";
+  const list = groupsData();
+  if (!Array.isArray(list) || !list.length) return "";
+  const open = list.filter(g => g.status === "open" && new Date(g.start_time) > new Date());
+  if (!open.length) return "";
+  const seats = seatsData(open); const s = Array.isArray(seats) ? seats[0] : {};
+  return `<div style="margin-top:${compact ? "0" : "2.5rem"}"><div class="stitle">👥 ${L("groupTitle")}</div><div class="ssub">${L("groupsSub")}</div>
+    <div class="grid">${open.slice(0, compact ? 3 : 30).map(g => groupCard(g, s)).join("")}</div></div>`;
+}
+const _renderPricing1 = renderPricing;
+renderPricing = function () { return _renderPricing1().replace(/<\/div>\s*<\/section>\s*$/, groupsPublicBlock(false) + "</div></section>"); };
+function myGroupsCard() {
+  const en = useData("myGroups", () => q(sb.from("group_enrollments").select("*, group_sessions(*)").eq("student_id", state.auth.user.id)));
+  if (!Array.isArray(en) || !en.length) return "";
+  const links = useData("myGroupLinks", () => q(sb.from("group_links").select("*")));
+  const lm = {}; if (Array.isArray(links)) links.forEach(l => lm[l.group_id] = l.meeting_url);
+  return `<div class="card" style="margin-bottom:1.2rem"><h3 style="margin-bottom:.6rem">👥 ${L("tabs6").mygroups}</h3>${en.map(e => { const g = e.group_sessions || {}; return `<div class="kv" style="align-items:center;flex-wrap:wrap">
+    <span><b>${esc(locText(g.title))}</b><br><span class="xs muted">${esc(g.start_time ? fmtDT(g.start_time) : "")} · ${g.language === "en" ? L("langEn") : L("langAr")}</span></span>
+    <span class="row" style="gap:.35rem"><span class="badge ${e.status === "paid" ? "badge-a" : "badge-g"}">${esc(stt(e.status === "paid" ? "paid" : "unpaid"))}</span>
+    ${e.status === "paid" && lm[e.group_id] ? `<a class="btn btn-p" href="${esc(lm[e.group_id])}" target="_blank" rel="noopener">${L("join")}</a>` : ""}
+    ${e.status !== "paid" && e.order_id ? `<button class="btn btn-p" onclick="state.payKind='order';state.payOrderId='${e.order_id}';navigate('pay')">${L("payNow")}</button>` : ""}</span></div>`; }).join("")}</div>`;
+}
+function ownerGroups(P) {
+  const list = useData("groupsAll", () => q(sb.from("group_sessions").select("*").order("start_time", { ascending: false }).limit(60)));
+  const ens = useData("groupEnrollAll", () => q(sb.from("group_enrollments").select("*")));
+  const links = useData("groupLinksAll", () => q(sb.from("group_links").select("*")));
+  const lm = {}; if (Array.isArray(links)) links.forEach(l => lm[l.group_id] = l.meeting_url);
+  const by = {}; if (Array.isArray(ens)) ens.forEach(e => (by[e.group_id] = by[e.group_id] || []).push(e));
+  return `<div class="grid g2">
+    <div class="card"><h3 style="margin-bottom:.8rem">➕ ${L("createGroup")}</h3>
+      <form onsubmit="event.preventDefault();createGroup()" style="display:flex;flex-direction:column;gap:.6rem">
+        <div><label class="l">${L("ctTitleOne")}</label><input class="in" id="gp_title" required></div>
+        <div><label class="l">${L("shareDesc")}</label><textarea class="in" id="gp_desc" rows="2"></textarea></div>
+        <div class="fgrid">
+          <div><label class="l">${L("lessonLang")}</label><select class="in" id="gp_lang"><option value="ar">${L("langAr")}</option><option value="en">${L("langEn")}</option></select></div>
+          <div><label class="l">${L("track")}</label><select class="in" id="gp_track"><option value="">—</option>${TRACKS.map(k => `<option value="${k}">${esc(trackTitle(k))}</option>`).join("")}</select></div>
+          <div><label class="l">${L("teacher")}</label><select class="in" id="gp_t">${teacherOptions(P, "")}</select></div>
+        </div>
+        <div class="fgrid">
+          <div><label class="l">${L("date")}</label><input class="in" type="date" id="gp_d" min="${localISODate()}" value="${localISODate(addDays(new Date(), 2))}"></div>
+          <div><label class="l">${L("time")}</label><select class="in" id="gp_h">${halfHourOptions("19:00")}</select></div>
+          <div><label class="l">${L("duration")}</label><select class="in" id="gp_m">${durOptions(50)}</select></div>
+        </div>
+        <div class="fgrid">
+          <div><label class="l">${L("totalPrice")} (${esc(setv("currency", "USD"))})</label><input class="in" type="number" id="gp_price" min="0" step="1" value="40" oninput="document.getElementById('gp_per').textContent=(+this.value/Math.max(1,+document.getElementById('gp_cap').value)).toFixed(2)"></div>
+          <div><label class="l">${L("capacity")}</label><input class="in" type="number" id="gp_cap" min="1" value="8" oninput="document.getElementById('gp_per').textContent=(+document.getElementById('gp_price').value/Math.max(1,+this.value)).toFixed(2)"></div>
+        </div>
+        <div class="sm">${L("perStudent")}: <b class="accent" id="gp_per">5.00</b></div>
+        <div><label class="l">${L("groupLink")}</label><input class="in" id="gp_url" type="url" placeholder="https://zoom.us/..."></div>
+        <button class="btn btn-p" ${state.busy ? "disabled" : ""}>${state.busy ? L("translating") : L("createGroup")}</button>
+      </form></div>
+    <div>${!Array.isArray(list) ? loadingBox() : list.length ? list.map(g => `<div class="card" style="margin-bottom:.8rem">
+      <div class="row" style="justify-content:space-between"><b>${esc(locText(g.title))}</b><span class="badge">${esc(g.status)}</span></div>
+      <div class="xs muted">${esc(fmtDT(g.start_time))} · ${g.language === "en" ? L("langEn") : L("langAr")} · ${esc(personName(g.teacher_id, P.map))} · ${esc(money(g.total_price, g.currency))} ÷ ${g.capacity} = ${esc(money(g.total_price / Math.max(1, g.capacity), g.currency))}</div>
+      <div class="sm" style="margin-top:.4rem"><b>${L("enrolled")}:</b> ${(by[g.id] || []).map(e => `${esc(personName(e.student_id, P.map))} ${e.status === "paid" ? "✅" : "⏳"}`).join(L("listSep")) || "—"}</div>
+      <div class="row" style="gap:.3rem;margin-top:.5rem"><input class="in" style="flex:1" value="${esc(lm[g.id] || "")}" placeholder="${L("groupLink")}" onchange="setGroupLink('${g.id}',this.value)">
+        ${g.status === "open" ? `<button class="btn btn-o" onclick="setGroupStatus('${g.id}','closed')">🔒</button><button class="btn btn-o" style="color:var(--danger)" onclick="setGroupStatus('${g.id}','cancelled')">${L("cancel")}</button>` : ""}</div>
+    </div>`).join("") : `<div class="card muted">${L("noGroups")}</div>`}</div></div>`;
+}
+async function createGroup() {
+  const g = (x) => document.getElementById(x).value;
+  const t = g("gp_title").trim(); if (!t) return toast(L("fillAll"), true);
+  state.busy = true; render();
+  try {
+    const src = detectLang(t); const dsc = g("gp_desc").trim();
+    const [title, description] = await Promise.all([translateAll(t, src), dsc ? translateAll(dsc, detectLang(dsc)) : {}]);
+    if (!Object.keys(title).length) title.ar = t;
+    const st = new Date(`${g("gp_d")}T${g("gp_h")}`); const mins = +g("gp_m");
+    const ins = await sb.from("group_sessions").insert({ title, description, language: g("gp_lang"), track: g("gp_track") || null, teacher_id: g("gp_t") || null,
+      start_time: st.toISOString(), end_time: new Date(st.getTime() + mins * 60000).toISOString(), capacity: Math.max(1, +g("gp_cap") || 1), total_price: +g("gp_price") || 0, currency: setv("currency", "USD") }).select("id").single();
+    if (ins.error) throw ins.error;
+    if (g("gp_url").trim()) await sb.from("group_links").upsert({ group_id: ins.data.id, meeting_url: g("gp_url").trim() });
+    invalidate("groupsAll", "groups", "groupSeats"); toast(L("saved"));
+  } catch (e) { toast(errMsg(e), true); }
+  state.busy = false; render();
+}
+async function setGroupLink(id, url) { const { error } = await sb.from("group_links").upsert({ group_id: id, meeting_url: url.trim() || null }); if (error) return toast(error.message, true); invalidate("groupLinksAll"); toast(L("saved")); }
+async function setGroupStatus(id, st) { if (!confirm(st + "?")) return; const { error } = await sb.from("group_sessions").update({ status: st }).eq("id", id); if (error) return toast(error.message, true); invalidate("groupsAll", "groups"); render(); }
+
+/* ---------- 8) الإحالات والمحفظة ---------- */
+function refLink() { const c = state.auth.profile && state.auth.profile.referral_code; return c ? `${location.origin}/?ref=${c}` : ""; }
+function referralCard() {
+  const refs = useData("myRefs", async () => { const { data, error } = await sb.rpc("my_referrals"); if (error) throw error; return data || []; });
+  const w = walletBal();
+  const cfg = setv("referral", { reward: 2, goal: 5, gifts: ["lesson25", "lesson50", "all_access_30"] });
+  const goal = cfg.goal || 5;
+  const list = Array.isArray(refs) ? refs : [];
+  const qual = list.filter(r => r.qualified).length;
+  const pct = Math.min(100, Math.round(qual / goal * 100));
+  const link = refLink(); const gifts = cfg.gifts || [];
+  const chosen = state.auth.profile && state.auth.profile.gift_choice;
+  const shareTxt = encodeURIComponent(`${I18N[state.lang].meta.siteName} — ${link}`);
+  return `<div class="card invitecard"><h3 style="font-size:1.25rem">${L("inviteTitle")}</h3>
+    <p class="sm" style="margin:.4rem 0 1rem;opacity:.92">${esc(L("inviteText").replace("{r}", money(cfg.reward || 0, setv("currency", "USD"))).replace("{g}", goal))}</p>
+    <label class="l">${L("myLink")}</label>
+    <div class="row" style="gap:.4rem"><input class="in" id="refl" value="${esc(link)}" readonly style="flex:1;min-width:200px">
+      <button class="btn btn-p" onclick="navigator.clipboard.writeText(document.getElementById('refl').value).then(()=>toast(L('copied')))">${L("copy")}</button>
+      ${navigator.share ? `<button class="btn btn-o" onclick="navigator.share({url:'${esc(link)}',title:'${esc(I18N[state.lang].meta.siteName)}'})">${L("share")}</button>` : `<a class="btn btn-o" target="_blank" rel="noopener" href="https://wa.me/?text=${shareTxt}">${L("share")}</a>`}</div>
+    <div style="margin-top:1rem"><div class="row" style="justify-content:space-between"><span class="sm b">${L("progress")}: ${qual}/${goal}</span><span class="xs muted">${list.length} ${L("friendsJoined")} · ${qual} ${L("friendsQualified")}</span></div>
+      <div class="pbar"><span style="width:${pct}%"></span></div></div>
+    <div style="margin-top:1rem"><label class="l">${L("chooseGift")}</label><div class="row" style="gap:.4rem">${gifts.map(gf => `<button class="btn ${chosen === gf ? "btn-p" : "btn-o"}" onclick="chooseGift('${gf}')">🎁 ${esc((L("gifts") || {})[gf] || gf)}</button>`).join("")}</div></div>
+    <div class="row" style="justify-content:space-between;margin-top:1rem"><span>💰 ${L("walletBal")}: <b>${Array.isArray(w) ? esc(money(w[0], setv("currency", "USD"))) : "…"}</b></span></div>
+    ${list.length ? `<div style="margin-top:.8rem">${list.slice(0, 10).map(r => `<div class="kv"><span class="sm">${esc(r.name)}</span><span class="badge ${r.qualified ? "badge-a" : ""}">${r.qualified ? "✓ " + L("friendsQualified") : L("friendsJoined")}</span></div>`).join("")}</div>` : ""}
+  </div>`;
+}
+async function chooseGift(gf) { await sb.rpc("set_gift_choice", { p_gift: gf }); await loadProfile(); toast(L("saved")); render(); }
+function ownerReferrals(P) {
+  const rr = useData("refRewards", () => q(sb.from("referral_rewards").select("*")));
+  const gifts = useData("refGifts", () => q(sb.from("referral_gifts").select("*").order("created_at", { ascending: false })));
+  const wl = useData("walletAll", () => q(sb.from("wallet_ledger").select("user_id,amount,currency")));
+  const cnt = {}; P.list.forEach(p => { if (p.referred_by) cnt[p.referred_by] = (cnt[p.referred_by] || 0) + 1; });
+  const qual = {}; if (Array.isArray(rr)) rr.forEach(r => qual[r.referrer_id] = (qual[r.referrer_id] || 0) + 1);
+  const bal = {}; if (Array.isArray(wl)) wl.forEach(x => bal[x.user_id] = (bal[x.user_id] || 0) + (+x.amount));
+  const given = {}; if (Array.isArray(gifts)) gifts.forEach(g => given[g.user_id] = (given[g.user_id] || 0) + 1);
+  const people = P.list.filter(p => cnt[p.id] || bal[p.id] || p.gift_choice).sort((a, b) => (qual[b.id] || 0) - (qual[a.id] || 0));
+  const goal = (setv("referral", {}) || {}).goal || 5;
+  return `<div class="card" style="overflow-x:auto"><h3 style="margin-bottom:.8rem">🤝 ${L("tabs6").referrals}</h3>
+    <table class="tbl"><thead><tr><th>${L("referrer")}</th><th>${L("referredCount")}</th><th>${L("qualifiedCount")}</th><th>${L("giftChoice")}</th><th>${L("walletBal")}</th><th></th></tr></thead><tbody>
+    ${people.map(p => `<tr><td><b>${esc(p.real_name || p.email)}</b><div class="xs muted">${esc(p.referral_code || "")}</div></td><td>${cnt[p.id] || 0}</td>
+      <td class="${(qual[p.id] || 0) >= goal ? "accent b" : ""}">${qual[p.id] || 0}/${goal}</td><td>${p.gift_choice ? esc((L("gifts") || {})[p.gift_choice] || p.gift_choice) : "—"}${given[p.id] ? ` <span class="badge badge-a">${L("giftGiven")} ×${given[p.id]}</span>` : ""}</td>
+      <td>${esc(money(bal[p.id] || 0, setv("currency", "USD")))}</td>
+      <td style="white-space:nowrap"><button class="btn btn-p" onclick="giveGift('${p.id}','${p.gift_choice || "lesson25"}')">🎁 ${L("giveGift")}</button>
+        <button class="btn btn-o" onclick="adjustWallet('${p.id}')">💰</button></td></tr>`).join("") || `<tr><td colspan="6" class="muted">${L("none")}</td></tr>`}
+    </tbody></table></div>`;
+}
+async function giveGift(uid, gift) {
+  if (!confirm(`${L("giveGift")}: ${(L("gifts") || {})[gift] || gift}?`)) return;
+  try {
+    if (gift === "lesson25" || gift === "lesson50") await q(sb.from("credit_ledger").insert({ student_id: uid, delta: gift === "lesson50" ? 2 : 1, reason: "manual", note: "referral gift", created_by: state.auth.user.id }));
+    else if (gift === "all_access_30") await q(sb.from("content_access").insert({ user_id: uid, scope: "all", expires_at: new Date(Date.now() + 30 * 864e5).toISOString(), source: "gift", granted_by: state.auth.user.id }));
+    await q(sb.from("referral_gifts").insert({ user_id: uid, gift, granted_by: state.auth.user.id }));
+    invalidate("refGifts", "ledgerAll", "accessAll"); toast(L("giftGiven")); render();
+  } catch (e) { toast(e.message, true); }
+}
+async function adjustWallet(uid) {
+  const v = parseFloat(prompt(L("walletAdjust") + " (+5 / -2)") || ""); if (!v) return;
+  const { error } = await sb.from("wallet_ledger").insert({ user_id: uid, amount: v, currency: setv("currency", "USD"), reason: "manual", created_by: state.auth.user.id });
+  if (error) return toast(error.message, true);
+  invalidate("walletAll"); toast(L("saved")); render();
+}
+
+/* ---------- 9) تصميم لوحة الطالب: بطاقة الإنجازات ---------- */
+function studentHero(uid) {
+  const st = useData("myStats", async () => {
+    const done = await q(sb.from("lessons").select("start_time,end_time").eq("student_id", uid).eq("attendance", "present"));
+    const posts = await q(sb.from("showcase_posts").select("id").eq("student_id", uid).eq("status", "published"));
+    const certs = await q(sb.from("certificates").select("id").eq("student_id", uid));
+    const refs = await sb.rpc("my_referrals");
+    const mins = done.reduce((a, l) => a + (new Date(l.end_time) - new Date(l.start_time)) / 60000, 0);
+    return [{ n: done.length, h: mins / 60, posts: posts.length, certs: certs.length, refs: (refs.data || []).filter(r => r.qualified).length }];
+  });
+  const b = availCredits(uid); const w = walletBal();
+  const s = Array.isArray(st) ? st[0] : { n: "…", h: 0, posts: 0, certs: 0, refs: 0 };
+  const A = L("ach") || {};
+  const badges = [[s.n >= 1, A.first], [s.n >= 10, A.ten], [s.n >= 50, A.fifty], [s.posts >= 1, A.poster], [s.refs >= ((setv("referral", {}) || {}).goal || 5), A.inviter], [s.certs >= 1, A.cert]];
+  return `<div class="hero-st">
+    <div class="hs-grid">
+      <div><div class="hs-n">${s.n}</div><div class="hs-l">${L("heroLessons")}</div></div>
+      <div><div class="hs-n">${typeof s.h === "number" ? s.h.toFixed(1) : "…"}</div><div class="hs-l">${L("heroHours")}</div></div>
+      <div><div class="hs-n">${Array.isArray(b) ? b[0] : "…"}</div><div class="hs-l">${L("heroBalance")}</div></div>
+      <div><div class="hs-n">${Array.isArray(w) ? esc(money(w[0], setv("currency", "USD"))) : "…"}</div><div class="hs-l">${L("heroWallet")}</div></div>
+    </div>
+    <div class="hs-ach"><span class="xs" style="opacity:.85">${L("achievements")}:</span> ${badges.map(([on, t]) => `<span class="achb ${on ? "on" : ""}">${esc(t || "")}</span>`).join("")}</div>
+    <div class="xs" style="opacity:.85;margin-top:.5rem">✨ ${L("keepGoing")}</div>
+  </div>`;
+}
+
+/* ---------- 10) لوحات التحكم المحدثة ---------- */
+const _renderStudentDash2 = renderStudentDash;
+renderStudentDash = function () {
+  const uid = state.auth.user.id;
+  const tabs = ["lessons", "messages", "share", "invite", "billing", "mycerts"];
+  if (state.dash.tab === "invite") return dashTabs(tabs) + referralCard();
+  if (state.dash.tab === "share") {
+    const sub = useData("amSub", async () => { const { data } = await sb.rpc("is_subscriber", { p_user: uid }); return [!!data]; });
+    if (Array.isArray(sub) && !sub[0]) return dashTabs(tabs) + `<div class="card notice">${L("subsOnly")}</div><button class="btn btn-p" onclick="navigate('pricing')">${I18N[state.lang].nav.pricing}</button>`;
+  }
+  let html = _renderStudentDash2();
+  html = html.replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (!state.dash.tab || state.dash.tab === "lessons") html = html.replace(dashTabs(tabs), dashTabs(tabs) + studentHero(uid) + myGroupsCard());
+  return html;
+};
+const _dashTabs1 = dashTabs;
+dashTabs = function (tabs) { return _dashTabs1(tabs).replace(/>([a-z]+)<\/a>/g, (m, k) => ">" + L6(k) + "</a>"); };
+const _renderTeacherDash2 = renderTeacherDash;
+renderTeacherDash = function () {
+  const tabs = ["calendar", "messages", "share", "schedule", "mystudents", "dues", "content"];
+  if (state.dash.tab === "share") return needAttendanceList() + dashTabs(tabs) + shareForm();
+  return _renderTeacherDash2().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+};
+const _renderOwnerDash2 = renderOwnerDash;
+renderOwnerDash = function () {
+  const tabs = ["overview", "calendar", "groups", "chats", "bookings", "requests", "orders", "users", "teachers", "students", "referrals", "reports", "certs", "content", "settings", "schedule"];
+  const P = peopleMap(); const t = state.dash.tab;
+  if (t === "groups") return dashTabs(tabs) + ownerGroups(P);
+  if (t === "referrals") return dashTabs(tabs) + ownerReferrals(P);
+  let html = _renderOwnerDash2().replace(/<div class="tabs dtabs">[\s\S]*?<\/div>/, dashTabs(tabs));
+  if (t === "users") html += accessGrantCard(P);
+  if (t === "teachers") {
+    const ts = P.list.filter(p => p.role === "teacher" || p.role === "owner");
+    html += `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">🌐 ${L("spokenLangs")} · ${L("qualifications")}</h3>${ts.map(p => `<div class="kv" style="align-items:flex-start;flex-wrap:wrap"><span><b>${esc(p.real_name || p.email)}</b>
+      <div class="xs muted">${L("native")}: ${esc(LANG_LIST[p.native_lang] || "—")} · ${L("speaks")}: ${esc(langNames(p.spoken_langs) || "—")}</div>${qualsHtml(p.qualifications)}</span></div>`).join("")}</div>`;
+  }
+  if (t === "students") {
+    const st = P.list.filter(p => p.role === "student");
+    html += `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.6rem">🌐 ${L("spokenLangs")}</h3>${st.map(p => `<div class="kv"><b class="sm">${esc(p.real_name || p.email)}</b><span class="xs muted">${L("native")}: ${esc(LANG_LIST[p.native_lang] || "—")} · ${L("speaks")}: ${esc(langNames(p.spoken_langs) || "—")}</span></div>`).join("")}</div>`;
+  }
+  if (t === "settings") html = html.replace(`<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.4rem">✉️`, extraSettingsCard() + pmManagerCard() + `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.4rem">✉️`);
+  return html;
+};
+/* peopleMap يحتاج أعمدة إضافية */
+const _peopleMap0 = peopleMap;
+peopleMap = function () {
+  const ppl = useData("people", () => q(sb.from("profiles").select("id,real_name,display_name,email,phone,role,timezone,created_at,native_lang,spoken_langs,qualifications,referral_code,referred_by,gift_choice").order("created_at", { ascending: false })));
+  const m = {}; if (Array.isArray(ppl)) ppl.forEach(p => { m[p.id] = p; });
+  return { list: Array.isArray(ppl) ? ppl : [], map: m, loading: ppl === null };
+};
+function extraSettingsCard() {
+  const d = settingsDraft();
+  d.allAccess = d.allAccess || { price: 15, days: 30 }; d.referral = d.referral || { reward: 2, goal: 5, gifts: ["lesson25", "lesson50", "all_access_30"] };
+  const qsText = (d.academyQuals || []).map(x => locText(x)).join("\n");
+  return `<div class="card" style="margin:1rem 0"><h3 style="margin-bottom:.8rem">⭐ ${L("allAccessTitle")} · 🤝 ${L("tabs6").referrals}</h3>
+    <div class="fgrid" style="align-items:end">
+      <div><label class="l">${L("allAccessPrice")}</label><input class="in" type="number" min="0" step="0.5" value="${d.allAccess.price}" oninput="sdSet('allAccess.price', +this.value)"></div>
+      <div><label class="l">${L("allAccessDays")}</label><input class="in" type="number" min="1" value="${d.allAccess.days}" oninput="sdSet('allAccess.days', +this.value)"></div>
+      <div><label class="l">${L("defaultContentPrice")}</label><input class="in" type="number" min="0" step="0.5" value="${d.defaultContentPrice == null ? 1.5 : d.defaultContentPrice}" oninput="sdSet('defaultContentPrice', +this.value)"></div>
+      <div><label class="l">${L("refReward")}</label><input class="in" type="number" min="0" step="0.5" value="${d.referral.reward}" oninput="sdSet('referral.reward', +this.value)"></div>
+      <div><label class="l">${L("refGoal")}</label><input class="in" type="number" min="1" value="${d.referral.goal}" oninput="sdSet('referral.goal', +this.value)"></div>
+    </div>
+    <div style="margin-top:.8rem"><label class="l">${L("academyQuals")}</label><p class="xs muted">${L("academyQualsHint")}</p>
+      <textarea class="in" rows="4" id="aq_txt">${esc(qsText)}</textarea>
+      <button type="button" class="btn btn-o" style="margin-top:.4rem" onclick="saveAcademyQuals()">🌐 ${L("save")}</button></div>
+  </div>`;
+}
+async function saveAcademyQuals() {
+  const lines = document.getElementById("aq_txt").value.split("\n").map(x => x.trim()).filter(Boolean);
+  toast(L("translating"));
+  const out = [];
+  for (const l of lines) { const t = await translateAll(l, detectLang(l)); if (!Object.keys(t).length) t[state.lang] = l; out.push(t); }
+  sdSet("academyQuals", out); await saveSettings();
+}
+/* معلومات المعلم للطالب في بطاقة الحجز */
+const _bookingCard0 = bookingCard;
+bookingCard = function (sid) {
+  const html = _bookingCard0(sid);
+  const ts = state.data["myTeachers:" + (sid === state.auth.user.id ? "me" : sid)];
+  if (!Array.isArray(ts) || !ts.length) return html;
+  const t = ts.find(x => x.id === (state.bookUI || {}).tid) || ts[0];
+  const info = `<div class="xs muted" style="margin:-.3rem 0 .7rem">${t.native_lang ? `${L("native")}: ${esc(LANG_LIST[t.native_lang] || t.native_lang)} · ` : ""}${(t.spoken_langs || []).length ? `${L("speaks")}: ${esc(langNames(t.spoken_langs))}` : ""}${qualsHtml(t.qualifications)}</div>`;
+  return html.replace(/(<\/div>\s*)(<div class="slotdays">|<p class="muted sm">|<div class="card muted sm")/, `$1${info}$2`);
+};
+/* المشاركات: علامة معلم */
+const _showcaseCard0 = showcaseCard;
+showcaseCard = function (p, manage) { const h = _showcaseCard0(p, manage); return p.author_role === "teacher" ? h.replace(L("studentPost"), L("teacherPost")) : h; };
+/* رسالة واضحة لو غير مشترك */
+const _errMsg0 = errMsg;
+errMsg = function (e) { const m = (e && e.message) || String(e); if (m.includes("subscribers_only")) return L("subsOnly"); return _errMsg0(e); };
+
+/* زر الملف الشخصي في لوحة التحكم */
+const _renderDashboard2 = renderDashboard;
+renderDashboard = function () {
+  return _renderDashboard2().replace(`<button class="btn btn-o" onclick="doLogout()">`, `<button class="btn btn-o" onclick="navigate('profile')"><i class="fa-solid fa-user-pen"></i> ${L6("profile")}</button> <button class="btn btn-o" onclick="doLogout()">`);
+};
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
-const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy"];
+const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile"];
 function readHash() {
   const h = (location.hash || "").replace(/^#\/?/, "");
   if (!h || h.includes("=")) return;
@@ -4608,6 +5336,7 @@ function render() {
   else if (r === 'cert') content += renderCertPage();
   else if (r === 'verify') content += renderVerifyPage();
   else if (r === 'policy') content += renderPolicyPage();
+  else if (r === 'profile') content += renderProfilePage();
   else content += renderHome();
 
   content += renderFooter();
