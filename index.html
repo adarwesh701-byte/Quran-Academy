@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v24";
+const UI_VERSION = "2026-11-12-v25";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -13022,7 +13022,7 @@ const _role25 = role;
 role = function () { const r = _role25(); return r === "owner" && state.preview ? "student" : r; };
 function realRole() { return _role25(); }
 const _renderHeader25 = renderHeader;
-renderHeader = function () { let h = _renderHeader25(); if (realRole() === "owner") h = (state.preview ? `<div class="pvbar">${L("pvBar")} <button class="btn" style="background:#fff;color:#7c2d12;padding:.15rem .7rem" onclick="state.preview=false;render()">${L("pvOff")}</button></div>` : "") + h.replace(/(<button class="thpill")/, `<button class="thpill" onclick="state.preview=!state.preview;render()">${state.preview ? L("pvOff") : L("pvOn")}</button>$1`); return h; };
+renderHeader = function () { let h = _renderHeader25(); if (realRole() === "owner") h = (state.preview ? `<div class="pvbar">${state.preview === "teacher" ? (state.lang === "ar" ? "إنت دلوقتي شايف الموقع زي المعلم بالظبط." : "You are seeing the site exactly as a teacher does.") : L("pvBar")} <button class="btn" style="background:#fff;color:#7c2d12;padding:.15rem .7rem" onclick="state.preview=false;render()">${L("pvOff")}</button></div>` : "") + h.replace(/(<button class="thpill")/, `<button class="thpill" onclick="state.preview=!state.preview;render()">${state.preview ? L("pvOff") : L("pvOn")}</button>$1`); return h; };
 document.head.insertAdjacentHTML("beforeend", `<style>.pvbar{background:#7c2d12;color:#fff;text-align:center;padding:.4rem;font-weight:700;font-size:.9rem;display:flex;gap:.6rem;justify-content:center;align-items:center;flex-wrap:wrap}</style>`);
 
 /* ---------- 2) القفل الصحيح: الإسلامي مجاني، والباقي بالاشتراك ---------- */
@@ -13198,6 +13198,157 @@ h1{font-size:clamp(1.55rem,3.2vw,2.2rem);line-height:1.35;font-weight:700;letter
 .tftx{font-family:var(--rf,"Amiri"),serif;font-size:var(--rs,1.08rem);line-height:2.05}
 .pagehead p,.sec>.wrap>p.muted{max-width:760px}
 </style>`);
+
+/* ======================= v26: ساعة مجانية، الأسعار حسب الدولة، «النهارده» للطالب و«جدولي» للمعلم وربط جوجل في الاتجاهين، لوحة الأونر بـ 4 أبواب، فتح محتوى لطالب، اختيار اللغة، تأكيد الإيميل، إصلاح القرّاء والتكبير ======================= */
+Object.assign(UI.ar, {
+  fhBtn: "⏱️ جرّب ساعة مجانية الآن", fhSub: "ساعة كاملة تفتح لك كل محتوى وأدوات الموقع — مرة واحدة لكل حساب.", fhOn: "⏱️ ساعتك المجانية: فاضل", fhMin: "دقيقة", fhUsed: "استخدمت الساعة المجانية قبل كده — اختار باقة تكمّل بيها.",
+  tdT: "النهارده", tdNext: "حصتك الجاية", tdNone: "مفيش حصص جاية — احجز حصة.", tdAvail: "مواعيدي المتاحة كل أسبوع", tdAvailHint: "علّم الساعات اللي تقدر تحضر فيها — المعلم والنظام بيحجزوا عليها.", tdSubs: "اشتراكاتي", tdOpenAll: "كل محتوى الموقع", tdUntil: "لحد", tdContinue: "كمّل من حيث وقفت",
+  myT: "جدولي", myHint: "علّم ساعاتك المتاحة كل أسبوع — وتقدر تغيّرها في أي وقت. الحصص بتتحجز عليها بس.", gbT: "📥 استبعاد أوقاتك المشغولة في جوجل كاليندر", gbHint: "من Google Calendar ← الإعدادات ← اسم التقويم ← «العنوان السري بتنسيق iCal»، انسخه والصقه هنا. الموقع بياخد الأوقات المشغولة بس (من غير عناوين) كل نص ساعة.", gbSave: "اربط", gbOn: "✓ مربوط — الأوقات المشغولة بتتشال من المتاح", gbOff: "فك الربط", gbBusy: "مشغول في جوجل الأسبوعين الجايين",
+  ogGroups: { people: "👥 الناس", money: "💰 الفلوس", content: "📚 المحتوى والأقفال", settings: "⚙️ الإعدادات" }, pcT: "🌍 الأسعار حسب الدولة", pcHint: "كل دولة ليها مستوى (A/B/C) بنسبة من السعر الأساسي — والطالب بيشوف السعر المحلي ويدفعه. تقدر تحط نسبة خاصة لأي دولة.", pcTier: "المستوى", pcFactor: "النسبة", pcAdd: "دولة + نسبة خاصة",
+  oaT: "🎁 افتح محتوى لطالب", oaPick: "اختار اللي هيتفتح", oaGo: "افتح",
+  lgPick: "اختار اللغة", emT: "📧 أكّد إيميلك عشان تأمّن حسابك", emResend: "ابعت رابط التأكيد تاني", emSent: "اتبعت ✓ — شوف بريدك (والـ Spam)",
+  pvAs: { student: "👁️ كطالب", teacher: "👁️ كمعلم", "": "👑 كأونر" }
+});
+Object.assign(UI.en, {
+  fhBtn: "⏱️ Try one free hour now", fhSub: "A full hour that unlocks all site content and tools — once per account.", fhOn: "⏱️ Free hour: remaining", fhMin: "min", fhUsed: "You've already used your free hour — pick a plan to continue.",
+  tdT: "Today", tdNext: "Your next lesson", tdNone: "No upcoming lessons — book one.", tdAvail: "My weekly availability", tdAvailHint: "Mark the hours you can attend — lessons are booked on them.", tdSubs: "My subscriptions", tdOpenAll: "All site content", tdUntil: "until", tdContinue: "Continue where you left off",
+  myT: "My schedule", myHint: "Mark your available hours each week — change them anytime. Lessons are only booked on them.", gbT: "📥 Exclude busy times from Google Calendar", gbHint: "Google Calendar → Settings → your calendar → \"Secret address in iCal format\". Paste it here. We read busy times only (no titles) every 30 minutes.", gbSave: "Connect", gbOn: "✓ Connected — busy times are removed from availability", gbOff: "Disconnect", gbBusy: "Busy in Google (next two weeks)",
+  ogGroups: { people: "👥 People", money: "💰 Money", content: "📚 Content & locks", settings: "⚙️ Settings" }, pcT: "🌍 Prices by country", pcHint: "Each country has a tier (A/B/C) as a share of the base price — students see and pay the local price. You can set a custom share for any country.", pcTier: "Tier", pcFactor: "Share", pcAdd: "Country + custom share",
+  oaT: "🎁 Unlock content for a student", oaPick: "Choose what to unlock", oaGo: "Unlock",
+  lgPick: "Choose language", emT: "📧 Confirm your email to secure your account", emResend: "Resend confirmation link", emSent: "Sent ✓ — check your inbox (and spam)",
+  pvAs: { student: "👁️ As student", teacher: "👁️ As teacher", "": "👑 As owner" }
+});
+Object.assign(UI.ar.tabs || (UI.ar.tabs = {}), {}); Object.assign(TABS10.ar, { prices: "الأسعار حسب الدولة" }); Object.assign(TABS10.en, { prices: "Prices by country" });
+
+/* ---------- 1) الأونر يشوف كطالب أو كمعلم (الحساب الواحد = دور واحد) ---------- */
+role = function () { const r = _role25(); return r === "owner" && state.preview ? state.preview : r; };
+renderHeader = (function (orig) { return function () { let h = orig(); if (realRole() !== "owner") return h;
+  h = h.replace(/<button class="thpill" onclick="state\.preview=!state\.preview;render\(\)">[^<]*<\/button>/, `<select class="thpill" onchange="state.preview=this.value||false;state.dash.tab=null;render()">${["", "student", "teacher"].map(v => `<option value="${v}" ${(state.preview || "") === v ? "selected" : ""}>${L("pvAs")[v]}</option>`).join("")}</select>`);
+  return h; }; })(renderHeader);
+
+/* ---------- 2) الساعة المجانية ---------- */
+function fhActive() { const now = Date.now(); const a = myAccess().find(x => x.scope === "all" && x.source === "trial" && x.expires_at && new Date(x.expires_at).getTime() > now); return a ? Math.ceil((new Date(a.expires_at).getTime() - now) / 60000) : 0; }
+function fhCan() { const p = state.auth.profile || {}; return !!state.auth.user && realRole() === "student" && !p.free_hour_at && !allAccess(); }
+async function startFreeHour() { if (!state.auth.user) return navigate("signup"); const { error } = await sb.rpc("start_free_hour"); if (error) return toast(error.message.includes("used") ? L("fhUsed") : error.message, true); state.auth.profile.free_hour_at = new Date().toISOString(); invalidate("myAccess"); confetti(1200); toast("🎉 " + L("fhBtn").replace("⏱️ ", "")); render(); }
+function fhCard() { return fhCan() ? `<div class="fhcard"><div><b>${L("fhBtn")}</b><div class="sm">${L("fhSub")}</div></div><button class="btn" style="background:#fff;color:#065f46;font-weight:800" onclick="startFreeHour()">${L("fhBtn").replace("⏱️ ", "")} ➜</button></div>` : ""; }
+const _lockBox26 = lockBox; lockBox = function (sid) { return fhCard() + _lockBox26(sid); };
+const _renderPricing26 = renderPricing; renderPricing = function () { const h = _renderPricing26(); return h.replace(/(<div class="card" id="site-plans")/, fhCard() + "$1"); };
+renderHeader = (function (orig) { return function () { let h = orig(); const m = state.auth.user ? fhActive() : 0; const chip = m ? `<span class="fhchip">${L("fhOn")} ${m} ${L("fhMin")}</span>` : fhCan() ? `<button class="fhchip" onclick="startFreeHour()">${L("fhBtn")}</button>` : ""; return chip ? h.replace(/(<div class="dombar"><div class="wrap">)/, `$1${chip}`) : h; }; })(renderHeader);
+setInterval(() => { if (state.auth.user && fhActive()) render(); }, 60000);
+document.head.insertAdjacentHTML("beforeend", `<style>.fhcard{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;background:linear-gradient(135deg,#059669,#0d9488);color:#fff;border-radius:16px;padding:.9rem 1.1rem;margin:1rem 0}.fhchip{display:inline-flex;align-items:center;border:none;border-radius:999px;padding:.35rem .8rem;background:linear-gradient(135deg,#059669,#0d9488);color:#fff;font:700 .85rem "IBM Plex Sans Arabic",sans-serif;cursor:pointer}</style>`);
+
+/* ---------- 3) الأسعار حسب الدولة ---------- */
+function myFactor() { const t = setv("priceTiers", null); if (!t || realRole() === "owner" && !state.preview) return 1; const cc = String((state.auth.profile || {}).country || guessCountry() || "").toUpperCase(); return +((t.overrides || {})[cc] || (t.tiers || {})[(t.countries || {})[cc]] || 1); }
+function guessCountry() { const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || ""); return { "Africa/Cairo": "EG", "Asia/Riyadh": "SA", "Asia/Dubai": "AE", "Asia/Kuwait": "KW", "Asia/Qatar": "QA", "Europe/London": "GB", "Asia/Karachi": "PK", "Asia/Kolkata": "IN", "Asia/Jakarta": "ID", "Asia/Kuala_Lumpur": "MY", "Europe/Istanbul": "TR", "Africa/Casablanca": "MA", "Africa/Algiers": "DZ", "Africa/Tunis": "TN", "Africa/Lagos": "NG", "Asia/Amman": "JO", "Asia/Baghdad": "IQ", "Europe/Paris": "FR", "Europe/Berlin": "DE" }[tz] || (tz.startsWith("America/") ? "US" : ""); }
+(async () => { for (let i = 0; i < 20 && !(state.auth.ready !== false && state.auth.profile); i++) await new Promise(r => setTimeout(r, 500)); const p = state.auth.profile; if (p && !p.country && guessCountry()) { await sb.from("profiles").update({ country: guessCountry() }).eq("id", state.auth.user.id); p.country = guessCountry(); } })();
+const _money26 = money; let __pf = 1;
+money = function (a, c) { return _money26(__pf !== 1 && a != null ? Math.round(+a * __pf * 100) / 100 : a, c); };
+function withFactor(fn) { return function () { __pf = myFactor(); try { return fn.apply(this, arguments); } finally { __pf = 1; } }; }
+renderPricing = withFactor(renderPricing); lockBox = withFactor(lockBox);
+function ownerPricesTab() {
+  const t = setv("priceTiers", { tiers: {}, countries: {}, overrides: {} }); const cs = Object.keys(t.countries || {}).sort();
+  return `<div class="card"><h3>${L("pcT")}</h3><p class="xs muted" style="margin:.3rem 0 .7rem">${L("pcHint")}</p><div class="row" style="gap:.6rem;flex-wrap:wrap">${["A", "B", "C"].map(k => `<label class="sm">${L("pcTier")} ${k}: <input class="in" style="width:5rem" type="number" step="0.05" min="0.05" max="2" value="${(t.tiers || {})[k] || 1}" onchange="pcSet(d=>{d.priceTiers.tiers['${k}']=+this.value})"></label>`).join("")}</div>
+    <div class="pcgrid">${cs.map(c => `<div class="pcrow"><b>${flagOf(c)} ${c}</b><select class="in" style="width:auto" onchange="pcSet(d=>{d.priceTiers.countries['${c}']=this.value})">${["A", "B", "C"].map(k => `<option ${t.countries[c] === k ? "selected" : ""}>${k}</option>`).join("")}</select><input class="in" style="width:4.5rem" type="number" step="0.05" placeholder="${L("pcFactor")}" value="${(t.overrides || {})[c] || ""}" onchange="pcSet(d=>{if(this.value)d.priceTiers.overrides['${c}']=+this.value;else delete d.priceTiers.overrides['${c}']})"></div>`).join("")}</div>
+    <div class="row" style="gap:.4rem;margin-top:.7rem"><input class="in" id="pc_c" placeholder="XX" style="width:5rem;text-transform:uppercase"><select class="in" id="pc_t" style="width:auto"><option>A</option><option>B</option><option selected>C</option></select><button class="btn btn-o" onclick="pcSet(d=>{const c=document.getElementById('pc_c').value.trim().toUpperCase();if(/^[A-Z]{2}$/.test(c))d.priceTiers.countries[c]=document.getElementById('pc_t').value})">+ ${L("pcAdd")}</button></div></div>`;
+}
+function flagOf(cc) { return String(cc).toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))); }
+function pcSet(fn) { acSaveAccess(d => { d.priceTiers = JSON.parse(JSON.stringify(d.priceTiers || setv("priceTiers", { tiers: {}, countries: {}, overrides: {} }))); d.priceTiers.overrides = d.priceTiers.overrides || {}; fn(d); }); }
+document.head.insertAdjacentHTML("beforeend", `<style>.pcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.35rem;margin-top:.8rem}.pcrow{display:flex;gap:.35rem;align-items:center;border:1px solid var(--line);border-radius:10px;padding:.3rem .5rem}.pcrow b{min-width:3.6rem}</style>`);
+
+/* ---------- 4) لوحة الأونر: 4 أبواب ---------- */
+const OG = { people: ["users", "students", "teachers", "teacherApps", "groups", "chats", "devices", "sponsors", "referrals", "reviews"], money: ["orders", "bookings", "requests", "prices"], content: ["content", "access", "competitions", "certs", "placement", "homework", "reports"], settings: ["overview", "calendar", "schedule", "settings"] };
+const _renderOwnerDash26 = renderOwnerDash;
+renderOwnerDash = function () {
+  if (realRole() !== "owner" || state.preview) return _renderOwnerDash26();
+  const g = state.og || (state.og = (Object.entries(OG).find(([, v]) => v.includes(state.dash.tab)) || ["settings"])[0]);
+  if (!OG[g].includes(state.dash.tab)) state.dash.tab = OG[g][0];
+  let h = state.dash.tab === "prices" ? `<div class="tabs dtabs"></div>${ownerPricesTab()}` : _renderOwnerDash26();
+  h = h.replace(/<div class="tabs dtabs">([\s\S]*?)<\/div>/, (m, inner) => { const keep = (inner.match(/<a [\s\S]*?<\/a>/g) || []).filter(a => { const t = (a.match(/state\.dash\.tab='([^']+)'/) || [])[1]; return OG[g].includes(t); }); if (g === "money" && !keep.some(a => a.includes("'prices'"))) keep.push(`<a href="#" aria-current="${state.dash.tab === "prices"}" onclick="state.dash.tab='prices';render();return false;">🌍 ${L("pcT").replace("🌍 ", "")}</a>`);
+    return `<div class="oggroups">${Object.entries(L("ogGroups")).map(([k, v]) => `<button class="${k === g ? "on" : ""}" onclick="state.og='${k}';state.dash.tab='${OG[k][0]}';render()">${v}</button>`).join("")}</div><div class="tabs dtabs">${keep.join("")}</div>`; });
+  if (state.dash.tab === "students" || state.dash.tab === "users") h = h.replace(/(<div class="tabs dtabs">[\s\S]*?<\/div>)/, `$1${ownerOpenFor()}`);
+  return h;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.oggroups{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin:.6rem 0}.oggroups button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.7rem .4rem;font:700 .95rem "IBM Plex Sans Arabic",sans-serif;cursor:pointer}.oggroups button.on{background:var(--accent);color:#fff;border-color:var(--accent)}@media(max-width:600px){.oggroups{grid-template-columns:repeat(2,1fr)}}</style>`);
+// فتح محتوى لطالب: الكل أو أجزاء
+function ownerOpenFor() {
+  const d = state.oa = state.oa || { q: "", sel: { all: true }, days: 30, uid: null }; const P = peopleMap(); const q_ = d.q.trim().toLowerCase();
+  const hits = q_.length > 1 ? P.list.filter(p => p.role === "student" && ((p.email || "").toLowerCase().includes(q_) || (p.real_name || "").toLowerCase().includes(q_))).slice(0, 6) : [];
+  const secs = (sectionsData() || []).filter ? sectionsData().filter(s => s.is_visible !== false && (!s.parent_id || (sectionsData().find(p => p.id === s.parent_id) || {}).parent_id == null)) : [];
+  const opt = (k, label) => `<label class="opt" style="padding:.35rem .6rem;width:auto"><input type="checkbox" ${d.sel[k] ? "checked" : ""} onchange="state.oa.sel['${k}']=this.checked"> ${esc(label)}</label>`;
+  return `<div class="card" style="margin-bottom:1rem;border-color:#f59e0b"><h3>${L("oaT")}</h3><input class="in" placeholder="${L("grUser")}" value="${esc(d.q)}" oninput="state.oa.q=this.value;clearTimeout(window.__oat);window.__oat=setTimeout(render,350)" style="margin:.4rem 0">
+    ${hits.map(p => `<label class="kv" style="cursor:pointer"><span><input type="radio" name="oau" ${d.uid === p.id ? "checked" : ""} onchange="state.oa.uid='${p.id}'"> ${esc(p.real_name || p.display_name || "")} <span class="xs muted">${esc(p.email || "")}</span></span></label>`).join("")}
+    <p class="sm b" style="margin:.5rem 0 .3rem">${L("oaPick")}</p><div class="row" style="gap:.35rem;flex-wrap:wrap">${opt("all", L("grScopes").all)}${opt("aah", L("grScopes").aah)}${opt("lang_eg", L("grScopes").lang_eg)}${opt("lang_fu", L("grScopes").lang_fu)}${opt("lang_gu", L("grScopes").lang_gu)}${secs.map(s => opt("s:" + s.id, (s.icon || "") + " " + secTitle(s))).join("")}</div>
+    <div class="row" style="gap:.4rem;align-items:center;margin-top:.6rem"><select class="in" style="width:auto" onchange="state.oa.days=+this.value">${Object.entries(L("grDur")).map(([k, v]) => `<option value="${k}" ${+d.days === +k ? "selected" : ""}>${v}</option>`).join("")}</select><button class="btn btn-p" onclick="ownerOpenGo()">🎁 ${L("oaGo")}</button></div></div>`;
+}
+async function ownerOpenGo() { const d = state.oa; if (!d.uid) return toast(L("grUser"), true); const days = +d.days || 0;
+  for (const [k, on] of Object.entries(d.sel)) { if (!on) continue; let r; if (k === "all") r = await sb.rpc("owner_grant_access", { p_user: d.uid, p_scope: "all", p_days: days }); else if (k.startsWith("s:")) r = await sb.rpc("owner_grant_section", { p_user: d.uid, p_section: k.slice(2), p_days: days }); else r = await sb.rpc("owner_grant_access", { p_user: d.uid, p_scope: "feature:" + k, p_days: days }); if (r.error) return toast(r.error.message, true); }
+  toast(L("grDone")); }
+
+/* ---------- 5) المعلم: «جدولي» أول ما يدخل + ربط جوجل في الاتجاهين ---------- */
+function busyList(uid) { return useData("busy:" + uid, () => q(sb.from("teacher_busy").select("starts,ends").eq("teacher_id", uid).gte("ends", new Date().toISOString()).lte("starts", new Date(Date.now() + 14 * 864e5).toISOString()).order("starts").limit(80))); }
+function gcalBusyCard() {
+  const on = useData("gbOn", async () => { const { data } = await sb.rpc("has_gcal_busy"); return [!!data]; }); const uid = state.auth.user.id; const bl = busyList(uid);
+  return `<div class="card" style="margin-bottom:1rem"><h3>${L("gbT")}</h3><p class="xs muted" style="margin:.3rem 0 .6rem">${L("gbHint")}</p>${Array.isArray(on) && on[0] ? `<div class="row" style="gap:.4rem;align-items:center"><span class="badge badge-g">${L("gbOn")}</span><button class="btn btn-o" onclick="gbSet('')">${L("gbOff")}</button></div>` : `<div class="row" style="gap:.4rem;flex-wrap:wrap"><input class="in" id="gb_u" type="password" autocomplete="off" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" style="flex:1;min-width:14rem"><button class="btn btn-p" onclick="gbSet(document.getElementById('gb_u').value.trim())">${L("gbSave")}</button></div>`}
+    ${Array.isArray(bl) && bl.length ? `<p class="sm b" style="margin:.7rem 0 .3rem">${L("gbBusy")}</p><div class="row" style="gap:.3rem;flex-wrap:wrap">${bl.map(b => `<span class="badge" style="color:var(--danger)">${esc(fmtDT(b.starts))} → ${esc(new Date(b.ends).toLocaleTimeString(state.lang, { hour: "2-digit", minute: "2-digit" }))}</span>`).join("")}</div>` : ""}</div>`;
+}
+async function gbSet(u) { const { error } = await sb.rpc("set_gcal_busy_url", { p_url: u }); if (error) return toast(error.message.includes("bad_url") ? "Google iCal URL ✗" : error.message, true); await sb.rpc("refresh_my_busy").then(() => {}, () => {}); invalidate("gbOn"); setTimeout(() => { invalidate("busy:" + state.auth.user.id); render(); }, 6000); toast(L("saved")); render(); }
+const _renderTeacherDash26 = renderTeacherDash;
+renderTeacherDash = function () {
+  if (!state.dash.tSeen) { state.dash.tSeen = true; state.dash.tab = "schedule"; }
+  const h = _renderTeacherDash26();
+  if (state.dash.tab !== "schedule") return h;
+  let ed = ""; try { ed = renderScheduleEditor(); } catch (e) {}
+  return `<div class="card" style="margin-bottom:1rem;border:2px solid var(--accent)"><h2 style="margin:0 0 .3rem">🗓️ ${L("myT")}</h2><p class="sm muted">${L("myHint")}</p></div>${ed}${gcalBusyCard()}` + (ed ? h.replace(ed, "") : h);
+};
+// تحذير وقت مشغول عند إضافة حصة
+const _saveLesson26 = typeof saveLesson === "function" ? saveLesson : null;
+
+/* ---------- 6) الطالب: «النهارده» ---------- */
+function studentToday() {
+  const uid = state.auth.user.id; const ls = useData("tdLs", () => q(sb.from("lessons").select("id,start_time,teacher_id,status").eq("student_id", uid).gte("start_time", new Date(Date.now() - 3600e3).toISOString()).order("start_time").limit(1)));
+  const P = peopleMap(); const nx = Array.isArray(ls) && ls[0]; const now = Date.now();
+  const subs = myAccess().filter(a => !a.expires_at || new Date(a.expires_at).getTime() > now).map(a => `<span class="badge badge-g">${a.scope === "all" ? L("tdOpenAll") : a.scope.startsWith("feature:lang_") ? (LC[a.scope.slice(13)] ? locText(LC[a.scope.slice(13)].name) : a.scope) : a.scope === "section" ? "📁" : a.scope}${a.expires_at ? ` · ${L("tdUntil")} ${esc(fmtDT(a.expires_at))}` : ""}</span>`).join(" ");
+  const av = state.avDraft || (state.avDraft = JSON.parse(JSON.stringify((state.auth.profile || {}).avail || {})));
+  const days = state.lang === "ar" ? ["الأحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; const hrs = Array.from({ length: 17 }, (_, i) => i + 7);
+  return `<div class="card tdcard"><h2 style="margin:0 0 .6rem">☀️ ${L("tdT")}</h2>${fhCard()}
+    <div class="grid g2" style="gap:.8rem;align-items:start"><div class="card" style="background:var(--bg)"><b>🎥 ${L("tdNext")}</b><p style="margin:.4rem 0">${nx ? `${esc(fmtDT(nx.start_time))} · ${esc(personName(nx.teacher_id, P.map))}` : L("tdNone")}</p>${nx ? `<button class="btn btn-p" onclick="navigate('classroom')">${L("nvClassroom")}</button>` : `<button class="btn btn-p" onclick="navigate('booking')">${I18N[state.lang].nav.book || "Book"}</button>`}</div>
+    <div class="card" style="background:var(--bg)"><b>🎟️ ${L("tdSubs")}</b><div style="margin:.4rem 0">${subs || `<span class="muted sm">—</span>`}</div><button class="btn btn-o" onclick="navigate('pricing')">${L("spT")}</button></div></div>
+    <details style="margin-top:.8rem"><summary class="b">🗓️ ${L("tdAvail")}</summary><p class="xs muted" style="margin:.3rem 0 .5rem">${L("tdAvailHint")}</p><div style="overflow-x:auto"><table class="avt"><tr><th></th>${hrs.map(h => `<th>${h}</th>`).join("")}</tr>${days.map((dn, d) => `<tr><th>${esc(dn)}</th>${hrs.map(h => { const on = (av[d] || []).includes(h); return `<td class="${on ? "on" : ""}" onclick="avToggle(${d},${h})"></td>`; }).join("")}</tr>`).join("")}</table></div><button class="btn btn-p" style="margin-top:.5rem" onclick="avSave()">${L("save")}</button></details></div>`;
+}
+function avToggle(d, h) { const a = state.avDraft[d] = state.avDraft[d] || []; const i = a.indexOf(h); i > -1 ? a.splice(i, 1) : a.push(h); render(); }
+async function avSave() { const { error } = await sb.from("profiles").update({ avail: state.avDraft, timezone: BROWSER_TZ }).eq("id", state.auth.user.id); if (error) return toast(error.message, true); state.auth.profile.avail = JSON.parse(JSON.stringify(state.avDraft)); toast(L("saved")); }
+document.head.insertAdjacentHTML("beforeend", `<style>.avt{border-collapse:collapse;font-size:.75rem}.avt th{padding:.2rem .3rem;font-weight:600;color:var(--muted);white-space:nowrap}.avt td{width:1.6rem;height:1.6rem;border:1px solid var(--line);cursor:pointer;background:var(--card)}.avt td.on{background:var(--accent)}.tdcard{border:2px solid var(--accent);margin-bottom:1rem}</style>`);
+const _renderStudentDash26 = typeof renderStudentDash === "function" ? renderStudentDash : null;
+if (_renderStudentDash26) renderStudentDash = function () { return studentToday() + _renderStudentDash26(); };
+
+/* ---------- 7) تأكيد الإيميل ---------- */
+function emailBar() { const u = state.auth.user; if (!u || u.email_confirmed_at || u.confirmed_at || !u.email || realRole() === "owner") return ""; return `<div class="embar">${L("emT")} <button class="btn" style="background:#fff;color:#1e3a8a;padding:.15rem .7rem" onclick="emResend()">${L("emResend")}</button></div>`; }
+async function emResend() { const { error } = await sb.auth.resend({ type: "signup", email: state.auth.user.email, options: { emailRedirectTo: location.origin } }); if (error) return toast(error.message, true); toast(L("emSent")); }
+renderHeader = (function (orig) { return function () { return emailBar() + orig(); }; })(renderHeader);
+document.head.insertAdjacentHTML("beforeend", `<style>.embar{background:#1e3a8a;color:#fff;text-align:center;padding:.4rem;font-weight:600;font-size:.88rem;display:flex;gap:.6rem;justify-content:center;align-items:center;flex-wrap:wrap}</style>`);
+
+/* ---------- 8) أيقونة اللغة واضحة ---------- */
+const LG_FLAGS = { ar: "🇪🇬", en: "🇬🇧", fr: "🇫🇷", de: "🇩🇪", es: "🇪🇸", tr: "🇹🇷", ru: "🇷🇺", id: "🇮🇩", ms: "🇲🇾", zh: "🇨🇳", ku: "🏳️", ur: "🇵🇰" };
+function langModal() { const m = document.createElement("div"); m.className = "hlpov"; m.onclick = (e) => { if (e.target === m) m.remove(); }; m.innerHTML = `<div class="hlpbox"><div class="row" style="justify-content:space-between"><h3>🌐 ${L("lgPick")}</h3><button class="ibtn" onclick="this.closest('.hlpov').remove()">✕</button></div><div class="lggrid2">${ALL_LANGS.map(l => `<button class="${l === state.lang ? "on" : ""}" onclick="this.closest('.hlpov').remove();setLang('${l}')"><span>${LG_FLAGS[l] || "🌐"}</span>${esc(LANG_LIST[l] || l)}</button>`).join("")}</div></div>`; document.body.appendChild(m); }
+renderHeader = (function (orig) { return function () { return orig().replace(/(<div class="dombar"><div class="wrap">)/, `$1<a href="#" class="lgbtn" onclick="langModal();return false;">🌐 ${LG_FLAGS[state.lang] || ""} ${esc(LANG_LIST[state.lang] || state.lang)} ▾</a>`); }; })(renderHeader);
+document.head.insertAdjacentHTML("beforeend", `<style>.dombar a.lgbtn{background:var(--accent);color:#fff;border-color:var(--accent)}.lggrid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.4rem;margin-top:.7rem}.lggrid2 button{display:flex;gap:.4rem;align-items:center;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:.55rem .7rem;cursor:pointer;font:600 .95rem "IBM Plex Sans Arabic",sans-serif}.lggrid2 button.on{border-color:var(--accent);background:rgba(16,185,129,.1)}.lggrid2 span{font-size:1.3rem}</style>`);
+
+/* ---------- 9) إصلاح صوت بعض القرّاء + التكبير على كل الأجهزة ---------- */
+const _srData26 = srData;
+srData = function (surah, chunk) { const d = _srData26(surah, chunk); if (Array.isArray(d)) d.forEach(a => { if (a.au && a.au.includes("verses.quran.com///")) a.au = "https://" + a.au.split("verses.quran.com///")[1]; }); return d; };
+(function () { const fix = (u) => !u ? u : u.startsWith("//") ? "https:" + u : /^https?:/.test(u) ? u : "https://verses.quran.com/" + u.replace(/^\/+/, ""); const _f = window.fetch; window.__fixAudioUrl = fix; })();
+function srFull() { const el = document.getElementById("srfilm"); if (!el) return; if (el.requestFullscreen && !/iPhone|iPad/.test(navigator.userAgent)) { (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()).catch(() => el.classList.toggle("fsfake")); } else el.classList.toggle("fsfake"); }
+const _surahPage26 = surahPage; surahPage = function (s, a) { return _surahPage26(s, a).replace(/onclick="document\.getElementById\('srfilm'\)\.requestFullscreen&&document\.getElementById\('srfilm'\)\.requestFullscreen\(\)"/, `onclick="srFull()"`); };
+document.head.insertAdjacentHTML("beforeend", `<style>.srfilm.fsfake{position:fixed!important;inset:0;z-index:300;border-radius:0;aspect-ratio:auto;width:100vw;height:100vh}.srfilm.fsfake .srar{font-size:2.4rem}.srfilm{cursor:zoom-in}.srfilm.fsfake{cursor:zoom-out}</style>`);
+document.addEventListener("dblclick", e => { const f = e.target.closest && e.target.closest(".srfilm"); if (f) srFull(); });
+
+/* ---------- 10) المصحف الملوّن: سورتين مجانًا ---------- */
+const TJ_FREE = [1, 112];
+tajPage = (function (orig) { return function (secId) { const s = state.tj = state.tj || { surah: 1 }; const full = allAccess(); if (!full && !TJ_FREE.includes(s.surah)) s.surah = 1;
+  const save = libFull; libFull = () => true; let h; try { h = orig(secId); } finally { libFull = save; }
+  if (!full) { h = h.replace(/<select class="in" style="width:auto" onchange="if\(!libFull\(\)&&\+this\.value!==1\)\{toast\(L\('smpLock'\),true\);this\.value=1;return\}/, `<select class="in" style="width:auto" onchange="if(!allAccess()&&![${TJ_FREE}].includes(+this.value)){toast(L('smpLock'),true);this.value=1;return}`);
+    const k = h.indexOf("</select>"); h = h.slice(0, k).replace(/<option value="(\d+)"([^>]*)>(?:🔒 )?(\d+\. )/g, (m, v, a, n) => `<option value="${v}"${a}>${TJ_FREE.includes(+v) ? "🎁 " : "🔒 "}${n}`) + h.slice(k); h += lockBox(secId); }
+  return h; }; })(tajPage);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
