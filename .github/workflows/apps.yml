@@ -1,0 +1,65 @@
+name: Build apps (Android APK + Windows + Mac + Linux)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["apps/**", ".github/workflows/apps.yml"]
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Build APK
+        working-directory: apps/android
+        run: |
+          npm install
+          npx cap add android
+          cp ../desktop/icon.png /tmp/icon.png
+          for d in android/app/src/main/res/mipmap-*; do cp /tmp/icon.png "$d/ic_launcher.png"; cp /tmp/icon.png "$d/ic_launcher_round.png"; cp /tmp/icon.png "$d/ic_launcher_foreground.png" 2>/dev/null || true; done
+          sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.CAMERA" />#' android/app/src/main/AndroidManifest.xml
+          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../../itqan-academy.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: android, path: apps/itqan-academy.apk }
+  desktop:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Build desktop app
+        working-directory: apps/desktop
+        env: { CSC_IDENTITY_AUTO_DISCOVERY: "false" }
+        run: |
+          npm install
+          npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.AppImage
+  release:
+    needs: [android, desktop]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - run: ls -la out
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apps-latest
+          name: Itqan Academy apps
+          make_latest: true
+          body: "Android APK, Windows, Mac and Linux apps. They open the live website, so every update appears automatically."
+          files: out/*

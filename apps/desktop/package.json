@@ -1,0 +1,21 @@
+{
+  "name": "itqan-academy",
+  "productName": "Itqan Academy",
+  "version": "1.0.0",
+  "description": "Itqan Academy — Quran, maqamat, tajweed and Arabic",
+  "main": "main.js",
+  "author": "Itqan Academy",
+  "scripts": { "dist": "electron-builder --publish never" },
+  "devDependencies": { "electron": "^31.7.0", "electron-builder": "^24.13.3" },
+  "build": {
+    "appId": "com.itqan.academy",
+    "productName": "Itqan Academy",
+    "artifactName": "itqan-academy-${os}.${ext}",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "icon.png"],
+    "win": { "target": "nsis", "icon": "icon.png" },
+    "mac": { "target": "dmg", "icon": "icon.png", "category": "public.app-category.education" },
+    "linux": { "target": "AppImage", "icon": "icon.png", "category": "Education" },
+    "nsis": { "oneClick": true }
+  }
+}
