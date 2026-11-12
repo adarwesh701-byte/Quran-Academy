@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v36";
+const UI_VERSION = "2026-11-12-v37";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14750,6 +14750,108 @@ Object.assign(UI.en, { adT: "Get the app", adS: "All apps open the live website,
   shyT: "Meet your shaykh", shyEmpty: "Click here to add your bio, sanad, a video and a recitation — they appear on the home and booking pages.", shyHear: "Hear the shaykh's recitation", shySanad: "Sanad", shyBook: "Book a trial with the shaykh", shyFormS: "Students see this before booking. Write it yourself — the sanad must be exact.", shyName: "Name", shyTitle: "Title (e.g. ijaza in the ten qira'at)", shyBio: "Short bio", shyVid: "Video (YouTube link or upload)", shyAud: "Your recitation (upload)", shyPhoto: "Photo (optional)", shySanadHint: "Sanad chains are added under Certificates → Sanad chains.",
   lkSub: "Maqamat · Tajweed · Hifz · Arabic — live classes and smart tools", lkTrial: "Book your trial lesson", lkMaq: "Vocal maqamat", lkTaj: "Tajweed & colour mushaf", lkHifz: "Quran memorization", lkAr: "Speak Arabic", lkListen: "Academy content", lkApp: "Get the app",
   ssTab: "Analytics", ssDays: "days", ssVisits: "visits", ssPeople: "visitors", ssTime: "avg visit time", ssMobile: "on mobile", ssByDay: "Visits per day", ssByHour: "Visits by hour (Cairo time)", ssPeak: "Peak hours", ssPages: "Most opened pages", ssSrc: "Traffic sources", ssTz: "Visitor time zones", tzMine: "All times are in your time zone", tzCairo: "Cairo now" });
+
+/* ================= v37: أدوات إسلامية جديدة ================= */
+PAGES16.push("prayer", "ayahcard", "arbaeen", "asma");
+/* ---------- 1) مواقيت الصلاة والقبلة ---------- */
+state.pr = state.pr || {};
+async function prLocate() {
+  if (!navigator.geolocation) return toast(L("prNoGeo"), true);
+  navigator.geolocation.getCurrentPosition(p => { state.pr.lat = p.coords.latitude; state.pr.lng = p.coords.longitude; try { localStorage.setItem("itqan_geo", JSON.stringify([state.pr.lat, state.pr.lng])); } catch (e) {} delete state.data.prTimes; render(); }, () => toast(L("prNoGeo"), true), { timeout: 10000 });
+}
+function qibla(lat, lng) { const k = [21.4225 * Math.PI / 180, 39.8262 * Math.PI / 180]; const a = lat * Math.PI / 180, b = lng * Math.PI / 180; const y = Math.sin(k[1] - b), x = Math.cos(a) * Math.tan(k[0]) - Math.sin(a) * Math.cos(k[1] - b); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; }
+function renderPrayer() {
+  const pr = state.pr; if (pr.lat == null) { try { const g = JSON.parse(localStorage.getItem("itqan_geo") || "null"); if (g) { pr.lat = g[0]; pr.lng = g[1]; } } catch (e) {} }
+  if (pr.lat == null) return pageWrap("🕋", L("prT"), L("prS"), `<div class="card" style="text-align:center"><div style="font-size:3rem">📍</div><p style="margin:.6rem 0">${L("prNeed")}</p><button class="btn btn-p btn-lg" onclick="prLocate()">📍 ${L("prLoc")}</button></div>`);
+  const m = setv("prayerMethod", 5); const d = useData("prTimes", () => fetch(`https://api.aladhan.com/v1/timings?latitude=${pr.lat}&longitude=${pr.lng}&method=${m}`).then(r => r.json()).then(j => j.data));
+  const q = qibla(pr.lat, pr.lng); const names = L("prN");
+  const t = d && d.timings; const now = new Date(); const hm = s => { const [h, mi] = s.split(":").map(Number); const x = new Date(); x.setHours(h, mi, 0, 0); return x; };
+  const order = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"]; const next = t ? order.find(k => hm(t[k]) > now) || "Fajr" : null;
+  return pageWrap("🕋", L("prT"), L("prS"), `<div class="grid g2" style="align-items:start"><div class="card">${!t ? loadingBox() : `<p class="xs muted">${esc(d.date && d.date.hijri ? `${d.date.hijri.day} ${state.lang === "ar" ? d.date.hijri.month.ar : d.date.hijri.month.en} ${d.date.hijri.year}هـ` : "")} · ${esc(d.meta && d.meta.timezone || "")}</p>${order.map(k => `<div class="prrow ${k === next ? "next" : ""}"><b>${esc(names[k])}</b><span>${esc(t[k])}</span></div>`).join("")}<p class="xs muted" style="margin-top:.6rem">${L("prSrc")}</p>`}</div>
+    <div class="card" style="text-align:center"><h3>🧭 ${L("prQ")}</h3><div class="qib"><div class="qibn" id="qibn" style="transform:rotate(${q}deg)">🕋<i></i></div></div><p style="margin-top:.6rem">${L("prQd").replace("{d}", Math.round(q))}</p><button class="btn btn-o" onclick="prCompass()">📱 ${L("prComp")}</button><button class="btn btn-o" style="margin-top:.4rem" onclick="prLocate()">📍 ${L("prRe")}</button></div></div>`);
+}
+function prCompass() { const q = qibla(state.pr.lat, state.pr.lng); const go = () => window.addEventListener("deviceorientation", e => { const h = e.webkitCompassHeading != null ? e.webkitCompassHeading : (e.alpha != null ? 360 - e.alpha : null); const n = document.getElementById("qibn"); if (n && h != null) n.style.transform = `rotate(${(q - h + 360) % 360}deg)`; }, true); if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission().then(r => r === "granted" && go()).catch(() => {}); else go(); toast(L("prCompOn")); }
+
+/* ---------- 2) بطاقة آية للمشاركة (صورة) ---------- */
+state.ac = state.ac || {};
+async function acNew() { const n = 1 + Math.floor(Math.random() * 6236); const j = await fetch(`https://api.quran.com/api/v4/verses/by_key/${acKeyFrom(n)}?fields=text_uthmani&translations=${TR_IDS[state.lang] || 85}`).then(r => r.json()).catch(() => null); if (!j || !j.verse) return; state.ac = { key: j.verse.verse_key, ar: j.verse.text_uthmani, tr: j.verse.translations && j.verse.translations[0] ? htmlText(j.verse.translations[0].text) : "", bg: Math.floor(Math.random() * 6) }; render(); setTimeout(acDraw, 50); }
+function acKeyFrom(n) { let s = 0; while (n > SURAH_AYAHS[s]) { n -= SURAH_AYAHS[s]; s++; } return `${s + 1}:${n}`; }
+const AC_BG = [["#0f3d2e", "#c7a86d"], ["#1d2a44", "#e9c96b"], ["#fbf4ec", "#a3472a"], ["#111111", "#d6b46a"], ["#f3f8f5", "#0b6b4b"], ["#2b200c", "#f6e7c1"]];
+function acDraw() {
+  const c = document.getElementById("acCv"); const a = state.ac; if (!c || !a.ar) return; const x = c.getContext("2d"); const W = c.width, H = c.height; const [bg, fg] = AC_BG[a.bg || 0];
+  x.fillStyle = bg; x.fillRect(0, 0, W, H); x.strokeStyle = fg; x.globalAlpha = .35; x.lineWidth = 3; x.strokeRect(40, 40, W - 80, H - 80); x.strokeRect(56, 56, W - 112, H - 112); x.globalAlpha = 1;
+  for (let i = 0; i < 4; i++) { x.save(); x.translate(i % 2 ? W - 56 : 56, i < 2 ? 56 : H - 56); x.rotate(Math.PI / 4); x.fillStyle = fg; x.fillRect(-12, -12, 24, 24); x.restore(); }
+  x.fillStyle = fg; x.textAlign = "center"; x.direction = "rtl"; x.font = "700 30px 'Amiri', serif"; x.fillText("﷽", W / 2, 130);
+  const wrap = (txt, font, maxW, y0, lh) => { x.font = font; const ws = txt.split(" "); const lines = []; let cur = ""; ws.forEach(w => { const t = cur ? cur + " " + w : w; if (x.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); lines.forEach((l, i) => x.fillText(l, W / 2, y0 + i * lh)); return y0 + lines.length * lh; };
+  let y = wrap(a.ar, "68px 'Amiri Quran', 'Amiri', serif", W - 200, 330, 120);
+  x.direction = "ltr"; x.globalAlpha = .85; if (a.tr && state.lang !== "ar") y = wrap(a.tr.slice(0, 300), "26px 'Inter', sans-serif", W - 220, y + 30, 38); x.globalAlpha = 1;
+  x.direction = "rtl"; x.font = "28px 'Amiri', serif"; const [s, n] = a.key.split(":"); x.fillText(`﴿ ${SURAHS[s - 1]} : ${n} ﴾`, W / 2, Math.min(H - 170, y + 70));
+  x.font = "600 22px 'IBM Plex Sans Arabic', sans-serif"; x.globalAlpha = .75; x.fillText("أكاديمية إتقان · Itqan Academy", W / 2, H - 90); x.globalAlpha = 1;
+}
+function acSave() { const c = document.getElementById("acCv"); if (!c) return; const a = document.createElement("a"); a.download = `ayah-${(state.ac.key || "").replace(":", "-")}.png`; a.href = c.toDataURL("image/png"); a.click(); }
+async function acShare() { const c = document.getElementById("acCv"); if (!c || !navigator.canShare) return acSave(); c.toBlob(async b => { const f = new File([b], "ayah.png", { type: "image/png" }); if (navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], text: location.origin }); } catch (e) {} } else acSave(); }); }
+function renderAyahCard() {
+  if (!state.ac.ar) setTimeout(acNew, 0); else setTimeout(acDraw, 30);
+  return pageWrap("🖼️", L("acT"), L("acS"), `<div class="card" style="text-align:center"><canvas id="acCv" width="1080" height="1350" style="width:100%;max-width:420px;border-radius:18px;box-shadow:var(--sh)"></canvas>
+    <div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.8rem"><button class="btn btn-p" onclick="acNew()">🎲 ${L("acNew")}</button>${AC_BG.map((b, i) => `<button class="mbg ${state.ac.bg === i ? "on" : ""}" style="background:${b[0]};color:${b[1]}" onclick="state.ac.bg=${i};render()">ب</button>`).join("")}<button class="btn btn-o" onclick="acSave()">⬇️ ${L("acDl")}</button><button class="btn btn-o" onclick="acShare()">📤 ${L("acSh")}</button></div>
+    <div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem;flex-wrap:wrap"><input class="in" id="acK" placeholder="2:255" style="max-width:8rem" dir="ltr"><button class="btn btn-o" onclick="acPick()">${L("acPick")}</button></div><p class="xs muted" style="margin-top:.5rem">${L("acNote")}</p></div>`);
+}
+async function acPick() { const k = (document.getElementById("acK") || {}).value || ""; if (!/^\d{1,3}:\d{1,3}$/.test(k.trim())) return toast("2:255", true); const j = await fetch(`https://api.quran.com/api/v4/verses/by_key/${k.trim()}?fields=text_uthmani&translations=${TR_IDS[state.lang] || 85}`).then(r => r.json()).catch(() => null); if (!j || !j.verse) return toast(L("error"), true); state.ac = { key: j.verse.verse_key, ar: j.verse.text_uthmani, tr: j.verse.translations && j.verse.translations[0] ? htmlText(j.verse.translations[0].text) : "", bg: state.ac.bg || 0 }; render(); }
+
+/* ---------- 3) احفظ الأربعين النووية (إخفاء تدريجي + تكملة) ---------- */
+state.ab = state.ab || { n: 1, hide: 0 };
+function abData() { return useData("abAll:" + state.lang, async () => { const base = "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/"; const [a, e] = await Promise.all([fetch(base + "ara-nawawi.min.json").then(r => r.json()), state.lang === "ar" ? null : fetch(base + "eng-nawawi.min.json").then(r => r.json()).catch(() => null)]); const em = {}; if (e) (e.hadiths || []).forEach(h => em[h.hadithnumber] = h.text); return (a.hadiths || []).map(h => ({ n: h.hadithnumber, ar: h.text, en: em[h.hadithnumber] || "" })); }); }
+function abDone() { try { return JSON.parse(localStorage.getItem("itqan_ab") || "{}"); } catch (e) { return {}; } }
+function renderArbaeen() {
+  const d = abData(); if (!Array.isArray(d)) return pageWrap("📜", L("abT"), L("abS"), loadingBox());
+  const ab = state.ab; const h = d.find(x => x.n === ab.n) || d[0]; const done = abDone(); const ws = h.ar.split(/\s+/); const seed = h.n * 7;
+  const hid = ws.map((w, i) => ab.hide > 0 && ((i * 37 + seed) % 100) < ab.hide * 25 && w.replace(/[^ء-ي]/g, "").length > 2);
+  return pageWrap("📜", L("abT"), L("abS"), `<div class="row" style="gap:.3rem;flex-wrap:wrap;margin-bottom:.8rem">${d.map(x => `<button class="abn ${x.n === h.n ? "on" : ""} ${done[x.n] ? "ok" : ""}" onclick="state.ab={n:${x.n},hide:0};render()">${x.n}</button>`).join("")}</div>
+    <div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>${L("abH")} ${h.n}</h3><span class="row" style="gap:.3rem">${[0, 1, 2, 3, 4].map(k => `<button class="btn ${ab.hide === k ? "btn-p" : "btn-o"}" style="padding:.25rem .6rem" onclick="state.ab.hide=${k};render()">${k === 0 ? "👁️" : k * 25 + "%"}</button>`).join("")}</span></div>
+    <p class="xs muted" style="margin:.3rem 0">${L("abHide")}</p><div class="abtx">${ws.map((w, i) => hid[i] ? `<span class="abw" onclick="this.classList.toggle('show')">${esc(w)}</span>` : esc(w)).join(" ")}</div>
+    ${h.en && state.lang !== "ar" ? `<details style="margin-top:.6rem"><summary class="sm b">🌐 ${esc(langLabel("en"))}</summary><p class="sm" style="line-height:1.9">${esc(h.en)}</p></details>` : ""}
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.8rem"><button class="btn btn-p" onclick="abQuiz(${h.n})">📝 ${L("abQ")}</button><button class="btn btn-o" onclick="abVoice(${h.n})">🎤 ${L("abV")}</button>${done[h.n] ? `<span class="badge badge-g">✓ ${L("abOk")}</span>` : ""}</div><p class="xs muted" style="margin-top:.6rem">${L("abSrc")}</p></div>
+    ${state.qz && state.qz.ab ? `<div style="margin-top:1rem">${quizView()}</div>` : ""}`);
+}
+function abQuiz(n) { const d = state.data["abAll:" + state.lang] || []; const h = d.find(x => x.n === n); if (!h) return; const ws = h.ar.split(/\s+/); const pool = [...new Set(d.flatMap(x => x.ar.split(/\s+/)).filter(w => w.replace(/[^ء-ي]/g, "").length > 3))]; const r = () => Math.random(); const qs = [];
+  const idx = ws.map((w, i) => [w, i]).filter(([w]) => w.replace(/[^ء-ي]/g, "").length > 3).sort(() => r() - .5).slice(0, 8);
+  idx.forEach(([w, i]) => qs.push({ q: ws.slice(Math.max(0, i - 8), i).join(" ") + " ＿＿＿ " + ws.slice(i + 1, i + 4).join(" "), ans: w, opts: [w].concat(pool.filter(x => x !== w).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5), t: L("abH") + " " + n }));
+  state.qz = { qs, i: 0, ok: 0, pick: null, ab: true, back: () => {}, again: () => abQuiz(n), onDone: sc => { if (sc >= 80) { const o = abDone(); o[n] = 1; try { localStorage.setItem("itqan_ab", JSON.stringify(o)); } catch (e) {} } } }; render(); }
+async function abVoice(n) { const d = state.data["abAll:" + state.lang] || []; const h = d.find(x => x.n === n); if (!h) return; if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) return toast(L("srsNoMic"), true); toast("🎤 " + L("srsSpeak")); const got = await srListen(Math.min(90000, 8000 + h.ar.split(/\s+/).length * 700)); const sc = Math.round(simRatio(got || "", h.ar) * 100); toast(`🎤 ${sc}%`, sc < 75); if (sc >= 75) { const o = abDone(); o[n] = 1; try { localStorage.setItem("itqan_ab", JSON.stringify(o)); } catch (e) {} confetti(1200); render(); } }
+
+/* ---------- 4) أسماء الله الحسنى (حفظ واختبار) ---------- */
+const ASMA = "الله الرحمن الرحيم الملك القدوس السلام المؤمن المهيمن العزيز الجبار المتكبر الخالق البارئ المصور الغفار القهار الوهاب الرزاق الفتاح العليم القابض الباسط الخافض الرافع المعز المذل السميع البصير الحكم العدل اللطيف الخبير الحليم العظيم الغفور الشكور العلي الكبير الحفيظ المقيت الحسيب الجليل الكريم الرقيب المجيب الواسع الحكيم الودود المجيد الباعث الشهيد الحق الوكيل القوي المتين الولي الحميد المحصي المبدئ المعيد المحيي المميت الحي القيوم الواجد الماجد الواحد الصمد القادر المقتدر المقدم المؤخر الأول الآخر الظاهر الباطن الوالي المتعالي البر التواب المنتقم العفو الرؤوف مالك_الملك ذو_الجلال_والإكرام المقسط الجامع الغني المغني المانع الضار النافع النور الهادي البديع الباقي الوارث الرشيد الصبور".split(" ").map(x => x.replace(/_/g, " "));
+function asmaDone() { try { return +localStorage.getItem("itqan_asma") || 0; } catch (e) { return 0; } }
+function renderAsma() {
+  const lvl = state.asLvl || 10; const best = asmaDone();
+  return pageWrap("🌿", L("asT"), L("asS"), `<div class="card"><div class="asgrid">${ASMA.map((n, i) => `<div class="asn ${i < best ? "ok" : ""}"><small>${i + 1}</small><b>${esc(n)}</b></div>`).join("")}</div><p class="xs muted" style="margin-top:.8rem">${L("asSrc")}</p></div>
+    <div class="card" style="margin-top:1rem;text-align:center"><h3>🎯 ${L("asQ")}</h3><p class="sm muted">${L("asQS")}</p><div class="row" style="gap:.3rem;justify-content:center;flex-wrap:wrap;margin:.6rem 0">${[10, 25, 50, 99].map(n => `<button class="btn ${lvl === n ? "btn-p" : "btn-o"}" onclick="state.asLvl=${n};render()">${L("asFirst").replace("{n}", n)}</button>`).join("")}</div><button class="btn btn-p btn-lg" onclick="asQuiz(${lvl})">${L("gmStart")}</button>${best ? `<p class="sm" style="margin-top:.5rem">🏅 ${L("asBest").replace("{n}", best)}</p>` : ""}</div>
+    ${state.qz && state.qz.as ? `<div style="margin-top:1rem">${quizView()}</div>` : ""}`);
+}
+function asQuiz(n) { const r = () => Math.random(); const qs = []; for (let i = 0; i < n - 1 && qs.length < 12; i++) { const k = Math.floor(r() * (n - 1)); const ans = ASMA[k + 1]; qs.push({ q: `${ASMA[k]} ← ＿＿＿`, ans, opts: [ans].concat(ASMA.slice(0, n).filter(x => x !== ans).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5), t: L("asOrder") }); }
+  state.qz = { qs, i: 0, ok: 0, pick: null, as: true, back: () => {}, again: () => asQuiz(n), onDone: sc => { if (sc >= 80 && n > asmaDone()) try { localStorage.setItem("itqan_asma", String(n)); } catch (e) {} } }; render(); }
+
+const _render37 = render;
+render = function () {
+  const fn = { prayer: renderPrayer, ayahcard: renderAyahCard, arbaeen: renderArbaeen, asma: renderAsma }[state.route];
+  if (fn) { const app = document.getElementById("app"); if (!app) return; let body; try { body = fn(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); applyRename(app); taEnhance(); visitPing(false); } catch (e) {} return; }
+  return _render37.apply(this, arguments);
+};
+const _DOMAINS37 = DOMAINS;
+DOMAINS = function () { const ds = _DOMAINS37(); const s = ds.find(d => d.k === "sciences"); if (s && s.tools && !s.tools.some(t => String(t[2]).includes("'prayer'"))) s.tools.push(["🕋", L("prT"), "go16('prayer')", ""], ["🖼️", L("acT"), "go16('ayahcard')", ""], ["📜", L("abT"), "go16('arbaeen')", ""], ["🌿", L("asT"), "go16('asma')", ""]); return ds; };
+document.head.insertAdjacentHTML("beforeend", `<style>.prrow{display:flex;justify-content:space-between;padding:.7rem .4rem;border-bottom:1px solid var(--line);font-size:1.05rem}.prrow.next{background:color-mix(in srgb,var(--accent) 10%,var(--card));border-radius:10px;font-weight:800;color:var(--accent)}
+.qib{width:200px;height:200px;border-radius:999px;margin:1rem auto;border:6px solid var(--line);position:relative;background:radial-gradient(circle,var(--card),var(--bg))}.qibn{position:absolute;inset:0;display:flex;justify-content:center;font-size:1.6rem;transition:transform .3s}.qibn i{position:absolute;top:40px;bottom:50%;width:4px;background:var(--accent);border-radius:4px}
+.abn{width:2.3rem;height:2.3rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;cursor:pointer}.abn.on{background:var(--accent);color:var(--accent-fg)}.abn.ok{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.abtx{font:1.35rem/2.3 'Amiri','Noto Naskh Arabic',serif;text-align:justify;margin-top:.6rem}.abw{background:var(--line);color:transparent;border-radius:6px;cursor:pointer;padding:0 .15em}.abw.show{background:color-mix(in srgb,var(--gold) 25%,transparent);color:inherit}
+.asgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.4rem}.asn{border:1px solid var(--line);border-radius:12px;padding:.5rem;text-align:center;background:var(--card)}.asn small{display:block;color:var(--muted);font-size:.7rem}.asn b{font:700 1.15rem 'Amiri',serif}.asn.ok{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--card))}</style>`);
+Object.assign(UI.ar, { prT: "مواقيت الصلاة والقبلة", prS: "مواقيت الصلاة في مكانك واتجاه القبلة — مفيد لطلابنا في كل الدول.", prNeed: "محتاجين نعرف مكانك التقريبي عشان نحسب المواقيت والقبلة.", prLoc: "حدد مكاني", prNoGeo: "مقدرناش نوصل لمكانك — اسمح للموقع بالوصول للموقع الجغرافي.", prN: { Fajr: "الفجر", Sunrise: "الشروق", Dhuhr: "الظهر", Asr: "العصر", Maghrib: "المغرب", Isha: "العشاء" }, prSrc: "المواقيت من AlAdhan (طريقة الهيئة المصرية العامة للمساحة افتراضيًا).", prQ: "اتجاه القبلة", prQd: "القبلة {d}° من الشمال", prComp: "شغّل البوصلة", prCompOn: "لف الموبايل لحد ما الكعبة تبقى لفوق", prRe: "تحديث المكان",
+  acT: "بطاقة آية للمشاركة", acS: "اعمل صورة جميلة لآية وشاركها على إنستجرام أو واتساب — بالحجم المناسب للبوست.", acNew: "آية تانية", acDl: "تحميل الصورة", acSh: "مشاركة", acPick: "اختار آية", acNote: "اكتب رقم السورة:الآية (مثلًا 2:255). النص من Quran.com.",
+  abT: "احفظ الأربعين النووية", abS: "اقرا الحديث، وبعدين خبّي ٢٥٪ أو ٥٠٪ أو أكتر من الكلمات وسمّع من حفظك، واختبر نفسك.", abH: "الحديث", abHide: "ادوس على أي كلمة مخفية عشان تظهر.", abQ: "اختبرني", abV: "سمّع بصوتك", abOk: "اتحفظ", abSrc: "النص من الأربعين النووية للإمام النووي (نسخة hadith-api المفتوحة).",
+  asT: "أسماء الله الحسنى", asS: "احفظ الأسماء الحسنى بالترتيب واختبر نفسك على مراحل.", asSrc: "الترتيب على السرد المشهور في رواية الترمذي (حديث رقم 3507)، وفي ثبوت السرد كلام عند أهل الحديث.", asQ: "اختبر حفظك", asQS: "هيظهرلك اسم، واختار الاسم اللي بعده في الترتيب.", asFirst: "أول {n}", asBest: "حفظت أول {n} اسم", asOrder: "إيه الاسم اللي بعده؟" });
+Object.assign(UI.en, { prT: "Prayer times & Qibla", prS: "Prayer times where you are and the Qibla direction — for our students in every country.", prNeed: "We need your approximate location to calculate times and the Qibla.", prLoc: "Use my location", prNoGeo: "Couldn't get your location — allow location access.", prN: { Fajr: "Fajr", Sunrise: "Sunrise", Dhuhr: "Dhuhr", Asr: "Asr", Maghrib: "Maghrib", Isha: "Isha" }, prSrc: "Times from AlAdhan (Egyptian General Authority of Survey method by default).", prQ: "Qibla direction", prQd: "Qibla is {d}° from north", prComp: "Use compass", prCompOn: "Turn your phone until the Kaaba points up", prRe: "Update location",
+  acT: "Ayah card to share", acS: "Make a beautiful image of an ayah and share it on Instagram or WhatsApp — post-sized.", acNew: "Another ayah", acDl: "Download image", acSh: "Share", acPick: "Pick ayah", acNote: "Type surah:ayah (e.g. 2:255). Text from Quran.com.",
+  abT: "Memorize the 40 Nawawi hadith", abS: "Read the hadith, then hide 25%, 50% or more of the words and recite from memory, then test yourself.", abH: "Hadith", abHide: "Tap a hidden word to reveal it.", abQ: "Test me", abV: "Recite aloud", abOk: "memorized", abSrc: "Text of al-Nawawi's Forty Hadith (open hadith-api edition).",
+  asT: "The Beautiful Names of Allah", asS: "Memorize the 99 Names in order and test yourself in stages.", asSrc: "Order follows the well-known listing in al-Tirmidhi (no. 3507); scholars of hadith discuss the authenticity of the listing itself.", asQ: "Test your memory", asQS: "You'll see a name — pick the one that comes next.", asFirst: "First {n}", asBest: "You've memorized the first {n}", asOrder: "Which name comes next?" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
