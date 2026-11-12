@@ -15484,7 +15484,7 @@ async function glossLoad(lang) { if (lang === "en" || GDEF[lang]) return; try { 
 
 /* 2) مترجم الصفحة: أي نص عربي ظاهر (غير القرآن وغير كلمات درس العربي) يتحوّل لغة الطالب، ويتخزّن */
 const DT = { mem: {}, lang: null, pend: new Map(), timer: 0, busy: false };
-const DT_SKIP = "script,style,textarea,code,pre,.tjtext,.tj2,.lvay,.lvsura,.srar,.tfay,.ayq,.qtext,.ayah,.mushaf,.lfbig,.lgar,.lftr,.lfkbd,.lgtl,.notr,[data-notr],[contenteditable],.hlpbox .notr,#toast .notr";
+const DT_SKIP = ".logo,.brand-mark,script,style,textarea,code,pre,.tjtext,.tj2,.lvay,.lvsura,.srar,.tfay,.ayq,.qtext,.ayah,.mushaf,.lfbig,.lgar,.lftr,.lfkbd,.lgtl,.notr,[data-notr],[contenteditable],.hlpbox .notr,#toast .notr";
 function dtQuran(s) { return /[ٱۖ-ۭ]|﴿|﴾/.test(s) || ((s.match(/[ً-ْ]/g) || []).length > 0.45 * Math.max(1, (s.match(/[ء-ي]/g) || []).length) && (s.match(/[ء-ي]/g) || []).length > 3); }
 function dtLoad(lang) { if (DT.lang === lang) return; DT.lang = lang; DT.mem = {}; DT_SEEN.clear(); try { DT.mem = JSON.parse(localStorage.getItem("dt:" + lang) || "{}"); } catch (e) { DT.mem = {}; } glossLoad(lang).then(() => dtRun()); }
 let dtSaveT = 0; function dtSave() { clearTimeout(dtSaveT); dtSaveT = setTimeout(() => { try { let s = JSON.stringify(DT.mem); if (s.length > 2.5e6) { const k = Object.keys(DT.mem); k.slice(0, k.length / 2).forEach(x => delete DT.mem[x]); s = JSON.stringify(DT.mem); } localStorage.setItem("dt:" + DT.lang, s); } catch (e) {} }, 800); }
