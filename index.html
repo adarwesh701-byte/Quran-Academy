@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v43";
+const UI_VERSION = "2026-11-12-v44";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14705,7 +14705,8 @@ setInterval(() => { if (document.visibilityState === "visible") visitPing(true);
 function ownerStatsTab() {
   const d = useData("siteStats:" + (state.ssDays || 30), async () => { const { data, error } = await sb.rpc("owner_site_stats", { p_days: state.ssDays || 30 }); if (error) throw error; return data || {}; });
   if (!d || d.__error) return d && d.__error ? `<div class="err">${esc(d.__error)}</div>` : loadingBox();
-  ["visits", "visitors", "avg_sec", "mobile_pct"].forEach(k => d[k] = +d[k] || 0);
+  if (typeof d !== "object" || Array.isArray(d) || Object.isFrozen(d)) return `<p class="sm muted">—</p>`;
+  ["visits", "visitors", "avg_sec", "mobile_pct"].forEach(k => d[k] = Math.round(+d[k] || 0));
   const bar = (arr, k, lab) => { const mx = Math.max(1, ...arr.map(x => x.n)); return `<div class="ssbars">${arr.map(x => `<div class="ssb"><span class="xs">${esc(String(lab(x)))}</span><i style="height:${Math.round(x.n / mx * 100)}%"></i><b class="xs">${x.n}</b></div>`).join("")}</div>`; };
   const hours = Array.from({ length: 24 }, (_, h) => ({ h, n: ((d.by_hour || []).find(x => x.h === h) || {}).n || 0 })); const peak = hours.slice().sort((a, b) => b.n - a.n).slice(0, 3).filter(x => x.n);
   const list = (arr, k) => (arr || []).map(x => `<div class="kv"><span>${esc(String(x[k]))}</span><b>${x.n}</b></div>`).join("") || `<p class="sm muted">—</p>`;
@@ -15200,9 +15201,12 @@ Object.assign(UI.en, { vlZip: "Upload voices file (itqan-voices.zip)", vlArt: "U
   window.tjFix = function (raw) {
     let s = String(raw || "");
     // Quran.com يكتب الألف الخنجرية أحيانًا بـ «ٲ» (ألف بهمزة) — الصحيح ألف صغيرة «ٰ»
-    s = s.replace(/ٲ/g, "ٰ").replace(/ٳ/g, "ٰ");
+    s = s.replace(/ٲ/g, "ٰ").replace(/ٳ/g, "ٰ").replace(/ـ(?=(?:<[^>]*>)*[ً-ٰۖ-ۭ])/g, "");
     // أحكام النون والميم: لوّن حرف النون/التنوين/الميم فقط، مش الكلمة اللي بعده
     s = s.replace(/<tajweed class=([a-z_]+)>([^<]*)<\/tajweed>/g, (m, c, t) => { if (!ONE.includes(c) || !t) return m; const [a, b] = firstCluster(t); return `<tajweed class=${c}>${a}</tajweed>${b}`; });
+    // لو اللون بيبدأ بعلامة (ألف صغيرة/مدّة/حركة/تطويل) من غير حرف: ضمّ الحرف اللي قبلها جوّه اللون
+    // عشان المتصفح ما يرسمش الألف الصغيرة منفصلة تحت السطر (كانت بتبان زي ألف عليها همزة)
+    s = s.replace(/([ء-غف-يٱ-ۓ][ً-ٰٟۖ-ۭ]*)<tajweed class=([a-z_]+)>([ـً-ٰٟۖ-ۭ])/g, (m, base, c, mk) => `<tajweed class=${c}>${base}${mk}`);
     return s;
   };
   const _tjSafe43 = tjSafe; tjSafe = function (h) { return _tjSafe43(tjFix(h)); };
@@ -15211,6 +15215,73 @@ Object.assign(UI.en, { vlZip: "Upload voices file (itqan-voices.zip)", vlArt: "U
   Object.entries(COL).forEach(([k, c]) => { if (TJ[k]) { TJ[k][0] = c; TJ[k][3] = ""; } });
   document.head.insertAdjacentHTML("beforeend", `<style>${Object.entries(COL).map(([k, c]) => `.tjtext .tj-${k},.tj-${k}{color:${c}!important;background:none!important;padding:0!important;border-radius:0!important}`).join("")}[class^="tj-"],[class*=" tj-"]{background:none!important;padding:0!important}.tjtext .wq{background:none!important;padding:0!important}</style>`);
 })();
+
+/* ================= v44: كل محتوى في صفحته — كروت جنب بعض تختار منها + نعومة + هيدر الموبايل ================= */
+state.hv = state.hv || {};
+function hvSet(sec, v) { state.hv[sec] = v; state.hvAnim = true; if (v !== "theory") state.tc.ch = null; render(); try { const a = document.querySelector(".hvwrap"); if (a) window.scrollTo({ top: Math.max(0, a.getBoundingClientRect().top + window.scrollY - 90), behavior: "smooth" }); } catch (e) { } }
+function hvCards(sec, items) {
+  return `<div class="hvgrid">${items.map(([k, ic, t, d, c]) => `<button class="hvcard" style="--c:${c}" onclick="hvSet('${sec}','${k}')"><span class="hvic">${ic}</span><b>${esc(t)}</b><small>${esc(d)}</small><span class="hvgo">${state.lang === "ar" ? "ادخل ←" : "Open →"}</span></button>`).join("")}</div>`;
+}
+function hvTabs(sec, items, cur) {
+  return `<div class="hvtabs"><button class="hvtab" onclick="hvSet('${sec}','')">▦ ${state.lang === "ar" ? "كل المحتوى" : "All content"}</button>${items.map(([k, ic, t]) => `<button class="hvtab${k === cur ? " on" : ""}" onclick="hvSet('${sec}','${k}')">${ic} ${esc(t)}</button>`).join("")}</div>`;
+}
+function hvSlim(h) { return h.replace(/<div class="dmbar"[\s\S]*?<\/div><\/div>/, "").replace('<div class="libhead"', '<div class="libhead hvslim"'); }
+function hvWrap(inner) { const a = state.hvAnim; state.hvAnim = false; return `<div class="hvwrap${a ? " hvin" : ""}">${inner}</div>`; }
+const _renderLibraryDb44 = renderLibraryDb;
+renderLibraryDb = function () {
+  const secs = sectionsData(); const cur = Array.isArray(secs) && state.libSec ? secs.find(s => s.id === state.libSec) : null;
+  if (!cur || !state.auth.user) return _renderLibraryDb44();
+  const ar = state.lang === "ar";
+  /* —— التجويد: المصحف الملوّن | المحتوى النظري —— */
+  if (isTajRoot(cur)) {
+    const tc = secs.find(s => (s.meta || {}).kind === "tajcolor" && s.parent_id === cur.id);
+    const items = [["mushaf", "🌈", ar ? "المصحف الملوّن" : "Colour-coded mushaf", ar ? "كل حكم بلون، استمع واعلّم أخطاءك" : "Every rule in colour — listen & mark mistakes", "#0d9488"],
+      ["theory", "📘", ar ? "المحتوى النظري" : "Theory lessons", ar ? "رحلة التجويد: دروس وكروت واختبارات بالترتيب" : "The tajweed journey: lessons, cards & tests", "#7c3aed"]];
+    let v = state.hv[cur.id] || ""; if (state.tc.ch) v = "theory";
+    let h = _renderLibraryDb44(); if (tc && !state.tc.ch) { const mus = tajPage(tc.id); const q = h.indexOf(mus); if (q >= 0) h = h.slice(0, q) + h.slice(q + mus.length); }
+    const block = state.tc.ch ? tcChapter() : tcMap();
+    const k = h.indexOf(block); const pre = k >= 0 ? h.slice(0, k) : h; const post = (k >= 0 ? h.slice(k + block.length) : "").replace('<div class="libgrid', '<div class="hvhide libgrid');
+    const body = v === "mushaf" ? (tc ? tajPage(tc.id) : "") : v === "theory" ? block : "";
+    return hvSlim(pre + (v ? hvTabs(cur.id, items, v) + hvWrap(body) : hvWrap(hvCards(cur.id, items))) + post);
+  }
+  /* —— التحفيظ: الأدوات كروت + المصحف الملوّن كارت لوحده —— */
+  if (isHifzHub(cur)) {
+    const v = state.hv[cur.id] || ""; let h = _renderLibraryDb44();
+    const k = h.lastIndexOf('<div style="margin-top:1rem">'); const base = k > 0 ? h.slice(0, k) : h;
+    if (v === "mushaf") { const g = base.indexOf('<div class="dmgrid"'); const pre = g > 0 ? base.slice(0, g) : base; return hvSlim(pre) + hvTabs(cur.id, [["mushaf", "🌈", ar ? "المصحف الملوّن" : "Colour mushaf"]], "mushaf") + hvWrap(tajPage(cur.id)); }
+    const card = `<div class="dmcard" style="--c:#0d9488;cursor:pointer" onclick="hvSet('${cur.id}','mushaf')"><div class="dmhead"><span class="dmic">🌈</span><div><h3>${ar ? "المصحف الملوّن" : "Colour-coded mushaf"}</h3><p class="sm">${ar ? "اقرأ وسمّع وعلّم أخطاءك بالأحمر." : "Read, recite and mark your mistakes in red."}</p></div></div></div>`;
+    return hvSlim(base).replace('<div class="dmgrid" style="margin-top:1rem">', `<div class="dmgrid" style="margin-top:1rem">${card}`);
+  }
+  return _renderLibraryDb44();
+};
+/* لما الطالب يدخل التجويد من أي زرار «المصحف» يفتح على صفحة المصحف مباشرة */
+
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.hvhide{display:none!important}.libhead.hvslim{min-height:0!important;padding:.9rem 1.1rem!important;border-radius:18px}.libhead.hvslim>div:first-child{font-size:1.5rem!important}.libhead.hvslim h2{font-size:1.25rem!important}.hvgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin:1rem 0}
+.hvcard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:.35rem;padding:1.1rem 1rem;border-radius:20px;background:var(--card,#fff);border:1px solid color-mix(in srgb,var(--c) 25%,transparent);box-shadow:0 6px 18px -10px color-mix(in srgb,var(--c) 60%,transparent);position:relative;overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s;min-height:150px;-webkit-tap-highlight-color:transparent}
+.hvcard::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--c)}
+.hvcard:hover{transform:translateY(-3px);box-shadow:0 14px 28px -14px color-mix(in srgb,var(--c) 70%,transparent)}
+.hvcard:active{transform:scale(.97)}
+.hvic{font-size:2.1rem;line-height:1}.hvcard b{font-size:1.05rem;color:var(--text,#111)}.hvcard small{color:var(--muted);font-size:.8rem;line-height:1.5}
+.hvgo{margin-top:auto;font-size:.8rem;font-weight:700;color:var(--c)}
+.hvtabs{display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:none;margin:1rem 0 .4rem;padding-bottom:.2rem;position:sticky;top:60px;z-index:5;background:var(--bg);padding-top:.3rem}
+.hvtabs::-webkit-scrollbar{display:none}
+.hvtab{flex:0 0 auto;border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:999px;padding:.45rem .9rem;font:inherit;font-size:.85rem;cursor:pointer;transition:background .2s,color .2s,transform .15s;color:var(--text,#111)}
+.hvtab.on{background:var(--accent,#1f6f4a);color:#fff;border-color:transparent}.hvtab:active{transform:scale(.95)}
+.hvin{animation:hvIn .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes hvIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* نعومة عامة */
+html{scroll-behavior:smooth}
+button,.btn,.dmcard,.libcard,.card[onclick],a{-webkit-tap-highlight-color:transparent}
+.btn,.ibtn,.dmcard,.libcard,.badge[onclick]{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background .2s,color .2s}
+.btn:active,.ibtn:active,.dmcard:active,.libcard:active{transform:scale(.96)}
+.dmcard:hover,.libcard:hover{transform:translateY(-2px)}
+i.fa-solid,i.fa-regular,i.fa-brands{transition:transform .2s}.btn:hover i,.ibtn:hover i{transform:scale(1.12)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* هيدر الموبايل: زرار القائمة ما يطلعش برّه الشاشة */
+@media (max-width:440px){header .balchip{display:none!important}header .thpill{padding:0 .5rem!important;font-size:0!important;min-width:34px}header .thpill::before{content:"🌓";font-size:1rem}header .tools{flex-shrink:0}header .brand,header .logo{min-width:0;overflow:hidden}}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
