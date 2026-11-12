@@ -1082,7 +1082,7 @@ function renderHome() {
             <div style="font-size:2.2rem;margin-bottom:.8rem">${TRACK_EMOJI[k]}</div>
             <h3 style="margin-bottom:.5rem">${tr.tracks[k].title}</h3>
             <p class="muted sm" style="margin-bottom:1rem">${tr.tracks[k].desc}</p>
-            <div class="more">${tr.common.learnMore} ←</div>
+            <div class="more">${tr.common.learnMore} ${document.dir === "rtl" ? "←" : "→"}</div>
           </div>
         `).join('')}
       </div>
@@ -1159,7 +1159,7 @@ function renderTracksList() {
             <div style="font-size:2.2rem;margin-bottom:.8rem">${TRACK_EMOJI[k]}</div>
             <h3 style="margin-bottom:.5rem">${tr.tracks[k].title}</h3>
             <p class="muted sm" style="margin-bottom:1rem">${tr.tracks[k].desc}</p>
-            <div class="more">${tr.common.learnMore} ←</div>
+            <div class="more">${tr.common.learnMore} ${document.dir === "rtl" ? "←" : "→"}</div>
           </div>
         `).join('')}
       </div>
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v44";
+const UI_VERSION = "2026-11-12-v45";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14973,18 +14973,19 @@ shaykhBlock = function () { return ""; }; shyForm = function () { return ""; };
 /* ---------- 2) الصفحة ما تطلعش لفوق ولا «ترفرش» لما تختار حاجة ---------- */
 let __lastKey = "", __wantTop = false;
 const _scrollTo40 = window.scrollTo.bind(window);
-window.scrollTo = function (a, b) { const y = typeof a === "object" ? a.top : b; if (y === 0) __wantTop = true; return _scrollTo40(a, b); };
+window.scrollTo = function (a, b) { const y = typeof a === "object" ? a.top : b; if (y === 0) __wantTop = true; return _scrollTo40.apply(window, arguments); };
 const _render40 = render;
 render = function () {
   const key = [state.route, state.libSec || "", typeof state.pageArg === "string" ? state.pageArg : "", state.dash && state.og || ""].join("|");
   const same = key === __lastKey; const y = window.scrollY; __wantTop = false;
   const app = document.getElementById("app"); if (app) app.classList.toggle("noanim", same);
   const r = _render40.apply(this, arguments);
-  if (same && !__wantTop && Math.abs(window.scrollY - y) > 2) _scrollTo40(0, y);
+  if (same && !__wantTop && Math.abs(window.scrollY - y) > 2) _scrollTo40({ top: y, behavior: "instant" });
+  if (!same && __lastKey) _scrollTo40({ top: 0, behavior: "instant" });
   __lastKey = key; try { resumeSave(); } catch (e) {} return r;
 };
 // التبويبات والاختيارات جوه نفس الصفحة: من غير طلوع لفوق
-document.addEventListener("click", e => { const t = e.target.closest && e.target.closest(".tabs a,.motabs button,.ptabs button,.trchips button,.chip,.tcnode,.launit,.opt"); if (t) { const y = window.scrollY; requestAnimationFrame(() => { if (!__wantTop && Math.abs(window.scrollY - y) > 2 && state.route === __lastKey.split("|")[0]) _scrollTo40(0, y); }); } }, true);
+document.addEventListener("click", e => { const t = e.target.closest && e.target.closest(".tabs a,.motabs button,.ptabs button,.trchips button,.chip,.tcnode,.launit,.opt"); if (t) { const y = window.scrollY; requestAnimationFrame(() => { if (!__wantTop && Math.abs(window.scrollY - y) > 2 && state.route === __lastKey.split("|")[0]) _scrollTo40({ top: y, behavior: "instant" }); }); } }, true);
 document.head.insertAdjacentHTML("beforeend", `<style>#app.noanim>*{animation:none!important}</style>`);
 
 /* ---------- 3) الأزرار تودّي للمكان الصح ---------- */
@@ -15283,6 +15284,7 @@ i.fa-solid,i.fa-regular,i.fa-brands{transition:transform .2s}.btn:hover i,.ibtn:
 @media (max-width:440px){header .balchip{display:none!important}header .thpill{padding:0 .5rem!important;font-size:0!important;min-width:34px}header .thpill::before{content:"🌓";font-size:1rem}header .tools{flex-shrink:0}header .brand,header .logo{min-width:0;overflow:hidden}}
 </style>`);
 
+document.head.insertAdjacentHTML("beforeend", `<style>[dir=ltr] .btn .fa-arrow-left{transform:scaleX(-1)}</style>`);
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
