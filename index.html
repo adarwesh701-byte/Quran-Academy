@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v28";
+const UI_VERSION = "2026-11-12-v29";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -13712,6 +13712,139 @@ Object.assign(UI.en, { mo1: "About", mo2: "Aahs", mo3: "Practise with your voice
   isT: ["Quran tafsir", "Hadith", "Fiqh", "Seerah", "Stories of the Prophets", "Quran sciences", "Hadith sciences", "Manners & virtues"],
   ptabs: { content: "📚 Content subscription", lang: "🗣️ Speak Arabic", lessons: "👨‍🏫 Lessons with a teacher", groups: "👥 Group classes" } });
 try { if (UI.ar.grScopes) { UI.ar.grScopes.lang_pa = "فلسطيني"; } if (UI.en.grScopes) UI.en.grScopes.lang_pa = "Palestinian"; } catch (e) {}
+
+/* ================= v29: المرحلة 2 — الحجز والجداول ================= */
+/* ---------- 1) الحجز: أكتر من مسار، تجريبية مرة واحدة خلال أسبوعين بـ $2 ---------- */
+function myTrial() { if (!state.auth.user) return []; return useData("myTrial", () => q(sb.from("bookings").select("id,status,trial_timestamp,track").eq("student_id", state.auth.user.id).limit(5))); }
+const _renderBooking29 = renderBooking;
+renderBooking = function () {
+  const bk = state.booking; if (!Array.isArray(bk.tracks)) bk.tracks = bk.track ? [bk.track] : [];
+  const mt = myTrial(); const used = realRole() !== "owner" && Array.isArray(mt) && mt.some(b => !["cancelled", "rejected"].includes(b.status || ""));
+  if (used) return `<section class="sec"><div class="wrap" style="max-width:40rem"><div class="card" style="text-align:center"><div style="font-size:2.4rem">🎟️</div><h2>${L("tbUsedT")}</h2><p class="muted" style="margin:.5rem 0 1rem">${L("tbUsedS")}</p><div class="row" style="gap:.5rem;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="state.ptab='lessons';navigate('pricing')">${L("tbPlans")}</button><button class="btn btn-o" onclick="navigate('dashboard')">${L("tbMine")}</button></div></div></div></section>`;
+  let h = _renderBooking29();
+  const chips = `<div class="trchips">${TRACKS.map(tk => `<button type="button" class="${bk.tracks.includes(tk) ? "on" : ""}" onclick="tbToggle('${tk}')">${bk.tracks.includes(tk) ? "✓ " : ""}${esc(trackTitle(tk))}</button>`).join("")}</div><p class="xs muted" style="margin-top:.3rem">${L("tbMulti")}</p>`;
+  h = h.replace(/<select class="in" onchange="state\.booking\.track=this\.value">[\s\S]*?<\/select>/, chips);
+  const max = new Date(Date.now() + 14 * 864e5); const maxS = `${max.getFullYear()}-${String(max.getMonth() + 1).padStart(2, "0")}-${String(max.getDate()).padStart(2, "0")}`;
+  h = h.replace(/(<input class="in" style="flex:1" type="date" min="[^"]*")/, `$1 max="${maxS}"`);
+  const fee = (CONFIG.trial && CONFIG.trial.fee) || 2;
+  h = h.replace(/(<h1 style="font-size:2rem;margin-bottom:\.5rem">[\s\S]*?<\/h1>)/, `$1<div class="tbnote">🎟️ ${L("tbNote").replace("{fee}", "$" + fee)}</div>`);
+  return h;
+};
+function tbToggle(tk) { const bk = state.booking; bk.tracks = bk.tracks || []; bk.tracks = bk.tracks.includes(tk) ? bk.tracks.filter(x => x !== tk) : bk.tracks.concat(tk); bk.track = bk.tracks[0] || ""; invalidate(...Object.keys(state.data).filter(k => k.startsWith("rec:"))); render(); }
+const _bookingPayload29 = bookingPayload;
+bookingPayload = function () { const p = _bookingPayload29(); const t = state.booking.tracks || []; if (t.length) { p.track = t[0]; if (t.length > 1) p.notes = (p.notes ? p.notes + "\n" : "") + L("tbTracksNote") + ": " + t.map(trackTitle).join("، "); } return p; };
+const _submitBooking29 = submitBooking;
+submitBooking = function () {
+  const bk = state.booking; if (!(bk.tracks || []).length) return toast(L("tbPick"), true);
+  if (bk.trialDate) { const t = new Date(bk.trialDate).getTime(); if (t > Date.now() + 14 * 864e5 + 864e5 || t < Date.now()) return toast(L("tbWindow"), true); }
+  return _submitBooking29.apply(this, arguments);
+};
+const _insertBooking29 = insertBooking;
+insertBooking = async function (p) { try { const r = await _insertBooking29(p); invalidate("myTrial"); return r; } catch (e) { const m = String(e && e.message || e); if (m.includes("trial_used")) { toast(L("tbUsedT"), true); invalidate("myTrial"); render(); } else if (m.includes("trial_window")) toast(L("tbWindow"), true); throw e; } };
+
+/* ---------- 2) جدول المعلم: النهارده + شهر حقيقي + PDF ---------- */
+const pad2 = n => String(n).padStart(2, "0");
+function dayStart(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+function tToday() {
+  const uid = state.auth.user.id; const s = dayStart(new Date()), e = new Date(s.getTime() + 864e5);
+  const ls = useData("tToday:" + s.toDateString(), () => q(sb.from("lessons").select("id,start_time,end_time,student_id,status,meeting_url,is_trial,track,attendance").eq("teacher_id", uid).gte("start_time", s.toISOString()).lt("start_time", e.toISOString()).order("start_time")));
+  const P = peopleMap(); const now = Date.now();
+  return `<div class="card tdy"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>☀️ ${L("ttT")} — ${esc(s.toLocaleDateString(state.lang, { weekday: "long", day: "numeric", month: "long" }))}</h3><span class="badge">${Array.isArray(ls) ? ls.filter(l => l.status !== "cancelled").length : "…"} ${L("ttN")}</span></div>
+  ${!Array.isArray(ls) ? loadingBox() : !ls.length ? `<p class="sm muted" style="margin-top:.5rem">${L("ttNone")}</p>` : `<div class="tdline">${ls.map(l => { const st = new Date(l.start_time).getTime(), en = new Date(l.end_time).getTime(); const live = now >= st - 6e5 && now <= en; const past = now > en;
+    return `<div class="tdl ${l.status === "cancelled" ? "cx" : live ? "live" : past ? "past" : ""}"><b>${new Date(l.start_time).toLocaleTimeString(state.lang, { hour: "2-digit", minute: "2-digit" })}</b><span>${esc(personName(l.student_id, P.map))}${l.is_trial ? ` <span class="badge badge-g">${L("ttTrial")}</span>` : ""}<br><span class="xs muted">${esc(l.track ? trackTitle(l.track) : "")} · ${Math.round((en - st) / 6e4)} ${L("minShort") || "min"}</span></span>${l.status === "cancelled" ? `<span class="xs muted">${L("ttCx")}</span>` : live ? `<button class="btn btn-p" onclick="navigate('dashboard');state.dash.tab='calendar';render()">🎥 ${L("ttJoin")}</button>` : ""}</div>`; }).join("")}</div>`}</div>`;
+}
+state.tm = state.tm || { y: new Date().getFullYear(), m: new Date().getMonth(), day: null };
+function tmRange() { const t = state.tm; const s = new Date(t.y, t.m, 1), e = new Date(t.y, t.m + 1, 1); return [s, e]; }
+async function tmSafe(qq) { try { const r = await qq; return (r && r.data) || []; } catch (e) { return []; } }
+function tmData() {
+  const uid = state.auth.user.id; const [s, e] = tmRange(); const k = `${uid}:${s.toISOString()}`;
+  return {
+    ex: useData("tmEx:" + k, () => tmSafe(sb.from("teacher_exceptions").select("id,starts,ends,kind").eq("teacher_id", uid).lt("starts", e.toISOString()).gte("ends", s.toISOString()))),
+    busy: useData("tmBusy:" + k, () => tmSafe(sb.from("teacher_busy").select("starts,ends").eq("teacher_id", uid).lt("starts", e.toISOString()).gte("ends", s.toISOString()))),
+    ls: useData("tmLs:" + k, () => tmSafe(sb.from("lessons").select("id,start_time,end_time,student_id,status,is_trial").eq("teacher_id", uid).neq("status", "cancelled").gte("start_time", s.toISOString()).lt("start_time", e.toISOString()).order("start_time")))
+  };
+}
+function tmInvalidate() { Object.keys(state.data).forEach(k => { if (/^tm(Ex|Busy|Ls):/.test(k)) delete state.data[k]; }); }
+// حالة كل ساعة في يوم معيّن
+function tmHour(date, h, D, week) {
+  const a = new Date(date); a.setHours(h, 0, 0, 0); const b = new Date(a.getTime() + 36e5); const ov = (x, s, e) => new Date(x[s]) < b && new Date(x[e]) > a;
+  const ls = (D.ls || []).find(l => ov(l, "start_time", "end_time")); if (ls) return { k: "lesson", l: ls };
+  if ((D.busy || []).some(x => ov(x, "starts", "ends"))) return { k: "busy" };
+  const off = (D.ex || []).find(x => x.kind === "off" && ov(x, "starts", "ends")); if (off) return { k: "off", x: off };
+  const ext = (D.ex || []).find(x => x.kind === "extra" && ov(x, "starts", "ends")); if (ext) return { k: "extra", x: ext };
+  return (week[a.getDay()] || []).includes(h) ? { k: "open" } : { k: "closed" };
+}
+function teacherMonth() {
+  const t = state.tm; const week = getMyAvail() || {}; const D = tmData(); const ready = [D.ex, D.busy, D.ls].every(Array.isArray);
+  const [s] = tmRange(); const first = s.getDay(); const days = new Date(t.y, t.m + 1, 0).getDate(); const today = dayStart(new Date()).getTime();
+  const tr = I18N[state.lang]; const dn = Array.from({ length: 7 }, (_, i) => new Date(2023, 0, 1 + i).toLocaleDateString(state.lang, { weekday: "short" }));
+  let cells = ""; for (let i = 0; i < first; i++) cells += `<div class="tmc empty"></div>`;
+  for (let d = 1; d <= days; d++) { const dt = new Date(t.y, t.m, d); let open = 0, les = 0, busy = 0, off = 0;
+    if (ready) for (let h = 0; h < 24; h++) { const st = tmHour(dt, h, D, week); if (st.k === "open" || st.k === "extra") open++; else if (st.k === "lesson") les++; else if (st.k === "busy") busy++; else if (st.k === "off") off++; }
+    const past = dt.getTime() < today; const sel = t.day === d;
+    cells += `<button class="tmc ${past ? "past" : ""} ${sel ? "sel" : ""} ${dt.getTime() === today ? "today" : ""}" ${past ? "disabled" : ""} onclick="state.tm.day=${d};render()"><b>${d}</b>${open ? `<i class="g">${open}${L("tmH")}</i>` : ""}${les ? `<i class="b">📚${les}</i>` : ""}${busy ? `<i class="r">G</i>` : ""}${off ? `<i class="x">−${off}</i>` : ""}</button>`; }
+  let panel = "";
+  if (t.day && ready) { const dt = new Date(t.y, t.m, t.day);
+    panel = `<div class="tmday"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><b>${esc(dt.toLocaleDateString(state.lang, { weekday: "long", day: "numeric", month: "long" }))}</b><span class="row" style="gap:.3rem;flex-wrap:wrap"><button class="btn btn-p" onclick="tmDay('open')">✅ ${L("tmAll")}</button><button class="btn btn-o" onclick="tmDay('close')">🚫 ${L("tmNone")}</button><button class="btn btn-o" onclick="tmDay('reset')">↩️ ${L("tmReset")}</button></span></div>
+      <div class="tmhours">${Array.from({ length: 24 }, (_, h) => { const st = tmHour(dt, h, D, week); return `<button class="tmh ${st.k}" ${st.k === "lesson" || st.k === "busy" ? "disabled" : ""} onclick="tmToggle(${h})" title="${esc(L("tmK")[st.k])}">${pad2(h)}:00<small>${esc(L("tmK")[st.k])}</small></button>`; }).join("")}</div>
+      <p class="xs muted" style="margin-top:.4rem">${L("tmHint")}</p></div>`; }
+  return `<div class="card" style="margin-bottom:1rem"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>📅 ${L("tmT")}</h3><span class="row" style="gap:.3rem"><button class="btn btn-o" onclick="tmMove(-1)">◀</button><b style="align-self:center;min-width:9rem;text-align:center">${esc(s.toLocaleDateString(state.lang, { month: "long", year: "numeric" }))}</b><button class="btn btn-o" onclick="tmMove(1)">▶</button><button class="btn btn-g" onclick="tmPdf()">📄 PDF</button></span></div>
+    <p class="xs muted" style="margin:.3rem 0 .6rem">${L("tmSub")}</p>
+    <div class="tmlegend">${["open", "extra", "lesson", "busy", "off"].map(k => `<span class="tmh ${k}" style="pointer-events:none">${esc(L("tmK")[k])}</span>`).join("")}</div>
+    ${!ready ? loadingBox() : `<div class="tmgrid">${dn.map(x => `<div class="tmdn">${esc(x)}</div>`).join("")}${cells}</div>${panel}`}</div>`;
+}
+function tmMove(n) { const t = state.tm; t.m += n; if (t.m < 0) { t.m = 11; t.y--; } if (t.m > 11) { t.m = 0; t.y++; } t.day = null; render(); }
+async function tmToggle(h) {
+  const t = state.tm; const dt = new Date(t.y, t.m, t.day); const D = tmData(); const st = tmHour(dt, h, D, getMyAvail() || {});
+  const a = new Date(dt); a.setHours(h, 0, 0, 0); const b = new Date(a.getTime() + 36e5); const uid = state.auth.user.id; let r;
+  if (st.k === "open") r = await sb.from("teacher_exceptions").insert({ teacher_id: uid, starts: a.toISOString(), ends: b.toISOString(), kind: "off" });
+  else if (st.k === "closed") r = await sb.from("teacher_exceptions").insert({ teacher_id: uid, starts: a.toISOString(), ends: b.toISOString(), kind: "extra" });
+  else if ((st.k === "off" || st.k === "extra") && st.x) r = await tmCut(st.x, a, b);
+  if (r && r.error) return toast(r.error.message, true); tmInvalidate(); render();
+}
+// شيل ساعة واحدة من استثناء أطول (لو اليوم كله مقفول مثلًا)
+async function tmCut(x, a, b) {
+  const s = new Date(x.starts), e = new Date(x.ends); const del = await sb.from("teacher_exceptions").delete().eq("id", x.id); if (del.error) return del;
+  const rows = []; if (s < a) rows.push({ teacher_id: state.auth.user.id, starts: s.toISOString(), ends: a.toISOString(), kind: x.kind }); if (e > b) rows.push({ teacher_id: state.auth.user.id, starts: b.toISOString(), ends: e.toISOString(), kind: x.kind });
+  return rows.length ? sb.from("teacher_exceptions").insert(rows) : del;
+}
+async function tmDay(mode) {
+  const t = state.tm; const a = new Date(t.y, t.m, t.day); const b = new Date(a.getTime() + 864e5); const uid = state.auth.user.id;
+  const d = await sb.from("teacher_exceptions").delete().eq("teacher_id", uid).gte("starts", a.toISOString()).lte("ends", b.toISOString()); if (d.error) return toast(d.error.message, true);
+  if (mode !== "reset") { const r = await sb.from("teacher_exceptions").insert({ teacher_id: uid, starts: a.toISOString(), ends: b.toISOString(), kind: mode === "open" ? "extra" : "off" }); if (r.error) return toast(r.error.message, true); }
+  tmInvalidate(); toast(L("saved")); render();
+}
+function tmPdf() {
+  const t = state.tm; const D = tmData(); const week = getMyAvail() || {}; const days = new Date(t.y, t.m + 1, 0).getDate(); const P = peopleMap(); const me = state.auth.profile || {};
+  const rows = []; for (let d = 1; d <= days; d++) { const dt = new Date(t.y, t.m, d); const open = [], les = []; for (let h = 0; h < 24; h++) { const st = tmHour(dt, h, D, week); if (st.k === "open" || st.k === "extra") open.push(h); } (D.ls || []).filter(l => new Date(l.start_time).getDate() === d).forEach(l => les.push(`${new Date(l.start_time).toLocaleTimeString(state.lang, { hour: "2-digit", minute: "2-digit" })} — ${personName(l.student_id, P.map)}${l.is_trial ? " (" + L("ttTrial") + ")" : ""}`));
+    const rng = []; open.forEach(h => { const last = rng[rng.length - 1]; if (last && last[1] === h) last[1] = h + 1; else rng.push([h, h + 1]); });
+    rows.push(`<tr class="${dt.getDay() === 5 ? "fr" : ""}"><td><b>${d}</b> ${esc(dt.toLocaleDateString(state.lang, { weekday: "short" }))}</td><td>${rng.map(([a, b]) => `${pad2(a)}:00–${pad2(b % 24)}:00`).join("، ") || "—"}</td><td>${les.map(esc).join("<br>") || "—"}</td></tr>`); }
+  const w = window.open("", "_blank"); if (!w) return toast(L("tmPopup"), true);
+  const title = `${L("tmT")} — ${new Date(t.y, t.m, 1).toLocaleDateString(state.lang, { month: "long", year: "numeric" })}`;
+  w.document.write(`<!doctype html><html lang="${state.lang}" dir="${I18N[state.lang].dir}"><head><meta charset="utf-8"><title>${esc(title)}</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@700&display=swap" rel="stylesheet"><style>body{font-family:"IBM Plex Sans Arabic",sans-serif;color:#111;margin:28px}h1{font-family:Amiri,serif;font-size:26px;margin:0}header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #2f6f4f;padding-bottom:10px;margin-bottom:14px}.mut{color:#666;font-size:12px}table{width:100%;border-collapse:collapse;font-size:12.5px}th{background:#2f6f4f;color:#fff;padding:7px;text-align:start}td{border-bottom:1px solid #e5e0d6;padding:6px 7px;vertical-align:top}tr:nth-child(even) td{background:#faf7f2}tr.fr td{background:#f1ede4}@media print{body{margin:10mm}button{display:none}}</style></head><body><header><div><h1>${esc(title)}</h1><div class="mut">${esc(me.real_name || me.display_name || "")} · ${esc(BROWSER_TZ)}</div></div><div class="mut">أكاديمية إتقان · Itqan Academy</div></header><table><thead><tr><th style="width:16%">${L("tmPd")[0]}</th><th>${L("tmPd")[1]}</th><th style="width:38%">${L("tmPd")[2]}</th></tr></thead><tbody>${rows.join("")}</tbody></table><p class="mut" style="margin-top:12px">${L("tmPd")[3]}</p><button onclick="print()" style="margin-top:10px;padding:8px 16px">🖨️ PDF</button><scr`+`ipt>setTimeout(()=>print(),700)<\/scr`+`ipt></body></html>`);
+  w.document.close();
+}
+// زرار «اختيار كل اليوم» أوضح في الجدول الأسبوعي
+const _renderScheduleEditor29 = renderScheduleEditor;
+renderScheduleEditor = function () { return _renderScheduleEditor29().replace(/<a href="#" class="xs accent" onclick="schedFillDay\((\d),true\);return false;">24h<\/a> ·\s*<a href="#" class="xs muted" onclick="schedFillDay\(\1,false\);return false;">✕<\/a>/g, (m, d) => `<button type="button" class="dayall" onclick="schedFillDay(${d},true)">✅ ${L("tmAll")}</button><button type="button" class="dayall o" onclick="schedFillDay(${d},false)">✕ ${L("tmClear")}</button>`).replace(/(<div class="card">\s*<p class="muted sm")/, `<div class="card"><h3 style="margin-bottom:.3rem">🔁 ${L("tmWeekT")}</h3><p class="muted sm"`); };
+const _renderTeacherDash29 = renderTeacherDash;
+renderTeacherDash = function () { const h = _renderTeacherDash29(); if (state.dash.tab !== "schedule" || !state.auth.user) return h; return h.replace(/(<div class="card" style="margin-bottom:1rem;border:2px solid var\(--accent\)">[\s\S]*?<\/div>)/, `$1${tToday()}${teacherMonth()}`); };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.trchips{display:flex;flex-wrap:wrap;gap:.35rem}.trchips button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.4rem .8rem;font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}.trchips button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.tbnote{border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);background:color-mix(in srgb,var(--gold) 8%,var(--card));border-radius:var(--rs);padding:.6rem .9rem;margin-bottom:1.2rem;font-size:.9rem;font-weight:600}
+.tdy{margin-bottom:1rem;border-inline-start:4px solid var(--accent)}.tdline{display:flex;flex-direction:column;gap:.35rem;margin-top:.6rem}.tdl{display:grid;grid-template-columns:4.5rem 1fr auto;gap:.6rem;align-items:center;border:1px solid var(--line);border-radius:var(--rs);padding:.45rem .6rem}.tdl.live{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card))}.tdl.past{opacity:.6}.tdl.cx{opacity:.5;text-decoration:line-through}
+.tmgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem}.tmdn{text-align:center;font-size:.75rem;color:var(--muted);font-weight:700}.tmc{min-height:64px;border:1px solid var(--line);border-radius:var(--rs);background:var(--card);color:var(--fg);display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;padding:.3rem;cursor:pointer;font:inherit}.tmc.empty{border:0;background:none}.tmc.past{opacity:.4;cursor:default}.tmc.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}.tmc.today b{background:var(--accent);color:var(--accent-fg);border-radius:999px;padding:0 .4rem}.tmc i{font-style:normal;font-size:.68rem;border-radius:6px;padding:0 .25rem}.tmc i.g{background:color-mix(in srgb,#16a34a 15%,transparent);color:#15803d}.tmc i.b{background:color-mix(in srgb,#2563eb 15%,transparent);color:#1d4ed8}.tmc i.r{background:#fee2e2;color:#b91c1c}.tmc i.x{background:color-mix(in srgb,var(--muted) 15%,transparent);color:var(--muted)}
+.tmday{margin-top:.8rem;border-top:1px solid var(--line);padding-top:.8rem}.tmhours{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:.3rem;margin-top:.6rem}.tmh{border:1px solid var(--line);border-radius:var(--rs);padding:.35rem .2rem;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;background:var(--card);color:var(--muted);display:flex;flex-direction:column;align-items:center}.tmh small{font-size:.62rem;font-weight:600}.tmh.open{background:color-mix(in srgb,#16a34a 14%,var(--card));color:#15803d;border-color:#86efac}.tmh.extra{background:color-mix(in srgb,#16a34a 8%,var(--card));color:#15803d;border:1px dashed #16a34a}.tmh.lesson{background:color-mix(in srgb,#2563eb 14%,var(--card));color:#1d4ed8;cursor:default}.tmh.busy{background:#fee2e2;color:#b91c1c;cursor:default}.tmh.off{text-decoration:line-through;opacity:.7}.tmlegend{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}.tmlegend .tmh{flex-direction:row;padding:.15rem .5rem}
+.dayall{border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));color:var(--accent);border-radius:999px;padding:.12rem .55rem;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer;margin-inline-start:.35rem}.dayall.o{border-color:var(--line);background:var(--card);color:var(--muted)}
+</style>`);
+Object.assign(UI.ar, { tbUsedT: "إنت استخدمت حصتك التجريبية", tbUsedS: "الحصة التجريبية مرة واحدة بس لكل طالب. تقدر تكمّل بباقة حصص مع معلمك.", tbPlans: "باقات الحصص", tbMine: "حصصي", tbMulti: "تقدر تختار أكتر من مسار — المعلم هيعرف إنت عايز تبدأ بإيه.", tbTracksNote: "المسارات المطلوبة", tbPick: "اختار مسار واحد على الأقل", tbWindow: "معاد الحصة التجريبية لازم يكون خلال الأسبوعين الجايين.", tbNote: "الحصة التجريبية بـ {fee} بتتدفع مقدمًا، مرة واحدة بس لكل طالب، ومعادها خلال أسبوعين من النهارده.",
+  ttT: "حصص النهارده", ttN: "حصة", ttNone: "مفيش حصص النهارده.", ttTrial: "تجريبية", ttCx: "اتلغت", ttJoin: "ادخل الفصل",
+  tmT: "جدولي الشهري", tmSub: "دوس على أي يوم وشيل أو زوّد ساعات في اليوم ده بس — من غير ما تغيّر جدولك الأسبوعي. ومواعيد جوجل المشغولة بتتقفل أوتوماتيك.", tmH: "س", tmAll: "اختيار كل اليوم", tmNone: "اقفل اليوم كله", tmReset: "رجّعه للجدول الأسبوعي", tmClear: "مسح اليوم", tmWeekT: "جدولي الأسبوعي الثابت", tmHint: "الأخضر = متاح للحجز · ادوس على ساعة عشان تقفلها أو تفتحها.", tmPopup: "اسمح بالنوافذ المنبثقة عشان يتعمل الـ PDF",
+  tmK: { open: "متاح", extra: "متاح (إضافي)", lesson: "حصة", busy: "مشغول (جوجل)", off: "مقفول", closed: "—" }, tmPd: ["اليوم", "الساعات المتاحة", "الحصص", "اطبعه أو احفظه PDF من نافذة الطباعة."] });
+Object.assign(UI.en, { tbUsedT: "You've already used your trial lesson", tbUsedS: "The trial is once per student. Continue with a lesson package.", tbPlans: "Lesson packages", tbMine: "My lessons", tbMulti: "You can pick more than one track.", tbTracksNote: "Requested tracks", tbPick: "Pick at least one track", tbWindow: "The trial must be within the next two weeks.", tbNote: "The trial lesson costs {fee}, paid upfront, once per student, within two weeks from today.",
+  ttT: "Today's lessons", ttN: "lessons", ttNone: "No lessons today.", ttTrial: "Trial", ttCx: "Cancelled", ttJoin: "Join class",
+  tmT: "My monthly calendar", tmSub: "Click a day to remove or add hours for that day only, without changing your weekly schedule. Google busy times are blocked automatically.", tmH: "h", tmAll: "Select whole day", tmNone: "Close whole day", tmReset: "Back to weekly", tmClear: "Clear day", tmWeekT: "My fixed weekly schedule", tmHint: "Green = bookable · click an hour to close or open it.", tmPopup: "Allow pop-ups to create the PDF",
+  tmK: { open: "Open", extra: "Open (extra)", lesson: "Lesson", busy: "Busy (Google)", off: "Closed", closed: "—" }, tmPd: ["Day", "Available hours", "Lessons", "Print or save as PDF from the print dialog."] });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
