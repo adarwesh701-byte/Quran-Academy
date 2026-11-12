@@ -25,8 +25,13 @@ jobs:
           sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.CAMERA" />#' android/app/src/main/AndroidManifest.xml
           cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk ../../itqan-academy.apk
-      - uses: actions/upload-artifact@v4
-        with: { name: android, path: apps/itqan-academy.apk }
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apps-latest
+          name: Itqan Academy apps
+          make_latest: true
+          body: "Android APK, Windows, Mac and Linux apps. They open the live website, so every update appears automatically."
+          files: apps/itqan-academy.apk
   desktop:
     strategy:
       matrix:
@@ -43,24 +48,13 @@ jobs:
         run: |
           npm install
           npm run dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: desktop-${{ matrix.os }}
-          path: |
-            apps/desktop/dist/*.exe
-            apps/desktop/dist/*.zip
-            apps/desktop/dist/*.AppImage
-  release:
-    needs: [android, desktop]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with: { path: out, merge-multiple: true }
-      - run: ls -la out
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: apps-latest
           name: Itqan Academy apps
           make_latest: true
           body: "Android APK, Windows, Mac and Linux apps. They open the live website, so every update appears automatically."
-          files: out/*
+          files: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.zip
+            apps/desktop/dist/*.AppImage
