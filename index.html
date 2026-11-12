@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl" data-theme="dark">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -24,9 +24,9 @@
 <script>
 try {
   var s = localStorage.getItem('theme');
-  document.documentElement.setAttribute('data-theme', s === 'light' ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', s === 'dark' ? 'dark' : 'light');
 } catch (e) {
-  document.documentElement.setAttribute('data-theme', 'dark');
+  document.documentElement.setAttribute('data-theme', 'light');
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -379,7 +379,7 @@ ar: {
   common: { bookTrial: "احجز حصة تجريبية", learnMore: "اعرف المزيد", allTracks: "كل المسارات", free: "مجاني", premium: "مدفوع", perMonth: "/ شهريًا", back: "رجوع", all: "الكل", copy: "نسخ", copied: "تم النسخ ✓", home: "العودة للرئيسية" },
   hero: { badge: "مرحباً بكم في أكاديمية إتقان", a: "أتقن القرآن الكريم ومقامات التلاوة بصوتك", b: "مع إجازات متصلة السند", c: "وتوجيه مباشر.",
     desc: "منصة تجمع بين علوم التجويد، والتدريب الصوتي المتقدم على المقامات، والتفسير المبسط، مع معلمين ومتابعة شخصية لكل طالب.",
-    cta1: "احجز حصتك التجريبية", cta2: "تصفّح المسارات", cta3: "المحتوى المجاني",
+    cta1: "احجز حصتك التجريبية", cta2: "تصفّح المسارات", cta3: "محتوى الأكاديمية",
     points: ["حصص مباشرة فردية وجماعية", "مواعيد مرنة بتوقيت بلدك", "متابعة وتقارير للطالب وولي الأمر"] },
   sec: { tracks: "مسارات الأكاديمية", tracksSub: "اختر المسار المناسب لمستواك وهدفك — ولكل مسار حصة تجريبية.", how: "كيف تبدأ؟", why: "لماذا أكاديميتنا؟", teachers: "تعرّف على المعلمين",
     testi: "آراء الطلاب", testiSoon: "سنعرض هنا آراء طلابنا الحقيقية بعد انطلاق الدفعات الأولى.", faq: "أسئلة شائعة", ctaT: "جاهز تبدأ رحلتك؟", ctaD: "احجز حصتك التجريبية الآن، وسنرشّح لك المعلم الأنسب لمستواك ومواعيدك.",
@@ -904,7 +904,7 @@ let state = {
   track: null,
   plan: null,
   lang: "ar",
-  theme: "dark",
+  theme: (function(){try{return localStorage.getItem("theme")==="dark"?"dark":"light"}catch(e){return "light"}})(),
   booking: {
     track: "ijaza",
     name: "", email: "", phoneCode: "+20", phone: "",
@@ -3030,7 +3030,7 @@ async function delSection(id) {
   invSections(); invalidate("contentsAll"); render();
 }
 Object.assign(UI.ar, { ctSection: "القسم", ctTrackOpt: "يظهر أيضًا في صفحة المسار (اختياري)", noSections: "أضف قسمًا أولًا من \"أقسام المحتوى\" ثم ضع المحتوى داخله.",
-  secTitle: "أقسام المحتوى المجاني", secHint: "أنت من يحدد الأقسام وترتيبها. المحتوى المجاني يظهر للزوار داخل هذه الأقسام فقط، والمعلمون يضيفون داخل الأقسام التي تنشئها.",
+  secTitle: "أقسام محتوى الأكاديمية", secHint: "أنت من يحدد الأقسام وترتيبها. المحتوى المجاني يظهر للزوار داخل هذه الأقسام فقط، والمعلمون يضيفون داخل الأقسام التي تنشئها.",
   secNameAr: "اسم القسم بالعربي", secNameEn: "اسم القسم بالإنجليزي (اختياري)", secAdd: "إضافة قسم", secHidden: "مخفي", secDelConfirm: "حذف القسم؟ المحتوى داخله سيبقى لكن بدون قسم." });
 Object.assign(UI.en, { ctSection: "Section", ctTrackOpt: "Also show on a track page (optional)", noSections: "Add a section first from \"Content sections\", then put content inside it.",
   secTitle: "Free content sections", secHint: "You define the sections and their order. Free content appears to visitors inside these sections only; teachers add content inside the sections you create.",
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v20";
+const UI_VERSION = "2026-11-12-v21";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -7672,7 +7672,7 @@ Object.assign(UI.en, {
 Object.assign(UI.ar, {
   hubTitle: "مساحتي", hubHi: "أهلًا بيك", hubNext: "الحصة الجاية", hubNoNext: "مفيش حصص جاية", hubJoin: "ادخل الفصل", hubBook: "احجز حصة",
   hubLessons: "حصصي", hubMessages: "الرسائل", hubHomework: "الواجبات", hubBilling: "الاشتراكات والدفع", hubCerts: "شهاداتي وموادي",
-  hubInvite: "ادعُ أصدقاءك", hubNotifs: "الإشعارات", hubLibrary: "المحتوى المجاني", hubProfile: "ملفي", hubCalendar: "الكاليندر", hubStudents: "طلابي",
+  hubInvite: "ادعُ أصدقاءك", hubNotifs: "الإشعارات", hubLibrary: "محتوى الأكاديمية", hubProfile: "ملفي", hubCalendar: "الكاليندر", hubStudents: "طلابي",
   hubEarnings: "أرباحي", hubSchedule: "مواعيدي المتاحة", hubOverview: "نظرة عامة", hubRequests: "الطلبات", hubBookings: "الحجوزات التجريبية", hubChats: "المحادثات",
   hubReports: "الأرباح والتقارير", hubReviews: "الآراء والاسترداد", hubSettings: "الإعدادات", hubUnread: "غير مقروءة", hubPending: "مستني", hubCredits: "حصص متبقية (وحدة 25 دقيقة)",
   hubRecent: "آخر الرسائل", hubOpenAll: "افتح الكل", hubToReview: "محتاج تصحيح", hubToday: "النهارده", hubDash: "لوحة التحكم الكاملة"
@@ -12342,6 +12342,323 @@ genAiImage = async function (text) {
     const u = await sb.storage.from("academy_public").upload(pth, blob, { contentType: "image/jpeg" }); if (u.error) throw u.error; return sb.storage.from("academy_public").getPublicUrl(pth).data.publicUrl;
   } catch (e) { return uri; }
 };
+
+/* ======================= v23: ترتيب الواجهة، شريط ظاهر، نهاري افتراضي، المقامات (أساسية/فرعية/أنشد معي)، التحفيظ، الإجازات، القرّاء، صور السور الحقيقية، خطوط، المسابقات، المعلم يصحح النطق ======================= */
+Object.assign(UI.en, {
+  dbSections: "Sections", dbLibrary: "Academy content", dbInvite: "Invite friends", dbGuide: "Site guide", dbPlans: "Subscribe",
+  thLight: "Light", thDark: "Dark", open2: "View",
+  mqMainT: "Main maqamat", mqBranchT: "Branch maqamat", krHubT: "Chant with me", krPoem: "Poem", krMaqam: "Maqam", krAahs: "🗣️ Aahs at my voice", krChant: "🎤 Chant the poem", krTest: "🎙️ Test the maqam",
+  upRec: "🎙️ Upload your recording to this section", upRecT: "Title", upDone: "Uploaded ✓",
+  hzHubT: "Memorisation tools", hzTools: [["📅", "Today's plan", "Exactly what to memorise and revise today.", "state.hzTab='today';go16('hifz')"], ["📝", "New session + test", "Memorise, revise or read your wird — then a test.", "state.hzTab='session';go16('hifz')"], ["🎧", "Recite to your teacher", "Record your recitation; your teacher corrects it by voice.", "navigate('homework')"], ["🗺️", "Memorisation map", "All 604 pages coloured by strength.", "state.hzTab='map';go16('hifz')"], ["🌳", "Growth trees", "Your grades after each lesson.", "go16('growth')"], ["📖", "Family khatma", "Share a khatma with family & friends.", "go16('khatma')"], ["🧭", "Placement test", "Find your level.", "go16('placement')"]],
+  recFull: "Full surah", recAyah: "Ayah by ayah (film)", recReciter: "Reciter", recMine: "Academy recitation", recUpload: "🎙️ Upload my recitation", recMaqam: "Maqam", recAyahN: "Ayah (optional)",
+  galT: "The Quran in pictures", galSub: "Paintings for every surah expressing the meaning of its ayahs — with the ayahs written on them.", galDl: "⬇️ Download with the ayah", galWait: "This picture is being painted — check back soon.",
+  rfFont: "Font", rfSize: "Size",
+  ptToTeacher: "📤 Recorded — your teacher will correct the pronunciation", ptPendingT: "Waiting for the teacher", ptRev: "Pronunciation to review", ptGrade: "Grade /10",
+  invT: "Invite your friends", invSub: "Every friend who subscribes adds $1 to your wallet — use it for lessons, content or any package.",
+  gdT: "Site guide", gdSub: "Everything in the academy, what's inside and how to get there."
+});
+Object.assign(UI.ar, {
+  dbSections: "الأقسام", dbLibrary: "محتوى الأكاديمية", dbInvite: "ادعُ أصحابك", dbGuide: "دليل الموقع", dbPlans: "اشترك",
+  thLight: "نهاري", thDark: "ليلي", open2: "اعرض",
+  mqMainT: "المقامات الأساسية", mqBranchT: "المقامات الفرعية", krHubT: "أنشد معي", krPoem: "القصيدة", krMaqam: "المقام", krAahs: "🗣️ آهات على صوتي", krChant: "🎤 أنشد القصيدة", krTest: "🎙️ اختبر المقام",
+  upRec: "🎙️ ارفع تسجيلك في القسم ده", upRecT: "العنوان", upDone: "اترفع ✓",
+  hzHubT: "أدوات التحفيظ والتسميع", hzTools: [["📅", "خطة النهارده", "بيقولك تحفظ إيه وتراجع إيه النهارده بالظبط.", "state.hzTab='today';go16('hifz')"], ["📝", "جلسة جديدة + اختبار", "حفظ أو مراجعة أو ورد — وبعدها اختبار.", "state.hzTab='session';go16('hifz')"], ["🎧", "سمّع للمعلم", "سجّل تسميعك والمعلم يصححلك بالصوت.", "navigate('homework')"], ["🗺️", "خريطة الحفظ", "الـ 604 صفحة متلوّنة حسب قوة حفظك.", "state.hzTab='map';go16('hifz')"], ["🌳", "أشجار التقدّم", "درجاتك بعد كل حصة.", "go16('growth')"], ["📖", "ختمة العيلة", "ختمة جماعية مع أهلك وأصحابك.", "go16('khatma')"], ["🧭", "اختبار المستوى", "اعرف مستواك.", "go16('placement')"]],
+  recFull: "السورة كاملة", recAyah: "آية آية (الفيلم)", recReciter: "القارئ", recMine: "تلاوة الأكاديمية", recUpload: "🎙️ ارفع تلاوتي", recMaqam: "المقام", recAyahN: "الآية (اختياري)",
+  galT: "القرآن بالصور", galSub: "لوحات لكل سورة بتعبّر عن معاني آياتها — ومكتوب عليها الآيات.", galDl: "⬇️ نزّلها بالآية", galWait: "اللوحة دي بتترسم دلوقتي — ارجع لها بعد شوية.",
+  rfFont: "الخط", rfSize: "الحجم",
+  ptToTeacher: "📤 اتسجل — المعلم هيصحح النطق", ptPendingT: "في انتظار المعلم", ptRev: "نطق محتاج تصحيح", ptGrade: "الدرجة /10",
+  invT: "ادعُ أصحابك", invSub: "كل صاحب يشترك بيضيف دولار لمحفظتك — تستخدمه في الحصص أو المحتوى أو أي باقة.",
+  gdT: "دليل الموقع", gdSub: "كل حاجة في الأكاديمية، فيها إيه، وتوصلها إزاي."
+});
+Object.assign(UI.ar, { cmHero: "مسابقة إتقان — الحفظ والتجويد والمقامات", cmHeroSub: "تلات مسارات: 📖 حُفّاظ إتقان، 🕌 مُجوِّد إتقان، 🎼 صوت إتقان — للأطفال والناشئين والكبار. تصفيات أونلاين، لجنة تحكيم بدرجات على كل معيار، ونهائي لايف وجوايز." });
+Object.assign(UI.en, { cmHero: "The Itqan Competition — memorisation, tajweed & maqamat", cmHeroSub: "Three tracks: 📖 Itqan Huffaz, 🕌 Itqan Mujawwid, 🎼 Itqan Voice — for children, teens and adults. Online qualifiers, judges scoring each criterion, a live final and prizes." });
+
+/* ---------- 1) نهاري افتراضي + زرار ظاهر + ألوان مقروءة في الوضعين ---------- */
+try { if (!localStorage.getItem("theme")) { state.theme = "light"; document.documentElement.setAttribute("data-theme", "light"); } } catch (e) {}
+document.head.insertAdjacentHTML("beforeend", `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=El+Messiri:wght@600;700&family=Amiri+Quran&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:"IBM Plex Sans Arabic",Tajawal,system-ui,sans-serif}h1,h2,h3,.logo b{font-family:"El Messiri","IBM Plex Sans Arabic",sans-serif}
+button.opt{color:var(--fg);font:inherit;width:100%;text-align:start}button.opt:disabled{opacity:1;cursor:default}
+.tfay,.srar,.tjtext,.nsl{font-family:"Amiri Quran","Amiri",serif!important}
+.rfx .tftx,.rfx .tfay{font-family:var(--rf,"Amiri"),serif!important;font-size:var(--rs,1.05rem)!important}
+.thpill{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.35rem .75rem;font:600 .82rem "IBM Plex Sans Arabic",sans-serif;cursor:pointer}
+.dombar{border-top:1px solid var(--line);background:var(--card)}.dombar .wrap{display:flex;flex-wrap:wrap;gap:.35rem;padding-block:.5rem}
+.dombar a{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .7rem;border-radius:999px;border:1px solid var(--line);color:var(--fg);text-decoration:none;font-size:.86rem;font-weight:600;white-space:nowrap;background:var(--bg)}
+.dombar a[aria-current="page"],.dombar a:hover{border-color:var(--accent);color:var(--accent)}.dombar a.gold{border-color:#f59e0b;color:#b45309}[data-theme=dark] .dombar a.gold{color:#fbbf24}
+@media(max-width:600px){.dombar a{font-size:.8rem;padding:.3rem .6rem}}
+.mqpromo{padding:.9rem 1.1rem!important;border-radius:16px!important;gap:.9rem!important}.mqpromo h2{font-size:1.1rem!important}.mqpromo p{font-size:.88rem;margin-bottom:.45rem!important}.mqwave{height:54px!important;min-width:80px!important}
+.libtile small.ds{display:block;font-size:.76rem;opacity:.9;line-height:1.5;margin-top:.15rem;max-height:3em;overflow:hidden}
+</style>`);
+const _renderHeader23 = renderHeader;
+renderHeader = function () {
+  let h = _renderHeader23(); const dark = state.theme === "dark";
+  h = h.replace(/<button class="ibtn" onclick="setTheme\(state\.theme==='dark'\?'light':'dark'\)"[^>]*>[\s\S]*?<\/button>/, `<button class="thpill" onclick="setTheme(state.theme==='dark'?'light':'dark');render()" title="${esc(I18N[state.lang].nav.theme)}">${dark ? "🌙 " + L("thDark") : "☀️ " + L("thLight")}</button>`);
+  const cur = (r, a) => state.route === r && (a == null || state.pageArg === a) ? 'aria-current="page"' : "";
+  const ds = DOMAINS();
+  const bar = `<div class="dombar"><div class="wrap">
+    <a href="#" onclick="go16('tools');return false;" ${cur("tools")}>🧭 ${L("dbSections")}</a>
+    ${ds.map(d => `<a href="#" onclick="go16('d','${d.k}');return false;" ${cur("d", d.k)}>${d.ic} ${esc(locText(d.t))}</a>`).join("")}
+    <a href="#" onclick="navigate('library');return false;" ${cur("library")}>📚 ${L("dbLibrary")}</a>
+    <a href="#" onclick="go16('invite');return false;" class="gold" ${cur("invite")}>🎁 ${L("dbInvite")}</a>
+    <a href="#" onclick="navigate('pricing');return false;" ${cur("pricing")}>💳 ${L("dbPlans")}</a>
+    <a href="#" onclick="go16('guide');return false;" ${cur("guide")}>🗺️ ${L("dbGuide")}</a></div></div>`;
+  const i = h.indexOf("</header>"); return i >= 0 ? h.slice(0, i) + bar + h.slice(i) : bar + h;
+};
+// مفاجأة واحدة بس، وصغيرة
+const _promoMaqamat23 = promoMaqamat;
+promoMaqamat = function () { if (state._promoDone) return ""; state._promoDone = true; return _promoMaqamat23(); };
+const _render23a = render;
+render = function () { state._promoDone = false; return _render23a.apply(this, arguments); };
+renderToolsPage = (function (orig) { return function () { state._promoDone = true; return orig(); }; })(renderToolsPage);
+renderHub = (function (orig) { return function () { state._promoDone = true; return orig(); }; })(renderHub);
+
+/* ---------- 2) أي محتوى منشور يتفتح + من غير «0 عنصر» + وصف كل قسم ---------- */
+const _contentCard23 = contentCard;
+contentCard = function (c, manage) { let h = _contentCard23(c, manage); if (!/onclick="openContent\(/.test(h)) h = h.replace(/(<div class="row" style="margin-top:auto;gap:\.4rem">)/, `$1<button class="btn btn-p" onclick="openContent('${c.id}')">▶ ${L("open2")}</button>`); return h; };
+const _render23b = render;
+render = function () { const r = _render23b.apply(this, arguments); if (state.viewContent && !document.querySelector(".modal .card h3") && typeof renderContentViewer === "function") { const app = document.getElementById("app"); if (app) app.insertAdjacentHTML("beforeend", renderContentViewer()); } return r; };
+const _libTile23 = libTile;
+libTile = function (s, n, k) {
+  let h = _libTile23(s, n, k); const d = s.description && (s.description[state.lang] || s.description.ar || s.description.en);
+  h = h.replace(/<small>[^<]*<\/small>/, n || k ? `<small>${n ? `${n} ${L("libItems")}` : ""}${n && k ? " · " : ""}${k ? `${k} ${L("libSubs")}` : ""}</small>` : "");
+  return d ? h.replace(/<\/a>$/, `<small class="ds">${esc(d)}</small></a>`) : h;
+};
+// القفل بيتورّث من القسم الأب (المقام المقفول بيقفل مرتله ومجوده...)
+const _secUnlocked23 = secUnlocked;
+secUnlocked = function (s) { if (!_secUnlocked23(s)) return false; const secs = sectionsData(); let p = s && Array.isArray(secs) ? secs.find(x => x.id === s.parent_id) : null, g = 0; while (p && g++ < 6) { if (+p.price > 0 && !_secUnlocked23(p)) return false; p = secs.find(x => x.id === p.parent_id); } return true; };
+
+/* ---------- 3) الأقسام والأدوات: المقامات / الحفظ ---------- */
+function secKind(k) { const s = sectionsData(); return Array.isArray(s) ? s.find(x => (x.meta || {}).kind === k && x.is_visible !== false) : null; }
+const _DOMAINS23 = DOMAINS;
+DOMAINS = function () {
+  const ds = _DOMAINS23(); const lib = (s) => s ? `libGo('${s.id}')` : "navigate('library')";
+  const mq = ds.find(d => d.k === "maqamat"); if (mq) mq.tools = [["⭐", L("mqMainT"), lib(secKind("mq_main")), ""], ["🌿", L("mqBranchT"), lib(secKind("mq_branch")), ""], ["🎤", L("krHubT"), lib(secKind("karaoke_hub")), "karaoke"], ["🪜", L("mqTitle"), "go16('maqamat')", "ladder"], ["🎙️", L("tnTitle"), "go16('tuner')", "tuner"], ["🎧", L("gmTitle"), "go16('maqam-game')", "game"]];
+  const hz = ds.find(d => d.k === "hifz"); const hs = secKind("hifz_hub"); if (hz && hs) hz.sec = hs.id;
+  return ds;
+};
+function sectionExtra23(cur) {
+  const meta = cur.meta || {}; const own = role() === "owner";
+  if (meta.kind === "maqam") { const m = MQ.find(x => x.id === meta.maqam); if (!m) return ""; return `<div class="card" style="margin-top:1rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem"><h3>🎼 ${esc(mqName(m))}</h3><span class="badge">${L("mqFamily")}: ${esc(famName(m.fam))}</span></div><div class="kv"><span>${L("mqQarar")}</span><b>${esc(noteName(m.tonic) || "")}</b></div><div class="kv"><span>${L("mqJawab")}</span><b>${esc(noteName(m.tonic + m.sc[m.sc.length - 1]) || "")}</b></div><div class="kv"><span>${L("mqUse")}</span><span class="sm">${esc(m.use || "")}</span></div><div class="row" style="gap:.4rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-p" onclick="mqPagePlay('${m.id}',0)">▶ ${esc(L("mqPatterns")[0])}</button><button class="btn btn-o" onclick="state.mq.id='${m.id}';go16('maqamat')">🪜 ${L("mqTitle")}</button></div></div>`; }
+  if ((meta.kind === "murattal" || meta.kind === "mujawwad") && own) return `<div class="card" style="margin-top:1rem;border-style:dashed"><b>${L("upRec")}</b><div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><input class="in" id="ur_t" placeholder="${L("upRecT")}" style="flex:1;min-width:10rem"><input type="file" id="ur_f" accept="audio/*,video/*"><button class="btn btn-p" onclick="upRecording('${cur.id}','${esc(meta.maqam || "")}')">⬆️</button></div></div>`;
+  if (meta.kind === "vtest") return maqamPage("aah", meta.maqam);
+  if (meta.kind === "karaoke_hub") return karaokeHub();
+  if (meta.kind === "hifz_hub") { const t = L("hzTools"); return `<div class="dmgrid" style="margin-top:1rem">${t.map(([ic, n, d, go]) => `<div class="dmcard" style="--c:#059669;cursor:pointer" onclick="${go}"><div class="dmhead"><span class="dmic">${ic}</span><div><h3>${esc(n)}</h3><p class="sm">${esc(d)}</p></div></div></div>`).join("")}</div>`; }
+  if (meta.kind === "ijaza_info") return ijazaInfo();
+  if (meta.kind === "surah_gallery") return surahGallery();
+  return "";
+}
+const _renderLibraryDb23 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb23(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec || !state.auth.user) return h;
+  const cur = secs.find(s => s.id === state.libSec); if (!cur || !secUnlocked(cur)) return h; const ex = sectionExtra23(cur); if (!ex) return h;
+  return h.replace(`<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`, "") + ex;
+};
+async function upRecording(sid, maqam) {
+  const f = document.getElementById("ur_f").files[0]; if (!f) return; const t = document.getElementById("ur_t").value.trim() || f.name;
+  const path = `recordings/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${(f.name.split(".").pop() || "mp3").replace(/[^a-z0-9]/gi, "")}`;
+  const up = await sb.storage.from("academy_public").upload(path, f, { contentType: f.type }); if (up.error) return toast(up.error.message, true);
+  const { error } = await sb.from("contents").insert({ title: { ar: t, en: t }, type: /^video/.test(f.type) ? "video" : "audio", status: "published", visibility: "public", section_id: sid, file_path: "academy_public/" + path, maqam: maqam || null, music_free: true });
+  if (error) return toast(error.message, true); invalidate("libCt", "contentsAll"); toast(L("upDone")); render();
+}
+
+/* ---------- 4) أنشد معي ---------- */
+state.kh = state.kh || { m: "bayati", p: 0 };
+function karaokeHub() {
+  const k = state.kh; const m = MQ.find(x => x.id === k.m) || MQ[5]; const okM = mqAllowed("aah", m.id); const p = POEMS[k.p] || POEMS[0]; const pr = state.auth.profile || {};
+  if (TN.maqam !== m.id) { TN.maqam = m.id; TN.manual = false; } if (!TN.manual) TN.tonic = personalTonic(m);
+  return `<div class="card" style="margin-top:1rem"><div class="fgrid" style="align-items:end"><div><label class="l">${L("krMaqam")}</label><select class="in" onchange="state.kh.m=this.value;render()">${MQ_FAMS.map(f => `<optgroup label="${esc(famName(f))}">${MQ.filter(x => x.fam === f).map(x => `<option value="${x.id}" ${x.id === m.id ? "selected" : ""}>${mqAllowed("aah", x.id) ? "🎁 " : "🔒 "}${esc(mqName(x))}</option>`).join("")}</optgroup>`).join("")}</select></div>
+    <div><label class="l">${L("krPoem")}</label><select class="in" onchange="state.kh.p=+this.value;render()">${POEMS.map((x, i) => `<option value="${i}" ${i === k.p ? "selected" : ""}>${esc(x.t)}</option>`).join("")}</select></div></div>
+    <div class="row" style="gap:.5rem;flex-wrap:wrap;margin-top:.8rem;align-items:center"><button class="btn ${pr.voice_low ? "btn-o" : "btn-p"}" onclick="vrRecord('low')">${L("vtLow")}</button><button class="btn ${pr.voice_high ? "btn-o" : "btn-p"}" onclick="vrRecord('high')">${L("vtHigh")}</button>${myQarar() ? `<span class="badge badge-g">✓ ${L("vtYourQ")}: <span dir="ltr">${hzNote(myQarar())}</span></span>` : `<span class="xs muted">${L("vtStep1s")}</span>`}</div></div>
+  ${okM ? `<div class="card" style="margin-top:1rem"><h3>🌙 ${esc(p.t)} — ${esc(mqName(m))}</h3><div class="nsv">${p.v.map(v => { const [a, b] = v.split(" ... "); return `<div class="nsl"><span>${esc(a)}</span><span>${esc(b || "")}</span></div>`; }).join("")}</div>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.8rem"><button class="btn btn-o" onclick="state.mq.mine=!!myQarar();vtPlay('${m.id}','gen')">${L("krAahs")}</button><button class="btn btn-p" onclick="karaokePoem('${m.id}',${k.p})">${L("krChant")}</button><button class="btn btn-o" style="color:var(--danger)" onclick="aahStop()">⏹</button></div></div>
+  <div class="card" style="margin-top:1rem"><h3>${L("krTest")}</h3>${tunerWidget(true)}</div>` : lockBox((secKind("mq_branch") || {}).id)}`;
+}
+function karaokePoem(mid, pi) { const save = POEMS.slice(); const m = MQ.find(x => x.id === mid); const idx = MQ.indexOf(m) % POEMS.length; const tmp = POEMS[idx]; POEMS[idx] = POEMS[pi]; try { karaoke(mid); } finally { POEMS[idx] = tmp; } }
+
+/* ---------- 5) القراءات والإجازات والسند ---------- */
+function ijazaInfo() {
+  const R = [["نافع المدني", "قالون", "ورش"], ["ابن كثير المكي", "البزّي", "قُنبل"], ["أبو عمرو البصري", "الدوري", "السوسي"], ["ابن عامر الشامي", "هشام", "ابن ذكوان"], ["عاصم الكوفي", "شعبة", "حفص"], ["حمزة الكوفي", "خلف", "خلّاد"], ["الكسائي الكوفي", "أبو الحارث", "الدوري"], ["أبو جعفر المدني", "ابن وردان", "ابن جمّاز"], ["يعقوب الحضرمي", "رُوَيس", "رَوح"], ["خلف العاشر", "إسحاق", "إدريس"]];
+  const card = (t, b) => `<div class="card" style="margin-top:1rem"><h3 style="margin-bottom:.5rem">${t}</h3>${b}</div>`;
+  return card("📜 يعني إيه «قراءة» و«رواية» و«طريق»؟", `<p style="line-height:2">القراءة: الوجه المنسوب لإمام من الأئمة القرّاء (زي قراءة عاصم). الرواية: اللي نقله عنه أحد تلاميذه (زي رواية حفص عن عاصم). الطريق: اللي نقله عن الراوي مَن بعده. واللي بيقرأ بيه أغلب العالم الإسلامي النهارده رواية حفص عن عاصم.</p>`)
+    + card("🔗 يعني إيه «السند»؟", `<p style="line-height:2">السند هو سلسلة المشايخ اللي أخذ عنهم القارئ القرآن مشافهةً، شيخ عن شيخ، لحد ما توصل للنبي ﷺ. وده من خصائص الأمة: القرآن متنقل بالتلقّي والسماع، مش من الكتب بس.</p>`)
+    + card("🏅 يعني إيه «الإجازة»؟", `<p style="line-height:2">الإجازة شهادة من شيخ مُجاز بإن الطالب قرأ عليه القرآن كامل (حفظًا أو نظرًا) بالرواية أو القراءة المحددة، وأتقن أحكامها، فيأذن له إنه يقرأ ويُقرئ غيره بسنده المتصل.</p><ul style="line-height:2;padding-inline-start:1.2rem"><li>إجازة برواية واحدة (زي حفص عن عاصم).</li><li>إجازة بقراءة كاملة (بروايتيها).</li><li>إجازة بالقراءات السبع أو العشر.</li></ul>`)
+    + card("📚 القرّاء العشرة ورواتهم", `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tr><th style="text-align:start;padding:.4rem">الإمام</th><th style="text-align:start;padding:.4rem">الراوي الأول</th><th style="text-align:start;padding:.4rem">الراوي الثاني</th></tr>${R.map(([a, b, c], i) => `<tr style="border-top:1px solid var(--line)"><td style="padding:.4rem"><b>${i + 1}. ${a}</b></td><td style="padding:.4rem">${b}</td><td style="padding:.4rem">${c}</td></tr>`).join("")}</table></div>`)
+    + card("🧭 إزاي تاخد إجازة في الأكاديمية؟", `<ol style="line-height:2;padding-inline-start:1.2rem"><li>اختبار مستوى عشان نعرف حفظك وتجويدك.</li><li>خطة ختمة كاملة مع شيخ مُجاز بسند متصل.</li><li>تقرأ الختمة كاملة عليه مع تصحيح كل الأحكام.</li><li>بعد الإتقان، الشيخ يكتبلك الإجازة بسنده.</li></ol><button class="btn btn-p" style="margin-top:.6rem" onclick="navigate('booking')">✨ احجز حصة تجريبية</button>`);
+}
+
+/* ---------- 6) القرّاء: كل المشايخ + تلاواتي ---------- */
+state.sr.rec = state.sr.rec || 7; state.sr.crec = state.sr.crec || 7;
+const RECS = { v: null, c: null };
+(async () => { try { const [a, b] = await Promise.all([fetch("https://api.quran.com/api/v4/resources/recitations?language=ar").then(r => r.json()), fetch("https://api.quran.com/api/v4/resources/chapter_reciters?language=ar").then(r => r.json())]); RECS.v = a.recitations || []; RECS.c = b.reciters || []; } catch (e) {} })();
+srData = function (surah, chunk) {
+  const tr = state.tf.trId || TR_IDS[state.lang] || 85; const rec = state.sr.rec || 7;
+  return useData(`sr:${surah}:${chunk}:${tr}:${rec}`, async () => {
+    const [v, au] = await Promise.all([fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah}?fields=text_uthmani&per_page=20&page=${chunk}&translations=${tr}`).then(r => r.json()), fetch(`https://api.quran.com/api/v4/recitations/${rec}/by_chapter/${surah}?per_page=300`).then(r => r.json()).catch(() => ({}))]);
+    const am = {}; (au.audio_files || []).forEach(a => am[a.verse_key] = /^https?:/.test(a.url) ? a.url : "https://verses.quran.com/" + a.url);
+    return (v.verses || []).map(x => ({ n: x.verse_number, key: x.verse_key, ar: x.text_uthmani, tr: x.translations && x.translations[0] ? htmlText(x.translations[0].text) : "", au: am[x.verse_key] || `https://verses.quran.com/Alafasy/mp3/${String(surah).padStart(3, "0")}${String(x.verse_number).padStart(3, "0")}.mp3` }));
+  });
+};
+const _surahPage23 = surahPage;
+surahPage = function (surah, ayahs) {
+  let h = _surahPage23(surah, ayahs); const sr = state.sr;
+  if (sr.tab === "watch" && RECS.v) h = h.replace(/<span class="xs muted">[^<]*<\/span><\/div>$/, "") + `<div class="row" style="gap:.4rem;margin-top:.6rem;align-items:center;flex-wrap:wrap"><span class="sm">🎙️ ${L("recReciter")}</span><select class="in" style="width:auto" onchange="state.sr.rec=+this.value;srStop();render()">${RECS.v.map(r => `<option value="${r.id}" ${r.id === sr.rec ? "selected" : ""}>${esc(r.translated_name ? r.translated_name.name : r.reciter_name)}${r.style ? " — " + esc(r.style) : ""}</option>`).join("")}</select></div>`;
+  if (sr.tab === "listen") h = h.replace(/<div class="card" style="text-align:center"><audio[\s\S]*?<\/div>$/, listenTab(surah));
+  return h;
+};
+function listenTab(surah) {
+  const sr = state.sr; const mine = useData("myrec:" + surah, () => q(sb.from("my_recitations").select("*").eq("surah", surah).order("created_at", { ascending: false })));
+  const cid = sr.crec || 7; const cu = useData(`crec:${cid}:${surah}`, () => fetch(`https://api.quran.com/api/v4/chapter_recitations/${cid}/${surah}`).then(r => r.json()).then(d => [d.audio_file && d.audio_file.audio_url]));
+  const pub = (p) => sb.storage.from("academy_public").getPublicUrl(p.replace(/^academy_public\//, "")).data.publicUrl;
+  return `${Array.isArray(mine) && mine.length ? `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>⭐ ${L("recMine")}</h3>${mine.map(x => `<div style="margin:.5rem 0"><div class="sm"><b>${esc(x.title || "")}</b>${x.ayah ? ` · ${state.lang === "ar" ? "آية" : "Ayah"} ${x.ayah}` : ""}${x.maqam ? ` · 🎼 ${esc(maqamName(x.maqam))}` : ""}</div><audio controls preload="none" style="width:100%" src="${esc(pub(x.file_path))}"></audio></div>`).join("")}</div>` : ""}
+  <div class="card"><h3>🎧 ${L("recFull")}</h3>${Array.isArray(cu) && cu[0] ? `<audio controls preload="none" style="width:100%;margin-top:.5rem" src="${esc(cu[0])}"></audio>` : loadingBox()}
+    <div class="row" style="gap:.4rem;margin-top:.7rem;align-items:center;flex-wrap:wrap"><span class="sm">🎙️ ${L("recReciter")}</span><select class="in" style="width:auto;max-width:100%" onchange="state.sr.crec=+this.value;render()">${(RECS.c || []).map(r => `<option value="${r.id}" ${r.id === cid ? "selected" : ""}>${esc(r.translated_name ? r.translated_name.name : r.name)}${r.style && r.style.name ? " — " + esc(r.style.name) : ""}</option>`).join("")}</select></div></div>
+  ${role() === "owner" ? `<div class="card" style="margin-top:1rem;border-style:dashed"><b>${L("recUpload")}</b><div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><input class="in" id="mr_t" placeholder="${L("upRecT")}" style="flex:1;min-width:9rem"><select class="in" id="mr_m" style="width:auto"><option value="">${L("recMaqam")}</option>${MQ.map(m => `<option value="${m.id}">${esc(mqName(m))}</option>`).join("")}</select><input class="in" id="mr_a" type="number" min="1" placeholder="${L("recAyahN")}" style="width:7rem"><input type="file" id="mr_f" accept="audio/*"><button class="btn btn-p" onclick="upMyRec(${surah})">⬆️</button></div></div>` : ""}`;
+}
+async function upMyRec(surah) {
+  const f = document.getElementById("mr_f").files[0]; if (!f) return; const path = `recit/${surah}-${Date.now()}.${(f.name.split(".").pop() || "mp3").replace(/[^a-z0-9]/gi, "")}`;
+  const up = await sb.storage.from("academy_public").upload(path, f, { contentType: f.type }); if (up.error) return toast(up.error.message, true);
+  const { error } = await sb.from("my_recitations").insert({ surah, ayah: +document.getElementById("mr_a").value || null, maqam: document.getElementById("mr_m").value || null, title: document.getElementById("mr_t").value.trim() || null, file_path: path });
+  if (error) return toast(error.message, true); invalidate("myrec:" + surah); toast(L("upDone")); render();
+}
+
+/* ---------- 7) الصور الحقيقية المتولّدة (بتتملى في الخلفية) ---------- */
+const ART = {};
+async function artLoad() { try { const { data } = await sb.from("art_assets").select("key,url").eq("status", "done").limit(2000); (data || []).forEach(a => ART[a.key] = a.url); } catch (e) {} }
+setTimeout(artLoad, 800); setInterval(() => { artLoad().then(() => { if (["library", "d"].includes(state.route)) render(); }); }, 180000);
+function surahGroups(ayahs) { const cnt = ayahs <= 6 ? 2 : ayahs <= 12 ? 3 : ayahs <= 40 ? 4 : ayahs <= 100 ? 5 : 6; return Array.from({ length: cnt }, (_, g) => ({ g, from: 1 + Math.floor(g * ayahs / cnt), to: Math.floor((g + 1) * ayahs / cnt) })); }
+function surahArt(surah, ayah) { const a = SURAH_AYAHS[surah - 1] || 7; const gr = surahGroups(a).find(x => ayah >= x.from && ayah <= x.to) || { g: 0 }; return ART[`surah:${surah}:${gr.g}`] || null; }
+const _stImg23 = stImg;
+stImg = function (p, seed, w, h) { const k = "p:" + artHash(p); if (ART[k]) return ART[k]; if (role() === "owner" && !artQueued[k]) { artQueued[k] = 1; sb.from("art_assets").upsert({ key: k, prompt: p + ", breathtaking cinematic digital painting, soft light, highly detailed, no people, no faces, no text, no letters", priority: 50 }, { onConflict: "key", ignoreDuplicates: true }).then(() => {}, () => {}); } return _stImg23(p, seed, w, h); };
+const artQueued = {};
+// الفيلم والتأمل والغلاف بيستخدموا لوحات السورة الحقيقية لو جاهزة
+const _surahPage23b = surahPage;
+surahPage = function (surah, ayahs) {
+  let h = _surahPage23b(surah, ayahs);
+  const hero = ART[`surah:${surah}:0`]; if (hero) h = h.replace(/(<div class="srhero" style="background-image:linear-gradient\(to top,rgba\(2,6,23,\.92\),rgba\(2,6,23,\.25\)\),url\(')[^']*('\))/, `$1${hero}$2`);
+  if (state.sr.tab === "watch") { const d = srData(surah, state.sr.chunk); if (Array.isArray(d)) { const a = d[Math.min(state.sr.i, d.length - 1)]; const u = a && surahArt(surah, a.n); if (u) h = h.replace(/(<img id="sr_img" src=")[^"]*(")/, `$1${u}$2`); } }
+  return h;
+};
+const _srRenderFilm23 = srRenderFilm;
+srRenderFilm = function () { _srRenderFilm23(); const d = srData(state.sr.surah, state.sr.chunk); const a = Array.isArray(d) && d[state.sr.i]; const u = a && surahArt(state.sr.surah, a.n); const img = document.getElementById("sr_img"); if (u && img) img.src = u; };
+function surahGallery() {
+  const g = state.gal = state.gal || {}; const full = libFull();
+  if (!g.s) return `<p class="muted" style="margin-top:.8rem">${L("galSub")}</p><div class="libgrid" style="margin-top:.8rem">${SURAHS.map((n, i) => { const u = ART[`surah:${i + 1}:0`]; const free = full || i === 0 || i === 92; return `<a class="libtile" href="#" onclick="${free ? `state.gal.s=${i + 1};render();window.scrollTo({top:0})` : "toast(L('smpLock'),true)"};return false;" style="background-image:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.1)),url('${esc(u || sceneArt(n, i))}')"><span class="ic">${free ? "🖼️" : "🔒"}</span><b>${i + 1}. سورة ${esc(n)}</b></a>`; }).join("")}</div>`;
+  const s = g.s, ay = SURAH_AYAHS[s - 1]; const groups = surahGroups(ay);
+  const v = useData("galv:" + s, () => fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=text_uthmani&per_page=300`).then(r => r.json()).then(d => (d.verses || []).map(x => ({ n: x.verse_number, ar: x.text_uthmani }))));
+  return `<div style="margin-top:1rem"><button class="btn btn-o" onclick="state.gal.s=null;render()">${L("hcBack")}</button><h2 style="margin:.6rem 0">🖼️ سورة ${esc(SURAHS[s - 1])}</h2>
+    ${!Array.isArray(v) ? loadingBox() : groups.map(gr => { const u = ART[`surah:${s}:${gr.g}`]; const txt = v.filter(x => x.n >= gr.from && x.n <= gr.to).map(x => `${x.ar} ﴿${x.n}﴾`).join(" "); const short = txt.length > 420 ? txt.slice(0, 420) + "…" : txt;
+      return `<div class="galcard"><div class="galimg" style="background-image:url('${esc(u || sceneArt(SURAHS[s - 1] + gr.g, s * 10 + gr.g))}')"><div class="galtx">${esc(short)}</div>${u ? "" : `<span class="galwait">🎨 ${L("galWait")}</span>`}</div><div class="row" style="justify-content:space-between;padding:.5rem .2rem"><span class="xs muted">${state.lang === "ar" ? "الآيات" : "Ayahs"} ${gr.from}–${gr.to}</span>${u ? `<button class="btn btn-o" onclick="galDownload(${s},${gr.g})">${L("galDl")}</button>` : ""}</div></div>`; }).join("")}</div>`;
+}
+async function galDownload(s, g) {
+  const v = state.data["galv:" + s]; const gr = surahGroups(SURAH_AYAHS[s - 1])[g]; const txt = v.filter(x => x.n >= gr.from && x.n <= gr.to).slice(0, 4).map(x => `${x.ar} ﴿${x.n}﴾`).join(" ");
+  const img = new Image(); img.crossOrigin = "anonymous"; img.src = ART[`surah:${s}:${g}`]; await new Promise((r, j) => { img.onload = r; img.onerror = j; });
+  const W = 1280, H = Math.round(W * img.height / img.width); const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d"); c.drawImage(img, 0, 0, W, H);
+  const grd = c.createLinearGradient(0, H * .35, 0, H); grd.addColorStop(0, "rgba(2,6,23,0)"); grd.addColorStop(1, "rgba(2,6,23,.88)"); c.fillStyle = grd; c.fillRect(0, 0, W, H);
+  await document.fonts.load("44px 'Amiri Quran'"); c.fillStyle = "#fff"; c.textAlign = "center"; c.direction = "rtl"; c.font = "44px 'Amiri Quran', Amiri, serif";
+  const words = txt.split(" "), lines = []; let ln = ""; words.forEach(w => { const t = ln ? ln + " " + w : w; if (c.measureText(t).width > W - 160) { lines.push(ln); ln = w; } else ln = t; }); if (ln) lines.push(ln);
+  const ls = lines.slice(0, 5); ls.forEach((l, i) => c.fillText(l, W / 2, H - 60 - (ls.length - 1 - i) * 72));
+  c.font = "22px 'El Messiri', sans-serif"; c.fillStyle = "#fbbf24"; c.fillText(`سورة ${SURAHS[s - 1]} — أكاديمية إتقان`, W / 2, 46);
+  const a = document.createElement("a"); a.download = `surah-${s}-${g + 1}.jpg`; a.href = cv.toDataURL("image/jpeg", .9); a.click();
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.galcard{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card);margin:1rem 0}.galimg{position:relative;aspect-ratio:16/9;background-size:cover;background-position:center;display:flex;align-items:flex-end}.galtx{width:100%;padding:1.2rem 1.4rem;color:#fff;text-align:center;font:1.45rem/2.1 'Amiri Quran',Amiri,serif;direction:rtl;background:linear-gradient(to top,rgba(2,6,23,.9),transparent)}.galwait{position:absolute;top:.6rem;inset-inline-start:.6rem;background:rgba(15,23,42,.8);color:#fff;border-radius:999px;padding:.2rem .6rem;font-size:.78rem}@media(max-width:600px){.galtx{font-size:1.05rem}}</style>`);
+
+/* ---------- 8) المصحف الملوّن: ألوان مختلفة بوضوح ---------- */
+(function () {
+  const C = { madda_normal: ["#2563eb", "", "مد طبيعي (حركتان)", "Natural madd"], madda_permissible: ["#0891b2", "", "مد جائز (2–4–6)", "Permissible madd"], madda_obligatory: ["#7c3aed", "", "مد واجب (4–5)", "Obligatory madd"], madda_necessary: ["#9a3412", "", "مد لازم (6)", "Necessary madd"],
+    qalaqah: ["#dc2626", "", "قلقلة", "Qalqala"], ghunnah: ["#16a34a", "", "غنّة", "Ghunna"], ikhafa: ["#111", "#fed7aa", "إخفاء", "Ikhfāʾ"], ikhafa_shafawi: ["#111", "#fbcfe8", "إخفاء شفوي", "Ikhfāʾ shafawī"], idgham_ghunnah: ["#111", "#bbf7d0", "إدغام بغنة", "Idghām with ghunna"],
+    idgham_wo_ghunnah: ["#111", "#cbd5e1", "إدغام بغير غنة", "Idghām without ghunna"], idgham_shafawi: ["#111", "#e9d5ff", "إدغام شفوي", "Idghām shafawī"], iqlab: ["#111", "#a5f3fc", "إقلاب", "Iqlāb"], idgham_mutajanisayn: ["#64748b", "", "متجانسين", "Mutajānisayn"], idgham_mutaqaribayn: ["#64748b", "", "متقاربين", "Mutaqāribayn"],
+    ham_wasl: ["#a8a29e", "", "همزة وصل", "Hamzat waṣl"], laam_shamsiyah: ["#a8a29e", "", "لام شمسية", "Lām shamsiyya"], slnt: ["#a8a29e", "", "لا يُنطق", "Silent"] };
+  Object.keys(TJ).forEach(k => delete TJ[k]); Object.entries(C).forEach(([k, v]) => TJ[k] = [v[0], v[2], v[3], v[1]]);
+  document.head.insertAdjacentHTML("beforeend", `<style>${Object.entries(C).map(([k, [c, b]]) => `.tj-${k}{color:${c}!important;${b ? `background:${b};border-radius:4px;padding:0 1px;` : ""}}`).join("")}.tjtext{font-size:2.1rem!important}</style>`);
+})();
+const _tajPage23 = tajPage;
+tajPage = function (secId) { return _tajPage23(secId).replace(/<details style="margin:\.6rem 0">[\s\S]*?<\/details>/, `<div class="row" style="gap:.35rem;flex-wrap:wrap;margin:.7rem 0">${Object.entries(TJ).filter(([k]) => !["slnt", "laam_shamsiyah", "idgham_mutaqaribayn", "ham_wasl"].includes(k)).map(([k, [c, a, e, b]]) => `<span class="badge" style="color:${b ? "#111" : c};${b ? `background:${b};` : `border-color:${c};`}font-weight:700">${b ? "▇" : "●"} ${esc(state.lang === "ar" ? a : e)}</span>`).join("")}</div>`); };
+
+/* ---------- 9) اختيار الخط والحجم في القراءة ---------- */
+state.rf = state.rf || (() => { try { return JSON.parse(lsGet("itqan_rf") || "null"); } catch (e) { return null; } })() || { f: "Amiri", s: 1.1 };
+const RF_FONTS = [["Amiri", "أميري"], ["Noto Naskh Arabic", "نسخ"], ["Scheherazade New", "شهرزاد"], ["IBM Plex Sans Arabic", "بلكس"], ["El Messiri", "المسيري"]];
+function rfBar() { return `<div class="row" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin:.5rem 0"><span class="xs">🔤 ${L("rfFont")}</span><select class="in" style="width:auto;padding:.25rem .5rem" onchange="state.rf.f=this.value;rfSave()">${RF_FONTS.map(([f, n]) => `<option value="${f}" ${state.rf.f === f ? "selected" : ""} style="font-family:'${f}'">${n}</option>`).join("")}</select><span class="xs">${L("rfSize")}</span><button class="btn btn-o" style="padding:.2rem .6rem" onclick="state.rf.s=Math.max(.85,state.rf.s-.1);rfSave()">A−</button><button class="btn btn-o" style="padding:.2rem .6rem" onclick="state.rf.s=Math.min(2,state.rf.s+.1);rfSave()">A+</button></div>`; }
+function rfSave() { try { lsSet("itqan_rf", JSON.stringify(state.rf)); } catch (e) {} document.documentElement.style.setProperty("--rf", `"${state.rf.f}"`); document.documentElement.style.setProperty("--rs", state.rf.s + "rem"); }
+rfSave();
+const _hencReader23 = hencReader; hencReader = function (r, s) { return `<div class="rfx">${rfBar()}${_hencReader23(r, s)}</div>`; };
+const _tafsirReader22x23 = _tafsirReader22x; _tafsirReader22x = function (s, a) { return `<div class="rfx">${rfBar()}${_tafsirReader22x23(s, a)}</div>`; };
+
+/* ---------- 10) اختبار المستوى: النطق بيتسجل والمعلم يصححه ---------- */
+async function recClip(ms) { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); const rec = new MediaRecorder(s); const ch = []; rec.ondataavailable = e => ch.push(e.data); rec.start(); await new Promise(r => setTimeout(r, ms)); await new Promise(r => { rec.onstop = r; rec.stop(); }); s.getTracks().forEach(t => t.stop()); return new Blob(ch, { type: rec.mimeType || "audio/webm" }); }
+ptSay = async function () { const st = state.pt.steps[state.pt.i]; st.busy = true; render(); try { st.blob = await recClip(3500); st.heard = ""; st.toTeacher = true; st.scored = true; } catch (e) { toast(rmMediaErr(e), true); } st.busy = false; render(); };
+ptRead = async function () { const st = state.pt.steps[state.pt.i]; st.busy = true; render(); try { st.blob = await recClip(15000); st.res = null; st.heard = ""; st.toTeacher = true; st.scored = true; } catch (e) { toast(rmMediaErr(e), true); } st.busy = false; render(); };
+const _renderPlacementPage23 = renderPlacementPage;
+renderPlacementPage = function () {
+  let h = _renderPlacementPage23(); const pt = state.pt; const st = pt && pt.steps && pt.steps[pt.i];
+  if (st && st.toTeacher) h = h.replace(/<p style="margin-top:\.6rem">[\s\S]*?<\/p>/, `<p style="margin-top:.6rem;color:var(--accent)">${L("ptToTeacher")}</p>`);
+  if (pt && pt.steps && !st) { const n = pt.steps.filter(x => x.toTeacher).length; if (n) h = h.replace(/(<button class="btn btn-p btn-lg" style="margin-top:1rem")/, `<div class="kv"><span>🎙️ ${L("ptRev")}</span><b>${n} · ${L("ptPendingT")}</b></div>$1`); }
+  return h;
+};
+const _ptSave23 = ptSave;
+ptSave = async function () {
+  const pt = state.pt; const uid = state.auth.user.id; const audio = [];
+  for (const [i, s] of pt.steps.entries()) if (s.blob) { const p = `${uid}/pt-${Date.now()}-${i}.webm`; const up = await sb.storage.from("placement").upload(p, s.blob, { contentType: s.blob.type }); if (!up.error) audio.push({ path: p, word: s.w || null, part: s.part, kind: s.t }); }
+  // نفس الحفظ القديم بس بنضيف التسجيلات
+  const answers = { parts: pt.parts, scores: Object.fromEntries(Object.entries(pt.score).map(([k, v]) => [k, v.n ? Math.round(v.ok / v.n * 100) : null])), self_maqam: pt.selfMaqam || null, auto: true, audio, pending_review: audio.length > 0 };
+  const { error } = await sb.from("placement_tests").insert({ user_id: uid, file_path: audio[0] ? audio[0].path : "", answers }); if (error) return toast(error.message, true);
+  pt.saved = true; invalidate("plMine"); toast(L("plSent")); render();
+};
+// ptScore: خطوات النطق مش بتتحسب أوتوماتيك
+const _ptScore23 = ptScore; ptScore = function (ok, frac) { const st = state.pt.steps[state.pt.i]; if (st && (st.t === "say" || st.t === "read")) { st.scored = true; return; } return _ptScore23(ok, frac); };
+function reviewPronCard() {
+  const r = role(); if (r !== "owner" && r !== "teacher") return "";
+  const L_ = useData("ptRev", () => q(sb.from("placement_tests").select("id,user_id,answers,created_at").order("created_at", { ascending: false }).limit(40)));
+  if (!Array.isArray(L_)) return ""; const todo = L_.filter(t => t.answers && t.answers.pending_review); if (!todo.length) return ""; const P = peopleMap();
+  return `<div class="card" style="margin-bottom:1rem;border-color:var(--gold)"><h3>🎙️ ${L("ptRev")}</h3>${todo.map(t => `<div style="padding:.6rem 0;border-bottom:1px solid var(--line)"><b class="sm">${esc(personName(t.user_id, P.map))}</b> <span class="xs muted">${esc(fmtDT(t.created_at))}</span>${t.answers.audio.map((a, i) => `<div class="row" style="gap:.4rem;align-items:center;margin-top:.3rem;flex-wrap:wrap"><span class="sm" style="min-width:7rem">${esc(a.word || (a.kind === "read" ? "قراءة" : ""))}</span><button class="btn btn-o" onclick="ptPlayRev('${esc(a.path)}')">▶</button><input class="in" style="width:5rem" type="number" min="0" max="10" id="pg_${t.id}_${i}" placeholder="/10"></div>`).join("")}<input class="in" id="pn_${t.id}" placeholder="${L("grNote")}" style="margin-top:.4rem"><button class="btn btn-p" style="margin-top:.4rem" onclick="ptGradeSave('${t.id}')">${L("grSave")}</button></div>`).join("")}</div>`;
+}
+async function ptPlayRev(p) { const { data, error } = await sb.storage.from("placement").createSignedUrl(p, 600); if (error) return toast(error.message, true); new Audio(data.signedUrl).play(); }
+async function ptGradeSave(id) {
+  const t = state.data.ptRev.find(x => x.id === id); const a = Object.assign({}, t.answers); const g = a.audio.map((_, i) => { const v = document.getElementById(`pg_${id}_${i}`).value; return v === "" ? null : +v; });
+  const vals = g.filter(x => x != null); a.teacher = { grades: g, note: document.getElementById("pn_" + id).value.trim() || null, avg: vals.length ? Math.round(vals.reduce((x, y) => x + y, 0) / vals.length * 10) : null }; a.pending_review = false;
+  const { error } = await sb.from("placement_tests").update({ answers: a }).eq("id", id); if (error) return toast(error.message, true); invalidate("ptRev"); toast(L("saved")); render();
+}
+const _renderTeacherDash23 = renderTeacherDash; renderTeacherDash = function () { return reviewPronCard() + _renderTeacherDash23(); };
+const _renderOwnerDash23 = renderOwnerDash; renderOwnerDash = function () { const h = _renderOwnerDash23(); return state.dash.tab === "placement" || state.dash.tab === "overview" ? h.replace(/(<div class="tabs dtabs">[\s\S]*?<\/div>)/, `$1${reviewPronCard()}`) : h; };
+
+/* ---------- 11) جوجل كالندر للمعلم: اللينك الصح + الخطوات ---------- */
+gcalCard = function () {
+  const tk = useData("calToken", async () => { const { data, error } = await sb.rpc("my_calendar_token"); if (error) throw error; return [data]; });
+  if (!Array.isArray(tk) || !tk[0]) return "";
+  const url = `${SB_URL}/functions/v1/calendar?t=${tk[0]}`; const web = url.replace(/^https:/, "webcal:");
+  const gurl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(web)}`;
+  const ar = state.lang === "ar";
+  return `<div class="card" style="margin-bottom:1rem"><h3 style="margin-bottom:.4rem">📅 ${L("gcalTitle")}</h3><p class="xs muted" style="margin-bottom:.6rem">${L("gcalText")}</p>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap"><a class="btn btn-p" href="${esc(gurl)}" target="_blank" rel="noopener"><i class="fa-brands fa-google"></i> ${L("gcalBtn")}</a><a class="btn btn-o" href="${esc(web)}">🍎 Apple / Outlook</a><button class="btn btn-o" onclick="navigator.clipboard.writeText('${esc(url)}').then(()=>toast(L('copied')))">${L("gcalCopy")}</button><a class="btn btn-o" href="${esc(url)}" download="itqan.ics">⬇️ .ics</a></div>
+    <details style="margin-top:.6rem"><summary class="sm b">${ar ? "لو الزرار ما اشتغلش — الطريقة اليدوية" : "If the button doesn't work — manual way"}</summary><ol class="sm" style="line-height:1.9;padding-inline-start:1.2rem;margin-top:.4rem">${(ar ? ["انسخ رابط التقويم من الزرار اللي فوق.", "افتح Google Calendar من الكمبيوتر.", "على الشمال: «تقويمات أخرى» ← علامة + ← «من عنوان URL».", "الصق الرابط ودوس «إضافة تقويم»."] : ["Copy the calendar link above.", "Open Google Calendar on a computer.", "Left side: Other calendars → + → From URL.", "Paste the link and click Add calendar."]).map(x => `<li>${x}</li>`).join("")}</ol></details>
+    <p class="xs" style="margin-top:.5rem;color:var(--gold)">${ar ? "⏱️ جوجل بيحدّث التقويمات المشترَك فيها كل كام ساعة (مش لحظي). للحصة الجديدة فورًا استخدم زرار 📅 جنب الحصة." : "⏱️ Google refreshes subscribed calendars every few hours. For an instant add, use the 📅 button next to each lesson."} · ${L("gcalNote")}</p></div>`;
+};
+
+/* ---------- 12) صفحات: ادعُ أصحابك + دليل الموقع ---------- */
+PAGES16.push("invite", "guide");
+const _render23c = render;
+render = function () {
+  if (state.route === "invite" || state.route === "guide") {
+    if (RM.key || rmEl("rmRoot")) roomTeardown(); const app = document.getElementById("app"); if (!app) return;
+    let body; try { body = state.route === "invite" ? (state.auth.user ? pageWrap("🎁", L("invT"), L("invSub"), referralCard(), 820) : pageWrap("🎁", L("invT"), L("invSub"), guestPitch(), 820)) : guidePage(); } catch (e) { body = `<div class="err">${esc(e.message)}</div>`; }
+    app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); return;
+  }
+  return _render23c.apply(this, arguments);
+};
+function guidePage() {
+  const ds = DOMAINS(); const secs = sectionsData() || [];
+  return pageWrap("🗺️", L("gdT"), L("gdSub"), ds.map(d => { const kids = d.sec && Array.isArray(secs) ? secs.filter(s => s.parent_id === d.sec && s.is_visible !== false) : [];
+    return `<div class="card" style="margin-bottom:1rem;border-inline-start:4px solid ${d.color}"><h3>${d.ic} ${esc(locText(d.t))}</h3><p class="sm muted">${esc(locText(d.s))}</p>
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.5rem">${d.tools.map(t => `<button class="dmtool" onclick="${t[2]}"><span>${t[0]}</span><b>${esc(t[1])}</b></button>`).join("")}</div>
+      ${kids.length ? `<ul class="sm" style="margin:.6rem 0 0;padding-inline-start:1.2rem;line-height:1.9">${kids.map(s => `<li><a href="#" onclick="libGo('${s.id}');return false;"><b>${esc(s.icon || "")} ${esc(secTitle(s))}</b></a>${s.description ? ` — <span class="muted">${esc(s.description[state.lang] || s.description.ar || "")}</span>` : ""}</li>`).join("")}</ul>` : ""}</div>`; }).join(""), 1000);
+}
+// الفوتر: «اشترك في أي دورة»
+const _renderFooter23 = renderFooter;
+renderFooter = function () { const n = I18N[state.lang].nav.tracks; return _renderFooter23().replace(`<div class="b sm" style="margin-bottom:.6rem">${n}</div>`, `<div class="b sm" style="margin-bottom:.6rem"><a href="#" onclick="navigate('pricing');return false;" style="color:inherit">${state.lang === "ar" ? "اشترك في أي دورة ←" : "Join any course →"}</a></div>`); };
+// شرح الأقسام الجديدة
+Object.assign(HELP, {
+  invite: { ar: ["انسخ لينكك وابعته لأصحابك.", "أي صاحب يشترك من لينكك بيضيف دولار لمحفظتك.", "استخدم المحفظة في الحصص أو المحتوى أو أي باقة."], en: ["Copy your link and share it.", "Every friend who subscribes adds $1 to your wallet.", "Spend it on lessons, content or plans."] },
+  guide: { ar: ["دي خريطة الموقع كله.", "كل عالم فيه أدواته (أزرار) وأقسامه (لينكات) ومكتوب جنب كل قسم فيه إيه.", "دوس على أي حاجة تروحلها على طول."], en: ["The whole site map.", "Each area lists its tools and sections with a description.", "Tap anything to jump there."] }
+});
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
