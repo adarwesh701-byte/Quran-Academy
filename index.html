@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v45";
+const UI_VERSION = "2026-11-12-v46";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -15285,6 +15285,160 @@ i.fa-solid,i.fa-regular,i.fa-brands{transition:transform .2s}.btn:hover i,.ibtn:
 </style>`);
 
 document.head.insertAdjacentHTML("beforeend", `<style>[dir=ltr] .btn .fa-arrow-left{transform:scaleX(-1)}</style>`);
+/* ================= v46: «إزاي تستخدم الصفحة دي» لكل صفحة لوحدها — علامة صغيرة فوق جنب عنوان الصفحة ================= */
+const HELPK = {
+  surah: { ar: ["فوق: التبويبات — «شاهد» فيلم السورة، «تأمّل» معاني الآيات، «التفسير» من كتب التفسير، «استمع» تلاوة السورة كاملة.", "في التفسير تقدر تغيّر الكتاب واللغة من القايمة فوق النص.", "لو اللغة مش عربي، التفسير والتأمل بيظهروا بلغتك."], en: ["Tabs on top: Watch the surah film, Reflect, Tafsir from classical books, Listen to the whole surah.", "In Tafsir you can switch the book and the language above the text.", "If your language isn't Arabic, tafsir and reflections appear in your language."] },
+  tafsir: { ar: ["اختار السورة اللي عاوز تقرا تفسيرها.", "كل سورة فيها: فيلم، وتأمّل، وتفسير من أكتر من كتاب، واستماع."], en: ["Pick the surah you want.", "Each surah has a film, reflections, tafsir from several books and listening."] },
+  surah_gallery: { ar: ["«السورة كاملة»: اختار السورة والقارئ من القايمة (ابحث بالاسم) والتلاوة تشتغل على طول.", "«مع الفيديو»: نفس القرّاء كلهم، والآية بتظهر على فيديو طبيعة وهي بتتقري — ⏱ يعني القارئ متزامن بالظبط.", "زرار 🎞️ بيغيّر الفيديو، و⏮ ⏭ بينقلوك آية لورا أو لقدّام."], en: ["Full surah: pick the surah and reciter (search by name) and it plays.", "With video: the same reciters; each ayah appears over a nature video as it's recited — ⏱ means exact sync.", "🎞️ changes the video, ⏮ ⏭ move one ayah back or forward."] },
+  tajcolor: { ar: ["اختار السورة من فوق؛ كل حكم ليه لون والمفتاح تحت العنوان.", "دوس على أي كلمة عشان تسمعها من القارئ اللي اخترته.", "دوس كليك يمين (أو اضغط مطوّل على الموبايل) على الكلمة عشان تعلّمها غلطة — هتبان بالأحمر.", "تحت: السورة كاملة بأي قارئ، وقايمة أخطائك."], en: ["Pick a surah; each rule has its colour (legend under the title).", "Tap a word to hear it from the chosen reciter.", "Right-click (or long-press on mobile) a word to mark it as a mistake — it turns red.", "Below: the whole surah with any reciter and your mistakes list."] },
+  hifz_hub: { ar: ["الكروت دي أدوات الحفظ: خطة النهارده، التسميع، المراجعة، الخريطة، المصحف الملوّن.", "«التسميع»: اختار من آية لآية واقرا من غير مصحف والموقع يقارن قرايتك.", "اللي بتغلط فيه بيدخل المراجعة المتباعدة أوتوماتيك."], en: ["These cards are your hifz tools: today's plan, recitation check, review, map, colour mushaf.", "Recitation check: pick a range and recite without the mushaf; the site compares.", "Mistakes go into spaced review automatically."] },
+  aah: { ar: [], en: [] },
+  vtest: { ar: ["اختار المقام، ودوس «ابدأ» وغنّي السلم أو الآهة.", "المؤشر بيوريك نغمتك مظبوطة ولا عالية/واطية.", "في الآخر بتاخد درجة ونصايح."], en: ["Pick the maqam, press Start and sing the scale or the aah.", "The meter shows if you're on pitch, sharp or flat.", "You get a score and tips at the end."] },
+  nasheed: { ar: ["دي أناشيد وابتهالات من غير موسيقى على المقام ده.", "دوس تشغيل واسمع، وتابع الكلمات."], en: ["Nasheeds and ibtihalat without music in this maqam.", "Press play and follow the words."] },
+  mujawwad: { ar: ["تلاوات مجوّدة على المقام ده من كبار القرّاء.", "اسمع ولاحظ إزاي القارئ بيدخل المقام ويقفل."], en: ["Mujawwad recitations in this maqam by great reciters.", "Listen to how the reciter enters and closes the maqam."] },
+  murattal: { ar: ["تلاوات مرتّلة على المقام ده.", "جرّب تقرا معاه بنفس النغمة."], en: ["Murattal recitations in this maqam.", "Try reciting along on the same pitch."] },
+  info: { ar: ["معلومات نظرية عن المقام: أصله، درجاته، وبيستخدم في أنهي معاني.", "دوس على أي درجة في السلم عشان تسمعها."], en: ["Theory of the maqam: origin, notes and the meanings it suits.", "Tap any note of the scale to hear it."] },
+  maqam: { ar: ["دي صفحة المقام: اختار من الأقسام تحت — آهات، مرتل، مجود، أناشيد، معلومات، واختبار صوتك."], en: ["The maqam page: pick a part below — aahs, murattal, mujawwad, nasheeds, info, voice test."] },
+  mqgroup: { ar: ["اختار المقام اللي عاوزه من القايمة.", "⭐ أساسي، 🌿 فرعي، 🔒 للمشتركين."], en: ["Pick a maqam.", "⭐ main, 🌿 branch, 🔒 subscribers."] },
+  mq_main: { ar: ["المقامات الأساسية الثمانية — ابدأ بيها قبل الفرعية.", "كل مقام فيه آهات وتلاوات وأناشيد واختبار."], en: ["The eight main maqamat — start here.", "Each has aahs, recitations, nasheeds and a test."] },
+  mq_branch: { ar: ["المقامات الفرعية — بعد ما تخلص الأساسية.", "كل فرع مكتوب هو تابع لأنهي مقام أساسي."], en: ["Branch maqamat — after the main ones.", "Each shows which main maqam it belongs to."] },
+  karaoke_hub: { ar: ["«أنشد معي»: اختار نشيد، والكلمات بتنوّر وانت بتغني.", "سجّل صوتك وقارنه بالأصل."], en: ["Chant with me: pick a nasheed; words light up as you sing.", "Record yourself and compare."] },
+  books: { ar: ["اختار الكتاب، وبعدين الباب.", "النص من الكتاب نفسه ومكتوب المصدر تحت كل صفحة.", "استخدم البحث عشان توصل لموضوع معيّن."], en: ["Pick a book, then a chapter.", "Text is from the book itself with the source under each page.", "Use search to find a topic."] },
+  hadith_book: { ar: ["الأحاديث مرقّمة بالترتيب؛ دوس على أي حديث تفتحه.", "تحت كل حديث: الشرح والمصدر."], en: ["Hadiths are numbered; tap one to open it.", "Under each: explanation and source."] },
+  hadith: { ar: ["اختار كتاب الحديث: الأربعين، أو الصحيحين، أو الأحاديث المشروحة."], en: ["Choose a hadith collection."] },
+  henc_all: { ar: ["أحاديث مشروحة بلغتك — ابحث أو تصفّح بالموضوع."], en: ["Explained hadiths in your language — search or browse by topic."] },
+  fiqh_ch: { ar: ["أبواب الفقه من «المغني» و«المجموع».", "اختار الباب واقرا، والمصدر مكتوب مع كل فقرة."], en: ["Fiqh chapters from al-Mughni and al-Majmu'.", "Pick a chapter; the source is shown with each passage."] },
+  aqeedah: { ar: ["كتب العقيدة — اختار الكتاب واقرا بالترتيب."], en: ["Aqeedah books — pick one and read in order."] },
+  adab: { ar: ["كتب الآداب والفضائل — اختار الكتاب والباب."], en: ["Books of manners and virtues — pick book and chapter."] },
+  speak_root: { ar: ["اختار المسار: فصحى، مصري، خليجي، شامي.", "فوق كل مسار: الأكاديمية بالترتيب (دروس واختبارات)، وتحتها محادثات وقصص جاهزة."], en: ["Pick a track: MSA, Egyptian, Gulf, Levantine.", "Each track: the academy (lessons & tests), then ready dialogues and stories."] },
+  lang_track: { ar: ["ابدأ من «الأكاديمية»: الوحدات بالترتيب اللي تختاره، وكل وحدة تفتح بعد ما تنجح في اللي قبلها بأكتر من 70%.", "↕️ بيخليك ترتّب الوحدات على مزاجك.", "تحت: محادثات وقصص جاهزة تسمعها وتكررها."], en: ["Start with the Academy: units in your chosen order; each opens after you pass the previous one with over 70%.", "↕️ lets you reorder units.", "Below: ready dialogues and stories to listen and repeat."] },
+  ijaza_info: { ar: ["هنا شروط الإجازة ومراحلها.", "احجز تقييم من الزرار عشان تبدأ."], en: ["Ijaza requirements and stages.", "Book an assessment to start."] },
+  wird: { ar: ["وردك اليومي: اقرا وعلّم «خلصت»."], en: ["Your daily wird: read and mark done."] }
+};
+Object.assign(HELP, {
+  tasmee: { ar: ["اختار السورة ومن آية لآية.", "«سمّع» واقرا من غير ما تبص؛ الموقع بيسمعك ويطلع الكلمات اللي غلطت فيها أو نسيتها.", "«املا الفراغ»: كلمات ناقصة تختارها من اختيارات.", "الأخطاء بتدخل المراجعة أوتوماتيك."], en: ["Pick a surah and an ayah range.", "Recite without looking; the site listens and shows missed or wrong words.", "Fill-in-the-blank: choose the missing words.", "Mistakes go to review automatically."] },
+  hifzt: { ar: ["دي متابعة حفظك: الأيام اللي حفظت فيها، والمراجعات اللي عليك.", "اللون الأحمر = مراجعة متأخرة؛ ابدأ بيها."], en: ["Your hifz tracker: days you memorised and reviews due.", "Red = overdue review; start with those."] },
+  lang: { ar: ["اختار المسار واللغة اللي عاوز تتعلم بيها.", "الدروس بالترتيب، وكل درس فيه كلمات وحوار وقاعدة واختبار."], en: ["Pick a track and your interface language.", "Lessons in order: words, dialogue, rule and test."] },
+  plan: { ar: ["اعمل خطتك (يوم/أسبوع/شهر) من محتوى الأكاديمية.", "كل بند بيتعلّم عليه أوتوماتيك لما تنجح في اختباره."], en: ["Build a day/week/month plan from academy content.", "Items tick automatically when you pass their test."] },
+  links: { ar: ["كل لينكات الأكاديمية في مكان واحد — دوس على أي واحد."], en: ["All academy links in one place."] },
+  prayer: { ar: ["مواقيت الصلاة حسب مكانك — اسمح للموقع يعرف مكانك أو اكتب المدينة."], en: ["Prayer times for your location — allow location or type your city."] },
+  ayahcard: { ar: ["اختار آية، والخلفية، ونزّل الصورة تشاركها."], en: ["Pick an ayah and a background, then download to share."] },
+  arbaeen: { ar: ["الأربعون النووية — اختار الحديث، واسمعه، واختبر حفظك."], en: ["An-Nawawi's Forty — pick a hadith, listen and test yourself."] },
+  asma: { ar: ["أسماء الله الحسنى — دوس على أي اسم تشوف معناه."], en: ["The 99 Names — tap a name for its meaning."] },
+  org: { ar: ["اشتراك المدارس والمراكز: ابعت طلب، وبعد التفعيل تضيف طلابك ومدرسينك بكود.", "تتابع تقدّم الكل من اللوحة دي."], en: ["Schools & centres: send a request; after activation add students and teachers with a code.", "Follow everyone's progress here."] },
+  teach: { ar: ["قدّم كمعلم: املا بياناتك وارفع شهاداتك وتسجيل صوتك.", "الإدارة بتراجع الطلب وترد عليك."], en: ["Apply as a teacher: fill details, upload certificates and a voice sample.", "The admin reviews and replies."] },
+  profile: { ar: ["عدّل اسمك وصورتك ولغتك وتوقيتك."], en: ["Edit your name, photo, language and time zone."] },
+  tracks: { ar: ["دي كل الدورات؛ دوس على أي دورة تشوف تفاصيلها واحجز."], en: ["All courses; tap one for details and booking."] },
+  "track-detail": { ar: ["تفاصيل الدورة: المستويات والنتائج.", "احجز حصة تجريبية من الزرار."], en: ["Course details: levels and outcomes.", "Book a trial from the button."] },
+  about: { ar: ["تعرف على الأكاديمية وطريقتها."], en: ["About the academy."] },
+  contact: { ar: ["ابعتلنا رسالتك أو كلّمنا على الواتساب."], en: ["Send us a message or WhatsApp."] },
+  signup: { ar: ["اكتب إيميلك وباسورد، أو ادخل بجوجل.", "هيوصلك إيميل تأكيد."], en: ["Enter email and password, or use Google.", "You'll get a confirmation email."] },
+  login: { ar: ["ادخل بإيميلك وباسوردك أو بجوجل.", "نسيت الباسورد؟ دوس «نسيت كلمة المرور»."], en: ["Log in with email or Google.", "Forgot password? Use the link."] },
+  homework: { ar: ["واجباتك من المعلم: افتح الواجب، حلّه أو سجّل صوتك، وسلّمه."], en: ["Homework from your teacher: open, answer or record, and submit."] },
+  cert: { ar: ["شهاداتك — تقدر تنزّلها أو تشارك لينك التحقق منها."], en: ["Your certificates — download or share the verify link."] },
+  lib: { ar: [], en: [] }
+});
+function helpFor() {
+  const k = state.route; const ar = state.lang === "ar";
+  if (k === "library" && state.libSec) {
+    const secs = sectionsData(); const s = Array.isArray(secs) ? secs.find(x => x.id === state.libSec) : null; if (!s) return HELP.library;
+    const kd = (s.meta || {}).kind; const title = secTitle(s);
+    if (typeof isTajRoot === "function" && isTajRoot(s)) { const v = (state.hv || {})[s.id]; if (v === "mushaf") return HELPK.tajcolor; return { ar: ["قسم التجويد فيه حاجتين: «المصحف الملوّن» و«المحتوى النظري» — اختار الكارت.", "المحتوى النظري: رحلة محطات بالترتيب اللي تختاره (↕️)، وكل محطة تفتح بعد ما تنجح في اللي قبلها بأكتر من 70%.", "كل محطة: كروت شرح بأمثلة من القرآن + اختبار."], en: ["Tajweed has two parts: the colour mushaf and theory lessons — pick a card.", "Theory is a journey of stations in your chosen order (↕️); each opens after passing the previous with over 70%.", "Each station: explanation cards with Quran examples + a test."] }; }
+    if (kd === "aah") return { ar: [L("vtStep1s"), L("vtStep3s")].concat(HELP.maqamat.ar.slice(2)), en: HELP.maqamat.en };
+    if (kd === "hifz_hub" && (state.hv || {})[s.id] === "mushaf") return HELPK.tajcolor;
+    if (HELPK[kd] && (HELPK[kd].ar || []).length) return HELPK[kd];
+    const kids = Array.isArray(secs) ? secs.filter(x => x.parent_id === s.id).length : 0; const d = secDesc(s);
+    return { ar: [`دي صفحة «${title}».`].concat(d ? [d] : []).concat(kids ? ["دوس على أي قسم من الأقسام تحت عشان تدخله؛ 🎁 مفتوح للتجربة و🔒 للمشتركين."] : ["اقرا المحتوى، ولو فيه اختبار في الآخر حلّه عشان تقدّمك يتسجّل."]), en: [`This is the “${title}” page.`].concat(d ? [d] : []).concat(kids ? ["Tap any section below; 🎁 is free to try, 🔒 for subscribers."] : ["Read the content; if there's a test at the end, take it to record progress."]) };
+  }
+  return HELP[k] || null;
+}
+function hlpPlace() {
+  const app = document.getElementById("app"); if (!app) return; const old = document.getElementById("hlpfab"); if (old) old.remove();
+  const h = helpFor(); const cur = app.querySelector(".hlpq"); if (!h) { if (cur) cur.remove(); return; } if (cur) return;
+  const t = [...app.querySelectorAll("h1,h2")].find(x => x.offsetParent !== null && !x.closest("header,nav,footer,.hlpbox,.bnav,.modal,.libgrid,.dmgrid,.hvgrid"));
+  const b = document.createElement("button"); b.className = "hlpq"; b.type = "button"; b.title = L("hlpTitle"); b.setAttribute("aria-label", L("hlpTitle")); b.textContent = "?"; b.onclick = (e) => { e.stopPropagation(); helpOpen(); };
+  if (t) t.appendChild(b); else { b.classList.add("hlpq-top"); app.insertBefore(b, app.children[1] || null); }
+}
+const _render46h = render; render = function () { const r = _render46h.apply(this, arguments); try { hlpPlace(); } catch (e) {} return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>.hlpfab{display:none!important}
+.hlpq{display:inline-flex;align-items:center;justify-content:center;width:1.45rem;height:1.45rem;margin-inline-start:.45rem;vertical-align:middle;border-radius:50%;border:1.5px solid var(--accent,#1f6f4a);background:transparent;color:var(--accent,#1f6f4a);font:700 .85rem/1 Tajawal,system-ui,sans-serif;cursor:pointer;padding:0;opacity:.85;transition:transform .15s,opacity .15s,background .15s}
+.hlpq:hover{opacity:1;background:var(--accent,#1f6f4a);color:#fff}.hlpq:active{transform:scale(.9)}
+.libhead .hlpq,.lshero .hlpq{border-color:#fff;color:#fff}
+.hlpq-top{display:flex;margin:.6rem auto 0;margin-inline-end:1rem;margin-inline-start:auto}</style>`);
+
+/* ================= v46: سماع القرآن «مع الفيديو» بدل اللوحات — بكل القرّاء (244) ومتزامن آية بآية ================= */
+const LV_VIDS = [
+  ["Timelapse_Clouds_Compilation.ogv", "d/db"], ["Winter_Timelapse_of_Clouds_Roiling_over_Rimrock_on_Okanagan_Mountain.webm", "8/85"], ["Timelapse_of_Clouds_over_Bellevue_Canyon.webm", "d/d5"],
+  ["Grand_Canyon_National_Park-_Timelapse_Video_-_Summer_Clouds_%287775362134%29.webm", "8/85"], ["Stars_and_Clouds_Over_Headstone_Rock_%2830230087163%29.webm", "1/12"], ["Delaneys_Falls.webm", "8/8b"],
+  ["Timelapse_of_Winter%27s_End_at_Bertram_Creek_Park_overlooking_Okanagan_Lake%2C_includes_Snowmelt%2C_Sunset_and_Venus_Set.webm", "f/f4"], ["Timelapse_Joshua_Tree_Clouds_and_Sunset_Near_West_Entrance.webm", "c/c7"],
+  ["Mojave_Desert_Sunset_%2840480403760%29.webm", "1/1c"], ["Waterfall_on_Falls_Creek%2C_south_of_Augusta%2C_Montana_%2852974925584%29.webm", "f/fa"], ["Lenticular_cloud_over_Longs_Peak%2C_Colorado_%28time_lapse%29.ogv", "a/aa"],
+  ["Dying_Light_on_Okanagan_Mountain.webm", "d/d3"], ["Time_Lapse_Clouds_above_Steens_Mountain_%2836203941112%29.webm", "b/b2"]
+].map(([f, p]) => `https://upload.wikimedia.org/wikipedia/commons/transcoded/${p}/${f}/${f}.480p.vp9.webm`);
+const LV = { aud: null, i: 0, vid: null, timing: {}, reads: null };
+(async () => { try { const j = await fetch(`https://mp3quran.net/api/v3/ayat_timing/reads?language=${state.lang === "ar" ? "ar" : "eng"}`).then(r => r.json()); LV.reads = Array.isArray(j) ? j : []; } catch (e) { LV.reads = []; } })();
+function lvRead(rec) { if (!rec || !LV.reads) return null; const n = (s) => String(s || "").replace(/^(الشيخ|شيخ)\s+/, "").replace(/[ًٌٍَُِّْـ]/g, "").replace(/[أإآ]/g, "ا").trim(); return LV.reads.find(r => n(r.name) === n(rec.name) && (!r.rewaya || String(rec.mo || "").includes(String(r.rewaya).split(" ")[0]))) || null; }
+function lvData(s) { const tr = trIdFor(state.lang); return useData(`lv:${s}:${tr || 0}`, async () => { const v = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=text_uthmani&per_page=300${tr ? "&translations=" + tr : ""}`).then(r => r.json()); return (v.verses || []).map(x => ({ n: x.verse_number, t: x.text_uthmani, tr: x.translations && x.translations[0] ? String(x.translations[0].text).replace(/<[^>]*>/g, "") : "" })); }); }
+function lvSrc(rec, s) { const rd = lvRead(rec); if (rd && rd.folder_url) return { url: `${rd.folder_url}${String(s).padStart(3, "0")}.mp3`, read: rd.id }; return rec.surahs.has(s) ? { url: `${rec.server}${String(s).padStart(3, "0")}.mp3`, read: null } : null; }
+async function lvTiming(read, s) { const k = read + ":" + s; if (LV.timing[k] !== undefined) return LV.timing[k]; try { const j = await fetch(`https://mp3quran.net/api/v3/ayat_timing?surah=${s}&read=${read}`).then(r => r.json()); LV.timing[k] = Array.isArray(j) ? j.filter(x => x.ayah > 0).map(x => [x.ayah, x.start_time / 1000, x.end_time / 1000]) : null; } catch (e) { LV.timing[k] = null; } return LV.timing[k]; }
+function lvIdxAt(t, d, ayahs, tm) {
+  if (tm && tm.length) { let i = tm.findIndex(x => t >= x[1] && t < x[2]); if (i < 0) i = t < tm[0][1] ? 0 : tm.length - 1; return i; }
+  if (!d || !isFinite(d)) return 0; const lens = ayahs.map(a => a.t.length + 12); const head = state.ls.s === 1 || state.ls.s === 9 ? 0 : 45; const tot = lens.reduce((a, b) => a + b, head); let acc = head, x = t / d * tot; if (x < head) return 0;
+  for (let i = 0; i < lens.length; i++) { acc += lens[i]; if (x < acc) return i; } return lens.length - 1;
+}
+function lvStartOf(i, d, ayahs, tm) { if (tm && tm[i]) return tm[i][1]; if (!d || !isFinite(d)) return 0; const lens = ayahs.map(a => a.t.length + 12); const head = state.ls.s === 1 || state.ls.s === 9 ? 0 : 45; const tot = lens.reduce((a, b) => a + b, head); return lens.slice(0, i).reduce((a, b) => a + b, head) / tot * d; }
+function lvShow(i) {
+  const d = state.data[`lv:${state.ls.s}:${trIdFor(state.lang) || 0}`]; if (!Array.isArray(d) || !d[i]) return; LV.i = i;
+  const a = document.getElementById("lv_ay"), b = document.getElementById("lv_tr"), n = document.getElementById("lv_n");
+  if (a) { a.classList.remove("in"); void a.offsetWidth; a.textContent = d[i].t + " ﴿" + d[i].n.toLocaleString("ar-EG") + "﴾"; a.classList.add("in"); }
+  if (b) b.textContent = d[i].tr || ""; if (n) n.textContent = `${d[i].n} / ${d.length}`;
+}
+async function lvPlay() {
+  const list = MP3Q.list; const rec = list && (list.find(x => x.id === state.ls.r) || list[0]); const d = lvData(state.ls.s); if (!rec || !Array.isArray(d)) return;
+  const src = lvSrc(rec, state.ls.s); if (!src) return toast(state.lang === "ar" ? "القارئ ده مش مسجّل السورة دي — اختار قارئ تاني" : "This reciter hasn't recorded this surah", true);
+  if (!LV.aud) { LV.aud = new Audio(); LV.aud.preload = "auto"; LV.aud.addEventListener("timeupdate", () => { const dd = state.data[`lv:${state.ls.s}:${trIdFor(state.lang) || 0}`]; if (!Array.isArray(dd)) return; const i = lvIdxAt(LV.aud.currentTime, LV.aud.duration, dd, LV.tm); if (i !== LV.i) lvShow(i); }); LV.aud.addEventListener("play", lvBtn); LV.aud.addEventListener("pause", lvBtn); LV.aud.addEventListener("ended", lvBtn); }
+  LV.tm = src.read ? await lvTiming(src.read, state.ls.s) : null;
+  if (LV.aud.dataset.u !== src.url) { LV.aud.src = src.url; LV.aud.dataset.u = src.url; }
+  if (LV.aud.paused) { LV.aud.play().catch(() => {}); const v = document.getElementById("lv_vid"); if (v) v.play().catch(() => {}); } else LV.aud.pause();
+}
+function lvBtn() { const b = document.getElementById("lv_play"); if (b) b.textContent = LV.aud && !LV.aud.paused ? "⏸" : "▶"; }
+function lvSeek(step) { const d = state.data[`lv:${state.ls.s}:${trIdFor(state.lang) || 0}`]; if (!Array.isArray(d)) return; const i = Math.max(0, Math.min(d.length - 1, LV.i + step)); if (LV.aud && LV.aud.src) { LV.aud.currentTime = lvStartOf(i, LV.aud.duration, d, LV.tm) + .05; } lvShow(i); }
+function lvStop() { if (LV.aud) LV.aud.pause(); }
+function lvNextVid() { state.ls.v = ((state.ls.v == null ? state.ls.s : state.ls.v) + 1) % LV_VIDS.length; const v = document.getElementById("lv_vid"); if (v) { v.src = LV_VIDS[state.ls.v]; v.play().catch(() => {}); } }
+function lvFilm() {
+  const ls = state.ls; const list = MP3Q.list; const d = lvData(ls.s); if (!Array.isArray(d)) return loadingBox();
+  const rec = list.find(x => x.id === ls.r) || list[0]; const rd = lvRead(rec); const vi = (ls.v == null ? ls.s : ls.v) % LV_VIDS.length; const i = Math.min(LV.i, d.length - 1); const ar = state.lang === "ar";
+  const playing = LV.aud && !LV.aud.paused && LV.aud.dataset.u && LV.aud.dataset.u.endsWith(String(ls.s).padStart(3, "0") + ".mp3");
+  return `<div class="lvstage"><video id="lv_vid" src="${esc(LV_VIDS[vi])}" autoplay muted loop playsinline preload="metadata" onerror="this.style.display='none'"></video><div class="lvshade"></div>
+    <div class="lvtxt"><div class="lvsura">سورة ${esc(SURAHS[ls.s - 1])}</div><div id="lv_ay" class="lvay in">${esc(d[i].t)} ﴿${d[i].n.toLocaleString("ar-EG")}﴾</div><div id="lv_tr" class="lvtr">${esc(d[i].tr || "")}</div></div>
+    <div class="lvctl"><button class="lvb" onclick="lvSeek(-1)" title="${ar ? "الآية اللي قبلها" : "Previous ayah"}">${ar ? "⏭" : "⏮"}</button><button class="lvb lvbig" id="lv_play" onclick="lvPlay()">${playing ? "⏸" : "▶"}</button><button class="lvb" onclick="lvSeek(1)" title="${ar ? "الآية اللي بعدها" : "Next ayah"}">${ar ? "⏮" : "⏭"}</button><span id="lv_n" class="lvn">${d[i].n} / ${d.length}</span><button class="lvb" onclick="lvNextVid()" title="${ar ? "فيديو تاني" : "Another video"}">🎞️</button></div></div>
+    <p class="xs muted" style="margin:.4rem 0 0">🎙️ ${esc(rec.name)} · ${esc(rec.mo)} ${rd ? "· ⏱ " + (ar ? "متزامن آية بآية" : "synced ayah by ayah") : "· " + (ar ? "تزامن تقريبي" : "approximate sync")} — ${ar ? "فيديوهات طبيعة من ويكيميديا كومنز (ملكية عامة)" : "Nature videos: Wikimedia Commons (public domain)"}</p>`;
+}
+listenPage = (function (orig) { return function () {
+  const ls = state.ls; const list = MP3Q.list; if (!list || ls.tab !== "film") { lvStop(); return orig(); }
+  const full = allAccess(); const ar = state.lang === "ar";
+  const q_ = (ls.q || "").trim(); const shown = list.filter(x => !q_ || x.name.includes(q_) || x.mo.includes(q_)).slice(0, 300); if (!ls.r) ls.r = (list.find(x => /المنشاوي|Minshawi/i.test(x.name) && /مرتل|Murattal/i.test(x.mo)) || list[0]).id;
+  const tabs = `<div class="tabs" style="margin:1rem 0"><a href="#" aria-current="false" onclick="state.ls.tab='full';lvStop();render();return false;">${L("lsFull")}</a><a href="#" aria-current="true" onclick="return false;">${L("lsFilm")}</a></div>`;
+  const sel = `<div class="fgrid" style="align-items:end"><div><label class="l">${L("hzSurah")}</label><select class="in" onchange="state.ls.s=+this.value;LV.i=0;lvStop();render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${ls.s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(n)}</option>`).join("")}</select></div><div><label class="l">🔎 ${L("lsSearch")}</label><input class="in" value="${esc(ls.q)}" onchange="state.ls.q=this.value;render()"></div></div>`;
+  if (!full && ls.s !== 1) return `${tabs}<div class="card">${sel}</div>${lockBox()}`;
+  return `${tabs}<div class="card">${sel}${lvFilm()}<div class="lsgrid">${shown.map(x => `<button class="lsrec ${x.id === ls.r ? "on" : ""}" onclick="state.ls.r='${x.id}';LV.i=0;lvStop();render()"><b>${lvRead(x) ? "⏱ " : ""}${esc(x.name)}</b><small>${esc(x.mo)}</small></button>`).join("")}</div></div>`;
+}; })(listenPage);
+Object.assign(UI.ar, { lsFilm: "🎬 مع الفيديو (آية آية)" }); Object.assign(UI.en, { lsFilm: "🎬 With video (ayah by ayah)" });
+const _render46l = render; render = function () { const r = _render46l.apply(this, arguments); try { if (LV.aud && !LV.aud.paused && !document.getElementById("lv_vid")) LV.aud.pause(); } catch (e) {} return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.lvstage{position:relative;border-radius:20px;overflow:hidden;margin-top:1rem;aspect-ratio:16/9;max-height:72vh;width:100%;background:#0b1220 linear-gradient(135deg,#0f2a3a,#1f6f4a)}
+@media(max-width:640px){.lvstage{aspect-ratio:auto;min-height:420px}}
+.lvstage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lvshade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(2,6,23,.25),rgba(2,6,23,.72))}
+.lvtxt{position:absolute;inset:0 0 4.2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:1rem 1.4rem;gap:.6rem}
+.lvsura{font:1rem Tajawal,sans-serif;opacity:.85;letter-spacing:.02em}
+.lvay{font:clamp(1.5rem,3.6vw,2.6rem)/2 'Amiri Quran',Amiri,serif;direction:rtl;text-shadow:0 2px 14px rgba(0,0,0,.6);max-height:60%;overflow:auto}
+.lvay.in{animation:lvIn .5s ease}@keyframes lvIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.lvtr{font-size:clamp(.85rem,1.6vw,1.05rem);opacity:.9;max-width:52rem;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.lvctl{position:absolute;inset:auto 0 0 0;display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.7rem;background:linear-gradient(to top,rgba(2,6,23,.75),transparent)}
+.lvb{border:none;border-radius:999px;width:2.6rem;height:2.6rem;background:rgba(255,255,255,.16);color:#fff;font-size:1.05rem;cursor:pointer;backdrop-filter:blur(6px);transition:transform .15s,background .15s}.lvb:hover{background:rgba(255,255,255,.28)}.lvb:active{transform:scale(.92)}
+.lvbig{width:3.3rem;height:3.3rem;font-size:1.3rem;background:#fff;color:#0f172a}.lvn{color:#fff;font-size:.8rem;opacity:.85;min-width:3.5rem;text-align:center}
+</style>`);
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
