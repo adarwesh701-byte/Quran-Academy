@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v31";
+const UI_VERSION = "2026-11-12-v32";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14185,6 +14185,249 @@ renderLibraryDb = function () { let h = _renderLibraryDb31(); const secs = secti
 /* ---------- أسماء السور بلغة الطالب ---------- */
 const SURAHS_EN = "Al-Fatihah,Al-Baqarah,Al-Imran,An-Nisa,Al-Ma'idah,Al-An'am,Al-A'raf,Al-Anfal,At-Tawbah,Yunus,Hud,Yusuf,Ar-Ra'd,Ibrahim,Al-Hijr,An-Nahl,Al-Isra,Al-Kahf,Maryam,Ta-Ha,Al-Anbiya,Al-Hajj,Al-Mu'minun,An-Nur,Al-Furqan,Ash-Shu'ara,An-Naml,Al-Qasas,Al-Ankabut,Ar-Rum,Luqman,As-Sajdah,Al-Ahzab,Saba,Fatir,Ya-Sin,As-Saffat,Sad,Az-Zumar,Ghafir,Fussilat,Ash-Shura,Az-Zukhruf,Ad-Dukhan,Al-Jathiyah,Al-Ahqaf,Muhammad,Al-Fath,Al-Hujurat,Qaf,Adh-Dhariyat,At-Tur,An-Najm,Al-Qamar,Ar-Rahman,Al-Waqi'ah,Al-Hadid,Al-Mujadilah,Al-Hashr,Al-Mumtahanah,As-Saff,Al-Jumu'ah,Al-Munafiqun,At-Taghabun,At-Talaq,At-Tahrim,Al-Mulk,Al-Qalam,Al-Haqqah,Al-Ma'arij,Nuh,Al-Jinn,Al-Muzzammil,Al-Muddaththir,Al-Qiyamah,Al-Insan,Al-Mursalat,An-Naba,An-Nazi'at,Abasa,At-Takwir,Al-Infitar,Al-Mutaffifin,Al-Inshiqaq,Al-Buruj,At-Tariq,Al-A'la,Al-Ghashiyah,Al-Fajr,Al-Balad,Ash-Shams,Al-Layl,Ad-Duha,Ash-Sharh,At-Tin,Al-Alaq,Al-Qadr,Al-Bayyinah,Az-Zalzalah,Al-Adiyat,Al-Qari'ah,At-Takathur,Al-Asr,Al-Humazah,Al-Fil,Quraysh,Al-Ma'un,Al-Kawthar,Al-Kafirun,An-Nasr,Al-Masad,Al-Ikhlas,Al-Falaq,An-Nas".split(",");
 function sName(n) { return state.lang === "ar" ? SURAHS[n - 1] : `${SURAHS_EN[n - 1]} (${SURAHS[n - 1]})`; }
+/* ================= v32: المصحف الملوّن (قرّاء + الوقف + أخطائي) + رحلة التجويد + التزام الحفظ ================= */
+/* ---------- 1) علامات الوقف ---------- */
+const WQ = { "ۖ": ["sla", "صلى", "الوصل أولى", "Continuing is preferred"], "ۗ": ["qla", "قلى", "الوقف أولى", "Stopping is preferred"], "ۚ": ["jim", "ج", "وقف جائز (الوقف والوصل سواء)", "Permissible stop (either is fine)"], "ۘ": ["mim", "مـ", "وقف لازم", "Compulsory stop"], "ۙ": ["la", "لا", "لا تقف هنا", "Do not stop"], "ۛ": ["tan", "∴", "وقف التعانق: قف عند إحداهما فقط", "Paired stop: stop at only one of the two"], "ۜ": ["skt", "س", "سكتة لطيفة بدون نفس", "Brief pause without breath"] };
+state.tjv = state.tjv || { wq: true, mark: false, play: false, i: -1 };
+function wqWrap(html) { if (!state.tjv.wq) return html; return html.replace(/[ۖ-ۜ]/g, c => { const w = WQ[c]; return w ? `<span class="wq wq-${w[0]}" title="${esc(state.lang === "ar" ? w[2] : w[3])}">${c}</span>` : c; }); }
+// يقسم نص الآية الملوّن لكلمات من غير ما يكسر الألوان
+function tjWords(raw) {
+  const s = String(raw).replace(/<span class=end>[^<]*<\/span>/g, "").trim(); const words = []; let cur = "", stack = [], i = 0;
+  const open = () => stack.map(c => `<tajweed class=${c}>`).join(""), close = () => stack.map(() => "</tajweed>").join("");
+  while (i < s.length) {
+    if (s[i] === "<") { const j = s.indexOf(">", i); const tag = s.slice(i, j + 1); const m = tag.match(/^<tajweed class=([a-z_]+)>$/); if (m) stack.push(m[1]); else if (tag === "</tajweed>") stack.pop(); cur += tag; i = j + 1; continue; }
+    if (s[i] === " ") { if (cur.replace(/<[^>]*>/g, "").trim()) { words.push(cur + close()); cur = open(); } i++; continue; }
+    cur += s[i]; i++;
+  }
+  if (cur.replace(/<[^>]*>/g, "").trim()) words.push(cur + close());
+  return words;
+}
+/* ---------- 2) أخطائي في المصحف ---------- */
+const MM_KINDS = { haraka: ["✏️", "تشكيل / حركة", "Vowel / diacritic"], madd: ["〰️", "مد", "Madd"], ghunna: ["👃", "غنة", "Ghunnah"], nun: ["🔗", "إدغام / إخفاء / إقلاب", "Idgham / ikhfa / iqlab"], makhraj: ["👄", "مخرج حرف", "Letter articulation"], qalqala: ["💥", "قلقلة", "Qalqalah"], tafkhim: ["🔊", "تفخيم وترقيق", "Heavy / light letters"], waqf: ["⏸️", "وقف وابتداء", "Stopping / starting"], hifz: ["🧠", "نسيان أو تبديل كلمة", "Forgot / swapped a word"], other: ["📝", "حاجة تانية", "Other"] };
+function mmUser() { return state.mmUser || (state.auth.user && state.auth.user.id); }
+function mmMarks(surah) { const u = mmUser(); if (!u) return []; const d = useData(`mm:${u}:${surah}`, async () => { const r = await sb.from("mushaf_marks").select("*").eq("user_id", u).like("vkey", surah + ":%").order("created_at"); return r.data || []; }); return Array.isArray(d) ? d : []; }
+function mmInv(surah) { delete state.data[`mm:${mmUser()}:${surah}`]; delete state.data["mmAll:" + mmUser()]; }
+function mmOpen(vkey, w, word) {
+  const surah = +vkey.split(":")[0]; const ex = mmMarks(surah).filter(m => m.vkey === vkey && m.w === w);
+  let box = document.getElementById("mmModal"); if (!box) { box = document.createElement("div"); box.id = "mmModal"; document.body.appendChild(box); }
+  box.innerHTML = `<div class="edbox"><h3>✍️ ${L("mmT")}</h3><div class="mmword">${esc(word)}</div><p class="xs muted">${esc(sName(surah))} · ${L("mmAyah")} ${vkey.split(":")[1]}</p>
+    ${ex.map(m => `<div class="kv"><span>${(MM_KINDS[m.kind] || MM_KINDS.other)[0]} <b>${esc(mmKind(m.kind))}</b>${m.note ? " — " + esc(m.note) : ""}${m.resolved ? ` <span class="badge badge-g">✓ ${L("mmFixed")}</span>` : ""}</span><span class="row" style="gap:.25rem">${m.resolved ? "" : `<button class="btn btn-o" style="padding:.2rem .5rem" onclick="mmResolve('${m.id}',${surah})">✓</button>`}<button class="btn btn-o" style="padding:.2rem .5rem" onclick="mmDel('${m.id}',${surah})">🗑️</button></span></div>`).join("")}
+    <div class="mmkinds">${Object.entries(MM_KINDS).map(([k, v]) => `<label><input type="radio" name="mmk" value="${k}" ${k === "haraka" ? "checked" : ""}> ${v[0]} ${esc(state.lang === "ar" ? v[1] : v[2])}</label>`).join("")}</div>
+    <textarea id="mmNote" class="in" rows="2" placeholder="${esc(L("mmNoteP"))}"></textarea>
+    <div class="row" style="gap:.4rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-p" onclick="mmSave('${vkey}',${w},${esc(JSON.stringify(word))})">💾 ${L("save") || "حفظ"}</button><button class="btn btn-o" onclick="document.getElementById('mmModal').remove()">${L("cancel") || "إلغاء"}</button></div></div>`;
+}
+function mmKind(k) { const v = MM_KINDS[k] || MM_KINDS.other; return state.lang === "ar" ? v[1] : v[2]; }
+async function mmSave(vkey, w, word) { const k = (document.querySelector('input[name="mmk"]:checked') || {}).value || "other"; const note = (document.getElementById("mmNote") || {}).value || ""; const r = await sb.from("mushaf_marks").insert({ user_id: mmUser(), vkey, w, word, kind: k, note: note.trim() || null }); if (r.error) return toast(r.error.message, true); const s = +vkey.split(":")[0]; mmInv(s); const m = document.getElementById("mmModal"); if (m) m.remove(); toast(L("saved")); render(); }
+async function mmResolve(id, s) { await sb.from("mushaf_marks").update({ resolved: true }).eq("id", id); mmInv(s); const m = document.getElementById("mmModal"); if (m) m.remove(); render(); }
+async function mmDel(id, s) { await sb.from("mushaf_marks").delete().eq("id", id); mmInv(s); const m = document.getElementById("mmModal"); if (m) m.remove(); render(); }
+document.addEventListener("click", e => { const w = e.target.closest && e.target.closest(".tj2 .w"); if (!w) return; if (state.tjv.mark) { e.preventDefault(); mmOpen(w.dataset.v, +w.dataset.i, w.innerText.trim()); } else if (w.classList.contains("mk")) { mmOpen(w.dataset.v, +w.dataset.i, w.innerText.trim()); } });
+/* ---------- 3) المصحف الملوّن الجديد ---------- */
+let __tjAu = null;
+function tjPlayFrom(i) { const s = (state.tj || {}).surah || 1; const d = state.data["tj:" + s]; if (!Array.isArray(d)) return; if (!__tjAu) __tjAu = new Audio(); const v = state.tjv; v.i = i; v.play = true; document.querySelectorAll(".tj2 .ay.on").forEach(x => x.classList.remove("on")); const el = document.getElementById("tay_" + (i + 1)); if (el) { el.classList.add("on"); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  __tjAu.src = eaUrl(state.ea, `${s}:${i + 1}`); __tjAu.onended = () => { if (state.tjv.play && i + 1 < d.length) tjPlayFrom(i + 1); else tjStop(); }; __tjAu.play().catch(() => {}); const b = document.getElementById("tjPlayBtn"); if (b) b.textContent = "⏸ " + L("srPause"); }
+function tjStop() { state.tjv.play = false; if (__tjAu) __tjAu.pause(); document.querySelectorAll(".tj2 .ay.on").forEach(x => x.classList.remove("on")); const b = document.getElementById("tjPlayBtn"); if (b) b.textContent = "▶ " + L("tjPlayAll"); }
+function tjBody(surah, d) {
+  const marks = mmMarks(surah); const mset = new Set(marks.filter(m => !m.resolved).map(m => m.vkey + "#" + m.w));
+  return `<div class="tjtext tj2 ${state.tjv.mark ? "marking" : ""}">${d.map((raw, k) => { const vk = `${surah}:${k + 1}`; return `<span class="ay" id="tay_${k + 1}">${tjWords(raw).map((w, i) => `<span class="w${mset.has(vk + "#" + i) ? " mk" : ""}" data-v="${vk}" data-i="${i}">${wqWrap(tjSafe(w))}</span>`).join(" ")} <span class="end" onclick="tjPlayFrom(${k})" title="▶">﴿${k + 1}﴾</span></span>`; }).join(" ")}</div>`;
+}
+function tjTools() {
+  const v = state.tjv;
+  return `<div class="tjtools"><span class="row" style="gap:.35rem;align-items:center;flex-wrap:wrap"><span class="sm">🎙️</span>${eaSelect("state.ea=this.value;tjStop()")}<button class="btn btn-p" id="tjPlayBtn" onclick="state.tjv.play?tjStop():tjPlayFrom(Math.max(0,state.tjv.i))">${v.play ? "⏸ " + L("srPause") : "▶ " + L("tjPlayAll")}</button></span>
+    <span class="row" style="gap:.35rem;flex-wrap:wrap"><button class="btn ${v.mark ? "btn-p" : "btn-o"}" onclick="state.tjv.mark=!state.tjv.mark;render()">✍️ ${v.mark ? L("mmOn") : L("mmMode")}</button><button class="btn ${v.wq ? "btn-p" : "btn-o"}" onclick="state.tjv.wq=!state.tjv.wq;render()">⏸️ ${L("wqT")}</button></span></div>
+    ${v.mark ? `<p class="sm" style="margin:.4rem 0;color:var(--gold)">✍️ ${L("mmHint")}</p>` : ""}
+    ${v.wq ? `<div class="wqleg">${Object.values(WQ).map(w => `<span><b class="wq wq-${w[0]}">${w[1]}</b> ${esc(state.lang === "ar" ? w[2] : w[3])}</span>`).join("")}</div>` : ""}`;
+}
+function mmListCard(surah) {
+  const u = mmUser(); if (!u) return ""; const all = useData("mmAll:" + u, async () => { const r = await sb.from("mushaf_marks").select("*").eq("user_id", u).order("created_at", { ascending: false }).limit(300); return r.data || []; });
+  if (!Array.isArray(all)) return ""; const open = all.filter(m => !m.resolved); const by = {}; open.forEach(m => by[m.kind] = (by[m.kind] || 0) + 1); const top = Object.entries(by).sort((a, b) => b[1] - a[1]);
+  return `<div class="card" style="margin-top:1rem"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>📕 ${L("mmMine")}</h3><span class="badge">${open.length} ${L("mmOpenN")} · ${all.length - open.length} ✓</span></div>
+    ${top.length ? `<div class="row" style="gap:.35rem;flex-wrap:wrap;margin:.6rem 0">${top.map(([k, n]) => `<span class="badge">${(MM_KINDS[k] || MM_KINDS.other)[0]} ${esc(mmKind(k))}: <b>${n}</b></span>`).join("")}</div><p class="xs muted">${L("mmTop")}: <b>${esc(mmKind(top[0][0]))}</b></p>` : `<p class="sm muted" style="margin-top:.4rem">${L("mmEmpty")}</p>`}
+    ${open.slice(0, 40).map(m => { const [s, a] = m.vkey.split(":"); return `<div class="kv"><span>${(MM_KINDS[m.kind] || MM_KINDS.other)[0]} <b class="mmw">${esc(m.word || "")}</b> <span class="xs muted">${esc(sName(+s))} ${a}</span>${m.note ? `<br><span class="xs">${esc(m.note)}</span>` : ""}</span><span class="row" style="gap:.25rem"><button class="btn btn-o" style="padding:.2rem .5rem" onclick="state.tj=state.tj||{};state.tj.surah=${s};render();setTimeout(()=>{const e=document.getElementById('tay_${a}');e&&e.scrollIntoView({block:'center'})},600)">👁️</button><button class="btn btn-o" style="padding:.2rem .5rem" onclick="mmResolve('${m.id}',${s})">✓</button></span></div>`; }).join("")}</div>`;
+}
+function fullSurahCard(surah) {
+  const list = MP3Q.list; if (!list) return `<div class="card" style="margin-top:1rem">${loadingBox()}</div>`;
+  state.tjr = state.tjr || (list.find(x => /المنشاوي|Minshawi/i.test(x.name)) || list[0]).id; const rec = list.find(x => x.id === state.tjr) || list[0];
+  const url = rec.surahs.has(surah) ? `${rec.server}${String(surah).padStart(3, "0")}.mp3` : null;
+  return `<div class="card" style="margin-top:1rem"><h3>🎧 ${L("recFull")}</h3><div class="row" style="gap:.4rem;margin:.5rem 0;align-items:center;flex-wrap:wrap"><span class="sm">🎙️ ${list.length} ${L("tjRecN")}</span><select class="in" style="width:auto;max-width:100%" onchange="state.tjr=this.value;render()">${list.map(r => `<option value="${r.id}" ${r.id === rec.id ? "selected" : ""}>${esc(r.name)} — ${esc(r.mo)}${r.surahs.has(surah) ? "" : " ✗"}</option>`).join("")}</select></div>${url ? `<audio controls preload="none" style="width:100%" src="${esc(url)}" controlsList="nodownload"></audio>` : `<p class="sm muted">${L("tjNoSurah")}</p>`}</div>`;
+}
+const _tajPage32 = tajPage;
+tajPage = function (secId) {
+  let h = _tajPage32(secId); if (state.tjq && state.qz) return h; const s = (state.tj || {}).surah || 1; const d = state.data["tj:" + s];
+  const i = h.indexOf('<div class="tjtext">'); if (i >= 0 && Array.isArray(d)) { const j = h.indexOf("</div>", i) + 6; h = h.slice(0, i) + tjTools() + tjBody(s, d) + h.slice(j); }
+  h = h.replace(/<div class="card" style="margin-top:1rem"><h3>🎧 [\s\S]*$/, "");
+  return h + fullSurahCard(s) + (state.auth.user ? mmListCard(s) : "");
+};
+
+/* ---------- 4) رحلة التجويد (دروس ممتعة + اكتشف + اختبار) ---------- */
+const TJC = [
+  { id: "nun", ic: "🔗", t: ["النون الساكنة والتنوين", "Nun sakinah & tanween"], cls: ["ikhafa", "idgham_ghunnah", "idgham_wo_ghunnah", "iqlab"],
+    cards: [["الأحكام ٤", "لما تيجي نون ساكنة (نْ) أو تنوين (ـً ـٍ ـٌ) وبعدها حرف، بيتحدد حكمها حسب الحرف اللي بعدها: إظهار، إدغام، إقلاب، إخفاء."], ["١) الإظهار الحلقي", "لو بعدها حرف من حروف الحلق الستة: ء هـ ع ح غ خ → تنطق النون واضحة من غير غنة. مثال: «مِنْ هَادٍ»."], ["٢) الإدغام", "لو بعدها حرف من «يرملون»: بغنة في (ي ن م و) مثل «مَن يَقُولُ»، ومن غير غنة في (ل ر) مثل «مِن رَّبِّهِمْ»."], ["٣) الإقلاب", "لو بعدها باء: النون تتقلب ميم مخفاة بغنة. مثال: «مِنۢ بَعْدِ»."], ["٤) الإخفاء", "عند باقي الحروف الـ ١٥: تنطق النون بين الإظهار والإدغام مع غنة. مثال: «مِن قَبْلِ»."]],
+    q: [["كام حرف من حروف الإظهار الحلقي؟", "٦", ["٤", "١٥", "٢"]], ["حروف الإدغام مجموعة في كلمة…", "يرملون", ["قطب جد", "فحثه شخص سكت", "ينمو"]], ["لو جت باء بعد النون الساكنة يبقى الحكم…", "إقلاب", ["إخفاء", "إظهار", "إدغام بغنة"]], ["الإدغام من غير غنة في حرفين…", "اللام والراء", ["الياء والواو", "الميم والنون", "الباء والميم"]], ["عدد حروف الإخفاء الحقيقي…", "١٥", ["٦", "٤", "١٧"]]] },
+  { id: "mim", ic: "🫦", t: ["الميم الساكنة", "Mim sakinah"], cls: ["ikhafa_shafawi", "idgham_shafawi"],
+    cards: [["الأحكام ٣", "الميم الساكنة (مْ) ليها ٣ أحكام حسب الحرف اللي بعدها."], ["١) الإخفاء الشفوي", "لو بعدها باء: تخفي الميم مع غنة. مثال: «تَرْمِيهِم بِحِجَارَةٍ»."], ["٢) إدغام المثلين الصغير", "لو بعدها ميم: تدخل الميم في الميم بغنة. مثال: «لَهُم مَّا»."], ["٣) الإظهار الشفوي", "عند باقي الحروف: تظهر الميم، وخلي بالك أكتر عند الواو والفاء. مثال: «هُمْ فِيهَا»."]],
+    q: [["الميم الساكنة قبل الباء حكمها…", "إخفاء شفوي", ["إظهار شفوي", "إقلاب", "إدغام بغير غنة"]], ["الميم الساكنة قبل الميم حكمها…", "إدغام مثلين صغير", ["إخفاء شفوي", "إظهار", "قلقلة"]], ["أشد الإظهار الشفوي يكون عند…", "الواو والفاء", ["الباء والميم", "اللام والراء", "حروف الحلق"]]] },
+  { id: "madd", ic: "〰️", t: ["المدود", "Madd (prolongation)"], cls: ["madda_normal", "madda_permissible", "madda_obligatory", "madda_necessary"],
+    cards: [["حروف المد", "ا قبلها فتحة، و ساكنة قبلها ضمة، ي ساكنة قبلها كسرة. مجموعة في «نوحيها»."], ["المد الطبيعي", "حركتين بالظبط، من غير همز ولا سكون بعد حرف المد. مثال: «قَالَ»."], ["المد المتصل (واجب)", "حرف المد والهمزة في نفس الكلمة: ٤ أو ٥ حركات لحفص من طريق الشاطبية. مثال: «جَآءَ»."], ["المد المنفصل (جائز)", "حرف المد آخر كلمة والهمزة أول اللي بعدها: ٤ أو ٥ حركات من طريق الشاطبية. مثال: «يَٰٓأَيُّهَا»."], ["المد اللازم", "بعد حرف المد سكون أصلي ثابت: ٦ حركات دايمًا. مثال: «الضَّآلِّينَ»."], ["المد العارض للسكون", "لما تقف على كلمة قبل آخرها حرف مد: ٢ أو ٤ أو ٦. مثال: الوقف على «نَسْتَعِينُ»."]],
+    q: [["المد الطبيعي مقداره…", "حركتين", ["٤ حركات", "٦ حركات", "حركة"]], ["المد اللازم مقداره…", "٦ حركات", ["حركتين", "٤ أو ٥", "٢ أو ٤ أو ٦"]], ["لو حرف المد والهمزة في نفس الكلمة يبقى…", "مد متصل", ["مد منفصل", "مد لازم", "مد بدل"]], ["الوقف على «العالمين» فيه مد…", "عارض للسكون", ["لازم", "متصل", "منفصل"]], ["حروف المد مجموعة في…", "نوحيها", ["يرملون", "قطب جد", "يمنو"]]] },
+  { id: "qalqala", ic: "💥", t: ["القلقلة", "Qalqalah"], cls: ["qalaqah"],
+    cards: [["يعني إيه قلقلة؟", "اهتزاز وارتداد في الحرف الساكن لحد ما يسمع له نبرة قوية."], ["حروفها", "خمسة مجموعة في «قطب جد»: ق ط ب ج د."], ["صغرى وكبرى", "صغرى لما الحرف ساكن في وسط الكلمة زي «يَقْطَعُونَ»، وكبرى لما تقف عليه آخر الكلمة زي «الْفَلَقِ» وقت الوقف."]],
+    q: [["حروف القلقلة مجموعة في…", "قطب جد", ["يرملون", "فحثه شخص سكت", "خص ضغط قظ"]], ["القلقلة الكبرى بتكون…", "عند الوقف على الحرف آخر الكلمة", ["في وسط الكلمة", "مع كل حرف متحرك", "قبل الهمزة"]], ["أي حرف من دول حرف قلقلة؟", "د", ["س", "ل", "م"]]] },
+  { id: "ghunna", ic: "👃", t: ["الغنة والمشدد", "Ghunnah"], cls: ["ghunnah"],
+    cards: [["الغنة", "صوت لذيذ بيخرج من الخيشوم (الأنف)."], ["النون والميم المشددتين", "كل نون أو ميم مشددة فيها غنة بمقدار حركتين. مثال: «إِنَّ»، «ثُمَّ»."]],
+    q: [["الغنة بتخرج من…", "الخيشوم", ["الحلق", "الشفتين", "الجوف"]], ["مقدار الغنة في النون المشددة…", "حركتين", ["٤ حركات", "حركة", "٦ حركات"]]] },
+  { id: "lam", ic: "☀️", t: ["اللامات (شمسية وقمرية ولفظ الجلالة)", "Lam rules"], cls: ["laam_shamsiyah"],
+    cards: [["اللام القمرية", "لام «ال» تظهر قبل ١٤ حرف مجموعين في «ابغ حجك وخف عقيمه». مثال: «الْقَمَر»."], ["اللام الشمسية", "تتدغم وما تتنطقش قبل باقي الحروف الـ ١٤، والحرف اللي بعدها بيتشدد. مثال: «الشَّمْس»."], ["لام لفظ الجلالة", "تتفخم بعد فتح أو ضم (قَالَ اللَّهُ)، وتترقق بعد كسر (بِسْمِ اللَّهِ)."]],
+    q: [["اللام في «الشمس»…", "شمسية تُدغم", ["قمرية تظهر", "مفخمة", "مقلقلة"]], ["حروف اللام القمرية مجموعة في…", "ابغ حجك وخف عقيمه", ["قطب جد", "يرملون", "نوحيها"]], ["لام لفظ الجلالة في «بسم الله»…", "مرققة", ["مفخمة", "مقلقلة", "مدغمة"]]] },
+  { id: "ra", ic: "🔊", t: ["التفخيم والترقيق (الراء)", "Heavy & light Ra"], cls: [],
+    cards: [["حروف الاستعلاء", "دايمًا مفخمة: «خص ضغط قظ»."], ["تفخيم الراء", "لما تكون مفتوحة أو مضمومة، أو ساكنة وقبلها فتح أو ضم. مثال: «رَبِّ»، «قُرْآن»."], ["ترقيق الراء", "لما تكون مكسورة، أو ساكنة وقبلها كسر أصلي ومش بعدها حرف استعلاء. مثال: «رِجَال»، «فِرْعَوْن»."]],
+    q: [["حروف التفخيم مجموعة في…", "خص ضغط قظ", ["قطب جد", "يرملون", "فحثه شخص سكت"]], ["الراء في «رَبِّ»…", "مفخمة", ["مرققة", "مدغمة", "مقلقلة"]], ["الراء في «رِجَال»…", "مرققة", ["مفخمة", "مخفاة", "ممدودة"]]] },
+  { id: "makharij", ic: "👄", t: ["مخارج الحروف", "Articulation points"], cls: [],
+    cards: [["المخارج العامة ٥", "الجوف، الحلق، اللسان، الشفتان، الخيشوم. وعلى مذهب ابن الجزري ١٧ مخرج تفصيلي."], ["الجوف", "مخرج حروف المد الثلاثة: الألف والواو والياء الساكنتين بعد حركة تناسبهم."], ["الحلق", "أقصاه: ء هـ، وسطه: ع ح، وأدناه: غ خ."], ["الشفتان", "الفاء من باطن الشفة السفلى مع أطراف الثنايا العليا، والواو والباء والميم من بين الشفتين."]],
+    q: [["عدد المخارج العامة…", "٥", ["١٧", "٣", "٧"]], ["الهمزة والهاء من…", "أقصى الحلق", ["وسط الحلق", "أدنى الحلق", "الشفتين"]], ["حروف المد مخرجها…", "الجوف", ["الحلق", "الخيشوم", "اللسان"]]] },
+  { id: "sifat", ic: "🧬", t: ["صفات الحروف", "Letter attributes"], cls: [],
+    cards: [["صفات ليها عكس", "الجهر والهمس، الشدة والرخاوة (وبينهم التوسط)، الاستعلاء والاستفال، الإطباق والانفتاح، الإذلاق والإصمات."], ["الهمس", "جريان النفَس مع الحرف، حروفه «فحثه شخص سكت»."], ["الإطباق", "انطباق اللسان على الحنك الأعلى: ص ض ط ظ."], ["صفات من غير عكس", "الصفير، القلقلة، اللين، الانحراف، التكرير، التفشي، الاستطالة."]],
+    q: [["حروف الهمس مجموعة في…", "فحثه شخص سكت", ["قطب جد", "خص ضغط قظ", "يرملون"]], ["حروف الإطباق…", "ص ض ط ظ", ["ق ط ب ج د", "ي ر م ل و ن", "ا و ي"]], ["التكرير صفة حرف…", "الراء", ["اللام", "الشين", "الضاد"]]] },
+  { id: "waqf", ic: "⏸️", t: ["الوقف والابتداء وعلامات الوقف", "Stopping & its signs"], cls: [], wq: true,
+    cards: [["ليه الوقف مهم؟", "الوقف في مكان غلط ممكن يغيّر المعنى، فالمصحف فيه علامات بتساعدك."], ["علامات المصحف", "مـ وقف لازم · لا ممنوع · ج جائز (الوقف والوصل سواء) · صلى الوصل أولى · قلى الوقف أولى · ∴ تعانق: قف عند واحدة بس."], ["الوقف الجائز", "علامة «ج»: تقف أو تكمل، الاتنين صح بنفس الدرجة."]],
+    q: [["علامة «ج» معناها…", "وقف جائز: الوقف والوصل سواء", ["وقف لازم", "ممنوع الوقف", "الوصل أولى"]], ["علامة «قلى» معناها…", "الوقف أولى", ["الوصل أولى", "وقف لازم", "سكتة"]], ["علامة «صلى» معناها…", "الوصل أولى", ["الوقف أولى", "ممنوع الوقف", "وقف التعانق"]], ["علامة «مـ» معناها…", "وقف لازم", ["وقف جائز", "لا تقف", "سكتة"]]] }
+];
+const TJC_FREE = 2;
+state.tc = state.tc || { ch: null, step: "learn" };
+function tcProg() { if (!state.auth.user) return {}; const d = useData("tcp:" + state.auth.user.id, async () => { const r = await sb.from("tj_progress").select("ch,stars,score").eq("user_id", state.auth.user.id); const o = {}; (r.data || []).forEach(x => o[x.ch] = x); return o; }); return d && !d.__error && typeof d === "object" ? d : {}; }
+function tcMap() {
+  const P = tcProg(); const full = allAccess(); let open = true;
+  return `<div class="card tcmap"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h2>🧭 ${L("tcT")}</h2><span class="badge">⭐ ${Object.values(P).reduce((n, x) => n + (x.stars || 0), 0)} / ${TJC.length * 3}</span></div><p class="sm muted" style="margin:.3rem 0 1rem">${L("tcS")}</p><div class="tcpath">${TJC.map((c, k) => {
+    const st = (P[c.id] || {}).stars || 0; const paid = !full && k >= TJC_FREE; const can = open && !paid; const node = `<button class="tcnode ${st ? "done" : ""} ${can ? "" : "lock"}" onclick="${can ? `state.tc.ch='${c.id}';state.tc.step='learn';state.qz=null;render();window.scrollTo({top:0})` : paid ? `toast(L('smpLock'),true)` : `toast(L('tcPrev'),true)`}"><span class="tci">${can ? c.ic : "🔒"}</span><b>${esc(state.lang === "ar" ? c.t[0] : c.t[1])}</b><span class="tcst">${"★".repeat(st)}${"☆".repeat(3 - st)}</span>${k < TJC_FREE && !full ? `<small class="badge badge-g">${state.lang === "ar" ? "مجاني" : "Free"}</small>` : ""}</button>`; if (!st) open = false; return node; }).join("")}</div></div>`;
+}
+function tcChapter() {
+  const c = TJC.find(x => x.id === state.tc.ch); if (!c) return tcMap(); const st = state.tc.step;
+  const tabs = [["learn", "📘 " + L("tcL")], ...(c.cls.length || c.wq ? [["find", "🔍 " + L("tcF")]] : []), ["test", "📝 " + L("tcQ")]];
+  let body = "";
+  if (st === "learn") body = `<div class="tccards">${c.cards.map(([h, p], i) => `<div class="tccard" style="--i:${i}"><b>${esc(h)}</b><p>${esc(p)}</p></div>`).join("")}</div>${c.cls.length ? `<div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.6rem">${c.cls.map(k => TJ[k] ? `<span class="badge" style="border-color:${TJ[k][0]};color:${TJ[k][0]}">● ${esc(state.lang === "ar" ? TJ[k][1] : TJ[k][2])}</span>` : "").join("")}</div><p class="xs muted" style="margin-top:.3rem">${L("tcColors")}</p>` : ""}<p class="xs muted" style="margin-top:.6rem">📖 ${L("tcSrc")}</p><button class="btn btn-p" style="margin-top:.8rem" onclick="state.tc.step='${c.cls.length || c.wq ? "find" : "test"}';render()">${L("tcNext")} ➜</button>`;
+  else if (st === "find") body = tcFind(c);
+  else body = state.qz && state.qz.tc ? quizView() : `<div style="text-align:center;padding:1rem"><div style="font-size:2.6rem">📝</div><p>${L("tcQS")}</p><button class="btn btn-p btn-lg" onclick="tcQuiz('${c.id}')">${L("gmStart")}</button></div>`;
+  return `<div class="card tcch"><div class="row" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem"><button class="btn btn-o" onclick="state.tc.ch=null;state.qz=null;render()">← ${L("tcBack")}</button><h2 style="margin:0">${c.ic} ${esc(state.lang === "ar" ? c.t[0] : c.t[1])}</h2></div><div class="motabs">${tabs.map(([k, n]) => `<button class="${st === k ? "on" : ""}" onclick="state.tc.step='${k}';state.qz=null;render()">${n}</button>`).join("")}</div><div style="margin-top:1rem">${body}</div></div>`;
+}
+// «اكتشف»: الطالب يدوس على الكلمة اللي فيها الحكم في آية حقيقية
+function tcFind(c) {
+  const f = state.tcf = state.tcf && state.tcf.ch === c.id ? state.tcf : { ch: c.id, n: 0, ok: 0, s: 78 + Math.floor(Math.random() * 37), pick: null };
+  const d = useData("tj:" + f.s, async () => { const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${f.s}?fields=text_uthmani_tajweed&per_page=300`).then(r => r.json()); return (r.verses || []).map(v => v.text_uthmani_tajweed); });
+  if (!Array.isArray(d)) return loadingBox();
+  const has = w => c.wq ? /[ۖ-ۜ]/.test(w) : c.cls.some(k => w.includes("class=" + k + ">"));
+  const cands = d.map((raw, k) => [k, tjWords(raw)]).filter(([k, ws]) => ws.some(has));
+  if (!cands.length) { f.s = 78 + Math.floor(Math.random() * 37); setTimeout(render, 0); return loadingBox(); }
+  if (f.ay == null || !cands.some(x => x[0] === f.ay)) f.ay = cands[Math.floor(Math.random() * cands.length)][0];
+  const ws = tjWords(d[f.ay]); const plain = w => esc(w.replace(/<[^>]*>/g, ""));
+  return `<p class="sm" style="margin-bottom:.4rem">${c.wq ? L("tcFindWq") : L("tcFindQ")}</p><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.3rem"><span class="xs muted">${esc(sName(f.s))} · ${f.ay + 1}</span><span class="badge">✅ ${f.ok} / ${f.n}</span></div>
+    <div class="tjtext tcfind">${ws.map((w, i) => { const hit = has(w); const shown = f.pick != null; return `<span class="w ${shown ? (hit ? "hit" : i === f.pick ? "miss" : "") : ""}" onclick="tcPick(${i},${hit})">${shown ? wqWrap(tjSafe(w)) : plain(w)}</span>`; }).join(" ")}</div>
+    <div class="row" style="gap:.4rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-o" onclick="eaPlay('${eaUrl(state.ea, f.s + ":" + (f.ay + 1))}')">▶ ${L("tcListen")}</button>${f.pick != null ? `<button class="btn btn-p" onclick="state.tcf.ay=null;state.tcf.pick=null;if(Math.random()<.4)state.tcf.s=78+Math.floor(Math.random()*37);render()">${L("qzNext")} ➜</button>` : ""}${f.n >= 5 ? `<button class="btn btn-g" onclick="state.tc.step='test';render()">📝 ${L("tcQ")}</button>` : ""}</div>`;
+}
+function tcPick(i, hit) { const f = state.tcf; if (!f || f.pick != null) return; f.pick = i; f.n++; if (hit) { f.ok++; sfxSafe("correct"); } else sfxSafe("wrong"); render(); }
+function tcQuiz(id) {
+  const c = TJC.find(x => x.id === id); const r = () => Math.random();
+  const qs = c.q.map(([q, a, w]) => ({ q, ans: a, opts: [a].concat(w).sort(() => r() - .5), t: state.lang === "ar" ? c.t[0] : c.t[1] }));
+  TJC.filter(x => x.id !== id).sort(() => r() - .5).slice(0, 2).forEach(x => { const p = x.q[Math.floor(r() * x.q.length)]; qs.push({ q: p[0], ans: p[1], opts: [p[1]].concat(p[2]).sort(() => r() - .5), t: "🔁 " + L("tcRev") }); });
+  state.qz = { qs: qs.sort(() => r() - .5), i: 0, ok: 0, pick: null, tc: true, back: () => {}, again: () => tcQuiz(id), onDone: async (sc) => { const stars = sc >= 90 ? 3 : sc >= 75 ? 2 : sc >= 60 ? 1 : 0; const P = tcProg(); const best = Math.max(stars, (P[id] || {}).stars || 0); if (state.auth.user) { await sb.from("tj_progress").upsert({ user_id: state.auth.user.id, ch: id, stars: best, score: sc, updated_at: new Date().toISOString() }); delete state.data["tcp:" + state.auth.user.id]; } if (stars) toast("⭐".repeat(stars) + " " + L("tcWin")); } };
+  render();
+}
+function isTajRoot(cur) { return cur && !cur.parent_id && ((cur.title || {}).ar || "").startsWith("التجويد"); }
+const _renderLibraryDb32 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb32(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec || !state.auth.user) return h;
+  const cur = secs.find(s => s.id === state.libSec); if (!isTajRoot(cur)) return h;
+  const block = state.tc.ch ? tcChapter() : tcMap(); const k = h.indexOf('<div class="libgrid'); return k > 0 ? h.slice(0, k) + block + h.slice(k) : h + block;
+};
+
+/* ---------- 5) التزام الحفظ: مراجعة متباعدة + منع الجديد قبل المراجعة + سلسلة أيام ---------- */
+const SRS_DAYS = [1, 3, 7, 14, 30, 60, 120];
+PAGES16.push("hifzt");
+function today0() { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function srsList(uid) { return useData("srs:" + uid, async () => { const r = await sb.from("hifz_srs").select("*").eq("user_id", uid).order("due"); return r.data || []; }); }
+function srsDays(uid) { return useData("srsd:" + uid, async () => { const r = await sb.from("hifz_days").select("day,done,due").eq("user_id", uid).order("day", { ascending: false }).limit(60); return r.data || []; }); }
+function srsStreak(days) { let n = 0; const d = new Date(); for (let k = 0; k < 60; k++) { const key = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; const r = days.find(x => x.day === key); if (r && r.done > 0 && r.done >= r.due) n++; else if (k > 0) break; d.setDate(d.getDate() - 1); } return n; }
+async function srsAdd(uid, s, a, b, src) { const due = new Date(Date.now() + 864e5); const r = await sb.from("hifz_srs").upsert({ user_id: uid, s, a, b, stage: 0, due: `${due.getFullYear()}-${pad2(due.getMonth() + 1)}-${pad2(due.getDate())}`, src: src || "self", updated_at: new Date().toISOString() }, { onConflict: "user_id,s,a,b" }); if (r.error) toast(r.error.message, true); delete state.data["srs:" + uid]; }
+async function srsResult(it, sc) {
+  const pass = sc >= 60; const stage = pass ? Math.min(it.stage + 1, SRS_DAYS.length - 1) : 0; const due = new Date(Date.now() + SRS_DAYS[pass ? stage : 0] * 864e5);
+  await sb.from("hifz_srs").update({ stage, due: `${due.getFullYear()}-${pad2(due.getMonth() + 1)}-${pad2(due.getDate())}`, last_score: sc, lapses: (it.lapses || 0) + (pass ? 0 : 1), updated_at: new Date().toISOString() }).eq("id", it.id);
+  const list = state.data["srs:" + it.user_id] || []; const dueN = list.filter(x => x.due <= today0()).length; const day = today0(); const prev = (state.data["srsd:" + it.user_id] || []).find(x => x.day === day) || { done: 0 };
+  if (pass) await sb.from("hifz_days").upsert({ user_id: it.user_id, day, done: (prev.done || 0) + 1, due: Math.max(dueN, (prev.done || 0) + 1) });
+  delete state.data["srs:" + it.user_id]; delete state.data["srsd:" + it.user_id]; toast(pass ? L("srsPass").replace("{d}", SRS_DAYS[stage]) : L("srsFail"), !pass); if (pass) confetti(1200);
+}
+async function srsTest(id) {
+  const uid = mmUser(); const it = (state.data["srs:" + uid] || []).find(x => x.id === id); if (!it) return; toast(L("loading"));
+  try { const all = await qRange(it.s, it.a, it.b); let qs = buildQuiz("review", all, it.a, it.b); let g = 0; while (qs.length < Math.min(12, (it.b - it.a + 1) * 2) && g++ < 5) qs = qs.concat(buildQuiz("review", all, it.a, it.b)); state.qz = { qs: qs.slice(0, 15), i: 0, ok: 0, pick: null, srs: true, back: () => {}, again: () => srsTest(id), onDone: sc => srsResult(it, sc) }; render(); window.scrollTo({ top: 0 }); } catch (e) { toast(L("error"), true); }
+}
+async function srsVoice(id) {
+  const uid = mmUser(); const it = (state.data["srs:" + uid] || []).find(x => x.id === id); if (!it) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return toast(L("srsNoMic"), true);
+  const all = await qRange(it.s, it.a, it.b); const target = all.filter(x => x.n >= it.a && x.n <= it.b).map(x => x.ar).join(" ");
+  toast("🎤 " + L("srsSpeak")); const said = await srListen(Math.min(60000, 6000 + target.split(" ").length * 900)); const sc = Math.round(simRatio(said || "", target) * 100);
+  state.srsV = { id, sc, said: said || "" }; render(); await srsResult(it, sc >= 80 ? Math.max(sc, 60) : Math.min(sc, 59)); render();
+}
+function hifzTrack(uid, forTeacher) {
+  const list = srsList(uid), days = srsDays(uid); if (!Array.isArray(list) || !Array.isArray(days)) return loadingBox();
+  const t = today0(); const due = list.filter(x => x.due <= t), over = list.filter(x => x.due < t), soon = list.filter(x => x.due > t).slice(0, 8); const streak = srsStreak(days);
+  const f = state.srsF = state.srsF || { s: 78, a: 1, b: 5 }; const blocked = over.length > 0 && !forTeacher;
+  const row = (x, btn) => `<div class="plit ${x.due < t ? "late" : ""}"><span class="plck">${x.due < t ? "⏰" : x.due === t ? "📌" : "🗓️"}</span><span style="flex:1"><b>${esc(sName(x.s))}</b> (${x.a}–${x.b})<br><span class="xs muted">${L("srsStage")} ${x.stage + 1}/${SRS_DAYS.length} · ${x.due < t ? L("srsLate") + " " + x.due : x.due}${x.last_score != null ? " · " + x.last_score + "%" : ""}</span></span>${btn ? `<button class="btn btn-p" style="padding:.3rem .7rem" onclick="srsTest('${x.id}')">📝 ${L("plTest")}</button><button class="btn btn-o" style="padding:.3rem .7rem" onclick="srsVoice('${x.id}')">🎤</button>` : ""}</div>`;
+  return `<div class="plsum"><div><b>🔥 ${streak}</b><span>${L("srsStreak")}</span></div><div><b>${due.length}</b><span>${L("srsDue")}</span></div><div><b style="color:${over.length ? "var(--danger)" : "var(--accent)"}">${over.length}</b><span>${L("srsOver")}</span></div><div><b>${list.reduce((n, x) => n + (x.b - x.a + 1), 0)}</b><span>${L("srsAyahs")}</span></div></div>
+    ${state.srsV ? `<div class="notice ${state.srsV.sc >= 80 ? "ok" : ""}" style="margin:.6rem 0">🎤 ${L("srsVoiceRes")}: <b>${state.srsV.sc}%</b></div>` : ""}
+    <div class="card" style="margin-top:1rem"><h3>📌 ${L("srsToday")}</h3>${due.length ? due.map(x => row(x, true)).join("") : `<p class="sm" style="color:var(--accent);margin-top:.4rem">🎉 ${L("srsNone")}</p>`}</div>
+    <div class="card" style="margin-top:1rem"><h3>➕ ${forTeacher ? L("srsAddT") : L("srsAdd")}</h3>${blocked ? `<div class="err" style="margin-top:.5rem">🔒 ${L("srsBlock").replace("{n}", over.length)}</div>` : `<p class="xs muted" style="margin:.3rem 0 .6rem">${L("srsAddS")}</p><div class="pladd"><select class="in" onchange="state.srsF.s=+this.value;state.srsF.a=1;state.srsF.b=Math.min(5,SURAH_AYAHS[this.value-1]);render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${f.s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select><label class="xs">${L("plFrom")} <input class="in" type="number" min="1" max="${SURAH_AYAHS[f.s - 1]}" value="${f.a}" style="width:5rem" onchange="state.srsF.a=+this.value"></label><label class="xs">${L("plTo")} <input class="in" type="number" min="1" max="${SURAH_AYAHS[f.s - 1]}" value="${f.b}" style="width:5rem" onchange="state.srsF.b=+this.value"></label><button class="btn btn-p" onclick="srsNew('${uid}',${forTeacher ? "true" : "false"})">${forTeacher ? "➕ " + L("srsAssign") : "📝 " + L("srsNewTest")}</button></div>`}</div>
+    ${soon.length ? `<div class="card" style="margin-top:1rem"><h3>🗓️ ${L("srsSoon")}</h3>${soon.map(x => row(x, false)).join("")}</div>` : ""}
+    <p class="xs muted" style="margin-top:.6rem">${L("srsHow")}</p>`;
+}
+async function srsNew(uid, teacher) {
+  const f = state.srsF; const mx = SURAH_AYAHS[f.s - 1]; const a = Math.max(1, Math.min(f.a, mx)), b = Math.max(a, Math.min(f.b, mx));
+  if (teacher) { await srsAdd(uid, f.s, a, b, "teacher"); toast(L("saved")); return render(); }
+  toast(L("loading")); const all = await qRange(f.s, a, b); let qs = buildQuiz("review", all, a, b); let g = 0; while (qs.length < Math.min(12, (b - a + 1) * 2) && g++ < 5) qs = qs.concat(buildQuiz("review", all, a, b));
+  state.qz = { qs: qs.slice(0, 15), i: 0, ok: 0, pick: null, srs: true, back: () => {}, again: () => srsNew(uid, false), onDone: async sc => { if (sc >= 60) { await srsAdd(uid, f.s, a, b, "self"); toast(L("srsAdded")); } else toast(L("srsFail"), true); } }; render();
+}
+function renderHifzTrack() {
+  if (!state.auth.user) return pageWrap("🧠", L("srsT"), L("srsS"), guestPitch());
+  if (state.qz && state.qz.srs) return pageWrap("🧠", L("srsT"), "", quizView());
+  const r = role(); let sid = state.pageArg || (r === "student" ? state.auth.user.id : null);
+  if (!sid) { const P = peopleMap(); const st = (P.list || []).filter(p => p.role === "student"); return pageWrap("🧠", L("srsT"), L("plPickS"), `<div class="row" style="gap:.4rem;flex-wrap:wrap">${st.slice(0, 80).map(s => `<button class="btn btn-o" onclick="state.mmUser='${s.id}';go16('hifzt','${s.id}')">${esc(s.real_name || s.email)}</button>`).join("")}</div>`); }
+  state.mmUser = sid === state.auth.user.id ? null : sid; const P = peopleMap(); const nm = sid !== state.auth.user.id ? personName(sid, P.map) : "";
+  return pageWrap("🧠", L("srsT") + (nm ? " — " + nm : ""), L("srsS"), hifzTrack(sid, sid !== state.auth.user.id));
+}
+const _render32 = render;
+render = function () {
+  if (state.route === "hifzt") { const app = document.getElementById("app"); if (!app) return; let body; try { body = renderHifzTrack(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); applyRename(app); taEnhance(); } catch (e) {} return; }
+  return _render32.apply(this, arguments);
+};
+// الخطة: أي حفظ جديد بينجح فيه بيدخل المراجعة المتباعدة أوتوماتيك
+const _planMark32 = planMark;
+planMark = async function (id, sc) { const [p, it] = plFind(id); await _planMark32(id, sc); if (p && it && it.k === "hifz" && sc >= 60) await srsAdd(p.student_id, it.s, it.a, it.b, p.created_by === p.student_id ? "self" : "teacher"); };
+// «مساحتي»: كارت التزام الحفظ
+const _studentToday32 = studentToday;
+studentToday = function () { const uid = state.auth.user.id; const list = srsList(uid); const t = today0(); const due = Array.isArray(list) ? list.filter(x => x.due <= t).length : 0; const over = Array.isArray(list) ? list.filter(x => x.due < t).length : 0;
+  return `<div class="card" style="margin-bottom:1rem;${over ? "border-color:var(--danger)" : ""}"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><span><b>🧠 ${L("srsT")}</b><br><span class="xs muted">${due ? L("srsDueN").replace("{n}", due) : L("srsNone")}${over ? " · ⏰ " + over + " " + L("srsOver") : ""}</span></span><button class="btn btn-p" onclick="go16('hifzt')">${due ? L("srsGo") : L("plOpen")}</button></div></div>` + _studentToday32(); };
+// المعلم: من صفحة خطة الطالب يدخل على التزام حفظه ومصحف أخطائه
+const _renderPlanPage32 = renderPlanPage;
+renderPlanPage = function () { const h = _renderPlanPage32(); const sid = state.pageArg; if (!sid || !state.auth.user || sid === state.auth.user.id) return h; return h.replace(/(<h1[\s\S]*?<\/h1>)/, `$1<div class="row" style="gap:.4rem;margin:.6rem 0;flex-wrap:wrap"><button class="btn btn-p" onclick="state.mmUser='${sid}';go16('hifzt','${sid}')">🧠 ${L("srsT")}</button><button class="btn btn-o" onclick="state.mmUser='${sid}';go16('d','tajweed')">📕 ${L("mmMine")}</button></div>`); };
+// أدوات التحفيظ: زرار التزام الحفظ
+const _DOMAINS32 = DOMAINS;
+DOMAINS = function () { const ds = _DOMAINS32(); const hz = ds.find(d => d.k === "hifz"); if (hz && hz.tools && !hz.tools.some(t => String(t[2]).includes("hifzt"))) hz.tools.unshift(["🧠", L("srsT"), "go16('hifzt')", "hifzt"]); return ds; };
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.tj2 .w{cursor:default;border-radius:6px;transition:background .15s}.tj2.marking .w{cursor:pointer}.tj2.marking .w:hover{background:color-mix(in srgb,var(--gold) 22%,transparent)}.tj2 .w.mk{text-decoration:underline wavy #dc2626 2px;text-underline-offset:10px;cursor:pointer;background:rgba(220,38,38,.06)}
+.tj2 .ay.on{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:10px}.tj2 .end{cursor:pointer}
+.wq{font-weight:700;padding:0 .12em;border-radius:4px}.wq-jim{color:#0e7490;background:#cffafe}.wq-sla{color:#15803d;background:#dcfce7}.wq-qla{color:#a16207;background:#fef3c7}.wq-mim{color:#b91c1c;background:#fee2e2}.wq-la{color:#6b21a8;background:#f3e8ff}.wq-tan{color:#1d4ed8;background:#dbeafe}.wq-skt{color:#475569;background:#e2e8f0}
+.wqleg{display:flex;flex-wrap:wrap;gap:.3rem .8rem;font-size:.78rem;margin:.5rem 0;color:var(--muted)}.wqleg .wq{font-family:'Amiri',serif;font-size:1rem}
+.tjtools{display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.6rem 0}
+#mmModal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:1rem}.mmword{font:2rem/1.8 'Amiri',serif;text-align:center;background:var(--bg);border-radius:12px;margin:.4rem 0}.mmkinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.3rem;margin:.6rem 0}.mmkinds label{border:1px solid var(--line);border-radius:var(--rs);padding:.35rem .5rem;font-size:.85rem;cursor:pointer}.mmw{font-family:'Amiri',serif;font-size:1.15rem}
+.tcpath{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem}.tcnode{display:flex;flex-direction:column;gap:.25rem;align-items:center;text-align:center;border:2px solid var(--line);background:var(--card);color:var(--fg);border-radius:var(--rl);padding:.9rem .5rem;font:inherit;cursor:pointer;transition:transform .15s}.tcnode:hover{transform:translateY(-2px)}.tcnode.done{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--card))}.tcnode.lock{opacity:.55}.tci{font-size:2rem}.tcst{color:var(--gold);letter-spacing:.1em}
+.tccards{display:grid;gap:.6rem}.tccard{border:1px solid var(--line);border-inline-start:4px solid var(--accent);border-radius:var(--rs);padding:.8rem 1rem;background:var(--card);animation:tcin .4s ease both;animation-delay:calc(var(--i) * 80ms)}.tccard b{display:block;margin-bottom:.25rem}.tccard p{line-height:1.9}@keyframes tcin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tcfind .w{cursor:pointer;border-radius:8px;padding:0 .1em}.tcfind .w:hover{background:color-mix(in srgb,var(--gold) 20%,transparent)}.tcfind .w.hit{background:#dcfce7;outline:2px solid #16a34a}.tcfind .w.miss{background:#fee2e2;outline:2px solid #dc2626}
+.plit.late{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 6%,var(--card))}
+</style>`);
+Object.assign(UI.ar, { tjPlayAll: "تشغيل السورة آية بآية", wqT: "علامات الوقف", mmMode: "علّم أخطائي", mmOn: "وضع التعليم شغال", mmHint: "ادوس على أي كلمة غلطت فيها واكتب غلطت في إيه. الكلمات المتعلّمة بتظهر بخط أحمر.", mmT: "خطأ في الكلمة", mmAyah: "آية", mmFixed: "اتصلّح", mmNoteP: "اكتب غلطت في إيه بالظبط…", mmMine: "مصحف أخطائي", mmOpenN: "خطأ مفتوح", mmTop: "أكتر حاجة بتغلط فيها", mmEmpty: "لسه ما علّمتش أي خطأ. شغّل «علّم أخطائي» وادوس على الكلمة.", recFull: "استمع للسورة كاملة", tjRecN: "قارئ", tjNoSurah: "القارئ ده مش مسجّل السورة دي — اختار قارئ تاني.",
+  tcT: "رحلة التجويد", tcS: "١٠ محطات من النون الساكنة لحد علامات الوقف. كل محطة: شرح قصير، لعبة «اكتشف الحكم» في آيات حقيقية، واختبار بالنجوم. خلّص محطة عشان تفتح اللي بعدها.", tcPrev: "خلّص المحطة اللي قبلها الأول", tcL: "اتعلّم", tcF: "اكتشف", tcQ: "اختبر", tcBack: "الخريطة", tcNext: "يلا نجرّب", tcColors: "الألوان دي هي نفس ألوان المصحف الملوّن.", tcSrc: "الأحكام على رواية حفص عن عاصم، ملخّصة من متن تحفة الأطفال للجمزوري ومتن الجزرية لابن الجزري.", tcFindQ: "ادوس على الكلمة اللي فيها حكم الدرس ده — وبعدها هتشوف الألوان.", tcFindWq: "ادوس على الكلمة اللي جنبها علامة وقف.", tcListen: "اسمع الآية", tcQS: "٥ أسئلة على الدرس + مراجعة من دروس قبله. ٣ نجوم من ٩٠٪.", tcRev: "مراجعة", tcWin: "نجوم جديدة!",
+  srsT: "التزام الحفظ", srsS: "كل جزء تحفظه بيرجعلك للمراجعة بعد ١، ٣، ٧، ١٤، ٣٠ يوم… ولو غلطت يرجع من الأول. ومش هتقدر تضيف حفظ جديد وعليك مراجعات متأخرة.", srsStreak: "يوم ورا بعض", srsDue: "مراجعة النهارده", srsOver: "متأخرة", srsAyahs: "آية في المراجعة", srsToday: "مراجعات النهارده", srsNone: "مفيش مراجعات مستنياك النهارده", srsAdd: "ضيف حفظ جديد", srsAddT: "حدد حفظ للطالب", srsAddS: "هتتختبر فيه الأول، ولو نجحت يدخل جدول المراجعة.", srsNewTest: "اختبرني وضيفه", srsAssign: "ضيفه للطالب", srsBlock: "عندك {n} مراجعة متأخرة — خلّصهم الأول وبعدين تضيف حفظ جديد.", srsSoon: "المراجعات الجاية", srsHow: "المعلم بيتبعتله إشعار لو اتأخرت في المراجعة أكتر من يومين.", srsStage: "المرحلة", srsLate: "متأخرة من", srsPass: "ممتاز! هترجعلك بعد {d} يوم", srsFail: "محتاج تراجعها تاني — هترجعلك بكرة", srsAdded: "اتضاف لجدول المراجعة ✓", srsNoMic: "التسميع بالصوت محتاج متصفح Chrome", srsSpeak: "سمّع الجزء دلوقتي…", srsVoiceRes: "نسبة التطابق في التسميع", srsDueN: "عندك {n} مراجعة النهارده", srsGo: "راجع دلوقتي" });
+Object.assign(UI.en, { tjPlayAll: "Play ayah by ayah", wqT: "Stop signs", mmMode: "Mark my mistakes", mmOn: "Marking mode on", mmHint: "Tap any word you got wrong and note the mistake. Marked words show a red underline.", mmT: "Mistake on this word", mmAyah: "Ayah", mmFixed: "fixed", mmNoteP: "Describe the mistake…", mmMine: "My mistakes mushaf", mmOpenN: "open", mmTop: "Your most common mistake", mmEmpty: "No mistakes marked yet. Turn on “Mark my mistakes” and tap a word.", recFull: "Listen to the whole surah", tjRecN: "reciters", tjNoSurah: "This reciter hasn't recorded this surah — pick another.",
+  tcT: "Tajweed journey", tcS: "10 stations from Nun sakinah to stop signs. Each station: a short lesson, a “find the rule” game in real ayahs, and a star quiz. Finish a station to unlock the next.", tcPrev: "Finish the previous station first", tcL: "Learn", tcF: "Find", tcQ: "Test", tcBack: "Map", tcNext: "Let's try", tcColors: "These are the same colours as the colour-coded mushaf.", tcSrc: "Rules follow Hafs from Asim, summarised from Tuhfat al-Atfal (al-Jamzuri) and al-Jazariyya (Ibn al-Jazari).", tcFindQ: "Tap the word that has this lesson's rule — then the colours appear.", tcFindWq: "Tap the word that has a stop sign.", tcListen: "Listen", tcQS: "5 questions on this lesson + review. 3 stars from 90%.", tcRev: "review", tcWin: "New stars!",
+  srsT: "Memorization tracker", srsS: "Every portion you memorize comes back for review after 1, 3, 7, 14, 30 days… a mistake resets it. You can't add new memorization while reviews are overdue.", srsStreak: "day streak", srsDue: "due today", srsOver: "overdue", srsAyahs: "ayahs in review", srsToday: "Today's reviews", srsNone: "No reviews due today", srsAdd: "Add new memorization", srsAddT: "Assign memorization", srsAddS: "You'll be tested first; if you pass it enters the review schedule.", srsNewTest: "Test me & add", srsAssign: "Assign to student", srsBlock: "You have {n} overdue reviews — finish them before adding new memorization.", srsSoon: "Upcoming reviews", srsHow: "Your teacher is notified if a review is more than 2 days late.", srsStage: "Stage", srsLate: "overdue since", srsPass: "Great! It will come back in {d} days", srsFail: "Needs more review — it will come back tomorrow", srsAdded: "Added to your review schedule ✓", srsNoMic: "Voice recitation needs Chrome", srsSpeak: "Recite the portion now…", srsVoiceRes: "Recitation match", srsDueN: "{n} reviews due today", srsGo: "Review now" });
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
