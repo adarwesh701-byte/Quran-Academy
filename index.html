@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v42";
+const UI_VERSION = "2026-11-12-v43";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -15191,6 +15191,26 @@ vlAdminCard = function () { return _vlAdminCard42().replace(/(<h4 style="margin:
 document.head.insertAdjacentHTML("beforeend", `<style>.vlzip{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.8rem}</style>`);
 Object.assign(UI.ar, { vlZip: "ارفع ملف الأصوات (itqan-voices.zip)", vlArt: "ارفع ملف الصور (itqan-art.zip)", vlZipS: "الملفات دي بتطلع من دفتر Colab. بعد الرفع صوتك هيشتغل على طول في كل الدروس.", vlZipErr: "الملف مش مظبوط — لازم يكون الملف اللي طلع من Colab" });
 Object.assign(UI.en, { vlZip: "Upload voices file (itqan-voices.zip)", vlArt: "Upload images file (itqan-art.zip)", vlZipS: "These files come from the Colab notebook. After upload your voice plays in every lesson.", vlZipErr: "Invalid file — use the zip produced by Colab" });
+
+/* ---------- v43: المصحف الملوّن — تصحيح الألف + تلوين الحرف نفسه فقط ---------- */
+(function () {
+  const ONE = ["ikhafa", "ikhafa_shafawi", "idgham_ghunnah", "idgham_wo_ghunnah", "idgham_shafawi", "iqlab", "idgham_mutajanisayn", "idgham_mutaqaribayn"];
+  const MARK = /[ً-ٰٟۖ-ۭـ]/;
+  function firstCluster(t) { let i = 0; while (i < t.length && MARK.test(t[i])) i++; if (i < t.length) i++; while (i < t.length && MARK.test(t[i])) i++; return [t.slice(0, i), t.slice(i)]; }
+  window.tjFix = function (raw) {
+    let s = String(raw || "");
+    // Quran.com يكتب الألف الخنجرية أحيانًا بـ «ٲ» (ألف بهمزة) — الصحيح ألف صغيرة «ٰ»
+    s = s.replace(/ٲ/g, "ٰ").replace(/ٳ/g, "ٰ");
+    // أحكام النون والميم: لوّن حرف النون/التنوين/الميم فقط، مش الكلمة اللي بعده
+    s = s.replace(/<tajweed class=([a-z_]+)>([^<]*)<\/tajweed>/g, (m, c, t) => { if (!ONE.includes(c) || !t) return m; const [a, b] = firstCluster(t); return `<tajweed class=${c}>${a}</tajweed>${b}`; });
+    return s;
+  };
+  const _tjSafe43 = tjSafe; tjSafe = function (h) { return _tjSafe43(tjFix(h)); };
+  const _tjWords43 = tjWords; tjWords = function (raw) { return _tjWords43(tjFix(raw)); };
+  const COL = { ikhafa: "#ea580c", ikhafa_shafawi: "#db2777", idgham_ghunnah: "#0d9488", idgham_wo_ghunnah: "#475569", idgham_shafawi: "#9333ea", iqlab: "#0284c7", idgham_mutajanisayn: "#64748b", idgham_mutaqaribayn: "#64748b" };
+  Object.entries(COL).forEach(([k, c]) => { if (TJ[k]) { TJ[k][0] = c; TJ[k][3] = ""; } });
+  document.head.insertAdjacentHTML("beforeend", `<style>${Object.entries(COL).map(([k, c]) => `.tjtext .tj-${k},.tj-${k}{color:${c}!important;background:none!important;padding:0!important;border-radius:0!important}`).join("")}[class^="tj-"],[class*=" tj-"]{background:none!important;padding:0!important}.tjtext .wq{background:none!important;padding:0!important}</style>`);
+})();
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
