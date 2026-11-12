@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v21";
+const UI_VERSION = "2026-11-12-v22";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -12659,6 +12659,18 @@ Object.assign(HELP, {
   invite: { ar: ["انسخ لينكك وابعته لأصحابك.", "أي صاحب يشترك من لينكك بيضيف دولار لمحفظتك.", "استخدم المحفظة في الحصص أو المحتوى أو أي باقة."], en: ["Copy your link and share it.", "Every friend who subscribes adds $1 to your wallet.", "Spend it on lessons, content or plans."] },
   guide: { ar: ["دي خريطة الموقع كله.", "كل عالم فيه أدواته (أزرار) وأقسامه (لينكات) ومكتوب جنب كل قسم فيه إيه.", "دوس على أي حاجة تروحلها على طول."], en: ["The whole site map.", "Each area lists its tools and sections with a description.", "Tap anything to jump there."] }
 });
+
+
+/* ---------- 13) مقامات فرعية إضافية ---------- */
+[{ id: "kirdan", ar: "كردان", en: "Kirdan", fam: "rast", tonic: 1200, sc: [0, 200, 350, 500, 700, 900, 1050, 1200], use: "رست من الجواب (الكردان) — للانتقالات العالية" },
+ { id: "muhayyar", ar: "محيّر", en: "Muhayyar", fam: "bayati", tonic: 1400, sc: [0, 150, 300, 500, 700, 800, 1000, 1200], use: "بياتي بيدور حوالين جواب الدوكاه — للذروة في التلاوة" },
+ { id: "bayatayn", ar: "بياتين", en: "Bayatayn", fam: "bayati", tonic: 700, sc: [0, 150, 300, 500, 700, 800, 1000, 1200], use: "بياتي على النوا — تلوين علوي للبياتي" },
+ { id: "nahawandkabir", ar: "نهاوند كبير", en: "Nahawand Kabir", fam: "nahawand", tonic: 0, sc: [0, 200, 300, 500, 700, 900, 1100, 1200], use: "نهاوند بسادسة وسابعة مرفوعين — مشرق ورقيق" },
+ { id: "sultaniyakah", ar: "سلطاني يكاه", en: "Sultani Yakah", fam: "nahawand", tonic: -500, sc: [0, 200, 300, 500, 700, 800, 1100, 1200], use: "نهاوند من قرار اليكاه — وقور وعميق" },
+ { id: "nawaathar", ar: "نوا أثر", en: "Nawa Athar", fam: "nahawand", tonic: 0, sc: [0, 200, 300, 600, 700, 800, 1100, 1200], use: "نكريز مع حجاز على النوا — قوي التأثير" },
+ { id: "ajamushayran", ar: "عجم عشيران", en: "Ajam Ushayran", fam: "ajam", tonic: -300, sc: [0, 200, 400, 500, 700, 900, 1100, 1200], use: "عجم من قرار العشيران — مشرق من القرار" }
+].forEach(m => { if (!MQ.find(x => x.id === m.id)) { m.open = 0; m.close = 0; MQ.push(m); MAQAM_SCALES[m.id] = m.sc; } });
+Object.keys(UI).forEach(lg => { const mm = UI[lg] && UI[lg].maqams; if (mm) MQ.forEach(m => { if (!mm[m.id]) mm[m.id] = lg === "ar" ? m.ar : m.en; }); });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
