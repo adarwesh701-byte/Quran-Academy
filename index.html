@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v35";
+const UI_VERSION = "2026-11-12-v36";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14623,6 +14623,133 @@ document.head.insertAdjacentHTML("beforeend", `<style>.simpages{display:grid;gri
 #simBar{position:fixed;top:10px;inset-inline-start:50%;transform:translateX(50%);z-index:9000;display:flex;gap:.4rem;align-items:center;background:#111;color:#fff;padding:.4rem .6rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:.82rem}[dir=ltr] #simBar{transform:translateX(-50%)}#simBar button{border:1px solid #444;background:#222;color:#fff;border-radius:8px;padding:.25rem .55rem;font:inherit;cursor:pointer}</style>`);
 Object.assign(UI.ar, { simTab: "محاكاة الأكاديمية", simT: "شوف وعدّل أي صفحة", simS: "افتح أي صفحة زي ما الطالب أو المعلم شايفها، أو افتحها في وضع التعديل وادوس على أي كلام أو زرار تغيّره أو تخفيه. وتقدر ترجع هنا من الشريط اللي فوق.", simAsS: "كطالب", simAsT: "كمعلم", simAsO: "كأونر", simEd: "تعديل الكلام والأزرار", simEdShort: "عدّل", simTree: "الأقسام والصفحات اللي جوّاها", simTreeS: "غيّر الاسم بالعربي والإنجليزي، رتّب بالأسهم، اخفي، ضيف قسم جوه قسم، عدّل الوصف، أو امسح (لو فاضي).", simRoot: "قسم رئيسي جديد", simVis: "إظهار/إخفاء", simDesc: "الوصف", simAdd: "قسم فرعي", simGo: "افتح", simDel: "مسح", simNewAr: "اسم القسم بالعربي", simNewEn: "اسم القسم بالإنجليزي (اختياري)", simDescAr: "الوصف بالعربي", simDescEn: "الوصف بالإنجليزي", simHasKids: "القسم فيه أقسام جوّاه — امسحها أو انقلها الأول", simHasItems: "القسم فيه {n} عنصر — انقلهم الأول أو اخفي القسم", simDelQ: "متأكد إنك عاوز تمسح القسم ده؟", simTexts: "الكلام والأزرار اللي اتعدّلت", simTextsS: "كل تعديل عملته من وضع التعديل متسجّل هنا، وتقدر ترجّعه.", simChanged: "نص متعدّل", simHidden: "مخفي", simManage: "إدارة التعديلات" });
 Object.assign(UI.en, { simTab: "Academy simulator", simT: "View & edit any page", simS: "Open any page exactly as a student or teacher sees it, or open it in edit mode and click any text or button to change or hide it. Return here from the bar at the top.", simAsS: "as student", simAsT: "as teacher", simAsO: "as owner", simEd: "edit text & buttons", simEdShort: "Edit", simTree: "Sections & sub-pages", simTreeS: "Rename (Arabic/English), reorder with arrows, hide, add sub-sections, edit description, or delete (if empty).", simRoot: "New main section", simVis: "Show/hide", simDesc: "Description", simAdd: "Sub-section", simGo: "Open", simDel: "Delete", simNewAr: "Section name in Arabic", simNewEn: "Section name in English (optional)", simDescAr: "Description (Arabic)", simDescEn: "Description (English)", simHasKids: "This section has sub-sections — delete or move them first", simHasItems: "This section has {n} items — move them first or hide the section", simDelQ: "Delete this section?", simTexts: "Edited texts & buttons", simTextsS: "Every edit made in edit mode is listed here and can be reverted.", simChanged: "edited", simHidden: "hidden", simManage: "Manage edits" });
+
+/* ================= v36: التطبيقات + تعرّف على شيخك + صفحة اللينكات + الإحصائيات + التوقيت ================= */
+/* ---------- 1) تحميل التطبيقات ---------- */
+const REL = "https://github.com/adarwesh701-byte/Quran-Academy/releases/download/apps-latest/";
+function appDownloads() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  const b = (ic, t, s, href) => `<a class="appdlx" href="${href}" ${href.startsWith("#") ? "" : 'rel="noopener"'}><span class="adi">${ic}</span><span><b>${t}</b><small>${s}</small></span></a>`;
+  return `<div class="card" style="margin:1rem 0"><h2>📲 ${L("adT")}</h2><p class="sm muted" style="margin:.3rem 0 .8rem">${L("adS")}</p><div class="appdlgrid">
+    ${b("🤖", "Android (APK)", L("adApk"), REL + "itqan-academy.apk")}${b("🪟", "Windows", L("adWin"), REL + "itqan-academy-win.exe")}${b("🍎", "Mac", L("adMac"), REL + "itqan-academy-mac.dmg")}${b("🐧", "Linux", "AppImage", REL + "itqan-academy-linux.AppImage")}
+    <div class="appdlx ios"><span class="adi">📱</span><span><b>iPhone / iPad</b><small>${L("adIos")}</small></span></div></div>
+    <details style="margin-top:.8rem"><summary class="sm b">${L("adHelpT")}</summary><ul class="sm" style="line-height:2;padding-inline-start:1.2rem;margin-top:.4rem">${L("adHelp").map(x => `<li>${x}</li>`).join("")}</ul></details>${ios ? `<p class="notice" style="margin-top:.6rem">${L("adIos")}</p>` : ""}</div>`;
+}
+const _renderAppPage36 = renderAppPage;
+renderAppPage = function () { const h = _renderAppPage36(); return h.replace(/(<section[^>]*>\s*<div class="wrap"[^>]*>)/, `$1${appDownloads()}`); };
+
+/* ---------- 2) «تعرّف على شيخك»: نبذة + سند + فيديو + تلاوة ---------- */
+function shy() { return setv("shaykh", {}) || {}; }
+function shaykhBlock(compact) {
+  const s = shy(); const own = realRole() === "owner" && !state.preview; const has = s.name || (s.bio && (s.bio.ar || s.bio.en)) || s.video || s.audio;
+  if (!has) return own ? `<div class="card shycard empty" onclick="state.og='settings';state.dash.tab='sim';navigate('dashboard')" style="cursor:pointer"><b>👳 ${L("shyT")}</b><p class="sm muted">${L("shyEmpty")}</p></div>` : "";
+  const ch = sanadData(); const chain = Array.isArray(ch) ? ch.find(c => c.id === s.sanad) : null; const bio = (s.bio || {})[state.lang] || (s.bio || {}).ar || (s.bio || {}).en || "";
+  const yt = s.video && (s.video.match(/(?:youtu\.be\/|v=|shorts\/)([\w-]{11})/) || [])[1];
+  return `<section class="sec" style="padding-top:.5rem"><div class="wrap"><div class="card shycard"><div class="shyhead">${s.photo ? `<img src="${esc(s.photo)}" alt="" class="shyimg">` : `<div class="shyimg">👳</div>`}<div><p class="xs muted">${L("shyT")}</p><h2 style="margin:.1rem 0">${esc(s.name || "")}</h2>${s.title ? `<p class="sm" style="color:var(--gold);font-weight:700">${esc((s.title || {})[state.lang] || s.title.ar || "")}</p>` : ""}</div></div>
+    ${bio ? `<p style="line-height:2;margin:.8rem 0">${esc(bio)}</p>` : ""}
+    <div class="shymedia">${yt ? `<div class="shyvid"><iframe src="https://www.youtube-nocookie.com/embed/${yt}" allowfullscreen loading="lazy" title="video"></iframe></div>` : s.video ? `<video src="${esc(s.video)}" controls preload="none" class="shyvid"></video>` : ""}
+    ${s.audio ? `<div class="shyaud"><b class="sm">🎧 ${L("shyHear")}</b><audio controls preload="none" src="${esc(s.audio)}" style="width:100%" controlsList="nodownload"></audio></div>` : ""}</div>
+    ${chain ? `<details ${compact ? "" : "open"} style="margin-top:.8rem"><summary class="b">🔗 ${L("shySanad")} — ${esc(chain.name)}</summary><ol class="shychain">${chain.chain.map(x => `<li>${esc(x)}</li>`).join("")}</ol></details>` : ""}
+    ${compact ? "" : `<div class="row" style="gap:.5rem;margin-top:1rem;flex-wrap:wrap"><button class="btn btn-p btn-lg" onclick="navigate('booking')">✨ ${L("shyBook")}</button></div>`}</div></div></section>`;
+}
+const _renderHome36 = renderHome;
+renderHome = function () { const h = _renderHome36(); const b = shaykhBlock(false); if (!b) return h; const k = h.indexOf("</section>"); return k > 0 ? h.slice(0, k + 10) + b + h.slice(k + 10) : h + b; };
+const _renderBooking36 = renderBooking;
+renderBooking = function () { const h = _renderBooking36(); const b = shaykhBlock(true); return b && h.includes("tbnote") ? h.replace(/(<div class="tbnote">)/, b.replace(/<section class="sec"[^>]*><div class="wrap">|<\/div><\/section>$/g, "") + "$1") : h; };
+function shyForm() {
+  const s = shy(); const ch = sanadData(); const v = (k, l) => esc(((s[k] || {})[l]) || "");
+  return `<div class="card" style="margin-bottom:1rem"><h3>👳 ${L("shyT")}</h3><p class="xs muted" style="margin:.3rem 0 .6rem">${L("shyFormS")}</p><div class="fgrid">
+    <div><label class="l">${L("shyName")}</label><input class="in" id="sh_name" value="${esc(s.name || "")}"></div>
+    <div><label class="l">${L("shyTitle")} (AR)</label><input class="in" id="sh_tar" value="${v("title", "ar")}"></div><div><label class="l">${L("shyTitle")} (EN)</label><input class="in" id="sh_ten" dir="ltr" value="${v("title", "en")}"></div>
+    <div style="grid-column:1/-1"><label class="l">${L("shyBio")} (AR)</label><textarea class="in" id="sh_bar" rows="3">${v("bio", "ar")}</textarea></div><div style="grid-column:1/-1"><label class="l">${L("shyBio")} (EN)</label><textarea class="in" id="sh_ben" dir="ltr" rows="3">${v("bio", "en")}</textarea></div>
+    <div><label class="l">${L("shyVid")}</label><input class="in" id="sh_vid" dir="ltr" placeholder="https://youtube.com/…" value="${esc(s.video || "")}"><input type="file" accept="video/*" onchange="shyUp(this,'video')"></div>
+    <div><label class="l">${L("shyAud")}</label><input class="in" id="sh_aud" dir="ltr" value="${esc(s.audio || "")}"><input type="file" accept="audio/*" onchange="shyUp(this,'audio')"></div>
+    <div><label class="l">${L("shyPhoto")}</label><input class="in" id="sh_pho" dir="ltr" value="${esc(s.photo || "")}"><input type="file" accept="image/*" onchange="shyUp(this,'photo')"></div>
+    <div><label class="l">${L("shySanad")}</label><select class="in" id="sh_san"><option value="">—</option>${(Array.isArray(ch) ? ch : []).map(c => `<option value="${c.id}" ${s.sanad === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select><p class="xs muted">${L("shySanadHint")}</p></div></div>
+    <button class="btn btn-p" style="margin-top:.8rem" onclick="shySave()">💾 ${L("save") || "حفظ"}</button></div>`;
+}
+async function shyUp(inp, kind) { const f = inp.files && inp.files[0]; if (!f) return; toast(L("loading")); const path = `shaykh/${kind}-${Date.now()}.${(f.name.split(".").pop() || "bin").toLowerCase()}`; const { error } = await sb.storage.from("academy_public").upload(path, f, { upsert: true, contentType: f.type }); if (error) return toast(error.message, true); const url = sb.storage.from("academy_public").getPublicUrl(path).data.publicUrl; document.getElementById(kind === "video" ? "sh_vid" : kind === "audio" ? "sh_aud" : "sh_pho").value = url; toast(L("saved")); }
+function shySave() { const g = id => (document.getElementById(id) || {}).value || ""; acSaveAccess(d => { d.shaykh = { name: g("sh_name").trim(), title: { ar: g("sh_tar"), en: g("sh_ten") }, bio: { ar: g("sh_bar"), en: g("sh_ben") }, video: g("sh_vid").trim(), audio: g("sh_aud").trim(), photo: g("sh_pho").trim(), sanad: g("sh_san") || null }; }); }
+const _ownerSimTab36 = ownerSimTab;
+ownerSimTab = function () { return shyForm() + _ownerSimTab36(); };
+
+/* ---------- 3) صفحة «اللينك في البايو» + مصدر كل زيارة ---------- */
+(function () { try { const u = new URL(location.href); const src = u.searchParams.get("src") || u.searchParams.get("utm_source") || (document.referrer && !document.referrer.includes(location.host) ? new URL(document.referrer).hostname.replace(/^www\./, "") : ""); if (src && !sessionStorage.getItem("itqan_src")) { sessionStorage.setItem("itqan_src", src.slice(0, 40)); if (!localStorage.getItem("itqan_src0")) localStorage.setItem("itqan_src0", src.slice(0, 40)); } } catch (e) {} })();
+const _bookingPayload36 = bookingPayload;
+bookingPayload = function () { const p = _bookingPayload36(); let s = ""; try { s = localStorage.getItem("itqan_src0") || sessionStorage.getItem("itqan_src") || ""; } catch (e) {} if (s) p.notes = (p.notes ? p.notes + "\n" : "") + "source: " + s; return p; };
+PAGES16.push("links");
+function renderLinks() {
+  const so = (state.settings && state.settings.social) || {}; const u = (k, base) => so[k] ? (/^https?:/.test(so[k]) ? so[k] : base + so[k].replace(/^@/, "")) : null;
+  const L2 = (ic, t, go, cls) => `<a class="lnk ${cls || ""}" href="#" onclick="${go};return false;"><span>${ic}</span><b>${t}</b></a>`;
+  const ext = (ic, t, href) => href ? `<a class="lnk" href="${esc(href)}" target="_blank" rel="noopener"><span>${ic}</span><b>${t}</b></a>` : "";
+  return `<section class="sec"><div class="wrap" style="max-width:30rem;text-align:center"><div class="lnklogo">إ</div><h1 style="margin:.4rem 0 .2rem">${esc(I18N[state.lang].meta.siteName)}</h1><p class="muted sm">${L("lkSub")}</p>
+    <div class="lnks">${L2("✨", L("lkTrial"), "navigate('booking')", "pri")}${L2("🎼", L("lkMaq"), "go16('d','maqamat')")}${L2("🌈", L("lkTaj"), "go16('d','tajweed')")}${L2("📖", L("lkHifz"), "go16('d','hifz')")}${L2("🗣️", L("lkAr"), "go16('d','arabic')")}${L2("🎧", L("lkListen"), "navigate('library')")}${L2("📲", L("lkApp"), "navigate('app')")}
+    ${ext("📸", "Instagram", u("instagram", "https://instagram.com/"))}${ext("🎵", "TikTok", u("tiktok", "https://www.tiktok.com/@"))}${ext("▶️", "YouTube", u("youtube", "https://youtube.com/@"))}${ext("💬", "WhatsApp", setv("whatsapp", "") ? "https://wa.me/" + String(setv("whatsapp", "")).replace(/\D/g, "") : null)}</div></div></section>`;
+}
+const _render36 = render;
+render = function () {
+  if (state.route === "links") { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderLinks(); try { visitPing(true); } catch (e) {} return; }
+  const r = _render36.apply(this, arguments); try { visitPing(false); } catch (e) {} return r;
+};
+
+/* ---------- 4) إحصائيات الزيارات للأونر ---------- */
+const VIS = { id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()), path: "", t: 0 };
+function visSess() { try { let s = localStorage.getItem("itqan_vs"); if (!s) { s = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); localStorage.setItem("itqan_vs", s); } return s; } catch (e) { return VIS.id; } }
+function visitPing(force) {
+  if (realRole && state.auth.user && realRole() === "owner") return; const path = state.route + (state.libSec ? "/" + state.libSec.slice(0, 8) : state.pageArg && typeof state.pageArg === "string" ? "/" + state.pageArg.slice(0, 20) : ""); const now = Date.now();
+  const newPage = path !== VIS.path; if (!newPage && !force && now - VIS.t < 30000) return; VIS.path = path; VIS.t = now;
+  let src = ""; try { src = sessionStorage.getItem("itqan_src") || ""; } catch (e) {}
+  sb.rpc("visit_ping", { p_id: VIS.id, p_sess: visSess(), p_path: path, p_src: src, p_lang: state.lang, p_tz: BROWSER_TZ || "", p_mobile: /Mobi|Android|iPhone/i.test(navigator.userAgent), p_new_page: newPage }).then(() => {}, () => {});
+}
+setInterval(() => { if (document.visibilityState === "visible") visitPing(true); }, 30000);
+function ownerStatsTab() {
+  const d = useData("siteStats:" + (state.ssDays || 30), async () => { const { data, error } = await sb.rpc("owner_site_stats", { p_days: state.ssDays || 30 }); if (error) throw error; return data || {}; });
+  if (!d || d.__error) return d && d.__error ? `<div class="err">${esc(d.__error)}</div>` : loadingBox();
+  ["visits", "visitors", "avg_sec", "mobile_pct"].forEach(k => d[k] = +d[k] || 0);
+  const bar = (arr, k, lab) => { const mx = Math.max(1, ...arr.map(x => x.n)); return `<div class="ssbars">${arr.map(x => `<div class="ssb"><span class="xs">${esc(String(lab(x)))}</span><i style="height:${Math.round(x.n / mx * 100)}%"></i><b class="xs">${x.n}</b></div>`).join("")}</div>`; };
+  const hours = Array.from({ length: 24 }, (_, h) => ({ h, n: ((d.by_hour || []).find(x => x.h === h) || {}).n || 0 })); const peak = hours.slice().sort((a, b) => b.n - a.n).slice(0, 3).filter(x => x.n);
+  const list = (arr, k) => (arr || []).map(x => `<div class="kv"><span>${esc(String(x[k]))}</span><b>${x.n}</b></div>`).join("") || `<p class="sm muted">—</p>`;
+  return `<div class="row" style="gap:.3rem;margin-bottom:.8rem">${[7, 30, 90].map(n => `<button class="btn ${(state.ssDays || 30) === n ? "btn-p" : "btn-o"}" onclick="state.ssDays=${n};render()">${n} ${L("ssDays")}</button>`).join("")}</div>
+    <div class="plsum"><div><b>${d.visits}</b><span>${L("ssVisits")}</span></div><div><b>${d.visitors}</b><span>${L("ssPeople")}</span></div><div><b>${Math.floor(d.avg_sec / 60)}:${String(d.avg_sec % 60).padStart(2, "0")}</b><span>${L("ssTime")}</span></div><div><b>${d.mobile_pct}%</b><span>${L("ssMobile")}</span></div></div>
+    <div class="card" style="margin-top:1rem"><h3>📅 ${L("ssByDay")}</h3>${bar(d.by_day || [], "d", x => x.d)}</div>
+    <div class="card" style="margin-top:1rem"><h3>🕒 ${L("ssByHour")}</h3>${peak.length ? `<p class="sm" style="margin:.3rem 0">🔥 ${L("ssPeak")}: <b>${peak.map(x => pad2(x.h) + ":00").join("، ")}</b></p>` : ""}${bar(hours, "h", x => x.h)}</div>
+    <div class="grid g2" style="margin-top:1rem;align-items:start"><div class="card"><h3>📄 ${L("ssPages")}</h3>${list(d.pages, "p")}</div><div class="card"><h3>🔗 ${L("ssSrc")}</h3>${list(d.sources, "s")}<h3 style="margin-top:1rem">🌍 ${L("ssTz")}</h3>${list(d.tz, "t")}</div></div>`;
+}
+OG.settings.unshift("stats");
+const _renderOwnerDash36 = renderOwnerDash;
+renderOwnerDash = function () {
+  if (realRole() !== "owner" || state.preview || state.dash.tab !== "stats") { let h = _renderOwnerDash36(); if (realRole() === "owner" && !state.preview && state.og === "settings") h = h.replace(/(<div class="tabs dtabs">)/, `$1<a href="#" aria-current="false" onclick="state.dash.tab='stats';render();return false;">📊 ${L("ssTab")}</a>`); return h; }
+  state.dash.tab = "sim"; let h = _renderOwnerDash36(); state.dash.tab = "stats";
+  const i = h.indexOf('<div class="card" style="margin-bottom:1rem"><h3>👳'); const head = i > 0 ? h.slice(0, i) : h;
+  return head.replace(/aria-current="true"([^>]*>🧪)/, 'aria-current="false"$1').replace(/(<div class="tabs dtabs">)/, `$1<a href="#" aria-current="true" onclick="state.dash.tab='stats';render();return false;">📊 ${L("ssTab")}</a>`) + ownerStatsTab();
+};
+
+/* ---------- 5) التوقيت: كل المواعيد بتوقيتك + توقيت القاهرة ---------- */
+function tzBadge() { try { const now = new Date(); const cairo = now.toLocaleTimeString(state.lang, { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit" }); const mine = now.toLocaleTimeString(state.lang, { hour: "2-digit", minute: "2-digit" }); const city = (BROWSER_TZ || "").split("/").pop().replace(/_/g, " "); return `<div class="tzb">🕒 ${L("tzMine")}: <b>${esc(city)}</b> (${mine})${BROWSER_TZ !== "Africa/Cairo" ? ` · ${L("tzCairo")}: <b>${cairo}</b>` : ""}</div>`; } catch (e) { return ""; } }
+function cairoOf(iso) { try { return new Date(iso).toLocaleTimeString(state.lang, { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } }
+const _renderBooking36b = renderBooking;
+renderBooking = function () { const h = _renderBooking36b(); return h.replace(/(<div class="tbnote">)/, tzBadge() + "$1"); };
+const _studentToday36 = studentToday;
+studentToday = function () { return tzBadge() + _studentToday36(); };
+const _renderTeacherDash36 = renderTeacherDash;
+renderTeacherDash = function () { const h = _renderTeacherDash36(); return state.dash.tab === "schedule" ? h.replace(/(<div class="card tdy">)/, tzBadge() + "$1") : h; };
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.appdlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.6rem}.appdlx{display:flex;gap:.7rem;align-items:center;border:1px solid var(--line);border-radius:var(--rl);padding:.8rem;background:var(--card);color:var(--fg);text-decoration:none}.appdlx:hover{border-color:var(--accent)}.appdlx .adi{font-size:1.8rem}.appdlx small{display:block;color:var(--muted);font-size:.75rem}.appdlx.ios{border-style:dashed}
+.shycard{border-top:4px solid var(--gold)}.shycard.empty{border-style:dashed;text-align:center}.shyhead{display:flex;gap:1rem;align-items:center}.shyimg{width:84px;height:84px;border-radius:999px;object-fit:cover;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:2.4rem;flex:0 0 auto;border:3px solid var(--gold)}
+.shymedia{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.shyvid{width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000}.shyvid iframe{width:100%;height:100%;border:0}.shyaud{border:1px solid var(--line);border-radius:14px;padding:.7rem}.shychain{line-height:2.1;padding-inline-start:1.3rem;margin-top:.4rem}
+.lnklogo{width:84px;height:84px;margin:0 auto;border-radius:24px;background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center;font:700 2.6rem 'Amiri',serif}.lnks{display:flex;flex-direction:column;gap:.6rem;margin-top:1.2rem}.lnk{display:flex;align-items:center;gap:.8rem;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:.9rem 1rem;color:var(--fg);text-decoration:none;font-size:1.02rem;box-shadow:var(--sh)}.lnk span{font-size:1.4rem}.lnk.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.ssbars{display:flex;align-items:flex-end;gap:3px;height:150px;margin-top:.6rem;overflow-x:auto}.ssb{flex:1;min-width:16px;display:flex;flex-direction:column-reverse;align-items:center;height:100%;gap:2px}.ssb i{display:block;width:100%;background:linear-gradient(var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));border-radius:5px 5px 0 0;min-height:2px}
+.tzb{font-size:.82rem;background:color-mix(in srgb,var(--accent) 7%,var(--card));border:1px solid var(--line);border-radius:999px;padding:.35rem .9rem;margin:.4rem 0 .8rem;display:inline-block}
+</style>`);
+Object.assign(UI.ar, { adT: "نزّل التطبيق", adS: "كل التطبيقات بتفتح الموقع نفسه، فأي تحديث بيظهر فيها على طول من غير ما تنزّل نسخة جديدة.", adApk: "حمّل وافتح الملف ← اسمح بالتثبيت", adWin: "ملف تثبيت .exe", adMac: "ملف .dmg", adIos: "افتح الموقع من Safari ← زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية».", adHelpT: "مشكلة في التثبيت؟", adHelp: ["أندرويد: لو ظهر «تطبيق غير معروف» اختار «السماح من المصدر ده» وبعدين ثبّت.", "ويندوز: لو ظهر تحذير SmartScreen دوس «مزيد من المعلومات» ← «تشغيل على أي حال» (التطبيق مش موقّع لأن التوقيع بفلوس).", "ماك: كليك يمين على التطبيق ← فتح، أول مرة بس."],
+  shyT: "تعرّف على شيخك", shyEmpty: "دوس هنا وضيف نبذتك وسندك وفيديو وتلاوة بصوتك — هتظهر في الرئيسية وصفحة الحجز.", shyHear: "اسمع تلاوة الشيخ", shySanad: "السند", shyBook: "احجز حصة تجريبية مع الشيخ", shyFormS: "ده اللي الطلاب بيشوفوه قبل ما يحجزوا. اكتبه بنفسك — السند لازم يكون مضبوط.", shyName: "الاسم", shyTitle: "اللقب (مثلًا: مجاز بالقراءات العشر)", shyBio: "نبذة قصيرة", shyVid: "فيديو (لينك يوتيوب أو ارفع ملف)", shyAud: "تلاوة بصوتك (ارفع ملف)", shyPhoto: "صورتك (اختياري)", shySanadHint: "سلسلة السند بتتضاف من «الشهادات» ← سلاسل السند.",
+  lkSub: "مقامات · تجويد · تحفيظ · عربي — حصص مباشرة وأدوات ذكية", lkTrial: "احجز حصتك التجريبية", lkMaq: "المقامات الصوتية", lkTaj: "التجويد والمصحف الملوّن", lkHifz: "تحفيظ القرآن", lkAr: "اتكلم عربي", lkListen: "محتوى الأكاديمية", lkApp: "نزّل التطبيق",
+  ssTab: "الإحصائيات", ssDays: "يوم", ssVisits: "زيارة", ssPeople: "زائر", ssTime: "متوسط وقت الزيارة", ssMobile: "من الموبايل", ssByDay: "الزيارات كل يوم", ssByHour: "الزيارات حسب الساعة (توقيت القاهرة)", ssPeak: "أكتر ساعات زحمة", ssPages: "أكتر صفحات بتتفتح", ssSrc: "جايين منين", ssTz: "من أنهي بلد (حسب التوقيت)", tzMine: "كل المواعيد بتوقيتك", tzCairo: "القاهرة دلوقتي" });
+Object.assign(UI.en, { adT: "Get the app", adS: "All apps open the live website, so every update appears instantly — no new download needed.", adApk: "Download, open, allow install", adWin: ".exe installer", adMac: ".dmg file", adIos: "Open the site in Safari → Share ⬆️ → “Add to Home Screen”.", adHelpT: "Trouble installing?", adHelp: ["Android: if you see “unknown app”, allow this source, then install.", "Windows: on the SmartScreen warning choose “More info” → “Run anyway” (the app isn't code-signed).", "Mac: right-click the app → Open, the first time only."],
+  shyT: "Meet your shaykh", shyEmpty: "Click here to add your bio, sanad, a video and a recitation — they appear on the home and booking pages.", shyHear: "Hear the shaykh's recitation", shySanad: "Sanad", shyBook: "Book a trial with the shaykh", shyFormS: "Students see this before booking. Write it yourself — the sanad must be exact.", shyName: "Name", shyTitle: "Title (e.g. ijaza in the ten qira'at)", shyBio: "Short bio", shyVid: "Video (YouTube link or upload)", shyAud: "Your recitation (upload)", shyPhoto: "Photo (optional)", shySanadHint: "Sanad chains are added under Certificates → Sanad chains.",
+  lkSub: "Maqamat · Tajweed · Hifz · Arabic — live classes and smart tools", lkTrial: "Book your trial lesson", lkMaq: "Vocal maqamat", lkTaj: "Tajweed & colour mushaf", lkHifz: "Quran memorization", lkAr: "Speak Arabic", lkListen: "Academy content", lkApp: "Get the app",
+  ssTab: "Analytics", ssDays: "days", ssVisits: "visits", ssPeople: "visitors", ssTime: "avg visit time", ssMobile: "on mobile", ssByDay: "Visits per day", ssByHour: "Visits by hour (Cairo time)", ssPeak: "Peak hours", ssPages: "Most opened pages", ssSrc: "Traffic sources", ssTz: "Visitor time zones", tzMine: "All times are in your time zone", tzCairo: "Cairo now" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
