@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v39";
+const UI_VERSION = "2026-11-12-v40";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14631,7 +14631,7 @@ function appDownloads() {
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   const b = (ic, t, s, href) => `<a class="appdlx" href="${href}" ${href.startsWith("#") ? "" : 'rel="noopener"'}><span class="adi">${ic}</span><span><b>${t}</b><small>${s}</small></span></a>`;
   return `<div class="card" style="margin:1rem 0"><h2>📲 ${L("adT")}</h2><p class="sm muted" style="margin:.3rem 0 .8rem">${L("adS")}</p><div class="appdlgrid">
-    ${b("🤖", "Android (APK)", L("adApk"), REL + "itqan-academy.apk")}${b("🪟", "Windows", L("adWin"), REL + "itqan-academy-win.exe")}${b("🍎", "Mac", L("adMac"), REL + "itqan-academy-mac.dmg")}${b("🐧", "Linux", "AppImage", REL + "itqan-academy-linux.AppImage")}
+    ${b("🤖", "Android (APK)", L("adApk"), REL + "itqan-academy.apk")}${b("🪟", "Windows", L("adWin"), REL + "itqan-academy-win.exe")}${b("🍎", "Mac", L("adMac"), REL + "itqan-academy-mac.zip")}${b("🐧", "Linux", "AppImage", REL + "itqan-academy-linux.AppImage")}
     <div class="appdlx ios"><span class="adi">📱</span><span><b>iPhone / iPad</b><small>${L("adIos")}</small></span></div></div>
     <details style="margin-top:.8rem"><summary class="sm b">${L("adHelpT")}</summary><ul class="sm" style="line-height:2;padding-inline-start:1.2rem;margin-top:.4rem">${L("adHelp").map(x => `<li>${x}</li>`).join("")}</ul></details>${ios ? `<p class="notice" style="margin-top:.6rem">${L("adIos")}</p>` : ""}</div>`;
 }
@@ -14742,11 +14742,11 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .ssbars{display:flex;align-items:flex-end;gap:3px;height:150px;margin-top:.6rem;overflow-x:auto}.ssb{flex:1;min-width:16px;display:flex;flex-direction:column-reverse;align-items:center;height:100%;gap:2px}.ssb i{display:block;width:100%;background:linear-gradient(var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));border-radius:5px 5px 0 0;min-height:2px}
 .tzb{font-size:.82rem;background:color-mix(in srgb,var(--accent) 7%,var(--card));border:1px solid var(--line);border-radius:999px;padding:.35rem .9rem;margin:.4rem 0 .8rem;display:inline-block}
 </style>`);
-Object.assign(UI.ar, { adT: "نزّل التطبيق", adS: "كل التطبيقات بتفتح الموقع نفسه، فأي تحديث بيظهر فيها على طول من غير ما تنزّل نسخة جديدة.", adApk: "حمّل وافتح الملف ← اسمح بالتثبيت", adWin: "ملف تثبيت .exe", adMac: "ملف .dmg", adIos: "افتح الموقع من Safari ← زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية».", adHelpT: "مشكلة في التثبيت؟", adHelp: ["أندرويد: لو ظهر «تطبيق غير معروف» اختار «السماح من المصدر ده» وبعدين ثبّت.", "ويندوز: لو ظهر تحذير SmartScreen دوس «مزيد من المعلومات» ← «تشغيل على أي حال» (التطبيق مش موقّع لأن التوقيع بفلوس).", "ماك: كليك يمين على التطبيق ← فتح، أول مرة بس."],
+Object.assign(UI.ar, { adT: "نزّل التطبيق", adS: "كل التطبيقات بتفتح الموقع نفسه، فأي تحديث بيظهر فيها على طول من غير ما تنزّل نسخة جديدة.", adApk: "حمّل وافتح الملف ← اسمح بالتثبيت", adWin: "ملف تثبيت .exe", adMac: "ملف .zip — فكّه وافتح التطبيق", adIos: "افتح الموقع من Safari ← زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية».", adHelpT: "مشكلة في التثبيت؟", adHelp: ["أندرويد: لو ظهر «تطبيق غير معروف» اختار «السماح من المصدر ده» وبعدين ثبّت.", "ويندوز: لو ظهر تحذير SmartScreen دوس «مزيد من المعلومات» ← «تشغيل على أي حال» (التطبيق مش موقّع لأن التوقيع بفلوس).", "ماك: كليك يمين على التطبيق ← فتح، أول مرة بس."],
   shyT: "تعرّف على شيخك", shyEmpty: "دوس هنا وضيف نبذتك وسندك وفيديو وتلاوة بصوتك — هتظهر في الرئيسية وصفحة الحجز.", shyHear: "اسمع تلاوة الشيخ", shySanad: "السند", shyBook: "احجز حصة تجريبية مع الشيخ", shyFormS: "ده اللي الطلاب بيشوفوه قبل ما يحجزوا. اكتبه بنفسك — السند لازم يكون مضبوط.", shyName: "الاسم", shyTitle: "اللقب (مثلًا: مجاز بالقراءات العشر)", shyBio: "نبذة قصيرة", shyVid: "فيديو (لينك يوتيوب أو ارفع ملف)", shyAud: "تلاوة بصوتك (ارفع ملف)", shyPhoto: "صورتك (اختياري)", shySanadHint: "سلسلة السند بتتضاف من «الشهادات» ← سلاسل السند.",
   lkSub: "مقامات · تجويد · تحفيظ · عربي — حصص مباشرة وأدوات ذكية", lkTrial: "احجز حصتك التجريبية", lkMaq: "المقامات الصوتية", lkTaj: "التجويد والمصحف الملوّن", lkHifz: "تحفيظ القرآن", lkAr: "اتكلم عربي", lkListen: "محتوى الأكاديمية", lkApp: "نزّل التطبيق",
   ssTab: "الإحصائيات", ssDays: "يوم", ssVisits: "زيارة", ssPeople: "زائر", ssTime: "متوسط وقت الزيارة", ssMobile: "من الموبايل", ssByDay: "الزيارات كل يوم", ssByHour: "الزيارات حسب الساعة (توقيت القاهرة)", ssPeak: "أكتر ساعات زحمة", ssPages: "أكتر صفحات بتتفتح", ssSrc: "جايين منين", ssTz: "من أنهي بلد (حسب التوقيت)", tzMine: "كل المواعيد بتوقيتك", tzCairo: "القاهرة دلوقتي" });
-Object.assign(UI.en, { adT: "Get the app", adS: "All apps open the live website, so every update appears instantly — no new download needed.", adApk: "Download, open, allow install", adWin: ".exe installer", adMac: ".dmg file", adIos: "Open the site in Safari → Share ⬆️ → “Add to Home Screen”.", adHelpT: "Trouble installing?", adHelp: ["Android: if you see “unknown app”, allow this source, then install.", "Windows: on the SmartScreen warning choose “More info” → “Run anyway” (the app isn't code-signed).", "Mac: right-click the app → Open, the first time only."],
+Object.assign(UI.en, { adT: "Get the app", adS: "All apps open the live website, so every update appears instantly — no new download needed.", adApk: "Download, open, allow install", adWin: ".exe installer", adMac: ".zip — unzip and open", adIos: "Open the site in Safari → Share ⬆️ → “Add to Home Screen”.", adHelpT: "Trouble installing?", adHelp: ["Android: if you see “unknown app”, allow this source, then install.", "Windows: on the SmartScreen warning choose “More info” → “Run anyway” (the app isn't code-signed).", "Mac: right-click the app → Open, the first time only."],
   shyT: "Meet your shaykh", shyEmpty: "Click here to add your bio, sanad, a video and a recitation — they appear on the home and booking pages.", shyHear: "Hear the shaykh's recitation", shySanad: "Sanad", shyBook: "Book a trial with the shaykh", shyFormS: "Students see this before booking. Write it yourself — the sanad must be exact.", shyName: "Name", shyTitle: "Title (e.g. ijaza in the ten qira'at)", shyBio: "Short bio", shyVid: "Video (YouTube link or upload)", shyAud: "Your recitation (upload)", shyPhoto: "Photo (optional)", shySanadHint: "Sanad chains are added under Certificates → Sanad chains.",
   lkSub: "Maqamat · Tajweed · Hifz · Arabic — live classes and smart tools", lkTrial: "Book your trial lesson", lkMaq: "Vocal maqamat", lkTaj: "Tajweed & colour mushaf", lkHifz: "Quran memorization", lkAr: "Speak Arabic", lkListen: "Academy content", lkApp: "Get the app",
   ssTab: "Analytics", ssDays: "days", ssVisits: "visits", ssPeople: "visitors", ssTime: "avg visit time", ssMobile: "on mobile", ssByDay: "Visits per day", ssByHour: "Visits by hour (Cairo time)", ssPeak: "Peak hours", ssPages: "Most opened pages", ssSrc: "Traffic sources", ssTz: "Visitor time zones", tzMine: "All times are in your time zone", tzCairo: "Cairo now" });
@@ -14965,6 +14965,101 @@ document.head.insertAdjacentHTML("beforeend", `<style>.orgpitch{display:grid;gri
 .orgadm{border:1px solid var(--line);border-radius:var(--rs);padding:.6rem .8rem;margin:.4rem 0}.orgadm summary{cursor:pointer}.orgcta{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;border-inline-start:4px solid var(--gold)}</style>`);
 Object.assign(UI.ar, { orgT: "اشتراكات المؤسسات", orgS: "للمدارس والمراكز الإسلامية والمساجد: اشترك لطلابك ومدرسينك في محتوى الأكاديمية وأدواتها، وتابع تقدّمهم من مكان واحد.", orgTab: "المؤسسات", orgPts: [["🎓", "مقاعد لطلابك", "كل طالب يدخل بكود المؤسسة ويتفتحله المحتوى أوتوماتيك."], ["👨‍🏫", "مدرسينك معاك", "مدرسينك يستخدموا الفصل الافتراضي والأدوات ويتابعوا الطلاب."], ["📊", "متابعة التقدّم", "تشوف آخر دخول، والمراجعات المتأخرة، والخطط اللي خلصت لكل طالب."], ["🧩", "محتوى على مقاسك", "تختار أقسام معيّنة (تجويد، تحفيظ، عربي…) أو كل المحتوى."]], orgJoinT: "عندك كود مؤسسة؟", orgJoinS: "اكتب الكود اللي المدرسة أو المركز بعتهولك، والمحتوى هيتفتحلك على طول.", orgJoinB: "انضم", orgReqT: "اطلب اشتراك لمؤسستك", orgReqS: "ابعت البيانات، وهنتواصل معاك بالسعر والتفعيل.", orgName: "اسم المؤسسة", orgCountry: "البلد", orgContact: "رقم أو إيميل للتواصل", orgSeats: "عدد الطلاب", orgTSeats: "عدد المدرسين", orgNote: "ملاحظات (الأعمار، الأقسام المطلوبة…)", orgSend: "ابعت الطلب", orgSent: "الطلب وصل ✓ — هنتواصل معاك قريب", orgNeedName: "اكتب اسم المؤسسة", orgSt: { pending: "قيد المراجعة", active: "مفعّل" }, orgWait: "طلبك قيد المراجعة — أول ما يتفعّل هيظهرلك كود الدعوة هنا.", orgStu: "طالب", orgTea: "مدرس", orgExp: "ينتهي", orgCode: "كود الدعوة", orgCodeS: "ابعت الكود أو اللينك للطلاب والمدرسين — كل واحد يدخل بحسابه ويكتبه.", orgWa: "انضم لاشتراك {o} في أكاديمية إتقان:", orgPeople: "الطلاب والمدرسين", orgDue: "مراجعة", orgDone: "مهمة خلصت", orgNone: "لسه محدش انضم.", orgNoReq: "لسه مفيش طلبات من مؤسسات.", orgRemQ: "تشيل العضو ده من المؤسسة وتقفل عليه المحتوى؟", orgErr: { bad_code: "الكود غلط أو المؤسسة لسه مش مفعّلة", full: "المقاعد خلصت — كلّم مؤسستك", expired: "اشتراك المؤسسة انتهى", login: "سجّل دخول الأول" }, orgAlready: "إنت عضو بالفعل", orgJoined: "انضميت لـ {o} ✓ — المحتوى اتفتحلك", orgAll: "طلبات واشتراكات المؤسسات", orgAllS: "فعّل الطلب: حدد المقاعد والمدة والأقسام والسعر. التغيير بيتطبّق على كل الأعضاء.", orgDays: "المدة (يوم)", orgPrice: "السعر المتفق عليه", orgScopes: "المحتوى المتاح", orgAllC: "كل المحتوى", orgAct: "فعّل", orgUpd: "تحديث", orgCtaT: "اشتراكات المدارس والمراكز", orgCtaS: "اشترك لطلابك ومدرسينك، وتابع تقدّمهم من لوحة واحدة.", orgCtaB: "اعرف أكتر" });
 Object.assign(UI.en, { orgT: "Institution subscriptions", orgS: "For schools, Islamic centres and mosques: subscribe your students and teachers to the academy's content and tools, and track progress in one place.", orgTab: "Institutions", orgPts: [["🎓", "Seats for students", "Each student joins with your institution code and content unlocks automatically."], ["👨‍🏫", "Your teachers too", "Teachers use the virtual classroom and tools and follow students."], ["📊", "Progress tracking", "See last activity, overdue reviews and completed plans for each student."], ["🧩", "Content that fits", "Pick specific sections (tajweed, hifz, Arabic…) or everything."]], orgJoinT: "Have an institution code?", orgJoinS: "Enter the code your school or centre sent you and the content opens immediately.", orgJoinB: "Join", orgReqT: "Request a subscription for your institution", orgReqS: "Send your details and we'll contact you with pricing and activation.", orgName: "Institution name", orgCountry: "Country", orgContact: "Phone or email", orgSeats: "Students", orgTSeats: "Teachers", orgNote: "Notes (ages, sections needed…)", orgSend: "Send request", orgSent: "Request received ✓ — we'll be in touch", orgNeedName: "Enter the institution name", orgSt: { pending: "Under review", active: "Active" }, orgWait: "Your request is under review — the invite code appears here once active.", orgStu: "students", orgTea: "teachers", orgExp: "Expires", orgCode: "Invite code", orgCodeS: "Send the code or link to students and teachers — each signs in and enters it.", orgWa: "Join {o}'s subscription at Itqan Academy:", orgPeople: "Students & teachers", orgDue: "due", orgDone: "tasks done", orgNone: "Nobody has joined yet.", orgNoReq: "No institution requests yet.", orgRemQ: "Remove this member and close their access?", orgErr: { bad_code: "Wrong code or institution not active yet", full: "No seats left — contact your institution", expired: "Institution subscription expired", login: "Sign in first" }, orgAlready: "You're already a member", orgJoined: "Joined {o} ✓ — content unlocked", orgAll: "Institution requests & subscriptions", orgAllS: "Activate: set seats, duration, sections and price. Changes apply to all members.", orgDays: "Duration (days)", orgPrice: "Agreed price", orgScopes: "Content included", orgAllC: "All content", orgAct: "Activate", orgUpd: "Update", orgCtaT: "School & centre subscriptions", orgCtaS: "Subscribe your students and teachers and track their progress from one dashboard.", orgCtaB: "Learn more" });
+
+/* ================= v40: من غير قفزة لفوق + توجيه صح + تكمل من مكان ما وقفت على كل الأجهزة ================= */
+/* ---------- 1) شيل «تعرّف على شيخك» ---------- */
+shaykhBlock = function () { return ""; }; shyForm = function () { return ""; };
+/* ---------- 2) الصفحة ما تطلعش لفوق ولا «ترفرش» لما تختار حاجة ---------- */
+let __lastKey = "", __wantTop = false;
+const _scrollTo40 = window.scrollTo.bind(window);
+window.scrollTo = function (a, b) { const y = typeof a === "object" ? a.top : b; if (y === 0) __wantTop = true; return _scrollTo40(a, b); };
+const _render40 = render;
+render = function () {
+  const key = [state.route, state.libSec || "", typeof state.pageArg === "string" ? state.pageArg : "", state.dash && state.og || ""].join("|");
+  const same = key === __lastKey; const y = window.scrollY; __wantTop = false;
+  const app = document.getElementById("app"); if (app) app.classList.toggle("noanim", same);
+  const r = _render40.apply(this, arguments);
+  if (same && !__wantTop && Math.abs(window.scrollY - y) > 2) _scrollTo40(0, y);
+  __lastKey = key; try { resumeSave(); } catch (e) {} return r;
+};
+// التبويبات والاختيارات جوه نفس الصفحة: من غير طلوع لفوق
+document.addEventListener("click", e => { const t = e.target.closest && e.target.closest(".tabs a,.motabs button,.ptabs button,.trchips button,.chip,.tcnode,.launit,.opt"); if (t) { const y = window.scrollY; requestAnimationFrame(() => { if (!__wantTop && Math.abs(window.scrollY - y) > 2 && state.route === __lastKey.split("|")[0]) _scrollTo40(0, y); }); } }, true);
+document.head.insertAdjacentHTML("beforeend", `<style>#app.noanim>*{animation:none!important}</style>`);
+
+/* ---------- 3) الأزرار تودّي للمكان الصح ---------- */
+const _DOMAINS40 = DOMAINS;
+DOMAINS = function () {
+  const ds = _DOMAINS40(); const lib = s => s ? `libGo('${s.id}')` : "navigate('library')"; const sk = (k, f) => (sectionsData() || []).find ? (sectionsData() || []).find(s => (s.meta || {}).kind === k && s.is_visible !== false && (!f || f(s))) : null;
+  const mq = ds.find(d => d.k === "maqamat"); if (mq) { const info = sk("info"); if (info && !mq.tools.some(t => String(t[2]).includes(info.id))) mq.tools.splice(2, 0, ["📘", state.lang === "ar" ? "معلومات عن المقامات" : "Maqam theory", lib(info), ""]); }
+  const ar = ds.find(d => d.k === "arabic"); const root = sk("speak_root");
+  if (ar) { ar.t = { ar: "اتكلم عربي", en: "Speak Arabic" }; if (root) ar.sec = root.id; const tr = k => sk("lang_track", s => (s.meta || {}).track === k);
+    ar.tools = [["🇪🇬", "المصري / Egyptian", tr("eg") ? lib(tr("eg")) : "go16('lang','eg')", ""], ["📖", "الفصحى / Fusha", tr("fu") ? lib(tr("fu")) : "go16('lang','fu')", ""], ["🏝️", "الخليجي / Gulf", tr("gu") ? lib(tr("gu")) : "go16('lang','gu')", ""], ["🫒", "الفلسطيني / Palestinian", tr("pa") ? lib(tr("pa")) : "go16('lang','pa')", ""], ["🧭", L("ptTitle"), "go16('placement')", "placement"]]; }
+  const tj = ds.find(d => d.k === "tajweed"); if (tj) { const tc = sk("tajcolor"); tj.tools = [["🧭", state.lang === "ar" ? "رحلة التجويد" : "Tajweed journey", tj.sec ? `state.tc.ch=null;libGo('${tj.sec}')` : "navigate('library')", ""], ["🌈", state.lang === "ar" ? "المصحف الملوّن" : "Colour mushaf", lib(tc), ""], ["📕", state.lang === "ar" ? "مصحف أخطائي" : "My mistakes mushaf", tc ? `state.tjv.mark=true;libGo('${tc.id}')` : "navigate('library')", ""], ["🎬", L("stTitle"), tj.sec ? `libGo('${tj.sec}')` : "navigate('library')", "stories"], ["🌳", L("grTitle"), "go16('growth')", "growth"]]; }
+  return ds;
+};
+// «اتكلم عربي»: الأكاديمية فوق، والمحادثات والقصص الجاهزة تحت
+const _renderLibraryDb40 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb40(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec) return h; const cur = secs.find(s => s.id === state.libSec);
+  if (!cur || (cur.meta || {}).kind !== "lang_track") return h;
+  const gi = h.indexOf('<div class="grid">'); const ai = h.indexOf('<div style="margin-top:1rem"><div class="'); if (gi < 0 || ai < 0 || ai < gi) return h;
+  const extra = h.slice(ai); const before = h.slice(0, gi); const grid = h.slice(gi, ai);
+  return before + extra + `<h3 style="margin:2rem 0 .8rem">💬 ${state.lang === "ar" ? "محادثات وقصص جاهزة" : "Ready-made dialogues & stories"}</h3>` + grid;
+};
+
+/* ---------- 4) تكمل من مكان ما وقفت — على كل أجهزتك ---------- */
+const RES_KEYS = { la: ["tr", "u", "tab", "skipPl"], lf: ["tr", "u", "i", "steps", "xp", "ok", "n"], tc: ["ch", "step"], tj: ["surah"], sr: ["surah", "chunk", "tab", "i"], tf: ["src", "page", "surah", "trId"], ab: ["n", "hide"], bk: ["book", "toc", "idx", "page", "pos", "open"], hc: ["root", "cat", "page", "open"], ls: ["s", "r", "tab"], pl: ["period", "add"], mq: ["id", "voice"], tjv: ["wq"] };
+function resumeSnap() { const o = { at: Date.now(), route: state.route, libSec: state.libSec || null, pageArg: typeof state.pageArg === "string" ? state.pageArg : null, ea: state.ea, mqTab: state.mqTab, mqFor: state.mqFor }; Object.entries(RES_KEYS).forEach(([k, f]) => { const s = state[k]; if (!s || typeof s !== "object") return; const x = {}; f.forEach(n => { if (s[n] !== undefined && s[n] !== null) x[n] = s[n]; }); if (Object.keys(x).length) o[k] = x; }); if (o.lf && !state.lf) delete o.lf; if (!state.lf) o.lf = null; return o; }
+let __resT = null, __resLast = "";
+function resumeSave() {
+  if (!state.auth.user || state.preview || !state.__resumed) return; const s = resumeSnap(); const j = JSON.stringify(Object.assign({}, s, { at: 0 })); if (j === __resLast) return; __resLast = j;
+  try { localStorage.setItem("itqan_resume_" + state.auth.user.id, JSON.stringify(s)); } catch (e) {}
+  clearTimeout(__resT); __resT = setTimeout(() => { sb.from("profiles").update({ resume: s }).eq("id", state.auth.user.id).then(() => {}, () => {}); if (state.auth.profile) state.auth.profile.resume = s; }, 2500);
+}
+function resumeApply(r) {
+  if (!r || typeof r !== "object") return; Object.keys(RES_KEYS).forEach(k => { if (r[k] && typeof r[k] === "object") state[k] = Object.assign({}, state[k] || {}, r[k]); });
+  if (r.lf && r.lf.steps && r.lf.steps.length) state.lf = Object.assign({ ans: null }, r.lf); if (r.ea) state.ea = r.ea; if (r.mqTab) { state.mqTab = r.mqTab; state.mqFor = r.mqFor; }
+}
+function resumeLoad() {
+  if (state.__resumed || !state.auth.user || !state.auth.profile) return; state.__resumed = true;
+  let loc = null; try { loc = JSON.parse(localStorage.getItem("itqan_resume_" + state.auth.user.id) || "null"); } catch (e) {}
+  const db = state.auth.profile.resume && state.auth.profile.resume.at ? state.auth.profile.resume : null; const r = [loc, db].filter(Boolean).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  if (r) { resumeApply(r); state.__resumeRoute = r; }
+}
+setInterval(() => { try { resumeLoad(); } catch (e) {} }, 700);
+function resumeLabel(r) {
+  if (!r) return ""; const secs = sectionsData(); const s = Array.isArray(secs) && r.libSec ? secs.find(x => x.id === r.libSec) : null;
+  if (r.lf && r.lf.tr && LC[r.lf.tr]) { const u = LC[r.lf.tr].units.find(x => x.id === r.lf.u); return `🗣️ ${locText(LC[r.lf.tr].name)} — ${u ? (state.lang === "ar" ? u.t : u.en) : ""}`; }
+  if (s) return `📚 ${secTitle(s)}`; const names = { hifzt: "🧠 " + L("srsT"), plan: "🎯 " + L("plT"), lang: "🗣️ " + (r.la && r.la.tr && LC[r.la.tr] ? locText(LC[r.la.tr].name) : "Arabic"), arbaeen: "📜 " + L("abT"), asma: "🌿 " + L("asT"), hifz: "📖", "maqam-game": "🎧 " + L("gmTitle"), maqamat: "🪜 " + L("mqTitle") };
+  return names[r.route] || "";
+}
+function resumeGo() { const r = state.__resumeRoute; if (!r) return; state.__resumeShown = true; if (r.libSec) return libGo(r.libSec); if (PAGES16.includes(r.route)) return r.pageArg ? go16(r.route, r.pageArg) : go16(r.route); navigate(r.route || "library"); }
+function resumeCard() { const r = state.__resumeRoute; if (!r || state.__resumeShown) return ""; const lab = resumeLabel(r); if (!lab || ["home", "dashboard", "pricing", "booking"].includes(r.route) && !r.libSec && !r.lf) return ""; return `<div class="card rescard"><div><b>▶️ ${L("resT")}</b><div class="sm">${esc(lab)}</div></div><span class="row" style="gap:.3rem"><button class="btn btn-p" onclick="resumeGo()">${L("resGo")}</button><button class="btn btn-o" onclick="state.__resumeShown=true;render()">✕</button></span></div>`; }
+const _studentToday40 = studentToday;
+studentToday = function () { return resumeCard() + _studentToday40(); };
+const _renderHome40 = renderHome;
+renderHome = function () { const h = _renderHome40(); const c = state.auth.user ? resumeCard() : ""; if (!c) return h; const k = h.indexOf("</section>"); return k > 0 ? h.slice(0, k + 10) + `<section class="sec" style="padding:.6rem 0"><div class="wrap">${c}</div></section>` + h.slice(k + 10) : c + h; };
+// الدرس الممتع: يكمّل من نفس الخطوة
+const _lfBuild40 = lfBuild;
+lfBuild = function (tr, uid) { if (state.lf && state.lf.tr === tr && state.lf.u === uid && state.lf.i > 0 && state.lf.i < state.lf.steps.length - 1) return state.lf; return _lfBuild40(tr, uid); };
+
+/* ---------- 5) زرار «اسمع» على كل نص مكتوب + كل الجمل تدخل في ملف الصوت ---------- */
+function sayBtn(t) { return `<button class="saybtn" title="🔊" onclick="event.stopPropagation();ttsPlay(${esc(JSON.stringify(String(t).slice(0, 600)))},'fu-a')">🔊</button>`; }
+const _tcChapter40 = tcChapter;
+tcChapter = function () { return _tcChapter40().replace(/<div class="tccard" style="--i:(\d+)"><b>([\s\S]*?)<\/b><p>([\s\S]*?)<\/p><\/div>/g, (m, i, b, p) => `<div class="tccard" style="--i:${i}"><b>${b}</b><p>${p}</p>${sayBtn((b + ". " + p).replace(/&[a-z#0-9]+;/g, " "))}</div>`); };
+document.addEventListener("click", e => { const p = e.target.closest && e.target.closest(".bktext .tftx,.tfa .tftx,.hdtx"); if (!p || !e.altKey) return; ttsPlay(p.innerText.slice(0, 600), "fu-a"); });
+const _vlExport40 = vlExport;
+vlExport = function () {
+  const rows = [["text", "kind", "where"]]; const seen = new Set(); const add = (t, k, w) => { t = String(t || "").split("←").pop().trim(); if (!t || seen.has(k + t)) return; seen.add(k + t); rows.push([t, k, w]); };
+  Object.entries(LC).forEach(([tr, T]) => T.units.forEach(u => { u.words.forEach(w => add(w[0], "m", tr + "/" + u.id)); u.dialog.forEach(d => add(d[1], d[0] === "B" ? "f" : "m", tr + "/" + u.id)); u.gram.ex.forEach(e => add(e[0], "m", tr + "/" + u.id)); add(u.gram.rule, "m", tr + "/" + u.id + "/rule"); }));
+  TJC.forEach(c => { c.cards.forEach(([b, p]) => add(b + ". " + p, "m", "tajweed/" + c.id)); c.q.forEach(q => add(q[0], "m", "tajweed/" + c.id + "/q")); });
+  try { Object.entries(L("hzTools") || []).forEach(([i, t]) => t && t[1] && add(t[1] + ". " + (t[2] || ""), "m", "help")); } catch (e) {}
+  try { Object.values(HELP || {}).forEach(hh => ((hh && hh.ar) || []).forEach(s => add(s, "m", "help"))); } catch (e) {}
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "itqan-voice-lines.csv"; a.click(); toast(`${rows.length - 1} ${L("vlLines")}`);
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.rescard{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;border-inline-start:4px solid var(--accent)}.saybtn{border:1px solid var(--line);background:var(--card);border-radius:999px;width:2rem;height:2rem;cursor:pointer;margin-top:.4rem}</style>`);
+Object.assign(UI.ar, { resT: "كمّل من مكان ما وقفت", resGo: "كمّل" });
+Object.assign(UI.en, { resT: "Continue where you left off", resGo: "Continue" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
