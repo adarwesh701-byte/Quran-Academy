@@ -34,6 +34,7 @@ jobs:
           files: apps/itqan-academy.apk
   desktop:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
