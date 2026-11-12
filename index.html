@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v47";
+const UI_VERSION = "2026-11-12-v48";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -15484,7 +15484,7 @@ async function glossLoad(lang) { if (lang === "en" || GDEF[lang]) return; try { 
 
 /* 2) مترجم الصفحة: أي نص عربي ظاهر (غير القرآن وغير كلمات درس العربي) يتحوّل لغة الطالب، ويتخزّن */
 const DT = { mem: {}, lang: null, pend: new Map(), timer: 0, busy: false };
-const DT_SKIP = ".logo,.brand-mark,script,style,textarea,code,pre,.tjtext,.tj2,.lvay,.lvsura,.srar,.tfay,.ayq,.qtext,.ayah,.mushaf,.lfbig,.lgar,.lftr,.lfkbd,.lgtl,.notr,[data-notr],[contenteditable],.hlpbox .notr,#toast .notr";
+const DT_SKIP = ".logo,.brand-mark,.tslive,#tsLive,.tsres,.tsbig,.mtv,[lang=ar],script,style,textarea,code,pre,.tjtext,.tj2,.lvay,.lvsura,.srar,.tfay,.ayq,.qtext,.ayah,.mushaf,.lfbig,.lgar,.lftr,.lfkbd,.lgtl,.notr,[data-notr],[contenteditable],.hlpbox .notr,#toast .notr";
 function dtQuran(s) { return /[ٱۖ-ۭ]|﴿|﴾/.test(s) || ((s.match(/[ً-ْ]/g) || []).length > 0.45 * Math.max(1, (s.match(/[ء-ي]/g) || []).length) && (s.match(/[ء-ي]/g) || []).length > 3); }
 function dtLoad(lang) { if (DT.lang === lang) return; DT.lang = lang; DT.mem = {}; DT_SEEN.clear(); try { DT.mem = JSON.parse(localStorage.getItem("dt:" + lang) || "{}"); } catch (e) { DT.mem = {}; } glossLoad(lang).then(() => dtRun()); }
 let dtSaveT = 0; function dtSave() { clearTimeout(dtSaveT); dtSaveT = setTimeout(() => { try { let s = JSON.stringify(DT.mem); if (s.length > 2.5e6) { const k = Object.keys(DT.mem); k.slice(0, k.length / 2).forEach(x => delete DT.mem[x]); s = JSON.stringify(DT.mem); } localStorage.setItem("dt:" + DT.lang, s); } catch (e) {} }, 800); }
@@ -15557,10 +15557,10 @@ tcFind = function (c) {
   const d = useData("tj:" + f.s, async () => { const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${f.s}?fields=text_uthmani_tajweed&per_page=300`).then(r => r.json()); return (r.verses || []).map(v => v.text_uthmani_tajweed); });
   if (!Array.isArray(d)) return loadingBox();
   const has = w => c.wq ? /[ۖ-ۜ]/.test(w) : tcWordCls(w, c).length > 0;
-  const cands = d.map((raw, k) => [k, tjWords(raw)]).filter(([k, ws]) => { const n = ws.filter(has).length; return n >= 1 && n <= 5; });
+  const cands = d.map((raw, k) => [k, tcUnits(raw)]).filter(([k, ws]) => { const n = ws.filter(has).length; return n >= 1 && n <= 5; });
   if (!cands.length) { f.s = 78 + Math.floor(Math.random() * 37); setTimeout(render, 0); return loadingBox(); }
   if (f.ay == null || !cands.some(x => x[0] === f.ay)) { f.ay = cands[Math.floor(Math.random() * cands.length)][0]; f.found = {}; f.wrong = []; f.ask = null; f.gave = false; }
-  const ws = tjWords(d[f.ay]); const plain = w => esc(w.replace(/<[^>]*>/g, ""));
+  const ws = tcUnits(d[f.ay]); const plain = w => esc(w.replace(/<[^>]*>/g, ""));
   const total = ws.filter(has).length; const got = Object.keys(f.found).length; const done = f.gave || got >= total;
   const askBox = f.ask != null ? (() => { const w = ws[f.ask]; const right = tcWordCls(w, c); const pool = [...new Set(c.cls.concat(TJC.flatMap(x => x.cls)))].filter(k => TJ[k] && !["slnt", "ham_wasl"].includes(k));
     const opts = [...new Set(right.slice(0, 1).concat(c.cls.filter(k => !right.includes(k))).concat(pool.filter(k => !right.includes(k)).sort(() => Math.random() - .5)))].slice(0, 4).sort((a, b) => (a + f.ay).length % 3 - (b + f.ay).length % 3);
@@ -15574,6 +15574,17 @@ tcFind = function (c) {
       ${!done ? `<button class="btn btn-o" onclick="state.tcf.gave=true;state.tcf.ask=null;render()">🤷 ${ar ? "مش عارف الباقي" : "I don't know the rest"}</button>` : `<button class="btn btn-p" onclick="state.tcf.ay=null;if(Math.random()<.4)state.tcf.s=78+Math.floor(Math.random()*37);render()">${L("qzNext")} ➜</button>`}
       ${f.n >= 5 ? `<button class="btn btn-g" onclick="state.tc.step='test';render()">📝 ${L("tcQ")}</button>` : ""}</div>`;
 };
+/* الحكم اللي بين كلمتين (زي «عليهم موصدة») = اختيار واحد */
+const TC_CROSS = ["ikhafa", "ikhafa_shafawi", "idgham_ghunnah", "idgham_wo_ghunnah", "idgham_shafawi", "iqlab", "idgham_mutajanisayn", "idgham_mutaqaribayn", "izhar", "izhar_shafawi"];
+function tcUnits(raw) {
+  const ws = tjWords(raw); const out = [];
+  for (let i = 0; i < ws.length; i++) {
+    let w = ws[i];
+    while (i + 1 < ws.length) { const last = (w.match(/<tajweed class=([a-z_]+)>[^<]*<\/tajweed>(?:[ً-ٰٟۖ-ۭاىۥۦ]|<[^>]*>)*\s*$/) || [])[1]; const first = (ws[i + 1].match(/^\s*<tajweed class=([a-z_]+)>/) || [])[1]; if (last && last === first && TC_CROSS.includes(last)) { w = w + " " + ws[i + 1]; i++; } else break; }
+    out.push(w);
+  }
+  return out;
+}
 function tcTap(i, hit) {
   const f = state.tcf; if (!f || f.found[i] || f.gave) return; const c = TJC.find(x => x.id === f.ch);
   if (!hit) { if (!f.wrong.includes(i)) { f.wrong.push(i); sfxSafe("wrong"); } render(); return; }
@@ -15581,7 +15592,7 @@ function tcTap(i, hit) {
   f.ask = i; render();
 }
 function tcRule(i, k) {
-  const f = state.tcf; if (!f) return; const c = TJC.find(x => x.id === f.ch); const d = state.data["tj:" + f.s]; const w = tjWords(d[f.ay])[i]; const right = tcWordCls(w, c); const ok = right.includes(k);
+  const f = state.tcf; if (!f) return; const c = TJC.find(x => x.id === f.ch); const d = state.data["tj:" + f.s]; const w = tcUnits(d[f.ay])[i]; const right = tcWordCls(w, c); const ok = right.includes(k);
   f.found[i] = { ok, right, pick: k }; f.ask = null; f.n++; if (ok) { f.ok++; sfxSafe("correct"); } else sfxSafe("wrong"); render();
 }
 document.head.insertAdjacentHTML("beforeend", `<style>.tcfind .w.sel{outline:2px solid var(--accent);border-radius:8px}.tcfind .w.half{background:#fee2e2;border-radius:8px}.tcfind .w.reveal{background:#fef9c3;border-radius:8px}.tcask{margin-top:.7rem;padding:.8rem;border-radius:14px;background:var(--soft,#f1f5f9)}.tcopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.4rem;margin-top:.5rem}</style>`);
@@ -15715,6 +15726,104 @@ HELP.stories = { ar: ["دي كل القصص المصوّرة — دوس على �
 document.head.insertAdjacentHTML("beforeend", `<style>.stygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}.stycard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:.45rem;padding:.6rem;border:1px solid var(--line);border-radius:18px;background:var(--card);transition:transform .2s}.stycard:hover{transform:translateY(-3px)}.styimg{display:block;aspect-ratio:16/9;border-radius:12px;background:#0f2a3a center/cover}</style>`);
 
 const _sbc47 = scheduleBookerCard; scheduleBookerCard = function (a, b) { return `<details class="card" style="margin-bottom:1rem;padding:.7rem 1rem"><summary class="b" style="cursor:pointer">📅 ${state.lang === "ar" ? "احجز حصة من جدول المعلم" : "Book from a teacher's schedule"}</summary>${_sbc47(a, b).replace(/^<div class="card"[^>]*>/, "<div>")}</details>`; };
+/* ================= v48 ================= */
+/* 1) القصص اللي متعلّم عليها «مدفوع»: الأونر والمعلم واللي اشترى بيفتحوها على طول (مكانش فيه نسخة محمية فكانت بتقول مدفوع) */
+const _openSecure48 = openSecure;
+openSecure = async function (id) {
+  let c = [].concat(...Object.values(state.data).filter(Array.isArray)).find(x => x && x.id === id && x.title);
+  if (!c || c.type === "story") { const r = await sb.from("contents").select("*").eq("id", id).maybeSingle(); if (r.data) c = r.data; }
+  if (c && c.type === "story" && c.story && (c.story.slides || []).length) { const ok = staff() || allAccess() || (typeof boughtItem === "function" && boughtItem(c)) || c.access !== "paid"; if (ok) return storyOpen(c); toast(L("smpLock"), true); return navigate("pricing"); }
+  return _openSecure48(id);
+};
+/* 2) التسميع: الكلام اللي بيتسمع منك يفضل عربي — ما يتترجمش */
+const _dtRun48 = dtRun; dtRun = function (root) { if (state.route === "tasmee") { document.querySelectorAll(".tslive,#tsLive,.tsres,.tsbig").forEach(e => e.classList.add("notr")); } document.querySelectorAll(".srsay,.mtv").forEach(e => e.classList.add("notr")); return _dtRun48(root); };
+/* 3) البحث عن القرّاء: بيدوّر وانت بتكتب (عربي أو إنجليزي، من غير تشكيل/همزات) ويعرض القرّاء على طول */
+function rNorm(s) { return String(s || "").toLowerCase().replace(/[ً-ْـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/^(الشيخ|شيخ)\s+/, "").trim(); }
+listenPage = (function (orig) { return function () {
+  const ls = state.ls; const qq = rNorm(ls.q); const list = MP3Q.list;
+  if (list && qq) { const all = list; MP3Q.list = all.filter(x => rNorm(x.name).includes(qq) || rNorm(x.mo).includes(qq) || rNorm(x.en || "").includes(qq)); if (!MP3Q.list.length) MP3Q.list = all; const saveQ = ls.q; ls.q = ""; try { var h = orig(); } finally { MP3Q.list = all; ls.q = saveQ; } }
+  else var h = orig();
+  return h.replace(/<input class="in" value="([^"]*)" onchange="state\.ls\.q=this\.value;render\(\)">/, (m0, v) => `<input class="in" id="lsQ" value="${v}" placeholder="${state.lang === "ar" ? "اكتب اسم الشيخ…" : "Type a reciter's name…"}" oninput="state.ls.q=this.value;clearTimeout(window.__lsq);window.__lsq=setTimeout(()=>{render();const e=document.getElementById('lsQ');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},220)">`);
+}; })(listenPage);
+
+/* 4) المتون: تحفة الأطفال والمقدمة الجزرية — من «ويكي مصدر»، بيت بيت، مع الحفظ والاختبار */
+const MATN = { tuhfa: { ar: "تحفة الأطفال", en: "Tuhfat al-Atfal", au: "سليمان الجمزوري", page: "تحفة الأطفال" }, jaz: { ar: "المقدمة الجزرية", en: "Al-Muqaddimah al-Jazariyyah", au: "ابن الجزري", page: "الجزرية" } };
+async function matnLoad(k) {
+  const ck = "matn2:" + k; try { const c = JSON.parse(localStorage.getItem(ck) || "null"); if (c && c.length) return c; } catch (e) {}
+  const cl = s => s.replace(/ـ/g, "").replace(/\s+/g, " ").trim(); let out = [];
+  if (k === "tuhfa") { const r = await fetch(`https://ar.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(MATN.tuhfa.page)}&prop=text&format=json&origin=*`).then(r => r.json()); const d = new DOMParser().parseFromString(r.parse.text["*"], "text/html"); let cur = null; [...d.querySelectorAll("tr")].forEach(el => { const t = [...el.querySelectorAll("td")].map(x => cl(x.textContent)); if (t.length === 1 && t[0]) { cur = { t: t[0], v: [] }; out.push(cur); } else if (t.length === 3 && cur) cur.v.push([t[1], t[2]]); }); }
+  else { const r = await fetch(`https://ar.wikisource.org/w/api.php?action=query&prop=revisions&rvprop=content&rvslots=main&titles=${encodeURIComponent(MATN.jaz.page)}&format=json&origin=*`).then(r => r.json()); const w = Object.values(r.query.pages)[0].revisions[0].slots.main["*"]; let cur = null; w.split("\n").forEach(l => { const h = l.match(/^==+\s*(.*?)\s*==+$/); if (h) { cur = { t: h[1], v: [] }; out.push(cur); return; } if (!cur) return; const m = l.replace(/\{\{أبيات\|/, "").replace(/\}\}$/, "").trim(); if (m.includes("\\\\")) cur.v.push(m.split("\\\\").map(cl)); }); }
+  out = out.filter(x => x.v.length); try { localStorage.setItem(ck, JSON.stringify(out)); } catch (e) {} return out;
+}
+state.mt = state.mt || { k: "tuhfa", sec: 0, hide: false, q: null };
+function matnBox() {
+  const mt = state.mt; const ar = state.lang === "ar"; const d = useData("matn:" + mt.k, () => matnLoad(mt.k));
+  const tabs = `<div class="tabs" style="margin:.6rem 0">${Object.entries(MATN).map(([k, m]) => `<a href="#" aria-current="${mt.k === k}" onclick="state.mt.k='${k}';state.mt.sec=0;state.mt.q=null;render();return false;">📜 ${esc(ar ? m.ar : m.en)}</a>`).join("")}</div>`;
+  if (!Array.isArray(d)) return tabs + loadingBox(); let n0 = 0; const starts = d.map(s => { const a = n0; n0 += s.v.length; return a; });
+  const sec = d[Math.min(mt.sec, d.length - 1)]; const st = starts[Math.min(mt.sec, d.length - 1)];
+  if (mt.q) return tabs + matnQuizView();
+  return tabs + `<p class="xs muted">${esc(MATN[mt.k].au)} — ${n0} ${ar ? "بيت" : "lines"} · ${ar ? "المصدر: ويكي مصدر" : "Source: Arabic Wikisource"}</p>
+    <div class="mtsecs">${d.map((s, i) => `<button class="${i === mt.sec ? "on" : ""}" onclick="state.mt.sec=${i};render()">${esc(s.t)} <small>${s.v.length}</small></button>`).join("")}</div>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.6rem 0"><button class="btn ${mt.hide ? "btn-p" : "btn-o"}" onclick="state.mt.hide=!state.mt.hide;render()">🙈 ${ar ? "خبّي الشطر التاني (للحفظ)" : "Hide 2nd half (memorise)"}</button><button class="btn btn-o" onclick="matnSay(${mt.sec})">🔊 ${ar ? "اسمع الباب" : "Listen to this chapter"}</button><button class="btn btn-g" onclick="matnQuiz()">📝 ${ar ? "اختبرني في الباب ده" : "Test me on this chapter"}</button></div>
+    <div class="mtv">${sec.v.map((b, i) => `<div class="mtl"><span class="mtn">${st + i + 1}</span><span class="mts">${esc(b[0])}</span><span class="mts ${mt.hide ? "mth" : ""}" onclick="this.classList.toggle('mth')">${esc(b[1] || "")}</span></div>`).join("")}</div>`;
+}
+async function matnSay(i) { const d = state.data["matn:" + state.mt.k]; if (!Array.isArray(d)) return; const s = d[i]; for (const b of s.v) { await ttsPlay(b.join("، "), "m"); } }
+function matnQuiz() {
+  const d = state.data["matn:" + state.mt.k]; if (!Array.isArray(d)) return; const s = d[state.mt.sec]; const all = [].concat(...d.map(x => x.v)); const r = () => Math.random(); const ar = state.lang === "ar";
+  const qs = s.v.map(b => { const ans = b[1]; const opts = [ans].concat(all.map(x => x[1]).filter(x => x !== ans).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5); return { q: b[0] + " …", ans, opts, ask: ar ? "كمّل البيت: إيه الشطر التاني؟" : "Complete the line: which is the second half?" }; }).sort(() => r() - .5);
+  state.mt.q = true; state.qz = { qs, i: 0, ok: 0, pick: null, mt: true, back: () => { state.mt.q = null; }, again: matnQuiz }; render();
+}
+function matnQuizView() { return `<div class="notr">${quizView()}</div>`; }
+document.head.insertAdjacentHTML("beforeend", `<style>.mtsecs{display:flex;gap:.35rem;overflow-x:auto;scrollbar-width:none;padding-bottom:.2rem}.mtsecs button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:.4rem .8rem;font:inherit;font-size:.85rem;cursor:pointer;color:var(--fg)}.mtsecs button.on{background:var(--accent);color:#fff;border-color:transparent}.mtsecs small{opacity:.7}
+.mtv{background:#fffdf5;color:#111;border-radius:16px;padding:.8rem 1rem;direction:rtl}.mtl{display:grid;grid-template-columns:2rem 1fr 1fr;gap:.6rem;align-items:center;padding:.45rem 0;border-bottom:1px dashed #e7e2cf;font:1.3rem/2 'Amiri',serif}.mtl:last-child{border:0}.mtn{font:700 .8rem system-ui;color:#a16207;text-align:center}.mts{text-align:center}.mth{color:transparent;background:repeating-linear-gradient(90deg,#e7e2cf 0 6px,transparent 6px 10px);border-radius:8px;cursor:pointer}@media(max-width:600px){.mtl{grid-template-columns:1.6rem 1fr;}.mtl .mts:last-child{grid-column:2}}</style>`);
+PAGES16.push("matn");
+const _render48m = render; render = function () { if (state.route === "matn") { const app = document.getElementById("app"); if (!app) return; const ar = state.lang === "ar"; let body; try { body = pageWrap("📜", ar ? "متون التجويد" : "Tajweed poems (mutun)", ar ? "تحفة الأطفال والمقدمة الجزرية بيت بيت: اقرا، اسمع، احفظ، واختبر نفسك." : "Tuhfat al-Atfal and the Jazariyyah line by line: read, listen, memorise and test yourself.", `<div class="card">${matnBox()}</div>`, 1100); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); applyRename(app); visitPing(false); dtRun(); hlpPlace(); } catch (e) {} return; } return _render48m.apply(this, arguments); };
+HELP.matn = { ar: ["اختار المتن من فوق، وبعدين الباب.", "«خبّي الشطر التاني» عشان تحفظ — دوس على المكان المخفي عشان يظهر.", "«اختبرني» بيديك الشطر الأول وانت تختار التاني."], en: ["Pick the poem, then the chapter.", "'Hide 2nd half' to memorise — tap the hidden part to reveal it.", "'Test me' shows the first half; you pick the second."] };
+/* زرار المتون جوه رحلة التجويد وأدوات التجويد */
+const _tcMap48 = tcMap; tcMap = function () { const ar = state.lang === "ar"; return _tcMap48() + `<div class="card" style="margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap"><span><b>📜 ${ar ? "متون التجويد" : "Tajweed poems"}</b><br><span class="xs muted">${ar ? "تحفة الأطفال (٦١ بيت) والمقدمة الجزرية — احفظ واختبر نفسك." : "Tuhfat al-Atfal (61 lines) and the Jazariyyah — memorise and test yourself."}</span></span><button class="btn btn-p" onclick="go16('matn')">${ar ? "افتح المتون" : "Open"}</button></div>`; };
+
+/* 5) السيرة وقصص الأنبياء: خريطة واضحة — كل نبي وكل حدث بيفتح الفصل بتاعه من الكتاب نفسه */
+const PROPHETS = [["آدم", "Adam", 138], ["إدريس", "Idris", 750], ["نوح", "Nuh (Noah)", 778], ["هود", "Hud", 1134], ["صالح", "Salih", 1310], ["إبراهيم", "Ibrahim (Abraham)", 1627], ["لوط", "Lut (Lot)", 2211], ["شعيب", "Shu'ayb", 2346], ["إسماعيل", "Isma'il", 2485], ["إسحاق", "Ishaq", 2522], ["يعقوب ويوسف", "Ya'qub & Yusuf", 2617], ["أيوب", "Ayyub (Job)", 3102], ["ذو الكفل", "Dhul-Kifl", 3192], ["يونس", "Yunus (Jonah)", 3334], ["موسى وهارون", "Musa & Harun", 3453], ["موسى والخضر", "Musa & al-Khidr", 4391], ["يوشع", "Yusha'", 4830], ["إلياس", "Ilyas", 4930], ["اليسع", "Al-Yasa'", 5255], ["داود", "Dawud (David)", 5350], ["سليمان", "Sulayman", 5519], ["زكريا ويحيى", "Zakariyya & Yahya", 5978], ["عيسى", "'Isa (Jesus)", 6293]];
+const SEERAH = [["الميلاد والرضاعة", "Birth & nursing", 1292, "٥٧٠م"], ["بحيرى الراهب", "Bahira the monk", 1494, ""], ["زواجه من خديجة", "Marriage to Khadijah", 1531, ""], ["بناء الكعبة", "Rebuilding the Ka'bah", 1571, ""], ["المبعث", "The first revelation", 1864, "٦١٠م"], ["نزول جبريل", "Jibril's first descent", 1874, ""], ["إسلام أبي بكر", "Abu Bakr accepts Islam", 1969, ""], ["الهجرة إلى الحبشة", "Migration to Abyssinia", 2519, ""], ["الطائف", "Journey to Ta'if", 3251, ""], ["الإسراء والمعراج", "Al-Isra' & al-Mi'raj", 3097, ""], ["بيعة العقبة", "Pledge of 'Aqabah", 3333, ""], ["الهجرة إلى المدينة", "Hijrah to Madinah", 3693, "١هـ"], ["غزوة بدر", "Battle of Badr", 4734, "٢هـ"], ["غزوة أحد", "Battle of Uhud", 6434, "٣هـ"], ["غزوة الخندق", "Battle of the Trench", 8072, "٥هـ"], ["صلح الحديبية", "Treaty of Hudaybiyyah", 8936, "٦هـ"], ["خيبر", "Khaybar", 9100, "٧هـ"], ["فتح مكة", "Conquest of Makkah", 9680, "٨هـ"], ["حنين", "Hunayn", 10157, "٨هـ"], ["تبوك", "Tabuk", 10943, "٩هـ"], ["حجة الوداع", "Farewell Pilgrimage", 11668, "١٠هـ"], ["مرضه ووفاته ﷺ", "His illness & passing ﷺ", 11983, "١١هـ"]];
+function storyMapGo(book, idx) { const toc = state.data["toc:" + book]; Object.assign(state.bk, { id: book, ch: idx, page: 0, res: null, quiz: null }); render(); try { const a = document.querySelector(".bktext,.bkhead"); if (a) a.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
+const _booksPage48 = booksPage;
+booksPage = function (ids, secId) {
+  const bk = state.bk; const ar = state.lang === "ar"; const h = _booksPage48(ids, secId);
+  if (bk.ch != null) return `<div class="row" style="margin-top:.8rem"><button class="btn btn-o" onclick="state.bk.ch=null;render()">${ar ? "→ رجوع للخريطة" : "← Back to the map"}</button></div>` + h;
+  if (ids.includes("qisas")) return `<div class="card" style="margin-top:1rem"><h3>🌿 ${ar ? "قصص الأنبياء — اختار النبي" : "Stories of the Prophets — pick a prophet"}</h3><p class="xs muted">${ar ? "كل قصة بتفتح من «قصص الأنبياء» للحافظ ابن كثير — نفس نص الكتاب." : "Each story opens in Ibn Kathir's 'Stories of the Prophets' — the book's own text."}</p><div class="pmap">${PROPHETS.map(([a, e, i], k) => `<button class="pcard" onclick="storyMapGo('qisas',${i})"><span class="pnum">${k + 1}</span><b>${esc(ar ? a : e)}</b><small>${ar ? "عليه السلام" : "peace be upon him"}</small></button>`).join("")}</div></div>` + h;
+  if (ids.includes("hisham")) return `<div class="card" style="margin-top:1rem"><h3>🕋 ${ar ? "السيرة النبوية — خط زمني" : "The Prophet's life ﷺ — timeline"}</h3><p class="xs muted">${ar ? "كل حدث بيفتح الفصل بتاعه من «السيرة النبوية» لابن هشام." : "Each event opens its chapter in Ibn Hisham's Sirah."}</p><div class="tline">${SEERAH.map(([a, e, i, y]) => `<button class="tlev" onclick="storyMapGo('hisham',${i})"><span class="tldot"></span><span><b>${esc(ar ? a : e)}</b>${y ? `<small>${y}</small>` : ""}</span></button>`).join("")}</div></div>` + h;
+  return h;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.pmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-top:.7rem}.pcard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.15rem;padding:.8rem .5rem;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--accent) 6%,var(--card)));transition:transform .15s}.pcard:hover{transform:translateY(-3px)}.pnum{font:800 .75rem system-ui;color:var(--accent)}.pcard b{font-size:1.05rem}.pcard small{font-size:.7rem;opacity:.7}
+.tline{position:relative;margin-top:.8rem;padding-inline-start:1.2rem;border-inline-start:3px solid color-mix(in srgb,var(--accent) 40%,transparent);display:flex;flex-direction:column;gap:.35rem}.tlev{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:.6rem;align-items:center;padding:.45rem .7rem;border-radius:12px;position:relative}.tlev:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}.tldot{position:absolute;inset-inline-start:-1.72rem;width:.9rem;height:.9rem;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}.tlev small{display:block;font-size:.72rem;color:var(--accent);font-weight:700}</style>`);
+
+/* 6) التحويل من مقام لمقام: في صفحة كل مقام — اختار المقام اللي هتتحوّل له، واسمع مثال بالذكاء الاصطناعي، والأونر يرفع تسجيل حقيقي */
+function modPhrase(from, to) {
+  const A = mqPattern(from, 0, 1.05), cad = mqPattern(from, 1, 1); const bridge = [[mqDeg(from, 4), .9], [mqDeg(from, 3), .5], [mqDeg(to, 3), .9], [mqDeg(to, 2), .5], [mqDeg(to, 1), .5], [mqDeg(to, 2), .7]];
+  const B = mqPattern(to, 2, 1), endT = mqPattern(to, 1, 1); return A.slice(0, 9).concat(cad.slice(0, 4), bridge, B, endT);
+}
+function modPlay(fromId, toId) { const f = MQ.find(x => x.id === fromId), t = MQ.find(x => x.id === toId); if (!f || !t) return; aahSing(modPhrase(f, t), mqTonicHz(f), (state.mq && state.mq.voice) || "m"); }
+function modUrl(a, b) { return sb.storage.from("academy_public").getPublicUrl(`mod/${a}_${b}.mp3`).data.publicUrl; }
+async function modUpload(inp, a, b) { const f = inp.files && inp.files[0]; if (!f) return; toast(L("loading") || "…"); const r = await sb.storage.from("academy_public").upload(`mod/${a}_${b}.mp3`, f, { upsert: true, contentType: f.type || "audio/mpeg" }); if (r.error) return toast(r.error.message, true); delete state.data["modok:" + a + "_" + b]; toast(L("saved")); render(); }
+function modTab(cur) {
+  const mid = (cur.meta || {}).maqam; const m = MQ.find(x => x.id === mid); if (!m) return ""; const ar = state.lang === "ar"; const to = state.modTo && state.modTo !== mid ? MQ.find(x => x.id === state.modTo) : null;
+  const grid = `<div class="modgrid">${MQ.filter(x => x.id !== mid).map(x => `<button class="${to && to.id === x.id ? "on" : ""}" onclick="state.modTo='${x.id}';render()">${esc(mqName(m))} ➜ <b>${esc(mqName(x))}</b></button>`).join("")}</div>`;
+  let detail = ""; if (to) { const k = mid + "_" + to.id; const ok = useData("modok:" + k, async () => { try { const r = await fetch(modUrl(mid, to.id), { method: "HEAD" }); return [r.ok]; } catch (e) { return [false]; } });
+    detail = `<div class="card" style="margin-top:.8rem;border-color:var(--accent)"><h3>🔀 ${esc(mqName(m))} ➜ ${esc(mqName(to))}</h3><p class="sm muted" style="margin:.3rem 0 .6rem">${ar ? `بتبدأ في ${mqName(m)}، وتنزل للقرار، وبعدين بتغيّر الجنس لـ ${mqName(to)} على نفس القرار وتقفل فيه.` : `Starts in ${mqName(m)}, settles on the tonic, then switches the jins to ${mqName(to)} on the same tonic and closes there.`}</p>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-p" onclick="modPlay('${mid}','${to.id}')">▶ ${ar ? "مثال بالذكاء الاصطناعي (آهات)" : "AI example (aahs)"}</button><button class="btn btn-o" onclick="aahStop()">⏹</button></div>
+      ${Array.isArray(ok) && ok[0] ? `<p class="sm b" style="margin-top:.7rem">🎙️ ${ar ? "تسجيل الشيخ" : "Teacher's recording"}</p><audio controls preload="none" style="width:100%" src="${esc(modUrl(mid, to.id))}"></audio>` : `<p class="xs muted" style="margin-top:.6rem">${ar ? "لسه مفيش تسجيل حقيقي للتحويل ده." : "No real recording for this modulation yet."}</p>`}
+      ${realRole() === "owner" && !state.preview ? `<label class="btn btn-o" style="margin-top:.6rem">⬆️ ${ar ? "ارفع تسجيلك للتحويل ده" : "Upload your recording"}<input type="file" accept="audio/*" hidden onchange="modUpload(this,'${mid}','${to.id}')"></label>` : ""}</div>`; }
+  return `<div class="card" style="margin-top:1rem"><h3>🔀 ${ar ? `التحويل من ${mqName(m)} للمقامات التانية` : `Modulating from ${mqName(m)} to other maqamat`}</h3><p class="xs muted">${ar ? "اختار المقام اللي عاوز تتحوّل له." : "Pick the maqam to modulate to."}</p>${grid}</div>${detail}`;
+}
+const _maqamOne48 = maqamOne;
+maqamOne = function (cur) {
+  let h = _maqamOne48(cur); const ar = state.lang === "ar";
+  h = h.replace(/(<div class="motabs">[\s\S]*?)(<\/div>)/, `$1<button class="${state.mqTab === "mod" ? "on" : ""}" onclick="state.mqTab='mod';aahStop();render()">🔀 ${ar ? "التحويل" : "Modulation"}</button>$2`);
+  if (state.mqTab !== "mod") return h; const i = h.indexOf('<div class="motabs">'); const j = h.indexOf("</div>", i) + 6; return h.slice(0, j) + modTab(cur);
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.modgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.4rem;margin-top:.6rem}.modgrid button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:.55rem .6rem;font:inherit;font-size:.88rem;cursor:pointer;color:var(--fg);text-align:start}.modgrid button.on{background:var(--accent);color:#fff;border-color:transparent}</style>`);
+HELP.maqam = { ar: ["دي صفحة المقام: اختار من التبويبات — معلومات، آهات، اختبار صوتك، مرتل، أناشيد، خمّن المقام، والتحويل.", "«التحويل»: اختار المقام اللي هتتحوّل له واسمع المثال."], en: ["The maqam page: info, aahs, voice test, murattal, nasheeds, guess the maqam and modulation.", "'Modulation': pick a target maqam and listen to the example."] };
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
