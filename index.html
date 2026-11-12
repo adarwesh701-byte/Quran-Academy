@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v23";
+const UI_VERSION = "2026-11-12-v24";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -12777,7 +12777,7 @@ function booksPage(ids, secId) {
     const i = toc.findIndex(t => t.idx === bk.ch); const end = toc[i + 1] ? toc[i + 1].idx : 1e9; const per = 60;
     const rows = useData(`bkr:${b.id}:${bk.ch}:${bk.page}`, () => q(sb.from("book_rows").select("idx,kind,level,txt").eq("book", b.id).gte("idx", bk.ch).lt("idx", end).order("idx").range(bk.page * per, bk.page * per + per - 1)));
     return `<div class="rfx" style="margin-top:1rem">${tabs}${head}${rfBar()}<div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.6rem 0"><button class="btn btn-o" onclick="state.bk.ch=null;state.bk.page=0;render()">☰ ${L("bkToc")}</button><button class="btn btn-p" onclick="bkQuiz('${b.id}',${bk.ch},${end})">${L("bkQuiz")}</button></div>
-      <div class="card bktext">${!Array.isArray(rows) ? loadingBox() : rows.map(r => r.kind === "h" ? (r.txt.length > 120 ? `<h3 class="bkh l${r.level}">${esc(r.txt.split(/\s+/).slice(0, 6).join(" "))}</h3><p class="tftx">${esc(r.txt)}</p>` : `<h3 class="bkh l${r.level}">${esc(r.txt)}</h3>`) : `<p class="tftx">${esc(r.txt)}</p>`).join("")}</div>
+      <div class="card bktext">${!Array.isArray(rows) ? loadingBox() : rows.map(r => r.kind === "h" ? (r.txt.length > 120 ? `<h3 class="bkh l${r.level}">${esc(r.txt.split(/\s+/).slice(0, 6).join(" "))}</h3><p class="tftx" data-i="${r.idx}">${esc(r.txt)}</p>` : `<h3 class="bkh l${r.level}">${esc(r.txt)}</h3>`) : `<p class="tftx" data-i="${r.idx}">${esc(r.txt)}</p>`).join("")}</div>
       <div class="row" style="gap:.4rem;justify-content:space-between;flex-wrap:wrap;margin-top:.6rem">${i > 0 && isFree(i - 1) ? `<button class="btn btn-o" onclick="state.bk.ch=${toc[i - 1].idx};state.bk.page=0;render();window.scrollTo({top:0})">${L("bkPrev")}</button>` : "<span></span>"}
       ${Array.isArray(rows) && rows.length === per ? `<button class="btn btn-p" onclick="state.bk.page++;render();window.scrollTo({top:0})">${L("bkMore")} ▼</button>` : ""}
       ${toc[i + 1] ? (isFree(i + 1) ? `<button class="btn btn-o" onclick="state.bk.ch=${toc[i + 1].idx};state.bk.page=0;render();window.scrollTo({top:0})">${L("bkNext")}</button>` : `<button class="btn btn-o" onclick="toast(L('smpLock'),true)">🔒 ${L("bkNext")}</button>`) : ""}</div></div>`;
@@ -12962,6 +12962,242 @@ wbAyahModal = function () { _wbAyahModal24(); const m = rmEl("rmModal"); const b
 async function wbPlayAyahs() { const s = +rmEl("ay_s").value, f = Math.max(1, +rmEl("ay_f").value || 1), t = Math.max(f, +rmEl("ay_t").value || f), rid = +rmEl("ay_r").value || 7;
   const d = await fetch(`https://api.quran.com/api/v4/recitations/${rid}/by_chapter/${s}?per_page=300`).then(r => r.json()); const list = (d.audio_files || []).filter(a => { const n = +a.verse_key.split(":")[1]; return n >= f && n <= t; });
   for (const a of list) { await new Promise(res => { const au = new Audio(/^https?:/.test(a.url) ? a.url : "https://verses.quran.com/" + a.url); au.onended = res; au.onerror = res; au.play().catch(res); }); } }
+
+/* ======================= v25 data: وحدات إضافية لحد المستوى المتقدم ======================= */
+LC_RAW.eg.levels = ["مبتدئ", "أساسي", "متوسط", "متقدم"];
+LC_RAW.eg.units.push(
+ ["e13", "في المطعم", "At the restaurant", "منيو~menyu~menu|طلب~ṭalab~order|الحساب~el-ḥisāb~the bill|سلطة~salaṭa~salad|فراخ~firāx~chicken|مشوي~mašwi~grilled|حار~ḥāmi~spicy|بالهنا~bil-hana~enjoy", "A:ممكن المنيو لو سمحت؟~mumkin el-menyu law samaḥt?~Can I have the menu please?|B:اتفضل. تحب تطلب إيه؟~itfaḍḍal. tḥebb tuṭlub ēh?~Here you go. What would you like?|A:فراخ مشوية وسلطة، ومش حامي.~firāx mašwiyya w salaṭa, w miš ḥāmi.~Grilled chicken and salad, not spicy.|B:حاضر، دقايق ويكون جاهز.~ḥāḍir, daʾāyeʾ w yikūn gāhiz.~Sure, ready in minutes.|A:وبعد الأكل هات الحساب.~w baʿd el-akl hāt el-ḥisāb.~After eating, bring the bill.", "«هات» = give me (أمر مؤدب في المطاعم والمحلات)~~هات الحساب~hāt el-ḥisāb~bring the bill|هات مية~hāt mayya~bring water|هاتلي شاي~hātli šāy~bring me tea"],
+ ["e14", "مقابلة شغل", "Job interview", "خبرة~xibra~experience|سيرة ذاتية~sīra zatiyya~CV|مرتب~murattab~salary|شركة~šerka~company|مسؤولية~masʾuliyya~responsibility|فريق~farīʾ~team|طموح~ṭumūḥ~ambition|اتعلمت~itʿallimt~I learned", "A:احكيلي عن خبرتك.~iḥkīli ʿan xibratak.~Tell me about your experience.|B:اشتغلت خمس سنين في شركة برمجة.~ištaghalt xamas sinīn fi šerkit barmaga.~I worked five years at a software company.|A:إيه أكتر حاجة اتعلمتها هناك؟~ēh aktar ḥāga itʿallimtaha hināk?~What did you learn most there?|B:الشغل في فريق وتحمّل المسؤولية.~eš-šoghl fi farīʾ w taḥammul el-masʾuliyya.~Teamwork and taking responsibility.|A:كويس جدًا، هنكلمك قريب.~kwayyis giddan, hankallimak ʾurayyib.~Very good, we'll call you soon.", "«أكتر» للتفضيل: أكبر، أحسن، أسرع~~أحسن حاجة~aḥsan ḥāga~the best thing|أكبر شركة~akbar šerka~the biggest company|أسرع طريق~asraʿ ṭarīʾ~the fastest way"],
+ ["e15", "التليفون والمواعيد", "Phone & plans", "رن~rann~ring|كلمني~kallimni~call me|مشغول~mašghūl~busy|رسالة~risāla~message|واتساب~wātsāb~WhatsApp|نتقابل~nitʾābil~we meet|اتأخرت~itʾaxxart~I'm late|ولا يهمك~wala yhimmak~don't worry", "A:ألو، معلش اتأخرت عليك.~alō, maʿlešš itʾaxxart ʿalēk.~Hello, sorry I'm late.|B:ولا يهمك، إنت فين دلوقتي؟~wala yhimmak, inta fēn dilwaʾti?~Don't worry, where are you now?|A:في الطريق، عشر دقايق وأوصل.~fiṭ-ṭarīʾ, ʿašar daʾāyeʾ w awṣal.~On the way, ten minutes.|B:تمام، ابعتلي رسالة لما توصل.~tamām, ibʿatli risāla lamma tiwṣal.~OK, text me when you arrive.", "«لما» = when (ربط جملتين)~~لما أوصل هكلمك~lamma awṣal hakallimak~when I arrive I'll call you|لما كنت صغير~lamma kunt ṣughayyar~when I was young|كلمني لما تفضى~kallimni lamma tifḍa~call me when you're free"],
+ ["e16", "الحكايات والماضي", "Telling stories", "زمان~zamān~long ago|فاكر~fākir~I remember|حصل~ḥaṣal~it happened|فجأة~fagʾa~suddenly|ضحكنا~ḍiḥikna~we laughed|اتخضيت~itxaḍḍēt~I got scared|في الآخر~fil-āxir~in the end|كنت بـ~kunt ba-~I used to", "A:فاكر لما رحنا إسكندرية زمان؟~fākir lamma ruḥna Iskindiriyya zamān?~Remember when we went to Alexandria long ago?|B:أيوه! وفجأة المطرة نزلت.~aywa! w fagʾa el-maṭara nizlit.~Yes! And suddenly it rained.|A:وفي الآخر ضحكنا أوي.~w fil-āxir ḍiḥikna awi.~And in the end we laughed a lot.|B:كنت بحب الأيام دي.~kunt baḥebb el-ayyām di.~I used to love those days.", "«كنت بـ» للعادة في الماضي~~كنت بلعب كورة~kunt balʿab kōra~I used to play football|كانت بتذاكر بالليل~kānit bitzākir bil-lēl~she used to study at night|كنا بنسافر كل صيف~kunna binsāfir kull ṣēf~we used to travel every summer"],
+ ["e17", "الرأي والنقاش", "Debating", "من وجهة نظري~min wighit naẓari~in my view|بالعكس~bil-ʿaks~on the contrary|عندك حق~ʿandak ḥaʾʾ~you're right|بس~bass~but|مقتنع~miʾtiniʿ~convinced|الحقيقة~el-ḥaʾīʾa~actually|يعني~yaʿni~I mean|مثلًا~masalan~for example", "A:من وجهة نظري، الشغل من البيت أحسن.~min wighit naẓari, eš-šoghl min el-bēt aḥsan.~In my view, working from home is better.|B:بالعكس، أنا شايف المكتب أحسن للتركيز.~bil-ʿaks, ana šāyif el-maktab aḥsan lit-tarkīz.~On the contrary, I think the office is better for focus.|A:عندك حق في نقطة، بس الوقت في المواصلات كتير.~ʿandak ḥaʾʾ fi nuʾṭa, bass el-waʾt fil-muwaṣlāt ketīr.~You have a point, but commuting takes long.|B:يعني ممكن نعمل الاتنين.~yaʿni mumkin niʿmil el-itnēn.~I mean, we could do both.", "«شايف» = I think/see (رأي)~~أنا شايف إنه صح~ana šāyif innu ṣaḥḥ~I think it's right|هي شايفة إن ده غلط~hiyya šayfa inn da ghalaṭ~she thinks it's wrong|إنت شايف إيه؟~inta šāyif ēh?~what do you think?"],
+ ["e18", "أمثال وتعبيرات مصرية", "Egyptian idioms", "اللي فات مات~elli fāt māt~let bygones be bygones|على قد لحافك مد رجليك~ʿala ʾadd liḥāfak midd riglēk~live within your means|إيد لوحدها ما تسقفش~īd liwaḥdaha ma tsaʾʾafš~teamwork matters|الصبر مفتاح الفرج~eṣ-ṣabr muftāḥ el-farag~patience is the key to relief|يا بخت~ya baxt~how lucky|ربنا يسهل~rabbina ysahhil~may God make it easy|كل تأخيرة وفيها خيرة~kull taʾxīra w fīha xēra~every delay is for the best|حلوة دي~ḥilwa di~nice one", "A:اتأخرت على الأتوبيس النهارده.~itʾaxxart ʿal-otobīs en-naharda.~I missed the bus today.|B:كل تأخيرة وفيها خيرة!~kull taʾxīra w fīha xēra!~Every delay is for the best!|A:عندك حق. ربنا يسهل.~ʿandak ḥaʾʾ. rabbina ysahhil.~You're right. God make it easy.|B:وبعدين إيد لوحدها ما تسقفش — تعالى أوصلك.~w baʿdēn īd liwaḥdaha ma tsaʾʾafš — taʿāla awaṣṣalak.~And one hand can't clap — come, I'll drive you.", "الأمثال بتتقال زي ما هي من غير تغيير~~اللي فات مات~elli fāt māt~let it go|الصبر مفتاح الفرج~eṣ-ṣabr muftāḥ el-farag~patience brings relief|على قد لحافك مد رجليك~ʿala ʾadd liḥāfak midd riglēk~live within your means"]
+);
+LC_RAW.fu.levels = ["مبتدئ", "أساسي", "متوسط", "متقدم"];
+LC_RAW.fu.units.push(
+ ["f13", "البيئة", "The environment", "بيئة~bīʾa~environment|تلوث~talawwuth~pollution|طاقة~ṭāqa~energy|شجرة~shajara~tree|نفايات~nifāyāt~waste|حماية~ḥimāya~protection|مناخ~munākh~climate|مستقبل~mustaqbal~future", "A:ما أكبر خطر على البيئة اليوم؟~mā akbaru khaṭarin ʿalā l-bīʾati l-yawm?~What's the biggest threat to the environment today?|B:التلوث وتغير المناخ.~at-talawwuthu wa taghayyuru l-munākh.~Pollution and climate change.|A:وكيف نحمي مستقبل أبنائنا؟~wa kayfa naḥmī mustaqbala abnāʾinā?~And how do we protect our children's future?|B:بتقليل النفايات واستخدام الطاقة النظيفة.~bi-taqlīli n-nifāyāti wa stikhdāmi ṭ-ṭāqati n-naẓīfa.~By reducing waste and using clean energy.", "المصدر: تقليل، استخدام، حماية~~قلّلَ ← تقليل~qallala ← taqlīl~to reduce ← reduction|استخدمَ ← استخدام~istakhdama ← istikhdām~to use ← use|حمى ← حماية~ḥamā ← ḥimāya~to protect ← protection"],
+ ["f14", "التاريخ والحضارة", "History & civilisation", "حضارة~ḥaḍāra~civilisation|تاريخ~tārīkh~history|علماء~ʿulamāʾ~scholars|مخطوطة~makhṭūṭa~manuscript|اكتشاف~iktishāf~discovery|قرن~qarn~century|ازدهر~izdahara~flourished|ترجمة~tarjama~translation", "A:متى ازدهرت الحضارة الإسلامية؟~matā zdaharati l-ḥaḍāratu l-islāmiyya?~When did Islamic civilisation flourish?|B:في القرون الوسطى، وخاصة في بغداد والأندلس.~fī l-qurūni l-wusṭā, wa khāṣṣatan fī Baghdāda wal-Andalus.~In the Middle Ages, especially in Baghdad and Andalusia.|A:وما أهم إنجازاتها؟~wa mā ahammu injāzātihā?~What were its main achievements?|B:الترجمة والطب والفلك والرياضيات.~at-tarjamatu waṭ-ṭibbu wal-falaku war-riyāḍiyyāt.~Translation, medicine, astronomy and mathematics.", "جمع التكسير~~عالم ← علماء~ʿālim ← ʿulamāʾ~scholar(s)|قرن ← قرون~qarn ← qurūn~century/ies|كتاب ← كتب~kitāb ← kutub~book(s)"],
+ ["f15", "الاقتصاد والعمل", "Economy", "اقتصاد~iqtiṣād~economy|سوق~sūq~market|أسعار~asʿār~prices|ارتفاع~irtifāʿ~rise|انخفاض~inkhifāḍ~fall|استثمار~istithmār~investment|بطالة~baṭāla~unemployment|نمو~numuww~growth", "A:لماذا ارتفعت الأسعار هذا العام؟~li-mādhā rtafaʿati l-asʿāru hādhā l-ʿām?~Why did prices rise this year?|B:بسبب زيادة الطلب وقلة العرض.~bi-sababi ziyādati ṭ-ṭalabi wa qillati l-ʿarḍ.~Because of higher demand and lower supply.|A:وهل هناك نمو في الاستثمار؟~wa hal hunāka numuwwun fī l-istithmār?~Is there growth in investment?|B:نعم، وهذا يقلل البطالة.~naʿam, wa hādhā yuqallilu l-baṭāla.~Yes, and that reduces unemployment.", "بسبب + اسم مجرور~~بسبب المطر~bi-sababi l-maṭar~because of the rain|بسبب الزحام~bi-sababi z-ziḥām~because of the traffic|بسبب العمل~bi-sababi l-ʿamal~because of work"],
+ ["f16", "الأدب والشعر", "Literature & poetry", "شاعر~shāʿir~poet|قصيدة~qaṣīda~poem|بيت~bayt~verse|رواية~riwāya~novel|كاتب~kātib~writer|خيال~khayāl~imagination|بلاغة~balāgha~eloquence|تشبيه~tashbīh~simile", "A:من شاعرك المفضل؟~man shāʿiruka l-mufaḍḍal?~Who's your favourite poet?|B:أحب المتنبي، فشعره مليء بالحكمة.~uḥibbu l-Mutanabbī, fa-shiʿruhu malīʾun bil-ḥikma.~I love al-Mutanabbi; his poetry is full of wisdom.|A:وهل تقرأ الروايات أيضًا؟~wa hal taqraʾu r-riwāyāti ayḍan?~Do you read novels too?|B:نعم، روايات نجيب محفوظ خاصة.~naʿam, riwāyāti Najīb Maḥfūẓ khāṣṣatan.~Yes, especially Naguib Mahfouz's novels.", "التشبيه بالكاف وكأنّ~~العلم كالنور~al-ʿilmu kan-nūr~knowledge is like light|كأنّ القمرَ مصباحٌ~kaʾanna l-qamara miṣbāḥun~as if the moon were a lamp|وجهه كالبدر~wajhuhu kal-badr~his face is like the full moon"],
+ ["f17", "الحوار والإقناع", "Persuasion", "أرى أن~arā anna~I believe that|من ناحية أخرى~min nāḥiyatin ukhrā~on the other hand|دليل~dalīl~evidence|أتفق~attafiqu~I agree|أختلف~akhtalifu~I disagree|نتيجة~natīja~result|لذلك~li-dhālika~therefore|بالتأكيد~bit-taʾkīd~certainly", "A:أرى أن التعليم عن بعد مفيد جدًّا.~arā anna t-taʿlīma ʿan buʿdin mufīdun jiddan.~I believe distance learning is very useful.|B:أتفق معك، لكن من ناحية أخرى يحتاج إلى انضباط.~attafiqu maʿak, lākin min nāḥiyatin ukhrā yaḥtāju ilā inḍibāṭ.~I agree, but on the other hand it needs discipline.|A:بالتأكيد، لذلك نحتاج إلى خطة واضحة.~bit-taʾkīd, li-dhālika naḥtāju ilā khiṭṭatin wāḍiḥa.~Certainly, so we need a clear plan.", "أنّ + اسم منصوب + خبر~~أرى أنّ الوقتَ مهمٌّ~arā anna l-waqta muhimmun~I believe time matters|علمتُ أنّ الدرسَ سهلٌ~ʿalimtu anna d-darsa sahlun~I learned the lesson is easy|أظنّ أنّه قادمٌ~aẓunnu annahu qādimun~I think he is coming"],
+ ["f18", "الخطابة والتقديم", "Presenting", "أيها الحضور~ayyuhā l-ḥuḍūr~dear audience|يسعدني~yusʿidunī~I'm pleased|موضوع~mawḍūʿ~topic|أولًا~awwalan~firstly|ختامًا~khitāman~finally|أشكركم~ashkurukum~I thank you|عرض~ʿarḍ~presentation|سؤال~suʾāl~question", "A:أيها الحضور الكرام، يسعدني أن أقدم لكم موضوعي اليوم.~ayyuhā l-ḥuḍūru l-kirām, yusʿidunī an uqaddima lakum mawḍūʿī l-yawm.~Dear audience, I'm pleased to present my topic today.|A:أولًا سأتحدث عن المشكلة، ثم عن الحلول.~awwalan sa-ataḥaddathu ʿani l-mushkila, thumma ʿani l-ḥulūl.~First I'll speak about the problem, then the solutions.|A:وختامًا، أشكركم على حسن الاستماع.~wa khitāman, ashkurukum ʿalā ḥusni l-istimāʿ.~Finally, thank you for listening.|B:هل يمكنني أن أسأل سؤالًا؟~hal yumkinunī an asʾala suʾālan?~May I ask a question?", "أدوات الترتيب: أولًا، ثانيًا، ثم، أخيرًا~~أولًا نقرأ~awwalan naqraʾu~first we read|ثم نكتب~thumma naktubu~then we write|أخيرًا نناقش~akhīran nunāqishu~finally we discuss"]
+);
+LC_RAW.gu.levels = ["مبتدئ", "أساسي", "متوسط"];
+LC_RAW.gu.units.push(
+ ["g7", "العيلة", "Family", "أبوي~abūy~my father|أمي~ummī~my mother|أخوي~akhūy~my brother|أختي~ukhtī~my sister|ولدي~waladī~my son|بنتي~bintī~my daughter|ربعي~rabʿī~my friends|عيالي~ʿyālī~my kids", "A:شلون الأهل؟~shlōn il-ahal?~How's the family?|B:الحمد لله بخير. أبوي توه راجع من السفر.~il-ḥamdu lillāh bkhēr. abūy tawwah rājiʿ min is-safar.~Fine. My father just came back from travelling.|A:الحمد لله على السلامة. وعيالك؟~il-ḥamdu lillāh ʿala s-salāma. w ʿyālak?~Welcome back to him. And your kids?|B:زينين، بالمدرسة الحين.~zēnīn, bil-madrasa il-ḥīn.~Good, at school now.", "«توه» = لسه/الآن تواً~~توني واصل~tawwnī wāṣil~I just arrived|توه طالع~tawwah ṭāliʿ~he just left|توها خلصت~tawwha khallaṣat~she just finished"],
+ ["g8", "الشغل", "Work", "دوام~dawām~working hours|مدير~mudīr~manager|اجتماع~ijtimāʿ~meeting|إجازة~ijāza~holiday|راتب~rātib~salary|مكتب~maktab~office|متأخر~mitʾakhkhir~late|خلصت~khallaṣt~I finished", "A:متى يخلص دوامك؟~mita yikhlaṣ dawāmak?~When does your work end?|B:الساعة ثنتين، بس عندي اجتماع الحين.~is-sāʿa thintēn, bas ʿindī ijtimāʿ il-ḥīn.~At two, but I have a meeting now.|A:زين، كلمني إذا خلصت.~zēn, kallimnī idha khallaṣt.~OK, call me when you finish.|B:إن شاء الله.~in shāʾ allāh.~God willing.", "«إذا» للشرط~~إذا تبي تعال~idha tibī taʿāl~if you want, come|إذا خلصت كلمني~idha khallaṣt kallimnī~if you finish, call me|إذا ما عندك وقت لا تشيل هم~idha mā ʿindak wagt lā tshīl hamm~if you don't have time, don't worry"],
+ ["g9", "السفر والمطار", "Travel", "تذكرة~tadhkira~ticket|جواز~jawāz~passport|رحلة~riḥla~flight|شنطة~shanṭa~bag|بوابة~bawwāba~gate|متأخرة~mitʾakhkhira~delayed|فندق~funduq~hotel|غرفة~ghurfa~room", "A:رحلتك متى؟~riḥlatak mita?~When is your flight?|B:الساعة ثمان، بس يقولون متأخرة.~is-sāʿa thamān, bas yigūlūn mitʾakhkhira.~At eight, but they say it's delayed.|A:وين البوابة؟~wēn il-bawwāba?~Where's the gate?|B:بوابة عشرة، سيدا ويمين.~bawwāba ʿashra, sīda w yimīn.~Gate ten, straight then right.", "«يقولون» = بيقولوا~~يقولون الجو حار~yigūlūn ij-jaw ḥārr~they say it's hot|يقولون السوق زحمة~yigūlūn is-sūg zaḥma~they say the market is crowded|شنو يقولون؟~shinu yigūlūn?~what are they saying?"],
+ ["g10", "المجاملات", "Courtesies", "تسلم~tislam~thank you|ما قصرت~mā gaṣṣart~you did a lot (thanks)|الله يعطيك العافية~allāh yaʿṭīk il-ʿāfya~God give you health|عساك على القوة~ʿasāk ʿala l-gūwa~more power to you|يا هلا~yā halā~welcome|أبشر~abshir~sure, at your service|على راسي~ʿala rāsī~with pleasure|ما عليه~mā ʿalēh~never mind", "A:ممكن تساعدني بالشنطة؟~mumkin tsāʿidnī bish-shanṭa?~Can you help me with the bag?|B:أبشر، على راسي.~abshir, ʿala rāsī.~Sure, with pleasure.|A:تسلم، ما قصرت.~tislam, mā gaṣṣart.~Thanks, you've been great.|B:الله يعطيك العافية.~allāh yaʿṭīk il-ʿāfya.~You're welcome.", "الردود الثابتة على الشكر~~تسلم ← الله يسلمك~tislam ← allāh yisallimak~thanks ← reply|ما قصرت ← ما سوّيت شي~mā gaṣṣart ← mā sawwēt shay~thanks ← it was nothing|يعطيك العافية ← الله يعافيك~yaʿṭīk il-ʿāfya ← allāh yʿāfīk~bless you ← reply"],
+ ["g11", "الطقس", "Weather", "حر~ḥarr~hot|برد~bard~cold|غبار~ghubār~dust|مطر~maṭar~rain|رطوبة~ruṭūba~humidity|الصيف~iṣ-ṣēf~summer|الشتا~ish-shita~winter|البحر~il-baḥar~the sea", "A:اليوم وايد حر!~il-yōm wāyid ḥarr!~It's very hot today!|B:إيه، والرطوبة عالية بعد.~ēh, wir-ruṭūba ʿālya baʿad.~Yes, and the humidity is high too.|A:خلنا نروح البحر العصر.~khallna nrūḥ il-baḥar il-ʿaṣr.~Let's go to the beach in the afternoon.|B:فكرة زينة!~fikra zēna!~Good idea!", "«خلنا» = يلا بينا~~خلنا نروح~khallna nrūḥ~let's go|خلنا ناكل~khallna nākil~let's eat|خلنا نشوف~khallna nshūf~let's see"],
+ ["g12", "قصص من الماضي", "Telling stories", "قبل~gabl~before|ذيك الأيام~dhīk il-ayyām~those days|كنا~kinna~we were|نلعب~nilʿab~we play|الفريج~il-firīj~the neighbourhood|البحر~il-baḥar~the sea|الغوص~il-ghōṣ~pearl diving|الحين~il-ḥīn~now", "A:شلون كانت الحياة قبل؟~shlōn kānat il-ḥayā gabl?~What was life like before?|B:ذيك الأيام كنا نلعب بالفريج كل يوم.~dhīk il-ayyām kinna nilʿab bil-firīj kill yōm.~In those days we played in the neighbourhood every day.|A:وأهلكم؟~w ahalkum?~And your family?|B:جدي كان يشتغل بالغوص.~jaddī kān yishtighil bil-ghōṣ.~My grandfather worked in pearl diving.", "«كان» + مضارع للعادة~~كان يشتغل~kān yishtighil~he used to work|كنا نلعب~kinna nilʿab~we used to play|كانت تطبخ~kānat taṭbukh~she used to cook"]
+);
+Object.keys(LC).forEach(k => delete LC[k]); Object.entries(LC_RAW).forEach(([k, v]) => { LC[k] = Object.assign({}, v, { units: v.units.map(lcParse) }); });
+
+/* ======================= v25: الاشتراكات والقفل الصحيح، الأصوات واختيارها، آهات مميزة لكل مقام، الترتيب النهائي، سماع القرآن لـ 244 قارئ، الترجمة لكل اللغات، الخطوط ======================= */
+Object.assign(UI.ar, {
+  spT: "اشتراكات محتوى الموقع", spSub: "افتح كل الأدوات والمحتوى (المقامات، أنشد معي، اتكلم عربي، الصور، الاختبارات) طول مدة الاشتراك.", spBuy: "اشترك", spLangT: "اشتراك اتكلم عربي (شهري لكل مسار)", spPerItem: "أو افتح القسم ده لوحده", spBest: "الأوفر",
+  pvOn: "👁️ معاينة كطالب", pvOff: "اخرج من المعاينة", pvBar: "إنت دلوقتي شايف الموقع زي الطالب بالظبط (الأقفال والأسعار).",
+  grT: "إضافة اشتراك لأي حد", grUser: "إيميل أو اسم الطالب", grScope: "النوع", grDays: "المدة", grDone: "اتضاف ✓", grScopes: { all: "كل محتوى الموقع", lang_eg: "المصري", lang_fu: "الفصحى", lang_gu: "الخليجي", aah: "المقامات المميزة" }, grDur: { 7: "أسبوع", 30: "شهر", 365: "سنة", 0: "مدى الحياة" },
+  pmT: "وسائل دفع إضافية", pmHint: "كل سطر: اسم الوسيلة | التفاصيل (رقم/حساب). بتظهر للطالب في صفحة الدفع، ويدفع ويبعتلك الكود على الواتساب.",
+  vcT: "الأصوات", vcA: "الطرف الأول", vcB: "الطرف التاني", vcM: "🧔 رجل", vcF: "👩 ست", vcK: "🧒 طفل", vcNoDev: "🔇 جهازك مافيهوش صوت عربي — افتح الموقع من متصفح Microsoft Edge أو من الموبايل وهتسمع الصوت. (أو الأكاديمية تفعّل الأصوات الطبيعية من الإعدادات)",
+  lsT: "سماع القرآن لكل القرّاء", lsFull: "🎧 السورة كاملة", lsFilm: "🖼️ مع اللوحات (آية آية)", lsSearch: "ابحث عن قارئ…", lsRiwaya: "الرواية / النوع",
+  trT: "🌐 الترجمة", trPick: "اختار لغة أو أكتر", trDo: "ترجم الصفحة", trNote: "ترجمة آلية للمساعدة على الفهم — المرجع هو النص العربي.",
+  plT: "اختبار تحديد المستوى", plSub: "١٠ أسئلة سريعة عشان نعرف تبدأ منين.", plStart: "ابدأ الاختبار", plRes: "مستواك", plFrom: "هتبدأ من الوحدة", plSkip: "أنا مبتدئ — ابدأ من الصفر"
+});
+Object.assign(UI.en, {
+  spT: "Site content subscriptions", spSub: "Unlock every tool and all content (maqamat, chant with me, Speak Arabic, paintings, tests) for the subscription period.", spBuy: "Subscribe", spLangT: "Speak Arabic subscription (monthly per track)", spPerItem: "or unlock just this section", spBest: "Best value",
+  pvOn: "👁️ Preview as student", pvOff: "Exit preview", pvBar: "You are seeing the site exactly as a student does (locks and prices).",
+  grT: "Give anyone a subscription", grUser: "Student email or name", grScope: "Type", grDays: "Duration", grDone: "Added ✓", grScopes: { all: "All site content", lang_eg: "Egyptian", lang_fu: "Fusha", lang_gu: "Gulf", aah: "Premium maqamat" }, grDur: { 7: "1 week", 30: "1 month", 365: "1 year", 0: "Lifetime" },
+  pmT: "Extra payment methods", pmHint: "One per line: method name | details (number/account). Shown on the payment page; the student pays and sends you the code on WhatsApp.",
+  vcT: "Voices", vcA: "Speaker 1", vcB: "Speaker 2", vcM: "🧔 Man", vcF: "👩 Woman", vcK: "🧒 Child", vcNoDev: "🔇 No Arabic voice on this device — open the site in Microsoft Edge or on your phone to hear it (or the academy can enable natural voices in settings).",
+  lsT: "Listen to the Quran — all reciters", lsFull: "🎧 Full surah", lsFilm: "🖼️ With paintings (ayah by ayah)", lsSearch: "Search reciters…", lsRiwaya: "Riwaya / style",
+  trT: "🌐 Translation", trPick: "Choose one or more languages", trDo: "Translate this page", trNote: "Machine translation to help understanding — the Arabic text is the reference.",
+  plT: "Placement test", plSub: "10 quick questions to find where you start.", plStart: "Start the test", plRes: "Your level", plFrom: "You'll start from unit", plSkip: "I'm a beginner — start from zero"
+});
+Object.assign(UI.ar.nkT || {}, { referral_month: "🎉 10 من أصحابك اشتركوا — خدت شهر مجاني لكل محتوى الموقع!", access_granted: "🎁 الأكاديمية فتحتلك اشتراك جديد" });
+Object.assign(UI.en.nkT || {}, { referral_month: "🎉 10 friends subscribed — you got a free month of all site content!", access_granted: "🎁 The academy gave you a new subscription" });
+
+/* ---------- 1) معاينة كطالب (عشان الأونر يشوف الأقفال) ---------- */
+const _role25 = role;
+role = function () { const r = _role25(); return r === "owner" && state.preview ? "student" : r; };
+function realRole() { return _role25(); }
+const _renderHeader25 = renderHeader;
+renderHeader = function () { let h = _renderHeader25(); if (realRole() === "owner") h = (state.preview ? `<div class="pvbar">${L("pvBar")} <button class="btn" style="background:#fff;color:#7c2d12;padding:.15rem .7rem" onclick="state.preview=false;render()">${L("pvOff")}</button></div>` : "") + h.replace(/(<button class="thpill")/, `<button class="thpill" onclick="state.preview=!state.preview;render()">${state.preview ? L("pvOff") : L("pvOn")}</button>$1`); return h; };
+document.head.insertAdjacentHTML("beforeend", `<style>.pvbar{background:#7c2d12;color:#fff;text-align:center;padding:.4rem;font-weight:700;font-size:.9rem;display:flex;gap:.6rem;justify-content:center;align-items:center;flex-wrap:wrap}</style>`);
+
+/* ---------- 2) القفل الصحيح: الإسلامي مجاني، والباقي بالاشتراك ---------- */
+const ISL_ROOT = "400a6e3f-a06a-4cda-9ddb-560959f16d4d";
+function allAccess() { const r = role(); if (r === "owner" || r === "teacher") return true; if (!state.auth.user) return false; const now = Date.now(); return myAccess().some(a => a.scope === "all" && (!a.expires_at || new Date(a.expires_at).getTime() > now)); }
+libFull = function () { return allAccess(); };
+function inTree(s, root) { const secs = sectionsData(); let x = s, g = 0; while (x && g++ < 8) { if (x.id === root) return true; x = Array.isArray(secs) ? secs.find(y => y.id === x.parent_id) : null; } return false; }
+const _secUnlocked25 = secUnlocked;
+secUnlocked = function (s) { if (s && inTree(s, ISL_ROOT)) return true; if (allAccess()) return true; return _secUnlocked25(s); };
+mqPremium = function () { if (allAccess() || hasFeature("aah")) return true; const t = useData("mqTrack", async () => { const { data } = await sb.rpc("credit_balance_tracks", {}); return [data || {}]; }); return Array.isArray(t) && +(t[0].maqamat || 0) > 0; };
+// الكتب والأحاديث في الإسلامي: كله مفتوح
+const _booksPage25 = booksPage; booksPage = function (ids, secId) { const f = libFull; libFull = () => true; try { return _booksPage25(ids, secId); } finally { libFull = f; } };
+const _hencReader25 = hencReader; hencReader = function (r, s) { const f = libFull; libFull = () => true; try { return _hencReader25(r, s); } finally { libFull = f; } };
+// اتكلم عربي: اشتراك شهري لكل مسار، والوحدة الأولى + اختبار المستوى مجاني
+laOpen = function (u, tr) { if (allAccess() || hasFeature("lang_" + tr)) return true; return LC[tr].units.findIndex(x => x.id === u) === 0; };
+// كل قفل بيودّي للدفع على طول
+lockBox = function (sid) {
+  const sp = (setv("sitePlans", []) || []); const cur = setv("currency", "USD"); const ip = ((setv("access", {}) || {}).itemPrice) || 3;
+  return `<div class="card lockcard"><div style="font-size:2rem">🔒</div><b>${L("smpLock")}</b><div class="spgrid" style="margin-top:.8rem">${sp.map(p => `<button class="spbtn ${p.id === "site_y" ? "best" : ""}" onclick="buySite('${p.id}')"><b>${esc(p[state.lang] || p.ar || p.en)}</b><span>${esc(money(p.price, cur))}</span>${p.id === "site_y" ? `<i>${L("spBest")}</i>` : ""}</button>`).join("")}</div>
+    ${sid ? `<button class="btn btn-o" style="margin-top:.7rem" onclick="buyContent('section','${sid}')">🔓 ${L("spPerItem")} — ${esc(money(ip, cur))}</button>` : ""}</div>`;
+};
+async function buySite(id) { if (!state.auth.user) return navigate("signup"); const { data, error } = await sb.rpc("create_site_order", { p_plan: id }); if (error) return toast(error.message, true); invalidate("myOrders"); state.payKind = "order"; state.payOrderId = data; navigate("pay"); }
+document.head.insertAdjacentHTML("beforeend", `<style>.lockcard{text-align:center;padding:1.2rem;border:2px solid #f59e0b;margin:1rem 0}.spgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem}.spbtn{position:relative;display:flex;flex-direction:column;gap:.2rem;align-items:center;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.7rem .4rem;cursor:pointer;font:inherit}.spbtn span{font-weight:800;color:var(--accent);font-size:1.1rem}.spbtn.best{border:2px solid #f59e0b}.spbtn i{position:absolute;top:-.6rem;background:#f59e0b;color:#fff;font-style:normal;font-size:.7rem;border-radius:999px;padding:0 .5rem}</style>`);
+// صفحة الأسعار: اشتراكات محتوى الموقع + اتكلم عربي
+const _renderPricing25 = renderPricing;
+renderPricing = function () {
+  const sp = setv("sitePlans", []) || []; const cur = setv("currency", "USD"); const f = setv("features", {}) || {};
+  const block = `<div class="card" id="site-plans" style="margin:1rem 0;border:2px solid var(--accent)"><h2 style="margin:0 0 .3rem">✨ ${L("spT")}</h2><p class="muted sm" style="margin-bottom:.8rem">${L("spSub")}</p><div class="spgrid">${sp.map(p => `<button class="spbtn ${p.id === "site_y" ? "best" : ""}" onclick="buySite('${p.id}')"><b>${esc(p[state.lang] || p.ar || p.en)}</b><span>${esc(money(p.price, cur))}</span>${p.id === "site_y" ? `<i>${L("spBest")}</i>` : ""}<small class="xs muted">${L("spBuy")} ➜</small></button>`).join("")}</div>
+    <h3 style="margin:1.2rem 0 .5rem">🗣️ ${L("spLangT")}</h3><div class="spgrid">${["eg", "fu", "gu"].map(t => `<button class="spbtn" onclick="buyFeature('lang_${t}')"><b>${LC[t].ic} ${esc(locText(LC[t].name))}</b><span>${esc(money((f["lang_" + t] || {}).price || 40, cur))}</span><small class="xs muted">/ ${state.lang === "ar" ? "شهر" : "month"}</small></button>`).join("")}</div></div>`;
+  const h = _renderPricing25(); const i = h.indexOf('<div class="wrap">'); return i >= 0 ? h.slice(0, i + 18) + block + h.slice(i + 18) : block + h;
+};
+// وسائل دفع إضافية من الإعدادات
+const _paymentOptions25 = paymentOptions;
+paymentOptions = function () { const o = _paymentOptions25(); String(setv("payExtra", "") || "").split("\n").map(l => l.split("|")).filter(x => x[0] && x[1]).forEach(([n, d], i) => o.push({ id: "x" + i, icon: "fa-solid fa-wallet", label: n.trim(), text: d.trim(), copy: d.trim() })); const wa = setv("whatsapp", "") || CONFIG.whatsapp; if (wa && !o.some(x => x.id === "wa")) o.push({ id: "wa", icon: "fa-brands fa-whatsapp", label: state.lang === "ar" ? "ادفع عن طريق الواتساب (خد كود التفعيل)" : "Pay via WhatsApp (get an activation code)", href: `https://wa.me/${String(wa).replace(/\D/g, "")}?text=${encodeURIComponent(state.lang === "ar" ? "عاوز أدفع اشتراك في أكاديمية إتقان" : "I'd like to pay for an Itqan Academy subscription")}` }); return o; };
+// الأونر: إضافة اشتراك + وسائل الدفع
+function ownerGrantCard() {
+  const d = state.gr = state.gr || { scope: "all", days: 30 }; const P = peopleMap(); const q_ = (d.q || "").trim().toLowerCase(); const hits = q_.length > 1 ? P.list.filter(p => (p.email || "").toLowerCase().includes(q_) || (p.real_name || "").toLowerCase().includes(q_)).slice(0, 6) : [];
+  return `<div class="card" style="margin-top:1rem"><h3>🎁 ${L("grT")}</h3><div class="fgrid" style="align-items:end;margin-top:.5rem"><div><label class="l">${L("grUser")}</label><input class="in" value="${esc(d.q || "")}" oninput="state.gr.q=this.value;clearTimeout(window.__grt);window.__grt=setTimeout(render,350)"></div>
+    <div><label class="l">${L("grScope")}</label><select class="in" onchange="state.gr.scope=this.value">${Object.entries(L("grScopes")).map(([k, v]) => `<option value="${k}" ${d.scope === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+    <div><label class="l">${L("grDays")}</label><select class="in" onchange="state.gr.days=+this.value">${Object.entries(L("grDur")).map(([k, v]) => `<option value="${k}" ${+d.days === +k ? "selected" : ""}>${v}</option>`).join("")}</select></div></div>
+    ${hits.map(p => `<div class="kv"><span>${esc(p.real_name || p.display_name || "")} <span class="xs muted">${esc(p.email || "")}</span></span><button class="btn btn-p" onclick="ownerGrant('${p.id}')">${L("grT").split(" ")[0]} ✓</button></div>`).join("")}</div>
+  <div class="card" style="margin-top:1rem"><h3>💳 ${L("pmT")}</h3><p class="xs muted" style="margin:.3rem 0 .5rem">${L("pmHint")}</p><textarea class="in" id="pm_x" rows="6" placeholder="فودافون كاش | 010xxxxxxxx&#10;إنستاباي | name@instapay&#10;اتصالات كاش | 011xxxxxxxx&#10;أورنج كاش | 012xxxxxxxx&#10;تحويل بنكي | IBAN …&#10;Western Union / MoneyGram | الاسم بالكامل&#10;Wise | email@…&#10;USDT (TRC20) | T…">${esc(setv("payExtra", "") || "")}</textarea><button class="btn btn-p" style="margin-top:.5rem" onclick="acSaveAccess(d=>{d.payExtra=document.getElementById('pm_x').value})">${L("save")}</button></div>`;
+}
+async function ownerGrant(uid) { const sc = state.gr.scope === "all" ? "all" : "feature:" + state.gr.scope; const { error } = await sb.rpc("owner_grant_access", { p_user: uid, p_scope: sc, p_days: +state.gr.days || 0 }); if (error) return toast(error.message, true); toast(L("grDone")); }
+const _ownerAccessTab25 = ownerAccessTab; ownerAccessTab = function () { return ownerGrantCard() + _ownerAccessTab25(); };
+// الدعوة: كل 10 أصحاب = شهر مجاني
+Object.assign(UI.ar, { invSub: "كل 10 أصحاب يشتركوا من لينكك = شهر مجاني لكل محتوى الموقع، أوتوماتيك.", invStrip: "🎁 ادعُ أصحابك — كل 10 يشتركوا = شهر مجاني لكل محتوى الموقع" });
+Object.assign(UI.en, { invSub: "Every 10 friends who subscribe through your link = a free month of all site content, automatically.", invStrip: "🎁 Invite friends — every 10 who subscribe = a free month of all site content" });
+
+/* ---------- 3) الأصوات: اختيار رجل/ست/طفل ولكل طرف في المحادثة ---------- */
+state.vc = state.vc || (() => { try { return JSON.parse(lsGet("itqan_vc") || "null"); } catch (e) { return null; } })() || { A: "m", B: "f" };
+function vcSave() { try { lsSet("itqan_vc", JSON.stringify(state.vc)); } catch (e) {} }
+function devVoices() { return ((window.speechSynthesis && speechSynthesis.getVoices()) || []).filter(v => /^ar/i.test(v.lang)); }
+function pickDevVoice(kind, dialect) { const vs = devVoices(); if (!vs.length) return null; const male = /male(?!.*female)|naayf|shakir|hamed|maged|majed|fahed|hamdan|tarik|omar|ahmad/i, fem = /female|hoda|salma|zariyah|laila|noura|fatima|amina|mona|sana|salwa/i;
+  const pref = vs.filter(v => dialect === "eg" ? /EG/i.test(v.lang) : true); const pool = pref.length ? pref : vs; const nat = pool.filter(v => /natural|online|neural|premium|enhanced/i.test(v.name)); const p2 = nat.length ? nat : pool;
+  return (kind === "m" ? p2.find(v => male.test(v.name)) : p2.find(v => fem.test(v.name))) || p2[kind === "m" ? 0 : p2.length - 1]; }
+say = function (text, dialect, pitch, kind) { return new Promise(res => { if (!window.speechSynthesis) return res(); const k = kind || (pitch && pitch > 1.1 ? "f" : "m"); const v = pickDevVoice(k === "k" ? "f" : k, dialect); if (!v) { state.noDevVoice = true; const el = document.getElementById("vcwarn"); if (el) el.style.display = "block"; return setTimeout(res, 400); }
+  const u = new SpeechSynthesisUtterance(text); u.voice = v; u.lang = v.lang; u.rate = state.vc.slow ? .7 : .9; u.pitch = k === "k" ? 1.6 : 1; u.onend = res; u.onerror = res; speechSynthesis.speak(u); }); };
+ttsPlay = async function (text, voice, slow) {
+  const tr = voice.slice(0, 2), sp = voice.slice(-1) === "b" ? "B" : "A"; const kind = state.vc[sp] || (sp === "A" ? "m" : "f"); const sv = tr + (kind === "m" ? "-a" : "-b");
+  const k = sv + "|" + kind + "|" + (state.vc.slow ? 1 : 0) + "|" + text; let url = TTSC.get(k);
+  if (!url && !state.ttsOff) {
+    try { const { data: s } = await sb.auth.getSession(); const tok = s && s.session ? s.session.access_token : null; if (!tok) throw 0;
+      const r = await fetch(`${SB_URL}/functions/v1/tts`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: SB_KEY }, body: JSON.stringify({ text, voice: sv, rate: state.vc.slow ? "slow" : "", kid: kind === "k" }) });
+      if (r.status === 404) { state.ttsOff = true; throw 404; } if (!r.ok) throw r.status; const key = r.headers.get("x-k"); const b = new Uint8Array(await r.arrayBuffer()); const kb = key.match(/../g).map(h => parseInt(h, 16)); for (let i = 0; i < b.length; i++) b[i] ^= kb[i % kb.length];
+      url = URL.createObjectURL(new Blob([b], { type: "audio/mpeg" })); TTSC.set(k, url);
+    } catch (e) { url = null; }
+  }
+  if (!url) return say(text, tr === "eg" ? "eg" : "fu", 1, kind);
+  return new Promise(res => { const a = new Audio(url); a.onended = res; a.onerror = res; a.play().catch(res); state.ttsAudio = a; });
+};
+function voiceBar() { const o = (sp) => [["m", L("vcM")], ["f", L("vcF")], ["k", L("vcK")]].map(([v, l]) => `<button class="chip ${state.vc[sp] === v ? "on" : ""}" onclick="state.vc.${sp}='${v}';vcSave();render()">${l}</button>`).join("");
+  return `<div class="card vcbar"><b>🎙️ ${L("vcT")}</b><div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center"><span class="xs">${L("vcA")}:</span>${o("A")}</div><div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center"><span class="xs">${L("vcB")}:</span>${o("B")}</div><label class="xs row" style="gap:.3rem;align-items:center"><input type="checkbox" ${state.vc.slow ? "checked" : ""} onchange="state.vc.slow=this.checked;vcSave()"> ${L("laSlow")}</label></div>
+  <div id="vcwarn" class="notice" style="display:${state.noDevVoice && state.ttsOff ? "block" : "none"};margin:.5rem 0">${L("vcNoDev")}</div>`; }
+document.head.insertAdjacentHTML("beforeend", `<style>.vcbar{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .9rem;margin:.6rem 0}</style>`);
+
+/* ---------- 4) آهات مميزة لكل مقام (سير وعلامات كل عائلة) ---------- */
+const MQ_SIG = { rast: { em: [0, 2, 4], orn: [[2, 3, 2], [4, 5, 4, 3, 2]] }, bayati: { em: [0, 1, 3], orn: [[1, 2, 1, 0], [3, 4, 3, 2, 1]] }, saba: { em: [0, 2, 3], orn: [[2, 3, 2, 3, 2], [3, 2, 1, 2, 1, 0]] }, hijaz: { em: [0, 1, 2, 3], orn: [[1, 2, 1, 2], [3, 2, 1, 0]] },
+  nahawand: { em: [0, 2, 4, 7], orn: [[2, 3, 4, 3, 2], [4, 5, 6, 5, 4]] }, sikah: { em: [0, 2, 4], orn: [[0, 1, 0, 1, 0], [2, 1, 0]] }, ajam: { em: [0, 2, 4, 7], orn: [[0, 2, 4, 2, 0], [4, 5, 7, 5, 4]] }, kurd: { em: [0, 1, 3], orn: [[1, 0, 1, 2, 1, 0], [3, 2, 1, 0]] } };
+mqGenerate = function (m, seed, speed) {
+  const R = rnd((seed | 0) + m.id.length * 97); const sp = speed || 1; const n = m.sc.length - 1; const sig = MQ_SIG[m.fam] || MQ_SIG.rast; const out = []; const P = (d, l) => out.push([mqDeg(m, d), l / sp]);
+  const start = m.open || 0; P(start, 1.1); (sig.orn[0]).forEach(d => P(Math.min(n, start + d - sig.orn[0][0]), .32));
+  const top = Math.min(n, Math.max(4, sig.em[sig.em.length - 1]) + Math.floor(R() * 3)); for (let d = Math.max(start, 1); d <= top; d++) P(d, sig.em.includes(d) ? .7 : .3);
+  P(top, 1.2); sig.orn[1].forEach(d => P(Math.min(n, d + (top >= 6 && R() < .5 ? 3 : 0)), .34));
+  for (let d = top - 1; d >= 0; d--) { P(d, sig.em.includes(d) ? .75 : .3); if (sig.em.includes(d) && R() < .55 && d + 1 <= n) { P(d + 1, .22); P(d, .45); } }
+  const c = m.close || 0; P(c + 1, .5); P(c, 1.8); return out;
+};
+
+/* ---------- 5) سماع القرآن لكل القرّاء (244 قارئ) + الأفلام ---------- */
+const MP3Q = { list: null };
+(async () => { try { const j = await fetch(`https://mp3quran.net/api/v3/reciters?language=${state.lang === "ar" ? "ar" : "eng"}`).then(r => r.json()); MP3Q.list = (j.reciters || []).flatMap(r => r.moshaf.map(m => ({ id: r.id + "-" + m.id, name: r.name, mo: m.name, server: m.server, surahs: new Set(String(m.surah_list).split(",").map(Number)) }))); } catch (e) {} })();
+state.ls = state.ls || { s: 1, r: null, tab: "full", q: "" };
+function listenPage() {
+  const ls = state.ls; const list = MP3Q.list; const full = allAccess();
+  if (!list) return `<div class="card" style="margin-top:1rem">${loadingBox()}</div>`;
+  const q_ = (ls.q || "").trim(); const shown = list.filter(x => !q_ || x.name.includes(q_) || x.mo.includes(q_)).slice(0, 300); if (!ls.r) ls.r = (list.find(x => /المنشاوي|Minshawi/i.test(x.name) && /مرتل|Murattal/i.test(x.mo)) || list[0]).id; const rec = list.find(x => x.id === ls.r) || list[0];
+  const tabs = `<div class="tabs" style="margin:1rem 0"><a href="#" aria-current="${ls.tab === "full"}" onclick="state.ls.tab='full';srStop();render();return false;">${L("lsFull")}</a><a href="#" aria-current="${ls.tab === "film"}" onclick="state.ls.tab='film';render();return false;">${L("lsFilm")}</a></div>`;
+  const sel = `<div class="fgrid" style="align-items:end"><div><label class="l">${L("hzSurah")}</label><select class="in" onchange="state.ls.s=+this.value;state.sr={};render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${ls.s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(n)}</option>`).join("")}</select></div>`;
+  if (ls.tab === "full") { const url = rec.surahs.has(ls.s) ? `${rec.server}${String(ls.s).padStart(3, "0")}.mp3` : null;
+    return `${tabs}<div class="card">${sel}<div><label class="l">🔎 ${L("lsSearch")}</label><input class="in" value="${esc(ls.q)}" onchange="state.ls.q=this.value;render()"></div></div>
+      <div class="lshero" style="background-image:linear-gradient(to top,rgba(2,6,23,.92),rgba(2,6,23,.3)),url('${esc(ART["surah:" + ls.s + ":0"] || sceneArt(SURAHS[ls.s - 1], ls.s))}')"><div style="font:2.2rem 'Amiri Quran',Amiri,serif">سورة ${esc(SURAHS[ls.s - 1])}</div><div class="sm">🎙️ ${esc(rec.name)} · ${esc(rec.mo)}</div></div>
+      ${url ? `<audio controls autoplay preload="none" style="width:100%;margin-top:.6rem" src="${esc(url)}"></audio>` : `<p class="muted">—</p>`}
+      <div class="lsgrid">${shown.map(x => `<button class="lsrec ${x.id === ls.r ? "on" : ""}" onclick="state.ls.r='${x.id}';render()"><b>${esc(x.name)}</b><small>${esc(x.mo)}</small></button>`).join("")}</div></div>`; }
+  if (!full && ls.s !== 1) return `${tabs}<div class="card">${sel}</div></div>${lockBox()}`;
+  return `${tabs}<div class="card">${sel}</div></div>${_surahFilm(ls.s, SURAH_AYAHS[ls.s - 1])}`;
+}
+function _surahFilm(s, a) { state.sr.tab = "watch"; return surahPage(s, a).replace(/<div class="tabs" style="margin:1rem 0">[\s\S]*?<\/div>/, "").replace(/<div class="row" style="justify-content:flex-end;margin-top:\.6rem">[\s\S]*?<\/div>/, ""); }
+document.head.insertAdjacentHTML("beforeend", `<style>.lshero{border-radius:18px;min-height:170px;background-size:cover;background-position:center;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:1.2rem;margin-top:1rem}.lsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.4rem;margin-top:1rem;max-height:420px;overflow:auto}.lsrec{display:flex;flex-direction:column;text-align:start;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:.45rem .6rem;cursor:pointer;font:inherit}.lsrec small{color:var(--muted);font-size:.75rem}.lsrec.on{border-color:var(--accent);background:rgba(16,185,129,.08)}</style>`);
+// التفسير بدون الأفلام والصور (الصور بالاشتراك في «سماع القرآن»)
+const _surahPage25 = surahPage;
+surahPage = function (s, a) { if (state.sr.inTafsir) { if (state.sr.tab === "watch") state.sr.tab = "reflect"; let h = _surahPage25(s, a); h = h.replace(/<a href="#" aria-current="(true|false)" onclick="state\.sr\.tab='watch'[^"]*">[^<]*<\/a>/, "").replace(/url\('[^']*'\)/g, "none"); return h; } return _surahPage25(s, a); };
+const _tafsirReader25 = tafsirReader; tafsirReader = function (s, a) { state.sr.inTafsir = true; try { return _tafsirReader25(s, a); } finally { state.sr.inTafsir = false; } };
+
+/* ---------- 6) اختبار تحديد المستوى لكل مسار لغة ---------- */
+function laPlacement(tr) {
+  const T = LC[tr]; const r = () => Math.random(); const qs = []; const per = Math.max(1, Math.floor(T.units.length / 10));
+  for (let i = 0; i < T.units.length && qs.length < 10; i += per) { const u = T.units[i]; const w = u.words[Math.floor(r() * u.words.length)]; const pool = T.units.flatMap(x => x.words.map(y => y[2])); qs.push({ q: w[0], ans: w[2], opts: [w[2]].concat(pool.filter(x => x !== w[2]).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5), t: `${L("laUnit")} ${i + 1}`, u: i }); }
+  state.qz = { qs, i: 0, ok: 0, pick: null, back: () => {}, again: () => laPlacement(tr), place: tr, onDone: async () => { const z = state.qz; let lvl = 0; z.qs.forEach((qq, k) => { if (z.res && z.res[k]) lvl = qq.u + 1; }); const plan = laPlan(); plan.placed = Object.assign({}, plan.placed, { [tr]: Math.min(lvl, T.units.length - 1) }); await sb.from("profiles").update({ lang_plan: plan }).eq("id", state.auth.user.id); state.auth.profile.lang_plan = plan; } };
+  render();
+}
+const _qzPick25 = qzPick; qzPick = function (i) { const z = state.qz; z.res = z.res || []; z.res[z.i] = z.qs[z.i].opts[i] === z.qs[z.i].ans; return _qzPick25(i); };
+const _langAcademy25 = langAcademy;
+langAcademy = function (defTrack) {
+  const la = state.la; if (defTrack) la.tr = defTrack; const tr = la.tr; const plan = laPlan();
+  if (tr && !la.u && !(plan.placed && plan.placed[tr] != null) && !la.skipPl) {
+    if (state.qz && state.qz.place === tr) return `<div class="lahero"><h2>${LC[tr].ic} ${L("plT")}</h2><p>${L("plSub")}</p></div><div style="margin-top:1rem">${quizView()}</div>`;
+    return `<div class="lahero"><h2>${LC[tr].ic} ${esc(locText(LC[tr].name))}</h2><p>${L("laSub")}</p></div>${voiceBar()}<div class="card" style="text-align:center;margin-top:1rem"><h3>🧭 ${L("plT")}</h3><p class="muted">${L("plSub")}</p><button class="btn btn-p btn-lg" onclick="laPlacement('${tr}')">${L("plStart")}</button> <button class="btn btn-o" onclick="state.la.skipPl=true;render()">${L("plSkip")}</button></div>`;
+  }
+  let h = _langAcademy25(defTrack);
+  if (tr && plan.placed && plan.placed[tr] != null && !la.u) h = h.replace(/(<div class="launits">)/, `<div class="notice ok" style="margin-top:1rem">${L("plRes")}: ${L("plFrom")} ${plan.placed[tr] + 1}</div>$1`);
+  if (tr) h = h.replace(/(<div class="tabs" style="margin:\.8rem 0">)/, voiceBar() + "$1").replace(/(<div class="launits">)/, voiceBar() + "$1");
+  return h;
+};
+const _laQuiz25 = laQuiz; laQuiz = function (k) { _laQuiz25(k); if (state.qz && k === "test") { const od = state.qz.onDone; state.qz.onDone = async (sc) => { await od(sc); }; } };
+
+/* ---------- 7) المكتبة: الأنواع الجديدة ---------- */
+const _renderLibraryDb25 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb25(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec || !state.auth.user) return h;
+  const cur = secs.find(s => s.id === state.libSec); if (!cur) return h; const meta = cur.meta || {}; let extra = "";
+  if (meta.kind === "lang_track") extra = `<div style="margin-top:1rem">${langAcademy(meta.track)}</div>`;
+  else if (meta.kind === "surah_gallery") extra = listenPage();
+  if (!extra) return h; return h.replace(`<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`, "") + extra;
+};
+surahGallery = function () { return ""; };
+
+/* ---------- 8) ترجمة الكتب الإسلامية لأي لغة (لغة أو أكتر) ---------- */
+const BTR_LANGS = [["en", "English"], ["fr", "Français"], ["de", "Deutsch"], ["es", "Español"], ["tr", "Türkçe"], ["ru", "Русский"], ["id", "Indonesia"], ["ms", "Melayu"], ["ur", "اردو"], ["bn", "বাংলা"], ["fa", "فارسی"], ["hi", "हिन्दी"], ["zh", "中文"], ["ku", "Kurdî"], ["it", "Italiano"], ["pt", "Português"], ["nl", "Nederlands"], ["sw", "Kiswahili"], ["ha", "Hausa"], ["so", "Soomaali"], ["uz", "Oʻzbek"], ["bs", "Bosanski"], ["sq", "Shqip"], ["ja", "日本語"], ["ko", "한국어"], ["th", "ไทย"], ["vi", "Tiếng Việt"], ["tl", "Tagalog"], ["ps", "پښتو"], ["ta", "தமிழ்"], ["ml", "മലയാളം"], ["am", "አማርኛ"]];
+const BTR = {};
+function readLangs() { const p = state.auth.profile || {}; return (p.read_langs && p.read_langs.length ? p.read_langs : (state.lang !== "ar" ? [state.lang] : [])).filter(x => BTR_LANGS.some(t => t[0] === x)); }
+async function setReadLang(code, on) { const s = new Set(readLangs()); on ? s.add(code) : s.delete(code); const arr = [...s].slice(0, 4); await sb.from("profiles").update({ read_langs: arr }).eq("id", state.auth.user.id); state.auth.profile.read_langs = arr; render(); }
+function trBar() { const sel = readLangs(); return `<details class="card" style="margin:.5rem 0" ${sel.length ? "open" : ""}><summary class="b">${L("trT")} ${sel.length ? `<span class="xs muted">(${sel.join(", ")})</span>` : ""}</summary><p class="xs muted" style="margin:.3rem 0">${L("trPick")} — ${L("trNote")}</p><div class="row" style="gap:.3rem;flex-wrap:wrap">${BTR_LANGS.map(([c, n]) => `<button class="chip ${sel.includes(c) ? "on" : ""}" onclick="setReadLang('${c}',${!sel.includes(c)})">${n}</button>`).join("")}</div>${sel.length ? `<button class="btn btn-p" style="margin-top:.6rem" onclick="bookTranslate()">${L("trDo")}</button>` : ""}</details>`; }
+async function bookTranslate() {
+  const b = state.bk.id; const ps = [...document.querySelectorAll(".bktext [data-i]")].map(e => +e.dataset.i); const langs = readLangs(); if (!ps.length || !langs.length) return; const { data: s } = await sb.auth.getSession(); const tok = s.session.access_token; toast("🌐 …");
+  for (const lg of langs) for (let i = 0; i < ps.length; i += 12) { const chunk = ps.slice(i, i + 12).filter(x => !BTR[`${b}:${x}:${lg}`]); if (!chunk.length) continue;
+    try { const r = await fetch(`${SB_URL}/functions/v1/book-tr`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: SB_KEY }, body: JSON.stringify({ book: b, idx: chunk, lang: lg }) }).then(r => r.json()); Object.entries(r.result || {}).forEach(([k, v]) => BTR[`${b}:${k}:${lg}`] = v); } catch (e) {} trInject(); }
+}
+function trInject() { const b = state.bk && state.bk.id; if (!b) return; document.querySelectorAll(".bktext [data-i]").forEach(e => { const i = e.dataset.i; readLangs().forEach(lg => { const t = BTR[`${b}:${i}:${lg}`]; if (t && !e.parentNode.querySelector(`.btr[data-k="${i}-${lg}"]`)) e.insertAdjacentHTML("afterend", `<div class="btr" data-k="${i}-${lg}" dir="${["ur", "fa", "ps"].includes(lg) ? "rtl" : "ltr"}"><span class="badge">${lg}</span> ${esc(t)}</div>`); }); }); }
+const _booksPage25b = booksPage; booksPage = function (ids, secId) { let h = _booksPage25b(ids, secId); if (state.bk.ch != null && !state.bk.quiz) h = h.replace(/(<div class="card bktext">)/, trBar() + "$1"); return h; };
+const _render25 = render; render = function () { const r = _render25.apply(this, arguments); if (document.querySelector(".bktext")) setTimeout(trInject, 0); return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>.btr{border-inline-start:3px solid var(--accent);background:var(--bg);border-radius:10px;padding:.5rem .7rem;margin:-.2rem 0 .8rem;font-size:.95rem;line-height:1.8}</style>`);
+
+/* ---------- 9) الخطوط والعناوين في كل الموقع ---------- */
+document.head.insertAdjacentHTML("beforeend", `<style>
+html{font-size:16px}body{line-height:1.75;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select,textarea,.btn,.chip,.opt{font-family:inherit!important}
+h1{font-size:clamp(1.55rem,3.2vw,2.2rem);line-height:1.35;font-weight:700;letter-spacing:0}h2{font-size:clamp(1.25rem,2.4vw,1.6rem);line-height:1.45;font-weight:700}h3{font-size:1.08rem;line-height:1.55;font-weight:700}
+.card h3{margin-bottom:.35rem}.sm{font-size:.9rem}.xs{font-size:.78rem}.muted{line-height:1.7}
+.btn{font-weight:600;letter-spacing:0;border-radius:12px}.chip{font-weight:600}
+.libtile b{font-family:"El Messiri","IBM Plex Sans Arabic",sans-serif;font-size:1.05rem;line-height:1.45}.libtile small.ds{font-family:"IBM Plex Sans Arabic",sans-serif}
+.dmcard h3,.htool b,.dmtool b{font-family:"El Messiri","IBM Plex Sans Arabic",sans-serif}
+.dombar a{font-family:"IBM Plex Sans Arabic",sans-serif}
+.tftx{font-family:var(--rf,"Amiri"),serif;font-size:var(--rs,1.08rem);line-height:2.05}
+.pagehead p,.sec>.wrap>p.muted{max-width:760px}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
