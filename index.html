@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v40";
+const UI_VERSION = "2026-11-12-v41";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -15060,6 +15060,114 @@ vlExport = function () {
 document.head.insertAdjacentHTML("beforeend", `<style>.rescard{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;border-inline-start:4px solid var(--accent)}.saybtn{border:1px solid var(--line);background:var(--card);border-radius:999px;width:2rem;height:2rem;cursor:pointer;margin-top:.4rem}</style>`);
 Object.assign(UI.ar, { resT: "كمّل من مكان ما وقفت", resGo: "كمّل" });
 Object.assign(UI.en, { resT: "Continue where you left off", resGo: "Continue" });
+
+/* ================= v41: التسميع + ترتيبك الخاص بالاختبارات + المصحف في التحفيظ + الأخطاء بكليك يمين ================= */
+/* ---------- 1) التسميع: «اقرأ من آية كذا لكذا من غير مصحف» + تكملة الفراغات ---------- */
+PAGES16.push("tasmee");
+state.ts = state.ts || { s: 67, a: 1, b: 5 };
+function tsSources() {
+  if (!state.auth.user) return ""; const uid = state.auth.user.id; const t = today0();
+  const srs = srsList(uid); const hw = useData("tsHw", async () => { const r = await sb.from("lessons").select("homework,start_time").eq("student_id", uid).not("homework", "is", null).order("start_time", { ascending: false }).limit(5); return r.data || []; });
+  const due = Array.isArray(srs) ? srs.filter(x => x.due <= t).slice(0, 6) : []; const plans = (state.data["plans:" + uid] || []).flatMap(p => (p.items || []).filter(i => i.k === "hifz" || i.k === "review")).slice(0, 6);
+  const chip = (s, a, b, ic) => `<button class="chip" onclick="state.ts={s:${s},a:${a},b:${b}};render()">${ic} ${esc(sName(s))} ${a}–${b}</button>`;
+  return `${due.length || plans.length ? `<p class="xs b" style="margin:.6rem 0 .3rem">${L("tsFrom")}</p><div class="row" style="gap:.3rem;flex-wrap:wrap">${due.map(x => chip(x.s, x.a, x.b, "🧠")).join("")}${plans.map(x => chip(x.s, x.a, x.b, "🎯")).join("")}</div>` : ""}
+    ${Array.isArray(hw) && hw.length ? `<details style="margin-top:.6rem"><summary class="xs b">📝 ${L("tsHw")}</summary>${hw.map(h => `<p class="sm" style="margin:.3rem 0;border-inline-start:3px solid var(--gold);padding-inline-start:.5rem">${esc(h.homework)}</p>`).join("")}</details>` : ""}`;
+}
+function tsDiff(target, said) {
+  const tw = normAr(target).split(" ").filter(Boolean), sw = normAr(said).split(" ").filter(Boolean); const m = tw.length, n = sw.length;
+  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0)); for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = tw[i - 1] === sw[j - 1] || simRatio(tw[i - 1], sw[j - 1]) > .75 ? d[i - 1][j - 1] + 1 : Math.max(d[i - 1][j], d[i][j - 1]);
+  const ok = new Array(m).fill(false); let i = m, j = n; while (i > 0 && j > 0) { if ((tw[i - 1] === sw[j - 1] || simRatio(tw[i - 1], sw[j - 1]) > .75) && d[i][j] === d[i - 1][j - 1] + 1) { ok[i - 1] = true; i--; j--; } else if (d[i - 1][j] >= d[i][j - 1]) i--; else j--; }
+  return ok;
+}
+let __tsRec = null;
+async function tsStart() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return toast(L("srsNoMic"), true);
+  const t = state.ts; const all = await qRange(t.s, t.a, t.b); const part = all.filter(x => x.n >= t.a && x.n <= t.b); t.target = part; t.said = ""; t.res = null; t.live = true; render();
+  const r = new SR(); r.lang = "ar-SA"; r.continuous = true; r.interimResults = true; let fin = "";
+  r.onresult = e => { let tmp = ""; for (let k = e.resultIndex; k < e.results.length; k++) { if (e.results[k].isFinal) fin += " " + e.results[k][0].transcript; else tmp += e.results[k][0].transcript; } t.said = (fin + " " + tmp).trim(); const el = document.getElementById("tsLive"); if (el) el.textContent = t.said.split(" ").slice(-14).join(" "); };
+  r.onend = () => { if (t.live) { try { r.start(); } catch (e) {} } }; __tsRec = r; try { r.start(); } catch (e) {}
+}
+function tsStop() { const t = state.ts; t.live = false; try { __tsRec && __tsRec.stop(); } catch (e) {} __tsRec = null; const words = (t.target || []).map(v => v.ar).join(" "); const ok = tsDiff(words, t.said || ""); t.res = ok; t.score = Math.round(ok.filter(Boolean).length / Math.max(1, ok.length) * 100); sfxSafe(t.score >= 70 ? "correct" : "wrong"); if (t.score >= 85) setTimeout(qzCelebrate, 100); tsLog(t.score, "voice"); render(); }
+async function tsCloze() { const t = state.ts; toast(L("loading")); const all = await qRange(t.s, t.a, t.b); let qs = buildQuiz("review", all, t.a, t.b); let g = 0; while (qs.length < Math.min(15, (t.b - t.a + 1) * 2) && g++ < 6) qs = qs.concat(buildQuiz("review", all, t.a, t.b)); state.qz = { qs: qs.slice(0, 15), i: 0, ok: 0, pick: null, ts: true, back: () => {}, again: tsCloze, onDone: sc => tsLog(sc, "cloze") }; render(); }
+async function tsLog(sc, kind) { if (!state.auth.user) return; const t = state.ts; try { await sb.from("hifz_days").upsert({ user_id: state.auth.user.id, day: today0(), done: 1, due: 1 }); } catch (e) {} const it = (state.data["srs:" + state.auth.user.id] || []).find(x => x.s === t.s && x.a === t.a && x.b === t.b); if (it && sc != null) srsResult(it, sc >= 70 ? sc : Math.min(sc, 59)); }
+function renderTasmee() {
+  if (!state.auth.user) return pageWrap("🎤", L("tsT"), L("tsS"), guestPitch());
+  if (state.qz && state.qz.ts) return pageWrap("🎤", L("tsT"), "", quizView());
+  const t = state.ts; const mx = SURAH_AYAHS[t.s - 1];
+  const pick = `<div class="card"><h3>📖 ${L("tsPick")}</h3><div class="pladd" style="margin-top:.5rem"><select class="in" onchange="state.ts={s:+this.value,a:1,b:Math.min(5,SURAH_AYAHS[this.value-1])};render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${t.s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select><label class="xs">${L("plFrom")} <input class="in" type="number" min="1" max="${mx}" value="${t.a}" style="width:5rem" onchange="state.ts.a=Math.max(1,Math.min(+this.value,${mx}));state.ts.res=null;render()"></label><label class="xs">${L("plTo")} <input class="in" type="number" min="1" max="${mx}" value="${t.b}" style="width:5rem" onchange="state.ts.b=Math.max(state.ts.a,Math.min(+this.value,${mx}));state.ts.res=null;render()"></label></div>${tsSources()}</div>`;
+  const task = `<div class="card tstask"><div class="tsbig">🎤 ${L("tsSay").replace("{s}", sName(t.s)).replace("{a}", t.a).replace("{b}", t.b)}</div><p class="sm muted">${L("tsNoMushaf")}</p>
+    ${t.live ? `<div class="tslive" id="tsLive">${esc((t.said || "").split(" ").slice(-14).join(" ")) || "…"}</div><button class="btn btn-p btn-lg" onclick="tsStop()">⏹ ${L("tsDone")}</button>` : `<div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-p btn-lg" onclick="tsStart()">🎤 ${L("tsGo")}</button><button class="btn btn-o btn-lg" onclick="tsCloze()">🧩 ${L("tsCl")}</button></div>`}</div>`;
+  let res = "";
+  if (t.res && t.target) { let w = 0; res = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h3>${t.score >= 85 ? "🌟" : t.score >= 70 ? "👍" : "💪"} ${L("tsRes")}: ${t.score}%</h3><button class="btn btn-o" onclick="state.ts.res=null;render()">↻</button></div><p class="xs muted">${L("tsLegend")}</p><div class="tjtext tsres">${t.target.map(v => v.ar.split(/\s+/).map(x => { const k = normAr(x) ? w++ : -1; return k < 0 ? esc(x) : `<span class="${t.res[k] ? "tsok" : "tsmiss"}">${esc(x)}</span>`; }).join(" ") + ` <span class="end">﴿${v.n}﴾</span>`).join(" ")}</div><p class="xs muted" style="margin-top:.5rem">${L("tsNote")}</p></div>`; }
+  return pageWrap("🎤", L("tsT"), L("tsS"), pick + task + res);
+}
+const _render41 = render;
+render = function () { if (state.route === "tasmee") { const app = document.getElementById("app"); if (!app) return; let body; try { body = renderTasmee(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); applyRename(app); taEnhance(); visitPing(false); } catch (e) {} return; } return _render41.apply(this, arguments); };
+const _DOMAINS41 = DOMAINS;
+DOMAINS = function () { const ds = _DOMAINS41(); const hz = ds.find(d => d.k === "hifz"); if (hz && hz.tools && !hz.tools.some(t => String(t[2]).includes("tasmee"))) hz.tools.splice(1, 0, ["🎤", L("tsT"), "go16('tasmee')", ""], ["🌈", state.lang === "ar" ? "المصحف الملوّن" : "Colour mushaf", "state.hzMushaf=true;go16('d','hifz')", ""]); return ds; };
+const _studentToday41 = studentToday;
+studentToday = function () { return _studentToday41().replace(/(<button class="btn btn-p" onclick="go16\('hifzt'\)">[^<]*<\/button>)/, `$1<button class="btn btn-o" onclick="go16('tasmee')">🎤 ${L("tsT")}</button>`); };
+
+/* ---------- 2) المصحف الملوّن جوه التحفيظ + فوق خالص في التجويد ---------- */
+function isHifzHub(cur) { return cur && (cur.meta || {}).kind === "hifz_hub"; }
+const _renderLibraryDb41 = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb41(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec || !state.auth.user) return h; const cur = secs.find(s => s.id === state.libSec);
+  if (isHifzHub(cur)) return h + `<div style="margin-top:1rem">${tajPage(cur.id)}</div>`;
+  if (isTajRoot(cur)) { const tc = secs.find(s => (s.meta || {}).kind === "tajcolor" && s.parent_id === cur.id); if (tc && !state.tc.ch) { const k = h.indexOf('<div class="card tcmap">'); if (k > 0) h = h.slice(0, k) + tajPage(tc.id) + h.slice(k); } }
+  return h;
+};
+const _renderDomainPage41 = renderDomainPage;
+renderDomainPage = function () { const h = _renderDomainPage41(); if (state.pageArg === "hifz" && state.hzMushaf && state.auth.user) { const hs = (sectionsData() || []).find ? (sectionsData() || []).find(s => isHifzHub(s)) : null; state.hzMushaf = false; if (hs) setTimeout(() => libGo(hs.id), 0); } return h; };
+
+/* ---------- 3) الأخطاء: لون واضح + كليك يمين (وضغطة طويلة على الموبايل) ---------- */
+document.addEventListener("contextmenu", e => { const w = e.target.closest && e.target.closest(".tj2 .w"); if (!w || !state.auth.user) return; e.preventDefault(); mmOpen(w.dataset.v, +w.dataset.i, w.innerText.trim()); });
+let __lp = null; document.addEventListener("touchstart", e => { const w = e.target.closest && e.target.closest(".tj2 .w"); if (!w || !state.auth.user) return; __lp = setTimeout(() => { mmOpen(w.dataset.v, +w.dataset.i, w.innerText.trim()); }, 550); }, { passive: true });
+["touchend", "touchmove", "touchcancel"].forEach(ev => document.addEventListener(ev, () => clearTimeout(__lp), { passive: true }));
+document.head.insertAdjacentHTML("beforeend", `<style>.tj2 .w.mk{background:#fecaca!important;color:#991b1b!important;text-decoration:underline wavy #dc2626 2px!important;text-underline-offset:10px;border-radius:8px;padding:0 .12em;box-shadow:0 0 0 2px #fca5a5}.tj2 .w.mk *{color:#991b1b!important}
+.tstask{text-align:center;margin-top:1rem}.tsbig{font-size:1.3rem;font-weight:800;margin:.4rem 0}.tslive{font:1.4rem/2 'Amiri',serif;min-height:3rem;background:var(--bg);border-radius:14px;padding:.6rem;margin:.6rem 0;color:var(--accent)}
+.tsres .tsok{color:#15803d}.tsres .tsmiss{background:#fecaca;color:#991b1b;border-radius:6px;padding:0 .1em}</style>`);
+Object.assign(UI.ar, { mmHint: "ادوس على أي كلمة غلطت فيها (أو كليك يمين / ضغطة طويلة في أي وقت) واكتب غلطت في إيه. الكلمة الغلط بتتلوّن أحمر.",
+  tsT: "التسميع", tsS: "اختار سورة ومن آية لآية، وسمّع من غير مصحف — الموقع يسمعك ويطلّعلك الكلمات اللي نسيتها، أو كمّل الفراغات.", tsPick: "هتسمّع إيه؟", tsFrom: "من مراجعاتك وخطتك:", tsHw: "واجباتك من المعلم", tsSay: "اقرأ سورة {s} من آية {a} لآية {b}", tsNoMushaf: "اقفل المصحف وسمّع من حفظك 🙈", tsGo: "ابدأ التسميع", tsDone: "خلّصت", tsCl: "كمّل الفراغات", tsRes: "نتيجة التسميع", tsLegend: "الأخضر قلته صح · الأحمر نسيته أو قلته غلط", tsNote: "التسميع بالصوت تقريبي (حسب وضوح الصوت والميكروفون)، وراجع مع معلمك." });
+Object.assign(UI.en, { mmHint: "Tap any word you got wrong (or right-click / long-press anytime) and note the mistake. Mistaken words turn red.",
+  tsT: "Recitation check", tsS: "Pick a surah and ayah range and recite without the mushaf — the site listens and shows the words you missed, or fill in the blanks.", tsPick: "What will you recite?", tsFrom: "From your reviews and plan:", tsHw: "Homework from your teacher", tsSay: "Recite Surah {s}, ayah {a} to {b}", tsNoMushaf: "Close the mushaf and recite from memory 🙈", tsGo: "Start reciting", tsDone: "Done", tsCl: "Fill the blanks", tsRes: "Result", tsLegend: "Green = said correctly · Red = missed or wrong", tsNote: "Voice checking is approximate (depends on mic and clarity) — review with your teacher." });
+
+/* ---------- 4) ترتيبك الخاص + ما يتفتحش المستوى غير لما تنجح ٧٠٪ ---------- */
+const PASS = 70;
+function ordGet(k, def) { const r = (state.auth.profile && state.auth.profile.resume && state.auth.profile.resume.ord) || {}; let o = r[k]; try { const l = JSON.parse(localStorage.getItem("itqan_ord_" + k) || "null"); if (l) o = l; } catch (e) {} const ids = def.slice(); return Array.isArray(o) ? o.filter(x => ids.includes(x)).concat(ids.filter(x => !o.includes(x))) : ids; }
+function ordSet(k, arr) { try { localStorage.setItem("itqan_ord_" + k, JSON.stringify(arr)); } catch (e) {} if (state.auth.profile) { const r = Object.assign({}, state.auth.profile.resume || {}); r.ord = Object.assign({}, r.ord || {}, { [k]: arr }); state.auth.profile.resume = r; sb.from("profiles").update({ resume: r }).eq("id", state.auth.user.id).then(() => {}, () => {}); } }
+function staff() { return realRole() === "owner" || role() === "teacher"; }
+// رحلة التجويد بترتيبك
+tcMap = function () {
+  const P = tcProg(); const full = allAccess(); const ids = ordGet("tj", TJC.map(c => c.id)); let open = true; const edit = state.tcEdit;
+  return `<div class="card tcmap"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h2>🧭 ${L("tcT")}</h2><span class="row" style="gap:.3rem"><span class="badge">⭐ ${Object.values(P).reduce((n, x) => n + (x.stars || 0), 0)} / ${TJC.length * 3}</span><button class="btn ${edit ? "btn-p" : "btn-o"}" onclick="state.tcEdit=!state.tcEdit;render()">↕️ ${edit ? L("ordDone") : L("ordMine")}</button></span></div><p class="sm muted" style="margin:.3rem 0 1rem">${L("ordS").replace("{p}", PASS)}</p><div class="tcpath">${ids.map((id, k) => {
+    const c = TJC.find(x => x.id === id); const pr = P[c.id] || {}; const st = pr.stars || 0; const passed = (pr.score || 0) >= PASS; const paid = !full && k >= TJC_FREE; const can = staff() || (open && !paid);
+    const node = `<div class="tcwrap">${edit ? `<div class="ordbtns"><button onclick="tcMove('${id}',-1)" ${k === 0 ? "disabled" : ""}>▲</button><button onclick="tcMove('${id}',1)" ${k === ids.length - 1 ? "disabled" : ""}>▼</button></div>` : ""}<button class="tcnode ${passed ? "done" : ""} ${can ? "" : "lock"}" onclick="${edit ? "" : can ? `state.tc.ch='${c.id}';state.tc.step='learn';state.qz=null;render();window.scrollTo({top:0})` : paid ? `toast(L('smpLock'),true)` : `toast(L('ordPrev').replace('{p}',${PASS}),true)`}"><span class="tcord">${k + 1}</span><span class="tci">${can ? c.ic : "🔒"}</span><b>${esc(state.lang === "ar" ? c.t[0] : c.t[1])}</b><span class="tcst">${"★".repeat(st)}${"☆".repeat(3 - st)}</span>${pr.score != null ? `<small class="xs">${pr.score}%</small>` : ""}</button></div>`;
+    if (!passed) open = false; return node; }).join("")}</div></div>`;
+};
+function tcMove(id, d) { const ids = ordGet("tj", TJC.map(c => c.id)); const i = ids.indexOf(id), j = i + d; if (j < 0 || j >= ids.length) return; [ids[i], ids[j]] = [ids[j], ids[i]]; ordSet("tj", ids); render(); }
+const _tcQuiz41 = tcQuiz;
+tcQuiz = function (id) { _tcQuiz41(id); const z = state.qz; if (!z) return; const od = z.onDone; z.onDone = async sc => { const stars = sc >= 90 ? 3 : sc >= 80 ? 2 : sc >= PASS ? 1 : 0; const P = tcProg(); const best = Math.max(stars, (P[id] || {}).stars || 0); const bestSc = Math.max(sc, (P[id] || {}).score || 0); if (state.auth.user) { await sb.from("tj_progress").upsert({ user_id: state.auth.user.id, ch: id, stars: best, score: bestSc, updated_at: new Date().toISOString() }); delete state.data["tcp:" + state.auth.user.id]; } toast(sc >= PASS ? "⭐".repeat(Math.max(1, stars)) + " " + L("ordOpened") : L("ordNeed").replace("{p}", PASS), sc < PASS); }; };
+// اتكلم عربي: نفس الفكرة — ترتيب الوحدات بتاعك والوحدة تتفتح بعد ما تنجح ٧٠٪ في اللي قبلها
+const _laOpen41 = laOpen;
+laOpen = function (u, tr) {
+  if (staff()) return true; const paidOk = _laOpen41(u, tr); if (!paidOk) return false;
+  const ids = ordGet("la_" + tr, LC[tr].units.map(x => x.id)); const k = ids.indexOf(u); if (k <= 0) return true;
+  const pr = laProg(tr); if (!Array.isArray(pr)) return false; const prev = ids[k - 1]; return pr.some(x => x.unit === prev && x.score >= PASS);
+};
+const _langAcademy41 = langAcademy;
+langAcademy = function (defTrack) {
+  let h = _langAcademy41(defTrack); const la = state.la; if (!state.auth.user || !la.tr || la.u || state.lf || (state.qz && state.qz.laRev)) return h;
+  const T = LC[la.tr]; const ids = ordGet("la_" + la.tr, T.units.map(x => x.id)); const pr = laProg(la.tr); const sc = id => { const x = Array.isArray(pr) && pr.find(p => p.unit === id); return x ? x.score : null; };
+  const list = `<div class="card" style="margin-top:1rem"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>🗺️ ${L("ordUnits")}</h3><button class="btn ${state.laEdit ? "btn-p" : "btn-o"}" onclick="state.laEdit=!state.laEdit;render()">↕️ ${state.laEdit ? L("ordDone") : L("ordMine")}</button></div><p class="xs muted" style="margin:.3rem 0 .6rem">${L("ordS").replace("{p}", PASS)}</p><div class="laord">${ids.map((id, k) => { const u = T.units.find(x => x.id === id); const ok = laOpen(id, la.tr); const s = sc(id);
+    return `<div class="laordrow ${s >= PASS ? "done" : ""} ${ok ? "" : "lock"}">${state.laEdit ? `<span class="ordbtns"><button onclick="laMove('${id}',-1)" ${k === 0 ? "disabled" : ""}>▲</button><button onclick="laMove('${id}',1)" ${k === ids.length - 1 ? "disabled" : ""}>▼</button></span>` : ""}<span class="tcord">${k + 1}</span><b style="flex:1">${esc(state.lang === "ar" ? u.t : u.en)}</b>${s != null ? `<span class="badge ${s >= PASS ? "badge-g" : ""}">${s}%</span>` : ""}${state.laEdit ? "" : ok ? `<button class="btn btn-p" style="padding:.25rem .7rem" onclick="state.lf=lfBuild('${la.tr}','${id}');render();window.scrollTo({top:0})">▶</button>` : `<span>🔒</span>`}</div>`; }).join("")}</div></div>`;
+  const k = h.indexOf('<div class="launits">'); if (k < 0) return h + list; return h.slice(0, k) + list + `<div style="display:none">` + h.slice(k) + `</div>`;
+};
+function laMove(id, d) { const tr = state.la.tr; const ids = ordGet("la_" + tr, LC[tr].units.map(x => x.id)); const i = ids.indexOf(id), j = i + d; if (j < 0 || j >= ids.length) return; [ids[i], ids[j]] = [ids[j], ids[i]]; ordSet("la_" + tr, ids); render(); }
+document.head.insertAdjacentHTML("beforeend", `<style>.tcwrap{position:relative}.tcord{font-size:.72rem;font-weight:800;background:var(--line);border-radius:999px;padding:0 .5rem;align-self:flex-start}.ordbtns{display:flex;gap:.2rem;justify-content:center;margin-bottom:.2rem}.ordbtns button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:.1rem .5rem;cursor:pointer}.ordbtns button:disabled{opacity:.3}
+.laord{display:flex;flex-direction:column;gap:.35rem}.laordrow{display:flex;gap:.5rem;align-items:center;border:1px solid var(--line);border-radius:var(--rs);padding:.45rem .6rem;background:var(--card)}.laordrow.done{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--card))}.laordrow.lock{opacity:.6}</style>`);
+Object.assign(UI.ar, { ordMine: "رتّب بنفسك", ordDone: "تمام", ordS: "رتّب المستويات بالترتيب اللي يريحك. كل مستوى بيتفتح بعد ما تنجح في اختبار اللي قبله بـ {p}٪ أو أكتر.", ordPrev: "لازم تنجح في اختبار المستوى اللي قبله بـ {p}٪ الأول", ordOpened: "عدّيت — المستوى اللي بعده اتفتح!", ordNeed: "محتاج {p}٪ عشان المستوى اللي بعده يتفتح — جرّب تاني", ordUnits: "وحداتك بترتيبك" });
+Object.assign(UI.en, { ordMine: "Set my order", ordDone: "Done", ordS: "Arrange the levels in the order you prefer. Each level opens after you pass the previous one's test with {p}% or more.", ordPrev: "Pass the previous level's test with {p}% first", ordOpened: "Passed — the next level is open!", ordNeed: "You need {p}% to open the next level — try again", ordUnits: "Your units, your order" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
