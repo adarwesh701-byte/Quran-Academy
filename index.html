@@ -3222,7 +3222,7 @@ async function syncUiTranslations(force) {
       Object.keys(srcSite).forEach(k => { if (SKIP_KEYS.test(k)) return; if (hand()["I18N." + lg][k] === undefined && existing[lg + "|I18N." + k] !== srcSite[k]) need["I18N." + k] = srcSite[k]; });
       const keys = Object.keys(need);
       if (keys.length) {
-        toast(`${L("syncing")} (${lg}) …`);
+        console.info("i18n sync", lg);
         const tr = await translateTexts(need, "en", lg);
         const rows = Object.keys(tr).map(k => ({ lang: lg, key: k, text: tr[k], src: need[k], updated_at: new Date().toISOString() }));
         for (let i = 0; i < rows.length; i += 400) await sb.from("ui_i18n").upsert(rows.slice(i, i + 400));
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v30";
+const UI_VERSION = "2026-11-12-v31";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14003,6 +14003,179 @@ Object.assign(UI.ar, { qzPass: "مبروك، عدّيت! 🎉", qzFail: "محت�
   plT: "خطتي", plSub: "اختار خطة يومية أو أسبوعية أو شهرية من محتوى الأكاديمية، وكل حاجة تنجح في اختبارها بتتعلّم لوحدها.", plP: { day: "خطة اليوم", week: "خطة الأسبوع", month: "خطة الشهر" }, plK: { hifz: "حفظ جديد", review: "مراجعة", taj: "تجويد", maqam: "مقام", lang: "درس عربي" }, plFrom: "من آية", plTo: "لآية", plAddBtn: "ضيف للخطة", plAddT: "ضيف حاجة للخطة", plEmpty: "الخطة فاضية — ضيف أول حاجة من تحت.", plTest: "اختبرني", plStudy: "ذاكرت الباب", plApply: "طبّقت على التلاوة", plDone: "اتعلّم في خطتك ✓", plRetry: "محتاج 60% عشان يتحسب — جرّب تاني", plHist: "اللي خلّصته", plSum: ["من خطتك الحالية", "آية اتحفظت", "مراجعة", "أبواب تجويد", "مقامات", "دروس عربي"], plOpen: "افتح الخطة", plMake: "اعمل خطتك", plAllDone: "خلّصت كل اللي في الخطة!", plPickS: "اختار طالب عشان تشوف خطته وتعدّلها", plTeach: "خطط الطلاب", plTeachS: "شوف تقدّم كل طالب في خطته وعدّلها.", msLang: "اتكلم عربي — اختار مسارك", msStart: "ابدأ", msCont: "كمّل" });
 Object.assign(UI.en, { qzPass: "Well done — you passed! 🎉", qzFail: "You need 60% to pass — try again.", qzS: ["right first time", "wrong", "slow", "questions"], qzRe: "retry", qzSec: "s", qzNext: "Next", qzEnd: "Result", qzMsg: { ok: "✅ Correct and on time", bad: "❌ Wrong — this question will come back", slow: "🐢 Correct but slow — it will come back", time: "⏱️ Time's up — this question will come back" },
   plT: "My plan", plSub: "Build a daily, weekly or monthly plan from the academy content; each item is ticked automatically when you pass its test.", plP: { day: "Today's plan", week: "This week's plan", month: "This month's plan" }, plK: { hifz: "New memorization", review: "Review", taj: "Tajweed", maqam: "Maqam", lang: "Arabic lesson" }, plFrom: "From ayah", plTo: "to", plAddBtn: "Add to plan", plAddT: "Add to the plan", plEmpty: "The plan is empty — add your first item below.", plTest: "Test me", plStudy: "Studied the chapter", plApply: "Applied in recitation", plDone: "Ticked in your plan ✓", plRetry: "You need 60% for it to count — try again", plHist: "Completed", plSum: ["of current plan", "ayahs memorized", "reviews", "tajweed chapters", "maqamat", "Arabic lessons"], plOpen: "Open plan", plMake: "Create your plan", plAllDone: "Everything in the plan is done!", plPickS: "Pick a student to view and edit their plan", plTeach: "Student plans", plTeachS: "See each student's progress and edit their plan.", msLang: "Speak Arabic — pick your track", msStart: "Start", msCont: "Continue" });
+
+/* ================= v31: التفسير بلغة الطالب + القرّاء + تحديد مقام الآيات ================= */
+/* ---------- 1) القرّاء (تلاوات آية بآية من EveryAyah) ---------- */
+const EA = [["Minshawy_Murattal_128kbps", "محمد صديق المنشاوي (مرتل)", "Al-Minshawi (murattal)"], ["Minshawy_Mujawwad_192kbps", "محمد صديق المنشاوي (مجود)", "Al-Minshawi (mujawwad)"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد (مرتل)", "Abdul Basit (murattal)"], ["Abdul_Basit_Mujawwad_128kbps", "عبد الباسط عبد الصمد (مجود)", "Abdul Basit (mujawwad)"], ["Husary_128kbps", "محمود خليل الحصري (مرتل)", "Al-Husary (murattal)"], ["Husary_128kbps_Mujawwad", "محمود خليل الحصري (مجود)", "Al-Husary (mujawwad)"], ["Husary_Muallim_128kbps", "الحصري (المصحف المعلّم)", "Al-Husary (teaching)"], ["Mohammad_al_Tablaway_128kbps", "محمد محمود الطبلاوي", "Al-Tablawi"], ["Mustafa_Ismail_48kbps", "مصطفى إسماعيل", "Mustafa Ismail"], ["mahmoud_ali_al_banna_32kbps", "محمود علي البنا", "Mahmoud Ali Al-Banna"], ["Ahmed_Neana_128kbps", "أحمد نعينع", "Ahmed Neana"], ["Alafasy_128kbps", "مشاري راشد العفاسي", "Mishary Alafasy"], ["Abdurrahmaan_As-Sudais_192kbps", "عبد الرحمن السديس", "Al-Sudais"], ["Saood_ash-Shuraym_128kbps", "سعود الشريم", "Al-Shuraym"], ["MaherAlMuaiqly128kbps", "ماهر المعيقلي", "Maher Al-Muaiqly"], ["Abu_Bakr_Ash-Shaatree_128kbps", "أبو بكر الشاطري", "Abu Bakr Al-Shatri"], ["Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net", "أحمد بن علي العجمي", "Ahmed Al-Ajamy"], ["Hani_Rifai_192kbps", "هاني الرفاعي", "Hani Ar-Rifai"], ["Hudhaify_128kbps", "علي الحذيفي", "Al-Hudhaify"], ["Muhammad_Ayyoub_128kbps", "محمد أيوب", "Muhammad Ayyub"], ["Muhammad_Jibreel_128kbps", "محمد جبريل", "Muhammad Jibreel"], ["Abdullah_Basfar_192kbps", "عبد الله بصفر", "Abdullah Basfar"], ["Ghamadi_40kbps", "سعد الغامدي", "Saad Al-Ghamdi"], ["Ibrahim_Akhdar_64kbps", "إبراهيم الأخضر", "Ibrahim Al-Akhdar"], ["Salaah_AbdulRahman_Bukhatir_128kbps", "صلاح بوخاطر", "Salah Bukhatir"], ["Muhsin_Al_Qasim_192kbps", "محسن القاسم", "Muhsin Al-Qasim"], ["Abdullaah_3awwaad_Al-Juhaynee_128kbps", "عبد الله الجهني", "Abdullah Al-Juhani"], ["Salah_Al_Budair_128kbps", "صلاح البدير", "Salah Al-Budair"], ["Abdullah_Matroud_128kbps", "عبد الله مطرود", "Abdullah Matroud"], ["Muhammad_AbdulKareem_128kbps", "محمد عبد الكريم", "Muhammad AbdulKareem"], ["khalefa_al_tunaiji_64kbps", "خليفة الطنيجي", "Khalifa Al-Tunaiji"], ["Khaalid_Abdullaah_al-Qahtaanee_192kbps", "خالد القحطاني", "Khalid Al-Qahtani"], ["Yasser_Ad-Dussary_128kbps", "ياسر الدوسري", "Yasser Al-Dosari"], ["Nasser_Alqatami_128kbps", "ناصر القطامي", "Nasser Al-Qatami"], ["Ali_Hajjaj_AlSuesy_128kbps", "علي حجاج السويسي", "Ali Hajjaj Al-Suwaisi"], ["Sahl_Yassin_128kbps", "سهل ياسين", "Sahl Yassin"], ["aziz_alili_128kbps", "عزيز عليلي", "Aziz Alili"], ["Yaser_Salamah_128kbps", "ياسر سلامة", "Yaser Salamah"], ["Akram_AlAlaqimy_128kbps", "أكرم العلاقمي", "Akram Al-Alaqimy"], ["Ali_Jaber_64kbps", "علي جابر", "Ali Jaber"], ["Fares_Abbad_64kbps", "فارس عباد", "Fares Abbad"], ["Ayman_Sowaid_64kbps", "أيمن سويد", "Ayman Suwaid"], ["Karim_Mansoori_40kbps", "كريم منصوري", "Karim Mansoori"], ["warsh/warsh_Abdul_Basit_128kbps", "عبد الباسط (رواية ورش)", "Abdul Basit (Warsh)"], ["warsh/warsh_ibrahim_aldosary_128kbps", "إبراهيم الدوسري (ورش)", "Ibrahim Al-Dosari (Warsh)"], ["warsh/warsh_yassin_al_jazaery_64kbps", "ياسين الجزائري (ورش)", "Yassin Al-Jazaery (Warsh)"]];
+const p3 = n => String(n).padStart(3, "0");
+function eaUrl(folder, vkey) { const [s, a] = vkey.split(":"); return `https://everyayah.com/data/${folder}/${p3(s)}${p3(a)}.mp3`; }
+function eaName(f) { const r = EA.find(x => x[0] === f); return r ? (state.lang === "ar" ? r[1] : r[2]) : f; }
+state.ea = state.ea || EA[0][0];
+let __eaAu = null;
+function eaPlay(url, btnId) { try { if (!__eaAu) __eaAu = new Audio(); if (__eaAu.src === url && !__eaAu.paused) { __eaAu.pause(); return; } __eaAu.src = url; __eaAu.play().catch(() => toast(L("srNoAudio") || "—", true)); document.querySelectorAll(".eaplay.on").forEach(b => b.classList.remove("on")); const b = btnId && document.getElementById(btnId); if (b) { b.classList.add("on"); __eaAu.onended = () => b.classList.remove("on"); } } catch (e) {} }
+function eaSelect(onch) { return `<select class="in easel" onchange="${onch}">${EA.map(r => `<option value="${r[0]}" ${state.ea === r[0] ? "selected" : ""}>${esc(state.lang === "ar" ? r[1] : r[2])}</option>`).join("")}</select>`; }
+
+/* ---------- 2) تحديد مقام الآية (للأونر والمعلمين اللي يختارهم) + عرضه للمشتركين ---------- */
+function canTagMq() { if (!state.auth.user) return false; if (realRole() === "owner" && !state.preview) return true; return role() === "teacher" && (setv("maqamTaggers", []) || []).includes(state.auth.user.id); }
+function mqPrem() { if (!state.auth.user) return false; if (canTagMq() || role() === "teacher" || role() === "owner") return true; const v = useData("mqPrem", async () => { const { data } = await sb.rpc("can_maqam_premium"); return !!data; }); return v === true; }
+function mqLabel(id) { const m = MQ.find(x => x.id === id); return m ? mqName(m) : maqamName(id); }
+const _maqamName31 = maqamName; maqamName = function (m) { const r = _maqamName31(m); if (r !== m) return r; const x = MQ.find(z => z.id === m); return x ? mqName(x) : m; };
+function amTags(src, keys) {
+  if (!keys.length || !state.auth.user) return {};
+  const k = "amt:" + src + ":" + keys[0] + ":" + keys.length;
+  const d = useData(k, async () => { let rows = []; if (canTagMq()) { const r = await sb.from("ayah_maqam").select("vkey,maqam").eq("src", src).in("vkey", keys); rows = r.data || []; } else { const r = await sb.rpc("maqam_tags", { p_src: src, p_keys: keys }); rows = r.data || []; } const o = {}; rows.forEach(x => o[x.vkey] = x.maqam); return o; });
+  return d && typeof d === "object" && !d.__error ? d : {};
+}
+async function amTag(src, vkey, maqam) {
+  let r; if (!maqam) r = await sb.from("ayah_maqam").delete().eq("src", src).eq("vkey", vkey);
+  else r = await sb.from("ayah_maqam").upsert({ src, vkey, maqam, tagged_by: state.auth.user.id }, { onConflict: "src,vkey" });
+  if (r.error) return toast(r.error.message, true); Object.keys(state.data).forEach(k => { if (k.startsWith("amt:" + src)) delete state.data[k]; }); toast(L("saved"));
+}
+function amRow(src, vkey, tags) {
+  const cur = tags[vkey] || "";
+  if (canTagMq()) return `<div class="amrow"><span class="xs b">🎼 ${L("amSet")}</span><select class="in amsel" onchange="amTag('${src}','${vkey}',this.value)"><option value="">—</option>${MQ.map(m => `<option value="${m.id}" ${cur === m.id ? "selected" : ""}>${esc(mqName(m))}</option>`).join("")}</select>${cur ? `<span class="badge badge-g">✓</span>` : ""}</div>`;
+  if (!state.auth.user) return "";
+  if (mqPrem()) return cur ? `<div class="amrow"><span class="ambadge">🎼 ${L("amIs")}: <b>${esc(mqLabel(cur))}</b></span></div>` : "";
+  return `<div class="amrow"><a href="#" class="amlock" onclick="state.ptab='content';navigate('pricing');return false;">🔒 ${L("amLock")}</a></div>`;
+}
+
+/* ---------- 3) الترجمة والتفاسير بلغة الطالب ---------- */
+const LANG_EN = { en: "english", fr: "french", de: "german", es: "spanish", tr: "turkish", ru: "russian", id: "indonesian", ms: "malay", ur: "urdu", bn: "bengali", fa: "persian", hi: "hindi", zh: "chinese", ku: "kurdish", it: "italian", pt: "portuguese", nl: "dutch", sw: "swahili", ha: "hausa", so: "somali", uz: "uzbek", bs: "bosnian", sq: "albanian", ja: "japanese", ko: "korean", th: "thai", vi: "vietnamese", tl: "tagalog", ps: "pashto", ta: "tamil", ml: "malayalam", am: "amharic" };
+const QRS = { tr: null, tf: null };
+(async () => { try { const [a, b] = await Promise.all([fetch("https://api.quran.com/api/v4/resources/translations").then(r => r.json()), fetch("https://api.quran.com/api/v4/resources/tafsirs").then(r => r.json())]); QRS.tr = a.translations || []; QRS.tf = b.tafsirs || []; if (state.route !== "home") render(); } catch (e) {} })();
+function trIdFor(lang) { if (lang === "ar") return state.tf.trId || null; if (TR_IDS[lang]) return TR_IDS[lang]; const n = LANG_EN[lang]; const t = (QRS.tr || []).find(x => (x.language_name || "").toLowerCase() === n); return t ? t.id : null; }
+function nativeTafsirs(lang) { const n = LANG_EN[lang]; return (QRS.tf || []).filter(x => n && (x.language_name || "").toLowerCase() === n); }
+const AR_TF = [91, 14, 15, 90, 16];
+async function tfTranslate(src, keys, lang) {
+  const { data: s } = await sb.auth.getSession(); const tok = (s && s.session && s.session.access_token) || SB_KEY; const out = {};
+  for (let i = 0; i < keys.length; i += 10) { const r = await fetch(`${SB_URL}/functions/v1/tafsir-tr`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: SB_KEY }, body: JSON.stringify({ src, keys: keys.slice(i, i + 10), lang }) }); const j = await r.json().catch(() => ({})); Object.assign(out, j.result || {}); }
+  return out;
+}
+_tafsirReader22x = function (surah, ayahs) {
+  const tf = state.tf; if (tf.surah !== surah) { tf.surah = surah; tf.page = 1; }
+  const lang = state.lang; const ar = lang === "ar"; const trId = trIdFor(lang); const natives = ar ? [] : nativeTafsirs(lang);
+  if (!AR_TF.includes(tf.src) && !natives.some(x => x.id === tf.src)) tf.src = 91;
+  const per = 6, pages = Math.ceil((ayahs || 7) / per); const isAr = AR_TF.includes(tf.src); const mt = !ar && isAr;
+  const key = `tfr2:${surah}:${tf.src}:${tf.page}:${lang}:${trId}`;
+  const data = useData(key, async () => {
+    const v = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah}?fields=text_uthmani&per_page=${per}&page=${tf.page}${trId ? "&translations=" + trId : ""}`).then(r => r.json());
+    const keys = (v.verses || []).map(x => x.verse_key); let tm = {};
+    if (mt) tm = await tfTranslate(tf.src, keys, lang);
+    else { const t = await fetch(`https://api.quran.com/api/v4/tafsirs/${tf.src}/by_chapter/${surah}?per_page=${per}&page=${tf.page}`).then(r => r.json()); (t.tafsirs || []).forEach(x => tm[x.verse_key] = htmlText(x.text)); }
+    return (v.verses || []).map(x => ({ key: x.verse_key, n: x.verse_number, ar: x.text_uthmani, tr: x.translations && x.translations[0] ? htmlText(x.translations[0].text) : "", tf: tm[x.verse_key] || "" }));
+  });
+  const nm = id => { const a = TAFSIRS.find(x => x[0] === id); return ar ? a[1] : `${a[2].replace(" (Arabic)", "")} — ${L("tfMT")}`; };
+  const opts = (ar ? "" : `<optgroup label="${esc(L("tfGrpAr"))}">`) + AR_TF.map(id => `<option value="${id}" ${tf.src === id ? "selected" : ""}>${esc(nm(id))}</option>`).join("") + (ar ? "" : "</optgroup>") + (natives.length ? `<optgroup label="${esc(L("tfGrpNat").replace("{l}", langLabel(lang)))}">${natives.map(x => `<option value="${x.id}" ${tf.src === x.id ? "selected" : ""}>${esc(x.name + (x.author_name && !x.name.includes(x.author_name) ? " — " + x.author_name : ""))}</option>`).join("")}</optgroup>` : "");
+  const srcName = isAr ? nm(tf.src) : ((natives.find(x => x.id === tf.src) || {}).name || "");
+  const src = "ea:" + state.ea; const tags = Array.isArray(data) ? amTags(src, data.map(a => a.key)) : {};
+  return `<div class="card" style="margin-top:1.2rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;align-items:center"><h3>📖 ${L("tfTitle")} — ${esc(SURAHS[surah - 1] || "")}</h3>
+      <label class="row" style="gap:.4rem;align-items:center"><span class="sm">${L("tfSrc")}</span><select class="in" style="width:auto;max-width:22rem" onchange="state.tf.src=+this.value;render()">${opts}</select></label></div>
+    <div class="row" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.6rem"><span class="sm">🎙️ ${L("recReciter") || "القارئ"}</span>${eaSelect("state.ea=this.value;render()")}</div>
+    ${!ar && (QRS.tr || []).filter(x => (x.language_name || "").toLowerCase() === LANG_EN[lang]).length > 1 ? `<div class="row" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.4rem"><span class="sm">🌐 ${L("srTr") || "Translation"}</span><select class="in" style="width:auto;max-width:20rem" onchange="TR_IDS[state.lang]=+this.value;render()">${(QRS.tr || []).filter(x => (x.language_name || "").toLowerCase() === LANG_EN[lang]).map(t => `<option value="${t.id}" ${t.id === trId ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></div>` : ""}
+    ${mt ? `<p class="xs muted" style="margin-top:.4rem">🌐 ${L("tfMTNote").replace("{l}", langLabel(lang))}</p>` : ""}
+    ${!Array.isArray(data) ? loadingBox() : data.map(a => `<div class="tfa"><div class="row" style="gap:.5rem;align-items:flex-start"><button class="eaplay" id="ea_${a.key.replace(":", "_")}" onclick="eaPlay('${eaUrl(state.ea, a.key)}','ea_${a.key.replace(":", "_")}')" title="▶">▶</button><div class="tfay" style="flex:1">${esc(a.ar)} <span class="spno">﴿${a.n}﴾</span></div></div>${!ar && a.tr ? `<div class="tftr"><span class="badge" style="margin-inline-end:.35rem">🌐 ${esc(langLabel(lang))}</span>${esc(a.tr)}</div>` : ""}${amRow(src, a.key, tags)}${a.tf ? `<details open><summary class="sm b">${esc(srcName)}</summary><div class="tftx" dir="${ar || isAr && !mt ? "rtl" : "auto"}">${esc(a.tf)}</div></details>` : `<p class="xs muted">${mt ? L("tfMTWait") : ""}</p>`}</div>`).join("")}
+    ${pages > 1 ? `<div class="row" style="gap:.3rem;flex-wrap:wrap;justify-content:center;margin-top:.8rem">${tf.page > 1 ? `<button class="btn btn-o" onclick="state.tf.page--;render()">◀</button>` : ""}<span class="sm" style="align-self:center">${tf.page} / ${pages}</span>${tf.page < pages ? `<button class="btn btn-p" onclick="state.tf.page++;render();window.scrollTo({top:0})">${L("tfMore")} ▶</button>` : ""}</div>` : ""}
+    <p class="xs muted" style="margin-top:.6rem">${L("tfNote")}</p></div>`;
+};
+// تبويب التأمل بلغة الطالب
+const _surahPage31 = surahPage;
+surahPage = function (surah, ayahs) {
+  const sr = state.sr;
+  if (sr.tab === "reflect" && state.lang !== "ar") {
+    let h = _surahPage31(surah, ayahs); const i = h.indexOf('<div class="tabs" style="margin:1rem 0">'); const j = h.indexOf("</div>", i) + 6; const head = h.slice(0, j);
+    const data = srData(surah, sr.chunk);
+    const rf = Array.isArray(data) ? useData(`srf2:${surah}:${sr.chunk}:${state.lang}`, () => tfTranslate(91, data.map(a => a.key), state.lang)) : null;
+    const body = !Array.isArray(data) || !rf || rf.__error ? loadingBox() : `<p class="xs muted">${L("srReflectSrc")} · 🌐 ${L("tfMTNote").replace("{l}", langLabel(state.lang))}</p>${data.map(a => { const t = rf[a.key] || ""; return t ? `<div class="srrefl" style="background-image:linear-gradient(90deg,rgba(2,6,23,.92),rgba(2,6,23,.7)),url('${esc(stImg(sceneFor(a.tr, a.n), surah * 100 + a.n, 900, 300))}')"><div class="srar" style="font-size:1.35rem">${esc(a.ar)} <span>﴿${a.n}﴾</span></div>${a.tr ? `<div class="srtr" style="margin:.4rem 0">${esc(a.tr)}</div>` : ""}<div class="sm" style="line-height:1.9;opacity:.95" dir="auto">${esc(t)}</div></div>` : ""; }).join("")}`;
+    return head + body;
+  }
+  let h = _surahPage31(surah, ayahs);
+  if (sr.tab === "watch") {
+    const data = srData(surah, sr.chunk); const a = Array.isArray(data) ? data[Math.min(sr.i, data.length - 1)] : null;
+    const src = state.sr.ea ? "ea:" + state.sr.ea : null;
+    const tags = a && src ? amTags(src, [a.key]) : {};
+    h += `<div class="card" style="margin-top:.8rem"><div class="row" style="gap:.4rem;align-items:center;flex-wrap:wrap"><span class="sm">🎙️ ${L("eaMore")}</span><select class="in easel" onchange="state.sr.ea=this.value||null;invalidate(...Object.keys(state.data).filter(k=>k.startsWith('sr:')));srStop();render()"><option value="">— ${L("eaDef")} —</option>${EA.map(r => `<option value="${r[0]}" ${state.sr.ea === r[0] ? "selected" : ""}>${esc(state.lang === "ar" ? r[1] : r[2])}</option>`).join("")}</select></div>${a ? `<div id="srTagRow">${src ? amRow(src, a.key, tags) : canTagMq() ? `<p class="xs muted" style="margin-top:.4rem">🎼 ${L("amPickRec")}</p>` : ""}</div>` : ""}</div>`;
+  }
+  return h;
+};
+const _srData31 = srData;
+srData = function (surah, chunk) { const d = _srData31(surah, chunk); if (Array.isArray(d) && state.sr.ea) return d.map(a => Object.assign({}, a, { au: eaUrl(state.sr.ea, a.key) })); return d; };
+const _srRenderFilm31 = srRenderFilm;
+srRenderFilm = function () { _srRenderFilm31(); const el = document.getElementById("srTagRow"); if (!el) return; const d = srData(state.sr.surah, state.sr.chunk); const a = Array.isArray(d) && d[state.sr.i]; if (!a) return; if (!state.sr.ea) return; const src = "ea:" + state.sr.ea; el.innerHTML = amRow(src, a.key, amTags(src, [a.key])); };
+
+/* ---------- 4) «خمّن المقام» واختبارات المقامات من تلاوات المشايخ + مقاطعك ---------- */
+function amSrcUrl(t) { if (t.src.startsWith("ea:")) return eaUrl(t.src.slice(3), t.vkey); if (t.src.startsWith("qc:")) { const [s, a] = t.vkey.split(":"); return null; } return null; }
+async function amPool(mid) { const { data, error } = await sb.rpc("maqam_pool", { p_maqam: mid || null, p_limit: 80 }); if (error) return []; return (data || []).map(t => Object.assign(t, { url: amSrcUrl(t) })).filter(t => t.url); }
+function amPlayUrl(u) { eaPlay(u); }
+async function mqRealQuiz(mid, onBack) {
+  const pool = await amPool(null); if (pool.length < 2) return false;
+  const r = () => Math.random(); let pick = pool.slice().sort(() => r() - .5);
+  if (mid) { const mine = pick.filter(t => t.maqam === mid), other = pick.filter(t => t.maqam !== mid); pick = mine.slice(0, 6).concat(other.slice(0, Math.max(2, 10 - Math.min(6, mine.length)))).sort(() => r() - .5); } else pick = pick.slice(0, 10);
+  const ids = [...new Set(pool.map(t => t.maqam).concat(MAQAMS))];
+  const qs = pick.map(t => { const others = ids.filter(x => x !== t.maqam).sort(() => r() - .5).slice(0, 3); return { q: "", ans: mqLabel(t.maqam), opts: [t.maqam].concat(others).sort(() => r() - .5).map(mqLabel), t: `🎙️ ${eaName(t.src.slice(3))} · ${t.vkey}`, play: `()=>amPlayUrl(${JSON.stringify(t.url)})`, tag: t.id }; });
+  state.qz = { qs, i: 0, ok: 0, pick: null, mqReal: true, back: onBack || (() => {}), again: () => mqRealQuiz(mid, onBack) }; render(); return true;
+}
+const _qzPick31 = qzPick;
+qzPick = function (i) { const z = state.qz; const qq = z && z.qs[z.i]; const r = _qzPick31(i); try { if (qq && qq.tag && z.pick != null) sb.from("maqam_answers").insert({ tag_id: qq.tag, picked: i >= 0 ? qq.opts[i] : null, correct: i >= 0 && qq.opts[i] === qq.ans }).then(() => {}, () => {}); } catch (e) {} return r; };
+// اختبار ودن المقامات العام: لو فيه آيات متحددة يبقى من تلاوات حقيقية
+const _mqEarStart31 = mqEarStart;
+mqEarStart = async function (fam) { if (mqPrem()) { const ok = await mqRealQuiz(null, () => { state.mqq = false; }); if (ok) { state.mqq = true; render(); return; } } return _mqEarStart31(fam); };
+// تبويب «خمّن المقام» جوه صفحة كل مقام
+const _maqamOne31 = maqamOne;
+maqamOne = function (cur) {
+  const mid = (cur.meta || {}).maqam; let h = _maqamOne31(cur);
+  h = h.replace(/(<div class="motabs">[\s\S]*?)(<\/div>)/, `$1<button class="${state.mqTab === "guess" ? "on" : ""}" onclick="state.mqTab='guess';state.qz=null;render()">🎧 ${L("amGuess")}</button>$2`);
+  if (state.mqTab !== "guess") return h;
+  const i = h.indexOf('<div class="motabs">'); const j = h.indexOf("</div>", i) + 6; const tabs = h.slice(i, j);
+  let body;
+  if (!mqPrem()) body = `<div class="card" style="margin-top:1rem;text-align:center"><div style="font-size:2.4rem">🔒</div><p>${L("amLockQ")}</p><button class="btn btn-p" onclick="state.ptab='content';navigate('pricing')">${L("amUnlock")}</button></div>`;
+  else if (state.qz && state.qz.mqReal) body = `<div style="margin-top:1rem">${quizView()}</div>`;
+  else body = `<div class="card" style="margin-top:1rem;text-align:center"><div style="font-size:2.6rem">🎧</div><h3>${L("amGuessT")}</h3><p class="muted sm" style="margin:.4rem 0 .8rem">${L("amGuessS")}</p><button class="btn btn-p btn-lg" onclick="mqRealQuiz('${mid}').then(ok=>{if(!ok)toast(L('amFew'),true)})">${L("gmStart")}</button></div>${amAnswersCard()}`;
+  return h.slice(0, j) + body;
+};
+function amAnswersCard() {
+  if (!(realRole() === "owner" || role() === "teacher")) return "";
+  const d = useData("amAns", async () => { const r = await sb.from("maqam_answers").select("user_id,picked,correct,created_at,tag_id,ayah_maqam(maqam,vkey,src)").order("created_at", { ascending: false }).limit(40); return r.data || []; });
+  const P = peopleMap();
+  return `<div class="card" style="margin-top:1rem"><h3>📋 ${L("amAns")}</h3>${!Array.isArray(d) ? loadingBox() : d.length ? d.map(a => `<div class="kv"><span>${a.correct ? "✅" : "❌"} <b>${esc(personName(a.user_id, P.map))}</b> — ${esc(a.picked || "⏱️")}${a.ayah_maqam ? ` <span class="xs muted">(${L("amRight")}: ${esc(mqLabel(a.ayah_maqam.maqam))} · ${esc(eaName(String(a.ayah_maqam.src).slice(3)))} ${esc(a.ayah_maqam.vkey)})</span>` : ""}</span><span class="xs muted">${new Date(a.created_at).toLocaleString(state.lang)}</span></div>`).join("") : `<p class="sm muted">—</p>`}</div>`;
+}
+// صفحة «خمّن المقام»: مقاطعك + آيات المشايخ المتحددة
+const _renderGamePage31 = renderGamePage;
+renderGamePage = function () {
+  if (state.auth.user && !state.data.gmPool && mqPrem()) {
+    useData("gmPool", async () => {
+      const [a, b, tags] = await Promise.all([sb.from("contents").select("id,title,maqam,file_path").not("maqam", "is", null).eq("status", "published"), sb.from("showcase_posts").select("id,maqam,file_path,file_bucket,media_type").not("maqam", "is", null).eq("status", "published"), amPool(null).catch(() => [])]);
+      return [].concat((a.data || []).filter(c => c.file_path && c.maqam).map(c => { const [bk, ...r] = c.file_path.split("/"); return { maqam: c.maqam, bucket: bk, path: r.join("/") }; }),
+        (b.data || []).filter(p => p.file_path && p.maqam && p.media_type !== "pdf").map(p => ({ maqam: p.maqam, bucket: p.file_bucket || "academy_public", path: p.file_path })),
+        tags.map(t => ({ maqam: t.maqam, url: t.url, tag: t.id, by: eaName(t.src.slice(3)) + " · " + t.vkey })));
+    });
+  }
+  let h = _renderGamePage31();
+  if (realRole() === "owner" && !state.preview) h = h.replace(/(<\/div><\/div>)(\s*<\/div>\s*<\/section>|$)/, `$1${amTaggersCard()}${amAnswersCard()}$2`);
+  else if (role() === "teacher") h = h.replace(/(<\/div><\/div>)(\s*<\/div>\s*<\/section>|$)/, `$1${amAnswersCard()}$2`);
+  return h;
+};
+const _gmNext31 = gmNext;
+gmNext = async function () {
+  const pool = state.data.gmPool; if (!Array.isArray(pool) || !pool.length) return;
+  const cur = pool[Math.floor(Math.random() * pool.length)]; if (!cur.url) { const all = pool; state.data.gmPool = pool.filter(x => !x.url); try { await _gmNext31(); } finally { state.data.gmPool = all; } return; }
+  const ids = [...new Set(MAQAMS.concat(pool.map(x => x.maqam)))]; const others = ids.filter(m => m !== cur.maqam).sort(() => Math.random() - .5).slice(0, 3);
+  state.gm.cur = cur; state.gm.answer = null; state.gm.opts = [cur.maqam, ...others].sort(() => Math.random() - .5); render();
+  const el = document.getElementById("gmAudio"); if (el) el.innerHTML = `<audio src="${esc(cur.url)}" controls autoplay controlsList="nodownload noplaybackrate" oncontextmenu="return false" style="width:100%"></audio><div class="xs muted" style="margin-top:.3rem">🎙️ ${esc(cur.by || "")}</div>`;
+};
+const _gmAnswer31 = gmAnswer;
+gmAnswer = async function (m) { const g = state.gm; const cur = g.cur; if (cur && cur.tag && !g.answer) sb.from("maqam_answers").insert({ tag_id: cur.tag, picked: m, correct: m === cur.maqam }).then(() => {}, () => {}); return _gmAnswer31(m); };
+function amTaggersCard() {
+  const P = peopleMap(); const teachers = (P.list || []).filter(p => p.role === "teacher"); const sel = setv("maqamTaggers", []) || [];
+  return `<div class="card" style="margin-top:1rem"><h3>🎼 ${L("amTaggers")}</h3><p class="xs muted" style="margin:.3rem 0 .6rem">${L("amTaggersS")}</p>${teachers.length ? teachers.map(t => `<label class="kv" style="cursor:pointer"><span>${esc(t.real_name || t.email)}</span><input type="checkbox" ${sel.includes(t.id) ? "checked" : ""} onchange="amSetTagger('${t.id}',this.checked)"></label>`).join("") : `<p class="sm muted">—</p>`}</div>`;
+}
+function amSetTagger(id, on) { acSaveAccess(d => { const s = new Set(d.maqamTaggers || []); on ? s.add(id) : s.delete(id); d.maqamTaggers = [...s]; }); }
+
+document.head.insertAdjacentHTML("beforeend", `<style>.eaplay{flex:0 0 auto;width:2.1rem;height:2.1rem;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--accent);font-size:.85rem;cursor:pointer;margin-top:.45rem}.eaplay.on{background:var(--accent);color:var(--accent-fg)}.easel{width:auto;max-width:18rem}
+.tftr{margin:.35rem 0;color:var(--fg);line-height:1.8;font-size:.97rem}.amrow{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.35rem 0}.amsel{width:auto;max-width:13rem;padding:.25rem .5rem;font-size:.85rem}.ambadge{background:color-mix(in srgb,var(--gold) 12%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);color:var(--fg);border-radius:999px;padding:.15rem .65rem;font-size:.82rem}.amlock{font-size:.8rem;color:var(--gold);text-decoration:none;font-weight:700}</style>`);
+Object.assign(UI.ar, { amSet: "مقام الآية:", amIs: "المقام", amLock: "اعرف مقام الآية دي (للمشتركين)", amGuess: "خمّن المقام", amGuessT: "خمّن المقام من تلاوات المشايخ", amGuessS: "هتسمع آيات من المنشاوي وعبد الباسط والحصري وغيرهم، وتختار المقام. الإجابات اتحددت بواسطة شيخ الأكاديمية.", amLockQ: "اختبارات المقامات من تلاوات المشايخ للمشتركين.", amUnlock: "اشترك وافتحها", amFew: "لسه مفيش آيات كفاية متحدد مقامها.", amAns: "إجابات الطلاب", amRight: "الصح", amTaggers: "المعلمين اللي يحددوا مقامات الآيات", amTaggersS: "إنت دايمًا تقدر تحدد. علّم على المعلمين اللي تسمحلهم كمان.", amPickRec: "اختار قارئ من «قرّاء أكتر» عشان تقدر تحدد مقام كل آية.", eaMore: "قرّاء أكتر:", eaDef: "الافتراضي",
+  tfMT: "مترجم آليًا", tfGrpAr: "التفاسير العربية (مترجمة آليًا)", tfGrpNat: "تفاسير مكتوبة بـ{l}", tfMTNote: "التفسير مترجم آليًا من العربي إلى {l} للفهم؛ الأصل العربي هو المرجع.", tfMTWait: "جاري الترجمة…" });
+Object.assign(UI.en, { amSet: "Ayah maqam:", amIs: "Maqam", amLock: "See this ayah's maqam (subscribers)", amGuess: "Guess the maqam", amGuessT: "Guess the maqam from real reciters", amGuessS: "Listen to ayahs by Al-Minshawi, Abdul Basit, Al-Husary and others and pick the maqam. Answers are set by the academy's shaykh.", amLockQ: "Maqam quizzes from real recitations are for subscribers.", amUnlock: "Subscribe to unlock", amFew: "Not enough tagged ayahs yet.", amAns: "Student answers", amRight: "correct", amTaggers: "Teachers who can tag ayah maqamat", amTaggersS: "You can always tag. Tick the teachers you also allow.", amPickRec: "Pick a reciter from “More reciters” to tag each ayah's maqam.", eaMore: "More reciters:", eaDef: "default",
+  tfMT: "machine-translated", tfGrpAr: "Arabic tafsirs (machine-translated)", tfGrpNat: "Tafsirs written in {l}", tfMTNote: "This tafsir is machine-translated from Arabic into {l} to aid understanding; the Arabic original is the reference.", tfMTWait: "Translating…" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
