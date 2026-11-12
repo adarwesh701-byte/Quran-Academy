@@ -15212,6 +15212,7 @@ Object.assign(UI.en, { vlZip: "Upload voices file (itqan-voices.zip)", vlArt: "U
       let j = rest.length - 1; while (j > 0 && MARK.test(rest[j])) j--; const mid = rest.slice(0, j), last = rest.slice(j);
       return `${lead}<tajweed class=${c}>${a}</tajweed>${mid}<tajweed class=${c}>${last}${after}</tajweed>`;
     });
+    s = s.replace(/(<tajweed class=ham_wasl>ٱ<\/tajweed>|ٱ)(ل[ْۡ])(?=[ء-ي])/g, "$1<tajweed class=lam_qamari>$2</tajweed>");
     // الإظهار الحلقي والشفوي واللام القمرية (Quran.com مش بيعلّمهم) — بنعلّمهم إحنا في النص اللي برّه أي حكم
     s = s.split(/(<tajweed class=[a-z_]+>[^<]*<\/tajweed>|<[^>]+>)/).map(seg => {
       if (!seg || seg[0] === "<") return seg;
@@ -15219,7 +15220,6 @@ Object.assign(UI.en, { vlZip: "Upload voices file (itqan-voices.zip)", vlArt: "U
       seg = seg.replace(new RegExp("(ن[ْۡ]" + ")(\\s*)([ءأإؤئهعحغخ]" + M + ")", "g"), "<tajweed class=izhar>$1</tajweed>$2<tajweed class=izhar>$3</tajweed>");
       seg = seg.replace(new RegExp("([ء-ي][ًٌٍ])([اى]?" + M + "\\s+)([ءأإؤئهعحغخ]" + M + ")", "g"), "<tajweed class=izhar>$1</tajweed>$2<tajweed class=izhar>$3</tajweed>");
       seg = seg.replace(new RegExp("(م[ْۡ])(\\s*)([ء-لن-يٱ](?![ْۡ]?ب)" + M + ")", "g"), (m0, a, sp, b) => /^[بم]/.test(b) ? m0 : `<tajweed class=izhar_shafawi>${a}</tajweed>${sp}<tajweed class=izhar_shafawi>${b}</tajweed>`);
-      seg = seg.replace(/(ٱ)(ل[ْۡ])(?=[ء-ي])/g, "$1<tajweed class=lam_qamari>$2</tajweed>");
       return seg;
     }).join("");
     // لو اللون بيبدأ بعلامة (ألف صغيرة/مدّة/حركة/تطويل) من غير حرف: ضمّ الحرف اللي قبلها جوّه اللون
