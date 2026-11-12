@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v25";
+const UI_VERSION = "2026-11-12-v28";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -13349,6 +13349,369 @@ tajPage = (function (orig) { return function (secId) { const s = state.tj = stat
   if (!full) { h = h.replace(/<select class="in" style="width:auto" onchange="if\(!libFull\(\)&&\+this\.value!==1\)\{toast\(L\('smpLock'\),true\);this\.value=1;return\}/, `<select class="in" style="width:auto" onchange="if(!allAccess()&&![${TJ_FREE}].includes(+this.value)){toast(L('smpLock'),true);this.value=1;return}`);
     const k = h.indexOf("</select>"); h = h.slice(0, k).replace(/<option value="(\d+)"([^>]*)>(?:🔒 )?(\d+\. )/g, (m, v, a, n) => `<option value="${v}"${a}>${TJ_FREE.includes(+v) ? "🎁 " : "🔒 "}${n}`) + h.slice(k); h += lockBox(secId); }
   return h; }; })(tajPage);
+
+/* ================= v27: نظام التصميم + معرض التصاميم + وضع التعديل ================= */
+const DSN_FONTS = {
+  arBody: ["IBM Plex Sans Arabic", "Tajawal", "Noto Sans Arabic", "Cairo", "Almarai", "Readex Pro"],
+  arHead: ["Amiri", "El Messiri", "Reem Kufi", "Noto Naskh Arabic", "Aref Ruqaa", "IBM Plex Sans Arabic"],
+  latBody: ["Inter", "Manrope", "DM Sans", "Source Sans 3", "Lora"],
+  latHead: ["Cormorant Garamond", "Playfair Display", "Fraunces", "DM Serif Display", "Inter"],
+  urBody: ["Noto Nastaliq Urdu", "Noto Naskh Arabic"]
+};
+const DSN_GF = { "IBM Plex Sans Arabic": "IBM+Plex+Sans+Arabic:wght@400;500;600;700", "Tajawal": "Tajawal:wght@400;500;700;800", "Noto Sans Arabic": "Noto+Sans+Arabic:wght@400;600;700", "Cairo": "Cairo:wght@400;600;700", "Almarai": "Almarai:wght@400;700;800", "Readex Pro": "Readex+Pro:wght@400;600;700", "Amiri": "Amiri:wght@400;700", "El Messiri": "El+Messiri:wght@500;600;700", "Reem Kufi": "Reem+Kufi:wght@500;600;700", "Noto Naskh Arabic": "Noto+Naskh+Arabic:wght@400;600;700", "Aref Ruqaa": "Aref+Ruqaa:wght@400;700", "Inter": "Inter:wght@400;500;600;700;800", "Manrope": "Manrope:wght@400;600;700;800", "DM Sans": "DM+Sans:wght@400;500;700", "Source Sans 3": "Source+Sans+3:wght@400;600;700", "Lora": "Lora:wght@400;600;700", "Cormorant Garamond": "Cormorant+Garamond:wght@500;600;700", "Playfair Display": "Playfair+Display:wght@500;600;700", "Fraunces": "Fraunces:wght@500;600;700", "DM Serif Display": "DM+Serif+Display", "Noto Nastaliq Urdu": "Noto+Nastaliq+Urdu:wght@400;600;700" };
+const DSN_VARS = ["bg", "card", "fg", "muted", "line", "accent", "accent-fg", "gold", "gold-fg"];
+const DSN_THEMES = {
+  cream: { ar: "كريمي هادي", en: "Calm Cream", r: 8, rl: 22, sh: "0 1px 2px rgba(34,28,18,.05),0 12px 36px rgba(34,28,18,.07)", f: { arBody: "IBM Plex Sans Arabic", arHead: "Amiri", latBody: "Inter", latHead: "Cormorant Garamond" },
+    light: { bg: "#faf7f2", card: "#fffdf8", fg: "#111111", muted: "#5a5a5a", line: "#ebe5da", accent: "#2f6f4f", "accent-fg": "#ffffff", gold: "#94763a", "gold-fg": "#ffffff" },
+    dark: { bg: "#15140f", card: "#1d1c16", fg: "#f3efe6", muted: "#b7b0a2", line: "#33302a", accent: "#5fae86", "accent-fg": "#0b1a12", gold: "#d9bd84", "gold-fg": "#1a1405" } },
+  emerald: { ar: "زمردي ملكي", en: "Royal Emerald", r: 10, rl: 18, sh: "0 1px 2px rgba(6,40,28,.06),0 10px 30px rgba(6,40,28,.08)", f: { arBody: "IBM Plex Sans Arabic", arHead: "El Messiri", latBody: "Manrope", latHead: "Playfair Display" },
+    light: { bg: "#f3f8f5", card: "#ffffff", fg: "#0e1f17", muted: "#4b5f55", line: "#dce8e1", accent: "#0b6b4b", "accent-fg": "#ffffff", gold: "#9a6d1f", "gold-fg": "#ffffff" },
+    dark: { bg: "#08140f", card: "#0f1f18", fg: "#e8f3ee", muted: "#9fb8ac", line: "#1f3a2e", accent: "#34c38f", "accent-fg": "#04140d", gold: "#e3b55a", "gold-fg": "#1a1203" } },
+  nightgold: { ar: "ليلي ذهبي", en: "Night & Gold", r: 10, rl: 20, sh: "0 10px 30px rgba(0,0,0,.25)", f: { arBody: "Readex Pro", arHead: "Amiri", latBody: "Manrope", latHead: "Cormorant Garamond" },
+    light: { bg: "#f7f4ec", card: "#ffffff", fg: "#141824", muted: "#555b6b", line: "#e7e1d2", accent: "#1d2a44", "accent-fg": "#f5d97a", gold: "#8f6a12", "gold-fg": "#ffffff" },
+    dark: { bg: "#0d1320", card: "#151d2e", fg: "#eef1f7", muted: "#a2abbe", line: "#26324a", accent: "#d4af37", "accent-fg": "#1a1405", gold: "#e9c96b", "gold-fg": "#1a1405" } },
+  ottoman: { ar: "أزرق عثماني", en: "Ottoman Blue", r: 8, rl: 16, sh: "0 1px 2px rgba(15,26,46,.06),0 8px 24px rgba(15,26,46,.08)", f: { arBody: "Noto Sans Arabic", arHead: "Noto Naskh Arabic", latBody: "Source Sans 3", latHead: "Fraunces" },
+    light: { bg: "#f4f6fb", card: "#ffffff", fg: "#0f1a2e", muted: "#4d5a73", line: "#dfe5f0", accent: "#1f4e8c", "accent-fg": "#ffffff", gold: "#a2741f", "gold-fg": "#ffffff" },
+    dark: { bg: "#0a1222", card: "#111c33", fg: "#e9eef8", muted: "#9eaccb", line: "#22314f", accent: "#5b93e0", "accent-fg": "#06101f", gold: "#e2b45d", "gold-fg": "#1a1203" } },
+  andalus: { ar: "أندلسي", en: "Andalusian", r: 12, rl: 24, sh: "0 1px 2px rgba(60,25,10,.06),0 12px 32px rgba(60,25,10,.08)", f: { arBody: "Cairo", arHead: "Reem Kufi", latBody: "DM Sans", latHead: "DM Serif Display" },
+    light: { bg: "#fbf4ec", card: "#fffaf4", fg: "#2a1a12", muted: "#6b5446", line: "#efdfcf", accent: "#a3472a", "accent-fg": "#ffffff", gold: "#2f6f6a", "gold-fg": "#ffffff" },
+    dark: { bg: "#1a110c", card: "#241812", fg: "#f6ebe1", muted: "#c3ab98", line: "#3d2a1f", accent: "#e07a52", "accent-fg": "#1f0d05", gold: "#5fb5ad", "gold-fg": "#06201e" } },
+  minimal: { ar: "أبيض بسيط", en: "Minimal White", r: 10, rl: 14, sh: "none", f: { arBody: "IBM Plex Sans Arabic", arHead: "IBM Plex Sans Arabic", latBody: "Inter", latHead: "Inter" },
+    light: { bg: "#ffffff", card: "#ffffff", fg: "#0a0a0a", muted: "#5c5c5c", line: "#e8e8e8", accent: "#111111", "accent-fg": "#ffffff", gold: "#7a5c1e", "gold-fg": "#ffffff" },
+    dark: { bg: "#0a0a0a", card: "#121212", fg: "#f2f2f2", muted: "#a3a3a3", line: "#262626", accent: "#f2f2f2", "accent-fg": "#0a0a0a", gold: "#d6b46a", "gold-fg": "#111111" } },
+  desert: { ar: "صحراوي", en: "Desert Sand", r: 10, rl: 20, sh: "0 1px 2px rgba(60,40,15,.06),0 10px 28px rgba(60,40,15,.08)", f: { arBody: "Almarai", arHead: "Amiri", latBody: "Lora", latHead: "Cormorant Garamond" },
+    light: { bg: "#f6efe3", card: "#fffaf1", fg: "#2b2318", muted: "#6a5c49", line: "#eadfcb", accent: "#8a5a2b", "accent-fg": "#ffffff", gold: "#3f6b4c", "gold-fg": "#ffffff" },
+    dark: { bg: "#17120b", card: "#211a10", fg: "#f4ecdf", muted: "#c2b39c", line: "#3a2f1f", accent: "#d39a5c", "accent-fg": "#1d1206", gold: "#7fb68f", "gold-fg": "#0b1c10" } },
+  modern: { ar: "داكن حديث", en: "Modern Dark", r: 12, rl: 20, sh: "0 8px 30px rgba(0,0,0,.3)", f: { arBody: "Readex Pro", arHead: "Readex Pro", latBody: "DM Sans", latHead: "DM Sans" },
+    light: { bg: "#f5f7fa", card: "#ffffff", fg: "#0b0d12", muted: "#505869", line: "#e3e7ee", accent: "#0f9d7f", "accent-fg": "#ffffff", gold: "#b06d0e", "gold-fg": "#ffffff" },
+    dark: { bg: "#0b0d12", card: "#13161f", fg: "#e8eaf0", muted: "#9aa1b2", line: "#252a37", accent: "#3dd6b0", "accent-fg": "#04140f", gold: "#f0b75a", "gold-fg": "#1a1203" } },
+  classic: { ar: "الكلاسيكي (القديم)", en: "Classic (old)", r: 12, rl: 16, sh: "none", f: { arBody: "IBM Plex Sans Arabic", arHead: "El Messiri", latBody: "Inter", latHead: "Inter" },
+    light: { bg: "#f8fafc", card: "#ffffff", fg: "#0f172a", muted: "#475569", line: "#e2e8f0", accent: "#047857", "accent-fg": "#ffffff", gold: "#b45309", "gold-fg": "#ffffff" },
+    dark: { bg: "#0b0f19", card: "#131b2e", fg: "#f1f5f9", muted: "#9fb0c8", line: "#243049", accent: "#10b981", "accent-fg": "#04130d", gold: "#f59e0b", "gold-fg": "#000000" } }
+};
+function dsnBase(id) { return JSON.parse(JSON.stringify(DSN_THEMES[id] || DSN_THEMES.cream)); }
+// يجمع التصميم النهائي: الثيم + تعديلات الأونر
+function dsnResolve(cfg) {
+  cfg = cfg || {}; const t = dsnBase(cfg.theme || "cream");
+  Object.assign(t.light, (cfg.light || {})); Object.assign(t.dark, (cfg.dark || {})); Object.assign(t.f, (cfg.f || {}));
+  if (cfg.r != null) t.r = +cfg.r; if (cfg.rl != null) t.rl = +cfg.rl; if (cfg.sh != null) t.sh = cfg.sh; t.scale = +cfg.scale || 1; t.urBody = cfg.urBody || "Noto Nastaliq Urdu";
+  return t;
+}
+function dsnLive() { return (state.dsnPrev) || ((state.settings || {}).design) || { theme: "cream" }; }
+let __dsnFontsLoaded = "";
+function dsnLoadFonts(t) {
+  const fams = [...new Set([t.f.arBody, t.f.arHead, t.f.latBody, t.f.latHead, t.urBody, "Amiri Quran"])].filter(f => DSN_GF[f] || f === "Amiri Quran").map(f => "family=" + (DSN_GF[f] || "Amiri+Quran")).join("&");
+  if (fams === __dsnFontsLoaded) return; __dsnFontsLoaded = fams;
+  let l = document.getElementById("dsnFonts"); if (!l) { l = document.createElement("link"); l.id = "dsnFonts"; l.rel = "stylesheet"; document.head.appendChild(l); }
+  l.href = "https://fonts.googleapis.com/css2?" + fams + "&display=swap";
+}
+function dsnApply() {
+  const t = dsnResolve(dsnLive()); dsnLoadFonts(t);
+  const vv = o => DSN_VARS.map(k => `--${k}:${o[k]}`).join(";");
+  const q_ = f => `"${f}"`;
+  const css = `:root{${vv(t.light)};--rs:${t.r}px;--rl:${t.rl}px;--sh:${t.sh};--fz:${t.scale}}
+[data-theme=dark]{${vv(t.dark)}}
+html{font-size:calc(16px * var(--fz))}
+body,.dombar a,.libtile small.ds{font-family:${q_(t.f.arBody)},"IBM Plex Sans Arabic",Tajawal,system-ui,sans-serif}
+h1,h2,h3,.logo b,.libtile b,.dmcard h3,.htool b,.dmtool b,.oggroups button{font-family:${q_(t.f.arHead)},${q_(t.f.arBody)},serif}
+:root:not(:lang(ar)):not(:lang(fa)):not(:lang(ur)):not(:lang(ps)):not(:lang(ku)) body,:root:not(:lang(ar)):not(:lang(fa)):not(:lang(ur)):not(:lang(ps)):not(:lang(ku)) .dombar a{font-family:${q_(t.f.latBody)},${q_(t.f.arBody)},system-ui,sans-serif}
+:root:not(:lang(ar)):not(:lang(fa)):not(:lang(ur)):not(:lang(ps)):not(:lang(ku)) :is(h1,h2,h3,.logo b,.libtile b,.dmcard h3,.htool b,.dmtool b){font-family:${q_(t.f.latHead)},${q_(t.f.arHead)},serif}
+:root:lang(ur) body,:root:lang(ur) :is(h1,h2,h3){font-family:${q_(t.urBody)},${q_(t.f.arBody)},serif;line-height:2.1}
+.card,.libtile,.dmcard,.faqbox,.npanel,.ai-box{border-radius:var(--rl)!important;box-shadow:var(--sh)}
+.btn,.ibtn,.in,.opt,.bandbtn{border-radius:var(--rs)}
+.hdr{background:color-mix(in srgb,var(--bg) 88%,transparent)}
+.hero{background:var(--bg)}
+.btn-p{box-shadow:none}
+.card{border-color:var(--line)}`;
+  let s = document.getElementById("dsnStyle"); if (!s) { s = document.createElement("style"); s.id = "dsnStyle"; } document.head.appendChild(s); s.textContent = css;
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", state.theme === "dark" ? t.dark.bg : t.light.bg);
+}
+const _applySettings27 = applySettings;
+applySettings = function (s) { _applySettings27(s); try { dsnApply(); } catch (e) {} };
+try { dsnApply(); } catch (e) {}
+
+/* ---------- تعديل النصوص والإخفاء من الموقع نفسه ---------- */
+const __ovOrig = new WeakMap();
+function ovMap() { const o = ((state.settings || {}).textOv || {}); return o[state.lang] || {}; }
+function ovHide() { const o = ((state.settings || {}).hideOv || {}); return o[state.lang] || []; }
+function applyOv(root) {
+  if (!root) return; const map = ovMap(), hide = ovHide(); if (!Object.keys(map).length && !hide.length) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); const hits = []; let n;
+  while ((n = w.nextNode())) { const k = n.nodeValue.trim(); if (!k) continue; if (map[k] != null || hide.includes(k)) hits.push([n, k]); }
+  hits.forEach(([n, k]) => {
+    if (hide.includes(k) && !state.editMode) { const el = n.parentElement && (n.parentElement.closest("button,a,.libtile,.htool,.dmtool,.dmcard,li,label,.badge") || n.parentElement); if (el) el.style.display = "none"; return; }
+    if (map[k] != null) { __ovOrig.set(n, k); n.nodeValue = n.nodeValue.replace(k, map[k]); }
+  });
+}
+const _render27 = render;
+render = function () { _render27.apply(this, arguments); try { applyOv(document.getElementById("app")); edBar(); } catch (e) {} };
+
+function edBar() {
+  let b = document.getElementById("edBar");
+  const on = realRole() === "owner" && !state.preview && (state.editMode || state.dsnPrev);
+  if (!on) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement("div"); b.id = "edBar"; document.body.appendChild(b); }
+  const t = state.dsnPrev ? (DSN_THEMES[state.dsnPrev.theme] || {})[state.lang === "ar" ? "ar" : "en"] : "";
+  b.innerHTML = state.dsnPrev
+    ? `<span>👁️ ${L("dsPrevOn")} <b>${esc(t || "")}</b></span><button onclick="setTheme(state.theme==='dark'?'light':'dark');dsnApply();render()">${state.theme === "dark" ? "☀️" : "🌙"}</button><button class="ok" onclick="dsnSave()">✅ ${L("dsApply")}</button><button onclick="state.dsnPrev=null;dsnApply();navigate('dashboard')">✏️ ${L("dsBack")}</button><button onclick="state.dsnPrev=null;dsnApply();render()">✖</button>`
+    : `<span>✏️ ${L("edOn")}</span><button onclick="state.editMode=false;render()">✖ ${L("edOff")}</button>`;
+}
+document.addEventListener("click", function (e) {
+  if (!state.editMode || realRole() !== "owner" || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.target.closest("#edBar,#edModal,.hdr .thpill")) return;
+  const el = e.target; let tn = [...el.childNodes].find(c => c.nodeType === 3 && c.nodeValue.trim());
+  if (!tn) { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (n.nodeValue.trim()) { tn = n; break; } }
+  if (!tn) return; e.preventDefault(); e.stopPropagation();
+  const orig = __ovOrig.get(tn) || tn.nodeValue.trim(); edOpen(orig, tn.nodeValue.trim());
+}, true);
+function edOpen(orig, cur) {
+  state.edOrig = orig; let m = document.getElementById("edModal"); if (!m) { m = document.createElement("div"); m.id = "edModal"; document.body.appendChild(m); }
+  const hidden = ovHide().includes(orig);
+  m.innerHTML = `<div class="edbox"><h3>✏️ ${L("edTitle")}</h3><p class="xs muted">${L("edOrig")}: ${esc(orig.slice(0, 200))}</p><textarea id="edTxt" class="in" rows="3">${esc(cur)}</textarea>
+  <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-p" onclick="edSave('set')">💾 ${L("save") || "حفظ"}</button><button class="btn btn-o" onclick="edSave('reset')">↩️ ${L("edReset")}</button><button class="btn btn-o" onclick="edSave('${hidden ? "show" : "hide"}')">${hidden ? "👁️ " + L("edShow") : "🙈 " + L("edHide")}</button><button class="btn btn-o" onclick="document.getElementById('edModal').remove()">${L("cancel") || "إلغاء"}</button></div><p class="xs muted" style="margin-top:.5rem">${L("edLangNote")}</p></div>`;
+  setTimeout(() => { const t = document.getElementById("edTxt"); if (t) t.focus(); }, 30);
+}
+function edSave(kind) {
+  const orig = state.edOrig, val = (document.getElementById("edTxt") || {}).value || ""; const lg = state.lang;
+  acSaveAccess(d => {
+    d.textOv = Object.assign({}, d.textOv || {}); d.textOv[lg] = Object.assign({}, d.textOv[lg] || {});
+    d.hideOv = Object.assign({}, d.hideOv || {}); d.hideOv[lg] = (d.hideOv[lg] || []).slice();
+    if (kind === "set") { if (val.trim() && val.trim() !== orig) d.textOv[lg][orig] = val.trim(); else delete d.textOv[lg][orig]; }
+    if (kind === "reset") { delete d.textOv[lg][orig]; d.hideOv[lg] = d.hideOv[lg].filter(x => x !== orig); }
+    if (kind === "hide" && !d.hideOv[lg].includes(orig)) d.hideOv[lg].push(orig);
+    if (kind === "show") d.hideOv[lg] = d.hideOv[lg].filter(x => x !== orig);
+  });
+  const m = document.getElementById("edModal"); if (m) m.remove();
+}
+
+/* ---------- تبويب «التصميم» للأونر ---------- */
+function dsnDraft() { if (!state.dsd) state.dsd = JSON.parse(JSON.stringify((state.settings || {}).design || { theme: "cream" })); return state.dsd; }
+function dsnMini(id) {
+  const t = dsnResolve({ theme: id }), c = state.theme === "dark" ? t.dark : t.light;
+  return `<div class="dsmini" style="background:${c.bg};color:${c.fg};border-radius:${t.rl}px;font-family:'${t.f.arBody}',sans-serif">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem .6rem;border-bottom:1px solid ${c.line}"><b style="font-family:'${t.f.arHead}',serif;font-size:.95rem">إتقان</b><span style="display:flex;gap:.25rem"><i style="width:28px;height:8px;border-radius:4px;background:${c.line}"></i><i style="width:20px;height:8px;border-radius:4px;background:${c.line}"></i></span></div>
+    <div style="padding:.6rem"><div style="font-family:'${t.f.arHead}',serif;font-weight:700;font-size:1.05rem;line-height:1.4">تعلّم المقامات والتجويد</div><div style="font-size:.7rem;color:${c.muted};margin:.2rem 0 .5rem">${esc(t.f.arBody)} · ${esc(t.f.arHead)} · <span style="font-family:'${t.f.latHead}',serif">${esc(t.f.latHead)}</span></div>
+    <div style="background:${c.card};border:1px solid ${c.line};border-radius:${t.rl}px;padding:.5rem;box-shadow:${t.sh}"><div style="font-family:'Amiri Quran',serif;font-size:.95rem">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div><div style="display:flex;gap:.3rem;margin-top:.4rem"><span style="background:${c.accent};color:${c["accent-fg"]};border-radius:${t.r}px;padding:.2rem .6rem;font-size:.72rem;font-weight:700">ابدأ</span><span style="border:1px solid ${c.gold};color:${c.gold};border-radius:${t.r}px;padding:.2rem .6rem;font-size:.72rem;font-weight:700">مجاني</span></div></div></div></div>`;
+}
+function ownerDesignTab() {
+  const d = dsnDraft(), cur = ((state.settings || {}).design || { theme: "cream" }).theme || "cream", t = dsnResolve(d), mode = state.dsMode || "light";
+  const nm = id => (DSN_THEMES[id] || {})[state.lang === "ar" ? "ar" : "en"];
+  const sel = (k, list) => `<label class="xs b">${L("dsF")[k]}<select class="in" onchange="dsnDraft().f=Object.assign(dsnDraft().f||{},{${k}:this.value});render()">${list.map(f => `<option ${t.f[k] === f ? "selected" : ""} style="font-family:'${f}'">${f}</option>`).join("")}</select></label>`;
+  return `<div class="card" style="margin-bottom:1rem"><h3>🎨 ${L("dsT")}</h3><p class="xs muted" style="margin:.3rem 0 .8rem">${L("dsSub")}</p>
+    <div class="dsgrid">${Object.keys(DSN_THEMES).map(id => `<div class="dscard ${d.theme === id ? "on" : ""}">${dsnMini(id)}<div class="row" style="justify-content:space-between;align-items:center;margin-top:.45rem;gap:.3rem"><b class="sm">${esc(nm(id))}${cur === id ? ` <span class="badge badge-g">${L("dsCur")}</span>` : ""}</b><span class="row" style="gap:.25rem"><button class="btn btn-o" style="padding:.25rem .55rem" onclick="state.dsd={theme:'${id}'};render()">${L("dsPick")}</button><button class="btn btn-p" style="padding:.25rem .55rem" onclick="state.dsnPrev={theme:'${id}'};dsnApply();navigate('home')">👁️</button></span></div></div>`).join("")}</div></div>
+  <div class="card" style="margin-bottom:1rem"><h3>🖌️ ${L("dsCustom")}: ${esc(nm(d.theme || "cream"))}</h3>
+    <div class="row" style="gap:.3rem;margin:.6rem 0"><button class="btn ${mode === "light" ? "btn-p" : "btn-o"}" onclick="state.dsMode='light';render()">☀️ ${L("thLight")}</button><button class="btn ${mode === "dark" ? "btn-p" : "btn-o"}" onclick="state.dsMode='dark';render()">🌙 ${L("thDark")}</button></div>
+    <div class="dscolors">${DSN_VARS.map(k => `<label class="dscol"><input type="color" value="${t[mode][k]}" onchange="const x=dsnDraft();x['${mode}']=Object.assign(x['${mode}']||{},{'${k}':this.value});render()"><span class="xs">${L("dsV")[k] || k}</span></label>`).join("")}</div>
+    <div class="dsfonts">${sel("arBody", DSN_FONTS.arBody)}${sel("arHead", DSN_FONTS.arHead)}${sel("latBody", DSN_FONTS.latBody)}${sel("latHead", DSN_FONTS.latHead)}
+      <label class="xs b">${L("dsUr")}<select class="in" onchange="dsnDraft().urBody=this.value;render()">${DSN_FONTS.urBody.map(f => `<option ${t.urBody === f ? "selected" : ""}>${f}</option>`).join("")}</select></label>
+      <label class="xs b">${L("dsR")} (${t.rl}px)<input type="range" min="0" max="32" value="${t.rl}" onchange="const x=dsnDraft();x.rl=+this.value;x.r=Math.round(this.value/2.5);render()"></label>
+      <label class="xs b">${L("dsZ")} (${Math.round(t.scale * 100)}%)<input type="range" min="90" max="120" step="5" value="${Math.round(t.scale * 100)}" onchange="dsnDraft().scale=this.value/100;render()"></label>
+      <label class="xs b">${L("dsSh")}<select class="in" onchange="dsnDraft().sh=this.value;render()"><option value="none" ${t.sh === "none" ? "selected" : ""}>${L("dsShO")[0]}</option><option value="0 1px 2px rgba(0,0,0,.05),0 10px 30px rgba(0,0,0,.07)" ${t.sh.includes("30px rgba(0,0,0,.07)") ? "selected" : ""}>${L("dsShO")[1]}</option><option value="0 18px 50px rgba(0,0,0,.14)" ${t.sh.includes("50px") ? "selected" : ""}>${L("dsShO")[2]}</option></select></label></div>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:1rem"><button class="btn btn-p" onclick="state.dsnPrev=JSON.parse(JSON.stringify(dsnDraft()));dsnApply();navigate('home')">👁️ ${L("dsPreview")}</button><button class="btn btn-g" onclick="state.dsnPrev=JSON.parse(JSON.stringify(dsnDraft()));dsnSave()">✅ ${L("dsApply")}</button><button class="btn btn-o" onclick="state.dsd=null;render()">↩️ ${L("dsDiscard")}</button>${((state.settings || {}).designPrev) ? `<button class="btn btn-o" onclick="dsnRestorePrev()">⏪ ${L("dsUndo")}</button>` : ""}</div></div>
+  <div class="card"><h3>✏️ ${L("edT")}</h3><p class="xs muted" style="margin:.3rem 0 .7rem">${L("edSub")}</p><button class="btn btn-p" onclick="state.editMode=true;navigate('home')">✏️ ${L("edStart")}</button>
+    ${(() => { const o = ((state.settings || {}).textOv || {})[state.lang] || {}, h = ((state.settings || {}).hideOv || {})[state.lang] || []; const rows = Object.entries(o).map(([a, b]) => `<div class="kv"><span class="xs"><s class="muted">${esc(a.slice(0, 60))}</s> → <b>${esc(b.slice(0, 60))}</b></span><button class="btn btn-o" style="padding:.15rem .5rem" onclick="state.edOrig=${esc(JSON.stringify(a))};edSave('reset')">↩️</button></div>`).concat(h.map(a => `<div class="kv"><span class="xs">🙈 ${esc(a.slice(0, 60))}</span><button class="btn btn-o" style="padding:.15rem .5rem" onclick="state.edOrig=${esc(JSON.stringify(a))};edSave('show')">👁️</button></div>`)); return rows.length ? `<p class="sm b" style="margin:.8rem 0 .3rem">${L("edList")}</p>${rows.join("")}` : ""; })()}</div>`;
+}
+function dsnSave() {
+  const nd = JSON.parse(JSON.stringify(state.dsnPrev || dsnDraft()));
+  acSaveAccess(d => { if (d.design) d.designPrev = d.design; d.design = nd; });
+  state.dsnPrev = null; state.dsd = null; setTimeout(dsnApply, 50);
+}
+function dsnRestorePrev() { acSaveAccess(d => { const p = d.designPrev; d.designPrev = d.design; d.design = p; }); state.dsd = null; setTimeout(dsnApply, 50); }
+OG.settings.unshift("design");
+const _renderOwnerDash27 = renderOwnerDash;
+renderOwnerDash = function () {
+  if (realRole() !== "owner" || state.preview || state.dash.tab !== "design") return _renderOwnerDash27();
+  state.og = "settings"; state.dash.tab = "overview"; let h = _renderOwnerDash27(); state.dash.tab = "design";
+  const m = h.match(/<div class="oggroups">[\s\S]*?<\/div><div class="tabs dtabs">[\s\S]*?<\/div>/);
+  let bar = m ? m[0] : ""; bar = bar.replace(/aria-current="true"/g, 'aria-current="false"').replace(/(<div class="tabs dtabs">)/, `$1<a href="#" aria-current="true" onclick="state.dash.tab='design';render();return false;">🎨 ${L("dsTab")}</a>`);
+  return bar + ownerDesignTab();
+};
+const _renderOwnerDash27b = renderOwnerDash;
+renderOwnerDash = function () { let h = _renderOwnerDash27b(); if (realRole() === "owner" && !state.preview && state.dash.tab !== "design" && (state.og === "settings")) h = h.replace(/(<div class="tabs dtabs">)/, `$1<a href="#" aria-current="false" onclick="state.dash.tab='design';render();return false;">🎨 ${L("dsTab")}</a>`); return h; };
+document.head.insertAdjacentHTML("beforeend", `<style>
+#edBar{position:fixed;bottom:14px;inset-inline-start:50%;transform:translateX(50%);z-index:9000;display:flex;gap:.4rem;align-items:center;background:#111;color:#fff;padding:.5rem .7rem;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.35);font-size:.85rem;flex-wrap:wrap;max-width:94vw}
+[dir=ltr] #edBar{transform:translateX(-50%)}
+#edBar button{border:1px solid #444;background:#222;color:#fff;border-radius:9px;padding:.3rem .6rem;font:inherit;cursor:pointer}#edBar button.ok{background:#16a34a;border-color:#16a34a}
+#edModal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:1rem}
+.edbox{background:var(--card);color:var(--fg);border-radius:var(--rl);padding:1.2rem;width:min(520px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+body:has(#edBar) #app *:hover{outline:1px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:2px}
+.dsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.8rem}
+.dscard{border:2px solid transparent;border-radius:calc(var(--rl) + 4px);padding:.35rem}.dscard.on{border-color:var(--accent)}
+.dsmini{border:1px solid rgba(0,0,0,.08);overflow:hidden;min-height:170px}
+.dscolors{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.4rem}
+.dscol{display:flex;align-items:center;gap:.4rem;border:1px solid var(--line);border-radius:var(--rs);padding:.3rem .45rem;cursor:pointer}.dscol input{width:34px;height:28px;border:0;padding:0;background:none;cursor:pointer}
+.dsfonts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.6rem;margin-top:.9rem}.dsfonts label{display:flex;flex-direction:column;gap:.25rem}
+</style>`);
+Object.assign(UI.ar, { dsTab: "التصميم", dsT: "معرض التصاميم", dsSub: "اختار تصميم، عاينه على الموقع كله قبل ما يتطبّق، وعدّل الألوان والخطوط لكل لغة. ولا حاجة بتتغيّر للطلاب غير لما تدوس «طبّق».", dsCur: "الحالي", dsPick: "اختار", dsCustom: "تخصيص", dsPreview: "معاينة على الموقع", dsApply: "طبّق للجميع", dsDiscard: "إلغاء التعديلات", dsUndo: "رجوع للتصميم السابق", dsBack: "رجوع للتعديل", dsPrevOn: "معاينة (محدش شايفها غيرك):", dsUr: "خط الأوردو", dsR: "استدارة الحواف", dsZ: "حجم الخط", dsSh: "الظل", dsShO: ["بدون", "خفيف", "واضح"],
+  dsF: { arBody: "خط النص العربي", arHead: "خط العناوين العربي", latBody: "خط النص (لغات أجنبية)", latHead: "خط العناوين (لغات أجنبية)" },
+  dsV: { bg: "الخلفية", card: "الكروت", fg: "النص", muted: "النص الثانوي", line: "الحدود", accent: "اللون الأساسي", "accent-fg": "نص الأزرار", gold: "اللون المميز", "gold-fg": "نص المميز" },
+  edT: "وضع التعديل", edSub: "شغّله وادوس على أي كلام أو زرار في الموقع: تغيّر النص، أو ترجّعه للأصل، أو تخفيه. التعديل بيتحفظ للغة الحالية بس.", edStart: "ابدأ التعديل على الموقع", edOn: "وضع التعديل شغال — ادوس على أي كلام (Ctrl+ضغطة للتنقّل العادي)", edOff: "خروج", edTitle: "تعديل النص", edOrig: "الأصل", edReset: "رجّع الأصل", edHide: "إخفاء", edShow: "إظهار", edLangNote: "التعديل ده للغة الحالية بس. غيّر اللغة من فوق عشان تعدّل اللغات التانية.", edList: "التعديلات الحالية" });
+Object.assign(UI.en, { dsTab: "Design", dsT: "Design gallery", dsSub: "Pick a design, preview it across the whole site before it goes live, and tune colors and fonts per language. Nothing changes for students until you press Apply.", dsCur: "Current", dsPick: "Pick", dsCustom: "Customize", dsPreview: "Preview on site", dsApply: "Apply for everyone", dsDiscard: "Discard changes", dsUndo: "Restore previous design", dsBack: "Back to editing", dsPrevOn: "Preview (only you see it):", dsUr: "Urdu font", dsR: "Corner radius", dsZ: "Text size", dsSh: "Shadow", dsShO: ["None", "Soft", "Strong"],
+  dsF: { arBody: "Arabic text font", arHead: "Arabic headings font", latBody: "Text font (other languages)", latHead: "Headings font (other languages)" },
+  dsV: { bg: "Background", card: "Cards", fg: "Text", muted: "Secondary text", line: "Borders", accent: "Primary", "accent-fg": "Button text", gold: "Highlight", "gold-fg": "Highlight text" },
+  edT: "Edit mode", edSub: "Turn it on and click any text or button on the site to change it, restore it, or hide it. Edits are saved for the current language.", edStart: "Start editing the site", edOn: "Edit mode on — click any text (Ctrl+click to navigate)", edOff: "Exit", edTitle: "Edit text", edOrig: "Original", edReset: "Restore original", edHide: "Hide", edShow: "Show", edLangNote: "This edit applies to the current language only.", edList: "Current edits" });
+
+/* ================= v28: المرحلة 1 — الترتيب والأعطال ================= */
+/* ---------- 1) اللهجة الفلسطينية ---------- */
+LC_RAW.pa = { name: { ar: "اللهجة الفلسطينية", en: "Palestinian Arabic" }, ic: "🫒", levels: ["مبتدئ", "أساسي"], units: [
+ ["p1", "التحيات", "Greetings", "مرحبا~marḥaba~hello|كيفك~kīfak~how are you (m)|كيفِك~kīfik~how are you (f)|منيح~mnīḥ~good|الحمد لله~il-ḥamdu lilla~thank God|أهلين~ahlēn~welcome|يسلمو~yislamu~thanks|مع السلامة~maʿ is-salāme~goodbye", "A:مرحبا! كيفك؟~marḥaba! kīfak?~Hello! How are you?|B:منيح الحمد لله، وإنت كيفك؟~mnīḥ il-ḥamdu lilla, w inte kīfak?~Fine thank God, and you?|A:تمام. أهلين فيك.~tamām. ahlēn fīk.~Great. Welcome.|B:يسلمو، أهلين فيك.~yislamu, ahlēn fīk.~Thanks, welcome to you.", "«كيف» + الضمير = إزاي~~كيفك؟~kīfak?~how are you (m)?|كيفها؟~kīfha?~how is she?|كيف الشغل؟~kīf ish-shughul?~how is work?"],
+ ["p2", "التعارف", "Introductions", "شو اسمك~shu ismak~what's your name|اسمي~ismi~my name is|من وين~min wēn~from where|أنا من~ana min~I'm from|تشرفنا~tsharrafna~nice to meet you|بشتغل~bashtghil~I work|بدرس~badrus~I study|ساكن~sākin~I live (m)", "A:شو اسمك؟~shu ismak?~What's your name?|B:اسمي سامي، وإنتِ؟~ismi sāmi, w inti?~I'm Sami, and you?|A:أنا ليلى، من رام الله.~ana layla, min rāmalla.~I'm Layla, from Ramallah.|B:تشرفنا! أنا ساكن بالقدس.~tsharrafna! ana sākin bil-ʾuds.~Nice to meet you! I live in Jerusalem.", "«شو» = إيه / ماذا~~شو هاد؟~shu hād?~what is this?|شو بتعمل؟~shu btiʿmal?~what are you doing?|شو رأيك؟~shu raʾyak?~what do you think?"],
+ ["p3", "الأرقام والفلوس", "Numbers & money", "واحد~wāḥad~one|تنين~tnēn~two|تلاتة~talāte~three|عشرة~ʿashara~ten|شيكل~shēkel~shekel|قدّيش~ʾaddēsh~how much|غالي~ghāli~expensive|رخيص~rkhīṣ~cheap", "A:قدّيش الكيلو؟~ʾaddēsh il-kīlo?~How much is a kilo?|B:عشرة شيكل.~ʿashara shēkel.~Ten shekels.|A:غالي شوي! بتعملّي خصم؟~ghāli shway! btiʿmallī khaṣm?~A bit expensive! Will you give me a discount?|B:ماشي، تمانية إلك.~māshi, tamānye ilak.~OK, eight for you.", "«قدّيش» = بكام / كم~~قدّيش عمرك؟~ʾaddēsh ʿumrak?~how old are you?|قدّيش الساعة؟~ʾaddēsh is-sāʿa?~what time is it?|قدّيش بدك؟~ʾaddēsh biddak?~how much do you want?"],
+ ["p4", "الأكل والشرب", "Food & drink", "خبز~khubz~bread|مي~mayy~water|حمّص~ḥummuṣ~hummus|فلافل~falāfel~falafel|جوعان~jūʿān~hungry|عطشان~ʿaṭshān~thirsty|بدّي~biddi~I want|زاكي~zāki~tasty", "A:أنا جوعان كتير.~ana jūʿān ktīr.~I'm very hungry.|B:بدك حمّص وفلافل؟~biddak ḥummuṣ w falāfel?~Do you want hummus and falafel?|A:آه، ومعهم كاسة شاي.~āh, w maʿhum kāsit shāy.~Yes, with a glass of tea.|B:صحتين! الأكل هون زاكي.~ṣaḥtēn! il-akel hōn zāki.~Enjoy! The food here is tasty.", "«بدّ» + الضمير = عايز / أريد~~بدّي~biddi~I want|بدّك~biddak~you want (m)|بدها~bidha~she wants"],
+ ["p5", "المواصلات", "Getting around", "سيارة~sayyāra~car|باص~bāṣ~bus|سرفيس~servīs~shared taxi|يمين~yamīn~right|شمال~shmāl~left|دغري~dughri~straight|قريب~ʾarīb~near|بعيد~bʿīd~far", "A:لو سمحت، وين محطة الباص؟~law samaḥt, wēn maḥaṭṭit il-bāṣ?~Excuse me, where's the bus station?|B:روح دغري، وبعدين شمال.~rūḥ dughri, w baʿdēn shmāl.~Go straight, then left.|A:قريبة ولا بعيدة؟~ʾarībe walla bʿīde?~Near or far?|B:قريبة، خمس دقايق مشي.~ʾarībe, khams daʾāyiʾ mashi.~Near, five minutes' walk.", "«وين» = فين / أين~~وين بيتك؟~wēn bētak?~where's your house?|وين رايح؟~wēn rāyiḥ?~where are you going?|من وين إنت؟~min wēn inte?~where are you from?"],
+ ["p6", "العيلة", "Family", "أبوي~abūy~my father|إمي~immi~my mother|أخوي~akhūy~my brother|أختي~ukhti~my sister|جوزي~jōzi~my husband|مرتي~marti~my wife|ابني~ibni~my son|بنتي~binti~my daughter", "A:إلك إخوة؟~ilak ikhwe?~Do you have siblings?|B:آه، عندي أخ وأختين.~āh, ʿindi akh w ukhtēn.~Yes, a brother and two sisters.|A:وين ساكنين؟~wēn sāknīn?~Where do they live?|B:أخوي بنابلس، وخواتي بالخليل.~akhūy b-nāblus, w khawāti bil-khalīl.~My brother in Nablus, my sisters in Hebron.", "«إلـ» + الضمير = عند (الملكية)~~إلي~ili~I have / mine|إلك~ilak~you have (m)|إلها~ilha~she has"],
+ ["p7", "الوقت والمواعيد", "Time", "الساعة قدّيش~is-sāʿa ʾaddēsh~what time is it|هلّأ~halla~now|بكرا~bukra~tomorrow|مبارح~mbāriḥ~yesterday|اليوم~il-yōm~today|بكّير~bakkīr~early|متأخر~mitʾakhkhir~late|موعد~mawʿid~appointment", "A:الساعة قدّيش هلّأ؟~is-sāʿa ʾaddēsh halla?~What time is it now?|B:تسعة ونص.~tisʿa w nuṣṣ.~Half past nine.|A:يا الله، أنا متأخر عالموعد!~yā alla, ana mitʾakhkhir ʿal-mawʿid!~Oh, I'm late for the appointment!|B:ولا يهمك، روح هلّأ.~wala yhimmak, rūḥ halla.~Don't worry, go now.", "«هلّأ» = دلوقتي / الآن~~هلّأ جاي~halla jāy~coming now|مش هلّأ~mish halla~not now|من هلّأ لبكرا~min halla la-bukra~from now till tomorrow"],
+ ["p8", "التسوق", "Shopping", "قميص~ʾamīṣ~shirt|قياس~ʾyās~size|لون~lōn~colour|أحمر~aḥmar~red|أسود~aswad~black|بقدر أقيس~baʾdar aʾīs~can I try on|خصم~khaṣm~discount|كاش~kāsh~cash", "A:بقدر أقيس هالقميص؟~baʾdar aʾīs hal-ʾamīṣ?~Can I try this shirt on?|B:أكيد، شو قياسك؟~akīd, shu ʾyāsak?~Sure, what's your size?|A:لارج. في منه أسود؟~lārj. fī minnu aswad?~Large. Is there a black one?|B:آه في، تفضل.~āh fī, tfaḍḍal.~Yes there is, here you go.", "«في» = فيه / يوجد~~في مي؟~fī mayy?~is there water?|ما في~ma fī~there isn't|في حدا؟~fī ḥada?~is anyone there?"],
+ ["p9", "الشغل والدراسة", "Work & study", "شغل~shughul~work|مكتب~maktab~office|مدير~mudīr~manager|امتحان~imtiḥān~exam|جامعة~jāmʿa~university|مشغول~mashghūl~busy|عطلة~ʿuṭle~holiday|اجتماع~ijtimāʿ~meeting", "A:إنت فاضي بكرا؟~inte fāḍi bukra?~Are you free tomorrow?|B:لا، عندي امتحان بالجامعة.~la, ʿindi imtiḥān bil-jāmʿa.~No, I have an exam at university.|A:الله يوفقك! وبعده؟~alla ywaffʾak! w baʿdo?~Good luck! And after it?|B:بعده بكون فاضي إن شاء الله.~baʿdo bakūn fāḍi inshalla.~After it I'll be free, God willing.", "«بـ» قبل الفعل = عادةً أو دلوقتي~~بشتغل~bashtghil~I work|بتدرس~btudrus~you study|بنروح~bnrūḥ~we go"],
+ ["p10", "الصحة", "Health", "تعبان~taʿbān~tired/ill|وجع راس~wajaʿ rās~headache|دكتور~doktōr~doctor|صيدلية~ṣaydaliyye~pharmacy|دوا~dawa~medicine|حرارة~ḥarāra~fever|بطني~baṭni~my stomach|سلامتك~salāmtak~get well", "A:مالك؟ شكلك تعبان.~mālak? shaklak taʿbān.~What's wrong? You look ill.|B:عندي وجع راس وحرارة.~ʿindi wajaʿ rās w ḥarāra.~I have a headache and fever.|A:سلامتك! روح عالدكتور.~salāmtak! rūḥ ʿad-doktōr.~Get well! Go to the doctor.|B:هلّأ بروح عالصيدلية.~halla barūḥ ʿaṣ-ṣaydaliyye.~I'll go to the pharmacy now.", "«عـ» = على / لـ (الاتجاه)~~عالبيت~ʿal-bēt~to the house|عالشغل~ʿash-shughul~to work|عالسوق~ʿas-sūʾ~to the market"],
+ ["p11", "المشاعر والآراء", "Feelings & opinions", "مبسوط~mabsūṭ~happy|زعلان~zaʿlān~upset|خايف~khāyif~afraid|متضايق~mitḍāyiʾ~annoyed|شو رأيك~shu raʾyak~what do you think|بفكّر~bafakkir~I think|موافق~mwāfiʾ~I agree|والله~walla~really", "A:شو رأيك بالفيلم؟~shu raʾyak bil-film?~What do you think of the film?|B:والله كتير حلو، انبسطت.~walla ktīr ḥilu, inbasaṭt.~Really very nice, I enjoyed it.|A:أنا كمان، بس النهاية زعّلتني.~ana kamān, bass in-nihāye zaʿʿalatni.~Me too, but the ending upset me.|B:معك حق.~maʿak ḥaʾʾ.~You're right.", "«كتير» = أوي / جدًا~~كتير منيح~ktīr mnīḥ~very good|مش كتير~mish ktīr~not much|شكرًا كتير~shukran ktīr~thanks a lot"],
+ ["p12", "في البيت", "At home", "أوضة~ʾōḍa~room|مطبخ~maṭbakh~kitchen|حمّام~ḥammām~bathroom|تخت~takht~bed|تلاجة~tallāje~fridge|ضو~ḍaww~light|افتح~ftaḥ~open|سكّر~sakkir~close", "A:بتقدر تفتح الشباك؟ الدنيا شوب.~btiʾdar tiftaḥ ish-shubbāk? id-dinya shōb.~Can you open the window? It's hot.|B:أكيد. بدك أطفي الضو كمان؟~akīd. biddak aṭaffi iḍ-ḍaww kamān?~Sure. Should I turn off the light too?|A:لا، خليه. وسكّر الباب لو سمحت.~la, khallī. w sakkir il-bāb law samaḥt.~No, leave it. And close the door please.|B:تكرم عينك.~tikram ʿēnak.~With pleasure.", "الأمر: «افتح / سكّر / روح»~~افتح الباب~ftaḥ il-bāb~open the door|سكّري الشباك~sakkri ish-shubbāk~close the window (f)|روحوا عالبيت~rūḥu ʿal-bēt~go home (pl)"]
+] };
+Object.keys(LC).forEach(k => delete LC[k]); Object.entries(LC_RAW).forEach(([k, v]) => { LC[k] = Object.assign({}, v, { units: v.units.map(lcParse) }); });
+voiceOf = function (tr, sp) { return (tr === "pa" ? "pa" : tr) + (sp === "B" ? "-b" : "-a"); };
+
+/* ---------- 2) التفسير: مصادر عربية بس + الترجمة باسم اللغة ---------- */
+TAFSIRS.splice(5);
+const LANG_NAME_AR = { en: "الإنجليزية", fr: "الفرنسية", de: "الألمانية", es: "الإسبانية", tr: "التركية", ru: "الروسية", id: "الإندونيسية", ms: "الملايوية", ur: "الأوردو", bn: "البنغالية", fa: "الفارسية", hi: "الهندية", zh: "الصينية", ku: "الكردية", it: "الإيطالية", pt: "البرتغالية", nl: "الهولندية", sw: "السواحلية", ha: "الهوسا", so: "الصومالية", uz: "الأوزبكية", bs: "البوسنية", sq: "الألبانية", ja: "اليابانية", ko: "الكورية", th: "التايلاندية", vi: "الفيتنامية", tl: "التاغالوغية", ps: "البشتو", ta: "التاميلية", ml: "المالايالامية", am: "الأمهرية" };
+function langLabel(l) { return state.lang === "ar" ? (LANG_NAME_AR[l] || l) : ((typeof LANG_LIST !== "undefined" && LANG_LIST[l]) || l); }
+const _tafsirReader28 = tafsirReader;
+tafsirReader = function (surah, ayahs) {
+  if (!TAFSIRS.some(x => x[0] === state.tf.src)) state.tf.src = 91;
+  let h = _tafsirReader28(surah, ayahs);
+  if (state.lang !== "ar") h = h.replace(/(<div class="sm" style="margin:\.3rem 0;color:var\(--accent\)">)/g, `$1<span class="badge" style="margin-inline-end:.35rem">🌐 ${esc(langLabel(state.lang))}</span>`);
+  return h;
+};
+
+/* ---------- 3) الهيدر: زرار لغة واحد + شريط واحد بس ---------- */
+const _renderHeader28 = renderHeader;
+renderHeader = function () {
+  let h = _renderHeader28();
+  h = h.replace(/<select class="ibtn" aria-label="[^"]*" onchange="setLang\(this\.value\)">[\s\S]*?<\/select>/, `<button class="ibtn lghdr" onclick="langModal()" title="Language">🌐 ${esc((state.lang || "ar").toUpperCase())}</button>`);
+  h = h.replace(/<a href="#" class="lgbtn"[^>]*>[\s\S]*?<\/a>/, "");
+  const hasEmail = h.includes('class="embar"'); const showInv = !hasEmail && state.auth.user && ["home", "dashboard", "invite"].includes(state.route);
+  if (!showInv) h = h.replace(/<div class="invstrip"[\s\S]*?<\/span><\/div>/, "");
+  return h;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.invstrip{background:var(--accent)!important;color:var(--accent-fg)!important;font-size:.82rem!important;padding:.3rem .8rem!important}.invstrip .btn{background:var(--accent-fg)!important;color:var(--accent)!important}.embar{font-size:.82rem;padding:.3rem .8rem}.lghdr{font-weight:800;letter-spacing:.02em}.dombar .wrap{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:thin;padding-bottom:.35rem}.dombar a{flex:0 0 auto;white-space:nowrap}.fhcard{background:var(--accent)!important;color:var(--accent-fg)!important}</style>`);
+
+/* ---------- 4) أسماء ثابتة اتغيرت (التفسير والعلوم الإسلامية ← العلوم الإسلامية) ---------- */
+const BUILTIN_RENAME = { ar: [["التفسير والعلوم الإسلامية", "العلوم الإسلامية"], ["تفسير القرآن وعلوم الإسلام", "العلوم الإسلامية"], ["العلوم الإسلامية (التفسير والحديث والفقه)", "العلوم الإسلامية"]], en: [["Tafsir & Islamic Sciences", "Islamic Sciences"], ["Quran Tafseer & Islamic Sciences", "Islamic Sciences"]] };
+function applyRename(root) { const list = BUILTIN_RENAME[state.lang] || []; if (!root || !list.length) return; const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { let v = n.nodeValue; for (const [a, b] of list) if (v.includes(a)) v = v.split(a).join(b); if (v !== n.nodeValue) n.nodeValue = v; } }
+const _render28 = render;
+render = function () { _render28.apply(this, arguments); try { applyRename(document.getElementById("app")); taEnhance(); pricingTabs(); } catch (e) {} };
+
+/* ---------- 5) محتوى الأكاديمية للمسجّلين بس ---------- */
+const _renderLibraryDb28 = renderLibraryDb;
+renderLibraryDb = function () { if (!state.auth.user) return guestPitch(); return _renderLibraryDb28(); };
+
+/* ---------- 6) صفحة المقام: صفحة واحدة فيها كل حاجته (من غير فولدرات مكررة) ---------- */
+state.mqTab = state.mqTab || "info";
+function maqamRecs(mid) { return useData("mqrec:" + mid, () => q(sb.from("contents").select("id,title,type,file_path,url,section_id,created_at,maqam").eq("maqam", mid).eq("status", "published").order("created_at", { ascending: false }).limit(40))); }
+function maqamOne(cur) {
+  const mid = (cur.meta || {}).maqam; const m = MQ.find(x => x.id === mid); if (!m) return "";
+  const tabs = [["info", "📘 " + L("mo1")], ["aah", "🗣️ " + L("mo2")], ["vtest", "🎤 " + L("mo3")], ["murattal", "📿 " + L("mo4")], ["nasheed", "🌙 " + L("mo5")]];
+  const t = state.mqTab; let body = "";
+  if (t === "info") body = _sectionExtra28(cur) || maqamPage("info", mid);
+  else if (t === "aah" || t === "vtest" || t === "nasheed") body = maqamPage(t, mid);
+  else { const rs = maqamRecs(mid);
+    body = `<div class="card" style="margin-top:1rem"><h3>📿 ${L("mo4")} — ${esc(mqName(m))}</h3>${!Array.isArray(rs) ? loadingBox() : rs.length ? rs.map(c => `<div class="kv" style="align-items:center"><span>${c.type === "video" ? "🎬" : "🎧"} ${esc(locText(c.title))}</span><button class="btn btn-o" onclick="openContent('${c.id}')">▶</button></div>`).join("") : `<p class="sm muted">${L("moEmpty")}</p>`}
+      ${realRole() === "owner" || role() === "teacher" ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.8rem;border-top:1px dashed var(--line);padding-top:.7rem"><input class="in" id="ur_t" placeholder="${L("upRecT")}" style="flex:1;min-width:10rem"><select class="in" id="ur_k" style="width:auto"><option value="murattal">${L("mo6")}</option><option value="mujawwad">${L("mo7")}</option></select><input type="file" id="ur_f" accept="audio/*,video/*"><button class="btn btn-p" onclick="upRecording('${cur.id}','${mid}').then(()=>invalidate('mqrec:${mid}'))">⬆️</button></div>` : ""}</div>`; }
+  return `<div class="motabs">${tabs.map(([k, n]) => `<button class="${k === t ? "on" : ""}" onclick="state.mqTab='${k}';render()">${n}</button>`).join("")}</div>${body}`;
+}
+const _sectionExtra28 = function (cur) { const meta = cur.meta || {}; const save = meta.kind; return sectionExtra23(cur); };
+const _renderLibraryDb28b = renderLibraryDb;
+renderLibraryDb = function () {
+  let h = _renderLibraryDb28b(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec || !state.auth.user) return h;
+  const cur = secs.find(s => s.id === state.libSec); if (!cur || (cur.meta || {}).kind !== "maqam") return h;
+  if (state.mqFor !== cur.id) { state.mqFor = cur.id; state.mqTab = "info"; }
+  const ex = _sectionExtra28(cur); if (ex && h.includes(ex)) h = h.replace(ex, "");
+  return h + maqamOne(cur);
+};
+
+/* ---------- 7) أزرار الأقسام: كل زرار يودّي لمكانه الصح ---------- */
+function islChild(words) { const s = sectionsData(); if (!Array.isArray(s)) return null; return s.find(x => x.parent_id === ISL_ROOT && x.is_visible !== false && words.some(w => (locText(x.title) || "").includes(w) || ((x.title || {}).ar || "").includes(w))); }
+const _DOMAINS28 = DOMAINS;
+DOMAINS = function () {
+  const ds = _DOMAINS28(); const lib = (s) => s ? `libGo('${s.id}')` : "navigate('library')";
+  const isl = ds.find(d => d.k === "sciences" || d.sec === ISL_ROOT);
+  const ar = ds.find(d => d.k === "arabic"); if (ar && ar.tools && !ar.tools.some(t => String(t[2]).includes("'pa'"))) { ar.tools.splice(3, 0, ["🫒", state.lang === "ar" ? "الفلسطيني" : "Palestinian", "go16('lang','pa')", ""]); ar.s = { ar: "فصحى ومصري وخليجي وفلسطيني بالمستويات: اقرأ، اسمع، اكتب، اتكلم، العب، واختبر.", en: "Fusha, Egyptian, Gulf & Palestinian by levels — read, listen, write, speak, play and test." }; }
+  if (isl) {
+    isl.t = { ar: "العلوم الإسلامية", en: "Islamic Sciences" }; isl.sec = ISL_ROOT; isl.s = { ar: "تفسير القرآن بخمس تفاسير، صحيح البخاري ومسلم بشروحهما، الفقه، السيرة، قصص الأنبياء، علوم القرآن والحديث، والآداب — كل معلومة بمصدرها.", en: "Quran tafsir (five tafsirs), Bukhari & Muslim with commentaries, fiqh, seerah, stories of the prophets, Quran & hadith sciences and manners — every point with its source." };
+    isl.tools = [["📖", L("isT")[0], lib(islChild(["تفسير"])), ""], ["📜", L("isT")[1], lib(islChild(["الحديث الشريف"])), ""], ["⚖️", L("isT")[2], lib(islChild(["الفقه"])), ""], ["🕌", L("isT")[3], lib(islChild(["السيرة"])), ""], ["🌿", L("isT")[4], lib(islChild(["قصص الأنبياء"])), ""], ["📚", L("isT")[5], lib(islChild(["علوم القرآن"])), ""], ["🔎", L("isT")[6], lib(islChild(["علوم الحديث"])), ""], ["💎", L("isT")[7], lib(islChild(["الآداب"])), ""]];
+  }
+  return ds;
+};
+
+/* ---------- 8) الإشعار يفتح الحاجة نفسها في مكانها ---------- */
+const NOTIF_GO = { new_order: ["money", "orders"], payment_submitted: ["money", "orders"], payment_confirmed: null, new_user: ["people", "users"], new_booking: ["money", "bookings"], booking_received: null, teacher_application: ["people", "teacherApps"], review_new: ["people", "reviews"], new_message: ["people", "chats"], message: ["people", "chats"] };
+const _openNotif28 = openNotif;
+openNotif = async function (id) {
+  const n = (state.notif.list || []).find(x => x.id === id); const d = (n && n.data) || {};
+  if (n && n.kind === "content_new" && d.id) {
+    state.notif.open = false; if (!n.read_at) { n.read_at = new Date().toISOString(); sb.from("notifications").update({ read_at: n.read_at }).eq("id", id).then(() => {}, () => {}); }
+    const { data: c } = await sb.from("contents").select("id,section_id").eq("id", d.id).maybeSingle();
+    if (c && c.section_id) { libGo(c.section_id); setTimeout(() => { try { openContent(c.id); } catch (e) {} }, 900); } else navigate("library");
+    return;
+  }
+  if (n && n.kind === "access_granted") { state.notif.open = false; navigate("library"); return; }
+  if (n && realRole() === "owner" && NOTIF_GO[n.kind]) { const [g, t] = NOTIF_GO[n.kind]; state.og = g; state.dash.tab = t; }
+  if (n && (n.kind === "payment_confirmed" || n.kind === "booking_received") && realRole() !== "owner") state.dash.tab = n.kind === "payment_confirmed" ? "billing" : "lessons";
+  return _openNotif28(id);
+};
+
+/* ---------- 9) الاقتراحات من أول حرف في كل مكان ---------- */
+function taPeople() { try { const P = peopleMap(); return (P.list || []).flatMap(p => [p.email, p.real_name, p.display_name]).filter(Boolean); } catch (e) { return []; } }
+function taEnhance() {
+  const app = document.getElementById("app"); if (!app) return;
+  // 1) حقول الأشخاص (إيميل/اسم)
+  const ppl = /إيميل|ايميل|email|الطالب|المعلم|student|teacher|اسم/i;
+  const inputs = [...app.querySelectorAll('input:not([type=password]):not([type=file]):not([type=color]):not([type=range]):not([list])')].filter(i => i.type === "email" || ppl.test(i.placeholder || ""));
+  if (inputs.length && realRole() !== "student") {
+    let dl = document.getElementById("taPeople"); if (!dl) { dl = document.createElement("datalist"); dl.id = "taPeople"; document.body.appendChild(dl); }
+    const vals = [...new Set(taPeople())]; if (dl.childElementCount !== vals.length) dl.innerHTML = vals.map(v => `<option value="${esc(v)}">`).join("");
+    inputs.forEach(i => i.setAttribute("list", "taPeople"));
+  }
+  // 2) أي قايمة طويلة (قرّاء، سور، مقامات…): خانة بحث فوقها
+  app.querySelectorAll("select").forEach(sel => {
+    if (sel.options.length < 15 || sel.dataset.ta || sel.multiple) return; sel.dataset.ta = "1";
+    const box = document.createElement("input"); box.className = "in tabox"; box.placeholder = "🔎 " + L("taFind"); box.setAttribute("list", "ta_" + Math.random().toString(36).slice(2));
+    const dl = document.createElement("datalist"); dl.id = box.getAttribute("list"); dl.innerHTML = [...sel.options].map(o => `<option value="${esc(o.text.trim())}">`).join("");
+    box.addEventListener("change", () => { const v = box.value.trim(); const o = [...sel.options].find(o => o.text.trim() === v) || [...sel.options].find(o => o.text.includes(v)); if (o) { sel.value = o.value; sel.dispatchEvent(new Event("change", { bubbles: true })); } });
+    sel.parentNode.insertBefore(box, sel); sel.parentNode.insertBefore(dl, sel);
+  });
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.tabox{max-width:16rem;margin-bottom:.3rem;padding:.35rem .6rem;font-size:.85rem}.motabs{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:1rem}.motabs button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.45rem .9rem;font:inherit;font-weight:700;cursor:pointer}.motabs button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.ptabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0}.ptabs button{flex:1;min-width:9rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:var(--rl);padding:.8rem .6rem;font:inherit;font-weight:800;cursor:pointer}.ptabs button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}</style>`);
+
+/* ---------- 10) المجاني: درسين من كل قسم ---------- */
+sampleN = function () { const a = setv("access", {}) || {}; return a.sample != null ? +a.sample : 2; };
+
+/* ---------- 11) صفحة الأسعار: تبويبات واضحة ---------- */
+state.ptab = state.ptab || "content";
+function pricingTabs() {
+  if (state.route !== "pricing") return; const sp = document.getElementById("site-plans"); if (!sp) return; const wrap = sp.parentElement; if (!wrap || wrap.querySelector(".ptabs")) return;
+  // افصل «اتكلم عربي» في كارت لوحده
+  const lh = [...sp.querySelectorAll("h3")].find(x => x.textContent.includes("🗣️"));
+  let lang = null; if (lh) { lang = document.createElement("div"); lang.className = "card"; lang.style.margin = "1rem 0"; const g = lh.nextElementSibling; lang.appendChild(lh); if (g) lang.appendChild(g); sp.after(lang); }
+  const kids = [...wrap.children]; let mode = "content"; const tagOf = new Map();
+  kids.forEach(el => { if (el === lang) { tagOf.set(el, "lang"); mode = "lessons"; return; } if (el.matches(".fhcard")) { tagOf.set(el, "content"); return; } if (el === sp) { tagOf.set(el, "content"); return; } if (/👥/.test((el.querySelector("h2") || {}).textContent || "") || (el.matches("h2") && /👥/.test(el.textContent))) mode = "groups"; tagOf.set(el, mode); });
+  const bar = document.createElement("div"); bar.className = "ptabs";
+  const T = L("ptabs"); bar.innerHTML = Object.entries(T).map(([k, v]) => `<button data-k="${k}" class="${k === state.ptab ? "on" : ""}">${v}</button>`).join("");
+  wrap.insertBefore(bar, wrap.firstChild);
+  const apply = () => { kids.forEach(el => { const t = tagOf.get(el); el.style.display = t && t !== state.ptab ? "none" : ""; }); bar.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === state.ptab)); };
+  bar.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.ptab = b.dataset.k; apply(); });
+  apply();
+}
+const _renderPricing28 = renderPricing;
+renderPricing = function () { let h = _renderPricing28(); const i = h.indexOf("buyFeature('lang_gu')"); if (i < 0) return h; const j = h.indexOf("</button>", i) + 9; return h.slice(0, j) + `<button class="spbtn" onclick="buyFeature('lang_pa')"><b>${LC.pa.ic} ${esc(locText(LC.pa.name))}</b><span>${esc(money(((setv("features", {}) || {}).lang_pa || {}).price || 40, setv("currency", "USD")))}</span><small class="xs muted">/ ${state.lang === "ar" ? "شهر" : "month"}</small></button>` + h.slice(j); };
+
+Object.assign(UI.ar, { mo1: "عن المقام", mo2: "الآهات", mo3: "مارس المقام بصوتك", mo4: "تلاوات مرتل ومجود", mo5: "ابتهال على المقام", mo6: "مرتل", mo7: "مجود", moEmpty: "لسه مفيش تلاوات متسجّلة على المقام ده.", taFind: "اكتب للبحث…",
+  isT: ["تفسير القرآن", "الحديث الشريف", "الفقه", "السيرة النبوية", "قصص الأنبياء", "علوم القرآن", "علوم الحديث", "الآداب والفضائل"],
+  ptabs: { content: "📚 اشتراك المحتوى", lang: "🗣️ اتكلم عربي", lessons: "👨‍🏫 حصص مع معلم", groups: "👥 حصص جماعية" } });
+Object.assign(UI.en, { mo1: "About", mo2: "Aahs", mo3: "Practise with your voice", mo4: "Murattal & Mujawwad", mo5: "Ibtihal on this maqam", mo6: "Murattal", mo7: "Mujawwad", moEmpty: "No recitations on this maqam yet.", taFind: "Type to search…",
+  isT: ["Quran tafsir", "Hadith", "Fiqh", "Seerah", "Stories of the Prophets", "Quran sciences", "Hadith sciences", "Manners & virtues"],
+  ptabs: { content: "📚 Content subscription", lang: "🗣️ Speak Arabic", lessons: "👨‍🏫 Lessons with a teacher", groups: "👥 Group classes" } });
+try { if (UI.ar.grScopes) { UI.ar.grScopes.lang_pa = "فلسطيني"; } if (UI.en.grScopes) UI.en.grScopes.lang_pa = "Palestinian"; } catch (e) {}
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
