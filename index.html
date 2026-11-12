@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v41";
+const UI_VERSION = "2026-11-12-v42";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -15168,6 +15168,29 @@ document.head.insertAdjacentHTML("beforeend", `<style>.tcwrap{position:relative}
 .laord{display:flex;flex-direction:column;gap:.35rem}.laordrow{display:flex;gap:.5rem;align-items:center;border:1px solid var(--line);border-radius:var(--rs);padding:.45rem .6rem;background:var(--card)}.laordrow.done{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--card))}.laordrow.lock{opacity:.6}</style>`);
 Object.assign(UI.ar, { ordMine: "رتّب بنفسك", ordDone: "تمام", ordS: "رتّب المستويات بالترتيب اللي يريحك. كل مستوى بيتفتح بعد ما تنجح في اختبار اللي قبله بـ {p}٪ أو أكتر.", ordPrev: "لازم تنجح في اختبار المستوى اللي قبله بـ {p}٪ الأول", ordOpened: "عدّيت — المستوى اللي بعده اتفتح!", ordNeed: "محتاج {p}٪ عشان المستوى اللي بعده يتفتح — جرّب تاني", ordUnits: "وحداتك بترتيبك" });
 Object.assign(UI.en, { ordMine: "Set my order", ordDone: "Done", ordS: "Arrange the levels in the order you prefer. Each level opens after you pass the previous one's test with {p}% or more.", ordPrev: "Pass the previous level's test with {p}% first", ordOpened: "Passed — the next level is open!", ordNeed: "You need {p}% to open the next level — try again", ordUnits: "Your units, your order" });
+
+/* ================= v42: رفع ملف الأصوات/الصور من Colab (من غير باسورد) ================= */
+function loadJSZip() { return window.JSZip ? Promise.resolve(window.JSZip) : new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"; s.onload = () => res(window.JSZip); s.onerror = rej; document.head.appendChild(s); }); }
+async function vlImportZip(inp, kind) {
+  const f = inp.files && inp.files[0]; if (!f) return; const box = document.getElementById("vlProg"); const say = t => { if (box) box.textContent = t; };
+  try {
+    const JSZip = await loadJSZip(); const zip = await JSZip.loadAsync(f); const man = JSON.parse(await zip.file("manifest.json").async("string")); let n = 0, ok = 0;
+    for (const x of man) {
+      n++; say(`${n} / ${man.length}`); const zf = zip.file(x.file); if (!zf) continue; const blob = await zf.async("blob");
+      if (kind === "art") { const path = `art/hq/${x.file}`; const up = await sb.storage.from("academy_public").upload(path, blob, { upsert: true, contentType: "image/jpeg" }); if (up.error) continue; const url = sb.storage.from("academy_public").getPublicUrl(path).data.publicUrl; await sb.from("art_assets").upsert({ key: x.key, prompt: x.prompt || "", status: "done", url }); ART[x.key] = url; ok++; continue; }
+      const path = `o/clone/${x.file}`; const up = await sb.storage.from("voice").upload(path, blob, { upsert: true, contentType: "audio/mpeg" }); if (up.error && !/exists/i.test(up.error.message)) continue;
+      const url = sb.storage.from("voice").getPublicUrl(path).data.publicUrl;
+      await sb.from("voice_lines").delete().eq("h", x.h).eq("kind", x.kind).eq("src", "clone");
+      const r = await sb.from("voice_lines").insert({ h: x.h, text: x.text, kind: x.kind, src: "clone", url, status: "approved" }); if (!r.error) ok++;
+    }
+    VLC.clear(); delete state.data.vlCount; say(`✓ ${ok} / ${man.length}`); toast(`✓ ${ok}`); render();
+  } catch (e) { console.error(e); toast(L("vlZipErr"), true); say(""); }
+}
+const _vlAdminCard42 = vlAdminCard;
+vlAdminCard = function () { return _vlAdminCard42().replace(/(<h4 style="margin:1rem 0 \.4rem">⏳)/, `<div class="vlzip"><label class="btn btn-p">📦 ${L("vlZip")}<input type="file" accept=".zip" hidden onchange="vlImportZip(this,'voice')"></label><label class="btn btn-o">🖼️ ${L("vlArt")}<input type="file" accept=".zip" hidden onchange="vlImportZip(this,'art')"></label><span id="vlProg" class="sm b"></span></div><p class="xs muted">${L("vlZipS")}</p>$1`).replace('href="https://github.com/adarwesh701-byte/Quran-Academy/blob/main/docs/itqan_voice_colab.ipynb"', 'href="https://colab.research.google.com/github/adarwesh701-byte/Quran-Academy/blob/main/docs/itqan_voice_colab.ipynb"'); };
+document.head.insertAdjacentHTML("beforeend", `<style>.vlzip{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.8rem}</style>`);
+Object.assign(UI.ar, { vlZip: "ارفع ملف الأصوات (itqan-voices.zip)", vlArt: "ارفع ملف الصور (itqan-art.zip)", vlZipS: "الملفات دي بتطلع من دفتر Colab. بعد الرفع صوتك هيشتغل على طول في كل الدروس.", vlZipErr: "الملف مش مظبوط — لازم يكون الملف اللي طلع من Colab" });
+Object.assign(UI.en, { vlZip: "Upload voices file (itqan-voices.zip)", vlArt: "Upload images file (itqan-art.zip)", vlZipS: "These files come from the Colab notebook. After upload your voice plays in every lesson.", vlZipErr: "Invalid file — use the zip produced by Colab" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
