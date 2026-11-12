@@ -14177,6 +14177,10 @@ Object.assign(UI.ar, { amSet: "مقام الآية:", amIs: "المقام", amLo
 Object.assign(UI.en, { amSet: "Ayah maqam:", amIs: "Maqam", amLock: "See this ayah's maqam (subscribers)", amGuess: "Guess the maqam", amGuessT: "Guess the maqam from real reciters", amGuessS: "Listen to ayahs by Al-Minshawi, Abdul Basit, Al-Husary and others and pick the maqam. Answers are set by the academy's shaykh.", amLockQ: "Maqam quizzes from real recitations are for subscribers.", amUnlock: "Subscribe to unlock", amFew: "Not enough tagged ayahs yet.", amAns: "Student answers", amRight: "correct", amTaggers: "Teachers who can tag ayah maqamat", amTaggersS: "You can always tag. Tick the teachers you also allow.", amPickRec: "Pick a reciter from “More reciters” to tag each ayah's maqam.", eaMore: "More reciters:", eaDef: "default",
   tfMT: "machine-translated", tfGrpAr: "Arabic tafsirs (machine-translated)", tfGrpNat: "Tafsirs written in {l}", tfMTNote: "This tafsir is machine-translated from Arabic into {l} to aid understanding; the Arabic original is the reference.", tfMTWait: "Translating…" });
 
+
+// الآداب والفضائل: كتب ابن القيم وابن قدامة وابن الجوزي فوق الأحاديث المشروحة
+const _renderLibraryDb31 = renderLibraryDb;
+renderLibraryDb = function () { let h = _renderLibraryDb31(); const secs = sectionsData(); if (!Array.isArray(secs) || !state.libSec || !state.auth.user) return h; const cur = secs.find(s => s.id === state.libSec); const m = (cur && cur.meta) || {}; if (m.kind === "adab" && Array.isArray(m.books) && m.books.length) h += `<div style="margin-top:1.2rem"><h2 style="margin-bottom:.6rem">📚 ${state.lang === "ar" ? "كتب الآداب والرقائق" : "Classical books on manners"}</h2>${booksPage(m.books, cur.id)}</div>`; return h; };
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
