@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v32";
+const UI_VERSION = "2026-11-12-v33";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -9034,7 +9034,7 @@ renderLibraryDb = function () {
     const orphan = bySec["_"] || [];
     if (!roots.length && !orphan.length) return `<div class="card muted" style="text-align:center">${L("libEmpty")}</div>`;
     return `<div class="libgrid" style="margin-top:1.5rem">${roots.map(s => libTile(s, count(s.id), shown(kids[s.id] || []).length)).join("")}</div>
-      ${orphan.length ? `<h3 style="margin:2rem 0 1rem">📂 ${L("noSection")}</h3><div class="grid">${orphan.map(c => contentCard(c, false)).join("")}</div>` : ""}${renderContentViewer()}`;
+      ${orphan.length && ["owner","teacher"].includes(role()) ? `<h3 style="margin:2rem 0 1rem">📂 ${L("noSection")}</h3><div class="grid">${orphan.map(c => contentCard(c, false)).join("")}</div>` : ""}${renderContentViewer()}`;
   }
   const chain = []; let x = cur; const guard = new Set();
   while (x && !guard.has(x.id)) { guard.add(x.id); chain.unshift(x); x = x.parent_id ? vis.find(s => s.id === x.parent_id) : null; }
@@ -9081,7 +9081,7 @@ async function autoCovers() {
     const [a, b] = await Promise.all([sb.from("content_sections").select("id,title,cover_url").is("cover_url", null).limit(25), sb.from("contents").select("id,title,cover_url").is("cover_url", null).limit(30)]);
     const jobs = [...(a.data || []).map(s => ["content_sections", s]), ...(b.data || []).map(c => ["contents", c])];
     if (!jobs.length) return;
-    toast(`🎨 ${L("aiMaking")} (${jobs.length})`);
+    console.info("ai covers", jobs.length);
     for (const [tbl, x] of jobs) { const url = await genAiImage(enTitle(x.title)); await sb.from(tbl).update({ cover_url: url }).eq("id", x.id); }
     invSections(); invalidate("contentsAll", "libCt", "contentsMine"); toast(L("aiDone")); render();
   } catch (e) { console.warn(e); } finally { state.autoCoverRunning = false; }
@@ -14427,6 +14427,98 @@ Object.assign(UI.ar, { tjPlayAll: "تشغيل السورة آية بآية", wqT
 Object.assign(UI.en, { tjPlayAll: "Play ayah by ayah", wqT: "Stop signs", mmMode: "Mark my mistakes", mmOn: "Marking mode on", mmHint: "Tap any word you got wrong and note the mistake. Marked words show a red underline.", mmT: "Mistake on this word", mmAyah: "Ayah", mmFixed: "fixed", mmNoteP: "Describe the mistake…", mmMine: "My mistakes mushaf", mmOpenN: "open", mmTop: "Your most common mistake", mmEmpty: "No mistakes marked yet. Turn on “Mark my mistakes” and tap a word.", recFull: "Listen to the whole surah", tjRecN: "reciters", tjNoSurah: "This reciter hasn't recorded this surah — pick another.",
   tcT: "Tajweed journey", tcS: "10 stations from Nun sakinah to stop signs. Each station: a short lesson, a “find the rule” game in real ayahs, and a star quiz. Finish a station to unlock the next.", tcPrev: "Finish the previous station first", tcL: "Learn", tcF: "Find", tcQ: "Test", tcBack: "Map", tcNext: "Let's try", tcColors: "These are the same colours as the colour-coded mushaf.", tcSrc: "Rules follow Hafs from Asim, summarised from Tuhfat al-Atfal (al-Jamzuri) and al-Jazariyya (Ibn al-Jazari).", tcFindQ: "Tap the word that has this lesson's rule — then the colours appear.", tcFindWq: "Tap the word that has a stop sign.", tcListen: "Listen", tcQS: "5 questions on this lesson + review. 3 stars from 90%.", tcRev: "review", tcWin: "New stars!",
   srsT: "Memorization tracker", srsS: "Every portion you memorize comes back for review after 1, 3, 7, 14, 30 days… a mistake resets it. You can't add new memorization while reviews are overdue.", srsStreak: "day streak", srsDue: "due today", srsOver: "overdue", srsAyahs: "ayahs in review", srsToday: "Today's reviews", srsNone: "No reviews due today", srsAdd: "Add new memorization", srsAddT: "Assign memorization", srsAddS: "You'll be tested first; if you pass it enters the review schedule.", srsNewTest: "Test me & add", srsAssign: "Assign to student", srsBlock: "You have {n} overdue reviews — finish them before adding new memorization.", srsSoon: "Upcoming reviews", srsHow: "Your teacher is notified if a review is more than 2 days late.", srsStage: "Stage", srsLate: "overdue since", srsPass: "Great! It will come back in {d} days", srsFail: "Needs more review — it will come back tomorrow", srsAdded: "Added to your review schedule ✓", srsNoMic: "Voice recitation needs Chrome", srsSpeak: "Recite the portion now…", srsVoiceRes: "Recitation match", srsDueN: "{n} reviews due today", srsGo: "Review now" });
+
+/* ================= v33: خلفيات المصحف + الدعوة + السرعة + شكل التطبيق على الموبايل ================= */
+/* ---------- 1) خلفيات المصحف ---------- */
+const MBG = {
+  cream: ["كريمي", "Cream", "#fffdf5", "#111", ""],
+  white: ["أبيض", "White", "#ffffff", "#111", ""],
+  sepia: ["ورق قديم", "Old paper", "#f4e7c8", "#2b1d0e", "radial-gradient(ellipse at center,rgba(255,250,235,.7),rgba(196,160,100,.35))"],
+  madina: ["مصحف المدينة", "Madinah frame", "#fffbea", "#111", "linear-gradient(#fffbea,#fffbea) padding-box,linear-gradient(135deg,#0f766e,#b08d2f,#0f766e) border-box"],
+  green: ["أخضر هادي", "Soft green", "#eef7f0", "#0d2417", ""],
+  blue: ["أزرق سماوي", "Sky blue", "#eef5fb", "#0b1d33", ""],
+  rose: ["وردي فاتح", "Soft rose", "#fbf1f1", "#2a1212", ""],
+  pattern: ["زخرفة إسلامية", "Islamic pattern", "#fffaf0", "#111", "PATTERN"],
+  night: ["ليلي", "Night", "#0f172a", "#f1f5f9", ""],
+  black: ["أسود (AMOLED)", "Black (AMOLED)", "#000000", "#f5f5f5", ""],
+  gold: ["دهبي فاخر", "Luxury gold", "#1b1408", "#f6e7c1", "linear-gradient(160deg,#1b1408,#2b200c)"]
+};
+const MBG_PAT = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><g fill="none" stroke="#c9a96e" stroke-opacity=".22" stroke-width="1"><path d="M40 4l10 26 26 10-26 10-10 26-10-26L4 40l26-10z"/><circle cx="40" cy="40" r="12"/></g></svg>')}")`;
+function mbgGet() { try { return localStorage.getItem("itqan_mbg") || "cream"; } catch (e) { return "cream"; } }
+function mbgSet(k) { try { localStorage.setItem("itqan_mbg", k); } catch (e) {} mbgApply(); render(); }
+function mbgApply() {
+  const k = mbgGet(); const b = MBG[k] || MBG.cream; let s = document.getElementById("mbgStyle"); if (!s) { s = document.createElement("style"); s.id = "mbgStyle"; document.head.appendChild(s); }
+  const bgimg = b[4] === "PATTERN" ? `${MBG_PAT},linear-gradient(${b[2]},${b[2]})` : b[4];
+  s.textContent = `.tjtext{background:${b[2]}!important;color:${b[3]}!important;${bgimg ? `background-image:${bgimg}!important;` : ""}${k === "madina" ? "border:6px double transparent!important;" : "border:1px solid color-mix(in srgb," + b[3] + " 10%,transparent);"}}${["night", "black", "gold"].includes(k) ? `.tjtext .tj-ham_wasl,.tjtext .tj-slnt,.tjtext .tj-laam_shamsiyah{color:#94a3b8!important}.tjtext .end{color:#fbbf24!important}` : ""}`;
+}
+mbgApply();
+function mbgPicker() { const cur = mbgGet(); return `<div class="mbgrow"><span class="xs b">🖼️ ${L("mbgT")}</span>${Object.entries(MBG).map(([k, b]) => `<button class="mbg ${cur === k ? "on" : ""}" title="${esc(state.lang === "ar" ? b[0] : b[1])}" onclick="mbgSet('${k}')" style="background:${b[2]};${b[4] && b[4] !== "PATTERN" ? `background-image:${b[4]};` : ""}${b[4] === "PATTERN" ? `background-image:${MBG_PAT};` : ""}color:${b[3]}">${k === cur ? "✓" : "ب"}</button>`).join("")}</div>`; }
+const _tjTools33 = tjTools;
+tjTools = function () { return _tjTools33() + mbgPicker(); };
+
+/* ---------- 2) الدعوة: كل ١٠ أصحاب يشتركوا = اشتراك كامل مجاني ---------- */
+referralCard = (function (orig) { return function () {
+  let h = orig(); const refs = state.data.myRefs; const list = Array.isArray(refs) ? refs : []; const paid = list.filter(r => r.qualified).length; const goal = (setv("referral", {}) || {}).goal || 10; const got = Math.floor(paid / goal); const cur = paid % goal;
+  h = h.replace(/<h3 style="font-size:1\.25rem">[\s\S]*?<\/h3><p class="sm" style="margin:\.4rem 0 1rem;opacity:\.92">[\s\S]*?<\/p>/, `<h3 style="font-size:1.25rem">🎁 ${L("rf2T").replace("{g}", goal)}</h3><p class="sm" style="margin:.4rem 0 .7rem;opacity:.92">${L("rf2S").replace("{g}", goal)}</p><div class="rfprog"><div class="row" style="justify-content:space-between"><b>${cur} / ${goal}</b><span class="xs">${got ? `🏆 ${L("rf2Got").replace("{n}", got)}` : L("rf2Left").replace("{n}", goal - cur)}</span></div><div class="pbar" style="margin-top:.35rem"><span style="width:${Math.round(cur / goal * 100)}%"></span></div></div>`);
+  return h;
+}; })(referralCard);
+Object.assign(UI.ar, { refTitle: "ادعُ أصحابك", refText: "كل 10 أصحاب يشتركوا من لينكك = اشتراك كامل مجاني في كل محتوى الموقع.", invSub: "كل 10 أصحاب يشتركوا من لينكك = اشتراك كامل مجاني في كل محتوى الموقع، أوتوماتيك.", invStrip: "🎁 ادعُ أصحابك — كل 10 يشتركوا = اشتراك كامل مجاني في كل محتوى الموقع", rf2T: "كل {g} أصحاب يشتركوا = اشتراك كامل مجاني", rf2S: "ابعت لينكك لأصحابك. أول ما {g} منهم يشتركوا في أي باقة، بيتفتحلك كل محتوى الموقع مجانًا أوتوماتيك — وكل {g} جداد = اشتراك تاني.", rf2Left: "فاضل {n} وتاخد الاشتراك", rf2Got: "خدت {n} اشتراك مجاني" });
+Object.assign(UI.en, { refTitle: "Invite your friends", refText: "Every 10 friends who subscribe through your link = a free full subscription to all site content.", invSub: "Every 10 friends who subscribe through your link = a free full subscription to all site content, automatically.", invStrip: "🎁 Invite friends — every 10 who subscribe = a free full subscription", rf2T: "Every {g} friends who subscribe = a free full subscription", rf2S: "Share your link. As soon as {g} friends subscribe to any package, all site content opens for you for free — automatically. Every {g} more = another subscription.", rf2Left: "{n} more to go", rf2Got: "You've earned {n} free subscription(s)" });
+
+/* ---------- 3) السرعة: رسم واحد بدل عشرات لما البيانات توصل ---------- */
+let __rq = 0;
+function renderSoon() { if (__rq) return; __rq = (window.requestAnimationFrame || setTimeout)(() => { __rq = 0; const y = window.scrollY; const ae = document.activeElement; const aid = ae && ae.id; render(); if (Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); if (aid) { const e = document.getElementById(aid); if (e && e.focus && e !== document.activeElement) try { e.focus({ preventScroll: true }); } catch (x) {} } }); }
+useData = function (key, loader) {
+  const d = state.data[key];
+  if (d === undefined) { state.data[key] = null; Promise.resolve().then(loader).then(v => { state.data[key] = v == null ? [] : v; renderSoon(); }).catch(e => { console.error(key, e); state.data[key] = { __error: e.message || String(e) }; renderSoon(); }); return null; }
+  return d;
+};
+// الصور تتحمّل وقت ما تظهر بس
+const _render33 = render;
+render = function () { const r = _render33.apply(this, arguments); try { document.querySelectorAll("#app img:not([loading])").forEach(i => { i.loading = "lazy"; i.decoding = "async"; }); } catch (e) {} return r; };
+
+/* ---------- 4) شكل تطبيق على الموبايل (ستايل iOS) ---------- */
+document.head.insertAdjacentHTML("beforeend", `<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>
+.mbgrow{display:flex;gap:.3rem;align-items:center;flex-wrap:wrap;margin:.3rem 0 .6rem}.mbg{width:30px;height:30px;border-radius:9px;border:2px solid var(--line);font:700 .8rem 'Amiri',serif;cursor:pointer}.mbg.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.rfprog{background:rgba(255,255,255,.14);border-radius:12px;padding:.6rem .8rem;margin-bottom:1rem}
+#app>*{animation:pgin .22s ease both}@keyframes pgin{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}
+button,.btn,a,.opt,.libtile{-webkit-tap-highlight-color:transparent}.btn:active,.libtile:active,.opt:active,.bnav a:active{transform:scale(.97)}
+@media(max-width:760px){
+  html{font-size:15px}
+  body{background:var(--bg)}
+  .wrap{padding-inline:14px}
+  .sec{padding:1.1rem 0}
+  .unav,.appdl-m,.appdl,.hide-sm,#hlpfab{display:none!important}
+  .hdr .wrap{gap:.4rem;padding-block:.45rem}.hdr .logo small,.hdr .logo .sub{display:none}.hdr .logo b{font-size:1rem}
+  .thpill span,.thpill .lbl{display:none}
+  .embar{font-size:.75rem!important;padding:.25rem .6rem!important}.embar .btn{padding:.1rem .5rem!important;font-size:.72rem!important}
+  .invstrip{display:none!important}
+  button.fhchip{display:none!important}span.fhchip{font-size:.7rem}
+  .dombar{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .dombar .wrap{gap:.35rem!important;padding-block:.4rem!important}.dombar a{font-size:.8rem;padding:.35rem .7rem!important;border-radius:999px}
+  h1{font-size:1.55rem!important;line-height:1.35}h2{font-size:1.25rem}h3{font-size:1.05rem}
+  .card{padding:1rem!important;border-radius:18px!important}
+  .libgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.6rem!important}
+  .libtile{padding:.85rem!important;min-height:0!important}.libtile small.ds,.libtile p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.76rem}
+  .libtile b{font-size:.95rem}
+  .dmgrid{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:.6rem;padding-bottom:.4rem}.dmgrid>*{flex:0 0 82%;scroll-snap-align:start}
+  .tabs,.dtabs,.oggroups,.motabs,.ptabs,.trchips{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tabs::-webkit-scrollbar,.dtabs::-webkit-scrollbar,.oggroups::-webkit-scrollbar,.motabs::-webkit-scrollbar{display:none}
+  .tabs a,.dtabs a,.oggroups button,.motabs button,.ptabs button{flex:0 0 auto;white-space:nowrap}
+  .ptabs button{min-width:auto}
+  .btn{min-height:42px}.btn-lg{min-height:50px}
+  .in{min-height:44px;font-size:16px}
+  .bnav{height:auto;background:color-mix(in srgb,var(--card) 88%,transparent)!important;backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border-top:1px solid var(--line)}
+  .bnav a{font-size:.7rem!important;font-weight:600}.bnav a i{font-size:1.25rem!important}
+  .bnav a[aria-current=true] i{transform:translateY(-1px)}
+  .ai-widget .ai-fab,.ai-fab{width:48px!important;height:48px!important}
+  .grid.g2,.grid.g3,.grid.g4{grid-template-columns:1fr!important}
+  .plsum{grid-template-columns:repeat(3,minmax(0,1fr))!important}.plsum b{font-size:1.2rem!important}
+  .tjtext{font-size:1.55rem!important;padding:.8rem!important}
+  .dshead .btn[onclick*="doLogout"],.row>.btn[onclick="doLogout()"]{display:none}
+  footer .wrap{padding-bottom:5rem}
+  .toast,#toast{bottom:84px!important}
+}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
