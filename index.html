@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v33";
+const UI_VERSION = "2026-11-12-v34";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14519,6 +14519,71 @@ button,.btn,a,.opt,.libtile{-webkit-tap-highlight-color:transparent}.btn:active,
   .toast,#toast{bottom:84px!important}
 }
 </style>`);
+
+/* ================= v34: «اتكلم عربي» — درس ممتع متدرّج + مراجعة ذكية للكلمات ================= */
+state.lf = state.lf || null;
+function laSrsGet(tr) { try { return JSON.parse(localStorage.getItem("la_srs_" + tr) || "{}"); } catch (e) { return {}; } }
+function laSrsSet(tr, o) { try { localStorage.setItem("la_srs_" + tr, JSON.stringify(o)); } catch (e) {} }
+const LA_BOX = [0, 1, 3, 7, 14, 30];
+function laSrsAdd(tr, words) { const o = laSrsGet(tr); const now = Date.now(); words.forEach(w => { if (!o[w[0]]) o[w[0]] = { w, b: 0, due: now + 864e5 }; }); laSrsSet(tr, o); }
+function laSrsDue(tr) { const o = laSrsGet(tr); const now = Date.now(); return Object.values(o).filter(x => x.due <= now); }
+function laSrsMark(tr, a, ok) { const o = laSrsGet(tr); const x = o[a]; if (!x) return; x.b = ok ? Math.min(x.b + 1, LA_BOX.length - 1) : 0; x.due = Date.now() + Math.max(1, LA_BOX[x.b]) * 864e5 * (ok ? 1 : .5); laSrsSet(tr, o); }
+function laSrsQuiz(tr) {
+  const due = laSrsDue(tr).slice(0, 15); if (!due.length) return toast(L("lfNoRev")); const T = LC[tr]; const pool = T.units.flatMap(u => u.words); const r = () => Math.random();
+  const qs = due.map(x => { const w = x.w; const fl = r() < .5; return fl ? { q: w[0], ans: w[2], opts: [w[2]].concat([...new Set(pool.map(p => p[2]))].filter(o => o !== w[2]).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5), t: "🔁 " + L("lfRev"), play: `()=>ttsPlay(${JSON.stringify(w[0])},'${voiceOf(tr, "A")}')`, lw: w[0] } : { q: "", ans: w[0], opts: [w[0]].concat([...new Set(pool.map(p => p[0]))].filter(o => o !== w[0]).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5), t: "🎧 " + L("lfRev"), play: `()=>ttsPlay(${JSON.stringify(w[0])},'${voiceOf(tr, "A")}')`, lw: w[0] }; });
+  state.la.tr = tr; state.la.u = null; state.qz = { qs, i: 0, ok: 0, pick: null, laRev: tr, back: () => {}, again: () => laSrsQuiz(tr) }; render(); window.scrollTo({ top: 0 });
+}
+const _qzPick34 = qzPick;
+qzPick = function (i) { const z = state.qz; const qq = z && z.qs[z.i]; const r = _qzPick34(i); try { if (z && z.laRev && qq && qq.lw && !qq._r) laSrsMark(z.laRev, qq.lw, i >= 0 && qq.opts[i] === qq.ans); } catch (e) {} return r; };
+// خطوات الدرس: اتعلّم كلمة → اختار معناها → اكتبها من السمع → المحادثة → القاعدة → قول بصوتك → خلاص
+function lfBuild(tr, uid) {
+  const T = LC[tr]; const u = T.units.find(x => x.id === uid); const r = () => Math.random(); const pool = T.units.flatMap(x => x.words); const steps = [];
+  u.words.forEach((w, i) => { steps.push({ k: "learn", w }); if (i % 2 === 1) { const a = u.words[i - 1], b = w; [a, b].sort(() => r() - .5).forEach(x => steps.push({ k: "pick", w: x, opts: [x[2]].concat([...new Set(pool.map(p => p[2]))].filter(o => o !== x[2]).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5) })); } if (i % 3 === 2) steps.push({ k: "write", w: u.words[i - Math.floor(r() * 3)] }); });
+  steps.push({ k: "dialog" }); steps.push({ k: "gram" });
+  u.gram.ex.slice(0, 2).forEach(ex => steps.push({ k: "pick", w: [ex[0], ex[1], ex[2]], opts: [ex[2]].concat(u.gram.ex.map(x => x[2]).concat(pool.map(p => p[2])).filter(o => o !== ex[2]).sort(() => r() - .5).slice(0, 3)).sort(() => r() - .5) }));
+  u.words.slice().sort(() => r() - .5).slice(0, 2).forEach(w => steps.push({ k: "speak", w }));
+  steps.push({ k: "done" });
+  return { tr, u: uid, steps, i: 0, ok: 0, n: 0, ans: null, xp: 0 };
+}
+function lfSay(t) { try { ttsPlay(t, voiceOf(state.lf.tr, "A")); } catch (e) {} }
+function lfNext() { const f = state.lf; f.i++; f.ans = null; render(); window.scrollTo({ top: 0, behavior: "smooth" }); const s = f.steps[f.i]; if (s && (s.k === "learn" || s.k === "write")) setTimeout(() => lfSay(s.w[0]), 250); }
+function lfPick(k) { const f = state.lf; const s = f.steps[f.i]; if (f.ans != null) return; const ok = s.opts[k] === s.w[2]; f.ans = k; f.n++; if (ok) { f.ok++; f.xp += 10; sfxSafe("correct"); } else { sfxSafe("wrong"); f.steps.splice(Math.min(f.steps.length - 1, f.i + 3), 0, Object.assign({}, s, { again: true })); } render(); }
+function lfWrite() { const f = state.lf; const s = f.steps[f.i]; const v = (document.getElementById("lfW") || {}).value || ""; const sc = simRatio(v, s.w[0]); f.ans = sc; f.n++; if (sc >= .8) { f.ok++; f.xp += 15; sfxSafe("correct"); } else sfxSafe("wrong"); render(); }
+async function lfSpeak() { const f = state.lf; const s = f.steps[f.i]; const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) { f.ans = -1; return render(); } toast("🎤 " + L("lfSayNow")); const got = await srListen(4000); const sc = simRatio(got || "", s.w[0]); f.ans = sc; f.heard = got; f.n++; if (sc >= .6) { f.ok++; f.xp += 15; sfxSafe("correct"); } else sfxSafe("wrong"); render(); }
+function lfView() {
+  const f = state.lf; const T = LC[f.tr]; const u = T.units.find(x => x.id === f.u); const s = f.steps[f.i]; const pct = Math.round(f.i / (f.steps.length - 1) * 100); const vA = voiceOf(f.tr, "A");
+  const spk = (t, v) => `<button class="lfspk" onclick="ttsPlay(${esc(JSON.stringify(t))},'${v || vA}')">🔊</button>`;
+  const nextBtn = (lbl) => `<button class="btn btn-p btn-lg btn-full" style="margin-top:1rem" onclick="lfNext()">${lbl || L("qzNext")} ➜</button>`;
+  let b = "";
+  if (s.k === "learn") b = `<p class="lfk">✨ ${L("lfNew")}</p><div class="lfbig">${esc(s.w[0])}</div><div class="lftr" dir="ltr">${esc(s.w[1])}</div><div class="lfmean">${esc(s.w[2])}</div><div style="text-align:center">${spk(s.w[0])}</div>${nextBtn()}`;
+  else if (s.k === "pick") { const ok = f.ans != null && s.opts[f.ans] === s.w[2]; b = `<p class="lfk">🤔 ${s.again ? L("lfAgain") : L("lfPick")}</p><div class="lfbig">${esc(s.w[0])}</div><div style="text-align:center">${spk(s.w[0].split("←").pop().trim())}</div><div class="lfopts">${s.opts.map((o, k) => `<button class="opt ${f.ans != null ? (o === s.w[2] ? "good" : k === f.ans ? "bad" : "") : ""}" ${f.ans != null ? "disabled" : ""} onclick="lfPick(${k})">${esc(o)}</button>`).join("")}</div>${f.ans != null ? `<p class="b" style="margin-top:.6rem;color:${ok ? "var(--accent)" : "var(--danger)"}">${ok ? "✅ " + L("lfGood") : "❌ " + L("lfBad")}</p>` + nextBtn() : ""}`; }
+  else if (s.k === "write") b = `<p class="lfk">✍️ ${L("lfWrite")}</p><div style="text-align:center">${spk(s.w[0])}<div class="xs muted" style="margin-top:.3rem">${esc(s.w[2])}</div></div><input id="lfW" class="in lfin" dir="rtl" placeholder="${esc(L("lfWriteP"))}" ${f.ans != null ? "disabled" : ""} onkeydown="if(event.key==='Enter')lfWrite()"><div class="lfkbd">${"ا ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي ة ء ى أ إ".split(" ").map(c => `<button onclick="const i=document.getElementById('lfW');i.value+='${c}';i.focus()">${c}</button>`).join("")}<button onclick="const i=document.getElementById('lfW');i.value+=' '">␣</button><button onclick="const i=document.getElementById('lfW');i.value=i.value.slice(0,-1)">⌫</button></div>${f.ans == null ? `<button class="btn btn-p btn-lg btn-full" style="margin-top:.8rem" onclick="lfWrite()">${L("lfCheck")}</button>` : `<p class="b" style="margin-top:.6rem;color:${f.ans >= .8 ? "var(--accent)" : "var(--danger)"}">${f.ans >= .8 ? "✅ " + L("lfGood") : "❌ " + L("lfRight")}: <span class="lgar">${esc(s.w[0])}</span></p>${nextBtn()}`}`;
+  else if (s.k === "dialog") b = `<p class="lfk">💬 ${L("laDialog")}</p><button class="btn btn-o" onclick="state.la.tr='${f.tr}';state.la.u='${f.u}';laPlayDialog()">▶ ${L("lfPlayAll")}</button><div class="lgbubbles" style="margin-top:.6rem">${u.dialog.map(([sp, a, t, e]) => `<div class="lfbub ${sp === "B" ? "b" : ""}">${spk(a, voiceOf(f.tr, sp))}<div><div class="lgar">${esc(a)}</div><div class="xs muted" dir="ltr">${esc(t)}</div><div class="xs">${esc(e)}</div></div></div>`).join("")}</div>${nextBtn()}`;
+  else if (s.k === "gram") b = `<p class="lfk">🧩 ${L("laGram")}</p><p style="line-height:2">${esc(u.gram.rule)}</p>${u.gram.ex.map(([a, t, e]) => `<div class="lfbub">${spk(a.split("←").pop().trim())}<div><div class="lgar">${esc(a)}</div><div class="xs muted" dir="ltr">${esc(t)}</div><div class="xs">${esc(e)}</div></div></div>`).join("")}${nextBtn()}`;
+  else if (s.k === "speak") b = `<p class="lfk">🎤 ${L("lfSpeak")}</p><div class="lfbig">${esc(s.w[0])}</div><div class="lftr" dir="ltr">${esc(s.w[1])}</div><div style="text-align:center">${spk(s.w[0])}</div>${f.ans == null ? `<button class="btn btn-p btn-lg btn-full" style="margin-top:1rem" onclick="lfSpeak()">🎤 ${L("lfSayBtn")}</button><button class="btn btn-o btn-full" style="margin-top:.4rem" onclick="lfNext()">${L("lfSkip")}</button>` : `<p class="b" style="margin-top:.6rem;color:${f.ans >= .6 ? "var(--accent)" : "var(--gold)"}">${f.ans < 0 ? L("srsNoMic") : f.ans >= .6 ? "✅ " + L("lfGood") : "🔁 " + L("lfTryAgain")}${f.heard ? ` <span class="xs muted">(${esc(f.heard)})</span>` : ""}</p>${nextBtn()}`}`;
+  else { laSrsAdd(f.tr, u.words.concat(u.gram.ex.map(x => [x[0].split("←").pop().trim(), x[1], x[2]]))); const sc = Math.round(f.ok / Math.max(1, f.n) * 100); if (!f.cele && sc >= 60) { f.cele = 1; setTimeout(qzCelebrate, 100); }
+    b = `<div style="text-align:center"><div style="font-size:3rem">${sc >= 60 ? "🎉" : "💪"}</div><h2>${L("lfDone")}</h2><p class="muted">${L("lfXp")}: <b>+${f.xp} XP</b> · ${sc}%</p><p class="sm" style="margin:.6rem 0">${L("lfDoneS")}</p><div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap"><button class="btn btn-p btn-lg" onclick="state.lf=null;state.la.tr='${f.tr}';state.la.u='${f.u}';state.la.tab='test';state.qz=null;laQuiz('test')">📝 ${L("lfTest")}</button><button class="btn btn-o" onclick="state.lf=lfBuild('${f.tr}','${f.u}');render()">↻ ${L("lfRedo")}</button><button class="btn btn-o" onclick="state.lf=null;state.la.u=null;render()">${L("hcBack")}</button></div></div>`; }
+  return `<div class="row" style="gap:.4rem;margin:.6rem 0;align-items:center"><button class="btn btn-o" onclick="state.lf=null;render()">✕</button><div class="pbar" style="flex:1"><span style="width:${pct}%"></span></div><span class="badge">⚡ ${f.xp}</span></div><div class="card lfcard"><p class="xs muted">${T.ic} ${esc(state.lang === "ar" ? u.t : u.en)}</p>${b}</div>`;
+}
+const _langAcademy34 = langAcademy;
+langAcademy = function (defTrack) {
+  if (state.lf && state.auth.user) return lfView();
+  if (state.qz && state.qz.laRev) return `<div class="row" style="gap:.4rem;margin:.6rem 0"><button class="btn btn-o" onclick="state.qz=null;render()">${L("hcBack")}</button></div>${quizView()}`;
+  let h = _langAcademy34(defTrack); const la = state.la; if (!state.auth.user) return h;
+  // فتح أي وحدة = الدرس الممتع المتدرّج على طول
+  h = h.replace(/state\.la\.u='([a-z0-9]+)';state\.la\.tab='read';render\(\)/g, (m, id) => `state.lf=lfBuild(state.la.tr,'${id}');render();setTimeout(()=>lfSay(state.lf.steps[0].w[0]),300)`);
+  if (la.tr && !la.u) { const n = laSrsDue(la.tr).length; h = h.replace(/(<div class="grid g2" style="align-items:start;margin-top:1rem">)/, `<div class="card lfrev"><div><b>🔁 ${L("lfRevT")}</b><div class="xs muted">${n ? L("lfRevN").replace("{n}", n) : L("lfNoRev")}</div></div><button class="btn ${n ? "btn-p" : "btn-o"}" ${n ? "" : "disabled"} onclick="laSrsQuiz('${la.tr}')">${L("lfRevGo")}</button></div>$1`); }
+  if (la.tr && la.u) h = h.replace(/(<div class="tabs" style="margin:\.8rem 0">)/, `<button class="btn btn-p btn-lg btn-full" style="margin:.6rem 0" onclick="state.lf=lfBuild('${la.tr}','${la.u}');render();setTimeout(()=>lfSay(state.lf.steps[0].w[0]),300)">🚀 ${L("lfStart")}</button>$1`);
+  return h;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.lfcard{text-align:start;min-height:52vh}.lfk{font-weight:800;color:var(--accent);margin:.4rem 0 .8rem}.lfbig{font:700 2.6rem/1.6 'Amiri','Noto Naskh Arabic',serif;text-align:center;margin:.4rem 0}.lftr{text-align:center;color:var(--muted);font-size:1.05rem}.lfmean{text-align:center;font-size:1.25rem;font-weight:700;margin:.4rem 0 .6rem}
+.lfspk{width:56px;height:56px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-fg);font-size:1.4rem;cursor:pointer;box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent)}.lfbub .lfspk{width:40px;height:40px;font-size:1rem;flex:0 0 auto}
+.lfopts{display:grid;gap:.5rem;margin-top:1rem}.opt.good{background:#dcfce7;border-color:#16a34a;color:#14532d}.opt.bad{background:#fee2e2;border-color:#dc2626;color:#7f1d1d}
+.lfin{font:1.6rem 'Amiri',serif;text-align:center;margin-top:1rem}.lfkbd{display:flex;flex-wrap:wrap;gap:.25rem;justify-content:center;margin-top:.6rem}.lfkbd button{min-width:36px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);font:1.15rem 'Amiri',serif;cursor:pointer}
+.lfbub{display:flex;gap:.6rem;align-items:center;border:1px solid var(--line);border-radius:16px;padding:.5rem .7rem;margin:.4rem 0;background:var(--card)}.lfbub.b{background:color-mix(in srgb,var(--accent) 7%,var(--card))}
+.lfrev{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:1rem;border-inline-start:4px solid var(--gold)}</style>`);
+Object.assign(UI.ar, { lfStart: "ابدأ الدرس الممتع (خطوة بخطوة)", lfNew: "كلمة جديدة — اسمعها وقولها", lfPick: "يعني إيه؟", lfAgain: "تاني عشان تثبت 💪", lfGood: "برافو!", lfBad: "مش دي — هترجعلك تاني بعد شوية", lfWrite: "اسمع واكتب الكلمة", lfWriteP: "اكتب هنا…", lfCheck: "اتأكد", lfRight: "الصح", lfPlayAll: "شغّل المحادثة كلها", lfSpeak: "قولها بصوتك", lfSayBtn: "اضغط وقول الكلمة", lfSayNow: "قول الكلمة دلوقتي…", lfSkip: "مش دلوقتي", lfTryAgain: "قربت! جرّب تاني بعدين", lfDone: "خلّصت الدرس!", lfXp: "نقاطك", lfDoneS: "الكلمات اتضافت لمراجعتك الذكية — هترجعلك بعد يوم و٣ و٧ أيام عشان ما تنساهاش.", lfTest: "اختبار الوحدة", lfRedo: "عيد الدرس", lfRevT: "مراجعة كلماتك الذكية", lfRevN: "{n} كلمة محتاجة مراجعة النهارده", lfNoRev: "مفيش كلمات مستنية مراجعة النهارده 👌", lfRevGo: "راجع", lfRev: "مراجعة" });
+Object.assign(UI.en, { lfStart: "Start the fun lesson (step by step)", lfNew: "New word — listen and say it", lfPick: "What does it mean?", lfAgain: "Again to lock it in 💪", lfGood: "Well done!", lfBad: "Not that one — it will come back shortly", lfWrite: "Listen and write the word", lfWriteP: "Type here…", lfCheck: "Check", lfRight: "Correct answer", lfPlayAll: "Play the whole dialogue", lfSpeak: "Say it out loud", lfSayBtn: "Tap and say the word", lfSayNow: "Say the word now…", lfSkip: "Not now", lfTryAgain: "Close! Try again later", lfDone: "Lesson complete!", lfXp: "Your points", lfDoneS: "The words were added to your smart review — they'll come back after 1, 3 and 7 days so you don't forget.", lfTest: "Unit test", lfRedo: "Redo lesson", lfRevT: "Smart word review", lfRevN: "{n} words due for review today", lfNoRev: "No words due today 👌", lfRevGo: "Review", lfRev: "review" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
