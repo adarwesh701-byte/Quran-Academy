@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-12-v37";
+const UI_VERSION = "2026-11-12-v38";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -14852,6 +14852,60 @@ Object.assign(UI.en, { prT: "Prayer times & Qibla", prS: "Prayer times where you
   acT: "Ayah card to share", acS: "Make a beautiful image of an ayah and share it on Instagram or WhatsApp — post-sized.", acNew: "Another ayah", acDl: "Download image", acSh: "Share", acPick: "Pick ayah", acNote: "Type surah:ayah (e.g. 2:255). Text from Quran.com.",
   abT: "Memorize the 40 Nawawi hadith", abS: "Read the hadith, then hide 25%, 50% or more of the words and recite from memory, then test yourself.", abH: "Hadith", abHide: "Tap a hidden word to reveal it.", abQ: "Test me", abV: "Recite aloud", abOk: "memorized", abSrc: "Text of al-Nawawi's Forty Hadith (open hadith-api edition).",
   asT: "The Beautiful Names of Allah", asS: "Memorize the 99 Names in order and test yourself in stages.", asSrc: "Order follows the well-known listing in al-Tirmidhi (no. 3507); scholars of hadith discuss the authenticity of the listing itself.", asQ: "Test your memory", asQS: "You'll see a name — pick the one that comes next.", asFirst: "First {n}", asBest: "You've memorized the first {n}", asOrder: "Which name comes next?" });
+
+/* ================= v38: صوتك لكل المحتوى (غير القرآن) — تسجيلات بشرية + صوت مستنسخ من Colab ================= */
+const VLC = new Map();
+async function vlHash(t) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t).trim())); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("").slice(0, 40); }
+async function vlFind(text, kind) {
+  const k = kind + "|" + text; if (VLC.has(k)) return VLC.get(k);
+  try { const h = await vlHash(text); const { data } = await sb.from("voice_lines").select("url,src,kind").eq("h", h).eq("status", "approved").in("kind", [kind, "m"]).limit(6); const rows = data || []; const pick = rows.find(r => r.kind === kind && r.src === "human") || rows.find(r => r.kind === kind) || (kind === "m" ? null : null); const u = pick ? pick.url : null; VLC.set(k, u); return u; } catch (e) { VLC.set(k, null); return null; }
+}
+let __vlAu = null;
+function vlPlayUrl(u, slow) { return new Promise(res => { try { if (!__vlAu) __vlAu = new Audio(); __vlAu.pause(); __vlAu.src = u; __vlAu.playbackRate = slow ? .8 : 1; __vlAu.onended = () => res(true); __vlAu.onerror = () => res(false); __vlAu.play().catch(() => res(false)); } catch (e) { res(false); } }); }
+const _ttsPlay38 = ttsPlay;
+ttsPlay = async function (text, voice, slow) {
+  try { const sp = String(voice || "").slice(-1) === "b" ? "B" : "A"; const kind = (state.vc && state.vc[sp]) || (sp === "A" ? "m" : "f"); const u = await vlFind(text, kind); if (u) { const ok = await vlPlayUrl(u, slow || (state.vc && state.vc.slow)); if (ok) return; } } catch (e) {}
+  return _ttsPlay38.apply(this, arguments);
+};
+/* ---------- التسجيل بصوتك (الأونر يتنشر على طول، الطالب بعد الموافقة) ---------- */
+let __vlRec = null;
+async function vlRecord(btn, text, kind) {
+  if (!state.auth.user) return navigate("signup");
+  if (__vlRec) { __vlRec.stop(); return; }
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return toast(L("vlMic"), true); }
+  const mr = new MediaRecorder(stream); const chunks = []; mr.ondataavailable = e => chunks.push(e.data); __vlRec = mr; if (btn) { btn.classList.add("rec"); btn.textContent = "⏹ " + L("vlStop"); }
+  mr.onstop = async () => { __vlRec = null; stream.getTracks().forEach(t => t.stop()); if (btn) { btn.classList.remove("rec"); btn.textContent = "🎙️ " + L("vlRec"); }
+    const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" }); if (blob.size < 2000) return toast(L("vlShort"), true);
+    const own = realRole() === "owner"; const h = await vlHash(text); const ext = (mr.mimeType || "").includes("mp4") ? "m4a" : "webm"; const path = `${own ? "o" : "u-" + state.auth.user.id}/${h}-${kind}-${Date.now()}.${ext}`;
+    const up = await sb.storage.from("voice").upload(path, blob, { contentType: blob.type }); if (up.error) return toast(up.error.message, true);
+    const url = sb.storage.from("voice").getPublicUrl(path).data.publicUrl;
+    const ins = await sb.from("voice_lines").insert({ h, text: String(text).trim(), kind, src: "human", url, status: own ? "approved" : "pending" }); if (ins.error) return toast(ins.error.message, true);
+    VLC.delete(kind + "|" + text); toast(own ? L("vlLive") : L("vlPending")); };
+  mr.start(); setTimeout(() => { if (__vlRec === mr) mr.stop(); }, 20000);
+}
+// زرار التسجيل في الدرس الممتع والقاموس
+const _lfView38 = lfView;
+lfView = function () { let h = _lfView38(); const f = state.lf; const s = f && f.steps[f.i]; if (s && s.k === "learn" && state.auth.user) h = h.replace(/(<button class="btn btn-p btn-lg btn-full" style="margin-top:1rem" onclick="lfNext\(\)">)/, `<div style="text-align:center;margin-top:.5rem"><button class="btn btn-o vlbtn" onclick="vlRecord(this,${esc(JSON.stringify(s.w[0]))},'m')">🎙️ ${L("vlRec")}</button><div class="xs muted">${realRole() === "owner" ? L("vlOwnerHint") : L("vlStuHint")}</div></div>$1`); return h; };
+/* ---------- موافقة الأونر على تسجيلات الطلاب + تصدير جمل المنهج للصوت المستنسخ ---------- */
+function vlAdminCard() {
+  const p = useData("vlPend", async () => { const r = await sb.from("voice_lines").select("*").eq("status", "pending").order("created_at", { ascending: false }).limit(50); return r.data || []; });
+  const n = useData("vlCount", async () => { const r = await sb.from("voice_lines").select("id", { count: "exact", head: true }).eq("status", "approved"); return [r.count || 0]; });
+  const P = peopleMap();
+  return `<div class="card" style="margin-bottom:1rem"><h3>🎙️ ${L("vlT")}</h3><p class="xs muted" style="margin:.3rem 0 .6rem">${L("vlS")}</p><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><span class="badge">✅ ${Array.isArray(n) ? n[0] : "…"} ${L("vlCount")}</span><button class="btn btn-p" onclick="vlExport()">⬇️ ${L("vlExport")}</button><a class="btn btn-o" href="https://github.com/adarwesh701-byte/Quran-Academy/blob/main/docs/itqan_voice_colab.ipynb" target="_blank" rel="noopener">📓 ${L("vlColab")}</a></div>
+    <h4 style="margin:1rem 0 .4rem">⏳ ${L("vlPendT")} (${Array.isArray(p) ? p.length : "…"})</h4>${!Array.isArray(p) ? loadingBox() : p.length ? p.map(x => `<div class="kv" style="align-items:center"><span><b>${esc(x.text.slice(0, 60))}</b><br><span class="xs muted">${esc(personName(x.by_user, P.map))}</span></span><span class="row" style="gap:.3rem;align-items:center"><audio controls preload="none" src="${esc(x.url)}" style="height:32px;max-width:180px"></audio><button class="btn btn-p" style="padding:.2rem .6rem" onclick="vlDecide('${x.id}','approved')">✓</button><button class="btn btn-o" style="padding:.2rem .6rem" onclick="vlDecide('${x.id}','rejected')">✕</button></span></div>`).join("") : `<p class="sm muted">—</p>`}</div>`;
+}
+async function vlDecide(id, st) { const { error } = await sb.from("voice_lines").update({ status: st }).eq("id", id); if (error) return toast(error.message, true); delete state.data.vlPend; delete state.data.vlCount; VLC.clear(); render(); }
+function vlExport() {
+  const rows = [["text", "kind", "where"]]; const seen = new Set(); const add = (t, k, w) => { t = String(t || "").split("←").pop().trim(); if (!t || seen.has(k + t)) return; seen.add(k + t); rows.push([t, k, w]); };
+  Object.entries(LC).forEach(([tr, T]) => T.units.forEach(u => { u.words.forEach(w => add(w[0], "m", tr + "/" + u.id)); u.dialog.forEach(d => add(d[1], d[0] === "B" ? "f" : "m", tr + "/" + u.id)); u.gram.ex.forEach(e => add(e[0], "m", tr + "/" + u.id)); }));
+  try { Object.values(LANG_SETS || {}).forEach(set => (set.items || set || []).forEach && (set.items || set).forEach(x => x && x.ar && add(x.ar, "m", "set"))); } catch (e) {}
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "itqan-voice-lines.csv"; a.click(); toast(`${rows.length - 1} ${L("vlLines")}`);
+}
+const _ownerSimTab38 = ownerSimTab;
+ownerSimTab = function () { return vlAdminCard() + _ownerSimTab38(); };
+document.head.insertAdjacentHTML("beforeend", `<style>.vlbtn.rec{background:#dc2626;color:#fff;border-color:#dc2626;animation:vlp 1s infinite}@keyframes vlp{50%{opacity:.7}}</style>`);
+Object.assign(UI.ar, { vlRec: "سجّل بصوتك", vlStop: "وقّف", vlMic: "اسمح للموقع باستخدام المايك", vlShort: "التسجيل قصير أوي", vlLive: "اتنشر بصوتك ✓ — هيتسمع لكل الطلاب", vlPending: "شكرًا! تسجيلك هيظهر بعد موافقة الأكاديمية", vlOwnerHint: "تسجيلك بيتنشر على طول ويحل محل الصوت الآلي.", vlStuHint: "شارك بصوتك — بيتنشر بعد موافقة الشيخ.", vlT: "صوتك في المحتوى", vlS: "أي جملة ليها تسجيل بصوتك (بشري أو مستنسخ من Colab) بتتشغّل بدل الصوت الآلي. القرآن عمره ما بيتولّد — التلاوات للمشايخ أو اللي إنت ترفعه بس.", vlCount: "جملة بصوتك", vlExport: "صدّر جمل المنهج (CSV) للـ Colab", vlColab: "دفتر Colab لاستنساخ صوتك", vlPendT: "تسجيلات الطلاب مستنية موافقتك", vlLines: "جملة" });
+Object.assign(UI.en, { vlRec: "Record with your voice", vlStop: "Stop", vlMic: "Allow microphone access", vlShort: "Recording too short", vlLive: "Published with your voice ✓", vlPending: "Thanks! Your recording appears after approval", vlOwnerHint: "Your recording goes live immediately and replaces the synthetic voice.", vlStuHint: "Contribute your voice — published after the shaykh approves.", vlT: "Your voice in the content", vlS: "Any line with a recording in your voice (human or cloned in Colab) plays instead of the synthetic voice. Quran is never generated — only reciters or what you upload.", vlCount: "lines in your voice", vlExport: "Export curriculum lines (CSV) for Colab", vlColab: "Colab notebook to clone your voice", vlPendT: "Student recordings awaiting approval", vlLines: "lines" });
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
