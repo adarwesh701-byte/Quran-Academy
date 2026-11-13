@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-13-v52";
+const UI_VERSION = "2026-11-13-v53";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16100,6 +16100,22 @@ const _render52 = render; render = function () { const r = _render52.apply(this,
 const _renderBell52 = renderBell; renderBell = function () { const h = _renderBell52(); if (realRole() !== "owner" || state.preview) return h; return `<button class="ibtn ${state.uiEdit ? "on" : ""}" title="${state.lang === "ar" ? "رتّب الواجهة" : "Arrange layout"}" onclick="state.uiEdit=!state.uiEdit;if(!state.uiEdit)UIL_DRAFT=null;render()">🧩</button>` + h; };
 document.head.insertAdjacentHTML("beforeend", `<style>.uiledit{position:relative;outline:2px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:2px;cursor:grab}.uiltb{position:absolute;top:-.9rem;inset-inline-end:.2rem;display:flex;gap:.15rem;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:.1rem .3rem;z-index:5;box-shadow:0 4px 12px rgba(0,0,0,.15)}.uiltb i{font-style:normal;cursor:pointer;font-size:.85rem;padding:0 .15rem}.uilmv{position:absolute;bottom:-.8rem;inset-inline-start:.2rem;display:flex;gap:.2rem;z-index:5}.uilmv i{font-style:normal;cursor:pointer;background:var(--accent);color:#fff;border-radius:6px;padding:0 .35rem;font-size:.7rem}.uilhid{opacity:.35}.uilnested{opacity:.6;transform:scale(.94)}.uildrag{opacity:.4}.uilover{box-shadow:0 0 0 3px var(--accent)!important}.uilparent{position:relative}.uilmore{position:absolute;top:.2rem;inset-inline-end:.3rem;font-size:.7rem;background:var(--accent);color:#fff;border-radius:999px;padding:0 .4rem;cursor:pointer;z-index:2}.uilpop{position:absolute;z-index:400;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:.5rem;box-shadow:0 14px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:.3rem;min-width:220px;max-width:280px}
 #uilBar{position:fixed;bottom:5.2rem;left:50%;transform:translateX(-50%);z-index:350;background:var(--card);color:var(--fg);border:2px solid var(--accent);border-radius:18px;padding:.5rem .7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;max-width:94vw;box-shadow:0 14px 40px rgba(0,0,0,.25)}</style>`);
+
+/* ================= v53: القصص المصوّرة والمحادثات بتتقري بصوت (مش آهات بس) ================= */
+let __spAu = null;
+const _storyOpen53 = storyOpen; storyOpen = function (c) { const st = c.story || {}; const r = _storyOpen53(Object.assign({}, c, { story: Object.assign({}, st, { hum: false }) })); SP.voice = true; return r; };
+const _spShow53 = spShow;
+spShow = async function () {
+  const c = SP.c; const i = SP.i; await _spShow53(); if (!SP.c || SP.c !== c || SP.i !== i || !SP.playing || SP.voice === false) return;
+  const s = c.story.slides[i]; try { if (window.speechSynthesis) speechSynthesis.cancel(); if (__spAu) __spAu.pause(); } catch (e) {}
+  clearTimeout(SP.t);
+  const next = () => { if (SP.c === c && SP.i === i && SP.playing) SP.t = setTimeout(() => spGo(1, true), 900); };
+  if (s.a) { __spAu = new Audio(eaUrl(HUSARY, s.a)); __spAu.onended = next; __spAu.onerror = next; __spAu.play().catch(next); return; }
+  const t = s.t || {}; const txt = t[state.lang] || t.ar || t.en || ""; if (!txt) return next();
+  try { await ttsPlay(txt, "m"); } catch (e) {} next();
+};
+const _storyClose53 = storyClose; storyClose = function () { try { if (__spAu) __spAu.pause(); if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} return _storyClose53(); };
+const _spToggle53 = spToggle; spToggle = function () { const r = _spToggle53(); if (!SP.playing) { try { if (__spAu) __spAu.pause(); if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} } return r; };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
