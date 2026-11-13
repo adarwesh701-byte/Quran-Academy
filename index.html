@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-13-v54";
+const UI_VERSION = "2026-11-13-v55";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16162,6 +16162,39 @@ PAGES16.push("kit");
 const _render54 = render; render = function () { if (state.route === "kit") { const app = document.getElementById("app"); if (!app) return; let body; try { body = renderKit(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); visitPing(false); } catch (e) {} return; } return _render54.apply(this, arguments); };
 const _renderOwnerDash54 = renderOwnerDash; renderOwnerDash = function () { let h = _renderOwnerDash54(); if (realRole() === "owner" && !state.preview && state.og === "settings") h = h.replace(/(<div class="tabs dtabs">[\s\S]*?)(<\/div>)/, `$1<a href="#" aria-current="false" onclick="go16('kit');return false;">🧰 ${state.lang === "ar" ? "عُدّة التسويق" : "Marketing kit"}</a>$2`); return h; };
 document.head.insertAdjacentHTML("beforeend", `<style>.kitgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem}.kitpost{position:relative;aspect-ratio:4/5;border-radius:18px;overflow:hidden;color:#fff;padding:1.3rem 1.2rem;display:flex;flex-direction:column;gap:.5rem;font-family:'IBM Plex Sans Arabic',Tajawal,sans-serif;background:linear-gradient(160deg,var(--k),#0b1220 92%)}.kpbg{position:absolute;inset:0;background:radial-gradient(circle at 85% 12%,rgba(255,255,255,.18),transparent 40%),repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 12px,transparent 12px 24px);pointer-events:none}.kptop{display:flex;align-items:center;gap:.45rem;font-weight:700;font-size:.85rem;opacity:.95;position:relative}.kplogo{width:1.7rem;height:1.7rem;border-radius:8px;background:#fff;color:var(--k);display:grid;place-items:center;font:700 1rem 'Amiri',serif}.kpic{font-size:3.4rem;line-height:1;margin-top:.6rem;position:relative}.kitpost h2{font-size:1.45rem;line-height:1.35;margin:.2rem 0;position:relative;color:#fff}.kitpost ul{list-style:none;padding:0;margin:.2rem 0;display:flex;flex-direction:column;gap:.35rem;position:relative}.kitpost li{background:rgba(255,255,255,.13);border-radius:10px;padding:.35rem .6rem;font-size:.86rem}.kpcta{margin-top:auto;background:#fff;color:#0b1220;border-radius:999px;padding:.45rem .9rem;font-weight:800;align-self:flex-start;position:relative}.kpurl{font-size:.72rem;opacity:.85;direction:ltr;position:relative}.kitpre{white-space:pre-wrap;background:var(--soft,#f1f5f9);border-radius:12px;padding:.7rem;font:inherit;font-size:.9rem}.kitplan p{margin:.35rem 0;line-height:1.8}</style>`);
+
+/* ================= v55: الفصل — الطرد/إنهاء الحصة بجد، طلب إذن التسجيل، اختيار المايك، الفيديو بيظهر للكل، والتابلت ================= */
+/* الطرد: بيطلع الطالب ومش بيقدر يدخل تاني (حتى لو معاه اللينك) */
+rmKick = async function (pid) { if (!confirm(RL("removeConfirm"))) return; const p = RM.peers[pid]; const uid = p && p.meta && p.meta.uid; rmSend("kick", { to: pid }); if (uid && RM.kind !== "test") { const { error } = await sb.rpc("room_kick", { p_kind: RM.kind, p_id: RM.id, p_user: uid }); if (error) toast(error.message, true); } };
+/* إنهاء الحصة للكل: الكل بيخرج والحصة بتتقفل لحد ما المعلم يفتحها تاني */
+rmEndAll = function () { rmMenuClose(); if (!confirm(RL("endAll") + "?")) return; rmSend("end", {}); if (RM.kind !== "test") sb.rpc("room_end", { p_kind: RM.kind, p_id: RM.id }).then(() => {}, () => {}); setTimeout(() => roomLeave(true), 300); };
+const _rmJoin55 = rmJoin; rmJoin = async function () { await _rmJoin55(); if (RM.joined && rmIsHost() && RM.kind !== "test") sb.rpc("room_reopen", { p_kind: RM.kind, p_id: RM.id }).then(() => {}, () => {}); };
+/* أزرار المعلم على كل فيديو: كتم + طرد */
+const _rmUpdTile55 = rmUpdTile; rmUpdTile = function (it) { const r = _rmUpdTile55(it); try { const t = RM.tiles[it.id]; if (!t) return r; if (t.v.paused && t.v.srcObject) t.v.play().catch(() => { t.el.classList.add("needtap"); }); let hb = t.el.querySelector(".rm-hostb"); const want = rmIsHost() && !it.me && it.kind !== "screen" && it.peer; if (want && !hb) { hb = document.createElement("div"); hb.className = "rm-hostb"; hb.innerHTML = `<button title="${RL("mute")}" data-a="mute">🔇</button><button title="${state.lang === "ar" ? "طرد من الحصة" : "Remove"}" data-a="kick">⛔</button>`; hb.onclick = e => { e.stopPropagation(); const a = e.target.dataset.a; const pid = it.peer && (it.peer.id || it.peer.pid) || it.id; if (a === "mute") rmSend("mute", { to: pid }); if (a === "kick") rmKick(pid); }; t.el.appendChild(hb); } else if (!want && hb) hb.remove(); } catch (e) {} return r; };
+document.addEventListener("click", () => { document.querySelectorAll(".rm-tile.needtap video").forEach(v => v.play().then(() => v.closest(".rm-tile").classList.remove("needtap")).catch(() => {})); }, true);
+/* التسجيل: الطالب بيطلب، والمعلم يوافق أو يرفض */
+RM.recOk = false;
+const _rmOnEv55 = rmOnEv; rmOnEv = function (p) {
+  if (RM.joined && p && p.from !== RM.pid) {
+    const fromHost = p.role === "host" || p.role === "owner"; const ar = state.lang === "ar";
+    if (p.type === "recreq" && rmIsHost()) { const ok = confirm((p.name || "") + (ar ? " عاوز يسجّل الحصة. توافق؟" : " wants to record the lesson. Allow?")); rmSend(ok ? "recok" : "recno", { to: p.from }); return; }
+    if (p.type === "recok" && fromHost && p.to === RM.pid) { RM.recOk = true; rmRenderBar(); toast(ar ? "✓ المعلم سمحلك تسجّل" : "✓ The teacher allowed you to record"); return; }
+    if (p.type === "recno" && fromHost && p.to === RM.pid) { toast(ar ? "المعلم ماوافقش على التسجيل" : "The teacher declined recording", true); return; }
+  }
+  return _rmOnEv55(p);
+};
+const _rmRenderBar55 = rmRenderBar; rmRenderBar = function () {
+  _rmRenderBar55(); const b = rmEl("rmBar"); if (!b) return; const ar = state.lang === "ar";
+  if (!rmIsHost() && !b.querySelector("#rbRec") && rmCanRecord()) { const x = document.createElement("button"); x.className = "rm-btn" + (RM.rec ? " off" : ""); x.id = "rbRec"; x.innerHTML = `<i class="fa-solid fa-circle"></i><span>${RM.rec ? RL("stopRec") : RM.recOk ? RL("rec") : (ar ? "اطلب تسجيل" : "Ask to record")}</span>`; x.onclick = () => { if (RM.rec || RM.recOk) return rmToggleRec(); rmSend("recreq", { name: RM.myName }); toast(ar ? "اتبعت الطلب للمعلم…" : "Request sent to the teacher…"); }; const more = b.querySelector("#rbMore"); b.insertBefore(x, more); }
+  const sh = b.querySelector("#rbShare"); if (sh && !(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) { sh.classList.add("off"); sh.setAttribute("onclick", ""); sh.onclick = () => toast(ar ? "مشاركة الشاشة مش مدعومة على الموبايل/التابلت من المتصفح — شاركها من الكمبيوتر (كروم أو إيدج)." : "Screen sharing isn't supported on phones/tablets — share from a computer (Chrome or Edge).", true); }
+  if (!b.querySelector("#rbAudio")) { const a = document.createElement("button"); a.className = "rm-btn"; a.id = "rbAudio"; a.innerHTML = `<i class="fa-solid fa-sliders"></i><span>${ar ? "المايك والسماعة" : "Mic & speaker"}</span>`; a.onclick = () => rmSettings(); b.insertBefore(a, b.querySelector("#rbMore")); }
+};
+/* لو وصّلت مايك أو سماعة جديدة: القايمة تتحدث لوحدها */
+try { navigator.mediaDevices && navigator.mediaDevices.addEventListener("devicechange", async () => { const el = rmEl("rmDevSel") || rmEl("rmSetDev"); if (el && RM.local) el.innerHTML = await rmDevSelHtml() + `<p style="font-size:.75rem;color:#94a3b8;margin:.2rem 0 0">${state.lang === "ar" ? "اختار المايك لوحده والسماعة لوحدها. على الموبايل السماعة بتتحدد من البلوتوث/إعدادات الصوت." : "Pick the mic and the speaker separately. On phones the speaker follows Bluetooth/sound settings."}</p>`; }); } catch (e) {}
+document.head.insertAdjacentHTML("beforeend", `<style>.rm-hostb{position:absolute;top:.4rem;inset-inline-start:.4rem;display:flex;gap:.25rem;z-index:3}.rm-hostb button{border:0;border-radius:8px;background:rgba(2,6,23,.65);color:#fff;padding:.15rem .4rem;cursor:pointer;font-size:.85rem}.rm-tile.needtap::after{content:"▶ دوس لتشغيل الصوت والفيديو";position:absolute;inset:auto 0 40% 0;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 6px #000}</style>`);
+
+/* التابلت: تصميم خاص — محتوى أكبر وأعمدة أكتر */
+document.head.insertAdjacentHTML("beforeend", `<style>@media (min-width:700px) and (max-width:1280px) and (hover:none){html{font-size:17.5px}.wrap{max-width:100%!important;padding-inline:1.4rem!important}.dmgrid,.hvgrid,.libgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.kitgrid,.stgrid,.pmap{grid-template-columns:repeat(3,minmax(0,1fr))!important}.tjtext,.mtv{font-size:2.1rem!important;line-height:2.5!important}.btn,.rm-btn,.opt{min-height:48px}.bnav a{font-size:.85rem}.hvcard{min-height:180px}.lvstage{max-height:78vh}}@media (min-width:700px) and (max-width:1280px) and (hover:none) and (orientation:landscape){.dmgrid,.hvgrid,.libgrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
