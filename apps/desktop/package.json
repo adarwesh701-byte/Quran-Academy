@@ -5,17 +5,51 @@
   "description": "Itqan Academy — Quran, maqamat, tajweed and Arabic",
   "main": "main.js",
   "author": "Itqan Academy",
-  "scripts": { "dist": "electron-builder --publish never" },
-  "devDependencies": { "electron": "^31.7.0", "electron-builder": "^24.13.3" },
+  "scripts": {
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "^31.7.0",
+    "electron-builder": "^24.13.3"
+  },
   "build": {
     "appId": "com.itqan.academy",
     "productName": "Itqan Academy",
     "artifactName": "itqan-academy-${os}.${ext}",
-    "directories": { "output": "dist" },
-    "files": ["main.js", "icon.png"],
-    "win": { "target": "nsis", "icon": "icon.png" },
-    "mac": { "target": "zip", "icon": "icon.png", "category": "public.app-category.education" },
-    "linux": { "target": "AppImage", "icon": "icon.png", "category": "Education" },
-    "nsis": { "oneClick": true }
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "icon.png"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "icon.png",
+      "category": "public.app-category.education",
+      "identity": null
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png",
+      "category": "Education"
+    },
+    "nsis": {
+      "oneClick": true
+    },
+    "dmg": {
+      "title": "Itqan Academy"
+    }
   }
 }

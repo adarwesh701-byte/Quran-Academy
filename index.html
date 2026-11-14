@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v98";
+const UI_VERSION = "2026-11-14-v99";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18892,6 +18892,37 @@ renderMakharij = function () {
 };
 document.head.insertAdjacentHTML("beforeend", `<style>.vb98{margin:.4rem 0 .8rem;padding:.6rem .8rem}.role98{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem}.fuln.role98on{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:12px}
 .mkall98{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.4rem}.mkall98>div{display:grid;grid-template-columns:2rem repeat(4,1fr);gap:.2rem;align-items:center;padding:.3rem;border:1px solid var(--line);border-radius:10px}.mkall98 b{font:700 1.4rem 'Amiri',serif;text-align:center}.mkall98 button{font:1.25rem 'Amiri',serif;padding:.2rem 0;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);cursor:pointer}.mkall98 button.mine{border-color:#16a34a;background:#dcfce7}</style>`);
+
+/* ================= v99: صفحة التحميل — كل الأجهزة ظاهرة (ويندوز، أندرويد، تابلت، ماك، آيفون، آيباد، لينكس) وجهازك متحدد فوق، وأي زرار تحميل في الموقع بيفتحها ================= */
+const _pwaInstall99 = pwaInstall;
+pwaInstall = function () { if (state.route !== "app") { navigate("app"); window.scrollTo({ top: 0 }); return; } return _pwaInstall99.apply(this, arguments); };
+if (typeof installApp12 === "function") installApp12 = function () { navigate("app"); window.scrollTo({ top: 0 }); };
+function relAssets99() { return useData("relAssets99", async () => { const r = await fetch("https://api.github.com/repos/adarwesh701-byte/Quran-Academy/releases/tags/apps-latest").then(r => r.json()); return [(r.assets || []).map(a => ({ n: a.name, u: a.browser_download_url, s: a.size }))]; }); }
+function asset99(re) { const a = relAssets99(); const xs = Array.isArray(a) ? a[0] : []; const x = xs.find(z => re.test(z.n)); return x || null; }
+renderAppPage = function () {
+  const ar = state.lang === "ar"; const T = (a, e) => ar ? a : e; const k = devKind(); const mb = s => s ? ` · ${Math.round(s / 1048576)} MB` : "";
+  const apk = asset99(/\.apk$/) || { u: REL57 + "itqan-academy.apk" }, exe = asset99(/\.exe$/) || { u: REL57 + "itqan-academy-win.exe" }, img = asset99(/AppImage$/) || { u: REL57 + "itqan-academy-linux.AppImage" }, dmg = asset99(/\.dmg$|mac.*\.zip$/);
+  const iosSteps = T("افتح الموقع من Safari ← زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية» ➕ — هيتثبت كتطبيق كامل بأيقونة ويشتغل ملء الشاشة.", "Open the site in Safari → Share ⬆️ → “Add to Home Screen” ➕ — it installs as a full-screen app.");
+  const D = [
+    ["win", "🪟", "Windows", exe, T("افتح الملف بعد التحميل. لو ظهر «حماية الكمبيوتر»: «معلومات إضافية» ← «تشغيل على أي حال».", "Open the file. If “protected your PC” appears: More info → Run anyway.")],
+    ["android", "🤖", "Android", apk, T("افتح الملف ← «تثبيت». لو ظهر «تطبيق غير معروف»: «السماح» ← «تثبيت».", "Open the file → Install. If “unknown app” appears: Allow → Install.")],
+    ["atab", "📱", T("تابلت أندرويد", "Android tablet"), apk, T("نفس تطبيق أندرويد — مظبوط على الشاشات الكبيرة.", "Same Android app — adapted to large screens.")],
+    ["mac", "💻", "Mac", dmg, dmg ? T("افتح الملف واسحب الأيقونة لـ Applications. أول مرة: كليك يمين على التطبيق ← «فتح».", "Open, drag to Applications. First time: right-click the app → Open.") : T("نسخة الماك بتتجهّز — لحد ما تخلص: افتح الموقع من Safari ← ملف ← «إضافة إلى Dock».", "The Mac app is being built — meanwhile: Safari → File → Add to Dock.")],
+    ["ios", "🍎", "iPhone", null, iosSteps],
+    ["ipad", "📲", "iPad", null, iosSteps],
+    ["linux", "🐧", "Linux", img, T("كليك يمين ← Properties ← اسمح بالتشغيل، وبعدين افتحه.", "Right-click → Properties → allow executing, then open.")]
+  ];
+  const me = D.find(d => d[0] === k) || D[0]; const others = D.filter(d => d !== me);
+  const action = (d, big) => d[3] ? `<a class="btn ${big ? "btn-p btn-lg" : "btn-o"}" href="${d[3].u}" download onclick="setTimeout(()=>toast('${T("⬇️ بدأ التحميل", "⬇️ Downloading")}'),200)">⬇️ ${T("تحميل", "Download")}${big ? " " + T("التطبيق لـ", "for") + " " + esc(d[2]) : ""}${mb(d[3].s)}</a>` : `<button class="btn ${big ? "btn-p btn-lg" : "btn-o"}" onclick="${d[0] === "mac" ? "_pwaInstall99()" : `toast('${String(d[4]).replace(/'/g, "")}')`}">${d[0] === "ios" || d[0] === "ipad" ? "➕ " + T("ثبّته على", "Install on") + (big ? " " + esc(d[2]) : "") : "⏳ " + T("قريبًا", "Soon")}</button>`;
+  return `<section class="sec"><div class="wrap" style="max-width:52rem;text-align:center"><div style="font-size:3rem">📲</div><h1 style="font-size:1.9rem;margin:.3rem 0">${L("apTitle")}</h1><p class="muted">${T("التطبيق الكامل لجهازك — كل حاجة في الموقع موجودة فيه، وأي تحديث بيوصلك لوحده.", "The full app for your device — everything on the site, updated automatically.")}</p>
+    ${IS_STANDALONE ? `<div class="notice ok">${L("apInstalled")}</div>` : `<div class="card dl99me"><span class="badge">✅ ${T("جهازك", "Your device")}</span><div style="font-size:3rem">${me[1]}</div><h2>${esc(me[2])}</h2>${action(me, true)}<p class="sm muted" style="max-width:30rem;margin:.6rem auto 0">${esc(me[4])}</p></div>`}
+    <h3 style="margin:1.4rem 0 .6rem">${T("أجهزة تانية", "Other devices")}</h3><div class="dl99g">${others.map(d => `<div class="card"><span style="font-size:2rem">${d[1]}</span><b>${esc(d[2])}</b>${action(d, false)}<small class="xs muted">${esc(d[4])}</small></div>`).join("")}</div>
+    <p class="xs muted" style="margin-top:1rem">${T("آيفون وآيباد: آبل مش بتسمح بتحميل التطبيقات من برّه الـ App Store، فالتثبيت من Safari هو الطريقة الرسمية لحد ما ننزل على الـ App Store.", "iPhone/iPad: Apple only allows App Store installs; Safari's Add to Home Screen is the official route until our App Store release.")}</p></div></section>`;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.dl99me{margin-top:1rem;padding:1.4rem;border:2px solid var(--accent)}.dl99me h2{margin:.2rem 0 .8rem}.dl99g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem}.dl99g .card{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.9rem}.dl99g small{line-height:1.5}</style>`);
+/* صفحات المقامات (مارس بصوتك وأخواتها): لو نفس الكارت اتكرر في نفس الصفحة نسيب نسخة واحدة */
+function dedupe99(app) { if (!app || state.route !== "library") return; const seen = new Map(); [...app.querySelectorAll(".card")].forEach(c => { if (!c.isConnected) return; const t = (c.innerText || "").replace(/\s+/g, " ").trim(); if (t.length < 60) return; const p = seen.get(t); if (p && p.isConnected && !p.contains(c) && !c.contains(p)) c.remove(); else seen.set(t, c); }); }
+const _render99 = render; render = function () { const r = _render99.apply(this, arguments); try { dedupe99(document.getElementById("app")); } catch (e) {} return r; };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
