@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v75b";
+const UI_VERSION = "2026-11-14-v76";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17794,6 +17794,94 @@ const _DOMAINS75 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS75(); ["h
 if (Array.isArray(KIT) && !KIT.some(k => k[0] === "kidsmushaf")) KIT.splice(5, 0, ["kidsmushaf", "🧒", "المصحف المعلّم للأطفال", "Teaching mushaf for kids", ["الشيخ يقرأ والأطفال يردّدوا", "تكرار وتصحيح"], ["Sheikh recites, kids repeat", "Repeat & check"], "#/kidsmushaf", "#f59e0b"]);
 document.head.insertAdjacentHTML("beforeend", `<style>.lhp{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin:.6rem 0}.lhs{display:flex;flex-direction:column;align-items:center;gap:.2rem}.lhs small{font-size:.75rem}.lhb{padding:.1rem .45rem!important;font-size:.85rem}
 .kmtext{font:2rem/2.6 'Amiri',serif;text-align:justify;direction:rtl;background:linear-gradient(135deg,#fffbeb,#fdf2f8);color:#1f2937;border-radius:22px;padding:1.2rem;margin-top:1rem}[data-theme=dark] .kmtext{background:#1e1b2e;color:#f1f5f9}.kmay{cursor:pointer;border-radius:12px;padding:0 .2rem;transition:background .2s}.kmay.on{background:#fde68a;color:#78350f}.kmn{color:#b45309;font-size:1.3rem}.kmbs{text-align:center;color:#7c3aed}.kmbar{position:sticky;top:4rem;z-index:5}</style>`);
+
+/* ================= v76: صفحة التحميل بضغطة واحدة حسب جهازك + تعديل/نقل/حذف أي تسجيل + رفع مجموعة تسجيلات مرة واحدة + روابط الأناشيد ================= */
+/* 1) صفحة التحميل: يدخل يلاقي جهازه مختار — زرار واحد يحمّل ويثبّت، والأجهزة التانية ظاهرة تحت */
+renderAppPage = function () {
+  const ar = state.lang === "ar"; const T = (a, e) => ar ? a : e; const k = devKind();
+  const F = { android: ["itqan-academy.apk", "🤖", "Android"], atab: ["itqan-academy.apk", "📱", T("تابلت أندرويد", "Android tablet")], win: ["itqan-academy-win.exe", "🪟", "Windows"], linux: ["itqan-academy-linux.AppImage", "🐧", "Linux"] };
+  const name = { android: T("موبايل أندرويد", "Android phone"), atab: T("تابلت أندرويد", "Android tablet"), ipad: "iPad", ios: "iPhone", win: "Windows", mac: "Mac", linux: "Linux", other: T("جهازك", "your device") }[k] || T("جهازك", "your device");
+  const f = F[k]; const apple = k === "ios" || k === "ipad" || k === "mac";
+  const hint = k === "android" || k === "atab" ? T("بعد التحميل افتح الملف ← «تثبيت». لو ظهر «تطبيق غير معروف» اضغط «السماح» ثم «تثبيت» — ده طبيعي لأي تطبيق من برّه جوجل بلاي.", "After downloading, open the file → Install. If you see “unknown app”, tap Allow → Install.") : k === "win" ? T("بعد التحميل افتح الملف. لو ويندوز قال «حماية الكمبيوتر»: «معلومات إضافية» ← «تشغيل على أي حال».", "After downloading, open the file. If Windows says “protected your PC”: More info → Run anyway.") : k === "linux" ? T("بعد التحميل: كليك يمين ← Properties ← اسمح بالتشغيل، وبعدين افتحه.", "After downloading: right-click → Properties → allow executing, then open it.") : "";
+  const appleSteps = k === "mac" ? T("افتح الموقع من Safari ← قائمة «ملف» ← «إضافة إلى Dock». أو من Chrome: زرار التثبيت في شريط العنوان.", "Open the site in Safari → File → Add to Dock. Or in Chrome: the install icon in the address bar.") : T("افتح الموقع من Safari ← زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية» ➕", "Open the site in Safari → Share ⬆️ → Add to Home Screen ➕");
+  const main = IS_STANDALONE ? `<div class="notice ok">${L("apInstalled")}</div>`
+    : f ? `<a class="btn btn-p btn-lg dl76b" href="${REL57 + f[0]}" download onclick="setTimeout(()=>toast('${T("⬇️ بدأ التحميل — افتح الملف لما يخلص", "⬇️ Downloading — open the file when it finishes")}'),300)">${f[1]} ${T("حمّل التطبيق لـ", "Download for")} ${esc(name)}</a><p class="sm muted" style="margin:.6rem auto 0;max-width:30rem">${hint}</p>`
+    : apple ? `<button class="btn btn-p btn-lg dl76b" onclick="${k === "mac" ? "pwaInstall()" : `toast('${appleSteps}')`}">🍎 ${T("ثبّت التطبيق على", "Install on")} ${esc(name)}</button><p class="sm muted" style="margin:.6rem auto 0;max-width:30rem">${appleSteps}</p>`
+    : `<button class="btn btn-p btn-lg dl76b" onclick="pwaInstall()">📲 ${T("ثبّت التطبيق", "Install the app")}</button>`;
+  const others = [["android", "🤖", "Android", REL57 + "itqan-academy.apk"], ["win", "🪟", "Windows", REL57 + "itqan-academy-win.exe"], ["linux", "🐧", "Linux", REL57 + "itqan-academy-linux.AppImage"], ["ios", "🍎", "iPhone / iPad", ""], ["mac", "💻", "Mac", ""]].filter(o => !(o[0] === k || (k === "atab" && o[0] === "android") || (k === "ipad" && o[0] === "ios")));
+  return `<section class="sec"><div class="wrap" style="max-width:46rem;text-align:center">
+    <div class="dl76ic">📲</div><h1 style="font-size:1.9rem;margin:.4rem 0">${L("apTitle")}</h1><p class="muted">${L("apSub")}</p>
+    <div class="card dl76"><p class="xs muted" style="margin-bottom:.6rem">${T("جهازك:", "Your device:")} <b>${esc(name)}</b></p>${main}</div>
+    <h3 style="margin:1.6rem 0 .7rem">${T("أجهزة تانية", "Other devices")}</h3>
+    <div class="dl76o">${others.map(o => o[3] ? `<a class="card" href="${o[3]}" download><span>${o[1]}</span><b>${o[2]}</b><small>${T("تحميل", "Download")}</small></a>` : `<button class="card" onclick="toast('${o[0] === "mac" ? T("على الماك: افتح الموقع من Safari ← ملف ← إضافة إلى Dock", "On Mac: Safari → File → Add to Dock") : T("على الآيفون: افتح الموقع من Safari ← مشاركة ⬆️ ← إضافة إلى الشاشة الرئيسية", "On iPhone: Safari → Share ⬆️ → Add to Home Screen")}')"><span>${o[1]}</span><b>${o[2]}</b><small>${T("الخطوات", "Steps")}</small></button>`).join("")}</div>
+    <p class="xs muted" style="margin-top:1rem">🔄 ${L("apSync")}</p></div></section>`;
+};
+appCtaBanner = function () { if (IS_STANDALONE) return ""; return `<section style="padding:1rem 0"><div class="wrap"><div class="appcta"><div><b style="font-size:1.15rem">${L("apBanner")}</b><div class="sm" style="opacity:.9">${L("apSync")}</div></div><button class="btn" onclick="navigate('app')">📲 ${L("apBannerBtn")}</button></div></div></section>`; };
+/* 2) تعديل / نقل / حذف أي تسجيل أو نشيد */
+const RK76 = [["murattal", "📿 مرتل", "📿 Murattal"], ["mujawwad", "🎙️ مجود", "🎙️ Mujawwad"], ["modulation", "🔀 تحويل بين مقامين", "🔀 Modulation"], ["nasheed", "🌙 نشيد", "🌙 Nasheed"], ["ibtihal", "🤲 ابتهال / أذان", "🤲 Ibtihal / adhan"]];
+function rcAll76() { return Object.values(state.data).filter(Array.isArray).flat().filter(x => x && x.id && (x.rec_kind !== undefined || x.maqam !== undefined)); }
+async function recEdit76(id) {
+  const ar = state.lang === "ar"; let c = rcAll76().find(x => x.id === id);
+  if (!c) { const r = await sb.from("contents").select("*").eq("id", id).maybeSingle(); c = r.data; } if (!c) return;
+  const secs = (sectionsData() || []).filter ? (sectionsData() || []) : []; const kind = recKind59(c);
+  const mqo = sel => MQ.map(m => `<option value="${m.id}" ${m.id === sel ? "selected" : ""}>${esc(mqName(m))}</option>`).join("");
+  const old = document.getElementById("fpM"); if (old) old.remove(); const m = document.createElement("div"); m.id = "fpM";
+  m.innerHTML = `<div class="fpbox card re76" style="max-width:32rem;width:100%;max-height:90vh;overflow:auto;text-align:start"><h3>✏️ ${ar ? "تعديل / نقل" : "Edit / move"}</h3>
+    <label class="l">${ar ? "الاسم" : "Title"}</label><input class="in" id="re_t" value="${esc(locText(c.title) || "")}">
+    <div class="grid g2" style="gap:.5rem"><div><label class="l">${ar ? "النوع" : "Kind"}</label><select class="in" id="re_k" onchange="document.getElementById('re_m2w').style.display=this.value==='modulation'?'':'none'">${RK76.map(r => `<option value="${r[0]}" ${r[0] === kind ? "selected" : ""}>${ar ? r[1] : r[2]}</option>`).join("")}</select></div>
+    <div><label class="l">${ar ? "المقام" : "Maqam"}</label><select class="in" id="re_m"><option value="">—</option>${mqo(c.maqam)}</select></div></div>
+    <div id="re_m2w" style="${kind === "modulation" ? "" : "display:none"}"><label class="l">${ar ? "إلى مقام" : "To maqam"}</label><select class="in" id="re_m2"><option value="">—</option>${mqo(c.maqam_to)}</select></div>
+    <label class="l">${ar ? "القسم (نقل لمكان تاني)" : "Section (move elsewhere)"}</label><select class="in" id="re_s"><option value="">— ${ar ? "تلقائي حسب المقام" : "auto by maqam"} —</option>${secs.map(s => `<option value="${s.id}" ${s.id === c.section_id ? "selected" : ""}>${esc(locText(s.title) || "")}${(s.meta || {}).maqam ? " · " + esc(maqamName(s.meta.maqam)) : ""}</option>`).join("")}</select>
+    <div class="grid" style="grid-template-columns:2fr 1fr 1fr;gap:.5rem"><div><label class="l">${ar ? "السورة" : "Surah"}</label><select class="in" id="re_su"><option value="">—</option>${SURAHS.map((n, i) => `<option value="${i + 1}" ${c.surah === i + 1 ? "selected" : ""}>${i + 1}. ${esc(n)}</option>`).join("")}</select></div><div><label class="l">${ar ? "من آية" : "From"}</label><input class="in" id="re_a" type="number" min="1" value="${c.ayah || ""}"></div><div><label class="l">${ar ? "لآية" : "To"}</label><input class="in" id="re_b" type="number" min="1" value="${c.ayah_to || ""}"></div></div>
+    <label class="l">${ar ? "القارئ / المنشد" : "Reciter / munshid"}</label><input class="in" id="re_r" value="${esc(c.reciter || "")}">
+    <label class="l">${ar ? "اللينك (لو يوتيوب أو بحث)" : "Link (YouTube or search)"}</label><input class="in" id="re_u" dir="ltr" value="${esc(c.url && !/^ea:/.test(c.url) ? c.url : "")}" placeholder="https://youtube.com/watch?v=…">
+    <div class="row" style="gap:.4rem;margin-top:.9rem;flex-wrap:wrap"><button class="btn btn-p" onclick="recSave76('${c.id}')">💾 ${L("save")}</button><button class="btn btn-o" style="color:#dc2626" onclick="recDel76('${c.id}')">🗑️ ${ar ? "حذف" : "Delete"}</button><button class="btn btn-o" onclick="document.getElementById('fpM').remove()">${ar ? "إلغاء" : "Cancel"}</button></div></div>`;
+  m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m);
+}
+function recInv76() { Object.keys(state.data).forEach(k => { if (/^mqrec59:|^tahwil|^libCt|^sec:|^ct:|^contents/.test(k)) delete state.data[k]; }); try { invalidate("libCt"); } catch (e) {} }
+async function recSave76(id) {
+  const g = x => document.getElementById(x); const ar = state.lang === "ar"; const k = g("re_k").value, m = g("re_m").value || null, m2 = g("re_m2").value || null, t = g("re_t").value.trim(), u = g("re_u").value.trim();
+  if (k === "modulation" && (!m || !m2 || m === m2)) return toast(ar ? "اختار مقامين مختلفين للتحويل" : "Choose two different maqamat", true);
+  const su = +g("re_su").value || null, a = +g("re_a").value || null, b = +g("re_b").value || null;
+  const patch = { title: { ar: t, en: t }, rec_kind: k, maqam: m, maqam_to: k === "modulation" ? m2 : null, section_id: g("re_s").value || (m ? mqSecId(m) : null), surah: su, ayah: su ? a : null, ayah_to: su ? (b || a) : null, reciter: g("re_r").value.trim() || null };
+  if (u) { patch.url = u; if (ytId59(u)) patch.type = "video"; } if (k === "nasheed" || k === "ibtihal") patch.type = patch.type === "video" ? "video" : k; else if (patch.type === undefined) { const cur = rcAll76().find(x => x.id === id); if (cur && (cur.type === "nasheed" || cur.type === "ibtihal")) patch.type = cur.file_path ? "audio" : (ytId59(cur.url) ? "video" : "link"); }
+  const { error } = await sb.from("contents").update(patch).eq("id", id); if (error) return toast(error.message, true);
+  document.getElementById("fpM").remove(); recInv76(); toast("✅ " + (ar ? "اتحفظ" : "Saved")); render();
+}
+async function recDel76(id) { if (!confirm(state.lang === "ar" ? "تحذفه نهائيًا؟" : "Delete permanently?")) return; const { error } = await sb.from("contents").delete().eq("id", id); if (error) return toast(error.message, true); const f = document.getElementById("fpM"); if (f) f.remove(); recInv76(); render(); }
+const _recCard76 = recCard59;
+recCard59 = function (c, mid) {
+  let h = _recCard76(c, mid); const ar = state.lang === "ar";
+  if (c.url && /youtube\.com\/results/.test(c.url)) h = h.replace(/<a class="btn btn-o" href="[^"]*" target="_blank" rel="noopener">🔗[^<]*<\/a>/, `<a class="btn btn-o" href="${esc(c.url)}" target="_blank" rel="noopener">▶️ ${ar ? "اسمعه (بدون موسيقى)" : "Listen (no music)"}</a>`);
+  if (realRole() === "owner" && !state.preview) h = h.replace(/<button class="btn btn-o rc59x"[^>]*>🗑️<\/button>/, `<div class="rc76a"><button class="btn btn-o" title="${ar ? "تعديل / نقل" : "Edit / move"}" onclick="recEdit76('${c.id}')">✏️</button><button class="btn btn-o" title="${ar ? "حذف" : "Delete"}" onclick="recDel76('${c.id}')">🗑️</button></div>`);
+  return h;
+};
+/* 3) رفع مجموعة تسجيلات مرة واحدة — المقام والنوع من اسم الملف: maqam__kind__الاسم.mp3 */
+function bulkCard76(mid) {
+  if (realRole() !== "owner" || state.preview) return ""; const ar = state.lang === "ar";
+  return `<div class="card bk76"><b>📦 ${ar ? "ارفع كذا تسجيل مرة واحدة" : "Upload many recordings at once"}</b><p class="xs muted">${ar ? "اختار ملفات كتير (صوت أو فيديو). لو اسم الملف بادئ بـ «saba__murattal__» هيتحط في الصبا مرتل تلقائي؛ غير كده هيتحط في المقام ده كمرتل. وتقدر تعدّل أي واحد بعدها بـ ✏️." : "Pick many files (audio or video). Names like “saba__murattal__title.mp3” are placed automatically; otherwise they go to this maqam as murattal. Edit any of them later with ✏️."}</p>
+    <input type="file" multiple accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.mp4,.webm" onchange="bulkUp76(this.files,'${mid || ""}')"><div id="bk76p" class="xs"></div></div>`;
+}
+async function bulkUp76(files, mid) {
+  const ar = state.lang === "ar"; const p = document.getElementById("bk76p"); const ids = MQ.map(m => m.id); const kinds = RK76.map(r => r[0]); let ok = 0, bad = 0;
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i]; if (p) p.textContent = `⬆️ ${i + 1}/${files.length} — ${f.name}`;
+    const base = f.name.replace(/\.[^.]+$/, ""); const parts = base.split("__"); let m = mid, k = "murattal", title = base;
+    if (parts.length >= 2 && ids.includes(parts[0])) { m = parts[0]; if (kinds.includes(parts[1])) { k = parts[1]; title = parts.slice(2).join(" ") || maqamName(m); } else title = parts.slice(1).join(" "); }
+    if (!m) { bad++; continue; }
+    const ext = (f.name.split(".").pop() || "mp3").toLowerCase().replace(/[^a-z0-9]/g, ""); const path = `recordings/${m}/${Date.now()}_${i}.${ext}`;
+    const up = await sb.storage.from("academy_public").upload(path, f, { contentType: f.type || "audio/mpeg", upsert: false }); if (up.error) { bad++; continue; }
+    const isV = /^video\//.test(f.type) || /^(mp4|webm|mov)$/.test(ext);
+    const { error } = await sb.from("contents").insert({ title: { ar: title.replace(/_/g, " ").trim(), en: title.replace(/_/g, " ").trim() }, type: isV ? "video" : "audio", status: "published", visibility: "public", section_id: mqSecId(m), file_path: "academy_public/" + path, maqam: m, music_free: true, rec_kind: k, created_by: state.auth.user.id });
+    if (error) bad++; else ok++;
+  }
+  if (p) p.textContent = `✅ ${ok} ${ar ? "اترفعوا" : "uploaded"}${bad ? ` · ⚠️ ${bad} ${ar ? "ماترفعوش" : "failed"}` : ""}`; recInv76(); setTimeout(render, 600);
+}
+const _maqamOne76 = maqamOne;
+maqamOne = function (cur) { const h = _maqamOne76(cur); const mid = (cur.meta || {}).maqam; return ["murattal", "mujawwad", "nasheed"].includes(state.mqTab) ? h + bulkCard76(mid) : h; };
+document.head.insertAdjacentHTML("beforeend", `<style>.dl76ic{font-size:3.2rem}.dl76{margin-top:1.2rem;padding:1.6rem}.dl76b{font-size:1.15rem!important;padding:1rem 1.8rem!important}
+.dl76o{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem}.dl76o .card{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:.9rem;cursor:pointer;text-decoration:none;color:var(--fg);border:1px solid var(--line);font:inherit}.dl76o span{font-size:1.8rem}.dl76o small{color:var(--accent)}
+.rc76a{position:absolute;top:.4rem;inset-inline-end:.4rem;display:flex;gap:.25rem}.rc76a .btn{padding:.15rem .45rem}.rc59{position:relative}.re76 .l{margin-top:.5rem;display:block}.bk76{margin-top:1rem;border-style:dashed}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
