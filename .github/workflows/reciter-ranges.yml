@@ -1,0 +1,25 @@
+name: Reciter voice ranges
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["tools/reciter_ranges.py", "tools/reciters.json", ".github/workflows/reciter-ranges.yml"]
+permissions:
+  contents: write
+jobs:
+  ranges:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install librosa numpy soundfile
+      - run: python tools/reciter_ranges.py
+      - name: Commit results
+        run: |
+          git config user.name "itqan-bot"; git config user.email "bot@users.noreply.github.com"
+          git add data/reciter_ranges.json
+          git commit -m "data: مساحة صوت كل شيخ (محسوبة من التلاوة)" || echo "no changes"
+          git pull --rebase && git push
