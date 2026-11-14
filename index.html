@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v63";
+const UI_VERSION = "2026-11-14-v64";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17144,6 +17144,80 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .tj2 .ay{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #tjWI{position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;padding:1rem}.tjwib{background:var(--card);color:var(--fg);border-radius:18px;padding:1rem;max-width:460px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.3)}.tjwiw{font:2.4rem/2 'Amiri',serif;text-align:center}.tjwir{padding:.35rem 0;border-bottom:1px dashed var(--line)}
 .tjshow>summary{list-style:none;margin:.5rem 0;display:inline-flex}.tjshow>summary::-webkit-details-marker{display:none}</style>`);
+
+/* ================= v64: مخارج الحروف وصفاتها — مخطط لكل حرف، الصفات وإزاي تتعمل، والغلط الشائع (من متن الجزرية) ================= */
+PAGES16.push("makharij");
+const MK_PTS = [
+  ["jawf", "الجوف", "The oral & throat cavity", "حروف المد: الألف، والواو الساكنة بعد ضم، والياء الساكنة بعد كسر — بتخرج من الفراغ ومش ليها نقطة محددة.", "Long vowels (alif, waw after damma, yaa after kasra) come from the open space — no fixed point.", 150, 120],
+  ["aqsa_halq", "أقصى الحلق", "Deepest throat", "أبعد نقطة في الحلق من ناحية الصدر.", "The deepest point of the throat, towards the chest.", 152, 205],
+  ["wast_halq", "وسط الحلق", "Middle throat", "منتصف الحلق.", "The middle of the throat.", 158, 178],
+  ["adna_halq", "أدنى الحلق", "Upper throat", "أقرب جزء في الحلق للفم.", "The part of the throat nearest the mouth.", 165, 152],
+  ["aqsa_lisan_q", "أقصى اللسان (القاف)", "Back of tongue (qaf)", "أقصى اللسان مع اللي فوقه من الحنك الأعلى (اللحمي).", "Back of the tongue against the soft palate above it.", 168, 118],
+  ["aqsa_lisan_k", "أقصى اللسان (الكاف)", "Back of tongue (kaf)", "أسفل من مخرج القاف شوية ناحية الفم.", "Slightly lower and forward of the qaf point.", 180, 116],
+  ["wast_lisan", "وسط اللسان", "Middle of tongue", "وسط اللسان مع اللي فوقه من الحنك الأعلى.", "Middle of the tongue against the hard palate.", 210, 108],
+  ["hafat", "حافة اللسان (الضاد)", "Side of tongue (ḍad)", "إحدى حافتي اللسان أو الاتنين مع الأضراس العليا.", "One or both sides of the tongue against the upper molars.", 228, 116],
+  ["lam", "أدنى حافة اللسان (اللام)", "Front edge of tongue (lam)", "أدنى حافة اللسان لمنتهى طرفه مع لثة الأسنان العليا.", "The front edges of the tongue up to its tip against the upper gums.", 244, 110],
+  ["nun", "طرف اللسان (النون)", "Tongue tip (nun)", "طرف اللسان تحت مخرج اللام شوية.", "Tongue tip, slightly below the lam point.", 252, 112],
+  ["ra", "طرف اللسان وظهره (الراء)", "Tip & top of tongue (ra)", "طرف اللسان مع ظهره قريب من مخرج النون.", "Tip with a little of the top of the tongue, near the nun point.", 248, 106],
+  ["nitiyya", "طرف اللسان + أصول الثنايا العليا", "Tip + roots of upper incisors", "طرف اللسان مع أصول الأسنان الأمامية العليا (الطاء والدال والتاء).", "Tongue tip against the roots of the upper front teeth.", 262, 112],
+  ["lithawiyya", "طرف اللسان + أطراف الثنايا العليا", "Tip + edges of upper incisors", "طرف اللسان مع أطراف الأسنان الأمامية العليا (الظاء والذال والثاء) — اللسان بيطلع شوية.", "Tongue tip against the edges of the upper front teeth (tongue slightly out).", 270, 120],
+  ["asaliyya", "طرف اللسان فوق الثنايا السفلى", "Tip above lower incisors", "طرف اللسان فوق الأسنان الأمامية السفلى مع فراغ صغير (الصاد والزاي والسين).", "Tongue tip just above the lower front teeth with a small gap.", 266, 128],
+  ["fa", "الشفة السفلى + أطراف الثنايا العليا", "Lower lip + upper incisors", "باطن الشفة السفلى مع أطراف الأسنان الأمامية العليا.", "Inside of the lower lip against the edges of the upper front teeth.", 282, 124],
+  ["shafatan", "الشفتان", "Both lips", "الباء والميم بانطباق الشفتين، والواو بانفتاحهم مع ضمّهم.", "Ba and meem with the lips closed; waw with the lips rounded and open.", 290, 116],
+  ["khayshum", "الخيشوم", "Nasal cavity", "مخرج الغنة (صوت الأنف) في النون والميم.", "Source of ghunnah (the nasal sound) in nun and meem.", 248, 62]];
+const MK_L = { "ء": ["aqsa_halq", "جهر شدة استفال انفتاح إصمات"], "ه": ["aqsa_halq", "همس رخاوة استفال انفتاح إصمات"], "ع": ["wast_halq", "جهر توسط استفال انفتاح إصمات"], "ح": ["wast_halq", "همس رخاوة استفال انفتاح إصمات"], "غ": ["adna_halq", "جهر رخاوة استعلاء انفتاح إصمات"], "خ": ["adna_halq", "همس رخاوة استعلاء انفتاح إصمات"], "ق": ["aqsa_lisan_q", "جهر شدة استعلاء انفتاح إصمات قلقلة"], "ك": ["aqsa_lisan_k", "همس شدة استفال انفتاح إصمات"], "ج": ["wast_lisan", "جهر شدة استفال انفتاح إصمات قلقلة"], "ش": ["wast_lisan", "همس رخاوة استفال انفتاح إصمات تفشي"], "ي": ["wast_lisan", "جهر رخاوة استفال انفتاح إصمات لين"], "ض": ["hafat", "جهر رخاوة استعلاء إطباق إصمات استطالة"], "ل": ["lam", "جهر توسط استفال انفتاح إذلاق انحراف"], "ن": ["nun", "جهر توسط استفال انفتاح إذلاق غنة"], "ر": ["ra", "جهر توسط استفال انفتاح إذلاق انحراف تكرير"], "ط": ["nitiyya", "جهر شدة استعلاء إطباق إصمات قلقلة"], "د": ["nitiyya", "جهر شدة استفال انفتاح إصمات قلقلة"], "ت": ["nitiyya", "همس شدة استفال انفتاح إصمات"], "ظ": ["lithawiyya", "جهر رخاوة استعلاء إطباق إصمات"], "ذ": ["lithawiyya", "جهر رخاوة استفال انفتاح إصمات"], "ث": ["lithawiyya", "همس رخاوة استفال انفتاح إصمات"], "ص": ["asaliyya", "همس رخاوة استعلاء إطباق إصمات صفير"], "ز": ["asaliyya", "جهر رخاوة استفال انفتاح إصمات صفير"], "س": ["asaliyya", "همس رخاوة استفال انفتاح إصمات صفير"], "ف": ["fa", "همس رخاوة استفال انفتاح إذلاق"], "ب": ["shafatan", "جهر شدة استفال انفتاح إذلاق قلقلة"], "م": ["shafatan", "جهر توسط استفال انفتاح إذلاق غنة"], "و": ["shafatan", "جهر رخاوة استفال انفتاح إصمات لين"], "ا": ["jawf", "جهر رخاوة استفال انفتاح إصمات"] };
+const MK_S = {
+  "همس": ["Hams (whisper)", "النفَس بيجري مع الحرف لضعف الاعتماد على مخرجه. حروفه: «فحثه شخص سكت».", "Breath flows with the letter. Letters: ف ح ث ه ش خ ص س ك ت.", "تحبس النفَس فتقلب التاء دال والكاف جيم مصري.", "Holding the breath so ت sounds like د."],
+  "جهر": ["Jahr (voiced)", "النفَس بيتحبس مع الحرف لقوة الاعتماد على المخرج — باقي الحروف.", "Breath is held back; the letter is voiced firmly.", "تطلّع نفَس مع الحرف فيضعف ويشبه أخوه المهموس.", "Letting breath escape so the letter weakens."],
+  "شدة": ["Shiddah (stop)", "الصوت بيتحبس مرة واحدة. حروفه: «أجد قط بكت».", "The sound stops completely. Letters: أ ج د ق ط ب ك ت.", "تمطّ الصوت في الحرف الشديد كأنه رخو.", "Stretching the sound of a stop letter."],
+  "رخاوة": ["Rakhāwah (flow)", "الصوت بيجري مع الحرف — باقي الحروف غير الشديدة والمتوسطة.", "The sound flows freely.", "تقطع الصوت فجأة.", "Cutting the sound abruptly."],
+  "توسط": ["Tawassuṭ (between)", "بين الشدة والرخاوة. حروفه: «لِن عُمَر».", "Between stop and flow. Letters: ل ن ع م ر.", "تحبس الصوت كله أو تسيبه يجري كله.", "Fully stopping or fully flowing."],
+  "استعلاء": ["Istiʿlāʾ (raised)", "أقصى اللسان بيرتفع للحنك فالحرف يتفخّم. حروفه: «خُصّ ضغطٍ قِظ».", "The back of the tongue rises — the letter is heavy. Letters: خ ص ض غ ط ق ظ.", "ترقيق حروف الاستعلاء.", "Pronouncing them light."],
+  "استفال": ["Istifāl (lowered)", "اللسان بينزل عن الحنك فالحرف يترقّق — باقي الحروف.", "The tongue stays low — the letter is light.", "تفخيم حرف مرقق (زي الألف بعد حرف مرقق).", "Making a light letter heavy."],
+  "إطباق": ["Iṭbāq (closure)", "اللسان بينطبق على الحنك الأعلى. حروفه: ص ض ط ظ.", "The tongue presses against the palate. Letters: ص ض ط ظ.", "عدم الإطباق فالصاد تبقى سين والطاء تاء.", "Not pressing, so ص becomes س."],
+  "انفتاح": ["Infitāḥ (open)", "فيه فراغ بين اللسان والحنك — باقي الحروف.", "A gap remains between tongue and palate.", "—", "—"],
+  "إذلاق": ["Idhlāq (fluent)", "خفة وسرعة في النطق. حروفه: «فرّ من لُب».", "Light, quick letters: ف ر م ن ل ب.", "—", "—"],
+  "إصمات": ["Iṣmāt (restrained)", "ثقل نسبي في النطق — باقي الحروف.", "Relatively weighty letters.", "—", "—"],
+  "صفير": ["Ṣafīr (whistle)", "صوت زايد يشبه صفير الطائر. حروفه: ص ز س.", "An extra whistling sound: ص ز س.", "تضعّف الصفير أو تبالغ فيه.", "Weakening or exaggerating it."],
+  "قلقلة": ["Qalqalah (echo)", "اهتزاز المخرج لما الحرف يبقى ساكن. حروفه: «قطب جد».", "The point bounces when the letter has sukoon: ق ط ب ج د.", "تحرّك الحرف بحركة كاملة أو تسيبه من غير قلقلة.", "Adding a full vowel, or no bounce at all."],
+  "لين": ["Līn (soft)", "الواو والياء الساكنتين بعد فتح: خَوْف، بَيْت.", "Waw/yaa with sukoon after fatha: خَوْف، بَيْت.", "تشددهم أو تمدهم من غير سبب.", "Stressing or stretching them without reason."],
+  "انحراف": ["Inḥirāf (deviation)", "ميل الحرف عن مخرجه لطرف اللسان: اللام والراء.", "The letter leans towards the tongue tip: ل ر.", "—", "—"],
+  "تكرير": ["Takrīr (repetition)", "قابلية الراء للتكرار — والمطلوب إخفاؤه مش إظهاره.", "Ra can trill — it must be suppressed.", "ترعيد الراء خصوصًا المشددة.", "Rolling the ra, especially with shaddah."],
+  "تفشي": ["Tafashshī (spreading)", "انتشار الهواء في الفم مع الشين.", "Air spreads in the mouth with ش.", "تضييق مخرج الشين فتبقى سين.", "Narrowing so ش sounds like س."],
+  "استطالة": ["Istiṭālah (extension)", "امتداد الصوت في الضاد من أول حافة اللسان لآخرها.", "The ḍad sound extends along the side of the tongue.", "تنطقها ظاء أو دال مفخمة.", "Pronouncing it like ظ or a heavy د."],
+  "غنة": ["Ghunnah (nasal)", "صوت من الخيشوم في النون والميم.", "A nasal sound in ن and م.", "تقطعها أو تطوّلها زيادة.", "Cutting it or over-stretching it."]
+};
+function mkSvg(pt) {
+  const p = MK_PTS.find(x => x[0] === pt) || MK_PTS[0];
+  return `<svg viewBox="0 0 340 260" class="mksvg" role="img" aria-label="${esc(p[1])}">
+    <path d="M120 40 Q170 10 240 30 Q300 50 305 95 L298 110 Q312 118 300 128 Q306 140 292 146 Q298 160 280 165 Q270 190 240 200 L200 205 Q185 240 180 258 L120 258 Q130 210 120 150 Q95 110 120 40 Z" fill="color-mix(in srgb,#f5d0b5 35%,var(--card))" stroke="currentColor" stroke-opacity=".45" stroke-width="2.5"/>
+    <path d="M150 90 Q200 70 262 98" fill="none" stroke="#c084fc" stroke-width="5" stroke-linecap="round"/>
+    <path d="M170 150 Q205 112 262 116 Q275 120 266 128 Q230 132 200 150" fill="#fda4af" stroke="#e11d48" stroke-width="1.5" opacity=".85"/>
+    <path d="M150 200 L160 140 Q165 120 170 112" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+    <path d="M200 40 Q240 50 262 78" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" opacity=".45"/>
+    <rect x="276" y="106" width="9" height="10" rx="2" fill="#f8fafc" stroke="#94a3b8"/><rect x="272" y="124" width="9" height="9" rx="2" fill="#f8fafc" stroke="#94a3b8"/>
+    ${MK_PTS.map(x => `<circle cx="${x[5]}" cy="${x[6]}" r="${x[0] === pt ? 9 : 4}" fill="${x[0] === pt ? "#dc2626" : "#94a3b8"}" opacity="${x[0] === pt ? 1 : .6}"><title>${esc(x[1])}</title></circle>`).join("")}
+    <circle cx="${p[5]}" cy="${p[6]}" r="16" fill="none" stroke="#dc2626" stroke-width="2"><animate attributeName="r" values="10;20;10" dur="1.6s" repeatCount="indefinite"/></circle>
+    <text x="196" y="252" font-size="11" fill="currentColor" opacity=".6">${state.lang === "ar" ? "الحلق" : "throat"}</text><text x="214" y="30" font-size="11" fill="currentColor" opacity=".6">${state.lang === "ar" ? "الخيشوم" : "nose"}</text><text x="214" y="160" font-size="11" fill="currentColor" opacity=".6">${state.lang === "ar" ? "اللسان" : "tongue"}</text></svg>`;
+}
+function renderMakharij() {
+  const ar = state.lang === "ar"; const c = state.mkL && MK_L[state.mkL] ? state.mkL : "ق"; const [pt, sf] = MK_L[c]; const p = MK_PTS.find(x => x[0] === pt);
+  const sifat = sf.split(" ");
+  const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent("أيمن سويد مخرج حرف " + (RD_NAME_AR[c] || c));
+  return pageWrap("👄", ar ? "مخارج الحروف وصفاتها" : "Letter articulation & attributes", ar ? "اختار أي حرف: تشوف مخرجه على المخطط، وصفاته، وإزاي تعملها، والغلط الشائع — من متن الجزرية" : "Pick any letter: see its point on the diagram, its attributes, how to produce them and the common mistake — from al-Jazariyyah", `
+    <div class="mkletters notr" lang="ar">${Object.keys(MK_L).map(x => `<button class="${x === c ? "on" : ""}" onclick="state.mkL='${x}';render()">${x}</button>`).join("")}</div>
+    <div class="mkwrap"><div class="card mkd">${mkSvg(pt)}<div style="text-align:center"><div class="mkbig notr" lang="ar">${c}</div><b>${ar ? p[1] : p[2]}</b><p class="sm">${ar ? p[3] : p[4]}</p><div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap">${["َ", "ُ", "ِ", "ْ"].map(h => `<button class="rdsyl" onclick="rdSay('${c === "ا" ? "ا" : (c === "ء" ? "أ" : c) + h}')">${c === "ا" ? "ا" : (c === "ء" ? "أ" : c) + (h === "ْ" ? "ْ" : h)}</button>`).join("")}<button class="btn btn-o" onclick="rdSay('${c === "ا" ? "ا" : "أَ" + c + "ْ"}')">🔊 ${ar ? "ساكن بعد همزة" : "with sukoon"}</button></div><a class="btn btn-o" style="margin-top:.5rem" target="_blank" rel="noopener" href="${yt}">▶ ${ar ? "شرح الشيخ أيمن سويد على يوتيوب" : "Sheikh Ayman Swaid on YouTube"}</a></div></div>
+    <div class="card"><h3>🧬 ${ar ? "صفات الحرف" : "Attributes"}</h3>${sifat.map(s => { const d = MK_S[s] || [s, "", "", "", ""]; return `<div class="mks"><b>${ar ? s : d[0]}</b><p class="sm">${ar ? d[1] : d[2]}</p>${d[3] && d[3] !== "—" ? `<p class="xs mkerr">⚠️ ${ar ? "الغلط الشائع" : "Common mistake"}: ${ar ? d[3] : d[4]}</p>` : ""}</div>`; }).join("")}</div></div>
+    <div class="card" style="margin-top:1rem"><h3>📍 ${ar ? "كل المخارج (17 مخرج)" : "All 17 articulation points"}</h3><div class="mkall">${MK_PTS.map(x => `<div class="kv"><span><b>${ar ? x[1] : x[2]}</b></span><span class="notr" lang="ar" style="font:1.3rem 'Amiri',serif">${Object.keys(MK_L).filter(k => MK_L[k][0] === x[0]).join(" ")}${x[0] === "khayshum" ? "نّ مّ" : ""}</span></div>`).join("")}</div><p class="xs muted" style="margin-top:.5rem">${ar ? "المصدر: متن الجزرية لابن الجزري (باب مخارج الحروف وباب الصفات). المخطط توضيحي مبسّط." : "Source: Ibn al-Jazari's al-Jazariyyah (chapters on articulation and attributes). The diagram is a simplified illustration."}</p></div>`);
+}
+const _render64 = render;
+render = function () { if (state.route === "makharij") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderMakharij(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render64.apply(this, arguments); };
+const _DOMAINS64 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS64(); const t = ds.find(d => d.k === "tajweed"); if (t && t.tools && !t.tools.some(x => String(x[2]).includes("makharij"))) t.tools.splice(1, 0, ["👄", state.lang === "ar" ? "مخارج الحروف وصفاتها" : "Articulation & attributes", "go16('makharij')", ""]); return ds; };
+if (Array.isArray(KIT) && !KIT.some(k => k[0] === "makharij")) KIT.splice(3, 0, ["makharij", "👄", "مخارج الحروف وصفاتها", "Articulation & attributes", ["مخطط لكل حرف", "الصفات والغلط الشائع"], ["Diagram for each letter", "Attributes & mistakes"], "#/makharij", "#e11d48"]);
+/* من شرح الكلمة في المصحف: حروفها ← المخارج */
+const _tjWordInfo64 = tjWordInfo; tjWordInfo = function (w) { _tjWordInfo64(w); const b = document.querySelector("#tjWI .tjwib"); if (!b) return; const ls = [...new Set([...w.textContent].filter(ch => MK_L[ch]))]; if (ls.length) b.insertAdjacentHTML("beforeend", `<div class="row notr" lang="ar" style="gap:.3rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem"><span class="xs" lang="${state.lang}">👄 ${state.lang === "ar" ? "مخرج:" : "Articulation:"}</span>${ls.map(ch => `<button class="rdsyl" onclick="document.getElementById('tjWI').remove();if(document.fullscreenElement)document.exitFullscreen();state.mkL='${ch}';go16('makharij')">${ch}</button>`).join("")}</div>`); };
+document.head.insertAdjacentHTML("beforeend", `<style>.mkletters{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;margin-bottom:.8rem;direction:rtl}.mkletters button{font:1.5rem 'Amiri',serif;width:2.8rem;height:2.8rem;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;color:var(--fg)}.mkletters button.on{background:var(--accent);color:#fff;border-color:transparent}
+.mkwrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.8rem}.mksvg{width:100%;max-width:380px;display:block;margin:auto;color:var(--fg)}.mkbig{font:700 3.6rem/1.3 'Amiri',serif}.mks{padding:.45rem 0;border-bottom:1px dashed var(--line)}.mkerr{color:#b45309}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
