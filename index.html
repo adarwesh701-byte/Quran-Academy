@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v130";
+const UI_VERSION = "2026-11-14-v131";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -11185,7 +11185,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.cmhero{text-align:center;
 .cmband{display:flex;align-items:center;gap:.8rem;justify-content:center;flex-wrap:wrap;padding:.7rem 1rem;border-radius:14px;background:linear-gradient(90deg,#b45309,#f59e0b);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(180,83,9,.35);animation:cmPulse 2.4s ease-in-out infinite}@keyframes cmPulse{50%{transform:scale(1.015)}}</style>`);
 function renderCompetitionPage() {
   const id = state.pageArg; const cs = compsData(); if (!Array.isArray(cs)) return pageWrap("🏆", L("cmTitle"), "", loadingBox());
-  const c = cs.find(x => x.id === id); if (!c) return pageWrap("🏆", L("cmTitle"), "", `<div class="err">${L("cmNone")}</div>`);
+  const c = cs.find(x => x.id === id); if (!c) return pageWrap("🏆", L("cmTitle"), "", `<div class="card muted" style="text-align:center">${L("cmNone")} <button class="btn btn-o" onclick="go16('competitions')">🏆</button></div>`);
   const rounds = useData("cmR:" + id, () => q(sb.from("competition_rounds").select("*").eq("competition_id", id).order("idx")));
   const board = useData("cmB:" + id, async () => { const { data } = await sb.rpc("comp_leaderboard", { p_comp: id, p_round: null }); return data || []; });
   const u = state.auth.user; const mine = u ? useData("cmMe:" + id, () => q(sb.from("competition_entries").select("*").eq("competition_id", id).eq("user_id", u.id))) : null;
