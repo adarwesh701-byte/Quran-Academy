@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v64";
+const UI_VERSION = "2026-11-14-v65";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17218,6 +17218,70 @@ if (Array.isArray(KIT) && !KIT.some(k => k[0] === "makharij")) KIT.splice(3, 0, 
 const _tjWordInfo64 = tjWordInfo; tjWordInfo = function (w) { _tjWordInfo64(w); const b = document.querySelector("#tjWI .tjwib"); if (!b) return; const ls = [...new Set([...w.textContent].filter(ch => MK_L[ch]))]; if (ls.length) b.insertAdjacentHTML("beforeend", `<div class="row notr" lang="ar" style="gap:.3rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem"><span class="xs" lang="${state.lang}">👄 ${state.lang === "ar" ? "مخرج:" : "Articulation:"}</span>${ls.map(ch => `<button class="rdsyl" onclick="document.getElementById('tjWI').remove();if(document.fullscreenElement)document.exitFullscreen();state.mkL='${ch}';go16('makharij')">${ch}</button>`).join("")}</div>`); };
 document.head.insertAdjacentHTML("beforeend", `<style>.mkletters{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;margin-bottom:.8rem;direction:rtl}.mkletters button{font:1.5rem 'Amiri',serif;width:2.8rem;height:2.8rem;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;color:var(--fg)}.mkletters button.on{background:var(--accent);color:#fff;border-color:transparent}
 .mkwrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.8rem}.mksvg{width:100%;max-width:380px;display:block;margin:auto;color:var(--fg)}.mkbig{font:700 3.6rem/1.3 'Amiri',serif}.mks{padding:.45rem 0;border-bottom:1px dashed var(--line)}.mkerr{color:#b45309}</style>`);
+
+/* ================= v65: الفصل — التسميع والألعاب على الجنب (الطالب ظاهر)، المعلم يثبّت نفسه كبير عند الكل، قفل أزرار الطلاب، يوتيوب مع الطلاب، اعرض ملف الطالب، الوقت بتوقيت كل واحد ================= */
+const RMX = { lock: false, yt: null, ytp: null, ytApi: null, page: null };
+/* 1) الوقت: توقيتي + توقيت المعلم */
+const _rmMeta65 = rmMeta; rmMeta = function () { return Object.assign(_rmMeta65(), { tz: BROWSER_TZ }); };
+const _rmTick65 = rmTick;
+rmTick = function () {
+  _rmTick65(); const el = rmEl("rmTimer"); if (!el) return; const ar = state.lang === "ar";
+  const fmt = tz => { try { return new Date().toLocaleTimeString(state.lang, { hour: "2-digit", minute: "2-digit", timeZone: tz }); } catch (e) { return ""; } };
+  let host = null; if (!rmIsHost()) { const h = Object.values(RM.peers || {}).find(p => p.meta && (p.meta.role === "host" || p.meta.role === "owner")); host = h && h.meta && h.meta.tz; }
+  let x = document.getElementById("rmClock"); if (!x) { x = document.createElement("span"); x.id = "rmClock"; x.className = "rm-chip"; el.after(x); }
+  x.textContent = `🕒 ${fmt(BROWSER_TZ)} ${ar ? "(توقيتك)" : "(you)"}` + (host && host !== BROWSER_TZ ? ` · 👨‍🏫 ${fmt(host)}` : "");
+};
+/* 2) أوامر المعلم */
+function rmSpot() { rmMenuClose(); const on = !RMX.spot; RMX.spot = on; rmSend("spot", { on }); toast(on ? (state.lang === "ar" ? "📌 انت دلوقتي كبير عند الكل" : "📌 You are now big for everyone") : "✓"); }
+function rmLock() { rmMenuClose(); RMX.lock = !RMX.lock; rmSend("lock", { on: RMX.lock }); toast(RMX.lock ? (state.lang === "ar" ? "🔒 أزرار الطلاب اتقفلت (المايك والكاميرا واليد والشات شغالين)" : "🔒 Student controls locked (mic, camera, hand and chat still work)") : (state.lang === "ar" ? "🔓 اتفتحت" : "🔓 Unlocked")); }
+function rmApplyLock(on) { const r = rmEl("rmRoot"); if (r) r.classList.toggle("rm-locked", !!on); }
+function ytId65(u) { const m = String(u || "").match(/(?:youtu\.be\/|v=|shorts\/|embed\/|live\/)([\w-]{11})/); return m ? m[1] : (/^[\w-]{11}$/.test(u) ? u : null); }
+function rmYtStart() { rmMenuClose(); const u = prompt(state.lang === "ar" ? "حط لينك فيديو يوتيوب تتفرجوا عليه مع بعض:" : "Paste a YouTube link to watch together:"); const id = ytId65(u); if (!id) return; rmSend("yt", { id, t: 0, play: true }); rmYtOpen(id, 0, true, true); }
+function rmYtApi() { return RMX.ytApi || (RMX.ytApi = new Promise(res => { if (window.YT && YT.Player) return res(); window.onYouTubeIframeAPIReady = res; const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })); }
+async function rmYtOpen(id, t, play, host) {
+  let w = rmEl("rmYT"); const ar = state.lang === "ar";
+  if (!w) { w = document.createElement("div"); w.id = "rmYT"; w.innerHTML = `<div class="rmyth"><b>▶ ${ar ? "بنتفرج مع بعض" : "Watching together"}</b><button class="rm-pbtn" onclick="${rmIsHost() ? "rmSend('yt',{close:1});" : ""}rmYtClose()">✕</button></div><div id="rmYTp"></div>`; (rmEl("rmMain") || rmEl("rmRoot") || document.body).appendChild(w); }
+  await rmYtApi(); RMX.yt = id;
+  if (RMX.ytp && RMX.ytp.loadVideoById) { RMX.ytp.loadVideoById({ videoId: id, startSeconds: t || 0 }); if (!play) setTimeout(() => RMX.ytp.pauseVideo(), 600); return; }
+  RMX.ytp = new YT.Player("rmYTp", { videoId: id, playerVars: { start: Math.floor(t || 0), autoplay: play ? 1 : 0, rel: 0, playsinline: 1, controls: rmIsHost() ? 1 : 0 }, events: { onStateChange: e => { if (!rmIsHost() || RMX.ytQuiet) return; if (e.data === 1 || e.data === 2) rmSend("yt", { id: RMX.yt, t: RMX.ytp.getCurrentTime(), play: e.data === 1 }); } } });
+}
+function rmYtClose() { try { RMX.ytp && RMX.ytp.destroy(); } catch (e) {} RMX.ytp = null; RMX.yt = null; const w = rmEl("rmYT"); if (w) w.remove(); }
+function rmYtSync(p) { if (p.close) return rmYtClose(); if (!RMX.ytp || RMX.yt !== p.id) return rmYtOpen(p.id, p.t, p.play, false); RMX.ytQuiet = 1; try { if (Math.abs(RMX.ytp.getCurrentTime() - p.t) > 1.5) RMX.ytp.seekTo(p.t, true); p.play ? RMX.ytp.playVideo() : RMX.ytp.pauseVideo(); } catch (e) {} setTimeout(() => RMX.ytQuiet = 0, 500); }
+/* اعرض صفحة (ملف الطالب / مصحفه / أي صفحة) عند الكل — كل واحد بيفتحها بحسابه */
+function rmPageMenu() { rmMenuClose(); const ar = state.lang === "ar"; const studs = Object.values(RM.peers || {}).map(p => p.meta).filter(m => m && m.role !== "host" && m.role !== "owner" && m.uid);
+  const opts = [...studs.map(m => [`#/sfile/${m.uid}`, `📂 ${ar ? "ملف" : "File of"} ${m.name || ""}`]), ["#/reading", "🔤 " + (ar ? "تعلّم القراءة" : "Reading course")], ["#/makharij", "👄 " + (ar ? "مخارج الحروف" : "Articulation")], ["#/matn", "📜 " + (ar ? "المتون" : "Matn")], ["#/hifz", "🧠 " + (ar ? "الحفظ" : "Memorization")]];
+  const m = rmEl("rmModal"); if (!m) return; m.innerHTML = `<div class="rm-game" onclick="if(event.target===this)this.parentNode.innerHTML=''"><div style="width:min(440px,94vw);text-align:start"><b>📺 ${ar ? "اعرض صفحة عند الكل" : "Show a page to everyone"}</b><div style="display:flex;flex-direction:column;gap:.35rem;margin-top:.6rem">${opts.map(o => `<button class="rm-pbtn" style="text-align:start" onclick="rmEl('rmModal').innerHTML='';rmSend('page',{h:'${o[0]}'});rmPageOpen('${o[0]}')">${esc(o[1])}</button>`).join("")}</div><p class="sm" style="color:#94a3b8;margin-top:.5rem">${ar ? "كل واحد بيشوف الصفحة بحسابه: المعلم يكتب ويصحّح والطالب يشوف التغيير بعد ↻." : "Everyone opens it with their own account: the teacher writes and corrects, the student sees it after ↻."}</p></div></div>`; }
+function rmPageOpen(h) { let w = rmEl("rmPG"); const ar = state.lang === "ar"; if (!w) { w = document.createElement("div"); w.id = "rmPG"; (rmEl("rmMain") || rmEl("rmRoot")).appendChild(w); } RMX.page = h; w.innerHTML = `<div class="rmyth"><b>📺</b><span style="flex:1"></span><button class="rm-pbtn" onclick="document.querySelector('#rmPG iframe').contentWindow.location.reload()">↻</button><button class="rm-pbtn" onclick="${rmIsHost() ? "rmSend('page',{close:1});" : ""}rmEl('rmPG').remove()">✕</button></div><iframe src="${location.pathname}${h}" title="page"></iframe>`; }
+/* 3) استقبال الأوامر */
+const _rmOnEv65 = rmOnEv;
+rmOnEv = function (p) {
+  if (RM.joined && p && p.from !== RM.pid) { const fh = p.role === "host" || p.role === "owner";
+    if (p.type === "spot" && fh) { RM.pin = p.on ? p.from : null; if (p.on) RM.layout = "speaker"; rmTopUpdate(); rmLayout(); return; }
+    if (p.type === "lock" && fh) { rmApplyLock(p.on); if (p.on) toast(state.lang === "ar" ? "🔒 المعلم قفل الأزرار" : "🔒 The teacher locked the controls"); return; }
+    if (p.type === "yt" && fh) return rmYtSync(p);
+    if (p.type === "page" && fh) { if (p.close) { const w = rmEl("rmPG"); if (w) w.remove(); return; } let h = p.h; if (/^#\/sfile\//.test(h) && RM.uid && h.split("/")[2] === RM.uid) h = "#/sfile"; return rmPageOpen(h); }
+    if (p.type === "hello" && rmIsHost()) { if (RMX.lock) rmSend("lock", { on: true }); if (RMX.spot) rmSend("spot", { on: true }); if (RMX.yt && RMX.ytp) rmSend("yt", { id: RMX.yt, t: RMX.ytp.getCurrentTime(), play: RMX.ytp.getPlayerState && RMX.ytp.getPlayerState() === 1 }); if (RMX.page) rmSend("page", { h: RMX.page }); }
+  }
+  return _rmOnEv65(p);
+};
+const _rmJoin65 = rmJoin; rmJoin = async function () { const r = await _rmJoin65.apply(this, arguments); setTimeout(() => { try { rmSend("hello", {}); } catch (e) {} }, 2500); return r; };
+/* 4) قايمة «المزيد» للمعلم */
+const _rmMenu65 = rmMenu;
+rmMenu = function (kind, el) {
+  _rmMenu65(kind, el); if (kind !== "more" || !rmIsHost()) return; const box = rmEl("rmMenuBox"); if (!box) return; const ar = state.lang === "ar";
+  box.insertAdjacentHTML("afterbegin", `<button onclick="rmSpot()">📌 ${RMX.spot ? (ar ? "رجّع العرض عادي" : "Back to normal view") : (ar ? "خلّيني كبير عند الكل" : "Make me big for everyone")}</button><button onclick="rmLock()">${RMX.lock ? "🔓" : "🔒"} ${RMX.lock ? (ar ? "افتح أزرار الطلاب" : "Unlock student controls") : (ar ? "اقفل أزرار الطلاب" : "Lock student controls")}</button><button onclick="rmYtStart()">▶ ${ar ? "يوتيوب مع الطلاب" : "YouTube together"}</button><button onclick="rmPageMenu()">📺 ${ar ? "اعرض ملف الطالب / صفحة" : "Show student file / page"}</button>`);
+};
+/* 5) لينك الدعوة للمالك بس */
+const _rmInviteModal65 = rmInviteModal; rmInviteModal = function () { if (RM.kind !== "lesson" && realRole() !== "owner") return toast(state.lang === "ar" ? "اللينكات العامة للمالك بس" : "Public links are owner-only", true); return _rmInviteModal65(); };
+document.head.insertAdjacentHTML("beforeend", `<style>
+#rmGame.rm-game{position:absolute!important;top:3.2rem!important;bottom:4.6rem!important;inset-inline-end:.5rem!important;inset-inline-start:auto!important;left:auto;width:min(520px,46%)!important;height:auto!important;border-radius:16px;background:rgba(15,23,42,.94)!important;overflow:auto;z-index:40;align-items:flex-start!important;padding:.8rem!important}
+#rmGame.rm-game>div{width:100%!important}
+@media (max-width:760px){#rmGame.rm-game{top:auto!important;width:auto!important;inset-inline-start:.4rem!important;inset-inline-end:.4rem!important;max-height:55%!important}}
+.rm-locked #rbShare,.rm-locked #rbWb,.rm-locked #rbReact,.rm-locked #rbMore,.rm-locked .rm-pinb{pointer-events:none;opacity:.35}
+.rm-locked #rmWb{pointer-events:none}
+#rmYT,#rmPG{position:absolute;top:.5rem;bottom:.5rem;inset-inline-start:.5rem;width:min(62%,900px);z-index:35;background:#0b1220;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#rmYTp,#rmYT iframe{flex:1;width:100%;border:0}#rmPG iframe{flex:1;width:100%;border:0;background:#fff}.rmyth{display:flex;align-items:center;gap:.4rem;padding:.35rem .6rem;color:#e2e8f0}
+@media (max-width:760px){#rmYT,#rmPG{width:auto;inset-inline-end:.5rem;bottom:45%}}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
