@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v99";
+const UI_VERSION = "2026-11-14-v100";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18923,6 +18923,11 @@ document.head.insertAdjacentHTML("beforeend", `<style>.dl99me{margin-top:1rem;pa
 /* صفحات المقامات (مارس بصوتك وأخواتها): لو نفس الكارت اتكرر في نفس الصفحة نسيب نسخة واحدة */
 function dedupe99(app) { if (!app || state.route !== "library") return; const seen = new Map(); [...app.querySelectorAll(".card")].forEach(c => { if (!c.isConnected) return; const t = (c.innerText || "").replace(/\s+/g, " ").trim(); if (t.length < 60) return; const p = seen.get(t); if (p && p.isConnected && !p.contains(c) && !c.contains(p)) c.remove(); else seen.set(t, c); }); }
 const _render99 = render; render = function () { const r = _render99.apply(this, arguments); try { dedupe99(document.getElementById("app")); } catch (e) {} return r; };
+
+/* v100: مصاحف الروايات جاهزة من الإنترنت (طبعات مجمع الملك فهد على archive.org) — ولو الأونر رفع نسخة تتقدّم عليها */
+const QR_WEB = { hafs: "https://archive.org/download/download-quran-pdf/%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20-%20%D8%A7%D9%84%D9%85%D8%B5%D8%AD%D9%81%20%D8%A7%D9%84%D9%88%D8%B3%D8%B7.pdf", warsh: "https://archive.org/download/quran-warsh-pdf/%D9%85%D8%B5%D8%AD%D9%81%20%D9%88%D8%B1%D8%B4.pdf", qalun: "https://archive.org/download/quran-qalon/%D9%85%D8%B5%D8%AD%D9%81%20%D9%82%D8%A7%D9%84%D9%88%D9%86.pdf", shuba: "https://archive.org/download/quran-shuba/%D9%85%D8%B5%D8%AD%D9%81%20%D8%B4%D8%B9%D8%A8%D8%A9.pdf", susi: "https://archive.org/download/quran-mushaf-alsusy/%D9%85%D8%B5%D8%AD%D9%81%20%D8%A7%D9%84%D8%B3%D9%88%D8%B3%D9%8A.pdf", duri: "https://archive.org/download/quran-dury/%D9%85%D8%B5%D8%AD%D9%81%20%D8%A7%D9%84%D8%AF%D9%88%D8%B1%D9%8A.pdf" };
+QR_FILES.splice(0, QR_FILES.length, ["hafs", "حفص عن عاصم (مصحف المدينة)", "Hafs 'an 'Asim"], ["warsh", "ورش عن نافع", "Warsh 'an Nafi'"], ["qalun", "قالون عن نافع", "Qalun 'an Nafi'"], ["shuba", "شعبة عن عاصم", "Shu'bah 'an 'Asim"], ["duri", "الدوري عن أبي عمرو", "Ad-Duri 'an Abi 'Amr"], ["susi", "السوسي عن أبي عمرو", "As-Susi 'an Abi 'Amr"], ["khalaf", "خلف عن حمزة", "Khalaf 'an Hamzah"], ["kisai", "الكسائي (من الشاطبية)", "Al-Kisa'i"], ["yaqub", "يعقوب الحضرمي (من الدرة)", "Ya'qub al-Hadrami"]);
+const _qrUrl100 = qrUrl; qrUrl = function (k) { return _qrUrl100(k) || QR_WEB[k] || null; };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
