@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v97";
+const UI_VERSION = "2026-11-14-v98";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18821,6 +18821,77 @@ const _fuQView97 = fuQView;
 fuQView = function () { const z = state.fuQ; let h = _fuQView97(); if (z && z.n >= z.qs.length) { const ar = state.lang === "ar"; state.fuFlow = null; if (z.wrong && z.wrong.length) h = h.replace(/(<\/h3>)/, `$1<div class="card" style="margin:.8rem 0;border:2px dashed #dc2626"><b>🔁 ${ar ? `غلطت في ${z.wrong.length} — يلا نعيدهم لحد ما يصحّوا` : `${z.wrong.length} mistakes — let's redo them until they're right`}</b><br><button class="btn btn-p" style="margin-top:.5rem" onclick="fuRedo97()">${ar ? "أعِد اللي غلطت فيه" : "Redo my mistakes"}</button></div>`); else if (z.redo) h = h.replace(/(<\/h3>)/, `$1<p>🌟 ${ar ? "ممتاز! صحّحت كل أخطائك." : "Excellent! You fixed all your mistakes."}</p>`); } return h; };
 document.head.insertAdjacentHTML("beforeend", `<style>.flow97{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}.flow97 span{flex:1;min-width:6rem;text-align:center;padding:.4rem;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:.85rem}.flow97 .on{background:var(--accent);color:#fff;border-color:transparent;font-weight:800}.flow97 .done{background:#dcfce7;color:#166534;border-color:#86efac}
 .flowcta97{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;margin-bottom:.8rem;border:2px solid var(--accent)}.flowcta97>b{flex-basis:100%}.flownext97{text-align:center;margin:1.2rem 0}.flowhint97{margin:.2rem 0 .6rem}</style>`);
+
+/* ================= v98: «نبرتي» للطالب (المحادثات بنبرة قريبة من صوته + نسخ رجالي/ستّاتي/طفل — ليه هو بس) + اختيار صوت أي 🔊 (راجل/ست/طفل) + «مثّل الدور» + كل الحروف بالحركات في المخارج ================= */
+const VG98 = { get kind() { try { return localStorage.getItem("itqan_vg") || "m"; } catch (e) { return "m"; } }, set kind(v) { try { localStorage.setItem("itqan_vg", v); } catch (e) {} } };
+function tone98() { try { return JSON.parse(localStorage.getItem("itqan_tone") || "null"); } catch (e) { return null; } }
+function toneSave98(o) { try { o ? localStorage.setItem("itqan_tone", JSON.stringify(o)) : localStorage.removeItem("itqan_tone"); } catch (e) {} }
+function toneCalc98() {
+  const t = tone98(); if (!t || !t.sel || !t.f0) return null; const f0 = t.f0; const male = f0 < 165; const cl = x => Math.max(.82, Math.min(1.22, x));
+  if (t.sel === "me") { const k = male ? "m" : f0 < 260 ? "f" : "k"; const base = { m: 120, f: 210, k: 290 }[k]; return { kind: k, rate: cl(f0 / base) }; }
+  if (t.sel === "m") return { kind: "m", rate: cl((male ? f0 : f0 / 1.7) / 120) };
+  if (t.sel === "f") return { kind: "f", rate: cl((male ? f0 * 1.7 : f0) / 210) };
+  return { kind: "k", rate: cl((male ? f0 * 2.3 : f0 * 1.35) / 290) };
+}
+function dlgRoute98() { return ["fusha", "egyptian", "kidsar", "lang", "library"].includes(state.route); }
+function effKind98() { const tc = dlgRoute98() ? toneCalc98() : null; return tc ? tc.kind : VG98.kind; }
+/* rdSay وأي صوت آلي: يمشي على اختيار الصوت/النبرة */
+const _rdSay98 = rdSay; rdSay = function (t) { const k = effKind98(); state.vc = state.vc || {}; state.vc.A = k; state.vc.B = k; window.__vgPitch = { m: .9, f: 1.25, k: 1.6 }[k] * ((dlgRoute98() && toneCalc98()) ? toneCalc98().rate : 1); return _rdSay98(t); };
+if (window.speechSynthesis) { const _sp98 = speechSynthesis.speak.bind(speechSynthesis); speechSynthesis.speak = function (u) { try { if (window.__vgPitch) u.pitch = Math.max(.1, Math.min(2, window.__vgPitch)); } catch (e) {} return _sp98(u); }; }
+const _play98 = HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play = function () { try { if (String(this.src || "").startsWith("blob:") && dlgRoute98()) { const tc = toneCalc98(); if (tc) { this.preservesPitch = false; this.mozPreservesPitch = false; this.webkitPreservesPitch = false; this.playbackRate = tc.rate; } } } catch (e) {} return _play98.apply(this, arguments); };
+const _ttsPlay98 = ttsPlay; ttsPlay = function (text, voice, slow) { const tc = dlgRoute98() ? toneCalc98() : null; if (tc) { state.vc = state.vc || {}; state.vc.A = tc.kind; state.vc.B = tc.kind; } return _ttsPlay98(text, voice, slow); };
+/* شريط الصوت فوق صفحات المحادثات */
+function voiceBar98() {
+  const ar = state.lang === "ar"; const t = tone98(); const sel = t && t.sel; const k = VG98.kind;
+  const chip = (v, l) => `<button class="chip ${sel === v ? "on" : ""}" onclick="toneSel98('${v}')">${l}</button>`;
+  return `<div class="card vb98"><div class="row" style="gap:.35rem;align-items:center;flex-wrap:wrap"><b>🎙️ ${ar ? "نبرتي" : "My tone"}</b>${t && t.f0 ? chip("me", ar ? "🙂 صوتي" : "🙂 Me") + chip("m", ar ? "👨 نسخة رجالي" : "👨 Male") + chip("f", ar ? "👩 نسخة ستّاتي" : "👩 Female") + chip("k", ar ? "🧒 نسخة طفل" : "🧒 Child") + (sel ? `<button class="btn btn-o xs" onclick="toneSel98(null)">↩️ ${ar ? "الأصلي" : "Original"}</button>` : "") + `<button class="btn btn-o xs" onclick="toneRec98()">🔄 ${ar ? "سجّل تاني" : "Re-record"}</button>` : `<button class="btn btn-p xs" onclick="toneRec98()">🎙️ ${ar ? "سجّل نبرتك (١٠ ثواني)" : "Record your tone (10 s)"}</button>`}</div>
+    ${sel ? "" : `<div class="row" style="gap:.3rem;align-items:center;flex-wrap:wrap;margin-top:.35rem"><span class="xs muted">🔊 ${ar ? "صوت القارئ:" : "Voice:"}</span>${[["m", ar ? "👨 راجل" : "👨 Man"], ["f", ar ? "👩 ست" : "👩 Woman"], ["k", ar ? "🧒 طفل" : "🧒 Child"]].map(([v, l]) => `<button class="chip ${k === v ? "on" : ""}" onclick="VG98.kind='${v}';render()">${l}</button>`).join("")}</div>`}
+    <p class="xs muted" style="margin-top:.3rem">${ar ? "الاختيار ده ليك انت بس وبيتطبّق على كل المحادثات." : "Only you hear this; it applies to every dialogue."}</p></div>`;
+}
+function toneSel98(v) { const t = tone98() || {}; t.sel = v; toneSave98(t.f0 ? t : null); render(); if (v) setTimeout(() => rdSay(state.route === "egyptian" ? "أهلًا! إزّيّك؟" : "مَرْحَبًا! كَيْفَ حالُكَ؟"), 200); }
+async function toneRec98() {
+  const ar = state.lang === "ar"; const old = document.getElementById("fpM"); if (old) old.remove(); const m = document.createElement("div"); m.id = "fpM";
+  const line = state.route === "egyptian" ? "أنا اسمي … وبحب أتعلّم العربي، والنهارده الجو حلو وأنا مبسوط." : "أَنا أَتَعَلَّمُ اللُّغَةَ العَرَبِيَّةَ، وَأُحِبُّ القِراءَةَ كَثيرًا، وَاليَوْمُ جَميلٌ.";
+  m.innerHTML = `<div class="fpbox card" style="max-width:28rem;width:100%"><h3>🎙️ ${ar ? "سجّل نبرتك" : "Record your tone"}</h3><p class="sm">${ar ? "اقرأ الجملة دي بصوتك الطبيعي:" : "Read this sentence naturally:"}</p><p class="notr" lang="ar" style="font:1.4rem/2 'Amiri',serif">${line}</p><button class="btn btn-p btn-lg" id="tr98" onclick="toneGo98(this)">🎙️ ${ar ? "ابدأ (١٠ ثواني)" : "Start (10 s)"}</button><div id="tr98o" class="sm" style="margin-top:.6rem"></div><button class="btn btn-o" style="margin-top:.5rem" onclick="document.getElementById('fpM').remove()">${ar ? "إغلاق" : "Close"}</button></div>`;
+  document.body.appendChild(m);
+}
+async function toneGo98(btn) {
+  const ar = state.lang === "ar"; let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { return toast(ar ? "اسمح بالمايك" : "Allow the microphone", true); }
+  const ac = new (window.AudioContext || window.webkitAudioContext)(); const src = ac.createMediaStreamSource(st); const an = ac.createAnalyser(); an.fftSize = 2048; src.connect(an); const buf = new Float32Array(2048); const fs = []; const t0 = performance.now(); btn.disabled = true;
+  await new Promise(res => { const loop = () => { an.getFloatTimeDomainData(buf); const f = tnPitch(buf, ac.sampleRate); if (f > 60 && f < 500) fs.push(f); const left = 10 - Math.floor((performance.now() - t0) / 1000); btn.textContent = "⏺ " + left; if (left <= 0) return res(); requestAnimationFrame(loop); }; loop(); });
+  st.getTracks().forEach(t => t.stop()); ac.close(); btn.disabled = false; btn.textContent = "🎙️ " + (ar ? "سجّل تاني" : "Again");
+  if (fs.length < 30) { document.getElementById("tr98o").textContent = ar ? "⚠️ الصوت مش واضح — قرّب من المايك وحاول تاني." : "⚠️ Unclear — move closer and retry."; return; }
+  fs.sort((a, b) => a - b); const f0 = Math.round(fs[Math.floor(fs.length / 2)]); toneSave98({ f0, sel: "me", at: Date.now() });
+  document.getElementById("tr98o").innerHTML = `✅ ${ar ? "اتحفظت نبرتك" : "Saved"} (${f0} Hz). ${ar ? "دلوقتي المحادثات بنبرتك — وتقدر تختار نسخة رجالي/ستّاتي/طفل من فوق." : "Dialogues now use your tone — pick other versions above."}`; render();
+}
+/* «مثّل الدور» في الحوار */
+async function roleRun98(i, spk) {
+  const u = fuD()[i]; const ar = state.lang === "ar"; state.fuRole = { spk, k: 0, run: Date.now() }; const run = state.fuRole.run; state.fuL = u[3].length; render();
+  for (let k = 0; k < u[3].length; k++) {
+    if (!state.fuRole || state.fuRole.run !== run) return; state.fuRole.k = k; document.querySelectorAll(".fuln").forEach((e, j) => e.classList.toggle("role98on", j === k)); const el = document.querySelectorAll(".fuln")[k]; if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    const l = u[3][k];
+    if (l[0] !== spk) { rdSay(l[1]); await new Promise(r => setTimeout(r, 900 + l[1].length * 85)); }
+    else { const box = document.getElementById("fud" + k); if (box) box.innerHTML = `<p class="sm b" style="color:var(--accent)">🎭 ${ar ? "دورك! قول الجملة دي…" : "Your turn! Say this line…"}</p>`; await new Promise(r => { rdListen(l[1], "fud" + k); setTimeout(r, 6500 + l[1].length * 60); }); }
+  }
+  state.fuRole = null; toast(ar ? "👏 برافو! خلّصت المشهد" : "👏 Bravo! Scene complete");
+}
+const _fuUnit98 = fuUnit;
+fuUnit = function (i) { let h = _fuUnit98(i); if ((state.fuT || "words") !== "dialog") return h; const u = fuD()[i]; const ar = state.lang === "ar"; const sp = [...new Set(u[3].map(l => l[0]))]; const bar = `<div class="card role98"><b>🎭 ${ar ? "مثّل دور:" : "Play a role:"}</b> ${sp.map(s => `<button class="btn btn-o" onclick="roleRun98(${i},${esc(JSON.stringify(s))})">${esc(s)}</button>`).join("")}<span class="xs muted">${ar ? "الطرف التاني بيتكلم، ولما ييجي دورك قول جملتك والموقع يصحّحلك." : "The other side speaks; on your turn, say your line and get checked."}</span></div>`; return h.replace('<div class="card fudlg">', bar + '<div class="card fudlg">'); };
+const _renderFusha98 = renderFusha;
+renderFusha = function () { const h = _renderFusha98(); if (state.fuEx || state.fuCert || state.fuQ) return h; const i = h.indexOf('<h1'); const j = i >= 0 ? h.indexOf("</p>", i) + 4 : -1; return j > 3 ? h.slice(0, j) + voiceBar98() + h.slice(j) : h; };
+/* كل الحروف بالحركات (المخارج) */
+const _renderMakharij98 = renderMakharij;
+renderMakharij = function () {
+  const ar = state.lang === "ar"; const h = _renderMakharij98(); const own = realRole() === "owner" && !state.preview;
+  const btn = `<div style="text-align:center;margin:.8rem 0"><button class="btn ${state.mkAll ? "btn-p" : "btn-o"}" onclick="state.mkAll=!state.mkAll;render()">📋 ${ar ? "كل الحروف بالحركات" : "All letters with vowels"}</button></div>`;
+  if (!state.mkAll) return h.replace('<div class="mkletters', btn + '<div class="mkletters');
+  const base = c => c === "ء" ? "أ" : c; const H = [["a", "َ"], ["u", "ُ"], ["i", "ِ"], ["s", "ْ"]];
+  const grid = `<div class="card"><p class="xs muted">${ar ? "دوس على أي خانة تسمعها." + (own ? " عشان تحط صوتك: شغّل «وضع الأصوات» 🎙️ من فوق ودوس على الخانة، أو افتح الحرف وارفع/سجّل." : "") : "Tap any cell to listen."}</p><div class="mkall98">${Object.keys(MK_L).filter(c => c !== "ا").map(c => `<div><b class="notr" lang="ar">${c}</b>${H.map(([h, m]) => { const syl = h === "s" ? "أَ" + base(c) + m : base(c) + m; return `<button class="notr ${lhUrl(c, h) ? "mine" : ""}" lang="ar" onclick="lhPlay('${c}','${h}','${syl}')">${syl}</button>`; }).join("")}</div>`).join("")}</div></div>`;
+  return h.replace(/<div class="mkletters[\s\S]*$/, btn + grid + "</div></section>");
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.vb98{margin:.4rem 0 .8rem;padding:.6rem .8rem}.role98{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem}.fuln.role98on{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:12px}
+.mkall98{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.4rem}.mkall98>div{display:grid;grid-template-columns:2rem repeat(4,1fr);gap:.2rem;align-items:center;padding:.3rem;border:1px solid var(--line);border-radius:10px}.mkall98 b{font:700 1.4rem 'Amiri',serif;text-align:center}.mkall98 button{font:1.25rem 'Amiri',serif;padding:.2rem 0;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);cursor:pointer}.mkall98 button.mine{border-color:#16a34a;background:#dcfce7}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
