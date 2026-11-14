@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v100";
+const UI_VERSION = "2026-11-14-v101";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18928,6 +18928,29 @@ const _render99 = render; render = function () { const r = _render99.apply(this,
 const QR_WEB = { hafs: "https://archive.org/download/download-quran-pdf/%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20-%20%D8%A7%D9%84%D9%85%D8%B5%D8%AD%D9%81%20%D8%A7%D9%84%D9%88%D8%B3%D8%B7.pdf", warsh: "https://archive.org/download/quran-warsh-pdf/%D9%85%D8%B5%D8%AD%D9%81%20%D9%88%D8%B1%D8%B4.pdf", qalun: "https://archive.org/download/quran-qalon/%D9%85%D8%B5%D8%AD%D9%81%20%D9%82%D8%A7%D9%84%D9%88%D9%86.pdf", shuba: "https://archive.org/download/quran-shuba/%D9%85%D8%B5%D8%AD%D9%81%20%D8%B4%D8%B9%D8%A8%D8%A9.pdf", susi: "https://archive.org/download/quran-mushaf-alsusy/%D9%85%D8%B5%D8%AD%D9%81%20%D8%A7%D9%84%D8%B3%D9%88%D8%B3%D9%8A.pdf", duri: "https://archive.org/download/quran-dury/%D9%85%D8%B5%D8%AD%D9%81%20%D8%A7%D9%84%D8%AF%D9%88%D8%B1%D9%8A.pdf" };
 QR_FILES.splice(0, QR_FILES.length, ["hafs", "حفص عن عاصم (مصحف المدينة)", "Hafs 'an 'Asim"], ["warsh", "ورش عن نافع", "Warsh 'an Nafi'"], ["qalun", "قالون عن نافع", "Qalun 'an Nafi'"], ["shuba", "شعبة عن عاصم", "Shu'bah 'an 'Asim"], ["duri", "الدوري عن أبي عمرو", "Ad-Duri 'an Abi 'Amr"], ["susi", "السوسي عن أبي عمرو", "As-Susi 'an Abi 'Amr"], ["khalaf", "خلف عن حمزة", "Khalaf 'an Hamzah"], ["kisai", "الكسائي (من الشاطبية)", "Al-Kisa'i"], ["yaqub", "يعقوب الحضرمي (من الدرة)", "Ya'qub al-Hadrami"]);
 const _qrUrl100 = qrUrl; qrUrl = function (k) { return _qrUrl100(k) || QR_WEB[k] || null; };
+
+/* ================= v101: تسجيلات الطالب في القراءة والفصحى والعامية توصل للمعلم — بعد أي «اقرأ وأنا أصحّحلك» يظهر «📤 ابعت تسجيلي للمعلم» (ويتمسح بعد ٣ أيام) ================= */
+const RDREC101 = {};
+const _rdListen101 = rdListen;
+rdListen = function (target, outId) {
+  const r = _rdListen101.apply(this, arguments);
+  try { if (!state.auth.user || !window.MediaRecorder || !navigator.mediaDevices || /Android|iPhone|iPad/i.test(navigator.userAgent)) return r; const prev = RDREC101[outId]; if (prev && prev.rec && prev.rec.state === "recording") { prev.rec.stop(); return r; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(st => { const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; const rec = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; rec.ondataavailable = e => e.data.size && ch.push(e.data); rec.onstop = () => { st.getTracks().forEach(t => t.stop()); RDREC101[outId] = { blob: new Blob(ch, { type: rec.mimeType || "audio/webm" }), target }; }; RDREC101[outId] = { rec, target }; rec.start(); setTimeout(() => { if (rec.state === "recording") rec.stop(); }, 15000); }).catch(() => {});
+  } catch (e) {}
+  return r;
+};
+const _rdShow101 = rdShow;
+rdShow = function (target, said, score, outId) {
+  _rdShow101.apply(this, arguments); const x = RDREC101[outId]; if (x && x.rec && x.rec.state === "recording") setTimeout(() => { try { x.rec.stop(); } catch (e) {} }, 300);
+  if (!state.auth.user) return; const o = document.getElementById(outId); if (!o) return; const ar = state.lang === "ar";
+  setTimeout(() => { if (!o.isConnected || o.querySelector(".snd101")) return; o.insertAdjacentHTML("beforeend", `<button class="btn btn-o xs snd101" onclick="rdSend101('${outId}',${Math.round((score || 0) * 100)},this)">📤 ${ar ? "ابعت تسجيلي للمعلم" : "Send my recording to my teacher"}</button>`); }, 600);
+};
+async function rdSend101(outId, pct, btn) {
+  const ar = state.lang === "ar"; const x = RDREC101[outId]; if (!x || !x.blob) return toast(ar ? "مفيش تسجيل — اقرأ تاني" : "No recording — read again", true); btn.disabled = true;
+  try { const f = new File([x.blob], `read_${Date.now()}.${/mp4/.test(x.blob.type) ? "m4a" : "webm"}`, { type: x.blob.type }); const up = await sfUpload(state.auth.user.id, [f], false); const area = state.route === "reading" ? "reading" : state.route === "makharij" ? "tajweed" : "arabic";
+    const { error } = await sb.from("student_tasks").insert({ student_id: state.auth.user.id, created_by: state.auth.user.id, kind: "check", area, title: `🎙️ ${ar ? "قراءة" : "Reading"}: ${String(x.target).slice(0, 60)}`, body: `${ar ? "تقييم آلي تقريبي" : "Approx. auto-check"}: ${pct}%`, status: "submitted", sub_files: up, submitted_at: new Date().toISOString() });
+    if (error) throw error; btn.textContent = "✅ " + (ar ? "اتبعت للمعلم" : "Sent to your teacher"); } catch (e) { btn.disabled = false; toast(e.message || String(e), true); }
+}
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
