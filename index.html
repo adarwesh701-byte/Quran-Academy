@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v117";
+const UI_VERSION = "2026-11-14-v120";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -19925,6 +19925,38 @@ edBar = (function (_f) { return function () { if (realRole() === "owner" && (sta
 uilBar = (function (_f) { return function () { _f.apply(this, arguments); if (realRole() === "owner") simBar117(); }; })(uilBar);
 document.head.insertAdjacentHTML("beforeend", `<style>#simBar{position:fixed!important;top:auto!important;bottom:5.4rem!important;left:50%!important;inset-inline-start:auto!important;transform:translateX(-50%)!important;z-index:9900!important;display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;background:#111;color:#fff;padding:.45rem .6rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:.85rem}
 #simBar button,#simBar select{background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:9px;padding:.35rem .6rem;font:inherit;cursor:pointer}#simBar button.on{background:#7c3aed;border-color:#7c3aed}#simBar button.sv{background:#16a34a;border-color:#16a34a;font-weight:800}</style>`);
+
+/* ================= v120: مساحة صوت كل شيخ + اقتراح الشيخ المناسب لطبقة صوت الطالب =================
+   المساحة محسوبة آليًا من تلاوة كل شيخ (tools/reciter_ranges.py على GitHub Actions)، والمالك يقدر يعدّلها من الإعدادات لأن الحساب الآلي ممكن يغلط. */
+function rrData() { return useData("rr120", async () => { try { const r = await fetch("/data/reciter_ranges.json?v=" + UI_VERSION); return [r.ok ? await r.json() : {}]; } catch (e) { return [{}]; } }); }
+function rrAll() { const d = rrData(); const base = Array.isArray(d) ? d[0] : {}; const ov = setv("reciterRanges", {}) || {}; const out = {}; EA.forEach(([f, ar, en]) => { const b = base[f] || {}, o = ov[f] || {}; const low = +o.low || +b.low || 0, high = +o.high || +b.high || 0; if (o.hide) return; out[f] = { f, ar, en, low, high, mid: low && high ? Math.sqrt(low * high) : 0, auto: !!b.low, edited: !!(o.low || o.high) }; }); return out; }
+function rrMatch(lo, hi) {
+  /* مركز صوت الطالب، ونقارنه بمركز كل شيخ مع مراعاة فرق الأوكتاف (الستات والأطفال أعلى بأوكتاف) */
+  const c = Math.sqrt(lo * hi); const st = x => 12 * Math.log2(x);
+  return Object.values(rrAll()).filter(r => r.mid).map(r => { let d = st(c) - st(r.mid); let oct = 0; while (d > 6) { d -= 12; oct++; } while (d < -6) { d += 12; oct--; } const span = st(hi) - st(lo), rs = st(r.high) - st(r.low); const fit = Math.abs(d) + Math.max(0, rs - span) * .5; return Object.assign({ d, oct, fit }, r); }).sort((a, b) => a.fit - b.fit);
+}
+function rrCard() {
+  const ar = state.lang === "ar"; const p = state.auth.profile || {}; const lo = +p.voice_low, hi = +p.voice_high;
+  if (!(lo > 0 && hi > lo)) return `<div class="card rr120"><b>🎯 ${ar ? "الشيخ المناسب لصوتك" : "Reciters that suit your voice"}</b><p class="sm muted">${ar ? "سجّل أوطى وأعلى طبقة لصوتك (من «مارس المقام بصوتك») وهنقترحلك المشايخ اللي طبقتهم قريبة منك عشان تقلّدهم بسهولة." : "Record your lowest and highest note first."}</p></div>`;
+  const m = rrMatch(lo, hi).slice(0, 5); if (!m.length) return `<div class="card rr120"><b>🎯 ${ar ? "الشيخ المناسب لصوتك" : "Reciters that suit your voice"}</b><p class="sm muted">${ar ? "بنحسب طبقات المشايخ دلوقتي — ارجع بعد شوية." : "Reciter ranges are being computed."}</p></div>`;
+  return `<div class="card rr120"><b>🎯 ${ar ? "المشايخ المناسبين لطبقة صوتك" : "Reciters that suit your voice"}</b><p class="xs muted">${ar ? "صوتك" : "Your voice"}: <b dir="ltr">${hzNote(lo)} – ${hzNote(hi)}</b> — ${ar ? "دول أقرب مشايخ لطبقتك؛ قلّدهم وانت مرتاح." : "closest reciters to your range."}</p>
+    <div class="rr120l">${m.map((r, i) => `<div class="rr120r"><span class="rr120n">${i + 1}</span><div style="flex:1;min-width:0"><b>${esc(ar ? r.ar : r.en)}</b><div class="xs muted" dir="ltr">${hzNote(r.low)} – ${hzNote(r.high)}${r.oct ? ` · ${ar ? (r.oct > 0 ? "اقرأ أعلى منه بأوكتاف" : "اقرأ أوطى منه بأوكتاف") : "octave shift"}` : ""}</div></div><button class="btn btn-o" onclick="eaPlay('${eaUrl(r.f, "1:2")}')">🔊</button></div>`).join("")}</div></div>`;
+}
+/* صفحة المالك: يسمع ويعدّل طبقة كل شيخ */
+function rrOwnerCard() {
+  const ar = state.lang === "ar"; const A = rrAll(); const ov = setv("reciterRanges", {}) || {}; const d = rrData(); const base = Array.isArray(d) ? d[0] : {};
+  const nIn = (f, k, v) => `<input class="in" style="width:5.2rem;direction:ltr" placeholder="${k === "low" ? "A2" : "E4"}" value="${v ? esc(hzNote(v)) : ""}" onchange="rrSet('${f}','${k}',this.value)">`;
+  return `<details class="card" style="margin-top:1rem"><summary><b>🎙️ ${ar ? "طبقات أصوات المشايخ (لاقتراح الشيخ المناسب للطالب)" : "Reciters' voice ranges"}</b></summary>
+    <p class="xs muted">${ar ? "اتحسبت آليًا من تلاوة كل شيخ (أوطى ٥٪ وأعلى ٥٪ من نغمات صوته). اسمع وعدّل لو شايف إن الحساب غلط — اكتب النغمة زي A2 أو D3 أو E4. «إخفاء» يشيل الشيخ من الاقتراحات." : "Auto-computed; edit if wrong (e.g. A2, E4)."}</p>
+    ${!Object.keys(base).length ? `<p class="sm" style="background:#fef3c7;border-radius:.5rem;padding:.5rem">⏳ ${ar ? "الحساب الآلي شغال على GitHub دلوقتي — النتايج هتظهر هنا لوحدها أول ما يخلص." : "Auto computation is running."}</p>` : ""}
+    <div style="overflow-x:auto"><table class="rr120t"><tr><th>${ar ? "الشيخ" : "Reciter"}</th><th></th><th>${ar ? "أوطى" : "Low"}</th><th>${ar ? "أعلى" : "High"}</th><th></th></tr>${EA.map(([f, a, e]) => { const r = A[f] || {}; const b = base[f] || {}; const hid = (ov[f] || {}).hide; return `<tr class="${hid ? "rr120hid" : ""}"><td>${esc(ar ? a : e)}${(ov[f] || {}).low || (ov[f] || {}).high ? ` <span class="chip on" style="font-size:.65rem">${ar ? "معدّل" : "edited"}</span>` : ""}<div class="xs muted" dir="ltr">${b.low ? `${ar ? "آلي" : "auto"}: ${b.lowN}–${b.highN}` : ""}</div></td><td><button class="btn btn-o" onclick="eaPlay('${eaUrl(f, "1:2")}')">🔊</button></td><td>${nIn(f, "low", r.low)}</td><td>${nIn(f, "high", r.high)}</td><td><button class="btn btn-o xs" onclick="rrSet('${f}','hide',${hid ? "false" : "true"})">${hid ? (ar ? "إظهار" : "Show") : (ar ? "إخفاء" : "Hide")}</button> <button class="btn btn-o xs" onclick="rrSet('${f}','reset')">↺</button></td></tr>`; }).join("")}</table></div></details>`;
+}
+function noteHz(n) { const m = String(n || "").trim().match(/^([A-Ga-g])([#b]?)(-?\d)$/); if (!m) return 0; const i = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1].toUpperCase()] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0); const midi = (+m[3] + 1) * 12 + i; return Math.round(440 * Math.pow(2, (midi - 69) / 12) * 10) / 10; }
+async function rrSet(f, k, v) { const ov = Object.assign({}, setv("reciterRanges", {}) || {}); const o = Object.assign({}, ov[f] || {}); if (k === "reset") delete ov[f]; else { if (k === "hide") o.hide = !!v; else { const hz = noteHz(v); if (v && !hz) return toast(state.lang === "ar" ? "اكتب النغمة زي A2 أو E4" : "Use a note like A2 or E4", true); o[k] = hz || undefined; } ov[f] = o; } await saveSetting16("reciterRanges", ov); toast("✅"); render(); }
+document.head.insertAdjacentHTML("beforeend", `<style>.rr120{margin-top:1rem}.rr120l{display:grid;gap:.35rem;margin-top:.5rem}.rr120r{display:flex;gap:.6rem;align-items:center;border:1px solid var(--line);border-radius:.7rem;padding:.4rem .6rem}.rr120n{width:1.7rem;height:1.7rem;border-radius:50%;background:var(--accent);color:var(--accent-fg,#fff);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}.rr120t{width:100%;border-collapse:collapse;margin-top:.5rem}.rr120t td,.rr120t th{padding:.35rem;border-bottom:1px solid var(--line);text-align:start;vertical-align:middle}.rr120hid{opacity:.45}</style>`);
+/* فين يظهر: صفحة «مارس المقام بصوتك» تحت مساحة الصوت + إعدادات المالك */
+const _maqamPage120 = maqamPage; maqamPage = function (kind, mid) { const h = _maqamPage120(kind, mid); return (kind === "aah" || kind === "vtest") && state.auth.user ? h + rrCard() : h; };
+const _ownerSettings120 = ownerSettings; ownerSettings = function () { return _ownerSettings120() + rrOwnerCard(); };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
