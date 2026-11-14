@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v82";
+const UI_VERSION = "2026-11-14-v83";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18252,7 +18252,6 @@ document.head.insertAdjacentHTML("beforeend", `<style>.bk81{font-weight:800}.cru
 PAGES16.push("adhans");
 RK76.push(["adhan", "📢 أذان", "📢 Adhan"]);
 const _recKind82 = recKind59; recKind59 = function (c) { if (c && c.rec_kind === "adhan") return "adhan"; return _recKind82(c); };
-maqamOne = function (cur) { if (state.mqTab === "nasheed") { const mid = (cur.meta || {}).maqam; const rs = maqamRecs59(mid); if (Array.isArray(rs)) rs.forEach(c => { if (c.rec_kind === "adhan") c.__adh = 1; }); } return _maqamOne82(cur); };
 const _rk59f = recKind59; recKind59 = function (c) { const k = _rk59f(c); return k === "adhan" && state.mqTab === "nasheed" ? "ibtihal" : k; };
 function adhList() { return useData("adhans", () => q(sb.from("contents").select("id,title,type,file_path,url,section_id,maqam,rec_kind,reciter,created_at").eq("rec_kind", "adhan").order("created_at"))); }
 async function adhCopy(id, kind) {
@@ -18288,6 +18287,46 @@ const _recInv82 = recInv76; recInv76 = function () { _recInv82(); delete state.d
 const _grantAccess82 = grantAccess;
 grantAccess = async function () { const uid = document.getElementById("ga_u").value; await _grantAccess82(); try { await sb.from("notifications").insert({ user_id: uid, kind: "access_granted", data: { by: state.auth.user.id } }); } catch (e) {} };
 (function () { let last = null; const chk = async () => { if (!state.auth || !state.auth.user || realRole() === "owner") return; const { data } = await sb.from("content_access").select("id").eq("user_id", state.auth.user.id); const n = (data || []).length; if (last != null && n > last) { delete state.data.myAccess; toast(state.lang === "ar" ? "🎉 اتفتحلك محتوى جديد!" : "🎉 New content unlocked for you!"); render(); } last = n; }; setInterval(chk, 30000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); setTimeout(chk, 4000); })();
+
+/* ================= v83: «قلّد التلاوة بنفس المقام» — الطالب يسمع ويسجّل، الموقع يقارن السلّم تقريبيًا، والتسجيل يتبعت لملفه عشان المعلم يأكّد (ويتمسح بعد ٣ أيام) ================= */
+async function im83Hist(ab) {
+  const ac = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 44100, 44100); const buf = await ac.decodeAudioData(ab.slice ? ab.slice(0) : ab);
+  const d = buf.getChannelData(0), sr = buf.sampleRate, N = 2048, max = Math.min(d.length, sr * 30); const fs = [];
+  for (let i = 0; i + N < max; i += 1024) { const f = tnPitch(d.subarray(i, i + N), sr); if (f > 70 && f < 1000) fs.push(1200 * Math.log2(f / 110)); }
+  if (fs.length < 20) return null; const h = new Array(24).fill(0); fs.forEach(c => { h[Math.round((((c % 1200) + 1200) % 1200) / 50) % 24]++; }); const s = Math.hypot(...h) || 1; return h.map(x => x / s);
+}
+function im83Sim(a, b) { let best = 0; for (let k = 0; k < 24; k++) { let s = 0; for (let i = 0; i < 24; i++) s += a[i] * b[(i + k) % 24]; best = Math.max(best, s); } return best; }
+let __im83 = null;
+function imOpen83(id, mid) {
+  const ar = state.lang === "ar"; const c = rcAll76().find(x => x.id === id); if (!c || !c.file_path) return; const url = sb.storage.from("academy_public").getPublicUrl(String(c.file_path).replace(/^academy_public\//, "")).data.publicUrl;
+  __im83 = { c, mid, url }; const old = document.getElementById("fpM"); if (old) old.remove(); const m = document.createElement("div"); m.id = "fpM";
+  m.innerHTML = `<div class="fpbox card" style="max-width:30rem;width:100%"><h3>🎤 ${ar ? "قلّد التلاوة بنفس المقام" : "Imitate in the same maqam"}</h3><p class="sm muted">${ar ? "١) اسمع المقطع كويس. ٢) سجّل نفس الحتة بصوتك (لحد ٢٥ ثانية). الموقع هيقارن السلّم، والمعلم هيأكّد." : "1) Listen carefully. 2) Record the same passage (up to 25 s). The site compares the scale; your teacher confirms."}</p>
+    <audio controls src="${esc(url)}" style="width:100%;margin:.5rem 0"></audio><button class="btn btn-p btn-lg" id="im83b" onclick="imRec83(this)">🎙️ ${ar ? "ابدأ التسجيل" : "Start recording"}</button><div id="im83o" style="margin-top:.7rem"></div><button class="btn btn-o" style="margin-top:.6rem" onclick="document.getElementById('fpM').remove()">${ar ? "إغلاق" : "Close"}</button></div>`;
+  document.body.appendChild(m);
+}
+async function imRec83(btn) {
+  const ar = state.lang === "ar"; const z = __im83; if (!z) return; if (z.rec) { z.rec.stop(); return; }
+  if (!state.auth.user) return toast(ar ? "سجّل دخول الأول" : "Please sign in first", true);
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); } catch (e) { return toast(ar ? "اسمح بالمايك" : "Allow the microphone", true); }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = [];
+  r.ondataavailable = e => e.data.size && ch.push(e.data);
+  r.onstop = async () => {
+    st.getTracks().forEach(t => t.stop()); z.rec = null; btn.textContent = "🎙️ " + (ar ? "سجّل تاني" : "Record again"); btn.classList.remove("rec59on"); const o = document.getElementById("im83o"); o.innerHTML = loadingBox();
+    const blob = new Blob(ch, { type: r.mimeType || "audio/webm" }); let sim = null;
+    try { const [ra, sa] = await Promise.all([fetch(z.url).then(x => x.arrayBuffer()), blob.arrayBuffer()]); const [h1, h2] = await Promise.all([im83Hist(ra), im83Hist(sa)]); if (h1 && h2) sim = im83Sim(h1, h2); } catch (e) { console.warn(e); }
+    const pct = sim == null ? null : Math.round(Math.max(0, Math.min(1, (sim - 0.55) / 0.4)) * 100); const ok = pct != null && pct >= 70;
+    let sent = false; try { const f = new File([blob], `imitate_${Date.now()}.${/mp4/.test(blob.type) ? "m4a" : "webm"}`, { type: blob.type }); const up = await sfUpload(state.auth.user.id, [f], false); const t = locText(z.c.title) || ""; const { error } = await sb.from("student_tasks").insert({ student_id: state.auth.user.id, created_by: state.auth.user.id, kind: "check", area: "maqamat", title: `🎤 ${ar ? "تقليد" : "Imitation"}: ${t} — ${maqamName(z.c.maqam || z.mid)}`, body: pct == null ? (ar ? "التقييم الآلي مش متاح للتسجيل ده" : "Auto-check unavailable") : `${ar ? "التقييم الآلي التقريبي" : "Approx. auto-check"}: ${pct}%`, status: "submitted", sub_files: up, submitted_at: new Date().toISOString() }); sent = !error; } catch (e) { console.warn(e); }
+    o.innerHTML = pct == null ? `<p>⚠️ ${ar ? "الصوت قصير أو مش واضح — حاول تسجّل في مكان هادي ١٠ ثواني على الأقل." : "Too short or unclear — record at least 10 s in a quiet place."}</p>` : `<div class="fures ${ok ? "ok" : ""}"><b style="font-size:1.3rem">${ok ? "✅" : "❌"} ${pct}%</b><p class="sm">${ok ? (ar ? "ممتاز! سلّمك قريب جدًا من نفس المقام." : "Great! Your scale closely matches the maqam.") : (ar ? "لسه بعيد شوية عن نفس المقام — اسمع تاني وركّز على النغمات اللي بتنزل وتطلع." : "Not quite the same maqam yet — listen again and focus on the rising/falling notes.")}</p></div>`;
+    o.innerHTML += `<p class="xs muted">${sent ? (ar ? "📤 تسجيلك اتبعت لملفك عشان المعلم يأكّد (بيتمسح تلقائيًا بعد ٣ أيام)." : "📤 Sent to your file for your teacher to confirm (auto-deleted after 3 days).") : ""} ${ar ? "التقييم الآلي تقريبي — الحكم النهائي للمعلم." : "The auto-check is approximate — your teacher has the final say."}</p>`;
+  };
+  z.rec = r; r.start(); btn.textContent = "⏹ " + (ar ? "وقّف" : "Stop"); btn.classList.add("rec59on"); setTimeout(() => { if (z.rec === r) r.stop(); }, 25000);
+}
+const _recCard83 = recCard59;
+recCard59 = function (c, mid) { const h = _recCard83(c, mid); if (!c.file_path || !["murattal", "mujawwad", "nasheed", "ibtihal", "adhan"].includes(c.rec_kind || recKind59(c))) return h; return h.replace(/<\/div>$/, `<button class="btn btn-o im83" onclick="imOpen83('${c.id}','${mid || ""}')">🎤 ${state.lang === "ar" ? "قلّد بنفس المقام" : "Imitate this maqam"}</button></div>`); };
+/* «خمّن المقام» في صفحة المقام: يتضاف اختبار من التسجيلات الحقيقية */
+const _maqamOne83 = maqamOne;
+maqamOne = function (cur) { const h = _maqamOne83(cur); if (state.mqTab !== "guess") return h; const ar = state.lang === "ar"; return `<div class="card" style="margin:1rem 0;text-align:center;border:2px solid var(--accent)"><b>🏆 ${ar ? "خمّن المقام من التسجيلات اللي على الموقع" : "Guess the maqam from the site's recordings"}</b><p class="sm muted">${ar ? "١٠ مقاطع حقيقية — تسمع وتختار المقام، ونقط ولوحة شرف" : "10 real clips — listen, choose, score, leaderboard"}</p><button class="btn btn-p" onclick="go16('mqchallenge')">▶ ${ar ? "ابدأ" : "Start"}</button></div>` + h; };
+document.head.insertAdjacentHTML("beforeend", `<style>.im83{margin-top:.4rem;width:100%}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
