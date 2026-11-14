@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v87";
+const UI_VERSION = "2026-11-14-v88";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18500,6 +18500,49 @@ function voiceCard87() {
 const _ownerSettings87 = ownerSettings; ownerSettings = function () { return _ownerSettings87() + voiceCard87(); };
 setTimeout(() => { try { if (vcSet87().aah === "clone") vcLoad87(); } catch (e) {} }, 4000);
 document.head.insertAdjacentHTML("beforeend", `<style>.vc87r{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px dashed var(--line)}.vc87r>div:first-child{display:flex;flex-direction:column}</style>`);
+
+/* ================= v88: قسم «القراءات العشر» — كل قارئ وراوييه، أشهر الفروق بأمثلة، استماع لرواية ورش، ومصاحف الروايات PDF (الأونر يرفعها) ================= */
+PAGES16.push("qiraat");
+const QR = [
+ ["نافع المدني", "Nafi' al-Madani", ["قالون", "Qalun"], ["ورش", "Warsh"], "المدينة", "warsh", "من أشهر رواياته ورش في المغرب العربي وغرب أفريقيا، وقالون في ليبيا وتونس."],
+ ["ابن كثير المكي", "Ibn Kathir al-Makki", ["البزي", "Al-Bazzi"], ["قنبل", "Qunbul"], "مكة", "", "يصل ميم الجمع بواو إذا جاء بعدها متحرك (عليهمو)."],
+ ["أبو عمرو البصري", "Abu 'Amr al-Basri", ["الدوري", "Ad-Duri"], ["السوسي", "As-Susi"], "البصرة", "", "رواية الدوري عن أبي عمرو منتشرة في السودان."],
+ ["ابن عامر الشامي", "Ibn 'Amir ash-Shami", ["هشام", "Hisham"], ["ابن ذكوان", "Ibn Dhakwan"], "الشام", "", "أعلى القراء العشرة سندًا."],
+ ["عاصم الكوفي", "'Asim al-Kufi", ["شعبة", "Shu'bah"], ["حفص", "Hafs"], "الكوفة", "hafs", "رواية حفص عن عاصم هي الأكثر انتشارًا في العالم اليوم، وبها المصاحف المتداولة."],
+ ["حمزة الكوفي", "Hamzah al-Kufi", ["خلف", "Khalaf"], ["خلاد", "Khallad"], "الكوفة", "khalaf", "اشتهر بالسكت قبل الهمز ومد المنفصل والمتصل ست حركات."],
+ ["الكسائي الكوفي", "Al-Kisa'i al-Kufi", ["أبو الحارث", "Abu al-Harith"], ["الدوري", "Ad-Duri"], "الكوفة", "kisai", "إمام النحو والقراءة، ويُميل هاء التأنيث عند الوقف."],
+ ["أبو جعفر المدني", "Abu Ja'far al-Madani", ["ابن وردان", "Ibn Wardan"], ["ابن جماز", "Ibn Jammaz"], "المدينة", "", "شيخ نافع، ومن القراءات الثلاث المتممة للعشر."],
+ ["يعقوب الحضرمي", "Ya'qub al-Hadrami", ["رويس", "Ruways"], ["روح", "Rawh"], "البصرة", "yaqub", "يضم هاء الضمير في نحو «عليهُم» و«إليهُم»."],
+ ["خلف العاشر", "Khalaf al-'Ashir", ["إسحاق", "Ishaq"], ["إدريس", "Idris"], "بغداد", "", "وهو نفسه راوي حمزة، وله اختيار مستقل."]
+];
+const QR_DIFF = [
+ ["1:4", "﴿مَالِكِ يَوْمِ الدِّينِ﴾", "«مالِك» بالألف: عاصم والكسائي ويعقوب وخلف العاشر. «مَلِك» بدون ألف: الباقون."],
+ ["1:6", "﴿الصِّرَاطَ﴾", "بالسين «السِّراط»: قنبل ورويس. بإشمام الصاد صوت الزاي: خلف عن حمزة. بالصاد الخالصة: الباقون."],
+ ["1:7", "﴿عَلَيْهِمْ﴾", "«عليهُم» بضم الهاء: حمزة ويعقوب. وبصلة ميم الجمع «عليهمو»: ابن كثير وأبو جعفر وقالون بخلاف عنه."],
+ ["2:9", "﴿وَمَا يَخْدَعُونَ﴾", "«وما يُخادعون» بالألف: نافع وابن كثير وأبو عمرو. «وما يَخدعون»: الباقون."],
+ ["2:10", "﴿بِمَا كَانُوا يَكْذِبُونَ﴾", "«يُكَذِّبون» بالتشديد: نافع وابن كثير وأبو عمرو وابن عامر وأبو جعفر ويعقوب. «يَكذِبون»: الكوفيون."],
+ ["ورش", "خصائص رواية ورش", "نقل حركة الهمزة للساكن قبلها (قَدَ افلح)، وإبدال الهمزة الساكنة حرف مد (يومنون)، وتغليظ اللامات بعد الصاد والطاء والظاء، وترقيق كثير من الراءات، ومد البدل."]
+];
+const QR_FILES = [["hafs", "حفص عن عاصم (مع هامش قالون)", "Hafs 'an 'Asim"], ["warsh", "ورش عن نافع", "Warsh 'an Nafi'"], ["qalun", "قالون عن نافع", "Qalun 'an Nafi'"], ["khalaf", "خلف عن حمزة", "Khalaf 'an Hamzah"], ["kisai", "الكسائي (من الشاطبية)", "Al-Kisa'i"], ["yaqub", "يعقوب الحضرمي (من الدرة)", "Ya'qub al-Hadrami"]];
+function qrList() { return useData("qrfiles", async () => { const { data } = await sb.storage.from("academy_public").list("mushafs", { limit: 100 }); return [(data || []).map(x => x.name)]; }); }
+function qrUrl(k) { const l = qrList(); const n = Array.isArray(l) ? l[0].find(x => x.startsWith(k + ".")) : null; return n ? sb.storage.from("academy_public").getPublicUrl("mushafs/" + n).data.publicUrl : null; }
+async function qrUp(k, f) { if (!f) return; const ar = state.lang === "ar"; if (f.size > 50 * 1024 * 1024) return toast(ar ? "الملف أكبر من ٥٠ ميجا — اضغطه الأول (مثلاً من ilovepdf.com) وارفعه تاني" : "File is over 50 MB — compress it first", true); toast(ar ? "⬆️ بنرفع…" : "⬆️ Uploading…"); const r = await sb.storage.from("academy_public").upload(`mushafs/${k}.pdf`, f, { contentType: "application/pdf", upsert: true }); if (r.error) return toast(r.error.message, true); delete state.data.qrfiles; toast("✅"); render(); }
+function renderQiraat() {
+  const ar = state.lang === "ar"; const own = realRole() === "owner" && !state.preview; const tab = state.qrT || "qurra";
+  const tabs = [["qurra", "👥 " + (ar ? "القراء العشرة ورواتهم" : "The ten readers")], ["diff", "🔍 " + (ar ? "أشهر الفروق" : "Famous differences")], ["listen", "🎧 " + (ar ? "استمع لرواية ورش" : "Listen: Warsh")], ["pdf", "📕 " + (ar ? "مصاحف الروايات" : "Mushafs")]];
+  let b = "";
+  if (tab === "qurra") b = `<p class="sm muted">${ar ? "القراءات العشر متواترة عن النبي ﷺ، ولكل قارئ راويان مشهوران. اختلافها اختلاف تنوّع لا تضاد." : "The ten readings are mass-transmitted from the Prophet ﷺ; each reader has two famous narrators."}</p><div class="qrgrid">${QR.map((q, i) => `<div class="card qrc"><b>${i + 1}. ${ar ? q[0] : q[1] + ` <span class="notr" lang="ar">(${q[0]})</span>`}</b><small class="muted">📍 ${esc(q[4])}</small><div class="row" style="gap:.3rem;flex-wrap:wrap;margin:.3rem 0"><span class="badge">${ar ? q[2][0] : q[2][1]}</span><span class="badge">${ar ? q[3][0] : q[3][1]}</span></div><p class="sm">${esc(q[6])}</p>${q[5] && qrUrl(q[5]) ? `<a class="btn btn-o xs" target="_blank" href="${qrUrl(q[5])}">📕 ${ar ? "المصحف" : "Mushaf"}</a>` : ""}</div>`).join("")}</div>`;
+  else if (tab === "diff") b = QR_DIFF.map(d => `<div class="card" style="margin-bottom:.6rem"><div class="row" style="gap:.5rem;align-items:center">${/^\d/.test(d[0]) ? `<button class="btn btn-o" onclick="eaPlay('${eaUrl("Husary_128kbps", d[0])}')">🔊</button>` : ""}<b class="notr" lang="ar" style="font:1.4rem 'Amiri',serif">${esc(d[1])}</b></div><p class="sm" style="margin-top:.4rem">${esc(d[2])}</p></div>`).join("") + `<p class="xs muted">${ar ? "المصادر: متن الشاطبية والدرة، و«النشر في القراءات العشر» لابن الجزري. التسجيل المرفق برواية حفص للمقارنة." : "Sources: al-Shatibiyyah, al-Durrah, and Ibn al-Jazari's al-Nashr."}</p>`;
+  else if (tab === "listen") { const s = +(state.qrS || 1); const r = state.qrR || "warsh/warsh_Abdul_Basit_128kbps"; const W = EA.filter(e => e[0].startsWith("warsh/")); b = `<div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap"><select class="in" style="width:auto" onchange="state.qrR=this.value">${W.map(w => `<option value="${w[0]}" ${w[0] === r ? "selected" : ""}>${esc(ar ? w[1] : w[2])}</option>`).join("")}</select><select class="in" style="width:auto" onchange="state.qrS=+this.value">${SURAHS.map((n, i) => `<option value="${i + 1}" ${i + 1 === s ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select></div><p class="sm muted" style="margin:.5rem 0">${ar ? "قارن الآية برواية ورش وبرواية حفص:" : "Compare the ayah in Warsh and Hafs:"}</p><div class="row" style="gap:.4rem;flex-wrap:wrap">${[1, 2, 3, 4, 5].map(a => `<button class="btn btn-o" onclick="eaPlay(eaUrl(state.qrR||'${r}','${s}:${a}'))">🟢 ${ar ? "ورش" : "Warsh"} ${a}</button><button class="btn btn-o" onclick="eaPlay('${eaUrl("Husary_128kbps", s + ":" + a)}')">🔵 ${ar ? "حفص" : "Hafs"} ${a}</button>`).join("")}</div></div>`; }
+  else b = `<p class="sm muted">${ar ? "مصاحف الروايات المختلفة للقراءة والتحميل." : "Mushafs of the different narrations to read or download."}</p>${QR_FILES.map(([k, a, e]) => { const u = qrUrl(k); return `<div class="card qrf"><b>📕 ${ar ? a : e}</b><div class="row" style="gap:.3rem;flex-wrap:wrap">${u ? `<a class="btn btn-p" target="_blank" href="${u}">${ar ? "افتح / حمّل" : "Open / download"}</a>` : `<span class="xs muted">${ar ? "لسه مترفعش" : "Not uploaded yet"}</span>`}${own ? `<label class="btn btn-o">⬆️ ${ar ? (u ? "استبدل" : "ارفع PDF") : "Upload PDF"}<input type="file" hidden accept="application/pdf" onchange="qrUp('${k}',this.files[0])"></label>` : ""}</div></div>`; }).join("")}${own ? `<p class="xs muted">${ar ? "ملفاتك في فولدر «قراءات». أقصى حجم ٥٠ ميجا للملف (مصحف حفص بالهامش ١٤٦ ميجا محتاج ضغط الأول)." : "Max 50 MB per file."}</p>` : ""}`;
+  return pageWrap("📜", ar ? "القراءات العشر" : "The ten Qira'at", ar ? "القراء العشرة ورواتهم، وأشهر الفروق بأمثلة، واستماع ومقارنة، ومصاحف الروايات" : "Readers and narrators, famous differences, listening and mushafs", `<div class="motabs">${tabs.map(([k, n]) => `<button class="${k === tab ? "on" : ""}" onclick="state.qrT='${k}';render()">${n}</button>`).join("")}</div><div style="margin-top:.8rem">${b}</div>`);
+}
+const _render88 = render;
+render = function () { if (state.route === "qiraat") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderQiraat(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render88.apply(this, arguments); };
+const _DOMAINS88 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS88(); ["tajweed", "hifz"].forEach(k => { const s = ds.find(d => d.k === k); if (s && s.tools && !s.tools.some(t => String(t[2]).includes("qiraat"))) s.tools.push(["📜", state.lang === "ar" ? "القراءات العشر" : "The ten Qira'at", "go16('qiraat')", ""]); }); return ds; };
+if (Array.isArray(KIT) && !KIT.some(k => k[0] === "qiraat")) KIT.push(["qiraat", "📜", "القراءات العشر", "The ten Qira'at", ["القراء ورواتهم وأشهر الفروق", "مصاحف الروايات"], ["Readers, narrators, differences", "Narration mushafs"], "#/qiraat", "#0f766e"]);
+RST81.qiraat = ["qrT", "qrS"];
+document.head.insertAdjacentHTML("beforeend", `<style>.qrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.6rem}.qrc{display:flex;flex-direction:column;gap:.15rem}.qrf{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
