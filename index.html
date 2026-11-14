@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v96";
+const UI_VERSION = "2026-11-14-v97";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18800,6 +18800,27 @@ renderFusha = function () {
   const h = _renderFusha96(); if (state.fuQ || state.fuU != null || state.fuDict || state.fuGame || state.fuPl) return h;
   return h.replace('<button class="btn btn-o" onclick="fuGameNew()">', `<button class="btn btn-o" onclick="fuExamNew()">🏁 ${ar ? "امتحان المستوى" : "Level exam"}</button>${fuCertData() ? `<button class="btn btn-o" onclick="state.fuCert=true;render()">🎓 ${ar ? "شهادتي" : "My certificate"}</button>` : ""}<button class="btn btn-o" onclick="fuGameNew()">`);
 };
+
+/* ================= v97: «الدرس خطوة بخطوة» — كلمات بالصوت ← حوار ← قاعدة ← تمارين (سماع/كلام/كتابة) ← إعادة اللي غلطت فيه لحد ما تصح ================= */
+const FLOW97 = [["words", "📚", "الكلمات", "Words"], ["dialog", "💬", "الحوار", "Dialogue"], ["grammar", "🧩", "القاعدة", "Grammar"], ["cards", "🃏", "بطاقات", "Flashcards"], ["ex", "📝", "تمارين", "Exercises"]];
+function flowStart97(i) { state.fuU = i; state.fuFlow = { u: i, s: 0 }; state.fuT = "words"; state.fuL = 1; render(); window.scrollTo({ top: 0 }); }
+function flowNext97() { const f = state.fuFlow; if (!f) return; f.s++; const st = FLOW97[f.s]; if (!st) { state.fuFlow = null; return render(); } if (st[0] === "ex") { fuEx(f.u); return; } state.fuT = st[0]; if (st[0] === "dialog") state.fuL = 1; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+function flowBar97() { const f = state.fuFlow; if (!f) return ""; const ar = state.lang === "ar"; return `<div class="flow97">${FLOW97.map((x, k) => `<span class="${k < f.s ? "done" : k === f.s ? "on" : ""}">${k < f.s ? "✓" : x[1]} ${ar ? x[2] : x[3]}</span>`).join("")}</div>`; }
+const _fuUnit97 = fuUnit;
+fuUnit = function (i) {
+  const ar = state.lang === "ar"; let h = _fuUnit97(i); const f = state.fuFlow && state.fuFlow.u === i ? state.fuFlow : null;
+  if (!f) return `<div class="card flowcta97"><b>🚶 ${ar ? "اتعلّم الوحدة دي خطوة بخطوة" : "Learn this unit step by step"}</b><span class="sm muted">${ar ? "كلمات ← حوار ← قاعدة ← بطاقات ← تمارين، وفي الآخر نعيد اللي غلطت فيه" : "Words → dialogue → grammar → cards → exercises, then we redo your mistakes"}</span><button class="btn btn-p" onclick="flowStart97(${i})">▶ ${ar ? "ابدأ" : "Start"}</button></div>` + h;
+  const st = FLOW97[f.s]; const hint = { words: ar ? "دوس على كل كلمة واسمعها وكرّرها بصوتك." : "Tap each word, listen and repeat.", dialog: ar ? "اقرأ الحوار سطر سطر — دوس «السطر الجاي» لحد الآخر." : "Read the dialogue line by line.", grammar: ar ? "اقرأ القاعدة كويس — هتحتاجها في التمارين." : "Read the rule — you'll need it in the exercises.", cards: ar ? "اقلب كل بطاقة وحاول تفتكر المعنى قبل ما تقلب." : "Flip each card and try to recall first." }[st[0]] || "";
+  return flowBar97() + `<p class="sm flowhint97">💡 ${hint}</p>` + h + `<div class="flownext97"><button class="btn btn-p btn-lg" onclick="flowNext97()">${f.s === FLOW97.length - 2 ? (ar ? "يلا على التمارين 📝" : "On to the exercises 📝") : (ar ? "الخطوة الجاية ←" : "Next step →")}</button></div>`;
+};
+/* إعادة الأسئلة اللي غلط فيها */
+const _fuPick97 = fuPick; fuPick = function (o) { const z = state.fuQ; const q = z && z.qs[z.n]; const before = z ? z.ok : 0; _fuPick97(o); if (z && q && z.ok === before) { (z.wrong = z.wrong || []).push(q); } };
+const _fuSpeak97 = fuSpeakDone; fuSpeakDone = function (sc) { const z = state.fuQ; const q = z && z.qs[z.n]; _fuSpeak97(sc); if (z && q && sc < .75) (z.wrong = z.wrong || []).push(q); };
+function fuRedo97() { const z = state.fuQ; if (!z || !z.wrong || !z.wrong.length) return; state.fuQ = { u: z.u, qs: z.wrong.slice().sort(() => Math.random() - .5), n: 0, ok: 0, pick: null, t0: Date.now(), redo: (z.redo || 0) + 1 }; state.fuFlow = null; render(); try { fuAuto(); } catch (e) {} }
+const _fuQView97 = fuQView;
+fuQView = function () { const z = state.fuQ; let h = _fuQView97(); if (z && z.n >= z.qs.length) { const ar = state.lang === "ar"; state.fuFlow = null; if (z.wrong && z.wrong.length) h = h.replace(/(<\/h3>)/, `$1<div class="card" style="margin:.8rem 0;border:2px dashed #dc2626"><b>🔁 ${ar ? `غلطت في ${z.wrong.length} — يلا نعيدهم لحد ما يصحّوا` : `${z.wrong.length} mistakes — let's redo them until they're right`}</b><br><button class="btn btn-p" style="margin-top:.5rem" onclick="fuRedo97()">${ar ? "أعِد اللي غلطت فيه" : "Redo my mistakes"}</button></div>`); else if (z.redo) h = h.replace(/(<\/h3>)/, `$1<p>🌟 ${ar ? "ممتاز! صحّحت كل أخطائك." : "Excellent! You fixed all your mistakes."}</p>`); } return h; };
+document.head.insertAdjacentHTML("beforeend", `<style>.flow97{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}.flow97 span{flex:1;min-width:6rem;text-align:center;padding:.4rem;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:.85rem}.flow97 .on{background:var(--accent);color:#fff;border-color:transparent;font-weight:800}.flow97 .done{background:#dcfce7;color:#166534;border-color:#86efac}
+.flowcta97{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;margin-bottom:.8rem;border:2px solid var(--accent)}.flowcta97>b{flex-basis:100%}.flownext97{text-align:center;margin:1.2rem 0}.flowhint97{margin:.2rem 0 .6rem}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
