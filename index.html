@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v86";
+const UI_VERSION = "2026-11-14-v87";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18443,6 +18443,63 @@ maqamOne = function (cur) { const h = _maqamOne86(cur); const mid = (cur.meta ||
 const _renderTahwil86 = renderTahwil;
 renderTahwil = function () { const h = _renderTahwil86(); const a = state.thA, b = state.thB; if (!a || !b || !MQK[a] || !MQK[b]) return h + `<div class="card" style="margin-top:1rem"><h3>💡 ${state.lang === "ar" ? "نصايح التحويل" : "Modulation tips"}</h3>${MQK_TIPS.map(t => `<p class="sm">• ${esc(t)}</p>`).join("")}</div>`; const ar = state.lang === "ar"; const card = `<div class="card mqk86" style="margin:1rem 0"><h3>🔀 ${ar ? "إزاي تتحوّل" : "How to modulate"}</h3><div class="kv"><span>${esc(MQK[a].name)} → ${esc(MQK[b].name)}</span><b>${esc(MQK[a].to[b] || MQK[b].from)}</b></div><div class="kv"><span>${esc(MQK[b].name)} → ${esc(MQK[a].name)}</span><b>${esc(MQK[b].to[a] || MQK[a].from)}</b></div></div>`; const i = h.indexOf('<div class="rcgrid59">'); return i < 0 ? h + card : h.slice(0, i) + card + h.slice(i); };
 document.head.insertAdjacentHTML("beforeend", `<style>.mqk86{margin:1rem 0;border-inline-start:4px solid var(--accent)}.mqk86g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem;margin-top:.5rem}.mqk86g>div{display:flex;flex-direction:column;gap:.15rem;padding:.6rem;border-radius:12px;background:color-mix(in srgb,var(--accent) 7%,var(--card))}.mqk86g span{font-size:.8rem;opacity:.8}.mqk86 .kv b{font-weight:500;text-align:start}</style>`);
+
+/* ================= v87: «صوتي» — الآهات بصوت الأونر الحقيقي (من عيّنات بيسجّلها) + اختيار الأصوات من الإعدادات (الأصلية / صوتي) وترجع زي ما كانت بضغطة ================= */
+const VC87 = { buf: {}, f0: {}, loading: false };
+function vcSet87() { return Object.assign({ aah: "synth", speech: "tts" }, setv("voiceSet", {}) || {}); }
+function vcUrl87(n) { const l = vList84(); const names = Array.isArray(l) ? l[0] : []; return names.includes("clone_" + n + ".wav") || names.some(x => x.startsWith("clone_" + n + ".")) ? sb.storage.from("academy_public").getPublicUrl("voices/" + names.find(x => x.startsWith("clone_" + n + "."))).data.publicUrl : null; }
+async function vcLoad87() {
+  if (VC87.loading) return; VC87.loading = true; const ac = aahCtx();
+  for (const n of ["low", "mid", "high"]) { const u = vcUrl87("aah_" + n); if (!u || VC87.buf[n]) continue; try { const b = await ac.decodeAudioData(await (await fetch(u)).arrayBuffer()); const d = b.getChannelData(0); const fs = []; for (let i = Math.floor(d.length * .25); i + 2048 < d.length * .75; i += 1024) { const f = tnPitch(d.subarray(i, i + 2048), b.sampleRate); if (f > 60 && f < 900) fs.push(f); } fs.sort((a, c) => a - c); if (fs.length) { VC87.buf[n] = b; VC87.f0[n] = fs[Math.floor(fs.length / 2)]; } } catch (e) { console.warn(e); } }
+  VC87.loading = false;
+}
+function vcReady87() { return Object.keys(VC87.buf).length > 0; }
+const _aahSing87 = aahSing;
+aahSing = function (notes, tonicHz, voice, onStep) {
+  if (vcSet87().aah !== "clone" || voice === "f" || !vcReady87()) { if (vcSet87().aah === "clone" && !vcReady87()) vcLoad87(); return _aahSing87(notes, tonicHz, voice, onStep); }
+  aahStop(); const ac = aahCtx(); const t0 = ac.currentTime + .08; const hz = c => tonicHz * Math.pow(2, c / 1200);
+  if (!AAH.rev) { const len = ac.sampleRate * 2.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); } AAH.rev = b; }
+  const out = ac.createGain(); out.gain.value = AAH.vol == null ? 1 : AAH.vol; const cv = ac.createConvolver(); cv.buffer = AAH.rev; const wet = ac.createGain(); wet.gain.value = .28; out.connect(ac.destination); out.connect(cv); cv.connect(wet); wet.connect(ac.destination);
+  let t = t0; const nodes = [], marks = [];
+  notes.forEach(([c, d]) => {
+    const f = hz(c); const k = Object.keys(VC87.buf).sort((a, b) => Math.abs(Math.log2(VC87.f0[a] / f)) - Math.abs(Math.log2(VC87.f0[b] / f)))[0]; const buf = VC87.buf[k];
+    const src = ac.createBufferSource(); src.buffer = buf; src.playbackRate.value = f / VC87.f0[k]; const L = buf.duration; src.loop = true; src.loopStart = L * .3; src.loopEnd = L * .7;
+    const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.9, t + .06); g.gain.setValueAtTime(.9, t + Math.max(.07, d - .05)); g.gain.linearRampToValueAtTime(0, t + d + .06);
+    src.connect(g); g.connect(out); src.start(t, L * .2); src.stop(t + d + .1); nodes.push(src); marks.push([t, c]); t += d;
+  });
+  AAH.nodes = nodes; AAH.playing = true;
+  const tick = () => { if (!AAH.playing) return; const now = ac.currentTime; const cur = marks.filter(m => m[0] <= now).pop(); if (cur && onStep) onStep(cur[1]); if (now < t + .3) AAH.timer = setTimeout(tick, 60); else aahStop(); };
+  tick(); const b = document.getElementById("mqStopBtn"); if (b) b.style.display = "";
+};
+/* كارت الإعدادات */
+let __vc87r = null;
+async function vcRec87(n, btn, secs) {
+  const ar = state.lang === "ar"; if (__vc87r) { __vc87r.stop(); return; } let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); } catch (e) { return toast(ar ? "اسمح بالمايك" : "Allow the microphone", true); }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = [];
+  r.ondataavailable = e => e.data.size && ch.push(e.data);
+  r.onstop = async () => { st.getTracks().forEach(t => t.stop()); __vc87r = null; let b = new Blob(ch, { type: r.mimeType || "audio/webm" }); if (n !== "speech") b = await trim81(b); const ext = b.type === "audio/wav" ? "wav" : /mp4/.test(b.type) ? "m4a" : "webm";
+    const bucket = n === "speech" ? "academy_materials" : "academy_public"; const path = n === "speech" ? `clone/speech.${ext}` : `voices/clone_${n}.${ext}`;
+    if (n !== "speech") { const names = (vList84() || [[]])[0] || []; const rm = names.filter(x => x.startsWith("clone_" + n + ".")).map(x => "voices/" + x); if (rm.length) await sb.storage.from("academy_public").remove(rm); }
+    const up = await sb.storage.from(bucket).upload(path, b, { contentType: b.type, upsert: true }); if (up.error) return toast(up.error.message, true);
+    delete state.data.voices84; VC87.buf = {}; VC87.f0 = {}; toast("✅ " + (ar ? "اتحفظ" : "Saved")); render(); };
+  __vc87r = r; r.start(); btn.textContent = "⏹ " + (ar ? "وقّف" : "Stop"); btn.classList.add("rec59on"); setTimeout(() => { if (__vc87r === r) r.stop(); }, secs * 1000);
+}
+async function vcSetSave87(k, v) { const s = vcSet87(); s[k] = v; await saveSetting16("voiceSet", s); if (k === "aah" && v === "clone") vcLoad87(); render(); }
+function voiceCard87() {
+  const ar = state.lang === "ar"; const s = vcSet87(); const have = n => !!vcUrl87(n);
+  const rec = (n, lbl, secs, hint) => `<div class="vc87r"><div><b>${lbl}</b><small class="xs muted">${hint}</small></div><div class="row" style="gap:.3rem">${have(n) ? `<button class="btn btn-o" onclick="new Audio('${vcUrl87(n)}').play()">▶</button>` : ""}<button class="btn ${have(n) ? "btn-o" : "btn-p"}" onclick="vcRec87('${n}',this,${secs})">🎙️ ${have(n) ? (ar ? "سجّل تاني" : "Re-record") : (ar ? "سجّل" : "Record")}</button></div></div>`;
+  const opt = (k, v, l, dis) => `<button class="chip ${s[k] === v ? "on" : ""}" ${dis ? "disabled title='" + (ar ? "سجّل العيّنات الأول" : "Record the samples first") + "'" : ""} onclick="vcSetSave87('${k}','${v}')">${l}</button>`;
+  const aahOk = have("aah_low") || have("aah_mid") || have("aah_high");
+  return `<div class="card" style="margin-top:1rem"><h3>🎙️ ${ar ? "صوتي في الموقع" : "My voice on the site"}</h3><p class="xs muted">${ar ? "سجّل «آااه» ممدودة ٤ ثواني بنفس النفس في ٣ طبقات (واطية/متوسطة/عالية) في مكان هادي — والآهات في كل المقامات هتطلع بصوتك انت. وتقدر ترجع للصوت الأصلي في أي وقت." : "Record a steady 4-second “aah” at three pitches in a quiet room — every maqam's aahs will use your real voice. Switch back anytime."}</p>
+    ${rec("aah_low", ar ? "١) آاااه — طبقة واطية" : "1) Aah — low", 5, ar ? "زي قرار البياتي" : "like a low tonic")}${rec("aah_mid", ar ? "٢) آاااه — طبقة متوسطة" : "2) Aah — middle", 5, ar ? "صوتك الطبيعي" : "your natural pitch")}${rec("aah_high", ar ? "٣) آاااه — طبقة عالية" : "3) Aah — high", 5, ar ? "زي الجواب من غير ما تزعق" : "like the upper octave, without straining")}
+    <div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center;margin:.6rem 0"><span class="sm b">${ar ? "صوت الآهات:" : "Aah voice:"}</span>${opt("aah", "synth", ar ? "🎹 الأصلي" : "🎹 Original")}${opt("aah", "clone", ar ? "🎙️ صوتي أنا" : "🎙️ My voice", !aahOk)}${aahOk ? `<button class="btn btn-o xs" onclick="vcLoad87().then(()=>aahSing([[0,.6],[200,.5],[350,.5],[500,.8]],196,'m'))">▶ ${ar ? "جرّب" : "Try"}</button>` : ""}</div>
+    <hr style="border:0;border-top:1px dashed var(--line);margin:.8rem 0">${rec("speech", ar ? "٤) عيّنة كلام (دقيقة ونص)" : "4) Speech sample (90 s)", 90, ar ? "اقرأ أي فقرة عربي بصوت طبيعي — منها هنعمل الاستنساخ للمحادثات (رجالي/حريمي/أطفال)" : "Read any Arabic paragraph naturally — used to clone your voice for dialogues (male/female/kids)")}
+    <div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center;margin-top:.5rem"><span class="sm b">${ar ? "صوت المحادثات والكلام:" : "Dialogue voice:"}</span>${opt("speech", "tts", ar ? "🔊 الأصوات الحالية" : "🔊 Current voices")}${opt("speech", "clone", ar ? "🎙️ المستنسخ من صوتي" : "🎙️ Cloned from my voice", !setv("cloneReady", false))}</div>
+    ${setv("cloneReady", false) ? "" : `<p class="xs muted">${ar ? "الصوت المستنسخ للمحادثات بيتجهّز بعد ما تسجّل عيّنة الكلام — وهيظهر هنا أول ما يخلص." : "The cloned dialogue voice is prepared after you record the speech sample — it appears here when ready."}</p>`}</div>`;
+}
+const _ownerSettings87 = ownerSettings; ownerSettings = function () { return _ownerSettings87() + voiceCard87(); };
+setTimeout(() => { try { if (vcSet87().aah === "clone") vcLoad87(); } catch (e) {} }, 4000);
+document.head.insertAdjacentHTML("beforeend", `<style>.vc87r{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px dashed var(--line)}.vc87r>div:first-child{display:flex;flex-direction:column}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
