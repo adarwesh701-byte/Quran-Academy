@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v112";
+const UI_VERSION = "2026-11-14-v113";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -19065,9 +19065,9 @@ function dispApply() {
   let l = document.getElementById("dispFonts"); if (fams.length) { if (!l) { l = document.createElement("link"); l.id = "dispFonts"; l.rel = "stylesheet"; document.head.appendChild(l); } const href = "https://fonts.googleapis.com/css2?" + fams.map(f => "family=" + f.replace(/ /g, "+") + (/(Quran|Lateef|Harmattan)/.test(f) ? "" : ":wght@400;700")).join("&") + "&display=swap"; if (l.href !== href) l.href = href; } else if (l) l.remove();
   let s = document.getElementById("disp104"); if (!s) { s = document.createElement("style"); s.id = "disp104"; document.head.appendChild(s); }
   s.textContent = `:root{--uz:${d.uz};--arz:${d.arz};--enz:${d.enz};--qz:${d.qz}}
-html:lang(ar),html:lang(fa),html:lang(ur){font-size:calc(18.9px * var(--fz,1) * var(--uz) * var(--arz))!important}
-html:not(:lang(ar)):not(:lang(fa)):not(:lang(ur)){font-size:calc(18.9px * var(--fz,1) * var(--uz) * var(--enz))!important}
-@media(max-width:760px){html:lang(ar),html:lang(fa),html:lang(ur){font-size:calc(17.6px * var(--fz,1) * var(--uz) * var(--arz))!important}html:not(:lang(ar)):not(:lang(fa)):not(:lang(ur)){font-size:calc(17.6px * var(--fz,1) * var(--uz) * var(--enz))!important}}
+:root{--bfs:clamp(16px, calc(9.2px + .76vw), 18.9px)}
+html:lang(ar),html:lang(fa),html:lang(ur){font-size:calc(var(--bfs) * var(--fz,1) * var(--uz) * var(--arz))!important}
+html:not(:lang(ar)):not(:lang(fa)):not(:lang(ur)){font-size:calc(var(--bfs) * var(--fz,1) * var(--uz) * var(--enz))!important}
 .logo i{width:2.15rem!important;height:2.15rem!important;font-size:1.15rem!important;border-radius:.65rem!important;flex:none}.logo img{height:2.15rem!important;width:auto!important}
 .ibtn{height:1.95rem!important;min-width:1.95rem!important;font-size:.85rem}.ibtn i,.ibtn svg{font-size:1em;width:1em;height:1em}
 .hdr img,.nav img,.mnav img{height:1.4em;width:auto}
@@ -19570,6 +19570,40 @@ TJC.push(
  { id: "maqtu", ic: "✂️", t: ["المقطوع والموصول", "Maqtu' & mawsul"], cls: [], cards: [["إيه هو؟", "المقطوع: كلمتين مكتوبين منفصلين. الموصول: مكتوبين متصلين."], ["فايدته", "معرفة مكان الوقف الاضطراري: الموصول مايتوقفش في نصه."], ["أمثلة", "«ألّا» موصولة إلا ١٠ مواضع، «عَن مَّا نُهُوا» مقطوعة في الأعراف، «إِنَّ مَا تُوعَدُونَ» مقطوعة في الأنعام."]], q: [["الكلمة الموصولة في الرسم…", "مايتوقفش في نصها", ["يتوقف في نصها", "تتقري مقطعين", "ملهاش حكم"]]] },
  { id: "lahn", ic: "🚫", t: ["اللحن الجلي والخفي", "Obvious & hidden mistakes"], cls: [], cards: [["اللحن الجلي", "تغيير حرف أو حركة — بيغيّر المعنى أحيانًا — حرام."], ["اللحن الخفي", "ترك غنة أو مد أو تفخيم — يعرفه أهل التجويد."], ["العلاج", "التلقي من شيخ، والتسجيل والمراجعة."]], q: [["قراءة «أنعمتُ» بدل «أنعمتَ»…", "لحن جلي", ["لحن خفي", "صحيحة", "وجه جائز"]], ["ترك الغنة…", "لحن خفي", ["لحن جلي", "مستحب", "واجب"]]] }
 );
+
+/* ================= v113: الموقع بيتأقلم مع أي مقاس (نص شاشة، تابلت، موبايل، لابتوب) + زرار «🌐 اللغة والعرض» تحت بدل Aa ================= */
+document.head.insertAdjacentHTML("beforeend", `<style>
+html,body{max-width:100%;overflow-x:hidden}img,video,iframe,canvas,svg{max-width:100%}
+.ibtn{white-space:nowrap}.hdr .wrap{min-width:0}.hdr .logo{flex:0 1 auto;min-width:0}.hdr .tools{min-width:0;flex-wrap:wrap;justify-content:flex-end;row-gap:.35rem}
+@media (max-width:1240px){.hdr .logo small{display:none!important}.hdr .logo b{white-space:nowrap}.hdr .tools{gap:.3rem}.hdr .tools .btn{padding:.38rem .75rem;font-size:.82rem;white-space:nowrap}}
+@media (max-width:1100px){.hdr .wrap{flex-wrap:wrap}.hdr .tools{flex:1 1 100%;justify-content:center}.hdr .nav{display:none!important}}
+@media (max-width:520px){.hdr .tools .btn:not(.btn-p){display:none}.hdr .tools .btn-p{padding:.32rem .6rem;font-size:.75rem}}
+.wrap{max-width:min(1200px,100%)}
+.dombar .wrap,.motabs,.fulv{flex-wrap:wrap!important;overflow:visible!important;row-gap:.35rem}.dombar .wrap{justify-content:center}
+.dmgrid{overflow:visible!important;display:grid!important;grid-auto-flow:row!important;grid-template-columns:repeat(auto-fill,minmax(min(15rem,100%),1fr))!important}.dmgrid>*{width:auto!important;min-width:0!important}
+@media (max-width:1240px){.unav .wrap,.hvtabs{flex-wrap:wrap!important;overflow:visible!important;justify-content:center;row-gap:.35rem}}
+.row{min-width:0}.card{min-width:0;overflow-wrap:anywhere}
+table{max-width:100%}.tblwrap,.table-wrap{overflow-x:auto}
+@media (max-width:900px){.dmgrid,.hvgrid,.libgrid,.toolsgrid{grid-template-columns:repeat(auto-fill,minmax(min(14rem,100%),1fr))!important}}
+#ctl113{position:fixed;inset-inline-start:1rem;bottom:6.2rem;z-index:120;display:flex;align-items:center;gap:.35rem;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:.45rem .85rem;font-weight:800;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.15);cursor:pointer}
+@media (max-width:760px){#ctl113{bottom:8.6rem;padding:.4rem .6rem}#ctl113 span{display:none}}
+#ctl113p{position:fixed;inset-inline-start:1rem;bottom:9.4rem;z-index:121;width:min(22rem,calc(100vw - 2rem));max-height:70vh;overflow:auto}
+</style>`);
+/* شيل زرار Aa من الهيدر */
+renderBell = (function (_rb) { return function () { return _rb().replace(/<button class="ibtn" title="[^"]*" onclick="navigate\('display'\)" style="font-weight:800">Aa<\/button>/, ""); }; })(renderBell);
+function ctlPanel113() {
+  const ar = state.lang === "ar"; const old = document.getElementById("ctl113p"); if (old) { old.remove(); return; } const d = dispGet();
+  const p = document.createElement("div"); p.id = "ctl113p"; p.className = "card";
+  const sl = (k, lbl) => `<label class="sm" style="display:block;margin:.4rem 0"><b>${lbl}</b> <span id="dsp_${k}" class="xs muted">${Math.round(d[k] * 100)}%</span><input type="range" min="0.75" max="1.6" step="0.05" value="${d[k]}" style="width:100%" oninput="dispSet('${k}',this.value)"></label>`;
+  p.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center"><b>🌐 ${ar ? "اللغة والعرض" : "Language & display"}</b><button class="btn btn-o" onclick="document.getElementById('ctl113p').remove()">✖</button></div>
+    <button class="btn btn-o" style="width:100%;margin:.5rem 0" onclick="document.getElementById('ctl113p').remove();try{langModal()}catch(e){}">🌐 ${ar ? "غيّر اللغة" : "Change language"} (${esc(String(state.lang).toUpperCase())})</button>
+    <button class="btn btn-o" style="width:100%;margin-bottom:.4rem" onclick="setTheme(state.theme==='dark'?'light':'dark');render()">${state.theme === "dark" ? "☀️ " + (ar ? "الوضع النهاري" : "Light mode") : "🌙 " + (ar ? "الوضع الليلي" : "Dark mode")}</button>
+    ${sl("uz", ar ? "حجم المنصة كلها" : "Whole platform size")}${sl(ar ? "arz" : "enz", ar ? "حجم الكلام" : "Text size")}${sl("qz", ar ? "حجم خط القرآن" : "Quran text size")}
+    <div class="row" style="gap:.4rem;margin-top:.4rem"><button class="btn btn-p" style="flex:1" onclick="document.getElementById('ctl113p').remove();navigate('display')">🎨 ${ar ? "كل الخطوط والإعدادات" : "All fonts & settings"}</button><button class="btn btn-o" onclick="dispReset();document.getElementById('ctl113p')&&document.getElementById('ctl113p').remove()">↺</button></div>`;
+  document.body.appendChild(p);
+}
+function ctlBtn113() { let b = document.getElementById("ctl113"); if (!b) { b = document.createElement("button"); b.id = "ctl113"; b.onclick = ctlPanel113; document.body.appendChild(b); } b.innerHTML = `🌐<span>${state.lang === "ar" ? "اللغة والعرض" : "Language & display"}</span>`; }
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { ctlBtn113(); } catch (e) {} return x; }; })(render);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
