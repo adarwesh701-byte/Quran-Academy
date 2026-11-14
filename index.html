@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v62";
+const UI_VERSION = "2026-11-14-v63";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17087,6 +17087,63 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .rdcert{max-width:760px;margin:auto;padding:1rem;border:6px double #b8860b;border-radius:18px;background:linear-gradient(135deg,#fffdf5,#fff7e0);color:#3b2f12;text-align:center}.rdcb h1{font:700 2.2rem 'Amiri',serif;margin:.4rem 0}.rdcb h2{color:#8a6412}
 @media print{body *{visibility:hidden}#rdCert,#rdCert *{visibility:visible}#rdCert{position:fixed;inset:0;margin:auto}}
 .rdgames{margin-top:1rem}</style>`);
+
+/* ================= v63: المصحف صفحة صفحة + ملء الشاشة + اختار آية تتقرأ + ضغطة طويلة = الحصري + شرح أي كلمة (نوع المد) + أحكام التسميع ================= */
+state.tjv = state.tjv || {}; if (state.tjv.pgm == null) state.tjv.pgm = true;
+function tjPages(s) { const d = useData("tjpg:" + s, async () => { const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=page_number&per_page=300`).then(r => r.json()); return (r.verses || []).map(v => v.page_number); }); return Array.isArray(d) && d.length ? d : null; }
+function tjGoPage(dir) { const s = (state.tj || {}).surah || 1; const pg = tjPages(s); if (!pg) return; const pages = [...new Set(pg)]; let i = pages.indexOf(state.tjv.page); i += dir;
+  if (i < 0) { if (s > 1) { state.tj.surah = s - 1; state.tjv.page = -1; } } else if (i >= pages.length) { if (s < 114) { state.tj.surah = s + 1; state.tjv.page = null; } } else state.tjv.page = pages[i];
+  tjStop && tjStop(); render(); const el = document.getElementById("tjFS"); if (el && !document.fullscreenElement) el.scrollIntoView({ block: "start", behavior: "smooth" }); }
+const _tjBody63 = tjBody;
+tjBody = function (surah, d) {
+  const v = state.tjv; const ar = state.lang === "ar"; const pg = v.pgm ? tjPages(surah) : null; let h;
+  if (pg) { const pages = [...new Set(pg)]; if (v.page === -1) v.page = pages[pages.length - 1]; if (!pages.includes(v.page)) v.page = pages[0];
+    const idx = pg.map((p, k) => p === v.page ? k : -1).filter(k => k >= 0); const full = _tjBody63(surah, d);
+    const tmp = document.createElement("div"); tmp.innerHTML = full; tmp.querySelectorAll(".tj2 .ay").forEach(a => { const k = +a.id.replace("tay_", "") - 1; if (!idx.includes(k)) a.remove(); });
+    if (idx[0] !== 0) { const hd = tmp.querySelector(".srhead56"); if (hd) hd.remove(); }
+    const nav = `<div class="tjpnav"><button class="btn btn-o" onclick="tjGoPage(${ar ? 1 : -1})">${ar ? "◀ الصفحة الجاية" : "◀ Previous"}</button><b>${ar ? "صفحة" : "Page"} ${v.page}</b><button class="btn btn-o" onclick="tjGoPage(${ar ? -1 : 1})">${ar ? "اللي قبلها ▶" : "Next ▶"}</button></div>`;
+    h = nav + tmp.innerHTML + nav;
+  } else h = _tjBody63(surah, d);
+  const sel = `<select class="in" style="width:auto" onchange="if(this.value)tjPlayOne(+this.value-1);this.value=''"><option value="">${ar ? "🎯 اقرأ آية معيّنة…" : "🎯 Play a specific ayah…"}</option>${d.map((x, k) => `<option value="${k + 1}">${ar ? "آية" : "Ayah"} ${k + 1}</option>`).join("")}</select>`;
+  const bar = `<div class="tjmode"><button class="btn ${v.pgm ? "btn-p" : "btn-o"}" onclick="state.tjv.pgm=true;render()">📄 ${ar ? "صفحة صفحة" : "Page by page"}</button><button class="btn ${!v.pgm ? "btn-p" : "btn-o"}" onclick="state.tjv.pgm=false;render()">📜 ${ar ? "السورة كاملة" : "Whole surah"}</button><button class="btn btn-o" onclick="tjFull()">⛶ ${ar ? "ملء الشاشة" : "Full screen"}</button>${sel}</div><p class="xs muted" style="margin:.2rem 0 .4rem">${ar ? "💡 دوسة طويلة على أي آية = تسمعها بصوت الحصري · دوسة على أي كلمة = أحكامها" : "💡 Long-press an ayah to hear Al-Husary · tap a word to see its rules"}</p>`;
+  return `<div id="tjFS" class="tjfs">${bar}${h}</div>`;
+};
+function tjPlayOne(k) { const s = (state.tj || {}).surah || 1; const pg = tjPages(s); if (state.tjv.pgm && pg && pg[k] !== state.tjv.page) { state.tjv.page = pg[k]; render(); setTimeout(() => tjPlayOne(k), 250); return; } state.tjv.play = false; if (!__tjAu) __tjAu = new Audio(); document.querySelectorAll(".tj2 .ay.on").forEach(x => x.classList.remove("on")); const el = document.getElementById("tay_" + (k + 1)); if (el) { el.classList.add("on"); el.scrollIntoView({ block: "center", behavior: "smooth" }); } __tjAu.src = eaUrl(state.ea || HUSARY, `${s}:${k + 1}`); __tjAu.onended = () => { if (el) el.classList.remove("on"); }; __tjAu.play().catch(() => {}); }
+function tjFull() { const el = document.getElementById("tjFS"); if (!el) return; if (document.fullscreenElement) return document.exitFullscreen(); (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); }
+/* الصفحة الجاية تكمّل القراءة: لو شغّال «آية آية» ونزل لآية في صفحة تانية */
+const _tjPlayFrom63 = tjPlayFrom;
+tjPlayFrom = function (i) { const s = (state.tj || {}).surah || 1; const pg = tjPages(s); if (state.tjv.pgm && pg && pg[i] != null && pg[i] !== state.tjv.page) { state.tjv.page = pg[i]; render(); setTimeout(() => _tjPlayFrom63(i), 200); return; } return _tjPlayFrom63(i); };
+/* ضغطة طويلة على الآية = الحصري، ودوسة على الكلمة = أحكامها */
+(function () {
+  let t = null, sx = 0, sy = 0, fired = false;
+  const start = e => { const a = e.target.closest && e.target.closest(".tj2 .ay"); if (!a || (state.tjv && state.tjv.mark)) return; fired = false; const p = e.touches ? e.touches[0] : e; sx = p.clientX; sy = p.clientY; clearTimeout(t); t = setTimeout(() => { fired = true; const k = +a.id.replace("tay_", "") - 1; const s = (state.tj || {}).surah || 1; if (!__tjAu) __tjAu = new Audio(); document.querySelectorAll(".tj2 .ay.on").forEach(x => x.classList.remove("on")); a.classList.add("on"); __tjAu.src = eaUrl(HUSARY, `${s}:${k + 1}`); __tjAu.onended = () => a.classList.remove("on"); __tjAu.play().catch(() => {}); if (navigator.vibrate) navigator.vibrate(30); toast("🎧 " + (state.lang === "ar" ? "الحصري — آية " : "Al-Husary — ayah ") + (k + 1)); }, 550); };
+  const cancel = e => { if (!t) return; const p = e.touches ? e.touches[0] : e; if (p && (Math.abs(p.clientX - sx) > 10 || Math.abs(p.clientY - sy) > 10)) { clearTimeout(t); t = null; } };
+  document.addEventListener("touchstart", start, { passive: true }); document.addEventListener("mousedown", start);
+  document.addEventListener("touchmove", cancel, { passive: true }); document.addEventListener("mousemove", cancel);
+  ["touchend", "mouseup", "touchcancel"].forEach(ev => document.addEventListener(ev, () => { clearTimeout(t); t = null; }));
+  document.addEventListener("contextmenu", e => { if (e.target.closest && e.target.closest(".tj2 .ay") && fired) e.preventDefault(); });
+  document.addEventListener("click", e => { const w = e.target.closest && e.target.closest(".tj2 .w"); if (!w || fired || (state.tjv && state.tjv.mark)) { fired = false; return; } tjWordInfo(w); }, false);
+})();
+function maddKind(w, cls) { if (cls !== "madda_permissible") return ""; const ay = w.closest(".ay"); const ws = ay ? [...ay.querySelectorAll(".w")] : []; const last = ws.length && ws[ws.length - 1] === w; const ar = state.lang === "ar"; return last ? (ar ? " — عارض للسكون (عند الوقف): 2 أو 4 أو 6 حركات" : " — ʿāriḍ (when stopping): 2, 4 or 6 counts") : (ar ? " — منفصل (المد في آخر كلمة والهمزة في أول اللي بعدها): 4 أو 5 حركات" : " — munfaṣil (madd ends a word, hamza starts the next): 4–5 counts"); }
+const MADD_DESC = { madda_normal: ["مد طبيعي: حركتين", "Natural madd: 2 counts"], madda_obligatory: ["مد واجب متصل: المد والهمزة في نفس الكلمة — 4 أو 5 حركات", "Obligatory connected madd (muttaṣil): madd and hamza in one word — 4–5 counts"], madda_necessary: ["مد لازم: بعد حرف المد سكون أصلي — 6 حركات", "Necessary madd (lāzim): original sukoon after the madd letter — 6 counts"] };
+function tjWordInfo(w) {
+  const ar = state.lang === "ar"; const cls = [...new Set([...w.querySelectorAll("[class^='tj-'],[class*=' tj-']")].flatMap(x => [...x.classList]).filter(c => c.startsWith("tj-")).map(c => c.slice(3)))].filter(c => TJ[c]);
+  const [s, a] = (w.dataset.v || "1:1").split(":"); const i = +w.dataset.i || 0; const url = `https://audio.qurancdn.com/wbw/${String(s).padStart(3, "0")}_${String(a).padStart(3, "0")}_${String(i + 1).padStart(3, "0")}.mp3`;
+  const old = document.getElementById("tjWI"); if (old) old.remove(); const m = document.createElement("div"); m.id = "tjWI";
+  m.innerHTML = `<div class="tjwib"><div class="tjwiw notr" lang="ar">${w.innerHTML}</div>${cls.length ? cls.map(c => `<div class="tjwir"><span style="color:${TJ[c][0]}">●</span> <b>${esc(tcName(c))}</b>${MADD_DESC[c] ? `<div class="xs">${MADD_DESC[c][ar ? 0 : 1]}</div>` : ""}${c === "madda_permissible" ? `<div class="xs">${ar ? "مد جائز" : "Permissible madd"}${maddKind(w, c)}</div>` : ""}</div>`).join("") : `<p class="sm muted">${ar ? "مفيش حكم ملوّن في الكلمة دي." : "No coloured rule in this word."}</p>`}<div class="row" style="gap:.4rem;justify-content:center;margin-top:.5rem"><button class="btn btn-p" onclick="new Audio('${url}').play().catch(()=>{})">🔊 ${ar ? "الكلمة" : "Word"}</button><button class="btn btn-o" onclick="tjPlayOne(${+a - 1})">🎧 ${ar ? "الآية" : "Ayah"}</button><button class="btn btn-o" onclick="document.getElementById('tjWI').remove()">✕</button></div></div>`;
+  m.onclick = e => { if (e.target === m) m.remove(); }; (document.fullscreenElement || document.body).appendChild(m);
+}
+/* لون بديل لعلامة 🌈 */
+const _clean63 = clean57; clean57 = function (app) { _clean63(app); if (!app) return; const tw = document.createTreeWalker(app, NodeFilter.SHOW_TEXT, { acceptNode: n => n.data.includes("🌈") ? 1 : 2 }); let n; const ns = []; while ((n = tw.nextNode())) ns.push(n); ns.forEach(x => x.data = x.data.replace(/🌈/g, "📗")); };
+/* التسميع: أحكام التجويد بتظهر دايمًا (لو مفيش أحكام محددة نستخدم الأساسية) بس جوه «أظهر أحكام التجويد» */
+const _myTjRules63 = myTjRules; myTjRules = function () { const r = _myTjRules63(); return r && r.length ? r : ["ghunnah", "ikhafa", "idgham_ghunnah", "iqlab", "qalaqah", "madda_obligatory", "madda_necessary", "madda_permissible"]; };
+const _tsTjList63 = tsTjList; tsTjList = function () { const h = _tsTjList63(); if (!h) return h; const ar = state.lang === "ar"; return `<details class="tjshow" ${state.ts && state.ts.tjOpen ? "open" : ""} ontoggle="state.ts.tjOpen=this.open"><summary class="btn btn-o">🕌 ${ar ? "أظهر أحكام التجويد في الآيات المقروءة" : "Show the tajweed rules in what you read"}</summary>${h}</details>`; };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.tjmode{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin:.4rem 0}.tjpnav{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin:.5rem 0}
+.tjfs:fullscreen{background:var(--bg);overflow:auto;padding:1rem 1.2rem}.tjfs:fullscreen .tjtext{font-size:clamp(1.8rem,3.2vw,2.8rem)}
+.tj2 .ay{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#tjWI{position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;padding:1rem}.tjwib{background:var(--card);color:var(--fg);border-radius:18px;padding:1rem;max-width:460px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.3)}.tjwiw{font:2.4rem/2 'Amiri',serif;text-align:center}.tjwir{padding:.35rem 0;border-bottom:1px dashed var(--line)}
+.tjshow>summary{list-style:none;margin:.5rem 0;display:inline-flex}.tjshow>summary::-webkit-details-marker{display:none}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
