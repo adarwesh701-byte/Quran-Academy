@@ -1,5 +1,5 @@
 /* Itqan Academy service worker — app shell cache (network-first for the page, cache-first for static assets) */
-const CACHE = "itqan-v94";
+const CACHE = "itqan-v95";
 const SHELL = ["/", "/index.html", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
