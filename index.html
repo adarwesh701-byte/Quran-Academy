@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v108";
+const UI_VERSION = "2026-11-14-v109";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -19280,10 +19280,10 @@ function qrUsul105() {
 const _renderQiraat105 = renderQiraat;
 renderQiraat = function () {
   const ar = state.lang === "ar"; if (!state.qrT || state.qrT === "listen" || state.qrT === "qurra0") state.qrT = "cmp"; const t = state.qrT;
-  const tabs = [["cmp", "📖 " + (ar ? "مصحف المقارنة مع حفص" : "Compare with Hafs")], ["usul", "📚 " + (ar ? "أصول كل قراءة" : "Usul of each reading")], ["qurra", "👥 " + (ar ? "القراء ورواتهم" : "Readers")], ["diff", "🔍 " + (ar ? "أشهر الفروق" : "Famous differences")], ["pdf", "📕 " + (ar ? "مصاحف PDF" : "PDF mushafs")]];
+  const tabs = [["cmp", "📖 " + (ar ? "مصحف المقارنة مع حفص" : "Compare with Hafs")], ["usul", "📚 " + (ar ? "أصول كل قراءة" : "Usul of each reading")], ["qurra", "👥 " + (ar ? "القراء ورواتهم" : "Readers")], ["diff", "🔍 " + (ar ? "أشهر الفروق" : "Famous differences")], ["pdf", "📕 " + (ar ? "مصاحف PDF" : "PDF mushafs")], ["quiz", "🎯 " + (ar ? "القراءة دي لمين؟" : "Whose reading?")]];
   const bar = `<div class="motabs">${tabs.map(([k, l]) => `<button class="${t === k ? "on" : ""}" onclick="state.qrT='${k}';render()">${l}</button>`).join("")}</div>`;
-  if (t !== "cmp" && t !== "usul") return _renderQiraat105().replace(/<div class="motabs">[\s\S]*?<\/div>/, bar);
-  return pageWrap("📜", ar ? "القراءات العشر" : "The ten Qira'at", ar ? "اختار الرواية من فوق: مصحف حفص الملوّن قدامك، والكلمات اللي بتختلف متعلّمة، والهامش جنبه بقراءتها — ومعاه المصاحف الصوتية للرواية وأصولها كاملة" : "Pick a narration: colored Hafs mushaf with differing words marked, the margin with the narration's reading, audio mushafs and usul", bar + `<div style="margin-top:.8rem">${t === "cmp" ? qrCompare105() : qrUsul105()}</div>`, 1300);
+  if (t !== "cmp" && t !== "usul" && t !== "quiz") return _renderQiraat105().replace(/<div class="motabs">[\s\S]*?<\/div>/, bar);
+  return pageWrap("📜", ar ? "القراءات العشر" : "The ten Qira'at", ar ? "اختار الرواية من فوق: مصحف حفص الملوّن قدامك، والكلمات اللي بتختلف متعلّمة، والهامش جنبه بقراءتها — ومعاه المصاحف الصوتية للرواية وأصولها كاملة" : "Pick a narration: colored Hafs mushaf with differing words marked, the margin with the narration's reading, audio mushafs and usul", bar + `<div style="margin-top:.8rem">${t === "cmp" ? qrCompare105() : t === "quiz" ? qrQuizHtml109() : qrUsul105()}</div>`, 1300);
 };
 RST81.qiraat = ["qrT", "qrS", "qrK", "qrU"];
 
@@ -19400,6 +19400,53 @@ const EG4 = [
 ];
 const _fuLvls108 = fuLvls; fuLvls = function () { const l = _fuLvls108(); if (state.route === "egyptian" && !l.includes(EG4)) l.push(EG4); return l; };
 const _fuLvName108 = fuLvName; fuLvName = function (i) { if (state.route === "egyptian" && i === 3) return state.lang === "ar" ? "المستوى ٤: كلمني عربي — مواقف بالتصريف" : "Level 4: Kallimni Arabi — situations & conjugation"; return _fuLvName108(i); };
+
+/* ================= v109: 🔍 بحث شامل في كل الأقسام والأدوات والدروس + 🎯 «القراءة دي لمين؟» اختبار في قسم القراءات ================= */
+function srIndex109() {
+  const ar = state.lang === "ar"; const out = [];
+  try { DOMAINS().forEach(d => { out.push([d.ic + " " + (ar ? d.t.ar : d.t.en), ar ? "قسم" : "Section", `go16('d','${d.k}')`]); (d.tools || []).forEach(t => out.push([t[0] + " " + t[1], (ar ? d.t.ar : d.t.en), t[2]])); }); } catch (e) {}
+  try { KIT.forEach(k => out.push([k[1] + " " + (ar ? k[2] : k[3]), (ar ? k[4] : k[5] || []).join(" · "), `go16('${k[0]}')`])); } catch (e) {}
+  try { NQ.forEach((L, i) => out.push(["🔤 " + (ar ? "النورانية — " : "Nuraniyyah — ") + (ar ? L[1] : L[2]), L[3].join(" "), `state.nqL=${i};go16('nooraniya')`])); } catch (e) {}
+  try { [[ILM, 1], [typeof ILM2 !== "undefined" ? ILM2 : null, 2], [typeof ILM3 !== "undefined" ? ILM3 : null, 3]].forEach(([S, lv]) => S && Object.keys(S).forEach(k => (S[k].lv || []).forEach((L, i) => out.push(["📚 " + L[0], (S[k].src || "") + " " + (L[1] || []).join(" "), `state.ilmKid=false;state.ilmLv=${lv};state.ilmS='${k}';state.ilmL=${i};go16('ilm')`])))); } catch (e) {}
+  try { QR.forEach((q, i) => (QRU[i] || []).forEach(r => out.push(["📜 " + q[0] + " — " + r[0], r[1], `state.qrT='usul';state.qrU=${i};go16('qiraat')`]))); QRR.forEach(r => out.push(["📖 " + (ar ? "مصحف " + r[2] + " بالمقارنة مع حفص" : r[3]), "", `state.qrT='cmp';state.qrK='${r[0]}';go16('qiraat')`])); } catch (e) {}
+  try { [["egyptian", typeof EG !== "undefined" ? [EG, EG2, EG3, EG4] : []], ["fusha", typeof FU !== "undefined" ? [FU, FU2, typeof FU3 !== "undefined" ? FU3 : []] : []]].forEach(([rt, Ls]) => Ls.forEach((U, li) => (U || []).forEach(u => out.push([(rt === "egyptian" ? "🇪🇬 " : "📘 ") + u[0], (u[2] || []).map(w => w[0] + " " + w[2]).join(" "), `go16('${rt}')`])))); } catch (e) {}
+  try { ADK.forEach(x => out.push([x[1] + " " + (ar ? x[2] : x[3]), "", `state.adkT='${x[0]}';go16('adhkar')`])); } catch (e) {}
+  return out;
+}
+const srNorm109 = s => String(s || "").toLowerCase().replace(/[ً-ٰٟـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
+function srOpen109() {
+  const ar = state.lang === "ar"; const old = document.getElementById("fpM"); if (old) old.remove(); const m = document.createElement("div"); m.id = "fpM";
+  m.innerHTML = `<div class="fpbox card" style="max-width:36rem;width:100%;max-height:85vh;display:flex;flex-direction:column"><div class="row" style="gap:.4rem"><input class="in" id="sr109" placeholder="${ar ? "دوّر على أي حاجة: إخفاء، ورش، الصيام، بكام، الحروف…" : "Search anything…"}" style="flex:1" oninput="srRun109(this.value)" autofocus><button class="btn btn-o" onclick="document.getElementById('fpM').remove()">✖</button></div><div id="sr109o" style="overflow:auto;margin-top:.6rem"></div></div>`;
+  document.body.appendChild(m); setTimeout(() => { const i = document.getElementById("sr109"); if (i) i.focus(); }, 50); window.__sr109 = srIndex109(); srRun109("");
+}
+function srRun109(q) {
+  const o = document.getElementById("sr109o"); if (!o) return; const ar = state.lang === "ar"; const n = srNorm109(q.trim());
+  if (!n) { o.innerHTML = `<p class="xs muted">${ar ? "اكتب كلمة وهتلاقي الأقسام والأدوات والدروس اللي فيها." : "Type to search sections, tools and lessons."}</p>`; return; }
+  const ws = n.split(/\s+/); const hits = (window.__sr109 || []).map(x => { const t = srNorm109(x[0]), b = srNorm109(x[1]); let sc = 0; ws.forEach(w => { if (t.includes(w)) sc += 3; else if (b.includes(w)) sc += 1; else sc -= 5; }); return [sc, x]; }).filter(z => z[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, 40);
+  o.innerHTML = hits.length ? hits.map(([, x]) => `<button class="card" style="display:block;width:100%;text-align:start;margin-bottom:.35rem;cursor:pointer" onclick="document.getElementById('fpM').remove();${esc(x[2])}"><b>${esc(x[0])}</b>${x[1] ? `<div class="xs muted" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(String(x[1]).slice(0, 140))}</div>` : ""}</button>`).join("") : `<p class="sm muted">${ar ? "مفيش نتايج — جرّب كلمة تانية." : "No results."}</p>`;
+}
+const _renderBell109 = renderBell;
+renderBell = function () { const h = _renderBell109(); return `<button class="ibtn" title="${state.lang === "ar" ? "بحث في كل المنصة" : "Search everything"}" onclick="srOpen109()">🔍</button>` + h; };
+document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); srOpen109(); } });
+
+/* 🎯 القراءة دي لمين؟ */
+const QRQ_R = QRR.filter(r => r[4]).map(r => r[0]);
+async function qrQuizNew109() {
+  const box = document.getElementById("qrq109"); if (!box) return; const ar = state.lang === "ar"; box.innerHTML = loadingBox();
+  for (let tries = 0; tries < 8; tries++) {
+    const s = 1 + Math.floor(Math.random() * 114); const all = {}; await Promise.all(QRQ_R.map(async k => { try { all[k] = await fetch(`/qr/${k}/${s}.json`).then(r => r.json()); } catch (e) { all[k] = {}; } }));
+    const pool = []; QRQ_R.forEach(k => Object.keys(all[k]).forEach(a => all[k][a].forEach(x => pool.push([k, a, x])))); if (!pool.length) continue;
+    const [k, a, x] = pool[Math.floor(Math.random() * pool.length)]; const same = QRQ_R.filter(r => (all[r][a] || []).some(z => z[0] === x[0] && z[2].replace(/[ۖ-ۭ]/g, "") === x[2].replace(/[ۖ-ۭ]/g, "")));
+    const wrong = QRQ_R.filter(r => !same.includes(r)).sort(() => Math.random() - .5).slice(0, 3); if (wrong.length < 2) continue; const opts = [k].concat(wrong).sort(() => Math.random() - .5); const nm = r => { const q = QRR.find(z => z[0] === r); return ar ? q[2] : q[3]; };
+    window.__qrq = { same, n: (window.__qrq || {}).n || 0, ok: (window.__qrq || {}).ok || 0 };
+    box.innerHTML = `<div class="card" style="text-align:center"><p class="sm muted">${esc(sName(s))} — ${ar ? "آية" : "ayah"} ${a}</p><p class="xs muted">${ar ? "حفص بيقرأ" : "Hafs reads"}</p><p style="font:1.8rem 'Amiri Quran',serif;margin:.2rem 0">${esc(x[1])}</p><p class="xs muted">${ar ? "والكلمة دي بتتقري كده:" : "This reading is:"}</p><p style="font:2rem 'qr-${k}','Amiri Quran',serif;color:#b45309;margin:.2rem 0">${esc(x[2])}</p><b>${ar ? "في أنهي رواية؟" : "In which narration?"}</b>
+      <div class="qrrdr" style="margin-top:.6rem">${opts.map(r => `<button class="btn btn-o" onclick="qrQuizPick109(this,'${r}')">${esc(nm(r))}</button>`).join("")}</div><p class="xs muted" style="margin-top:.5rem">${ar ? "النتيجة" : "Score"}: ${window.__qrq.ok}/${window.__qrq.n}</p></div>`;
+    return;
+  }
+  box.innerHTML = `<p class="sm muted">${ar ? "جرّب تاني" : "Try again"}</p>`;
+}
+function qrQuizPick109(btn, r) { const q = window.__qrq; if (!q || q.done) return; q.done = true; q.n++; const ok = q.same.includes(r); if (ok) q.ok++; btn.classList.add(ok ? "btn-p" : "no"); btn.style.background = ok ? "" : "#fee2e2"; try { sfxSafe(ok ? "correct" : "wrong"); } catch (e) {} if (!ok) { const nm = QRR.filter(z => q.same.includes(z[0])).map(z => state.lang === "ar" ? z[2] : z[3]).join("، "); btn.parentElement.insertAdjacentHTML("afterend", `<p class="sm">✅ ${esc(nm)}</p>`); } setTimeout(() => { window.__qrq.done = false; qrQuizNew109(); }, ok ? 900 : 2200); }
+function qrQuizHtml109() { setTimeout(qrQuizNew109, 0); return `<div id="qrq109"></div>`; }
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
