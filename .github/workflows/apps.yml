@@ -19,6 +19,7 @@ jobs:
         working-directory: apps/android
         run: |
           npm install
+          cp ../../index.html www/index.html && cp ../../index.html www/offline.html && cp ../../sw.js ../../manifest.json www/ && cp -r ../../icons ../../qr www/
           npx cap add android
           cp ../desktop/icon.png /tmp/icon.png
           for d in android/app/src/main/res/mipmap-*dpi; do cp /tmp/icon.png "$d/ic_launcher.png"; cp /tmp/icon.png "$d/ic_launcher_round.png"; cp /tmp/icon.png "$d/ic_launcher_foreground.png" 2>/dev/null || true; done
@@ -46,7 +47,9 @@ jobs:
       - name: Build desktop app
         working-directory: apps/desktop
         env: { CSC_IDENTITY_AUTO_DISCOVERY: "false" }
+        shell: bash
         run: |
+          mkdir -p site && cp ../../index.html ../../sw.js ../../manifest.json site/ && cp -r ../../icons ../../qr site/
           npm install
           npm run dist
       - uses: softprops/action-gh-release@v2

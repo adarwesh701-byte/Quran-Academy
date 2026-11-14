@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v105";
+const UI_VERSION = "2026-11-14-v106";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16050,11 +16050,11 @@ setTimeout(async () => { try { const t = await fetch("/index.html?__v=" + Date.n
 document.head.insertAdjacentHTML("beforeend", `<style>.updbar{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);z-index:300;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:.4rem .5rem .4rem 1rem;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;gap:.6rem;align-items:center;font-size:.9rem}</style>`);
 
 /* ================= v52: «رتّب الواجهة» — الأونر يحرّك ويسمّي ويخفي ويحط أيقونة جوه أيقونة في أي مكان ================= */
-const UIL_SEL = ".dmgrid,.dmtools,.unav .wrap,.bnav,.hvgrid,.libgrid,.lsgrid,.tlgrid,.toolsgrid,.gpgrid,.appdlgrid,.motabs,.tabs,.hvtabs,.oggroups,.pmap,.stygrid";
+let UIL_SEL = ".dmgrid,.dmtools,.unav .wrap,.bnav,.hvgrid,.libgrid,.lsgrid,.tlgrid,.toolsgrid,.gpgrid,.appdlgrid,.motabs,.tabs,.hvtabs,.oggroups,.pmap,.stygrid";
 function uilHash(s) { let h = 5381; for (const c of String(s)) h = (h * 33 ^ c.charCodeAt(0)) >>> 0; return h.toString(36); }
 function uilId(el) { const oc = el.getAttribute("onclick") || (el.querySelector("[onclick]") && el.querySelector("[onclick]").getAttribute("onclick")) || el.getAttribute("href") || ""; const t = (el.querySelector("h3,b") || el).textContent.replace(/\s+/g, " ").trim().slice(0, 60); return "u" + uilHash(oc + "|" + t); }
 function uilCKey(c) { const cls = [...c.classList].filter(x => !/^(on|hide|show)/.test(x)).join("."); return uilHash(cls + "|" + state.route + "|" + (["library", "d"].includes(state.route) ? (state.libSec || state.pageArg || "") : "")); }
-function uilGet() { return Object.assign({ order: {}, hide: [], name: {}, nest: {} }, JSON.parse(JSON.stringify(setv("uilayout", {}) || {}))); }
+function uilGet() { return Object.assign({ order: {}, hide: [], name: {}, nest: {}, move: {} }, JSON.parse(JSON.stringify(setv("uilayout", {}) || {}))); }
 let UIL_DRAFT = null;
 function uilData() { return UIL_DRAFT || uilGet(); }
 function uilApply(root) {
@@ -19286,6 +19286,30 @@ renderQiraat = function () {
   return pageWrap("📜", ar ? "القراءات العشر" : "The ten Qira'at", ar ? "اختار الرواية من فوق: مصحف حفص الملوّن قدامك، والكلمات اللي بتختلف متعلّمة، والهامش جنبه بقراءتها — ومعاه المصاحف الصوتية للرواية وأصولها كاملة" : "Pick a narration: colored Hafs mushaf with differing words marked, the margin with the narration's reading, audio mushafs and usul", bar + `<div style="margin-top:.8rem">${t === "cmp" ? qrCompare105() : qrUsul105()}</div>`, 1300);
 };
 RST81.qiraat = ["qrT", "qrS", "qrK", "qrU"];
+
+/* ================= v106: «رتّب الواجهة» على الواجهة كلها — أي عنصر في أي صفحة (الهيدر، الأقسام، الكروت، الأزرار، القوائم)، ونقل حاجة من مكان لمكان تاني، وحاجة جوه حاجة ================= */
+UIL_SEL += ",.hdr .tools,.hdr .nav,.mnav,.fulv,.row,.grid,[class*=grid],.disp104g,.qrrdr,.kmbar .row,.vc87r .row,#app > section > .wrap,#app > section > .wrap > .card,#app .wrap > .card > div:not(.row),footer .wrap,footer ul,.dash-side,.dashnav,.nhgrid,.ilmk";
+let UIL_PICK = null;
+function uilTarget106(el) { return el && el.closest && el.closest(".uiledit"); }
+const _uilApply106 = uilApply;
+uilApply = function (root) {
+  _uilApply106(root); const seen = {}; document.querySelectorAll("[data-uilc]").forEach(c => { const k = c.dataset.uilc; seen[k] = (seen[k] || 0) + 1; c.dataset.uilc2 = seen[k] > 1 ? k + "_" + seen[k] : k; }); const L0 = uilData(); const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; const mv = L0.move || {};
+  Object.keys(mv).forEach(id => { const el = document.querySelector(`[data-uil="${id}"]`); const m = mv[id]; if (!el || !m) return; const c = document.querySelector(`[data-uilc2="${m.c}"]`); if (!c || c.contains(el) && el.parentElement === c && !m.b) return; const b = m.b ? c.querySelector(`:scope > [data-uil="${m.b}"]`) : null; if (b && b !== el) c.insertBefore(el, b); else if (!m.b) c.appendChild(el); });
+  if (!edit) return;
+  document.querySelectorAll(".uiledit .uiltb").forEach(tb => { if (tb.querySelector("[data-a=move106]")) return; const k = tb.parentElement; const i = document.createElement("i"); i.dataset.a = "move106"; i.title = state.lang === "ar" ? "انقلها لمكان تاني (دوس هنا وبعدين دوس على المكان الجديد)" : "Move elsewhere (tap, then tap the destination)"; i.textContent = "↗"; i.addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); UIL_PICK = k.dataset.uil; document.body.classList.add("uilpick"); toast(state.lang === "ar" ? "دوس على العنصر اللي عاوزها تتحط قبله — أو على أي مساحة فاضية في القسم" : "Tap the item to place it before — or an empty area of a section"); }, true); tb.appendChild(i); });
+};
+function uilMove106(srcId, tgt) {
+  const D = UIL_DRAFT = uilData(); D.move = D.move || {}; let c, b = null;
+  if (tgt.classList.contains("uiledit")) { c = tgt.parentElement; b = tgt.dataset.uil; } else { c = tgt.closest("[data-uilc]"); }
+  if (!c || !c.dataset.uilc2) return false; const src = document.querySelector(`[data-uil="${srcId}"]`); if (!src || src === tgt || src.contains(c)) return false;
+  if (src.parentElement === c) return false; D.move[srcId] = { c: c.dataset.uilc2, b }; return true;
+}
+document.addEventListener("drop", e => { if (!state.uiEdit) return; const from = e.dataTransfer && e.dataTransfer.getData("text/plain"); if (!from) return; const t = uilTarget106(e.target) || (e.target.closest && e.target.closest("[data-uilc]")); if (!t) return; const src = document.querySelector(`[data-uil="${from}"]`); if (!src) return; const sameC = t.classList.contains("uiledit") ? t.parentElement === src.parentElement : t === src.parentElement; if (sameC) return; e.preventDefault(); e.stopPropagation(); if (uilMove106(from, t)) render(); }, true);
+document.addEventListener("dragover", e => { if (state.uiEdit && e.target.closest && e.target.closest("[data-uilc]")) e.preventDefault(); });
+document.addEventListener("click", e => { if (!UIL_PICK || !state.uiEdit) return; if (e.target.closest && e.target.closest(".uiltb")) return; const t = uilTarget106(e.target) || (e.target.closest && e.target.closest("[data-uilc]")); e.preventDefault(); e.stopPropagation(); const id = UIL_PICK; UIL_PICK = null; document.body.classList.remove("uilpick"); if (!t) return; const src = document.querySelector(`[data-uil="${id}"]`); if (t.classList.contains("uiledit") && src && t.parentElement === src.parentElement) { t.parentElement.insertBefore(src, t); const D = UIL_DRAFT = uilData(); D.order[t.parentElement.dataset.uilc] = [...t.parentElement.children].filter(x => x.dataset.uil).map(x => x.dataset.uil); render(); return; } if (uilMove106(id, t)) render(); }, true);
+const _uilBar106 = uilBar;
+uilBar = function () { _uilBar106(); const b = document.getElementById("uilBar"); if (!b || b.querySelector(".uil106")) return; const ar = state.lang === "ar"; b.insertAdjacentHTML("beforeend", `<button class="btn btn-o uil106" onclick="if(confirm('${ar ? "ترجّع ترتيب الصفحة دي للأصل؟" : "Reset this page layout?"}')){const D=UIL_DRAFT=uilData();document.querySelectorAll('[data-uilc]').forEach(c=>{delete D.order[c.dataset.uilc]});Object.keys(D.move||{}).forEach(id=>{if(document.querySelector('[data-uil=&quot;'+id+'&quot;]'))delete D.move[id]});render()}">↺ ${ar ? "رجّع الصفحة" : "Reset page"}</button><span class="xs">↗ ${ar ? "= انقل لأي مكان في الصفحة" : "= move anywhere"}</span>`); };
+document.head.insertAdjacentHTML("beforeend", `<style>body.uilpick [data-uilc]{outline:2px dotted #f59e0b;outline-offset:3px}body.uilpick .uiledit:hover{background:#fef3c7}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
