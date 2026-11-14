@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v94";
+const UI_VERSION = "2026-11-14-v95";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18765,6 +18765,13 @@ function mush94(app) {
 const _render94 = render; render = function () { const r = _render94.apply(this, arguments); try { mush94(document.getElementById("app")); } catch (e) {} return r; };
 document.head.insertAdjacentHTML("beforeend", `<style>.tjsel94{display:flex;gap:.5rem;align-items:center;margin:.6rem 0;padding:.5rem .7rem;border-radius:12px;background:color-mix(in srgb,var(--accent) 8%,var(--card));position:sticky;top:3.6rem;z-index:4}.tjsel94 select{flex:1;max-width:22rem}
 .tj2 .w.mk{position:relative}.mkn94{display:inline-block;font:600 .8rem/1.3 'Cairo',sans-serif;color:#fff;background:#dc2626;border-radius:8px;padding:.05rem .4rem;margin-inline-start:.2rem;vertical-align:super;white-space:nowrap;max-width:14rem;overflow:hidden;text-overflow:ellipsis}</style>`);
+
+/* v95: صفحة التحفيظ — المصحف الملوّن يظهر على طول تحت الأدوات من غير ضغطة زيادة */
+const _renderLibraryDb95 = renderLibraryDb;
+renderLibraryDb = function () {
+  const h = _renderLibraryDb95(); try { const secs = sectionsData(); const cur = Array.isArray(secs) && state.libSec ? secs.find(s => s.id === state.libSec) : null; if (!cur || !state.auth.user || !isHifzHub(cur) || (state.hv || {})[cur.id]) return h;
+    return h + `<div id="hifzMushaf95" style="margin-top:1rem">${hvWrap(tajPage(cur.id))}</div>`; } catch (e) { return h; }
+};
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
