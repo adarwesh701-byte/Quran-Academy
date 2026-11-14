@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v126";
+const UI_VERSION = "2026-11-14-v127";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -10563,7 +10563,11 @@ function aahSing(notes, tonicHz, voice, onStep) {
   const F = female ? [[850, 1, 90], [1220, .55, 100], [2810, .3, 130], [3800, .12, 170]] : [[730, 1, 80], [1090, .5, 90], [2440, .28, 120], [3350, .12, 150]];
   const env = ac.createGain(); env.gain.value = 0; const out = ac.createGain(); out.gain.value = .9 * (AAH.vol == null ? 1 : AAH.vol);
   const comp = ac.createDynamicsCompressor(); out.connect(comp); comp.connect(ac.destination);
+  /* v127: أقرب للبشري — صدى أوضة خفيف + تذبذب بطيء غير منتظم في الطبقة (jitter) والشدة (shimmer) */
+  try { if (!AAH.irBuf) { const L = ac.sampleRate * 1.6, ir = ac.createBuffer(2, L, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < L; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 3.2) * (i < 220 ? i / 220 : 1); } AAH.irBuf = ir; } const cv = ac.createConvolver(); cv.buffer = AAH.irBuf; const wet = ac.createGain(); wet.gain.value = .22; out.connect(cv); cv.connect(wet); wet.connect(comp); } catch (e) {}
   const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = female ? 5200 : 4200; env.connect(lp); lp.connect(out);
+  const jit = ac.createOscillator(); jit.type = "sine"; jit.frequency.value = .35 + Math.random() * .4; const jitG = ac.createGain(); jitG.gain.value = tonicHz * .0045; jit.connect(jitG); jitG.connect(osc.frequency);
+  const shim = ac.createOscillator(); shim.frequency.value = 2.3 + Math.random(); const shimG = ac.createGain(); shimG.gain.value = .045; shim.connect(shimG); shimG.connect(env.gain); jit.start(); shim.start(); setTimeout(() => { try { jit.stop(); shim.stop(); } catch (e) {} }, 60000);
   F.forEach(([f, g, bw]) => { const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = f / bw; const gg = ac.createGain(); gg.gain.value = g * 3.2; osc.connect(bp); bp.connect(gg); gg.connect(env); });
   // نَفَس خفيف
   const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), ch = nb.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
@@ -20178,6 +20182,90 @@ render = (function (_r) { return function () { const x = _r.apply(this, argument
 /* ٤) «انضم كمعلم» في صفحة الطالب */
 render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { if (state.route === "dashboard" && state.auth.user && realRole() === "student" && !document.getElementById("jt126")) { const app = document.getElementById("app"); const host = app && (app.querySelector(".hvgrid") || app.querySelector(".dmgrid") || app.querySelector("section .wrap")); if (host) { const ar = state.lang === "ar"; const b = document.createElement("div"); b.id = "jt126"; b.className = "card"; b.style.cssText = "display:flex;gap:.7rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.8rem 0"; b.innerHTML = `<span>👨‍🏫 <b>${ar ? "عندك إجازة أو بتعرف تعلّم؟" : "Can you teach?"}</b> ${ar ? "انضم لفريق معلمي الأكاديمية." : "Join our teachers."}</span><button class="btn btn-p" onclick="navigate('teach')">${ar ? "انضم كمعلم" : "Join as a teacher"}</button>`; host.parentElement.insertBefore(b, host.nextSibling); } } } catch (e) {} return x; }; })(render);
 
+/* ================= v127: «🎼 درجات المقام» جوه كل مقام — رسمة السلم (Do Re Mi + بيمول/دييز/نص بيمول) والأجناس، الآهات تبدأ وتنتهي عند الدرجة اللي تختارها على أكتر من أوكتاف، القرار على أي درجة واسم المقام الناتج، وشرح تكوين المقامات الفرعية + تمرين التحويل بالآهات ================= */
+const JINS_T = [["rast", "رست", [200, 150, 150]], ["bayati", "بياتي", [150, 150, 200]], ["hijaz", "حجاز", [100, 300, 100]], ["nahawand", "نهاوند", [200, 100, 200]], ["kurd", "كرد", [100, 200, 200]], ["ajam", "عجم", [200, 200, 100]], ["saba", "صبا", [150, 150, 100]], ["sikah", "سيكاه", [150, 200]]];
+const GHAMMAZ = { rast: 4, bayati: 3, hijaz: 3, saba: 2, nahawand: 4, kurd: 3, ajam: 4, sikah: 2 };
+function jinsAt(m, i) { const sc = m.sc; const iv = []; for (let k = i; k < Math.min(i + 3, sc.length - 1); k++) iv.push(sc[k + 1] - sc[k]); let best = null; JINS_T.forEach(([id, n, p]) => { const L = p.length; if (iv.slice(0, L).length === L && iv.slice(0, L).every((x, j) => Math.abs(x - p[j]) <= 25)) { if (!best || L > best[2].length) best = [id, n, p]; } }); return best; }
+function mqGh(m) { return GHAMMAZ[m.fam] != null ? GHAMMAZ[m.fam] : 4; }
+function ivName(c) { const ar = state.lang === "ar"; return { 100: ar ? "½ تون" : "½", 150: ar ? "¾ تون" : "¾", 200: ar ? "تون" : "1", 250: ar ? "١¼" : "1¼", 300: ar ? "١½ تون" : "1½" }[Math.round(c / 50) * 50] || (c / 200).toFixed(2); }
+function accCls(n) { return /½♭/.test(n) ? "hf" : /♭/.test(n) ? "fl" : /♯/.test(n) ? "sh" : ""; }
+const NAMED_TR = { ajam: { "-200": "عجم عشيران" }, sikah: { "-150": "عراق" }, nahawand: { "700": "نهاوند على النوا" }, bayati: { "900": "بياتي على الحسيني" }, rast: { "500": "رست على الجهاركاه (Fa)", "700": "رست على النوا (Sol)" }, hijaz: { "700": "حجاز على النوا (Sol)" } };
+function trName(m, tonicC) { const k = String(Math.round(tonicC / 50) * 50); const nm = (NAMED_TR[m.fam] || {})[k] || (NAMED_TR[m.id] || {})[k]; return nm || `${mqName(m)} ${state.lang === "ar" ? "على" : "on"} ${solf(tonicC)}`; }
+const NAT = [["Do", 0], ["Re", 200], ["Mi", 400], ["Fa", 500], ["Sol", 700], ["La", 900], ["Si", 1100]];
+function solfL(cents, li) { const oct = Math.floor((cents + 600) / 1200); let best = null; [-1, 0, 1].forEach(o => { const nat = NAT[li][1] + (oct + o) * 1200; const d = cents - nat; if (!best || Math.abs(d) < Math.abs(best.d)) best = { d, o: oct + o }; }); const acc = { "-200": "♭♭", "-150": "♭½", "-100": "♭", "-50": "½♭", "0": "", "50": "½♯", "100": "♯", "150": "♯½", "200": "♯♯" }[String(Math.round(best.d / 50) * 50)] || ""; const oc = Math.floor((NAT[li][1] + best.o * 1200) / 1200); return NAT[li][0] + acc + (oc < 0 ? "↓" : oc > 0 ? "↑".repeat(oc) : ""); }
+function tonicLetter(T) { let li = 0, bd = 1e9; NAT.forEach(([n, c], i) => { const sd = ((T - c) % 1200 + 1800) % 1200 - 600; const d = Math.abs(sd) + (sd > 0 ? .1 : 0); if (d < bd) { bd = d; li = i; } }); return li; }
+function degSolf(m, i, T) { const n = m.sc.length - 1; const k = ((i % n) + n) % n; const li = (tonicLetter(T) + k) % 7; return solfL(T + mqDeg(m, i), li); }
+function degList(m, oFrom, oTo) { const out = []; const n = m.sc.length - 1; for (let o = oFrom; o <= oTo; o++) for (let k = 0; k < n; k++) out.push(o * n + k); out.push((oTo + 1) * n); return out; }
+function degLabel(m, i, tonicC) { const ar = state.lang === "ar"; const n = m.sc.length - 1; const o = Math.floor(i / n), k = ((i % n) + n) % n; const tag = o < 0 ? (ar ? "قرار القرار" : "low") : o === 0 ? (k === 0 ? (ar ? "القرار" : "tonic") : "") : o === 1 ? (k === 0 ? (ar ? "الجواب" : "octave") : (ar ? "جواب" : "upper")) : (ar ? "جواب الجواب" : "2nd octave"); return `${degSolf(m, i, tonicC)}${tag ? " · " + tag : ""}`; }
+function mqDegPage(mid) {
+  const ar = state.lang === "ar"; const m = MQ.find(x => x.id === mid); if (!m) return ""; const st = state.mqd = state.mqd || {}; if (st.mid !== mid) { Object.assign(st, { mid, oct: 1, from: 0, to: m.sc.length - 1, tr: m.tonic, voice: state.mq.voice || "m", sp: 1 }); }
+  const n = m.sc.length - 1; const T = st.tr; const gh = mqGh(m); const j1 = jinsAt(m, 0), j2 = jinsAt(m, gh);
+  const degs = degList(m, 0, st.oct - 1);
+  const ladder = `<div class="mqd-lad">${degs.map((i, x) => { const nm = degSolf(m, i, T); const k = ((i % n) + n) % n; const iv = x < degs.length - 1 ? mqDeg(m, degs[x + 1]) - mqDeg(m, i) : null; return `<div class="mqd-n ${accCls(nm)} ${k === 0 ? "ton" : k === gh ? "gh" : ""}" onclick="mqdPlayOne(${i})" title="${ar ? "اسمع الدرجة" : "Play"}"><b>${esc(nm)}</b><small>${k === 0 ? (ar ? "قرار" : "tonic") : k === gh ? (ar ? "غمّاز" : "ghammaz") : (ar ? "درجة " : "deg ") + (k + 1)}</small></div>${iv != null ? `<span class="mqd-iv ${iv === 300 ? "big" : iv <= 100 ? "sm" : iv === 150 ? "q" : ""}">${ivName(iv)}</span>` : ""}`; }).join("")}</div>`;
+  const ajn = `<div class="mqd-aj"><div style="flex:${gh}">${j1 ? `${ar ? "جنس" : "Jins"} <b>${j1[1]}</b> ${ar ? "على" : "on"} ${degSolf(m, 0, T)}` : (ar ? "الجنس الأول" : "Lower jins")}</div><div style="flex:${n - gh}">${j2 ? `${ar ? "جنس" : "Jins"} <b>${j2[1]}</b> ${ar ? "على" : "on"} ${degSolf(m, gh, T)}` : (ar ? "الجنس التاني" : "Upper jins")}</div></div>`;
+  const k = MQK && MQK[mid]; const enc = typeof MQE !== "undefined" ? null : null;
+  const comp = `<div class="card mqd-comp"><b>🧩 ${ar ? "المقام ده بيتكوّن من إيه؟" : "What is this maqam made of?"}</b><p class="sm" style="margin:.4rem 0">${ar ? `«${esc(mqName(m))}» = ${j1 ? `جنس ${j1[1]} على القرار (${solf(T)})` : "جنس على القرار"} + ${j2 ? `جنس ${j2[1]} على الغمّاز (${solf(T + m.sc[gh])})` : "جنس تاني على الغمّاز"}. القرار هو اللي المقام بيبدأ وبيقفل عليه، والغمّاز هو الدرجة اللي بيرتكز عليها الجنس التاني.` : `${mqName(m)} = ${j1 ? j1[1] : "jins"} on the tonic + ${j2 ? j2[1] : "jins"} on the ghammaz.`}</p>${m.use ? `<p class="xs muted">🎯 ${esc(m.use)}</p>` : ""}${m.note ? `<p class="xs muted">💡 ${esc(m.note)}</p>` : ""}${m.fam !== m.id ? `<p class="xs">🌳 ${ar ? "فرع من عائلة" : "Branch of"} <b>${esc(mqName(MQ.find(x => x.id === m.fam) || m))}</b> — ${ar ? "الفرق عنه في الجنس التاني/الدرجات العليا." : "differs in the upper degrees."}</p>` : ""}</div>`;
+  const opt = (v, sel, lbl) => `<option value="${v}" ${v === sel ? "selected" : ""}>${esc(lbl)}</option>`;
+  const all = degList(m, -1, 1);
+  const trOpts = Array.from({ length: 24 }, (_, x) => -600 + x * 50).filter(c => true);
+  const ctrl = `<div class="card"><b>🎚️ ${ar ? "الآهات: تبدأ وتنتهي فين؟" : "Aahs: start and end where?"}</b>
+    <div class="fgrid" style="margin-top:.5rem">
+      <div><label class="l">${ar ? "تبدأ من" : "Start at"}</label><select class="in" onchange="state.mqd.from=+this.value">${all.map(i => opt(i, st.from, degLabel(m, i, T))).join("")}</select></div>
+      <div><label class="l">${ar ? "تنتهي عند" : "End at"}</label><select class="in" onchange="state.mqd.to=+this.value">${all.map(i => opt(i, st.to, degLabel(m, i, T))).join("")}</select></div>
+      <div><label class="l">${ar ? "الصوت" : "Voice"}</label><select class="in" onchange="state.mqd.voice=this.value">${[["mine", ar ? "🎤 صوتي أنا" : "My voice"], ["m", ar ? "👨 رجل" : "Male"], ["f", ar ? "👩 ست" : "Female"], ["k", ar ? "🧒 طفل" : "Child"]].map(([v, l]) => opt(v, st.voice, l)).join("")}</select></div>
+      <div><label class="l">${ar ? "السرعة" : "Speed"}</label><select class="in" onchange="state.mqd.sp=+this.value">${[[.7, ar ? "بطيء" : "Slow"], [1, ar ? "عادي" : "Normal"], [1.4, ar ? "سريع" : "Fast"]].map(([v, l]) => opt(v, st.sp, l)).join("")}</select></div>
+      <div><label class="l">${ar ? "عرض الأوكتافات" : "Octaves shown"}</label><select class="in" onchange="state.mqd.oct=+this.value;render()">${[1, 2, 3].map(v => opt(v, st.oct, String(v))).join("")}</select></div>
+    </div>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-p" onclick="mqdRun('ladder')">▶ ${ar ? "السلم طالع ونازل" : "Ladder up & down"}</button><button class="btn btn-o" onclick="mqdRun('phrase')">🎶 ${ar ? "جملة آهات في المدى ده" : "Aah phrase in range"}</button><button class="btn btn-o" onclick="mqdRun('sayr')">🧭 ${ar ? "سير المقام (القفلة)" : "Sayr & cadence"}</button><button class="btn btn-o" id="mqStopBtn" onclick="aahStop()">⏹</button><button class="btn btn-o" onclick="TN.maqam='${MAQAMS.includes(mid) ? mid : (MAQAMS.includes(m.fam) ? m.fam : "bayati")}';go16('tuner')">🎤 ${ar ? "مارس بصوتك" : "Practise with your voice"}</button></div></div>`;
+  const trCard = `<div class="card"><b>🎯 ${ar ? "القرار على أي درجة" : "Tonic on any note"}</b><p class="xs muted">${ar ? "غيّر القرار وشوف المقام هيبقى اسمه إيه — والسلم والآهات بيتنقلوا معاه." : "Move the tonic; the name, ladder and aahs follow."}</p>
+    <div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap"><select class="in" style="width:auto" onchange="state.mqd.tr=+this.value;render()">${trOpts.map(c => opt(c, T, solf(c) + (c === m.tonic ? (ar ? " (الأصلي)" : " (default)") : ""))).join("")}</select><span class="chip on">${esc(trName(m, T))}</span>${T !== m.tonic ? `<button class="btn btn-o xs" onclick="state.mqd.tr=${m.tonic};render()">↺</button>` : ""}</div></div>`;
+  return `<div class="mqd">${ajn}${ladder}<p class="xs muted" style="text-align:center;margin:.3rem 0 .8rem">${ar ? "دوس على أي درجة تسمعها · ½♭ = نص بيمول (ربع تون) · ♭ بيمول · ♯ دييز" : "Tap a note · ½♭ = half-flat · ♭ flat · ♯ sharp"}</p>${comp}<div class="mqdg">${ctrl}${trCard}</div></div>`;
+}
+function mqdTonicHz(m) { const st = state.mqd; const save = state.mq.voice, saveMine = state.mq.mine; state.mq.voice = st.voice === "f" || st.voice === "k" ? "f" : "m"; state.mq.mine = st.voice === "mine"; let f = mqTonicHz(Object.assign({}, m, { tonic: st.tr })); state.mq.voice = save; state.mq.mine = saveMine; if (st.voice === "k") f *= 1.33; return f; }
+function mqdVoice() { const v = state.mqd.voice; return v === "f" || v === "k" ? "f" : "m"; }
+function mqdPlayOne(i) { const m = MQ.find(x => x.id === state.mqd.mid); if (!m) return; AAH.vol = 1; aahSing([[mqDeg(m, i), 1.1]], mqdTonicHz(m), mqdVoice()); }
+function mqdRun(kind) {
+  const st = state.mqd; const m = MQ.find(x => x.id === st.mid); if (!m) return; const a = Math.min(st.from, st.to), b = Math.max(st.from, st.to); const s = 1 / (st.sp || 1); const seq = [];
+  if (kind === "ladder") { for (let i = a; i <= b; i++) seq.push([mqDeg(m, i), (i === a ? .9 : .5) * s]); for (let i = b - 1; i >= a; i--) seq.push([mqDeg(m, i), (i === a ? 1.5 : .45) * s]); }
+  else if (kind === "sayr") { const n = m.sc.length - 1, gh = mqGh(m); [0, 1, 2, gh, gh + 1, gh, gh - 1 >= 0 ? gh - 1 : 0, 2, 1, 0].forEach((i, x) => seq.push([mqDeg(m, i), (x === 0 || x === 9 ? 1.2 : x === 3 ? .9 : .5) * s])); if (m.fam === "sikah") { seq.length = 0; [0, 1, 0, 1, 2, 3, 2, 1, 1, 0].forEach((i, x) => seq.push([mqDeg(m, i), (x === 9 ? 1.6 : x === 4 ? .9 : .45) * s])); } }
+  else { let cur = a; seq.push([mqDeg(m, cur), .8 * s]); for (let x = 0; x < 14; x++) { const step = Math.random() < .6 ? 1 : 2; cur += (Math.random() < (cur - a) / Math.max(1, b - a) ? -step : step); cur = Math.max(a, Math.min(b, cur)); seq.push([mqDeg(m, cur), (Math.random() < .25 ? .8 : .42) * s]); } for (let i = cur; i > a; i--) seq.push([mqDeg(m, i - 1), .45 * s]); seq[seq.length - 1][1] = 1.5 * s; }
+  AAH.vol = 1; aahSing(seq, mqdTonicHz(m), mqdVoice());
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.mqd{margin-top:1rem}.mqd-lad{display:flex;align-items:center;gap:.15rem;overflow-x:auto;padding:.6rem .2rem;direction:ltr}.mqd-n{flex:none;min-width:3.6rem;text-align:center;border:2px solid var(--line);border-radius:.8rem;padding:.4rem .3rem;background:var(--card);cursor:pointer;transition:transform .15s}.mqd-n:hover{transform:translateY(-3px);border-color:var(--accent)}.mqd-n b{display:block;font:800 1rem system-ui}.mqd-n small{font-size:.65rem;color:var(--muted)}.mqd-n.ton{background:var(--accent);color:var(--accent-fg,#fff)}.mqd-n.ton small{color:inherit}.mqd-n.gh{border-color:#f59e0b;background:#fef3c7}.mqd-n.hf b{color:#7c3aed}.mqd-n.fl b{color:#0ea5e9}.mqd-n.sh b{color:#dc2626}
+.mqd-iv{flex:none;font-size:.62rem;padding:.1rem .3rem;border-radius:999px;background:var(--bg);border:1px solid var(--line)}.mqd-iv.q{background:#ede9fe}.mqd-iv.big{background:#fee2e2}.mqd-iv.sm{background:#e0f2fe}.mqd-aj{display:flex;gap:.3rem;direction:ltr;font-size:.8rem}.mqd-aj>div{border-top:3px solid var(--accent);padding:.3rem;text-align:center;direction:rtl}.mqd-aj>div+div{border-color:#f59e0b}.mqdg{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:.8rem;margin-top:.8rem}.mqd-comp{border-inline-start:4px solid var(--accent)}</style>`);
+/* تبويب جديد في صفحة كل مقام */
+const _maqamOne127 = maqamOne;
+maqamOne = function (cur) {
+  const ar = state.lang === "ar"; const mid = (cur.meta || {}).maqam; const want = state.mqTab === "deg"; if (want) state.mqTab = "info";
+  let h = _maqamOne127(cur); if (want) state.mqTab = "deg";
+  h = h.replace(/(<div class="motabs">)([\s\S]*?)(<\/div>)/, (x, a, b, c) => a + (want ? b.replace(/class="on"/g, 'class=""') : b) + `<button class="${want ? "on" : ""}" onclick="state.mqTab='deg';render()">🎼 ${ar ? "درجات المقام" : "Maqam degrees"}</button>` + c);
+  if (want) { const i = h.indexOf("</div>", h.indexOf('<div class="motabs">')) + 6; h = h.slice(0, i) + mqDegPage(mid); }
+  return h;
+};
+/* التحويل: تمرين بالآهات من المقام الأول للتاني على الدرجة المشتركة + طبقة + صوت */
+function thPivot(A, B) { const pc = c => ((Math.round(c / 50) * 50) % 1200 + 1200) % 1200; const aDeg = A.sc.slice(0, -1).map((c, i) => [pc(A.tonic + c), i]); const want = pc(B.tonic); const hit = aDeg.find(x => x[0] === want); return hit ? hit[1] : null; }
+function thPractice() {
+  const ar = state.lang === "ar"; const A = MQ.find(x => x.id === state.thA), B = MQ.find(x => x.id === state.thB); if (!A || !B) return ""; const st = state.thp = state.thp || { reg: "mid", voice: "m" };
+  const pv = thPivot(A, B); const pvName = pv != null ? solf(A.tonic + A.sc[pv]) : null;
+  const opt = (v, sel, l) => `<option value="${v}" ${v === sel ? "selected" : ""}>${esc(l)}</option>`;
+  const prof = state.auth.profile || {}; const lo = +prof.voice_low || 0, hi = +prof.voice_high || 0; let rec = "";
+  if (lo && hi) { const base = mqTonicHz(A); const regs = { low: base / 2, mid: base, high: base * 2 }; const fits = Object.entries(regs).filter(([k, f]) => f >= lo * .95 && f * 2 <= hi * 1.05); rec = fits.length ? (ar ? "✅ المناسب لصوتك: " : "Best for your voice: ") + fits.map(([k]) => ({ low: ar ? "القرار" : "low", mid: ar ? "الوسط" : "middle", high: ar ? "الجواب" : "high" })[k]).join(" / ") : (ar ? "⚠️ مداك مش مغطي التحويل كله — ابدأ من الوسط" : "Your range doesn't cover it all — start middle"); }
+  return `<div class="card" style="margin-top:1rem;border-inline-start:4px solid #7c3aed"><h3>🎤 ${ar ? "اتمرّن على التحويل بصوتك" : "Practise this modulation"}</h3>
+    <p class="sm">${pv != null ? (ar ? `الدرجة المشتركة: <b>${pvName}</b> — هي الدرجة رقم ${pv + 1} في ${esc(mqName(A))}، وعليها بيبدأ ${esc(mqName(B))}.` : `Pivot note: <b>${pvName}</b>.`) : (ar ? `مفيش درجة مشتركة مباشرة — هنعدّي على القرار بجملة انتقالية.` : "No direct common note — we pass through the tonic.")}</p>
+    <div class="fgrid"><div><label class="l">${ar ? "الطبقة" : "Register"}</label><select class="in" onchange="state.thp.reg=this.value">${[["low", ar ? "القرار (واطي)" : "Low"], ["mid", ar ? "الوسط" : "Middle"], ["high", ar ? "الجواب (عالي)" : "High"]].map(([v, l]) => opt(v, st.reg, l)).join("")}</select></div>
+      <div><label class="l">${ar ? "الصوت" : "Voice"}</label><select class="in" onchange="state.thp.voice=this.value">${[["mine", ar ? "🎤 صوتي" : "Mine"], ["m", ar ? "👨 رجل" : "Male"], ["f", ar ? "👩 ست" : "Female"], ["k", ar ? "🧒 طفل" : "Child"]].map(([v, l]) => opt(v, st.voice, l)).join("")}</select></div></div>
+    ${rec ? `<p class="sm" style="margin:.5rem 0 0">${rec}</p>` : `<p class="xs muted" style="margin:.5rem 0 0">${ar ? "سجّل مساحة صوتك من «مارس المقام بصوتك» عشان نقترحلك الطبقة المناسبة." : "Record your range to get a register suggestion."}</p>`}
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-p" onclick="thRun()">▶ ${ar ? "اسمع التحويل بالآهات" : "Hear the modulation"}</button><button class="btn btn-o" onclick="aahStop()">⏹</button><button class="btn btn-o" onclick="TN.maqam='${MAQAMS.includes(B.id) ? B.id : (MAQAMS.includes(B.fam) ? B.fam : "bayati")}';go16('tuner')">🎤 ${ar ? "مارس بصوتك على" : "Practise on"} ${esc(mqName(B))}</button></div></div>`;
+}
+function thRun() {
+  const A = MQ.find(x => x.id === state.thA), B = MQ.find(x => x.id === state.thB); if (!A || !B) return; const st = state.thp = state.thp || { reg: "mid", voice: "m" }; const pv = thPivot(A, B);
+  const sv = state.mq.voice, sm = state.mq.mine; state.mq.voice = st.voice === "f" || st.voice === "k" ? "f" : "m"; state.mq.mine = st.voice === "mine"; let f = mqTonicHz(A); state.mq.voice = sv; state.mq.mine = sm; if (st.voice === "k") f *= 1.33; if (st.reg === "low") f /= 2; if (st.reg === "high") f *= 2;
+  const seq = []; [0, 1, 2, 3, 2, 1, 0].forEach((i, x) => seq.push([mqDeg(A, i), x === 0 ? .9 : x === 6 ? 1.1 : .45]));
+  const p = pv != null ? pv : 0; for (let i = 1; i <= p; i++) seq.push([mqDeg(A, i), .45]); seq.push([mqDeg(A, p), 1.1]);
+  const off = mqDeg(A, p); [0, 1, 2, 3, 2, 1, 0, 1, 0].forEach((i, x) => seq.push([off + mqDeg(B, i), x === 8 ? 1.6 : x === 3 ? .8 : .45]));
+  AAH.vol = 1; aahSing(seq, f, st.voice === "f" || st.voice === "k" ? "f" : "m");
+}
+renderTahwil = (function (_r) { return function () { const h = _r(); if (!state.thA || !state.thB) return h; const card = thPractice(); const i = h.lastIndexOf("</section>"); return i > 0 ? h.slice(0, i) + `<div class="wrap">${card}</div>` + h.slice(i) : h + card; }; })(renderTahwil);
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
