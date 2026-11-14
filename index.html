@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v57";
+const UI_VERSION = "2026-11-14-v58";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16594,6 +16594,59 @@ appDownloads = function () {
 document.head.insertAdjacentHTML("beforeend", `<style>.dl57{text-align:center}.pol57 h3{margin-top:1rem}.pol57 p{line-height:1.9}
 header .pwabtn{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;font-weight:800;padding-inline:.7rem!important;width:auto!important;display:inline-flex!important}
 @media(max-width:640px){header .pwabtn span{display:none}}</style>`);
+
+/* ================= v58: ساعتك المجانية (كل الموقع) + نص ساعة كل شهر لقسم تختاره ================= */
+function fpS() { if (!state.auth.user || role() !== "student") return null; const d = useData("fpS", async () => { const { data, error } = await sb.rpc("free_pass_status"); if (error) throw error; return [data || {}]; }); return Array.isArray(d) ? d[0] : null; }
+function fpActive() { const s = fpS(); if (!s) return null; const now = Date.now(); if (s.hour_ends && new Date(s.hour_ends).getTime() > now) return { kind: "hour", ends: new Date(s.hour_ends).getTime() }; if (s.month_ends && new Date(s.month_ends).getTime() > now) return { kind: "month", section: s.month_section, ends: new Date(s.month_ends).getTime() }; return null; }
+const FP_SECS = [["maqamat", "🎼"], ["tajweed", "📖"], ["hifz", "🧠"], ["arabic", "🗣️"], ["tafseer", "📚"]];
+const fpHas = k => { const a = fpActive(); return !!a && (a.kind === "hour" || a.section === k); };
+const _allAccess58 = allAccess; allAccess = function () { if (_allAccess58.apply(this, arguments)) return true; const a = fpActive(); return !!a && a.kind === "hour"; };
+const _libFull58 = libFull; libFull = function () { return _libFull58.apply(this, arguments) || allAccess(); };
+const _mqPremium58 = mqPremium; mqPremium = function () { return _mqPremium58.apply(this, arguments) || fpHas("maqamat"); };
+const _laOpen58 = laOpen; laOpen = function () { return _laOpen58.apply(this, arguments) || fpHas("arabic"); };
+const _toolOK58 = toolOK; toolOK = function (t) { if (_toolOK58.apply(this, arguments)) return true; return !!fpActive() && toolMode(t) !== "hidden"; };
+const _secUnlocked58 = secUnlocked; secUnlocked = function (s) { if (_secUnlocked58.apply(this, arguments)) return true; const a = fpActive(); if (!a) return false; if (a.kind === "hour") return true; return !!s && secRootTrack(s) === a.section; };
+function fpName(k) { const ar = state.lang === "ar"; return { maqamat: ar ? "المقامات الصوتية" : "Vocal maqamat", tajweed: ar ? "التجويد" : "Tajweed", hifz: ar ? "حفظ القرآن" : "Quran memorization", arabic: ar ? "اللغة العربية" : "Arabic", tafseer: ar ? "التفسير والعلوم" : "Tafsir & sciences" }[k] || k; }
+function fpOffer() {
+  const s = fpS(); if (!s || allAccessReal58()) return null; const ar = state.lang === "ar";
+  if (fpActive()) return null;
+  if (!s.hour_used) return { k: "hour", t: ar ? "🎁 ساعتك المجانية" : "🎁 Your free hour" };
+  if (s.month_available) return { k: "month", t: ar ? "🎁 جرّب مجانًا" : "🎁 Try free" };
+  return null;
+}
+function allAccessReal58() { return _allAccess58(); }
+function fpModal(kind) {
+  const ar = state.lang === "ar"; const m = document.createElement("div"); m.id = "fpM";
+  const body = kind === "hour"
+    ? `<div style="font-size:2.6rem">⏳</div><h3>${ar ? "ساعة كاملة مجانًا لكل محتوى الموقع" : "One full free hour of all site content"}</h3><p class="sm" style="margin:.5rem 0">${ar ? "اختار الوقت اللي يناسبك — أول ما تضغط «ابدأ» العدّاد بيشتغل 60 دقيقة وكل المقامات والتجويد والحفظ والعربي والأدوات بتتفتح لك. وبعدها كل شهر بيجيلك نص ساعة مجانية لأي قسم تختاره." : "Pick a time that suits you — once you press “Start”, a 60-minute timer runs and all maqamat, tajweed, memorization, Arabic and tools open for you. After that you get a free half hour every month for any section you choose."}</p><button class="btn btn-p btn-lg" onclick="fpStart('hour')">▶ ${ar ? "ابدأ ساعتي دلوقتي" : "Start my hour now"}</button>`
+    : `<div style="font-size:2.6rem">🎁</div><h3>${ar ? "نص ساعة مجانية — اختار القسم" : "A free half hour — choose the section"}</h3><div class="fpgrid">${FP_SECS.map(([k, ic]) => `<button class="mstile" style="--c:var(--accent)" onclick="fpStart('month','${k}')"><span>${ic}</span><b>${esc(fpName(k))}</b></button>`).join("")}</div>`;
+  m.innerHTML = `<div class="fpbox card">${body}<button class="btn btn-o" style="margin-top:.8rem" onclick="document.getElementById('fpM').remove()">${ar ? "مش دلوقتي" : "Not now"}</button></div>`;
+  m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m);
+}
+async function fpStart(kind, sec) { const { error } = await sb.rpc("free_pass_start", { p_kind: kind, p_section: sec || null }); const m = document.getElementById("fpM"); if (m) m.remove(); if (error) return toast(error.message, true); delete state.data.fpS; toast(state.lang === "ar" ? "⏳ بدأ وقتك المجاني — استمتع!" : "⏳ Your free time has started — enjoy!"); render(); }
+function fpGo() { const o = fpOffer(); if (!state.auth.user) return navigate("signup"); if (o) fpModal(o.k); }
+let __fpT = 0;
+function fpTick() {
+  const a = fpActive(); let c = document.getElementById("fpChip");
+  if (!a) { if (c) { c.remove(); if (fpTick.was) { fpTick.was = 0; render(); } } return; }
+  fpTick.was = 1; const left = Math.max(0, a.ends - Date.now()); const mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60;
+  if (!c) { c = document.createElement("button"); c.id = "fpChip"; c.onclick = () => toast(a.kind === "hour" ? (state.lang === "ar" ? "كل محتوى الموقع مفتوح لك لحد ما العدّاد يخلص" : "All site content is open until the timer ends") : (state.lang === "ar" ? "مفتوح لك: " : "Open for you: ") + fpName(a.section)); document.body.appendChild(c); }
+  c.textContent = `⏳ ${mm}:${String(ss).padStart(2, "0")} · ${a.kind === "hour" ? (state.lang === "ar" ? "ساعتك المجانية" : "Free hour") : fpName(a.section)}`; c.classList.toggle("low", left < 5 * 60000);
+  if (left <= 0) { delete state.data.fpS; render(); }
+}
+setInterval(fpTick, 1000);
+const _renderHeader58 = renderHeader;
+renderHeader = function () { let h = _renderHeader58(); const o = state.auth.user ? fpOffer() : null; if (!o) return h; return h.replace(/(<div class="dombar"><div class="wrap">)/, `$1<a href="#" class="fp58" onclick="fpGo();return false;">${o.t}</a>`); };
+const _lockBox58 = lockBox;
+lockBox = function (sid) { const h = _lockBox58(sid); const o = state.auth.user ? fpOffer() : null; if (!o) return h; return h.replace(/(<div class="row" style="gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem">)/, `$1<button class="btn btn-p" onclick="fpGo()">${o.t}</button>`); };
+const _renderMySpace58 = renderMySpace;
+renderMySpace = function () { const h = _renderMySpace58(); const o = fpOffer(); if (!o) return h; return h.replace('<div class="msgrid">', `<div class="card fpcard" onclick="fpGo()"><b>${o.t}</b><span class="sm">${o.k === "hour" ? (state.lang === "ar" ? "ساعة كاملة لكل الموقع — تبدأها وقت ما تحب" : "A full hour of the whole site — start it whenever you like") : (state.lang === "ar" ? "نص ساعة لقسم تختاره" : "Half an hour for a section you choose")}</span></div><div class="msgrid">`); };
+document.head.insertAdjacentHTML("beforeend", `<style>
+#fpChip{position:fixed;bottom:5.2rem;inset-inline-start:.8rem;z-index:900;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:0;border-radius:999px;padding:.45rem .9rem;font:800 .9rem inherit;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}#fpChip.low{background:linear-gradient(135deg,#ef4444,#b91c1c);animation:fpPulse 1s infinite}@keyframes fpPulse{50%{transform:scale(1.06)}}
+#fpM{position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:1rem}.fpbox{max-width:460px;text-align:center}.fpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.5rem;margin-top:.8rem}
+.dombar a.fp58{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;font-weight:800}
+.fpcard{display:flex;flex-direction:column;gap:.2rem;cursor:pointer;margin-bottom:.8rem;border:2px dashed #f59e0b;background:color-mix(in srgb,#f59e0b 8%,var(--card))}
+@media(min-width:900px){#fpChip{bottom:1.2rem}}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
