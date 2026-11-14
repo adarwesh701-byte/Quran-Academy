@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v125";
+const UI_VERSION = "2026-11-14-v126";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20139,6 +20139,44 @@ TJC.push(
  { id: "tamarbuta", ic: "🔚", t: ["هاء التأنيث وتاؤه وقفًا", "Ta' marbutah when stopping"], cls: [], cards: [["التاء المربوطة", "في الوقف تبقى هاء ساكنة: «رحمةٌ» ← «رحمهْ»."], ["التاء المفتوحة", "«رَحْمَتَ ٱللَّهِ» مكتوبة مفتوحة ← نقف عليها بالتاء."]], q: [["الوقف على «رَحْمَتَ» المكتوبة بالتاء المفتوحة…", "بالتاء", ["بالهاء", "بالألف", "بالروم فقط"]]] },
  { id: "sinsad", ic: "🔀", t: ["السين والصاد لحفص", "Sin & Sad in Hafs"], cls: [], cards: [["بالسين", "«يَبْصُۜطُ» البقرة، و«بَصْۜطَةً» الأعراف."], ["بالوجهين", "«ٱلْمُصَۣيْطِرُونَ» الطور."], ["بالصاد", "«بِمُصَيْطِرٍ» الغاشية."]], q: [["«بَصْۜطَةً» في الأعراف تتقري لحفص…", "بالسين", ["بالصاد", "بالوجهين", "بالزاي"]], ["«بِمُصَيْطِرٍ» في الغاشية…", "بالصاد", ["بالسين", "بالوجهين", "بالإشمام"]]] }
 );
+
+/* ================= v126: شيل ضمان الاسترداد خالص + الصفحة ماتترفرشش لما تختار من قائمة + فرق التوقيت مع الطالب في الحجز + «انضم كمعلم» للطالب ================= */
+/* ١) ضمان استرداد الفلوس: اتشال من الأكاديمية */
+guaranteeBanner = function () { return ""; };
+refundCard = function () { return ""; };
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { const app = document.getElementById("app"); if (app) { app.querySelectorAll("h3").forEach(h => { if (/^🛡️|^💸/.test(h.textContent.trim()) && /(استرداد|refund|Money-back|ضمان)/i.test(h.textContent)) { const c = h.closest(".card"); if (c) c.remove(); } }); app.querySelectorAll("button,a").forEach(b => { if (/^(الآراء والاسترداد)$/.test(b.textContent.trim())) b.textContent = "الآراء"; }); } } catch (e) {} return x; }; })(render);
+/* ٢) الصفحة ماتترفرشش: أي render بيرجّع قيم الحقول اللي كنت كاتبها/مختارها + الأجزاء المفتوحة (details) زي ما هي */
+render = (function (_r) { return function () {
+  const app = document.getElementById("app"); const route = state.route; const snap = {}, open = new Set(); let focusId = null;
+  if (app) { app.querySelectorAll("input[id],select[id],textarea[id]").forEach(e => { if (e.type === "file" || e.type === "password") return; snap[e.id] = e.type === "checkbox" || e.type === "radio" ? e.checked : e.value; }); app.querySelectorAll("details").forEach((d, i) => { if (d.open) open.add((d.querySelector("summary") || {}).textContent || "#" + i); }); const a = document.activeElement; if (a && a.id && app.contains(a)) focusId = a.id; }
+  const before = JSON.stringify(state.__rv126 || {}); state.__rv126 = snap;
+  const x = _r.apply(this, arguments);
+  try { if (app && state.route === route) { app.querySelectorAll("input[id],select[id],textarea[id]").forEach(e => { if (!(e.id in snap) || e.type === "file" || e.type === "password") return; const v = snap[e.id]; if (e.type === "checkbox" || e.type === "radio") { if (e.dataset.keep126 !== "0" && e.checked !== v && !e.hasAttribute("data-fresh")) e.checked = v; } else if (e.value !== v && !e.hasAttribute("data-fresh") && !(e.tagName === "SELECT" && e.getAttribute("onchange") && /state\./.test(e.getAttribute("onchange")))) { if (e.tagName !== "SELECT" || [...e.options].some(o => o.value === v)) e.value = v; } });
+    app.querySelectorAll("details").forEach((d, i) => { const k = (d.querySelector("summary") || {}).textContent || "#" + i; if (open.has(k)) d.open = true; });
+    if (focusId) { const f = document.getElementById(focusId); if (f && document.activeElement !== f) try { f.focus({ preventScroll: true }); } catch (e) {} } } } catch (e) {}
+  return x; }; })(render);
+/* ٣) الحجز: وقت الطالب جنب كل ميعاد + فرق التوقيت بالساعات */
+function tzOffMin126(tz, d) { try { const dt = d || new Date(); const s = dt.toLocaleString("en-US", { timeZone: tz }); return Math.round((new Date(s) - new Date(dt.toLocaleString("en-US", { timeZone: "UTC" }))) / 60000); } catch (e) { return 0; } }
+function tzDiffTxt126(sTz) { const ar = state.lang === "ar"; const d = (tzOffMin126(sTz) - tzOffMin126(BROWSER_TZ)) / 60; if (!d) return ar ? "نفس توقيتك" : "same time as you"; const h = Math.abs(d); const hs = Number.isInteger(h) ? h : h.toFixed(1); return ar ? `الطالب ${d > 0 ? "قدّامك" : "وراك"} بـ ${hs} ساعة` : `student is ${hs}h ${d > 0 ? "ahead" : "behind"}`; }
+function stuNow126(sTz) { try { return new Intl.DateTimeFormat(locale(), { hour: "2-digit", minute: "2-digit", weekday: "short", timeZone: sTz }).format(new Date()); } catch (e) { return ""; } }
+const _sbc126 = scheduleBookerCard;
+scheduleBookerCard = function (students, teachers) {
+  let h = _sbc126(students, teachers); if (!students || !students.length) return h; const ar = state.lang === "ar"; const P = peopleMap(); const k = state.sbk || {};
+  const sid = k.sid && students.find(s => s.id === k.sid) ? k.sid : students[0].id; const stu = P.map[sid] || {}; const sTz = stu.timezone || BROWSER_TZ;
+  const info = `<div class="tz126"><span>🎓 ${ar ? "توقيت الطالب" : "Student's time zone"}: <b>${esc(sTz)}</b></span><span>🕒 ${ar ? "الساعة عنده دلوقتي" : "Now there"}: <b>${esc(stuNow126(sTz))}</b></span><span class="chip on">${esc(tzDiffTxt126(sTz))}</span>${stu.timezone ? "" : `<span class="xs muted">${ar ? "(الطالب لسه ماحددش توقيته — افتراضي توقيتك)" : "(student hasn't set a time zone — using yours)"}</span>`}</div>`;
+  h = h.replace(/(<select class="in" id="sbk_s"[\s\S]*?<\/select><\/div>)/, `$1`).replace(/(<div class="fgrid" style="align-items:end">)/, info + "$1");
+  if (sTz === BROWSER_TZ) h = h.replace(/onclick="sbkBook\('([^']+)'\)">([^<]*)<\/button>/g, (m, s, t) => `onclick="sbkBook('${s}')">${t}<br><span class="xs muted">🎓 ${ar ? "نفس الوقت" : "same"}</span></button>`);
+  if (state.sbkOpen126) h = h.replace(/^<details class="card"/, '<details open class="card"');
+  return h.replace(/^<details /, '<details ontoggle="state.sbkOpen126=this.open" ');
+};
+const _sbkBook126 = sbkBook;
+sbkBook = async function (start) { const P = peopleMap(); const k = state.sbk || {}; const stu = P.map[k.sid] || {}; const sTz = stu.timezone || BROWSER_TZ; const ar = state.lang === "ar"; const oc = window.confirm; window.confirm = (m) => oc(m + `\n\n🎓 ${ar ? "عند الطالب" : "Student's time"}: ${tzFmt(start, sTz)} (${tzDiffTxt126(sTz)})`); try { return await _sbkBook126(start); } finally { window.confirm = oc; } };
+document.head.insertAdjacentHTML("beforeend", `<style>.tz126{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;background:color-mix(in srgb,var(--accent) 8%,var(--card));border:1px solid var(--line);border-radius:.8rem;padding:.55rem .8rem;margin-bottom:.7rem;font-size:.9rem}</style>`);
+/* فورم «إضافة حصة»: يظهر وقت الطالب وفرق التوقيت وانت بتختار */
+function alTz126() { const o = document.getElementById("al_tz126"); if (!o) return; const P = peopleMap(); const sid = (document.getElementById("al_s") || {}).value; const stu = P.map[sid] || {}; const sTz = stu.timezone || BROWSER_TZ; const d = (document.getElementById("al_d") || {}).value, hm = (document.getElementById("al_h") || {}).value; const ar = state.lang === "ar"; let when = ""; if (d && hm) { const dt = new Date(`${d}T${hm}`); when = ` · ${ar ? "الحصة عنده" : "Lesson there"}: <b>${esc(tzFmt(dt.toISOString(), sTz))}</b>`; } o.innerHTML = `🎓 ${ar ? "توقيت الطالب" : "Student TZ"}: <b>${esc(sTz)}</b> · <span class="chip on">${esc(tzDiffTxt126(sTz))}</span>${when}`; }
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { const f = document.getElementById("al_s"); if (f && !document.getElementById("al_tz126")) { const form = f.closest("form"); form.insertAdjacentHTML("beforebegin", `<div id="al_tz126" class="tz126"></div>`); ["al_s", "al_d", "al_h"].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener("change", alTz126); }); alTz126(); } } catch (e) {} return x; }; })(render);
+/* ٤) «انضم كمعلم» في صفحة الطالب */
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { if (state.route === "dashboard" && state.auth.user && realRole() === "student" && !document.getElementById("jt126")) { const app = document.getElementById("app"); const host = app && (app.querySelector(".hvgrid") || app.querySelector(".dmgrid") || app.querySelector("section .wrap")); if (host) { const ar = state.lang === "ar"; const b = document.createElement("div"); b.id = "jt126"; b.className = "card"; b.style.cssText = "display:flex;gap:.7rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.8rem 0"; b.innerHTML = `<span>👨‍🏫 <b>${ar ? "عندك إجازة أو بتعرف تعلّم؟" : "Can you teach?"}</b> ${ar ? "انضم لفريق معلمي الأكاديمية." : "Join our teachers."}</span><button class="btn btn-p" onclick="navigate('teach')">${ar ? "انضم كمعلم" : "Join as a teacher"}</button>`; host.parentElement.insertBefore(b, host.nextSibling); } } } catch (e) {} return x; }; })(render);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
