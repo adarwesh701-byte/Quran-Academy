@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v56";
+const UI_VERSION = "2026-11-14-v57";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16305,7 +16305,8 @@ function renderAllTools() {
 const _render56 = render;
 render = function () {
   if (state.route === "pricing" && role() === "teacher") { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} }
-  if (state.route === "myspace" || state.route === "alltools") { const app = document.getElementById("app"); if (!app) return; let body; try { body = state.route === "myspace" ? renderMySpace() : renderAllTools(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); visitPing(false); uilApply(); uilBar(); } catch (e) {} return; }
+  const R56 = { myspace: () => renderMySpace(), alltools: () => renderAllTools(), privacy: () => renderPrivacy(), terms: () => renderTerms() };
+  if (R56[state.route]) { const app = document.getElementById("app"); if (!app) return; let body; try { body = R56[state.route](); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); visitPing(false); uilApply(); uilBar(); } catch (e) {} return; }
   return _render56.apply(this, arguments);
 };
 
@@ -16434,6 +16435,165 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acres{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:.35rem}.acr{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;text-align:start;padding:.5rem .7rem;border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer;font:inherit;color:var(--fg)}.acr:hover{border-color:var(--accent)}.acrt{font:1.15rem/1.9 'Amiri',serif;direction:rtl}
 .rec56{display:inline-block;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);border-radius:999px;padding:.15rem .7rem;font-size:.85rem;margin-bottom:.25rem}
 </style>`);
+
+/* ================= v57: القرآن ما يتترجمش أبدًا + قاموس المقامات + من غير تكرار + الميكروفون + القبلة + الخصوصية + التحميل ================= */
+/* ---------- 1) أي نص فيه تشكيل قرآني أو كلمة مشكّلة ما يتترجمش ---------- */
+dtQuran = function (s) {
+  if (/[ٱۖ-ۭ]|﴿|﴾/.test(s)) return true; const L1 = (s.match(/[ء-ي]/g) || []).length; if (!L1) return false; const M = (s.match(/[ً-ْٰ]/g) || []).length;
+  return M > 0 && (M / L1 >= 0.4 || (L1 <= 4 && M >= 1 && !/[a-z]/i.test(s)));
+};
+/* ---------- 2) الكلمات العربي جوه الجمل الإنجليزي تتعرض صح (اتجاه كل سطر حسب أوله) ---------- */
+document.head.insertAdjacentHTML("beforeend", `<style>
+html[dir=ltr] #app :is(p,li,button,.opt,h1,h2,h3,h4,label,td,th,summary,.qq,.qzq,.qtext,.ayq,b,small,span.sm,div.sm){unicode-bidi:plaintext}
+html[dir=ltr] #app .opt,html[dir=ltr] #app .qzq{text-align:start}
+.rfx :is(p,li,blockquote,.tftx,.tfay,.bktext p,.hdtx){font-family:var(--rdF,"Amiri"),serif!important;font-size:var(--rdS,1.08rem)!important;line-height:2}
+</style>`);
+/* ---------- 3) الخط والحجم بيتغيروا فعلًا + أسماء الخطوط الحقيقية + إزالة التشكيل في الكتب ---------- */
+rfSave = function () { try { lsSet("itqan_rf", JSON.stringify(state.rf)); } catch (e) {} const d = document.documentElement.style; d.setProperty("--rdF", `"${state.rf.f}"`); d.setProperty("--rdS", state.rf.s + "rem"); document.querySelectorAll(".rfx").forEach(x => x.classList.toggle("notash", !!state.rf.nt)); if (state.rf.nt != null) rfTash(); };
+function rfTash() { document.querySelectorAll(".rfx .bktext p, .rfx .tftx").forEach(p => { if (!p.dataset.o) p.dataset.o = p.textContent; p.textContent = state.rf.nt ? p.dataset.o.replace(/[ً-ْٰـ]/g, "") : p.dataset.o; }); }
+rfBar = function () {
+  const ar = state.lang === "ar";
+  return `<div class="row notr" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin:.5rem 0"><span class="xs">🔤 ${L("rfFont")}</span><select class="in notr" style="width:auto;padding:.25rem .5rem" onchange="state.rf.f=this.value;rfSave()">${RF_FONTS.map(([f, n]) => `<option value="${f}" ${state.rf.f === f ? "selected" : ""} style="font-family:'${f}'">${ar ? n : f}</option>`).join("")}</select><span class="xs">${L("rfSize")}</span><button class="btn btn-o" style="padding:.2rem .6rem" onclick="state.rf.s=Math.max(.85,+(state.rf.s-.1).toFixed(2));rfSave()">A−</button><button class="btn btn-o" style="padding:.2rem .6rem" onclick="state.rf.s=Math.min(2.4,+(state.rf.s+.1).toFixed(2));rfSave()">A+</button><button class="btn ${state.rf.nt ? "btn-p" : "btn-o"}" style="padding:.2rem .6rem" onclick="state.rf.nt=!state.rf.nt;rfSave();this.className='btn '+(state.rf.nt?'btn-p':'btn-o')">${state.rf.nt ? (ar ? "ـَ أظهر التشكيل" : "ـَ Show diacritics") : (ar ? "ـَ أخفِ التشكيل" : "ـَ Hide diacritics")}</button></div>`;
+};
+setTimeout(() => { try { rfSave(); } catch (e) {} }, 0);
+
+/* ---------- 4) شيل «0 عنصر» + المفرد/الجمع + من غير تكرار في نفس الصفحة ---------- */
+function clean57(app) {
+  if (!app) return; const it = L("libItems"), sb2 = L("libSubs");
+  app.querySelectorAll("small, .sm, span").forEach(el => { if (el.children.length) return; let t = el.textContent; if (!/\d/.test(t)) return; const o = t;
+    t = t.replace(new RegExp("(^|\\s)0 " + it + "( · )?"), "$1").replace(new RegExp("( · )?0 " + sb2), "");
+    if (state.lang === "en") t = t.replace(/\b1 items\b/, "1 item").replace(/\b1 sections\b/, "1 section").replace(/\b1 lesson\/week/, "1 lesson/week").replace(/\b([2-9]) lesson\/week/g, "$1 lessons/week");
+    if (t !== o) el.textContent = t.trim(); });
+  // نفس البلاطة مرتين (أدوات + دروس ومحتوى): سيب الأولى بس
+  const nrm = s => (s || "").replace(/[^\p{L}\s]/gu, "").replace(/\s+/g, " ").replace(/(^|\s)ال/g, "$1").trim().toLowerCase();
+  const seen = new Set();
+  app.querySelectorAll(".dmgrid > *, .libgrid > *, .dtools > *, .tgrid > *").forEach(t => { const b = t.querySelector("b,h3,h4") || t; const k = nrm(b.textContent); if (!k) return; if (seen.has(k)) t.remove(); else seen.add(k); });
+  app.querySelectorAll(".dmgrid, .libgrid").forEach(g => { if (!g.children.length) { const s = g.closest("section,.card,div"); const h = g.previousElementSibling; if (h && /^H[23]$/.test(h.tagName)) h.remove(); g.remove(); } });
+  // زرار تثبيت واحد بس
+  const pw = [...document.querySelectorAll(".pwabtn")]; pw.slice(1).forEach(x => x.remove());
+  if (state.lang !== "ar") { document.title = "Itqan Academy"; } else document.title = "أكاديمية إتقان";
+}
+const _uilApply57 = uilApply;
+uilApply = function () { const r = _uilApply57.apply(this, arguments); try { clean57(document.getElementById("app")); } catch (e) { console.error(e); } return r; };
+
+/* ---------- 5) نصوص الرئيسية: كل قسم له جملته + إجابة صريحة عن الحصة التجريبية ---------- */
+(function () {
+  try {
+    const A = I18N.ar, E = I18N.en;
+    const f = (o, a) => { const x = (o.faq || []).find(q => /تجريبية|trial/i.test(q.q)); if (x) x.a = a; };
+    f(A, "الحصة التجريبية مش مجانية لكن رمزية: 25 دقيقة بـ 2$ أو 50 دقيقة بـ 4$ (والسعر بيتظبط حسب بلدك). بتتعرف فيها على المعلم ونحدد مستواك، ولو اشتركت بعدها بيتخصم ثمنها من أول باقة.");
+    f(E, "The trial lesson is not free but symbolic: 25 minutes for $2 or 50 minutes for $4 (adjusted to your country). You meet the teacher and we set your level, and if you subscribe afterwards its price is deducted from your first package.");
+    if (E.hero) { ["title", "h1", "headline"].forEach(k => { if (typeof E.hero[k] === "string" && /with/i.test(E.hero[k])) E.hero[k] = "Master the Quran with connected ijazah and personal guidance."; }); }
+  } catch (e) {}
+})();
+const SUB57 = { ar: ["أربع خطوات بسيطة من الحجز لحد أول حصة مع معلمك.", "ليه طلابنا بيكمّلوا معانا: معلم متقن، متابعة شخصية، وأدوات تمرين ذكية."], en: ["Four simple steps from booking to your first lesson with your teacher.", "Why students stay with us: a qualified teacher, personal follow-up and smart practice tools."] };
+const _homeOrder57 = homeOrder56;
+homeOrder56 = function (app) {
+  _homeOrder57(app); if (state.route !== "home" || !app) return; const S = SUB57[state.lang] || SUB57.en;
+  const secs = [...app.querySelectorAll(":scope > section.sec")].filter(s => !s.classList.contains("t56why") && !s.classList.contains("hb56"));
+  const fix = (s, txt) => { if (!s) return; const p = s.querySelector(".sec-sub, .sec-t + p, h2 + p"); if (p) p.textContent = txt; };
+  fix(secs[1], S[0]); fix(secs[2], S[1]);
+  secs.forEach(s => { const h = s.querySelector("h3"); if (h && /سند|Sanad/i.test(h.textContent)) { const p = h.nextElementSibling; if (p) p.textContent = state.lang === "ar" ? "قراءة على شيوخ مجازين بالسند المتصل إلى النبي ﷺ." : "Recite to sheikhs with a connected chain (sanad) back to the Prophet ﷺ."; } });
+};
+
+/* ---------- 6) قاموس ثابت لأسماء نغمات وأجناس المقامات (بالإنجليزي من غير ترجمة آلية) ---------- */
+const MQ_NOTES57 = [["الراست", "Rast"], ["راست", "Rast"], ["الدوكاه", "Dukah"], ["دوكاه", "Dukah"], ["دوكا", "Dukah"], ["السيكاه", "Sikah"], ["سيكاه", "Sikah"], ["الجهاركاه", "Jaharkah"], ["جهاركاه", "Jaharkah"], ["النوا", "Nawa"], ["النوى", "Nawa"], ["نوا", "Nawa"], ["الحسيني", "Husseini"], ["حسيني", "Husseini"], ["الأوج", "Awj"], ["أوج", "Awj"], ["الكردان", "Kirdan"], ["كردان", "Kirdan"], ["المحير", "Muhayyar"], ["المحيّر", "Muhayyar"], ["محير", "Muhayyar"], ["الماهور", "Mahur"], ["العجم عشيران", "Ajam Ushayran"], ["عجم عشيران", "Ajam Ushayran"], ["العشيران", "Ushayran"], ["اليكاه", "Yakah"], ["القرار", "Qarar (tonic)"], ["قفلة", "Qafla (closing)"], ["القفلة", "Qafla (closing)"], ["جنس", "Jins"], ["أجناس", "Ajnas"], ["الأجناس", "Ajnas"], ["ربع تون", "quarter tone"], ["ربع الصوت", "quarter tone"], ["البياتي", "Bayati"], ["بياتي", "Bayati"], ["الصبا", "Saba"], ["صبا", "Saba"], ["الحجاز", "Hijaz"], ["حجاز", "Hijaz"], ["النهاوند", "Nahawand"], ["نهاوند", "Nahawand"], ["الكرد", "Kurd"], ["كرد", "Kurd"], ["العجم", "Ajam"], ["عجم", "Ajam"], ["الشهناز", "Shahnaz"], ["شهناز", "Shahnaz"], ["البوسليك", "Busalik"], ["بوسليك", "Busalik"], ["الزركلاه", "Zirkulah"], ["البزرك", "Buzurk"], ["بزرك", "Buzurk"], ["الكوشت", "Kawasht"], ["السلم", "scale"]];
+const MQN_RE57 = MQ_NOTES57.map(([a, e]) => [new RegExp("(^|[\\s«(\\-/،:+])(?:[وب]" + DIA + ")?" + [...a].map(c => c.replace(/[اأإآ]/, "[اأإآ]") + DIA).join("") + "(?=$|[\\s»),.،:؟!\\-/+])", "g"), e]);
+const _glossProtect57 = glossProtect;
+glossProtect = function (s) { const r = _glossProtect57(s); if (!(state.lang === "en" || /^(fr|de|es|it|tr|id|ms)$/.test(state.lang))) return r; let o = r.o; MQN_RE57.forEach(([re, e], i) => { o = o.replace(re, (m, p) => p + "{n" + String.fromCharCode(97 + Math.floor(i / 26)) + String.fromCharCode(97 + i % 26) + "}"); }); return { o, used: r.used }; };
+const _glossApply57 = glossApply;
+glossApply = function (s) { return _glossApply57(s).replace(/\{n([a-z])([a-z])\}/g, (m, x, y) => { const e = MQ_NOTES57[(x.charCodeAt(0) - 97) * 26 + y.charCodeAt(0) - 97]; return e ? e[1] : m; }); };
+
+/* ---------- 7) التسميع: الحروف المقطّعة (الم، كهيعص…) بتتقرأ حرف حرف ---------- */
+const MUQ57 = { "ا": "الف", "ل": "لام", "م": "ميم", "ص": "صاد", "ر": "را", "ك": "كاف", "ه": "ها", "ي": "يا", "ع": "عين", "ط": "طا", "س": "سين", "ح": "حا", "ق": "قاف", "ن": "نون" };
+const MUQW57 = new Set(["الم", "المص", "الر", "المر", "كهيعص", "طه", "طسم", "طس", "يس", "ص", "حم", "عسق", "ق", "ن"]);
+const _tsDiff57 = tsDiff;
+tsDiff = function (target, said) {
+  const t = normAr(target).split(" "); let s = " " + normAr(said) + " ";
+  t.forEach(w => { if (MUQW57.has(w)) { const spelled = [...w].map(c => MUQ57[c] || c); const re = new RegExp("\\s" + spelled.map(x => x.replace(/ا$/, "ا?[ءئ]?")).join("\\s*") + "\\s", "g"); s = s.replace(re, " " + w + " "); } });
+  return _tsDiff57(target, s.trim());
+};
+
+/* ---------- 8) الميكروفون: لو جهاز محفوظ مش موجود يرجع للافتراضي + رسالة واضحة ---------- */
+(function () {
+  const md = navigator.mediaDevices; if (!md || !md.getUserMedia || md.__w57) return; const orig = md.getUserMedia.bind(md); md.__w57 = 1;
+  const msg = e => { const ar = state.lang === "ar"; const n = e && e.name; if (n === "NotAllowedError" || n === "SecurityError") return ar ? "🎤 الميكروفون مقفول للموقع: اضغط على 🔒 جنب العنوان ← الأذونات ← الميكروفون ← سماح، وبعدين جرّب تاني." : "🎤 Microphone blocked: tap the 🔒 next to the address → Permissions → Microphone → Allow, then try again."; if (n === "NotFoundError") return ar ? "🎤 مفيش ميكروفون متوصل بالجهاز." : "🎤 No microphone found."; if (n === "NotReadableError") return ar ? "🎤 برنامج تاني ماسك الميكروفون (زوم/واتساب…) — اقفله وجرّب تاني." : "🎤 Another app is using the microphone — close it and retry."; return null; };
+  md.getUserMedia = async function (c) {
+    try { return await orig(c); } catch (e) {
+      if (e && (e.name === "OverconstrainedError" || e.name === "NotFoundError") && c) { try { return await orig({ audio: !!c.audio, video: !!c.video }); } catch (e2) { e = e2; } }
+      const m = msg(e); if (m) try { toast(m, true); } catch (x) {} throw e;
+    }
+  };
+  const SRc = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SRc && !SRc.__w57) { const W = function () { const r = new SRc(); r.addEventListener("error", ev => { const ar = state.lang === "ar"; const m = ev.error === "not-allowed" || ev.error === "service-not-allowed" ? (ar ? "🎤 اسمح للموقع بالميكروفون (🔒 جنب العنوان ← الميكروفون ← سماح)." : "🎤 Allow the microphone for this site (🔒 → Microphone → Allow).") : ev.error === "network" ? (ar ? "🎤 التعرّف على الصوت محتاج إنترنت." : "🎤 Speech recognition needs internet.") : ev.error === "audio-capture" ? (ar ? "🎤 مش لاقي ميكروفون شغال." : "🎤 No working microphone.") : null; if (m) try { toast(m, true); } catch (x) {} }); return r; }; W.__w57 = 1; W.prototype = SRc.prototype; if (window.SpeechRecognition) window.SpeechRecognition = W; if (window.webkitSpeechRecognition) window.webkitSpeechRecognition = W; }
+})();
+
+/* ---------- 9) مواقيت الصلاة: موقع تلقائي أو مدينة + بوصلة بالكاميرا ---------- */
+async function prIp() { try { const j = await fetch("https://get.geojs.io/v1/ip/geo.json").then(r => r.json()); if (j && j.latitude) { state.pr.lat = +j.latitude; state.pr.lng = +j.longitude; state.pr.city = j.city || ""; try { localStorage.setItem("itqan_geo", JSON.stringify([state.pr.lat, state.pr.lng])); } catch (e) {} delete state.data.prTimes; render(); return true; } } catch (e) {} return false; }
+async function prCity() { const c = (document.getElementById("prC") || {}).value || ""; if (!c.trim()) return; try { const j = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(c)).then(r => r.json()); if (j && j[0]) { state.pr.lat = +j[0].lat; state.pr.lng = +j[0].lon; try { localStorage.setItem("itqan_geo", JSON.stringify([state.pr.lat, state.pr.lng])); } catch (e) {} delete state.data.prTimes; render(); return; } } catch (e) {} toast(L("error"), true); }
+prLocate = async function () {
+  if (!navigator.geolocation) return prIp();
+  navigator.geolocation.getCurrentPosition(p => { state.pr.lat = p.coords.latitude; state.pr.lng = p.coords.longitude; try { localStorage.setItem("itqan_geo", JSON.stringify([state.pr.lat, state.pr.lng])); } catch (e) {} delete state.data.prTimes; render(); }, async () => { if (!(await prIp())) toast(L("prNoGeo"), true); }, { timeout: 9000, maximumAge: 6e5 });
+};
+const _renderPrayer57 = renderPrayer;
+renderPrayer = function () {
+  let h = _renderPrayer57(); const ar = state.lang === "ar";
+  const city = `<div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem"><input class="in" id="prC" placeholder="${ar ? "أو اكتب مدينتك (مثلاً: القاهرة)" : "Or type your city (e.g. London)"}" style="max-width:16rem" onkeydown="if(event.key==='Enter')prCity()"><button class="btn btn-o" onclick="prCity()">🔎</button></div>`;
+  h = h.replace(`onclick="prLocate()">📍 ${L("prLoc")}</button>`, `onclick="prLocate()">📍 ${L("prLoc")}</button>${city}`);
+  h = h.replace(`<button class="btn btn-o" onclick="prCompass()">📱 ${L("prComp")}</button>`, `<button class="btn btn-o" onclick="prCompass()">📱 ${L("prComp")}</button> <button class="btn btn-p" onclick="prCam()">📷 ${ar ? "القبلة بالكاميرا" : "Qibla with camera"}</button>`);
+  h = h.replace(`📍 ${L("prRe")}</button>`, `📍 ${L("prRe")}</button>${city}`);
+  return h;
+};
+let __prHead = null, __prOri = null;
+function prHeading(e) { let h = null; if (e.webkitCompassHeading != null) h = e.webkitCompassHeading; else if (e.absolute && e.alpha != null) h = 360 - e.alpha; else if (e.alpha != null) h = 360 - e.alpha; if (h != null) { const so = (screen.orientation && screen.orientation.angle) || 0; __prHead = (h + so + 360) % 360; prUpd(); } }
+function prUpd() { const q = qibla(state.pr.lat, state.pr.lng); if (__prHead == null) return; const r = (q - __prHead + 360) % 360; const n = document.getElementById("qibn"); if (n) n.style.transform = `rotate(${r}deg)`; const a = document.getElementById("pcArrow"); if (a) a.style.transform = `translate(-50%,-50%) rotate(${r}deg)`; const ok = r < 6 || r > 354; const s = document.getElementById("pcSt"); if (s) { s.textContent = ok ? (state.lang === "ar" ? "✅ انت في اتجاه القبلة" : "✅ You are facing the Qibla") : (state.lang === "ar" ? `لف ${r < 180 ? "يمين" : "شمال"} ${Math.round(r < 180 ? r : 360 - r)}°` : `Turn ${r < 180 ? "right" : "left"} ${Math.round(r < 180 ? r : 360 - r)}°`); s.classList.toggle("ok", ok); } if (ok && navigator.vibrate && !prUpd.v) { navigator.vibrate(80); prUpd.v = 1; setTimeout(() => prUpd.v = 0, 3000); } }
+function prListen() { if (__prOri) return; __prOri = 1; const ev = "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation"; window.addEventListener(ev, prHeading, true); }
+prCompass = function () { const go = () => { prListen(); toast(L("prCompOn")); }; if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission().then(r => r === "granted" && go()).catch(() => {}); else go(); };
+async function prCam() {
+  const ar = state.lang === "ar"; const start = async () => {
+    prListen(); let st = null; try { st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }); } catch (e) {}
+    const m = document.createElement("div"); m.id = "pcam"; m.innerHTML = `<video autoplay playsinline muted></video><div id="pcArrow">⬆️<span>🕋</span></div><div id="pcSt">${ar ? "حرّك الموبايل…" : "Move your phone…"}</div><button class="btn btn-p" id="pcX">✕</button>`;
+    document.body.appendChild(m); const v = m.querySelector("video"); if (st) v.srcObject = st; else v.remove();
+    m.querySelector("#pcX").onclick = () => { if (st) st.getTracks().forEach(t => t.stop()); m.remove(); }; prUpd();
+  };
+  if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) { try { const r = await DeviceOrientationEvent.requestPermission(); if (r !== "granted") return; } catch (e) { return; } }
+  start();
+}
+document.head.insertAdjacentHTML("beforeend", `<style>#pcam{position:fixed;inset:0;z-index:9800;background:#000}#pcam video{width:100%;height:100%;object-fit:cover}#pcArrow{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:6rem;transition:transform .15s;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 12px #000)}#pcArrow span{font-size:2.4rem}#pcSt{position:absolute;bottom:18%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;padding:.6rem 1.2rem;border-radius:999px;font-weight:800;font-size:1.1rem}#pcSt.ok{background:#16a34a}#pcX{position:absolute;top:1rem;inset-inline-end:1rem}</style>`);
+
+/* ---------- 10) صفحة الخصوصية والشروط ---------- */
+PAGES16.push("privacy", "terms");
+function renderPrivacy() {
+  const ar = state.lang === "ar"; const wa = (typeof CONFIG !== "undefined" && CONFIG.whatsapp) || "201091121907";
+  const S = ar ? [["البيانات اللي بنجمعها", "الاسم، الإيميل، رقم التليفون (اختياري)، البلد واللغة، مواعيد الحصص، ونتائج التمارين والتقدّم. ولو انت سجّلت صوتك أو رفعت واجب بنحفظه عشان معلمك يسمعه."], ["التسجيلات الصوتية والحصص", "التسجيلات اللي الطالب بيرفعها بتتمسح أوتوماتيك بعد 3 أيام، والتقدّم والدرجات بيفضلوا. تسجيل الحصة ما بيحصلش إلا بإذن واضح من الطالب أو وليّ أمره داخل الفصل، والتفريغ النصي التلقائي (لو اتفعّل) بيتم للمتابعة بس."], ["الدفع", "الدفع بيتم عن طريق مزوّدي الدفع (زي فودافون كاش/PayPal/Lemon Squeezy)، واحنا ما بنشوفش ولا بنحفظ بيانات الكارت."], ["مين بيشوف بياناتك", "انت، ومعلمك المرتبط بيك، وإدارة الأكاديمية بس. ما بنبيعش بياناتك ولا بنشاركها مع أي جهة إعلانية."], ["فين بتتحفظ", "على خوادم Supabase المشفّرة، والموقع على Vercel."], ["حقوقك", "تقدر تطلب نسخة من بياناتك أو مسحها نهائيًا في أي وقت من خلال الرسائل أو واتساب."], ["الأطفال", "حسابات الأطفال تحت 13 سنة بتتعمل وتتابع عن طريق وليّ الأمر."]]
+    : [["What we collect", "Name, email, phone number (optional), country and language, lesson times, and exercise results and progress. If you record your voice or upload homework, we store it so your teacher can hear it."], ["Voice and lesson recordings", "Recordings uploaded by students are deleted automatically after 3 days; progress and grades remain. A lesson is only recorded with clear permission from the student or guardian inside the classroom, and any automatic transcription is used only for follow-up."], ["Payments", "Payments go through payment providers (e.g. Vodafone Cash, PayPal, Lemon Squeezy); we never see or store card details."], ["Who sees your data", "You, your linked teacher and the academy administration only. We never sell your data or share it with advertisers."], ["Where it is stored", "On encrypted Supabase servers; the website is hosted on Vercel."], ["Your rights", "You can ask for a copy of your data or its permanent deletion at any time through messages or WhatsApp."], ["Children", "Accounts for children under 13 are created and supervised by a parent or guardian."]];
+  return pageWrap("🔐", ar ? "سياسة الخصوصية" : "Privacy Policy", ar ? "إزاي بنحمي بياناتك وصوتك" : "How we protect your data and voice", `<div class="card pol57">${S.map(s => `<h3>${s[0]}</h3><p>${s[1]}</p>`).join("")}<p class="sm muted">${ar ? "للتواصل" : "Contact"}: <a class="accent" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a> · <a href="#" class="accent" onclick="navigate('terms');return false;">${ar ? "الشروط والأحكام" : "Terms of use"}</a></p></div>`);
+}
+function renderTerms() {
+  const ar = state.lang === "ar";
+  const S = ar ? [["الحساب", "انت مسؤول عن بيانات دخولك، وكل حساب لشخص واحد."], ["الحصص والإلغاء", "مواعيد الحصص والإلغاء والتأجيل حسب «سياسة الحصص والإلغاء» المنشورة في الموقع."], ["الاسترداد", "لو ما استفدتش خلال أول 7 أيام من اشتراكك، ابعت لنا رسالة من صفحة الرسائل أو واتساب وبنرجّعلك فلوسك خلال 7 أيام عمل لنفس وسيلة الدفع."], ["المحتوى", "كل محتوى الموقع للاستخدام الشخصي في التعلّم، وممنوع نسخه أو إعادة نشره من غير إذن. النصوص الدينية منقولة من مصادرها المذكورة."], ["الأدب", "الاحترام واجب في الفصل والرسائل، والإدارة من حقها توقف أي حساب يسيء."], ["التعديلات", "ممكن نحدّث الشروط دي، وهنبلغك بأي تغيير مهم."]]
+    : [["Account", "You are responsible for your login details; each account is for one person."], ["Lessons and cancellation", "Lesson times, cancellation and rescheduling follow the published Lesson & Cancellation Policy."], ["Refunds", "If you don't benefit within the first 7 days of your subscription, message us from the Messages page or WhatsApp and we refund you within 7 working days to the same payment method."], ["Content", "All site content is for personal learning use; copying or republishing without permission is not allowed. Religious texts are quoted from their named sources."], ["Conduct", "Respect is required in class and in messages; the administration may suspend abusive accounts."], ["Changes", "We may update these terms and will notify you of any important change."]];
+  return pageWrap("📜", ar ? "الشروط والأحكام" : "Terms of Use", "", `<div class="card pol57">${S.map(s => `<h3>${s[0]}</h3><p>${s[1]}</p>`).join("")}<p class="sm"><a href="#" class="accent" onclick="navigate('policy');return false;">${L("policyLink")}</a> · <a href="#" class="accent" onclick="navigate('privacy');return false;">${ar ? "سياسة الخصوصية" : "Privacy Policy"}</a></p></div>`);
+}
+const _renderFooter57 = renderFooter;
+renderFooter = function () { const ar = state.lang === "ar"; return _renderFooter57().replace(`<li><a href="#" onclick="navigate('policy');return false;">${esc(L('policyLink'))}</a></li>`, `<li><a href="#" onclick="navigate('policy');return false;">${esc(L('policyLink'))}</a></li><li><a href="#" onclick="navigate('privacy');return false;">${ar ? "سياسة الخصوصية" : "Privacy Policy"}</a></li><li><a href="#" onclick="navigate('terms');return false;">${ar ? "الشروط والأحكام" : "Terms of Use"}</a></li>`); };
+
+/* ---------- 11) صفحة التحميل: بتعرف جهازك وتنزّل على طول + تثبيت بضغطة ---------- */
+function devKind() { const u = navigator.userAgent || ""; if (/iPad|Macintosh/.test(u) && navigator.maxTouchPoints > 1) return "ipad"; if (/iPhone|iPod/.test(u)) return "ios"; if (/Android/.test(u)) return /Mobile/.test(u) ? "android" : "atab"; if (/Windows/.test(u)) return "win"; if (/Mac/.test(u)) return "mac"; if (/Linux/.test(u)) return "linux"; return "other"; }
+const REL57 = "https://github.com/adarwesh701-byte/Quran-Academy/releases/download/apps-latest/";
+appDownloads = function () {
+  const ar = state.lang === "ar"; const k = devKind(); const T = (a, e) => ar ? a : e;
+  const file = { android: ["itqan-academy.apk", "🤖", T("تحميل تطبيق أندرويد (APK)", "Download Android app (APK)")], atab: ["itqan-academy.apk", "📱", T("تحميل تطبيق التابلت (APK)", "Download tablet app (APK)")], win: ["itqan-academy-win.exe", "🪟", T("تحميل برنامج ويندوز", "Download for Windows")], linux: ["itqan-academy-linux.AppImage", "🐧", T("تحميل لينكس", "Download for Linux")] }[k];
+  const name = { android: T("موبايل أندرويد", "Android phone"), atab: T("تابلت أندرويد", "Android tablet"), ipad: "iPad", ios: "iPhone", win: "Windows", mac: "Mac", linux: "Linux", other: T("جهازك", "your device") }[k];
+  const iosSteps = `<ol class="sm" style="text-align:start;line-height:2;margin:.6rem auto;max-width:26rem"><li>${T("افتح الموقع من Safari", "Open the site in Safari")}</li><li>${T("اضغط زرار المشاركة ⬆️ تحت", "Tap the Share button ⬆️")}</li><li>${T("اختار «إضافة إلى الشاشة الرئيسية» ➕", "Choose “Add to Home Screen” ➕")}</li></ol>`;
+  return `<div class="card dl57"><p class="xs muted">${T("جهازك:", "Your device:")} <b>${esc(name)}</b></p>
+    ${k === "ios" || k === "ipad" ? `<div style="font-size:3rem">📲</div><b>${T("ثبّت التطبيق على", "Install the app on")} ${name}</b>${iosSteps}` : `<button class="btn btn-p btn-lg" onclick="pwaInstall()">📲 ${T("ثبّت التطبيق بضغطة (موصى به)", "Install the app in one tap (recommended)")}</button><p class="xs muted" style="margin:.4rem 0 1rem">${T("بيظهرلك زرار «تثبيت» في نص الشاشة — من غير ملفات ولا تحذيرات أمان.", "An “Install” button appears in the middle of the screen — no files, no security warnings.")}</p>`}
+    ${file ? `<a class="btn btn-o" href="${REL57 + file[0]}" download>${file[1]} ${file[2]}</a><p class="xs muted" style="margin-top:.5rem">${k === "android" || k === "atab" ? T("لو الموبايل قال «تطبيق غير معروف»: ده طبيعي لأي تطبيق من برة جوجل بلاي — اضغط «تثبيت على أي حال». التطبيق آمن ومن الأكاديمية نفسها.", "If your phone warns about an “unknown app”, that's normal for apps outside Google Play — tap “Install anyway”. The app comes from the academy itself.") : k === "win" ? T("لو ويندوز قال «حماية الكمبيوتر»: اضغط «معلومات إضافية» ← «تشغيل على أي حال».", "If Windows shows “protected your PC”: click “More info” → “Run anyway”.") : ""}</p>` : ""}
+    <details style="margin-top:.8rem"><summary class="xs b">${T("أجهزة تانية", "Other devices")}</summary><div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem"><a class="btn btn-o" href="${REL57}itqan-academy.apk" download>🤖 Android</a><a class="btn btn-o" href="${REL57}itqan-academy-win.exe" download>🪟 Windows</a><a class="btn btn-o" href="${REL57}itqan-academy-linux.AppImage" download>🐧 Linux</a><span class="btn btn-o" style="cursor:default" onclick="toast('${T("على الآيفون والماك: افتح الموقع من Safari ← مشاركة ← إضافة إلى الشاشة الرئيسية", "On iPhone/Mac: open in Safari → Share → Add to Home Screen")}')">🍎 iPhone / Mac</span></div></details></div>`;
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.dl57{text-align:center}.pol57 h3{margin-top:1rem}.pol57 p{line-height:1.9}
+header .pwabtn{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;font-weight:800;padding-inline:.7rem!important;width:auto!important;display:inline-flex!important}
+@media(max-width:640px){header .pwabtn span{display:none}}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
