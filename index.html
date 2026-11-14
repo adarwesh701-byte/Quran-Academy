@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v80";
+const UI_VERSION = "2026-11-14-v81";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18184,6 +18184,69 @@ if (Array.isArray(KIT) && !KIT.some(k => k[0] === "mqchallenge")) KIT.splice(4, 
  ["فِي الْحَدِيقَةِ", "🌳", [["شَجَرَةٌ", "shajaratun", "tree", "🌳"], ["زَهْرَةٌ", "zahratun", "flower", "🌸"], ["فَرَاشَةٌ", "faraashatun", "butterfly", "🦋"], ["عُشْبٌ", "3ushbun", "grass", "🌱"], ["أُرْجُوحَةٌ", "urjuuHatun", "swing", "🎠"], ["كُرَةٌ", "kuratun", "ball", "⚽"]], [["ليلى", "انْظُرْ! فَرَاشَةٌ جَمِيلَةٌ!", "unZur! faraashatun jamiila!", "Look! A beautiful butterfly!"], ["يوسف", "إِنَّهَا عَلَى الزَّهْرَةِ.", "innahaa 3ala z-zahra.", "It's on the flower."], ["ليلى", "هَيَّا نَلْعَبُ بِالْكُرَةِ!", "hayyaa nal3abu bil-kura!", "Let's play with the ball!"], ["يوسف", "هَيَّا!", "hayyaa!", "Let's go!"]], ["«على» تدل على المكان فوق الشيء: الفراشةُ على الزهرة.", "3alaa = on: al-faraashatu 3ala z-zahra."]],
  ["فِي الْمَطْبَخِ", "🍳", [["كُوبٌ", "kuubun", "cup", "🥛"], ["صَحْنٌ", "SaHnun", "plate", "🍽️"], ["مِلْعَقَةٌ", "mil3aqatun", "spoon", "🥄"], ["خُبْزٌ", "khubzun", "bread", "🍞"], ["حَلِيبٌ", "Haliibun", "milk", "🥛"], ["مَاءٌ", "maa2un", "water", "💧"]], [["الأم", "هَلْ أَنْتَ جَائِعٌ؟", "hal anta jaa2i3un?", "Are you hungry?"], ["الطفل", "نَعَمْ، وَعَطْشَانُ أَيْضًا.", "na3am, wa 3aTshaanu ayDan.", "Yes, and thirsty too."], ["الأم", "تَفَضَّلْ: خُبْزٌ وَكُوبُ حَلِيبٍ.", "tafaDDal: khubzun wa kuubu Haliib.", "Here you go: bread and a cup of milk."], ["الطفل", "بِسْمِ اللَّهِ… الْحَمْدُ لِلَّهِ!", "bismi llaah… al-Hamdu lillaah!", "In God's name… praise be to God!"]], ["«هل» للسؤال وجوابه: نعم أو لا. «تفضَّلْ» نقولها ونحن نعطي شيئًا.", "hal makes a yes/no question. tafaDDal = here you go."]]
 ].forEach(u => { if (typeof KA !== "undefined" && !KA.some(x => x[0] === u[0])) KA.push(u); });
+
+/* ================= v81: إصلاحات واجهة شاملة — الخط أكبر، التحميل من الهيدر يفتح صفحة التحميل، الصفحة ماتطلعش لفوق، الرجوع لنفس المكان، الضغط برّه النافذة يقفلها، أسماء السور فرانكو، آية اليوم بصوت المنشاوي مجوّد، أصوات الحروف بتقف وتتقصّ ================= */
+/* 1) الخط أكبر ~١٨٪ */
+document.head.insertAdjacentHTML("beforeend", `<style>html{font-size:calc(18.9px * var(--fz,1))!important}@media(max-width:760px){html{font-size:calc(17.6px * var(--fz,1))!important}}</style>`);
+/* 2) زرار التحميل فوق ← صفحة التحميل حسب الجهاز */
+const _renderBell81 = renderBell; renderBell = function () { return _renderBell81().replace(/onclick="pwaInstall\(\)"/g, `onclick="navigate('app')"`); };
+const _renderHeader81 = renderHeader; renderHeader = function () { return _renderHeader81().replace(/(class="ibtn pwabtn"[^>]*?)onclick="pwaInstall\(\)"/g, `$1onclick="navigate('app')"`); };
+/* 3) الصفحة ماتطلعش لفوق مع أي تحديث/تحميل + تفتكر انت كنت فين جوه كل قسم */
+const RST81 = { fusha: ["fuU", "fuT", "fuLv", "fuL"], egyptian: ["fuU", "fuT", "fuLv", "fuL"], kidsar: ["fuU", "fuT", "fuL"], ilm: ["ilmS", "ilmL", "ilmKid"], reading: ["rdStage", "rdKid"], nahw: ["nhU"], makharij: ["mkL"], kidsmushaf: ["kmS"], library: ["mqTab"] };
+let __rt81 = null;
+function sub81() { const ks = RST81[state.route] || []; return ks.map(k => state[k] == null ? "" : String(state[k])).join(","); }
+function rstSave81(rt) { const ks = RST81[rt]; if (!ks) return; const o = {}; ks.forEach(k => { if (state[k] != null) o[k] = state[k]; }); try { const all = JSON.parse(localStorage.getItem("itqan_rst") || "{}"); all[rt] = o; localStorage.setItem("itqan_rst", JSON.stringify(all)); } catch (e) {} }
+function rstLoad81(rt) { const ks = RST81[rt]; if (!ks) return; try { const o = (JSON.parse(localStorage.getItem("itqan_rst") || "{}"))[rt] || {}; ks.forEach(k => { if (state[k] == null && o[k] != null) state[k] = o[k]; }); } catch (e) {} }
+const SCR81 = {};
+window.addEventListener("scroll", () => { if (__rt81) SCR81[__rt81 + "|" + sub81()] = window.scrollY; }, { passive: true });
+const _render81 = render;
+render = function () {
+  const app = document.getElementById("app"); const y = window.scrollY; const prevRt = __rt81, prevSub = prevRt === state.route ? sub81() : null;
+  if (prevRt && prevRt !== state.route) rstSave81(prevRt);
+  if (prevRt !== state.route) rstLoad81(state.route);
+  const same = prevRt === state.route; const key = state.route + "|" + sub81();
+  if (app && same) app.style.minHeight = app.offsetHeight + "px";
+  const r = _render81.apply(this, arguments); __rt81 = state.route;
+  if (app && same) { if (sub81() === prevSub) { if (Math.abs(window.scrollY - y) > 30) window.scrollTo({ top: y, behavior: "instant" }); } else if (SCR81[key] > 0) window.scrollTo({ top: SCR81[key], behavior: "instant" }); clearTimeout(render.__mh); render.__mh = setTimeout(() => { app.style.minHeight = ""; }, 900); }
+  if (state.route) rstSave81(state.route);
+  return r;
+};
+/* 4) زرار «رجوع» بيرجعك للصفحة اللي كنت فيها فعلًا (مش صفحة القسم) */
+const NAV81 = []; (function () { const push = () => { const h = location.hash || "#/home"; if (NAV81[NAV81.length - 1] !== h) NAV81.push(h); if (NAV81.length > 50) NAV81.shift(); }; window.addEventListener("hashchange", push); const _ps = history.pushState.bind(history); history.pushState = function (a, b, u) { const r = _ps(a, b, u); push(); return r; }; push(); })();
+function back81() { if (state.fuQ) { state.fuQ = null; return render(); } if (state.fuU != null && ["fusha", "egyptian", "kidsar"].includes(state.route)) { state.fuU = null; return render(); } if (state.ilmQ) { state.ilmQ = null; return render(); } if (state.ilmL != null && state.route === "ilm") { state.ilmL = null; return render(); } if (NAV81.length > 1) { history.back(); return; } navigate("home"); }
+const _pageWrap81 = pageWrap; pageWrap = function (icon, title, sub, inner, max) { return _pageWrap81(icon, title, sub, inner, max).replace(/<div class="crumb">/, `<div class="crumb"><a href="#" class="bk81" onclick="back81();return false;">${state.lang === "ar" ? "→ رجوع" : "← Back"}</a> · `); };
+/* 5) الضغط برّه أي نافذة يقفلها */
+document.addEventListener("click", e => {
+  const ov = e.target; if (!(ov instanceof Element)) return;
+  if (!ov.matches(".modal, .hlpov, .rm-modal, .svm, #edModal, #fpM, #lrModal, #mmModal, #tjWI, .fpmodal")) return;
+  if (ov.getAttribute("onclick")) return; // عنده قفل خاص بيه
+  const btn = [...ov.querySelectorAll("button, a")].find(b => /^(✕|×|✖|❌|x|X)$/.test((b.textContent || "").trim()) || /إغلاق|اقفل|إلغاء|Close|Cancel/.test(b.textContent || "") || /close|cls/i.test(b.className));
+  if (btn) btn.click(); else ov.remove();
+});
+/* 6) أسماء السور: فرانكو بالنطق العربي في أي لغة غير العربي — من غير ترجمة المعنى */
+const _locText81 = locText;
+locText = function (o) {
+  const t = _locText81(o); if (state.lang === "ar" || !o || typeof o !== "object") return t; const a = o.ar || "";
+  const m = a.match(/^\s*(\d+)\s*[.\-–]\s*سورة\s+(.+)$/) || a.match(/^\s*سورة\s+(.+)$/);
+  if (m) { const n = m.length === 3 ? +m[1] : SURAHS.indexOf(m[1].trim()) + 1; if (n > 0 && SURAHS_EN[n - 1]) return (m.length === 3 ? n + ". " : "") + "Surat " + SURAHS_EN[n - 1]; }
+  const i = SURAHS.indexOf(a.trim()); if (i >= 0) return SURAHS_EN[i]; return t;
+};
+sName = function (n) { return state.lang === "ar" ? SURAHS[n - 1] : SURAHS_EN[n - 1]; };
+/* 7) آية اليوم: بصوت الشيخ المنشاوي (مجوّد) */
+const _dailyAyahCard81 = dailyAyahCard;
+dailyAyahCard = function () { const h = _dailyAyahCard81(); const k = daPick(); return h.replace(/eaPlay\('[^']*'\)">🔊 ([^<]*)</, `eaPlay('${eaUrl("Minshawy_Mujawwad_192kbps", k)}')">🔊 $1 <small class="xs muted">(${state.lang === "ar" ? "المنشاوي مجوّد" : "Al-Minshawi, mujawwad"})</small><`); };
+/* 8) أصوات الحروف: صوت واحد بس يشتغل، يقف لوحده، ودوسة تانية توقفه؛ والتسجيل يقف لوحده بعد ٣ ثواني ويتقص الصمت من الأول والآخر */
+let __lh81 = null;
+lhPlay = function (c, h, fb) { if (__lh81 && !__lh81.paused) { __lh81.pause(); if (__lh81.__k === c + h) { __lh81 = null; return; } } const u = lhUrl(c, h); if (!u) return rdSay(fb); const a = new Audio(u); a.__k = c + h; __lh81 = a; a.play().catch(() => {}); setTimeout(() => { if (__lh81 === a) a.pause(); }, 3500); };
+async function trim81(blob) {
+  try { const ac = new (window.AudioContext || window.webkitAudioContext)(); const buf = await ac.decodeAudioData(await blob.arrayBuffer()); const d = buf.getChannelData(0); const thr = 0.02; let s = 0, e = d.length - 1; while (s < d.length && Math.abs(d[s]) < thr) s++; while (e > s && Math.abs(d[e]) < thr) e--; const pad = Math.floor(buf.sampleRate * 0.08); s = Math.max(0, s - pad); e = Math.min(d.length - 1, e + pad); const n = e - s; if (n < buf.sampleRate * 0.15) return blob;
+    const sr = buf.sampleRate, out = new DataView(new ArrayBuffer(44 + n * 2)); const w = (o, str) => [...str].forEach((ch, i) => out.setUint8(o + i, ch.charCodeAt(0)));
+    w(0, "RIFF"); out.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true); out.setUint32(24, sr, true); out.setUint32(28, sr * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true); w(36, "data"); out.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, d[s + i])); out.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true); } ac.close(); return new Blob([out], { type: "audio/wav" }); } catch (e) { return blob; }
+}
+lhRec = async function (c, h, btn) { const k = c + h; if (__lhRec[k]) { __lhRec[k].stop(); return; } let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return; } const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; r.ondataavailable = e => e.data.size && ch.push(e.data); r.onstop = async () => { st.getTracks().forEach(t => t.stop()); delete __lhRec[k]; const t = await trim81(new Blob(ch, { type: r.mimeType || "audio/webm" })); lhUpload(c, h, new File([t], `l.${t.type === "audio/wav" ? "wav" : /mp4/.test(t.type) ? "m4a" : "webm"}`, { type: t.type })); }; __lhRec[k] = r; r.start(); if (btn) { btn.textContent = "⏹"; btn.classList.add("rec59on"); } setTimeout(() => { if (__lhRec[k] === r) r.stop(); }, 3000); };
+const _lhUpload81 = lhUpload; lhUpload = async function (c, h, file) { if (file && !/wav/.test(file.type)) { const t = await trim81(file); if (t !== file) file = new File([t], "l.wav", { type: "audio/wav" }); } return _lhUpload81(c, h, file); };
+document.head.insertAdjacentHTML("beforeend", `<style>.bk81{font-weight:800}.crumb{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
