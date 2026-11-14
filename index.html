@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v67";
+const UI_VERSION = "2026-11-14-v68";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16587,8 +16587,8 @@ appDownloads = function () {
   const name = { android: T("موبايل أندرويد", "Android phone"), atab: T("تابلت أندرويد", "Android tablet"), ipad: "iPad", ios: "iPhone", win: "Windows", mac: "Mac", linux: "Linux", other: T("جهازك", "your device") }[k];
   const iosSteps = `<ol class="sm" style="text-align:start;line-height:2;margin:.6rem auto;max-width:26rem"><li>${T("افتح الموقع من Safari", "Open the site in Safari")}</li><li>${T("اضغط زرار المشاركة ⬆️ تحت", "Tap the Share button ⬆️")}</li><li>${T("اختار «إضافة إلى الشاشة الرئيسية» ➕", "Choose “Add to Home Screen” ➕")}</li></ol>`;
   return `<div class="card dl57"><p class="xs muted">${T("جهازك:", "Your device:")} <b>${esc(name)}</b></p>
-    ${k === "ios" || k === "ipad" ? `<div style="font-size:3rem">📲</div><b>${T("ثبّت التطبيق على", "Install the app on")} ${name}</b>${iosSteps}` : `<button class="btn btn-p btn-lg" onclick="pwaInstall()">📲 ${T("ثبّت التطبيق بضغطة (موصى به)", "Install the app in one tap (recommended)")}</button><p class="xs muted" style="margin:.4rem 0 1rem">${T("بيظهرلك زرار «تثبيت» في نص الشاشة — من غير ملفات ولا تحذيرات أمان.", "An “Install” button appears in the middle of the screen — no files, no security warnings.")}</p>`}
-    ${file ? `<a class="btn btn-o" href="${REL57 + file[0]}" download>${file[1]} ${file[2]}</a><p class="xs muted" style="margin-top:.5rem">${k === "android" || k === "atab" ? T("لو الموبايل قال «تطبيق غير معروف»: ده طبيعي لأي تطبيق من برة جوجل بلاي — اضغط «تثبيت على أي حال». التطبيق آمن ومن الأكاديمية نفسها.", "If your phone warns about an “unknown app”, that's normal for apps outside Google Play — tap “Install anyway”. The app comes from the academy itself.") : k === "win" ? T("لو ويندوز قال «حماية الكمبيوتر»: اضغط «معلومات إضافية» ← «تشغيل على أي حال».", "If Windows shows “protected your PC”: click “More info” → “Run anyway”.") : ""}</p>` : ""}
+    ${file ? `<a class="btn btn-p btn-lg" href="${REL57 + file[0]}" download>${file[1]} ${file[2]}</a><p class="xs muted" style="margin-top:.5rem">${k === "android" || k === "atab" ? T("لو الموبايل قال «تطبيق غير معروف»: ده طبيعي لأي تطبيق من برة جوجل بلاي — اضغط «تثبيت على أي حال». التطبيق آمن ومن الأكاديمية نفسها.", "If your phone warns about an “unknown app”, that's normal for apps outside Google Play — tap “Install anyway”. The app comes from the academy itself.") : k === "win" ? T("لو ويندوز قال «حماية الكمبيوتر»: اضغط «معلومات إضافية» ← «تشغيل على أي حال».", "If Windows shows “protected your PC”: click “More info” → “Run anyway”.") : ""}</p>` : ""}
+    ${k === "ios" || k === "ipad" ? `<div style="font-size:3rem">📲</div><b>${T("ثبّت التطبيق على", "Install the app on")} ${name}</b>${iosSteps}` : `<div style="margin-top:.9rem"><button class="btn btn-o" onclick="pwaInstall()">📲 ${T("أو ثبّته بضغطة من المتصفح", "Or install in one tap from the browser")}</button></div>`}
     <details style="margin-top:.8rem"><summary class="xs b">${T("أجهزة تانية", "Other devices")}</summary><div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem"><a class="btn btn-o" href="${REL57}itqan-academy.apk" download>🤖 Android</a><a class="btn btn-o" href="${REL57}itqan-academy-win.exe" download>🪟 Windows</a><a class="btn btn-o" href="${REL57}itqan-academy-linux.AppImage" download>🐧 Linux</a><span class="btn btn-o" style="cursor:default" onclick="toast('${T("على الآيفون والماك: افتح الموقع من Safari ← مشاركة ← إضافة إلى الشاشة الرئيسية", "On iPhone/Mac: open in Safari → Share → Add to Home Screen")}')">🍎 iPhone / Mac</span></div></details></div>`;
 };
 document.head.insertAdjacentHTML("beforeend", `<style>.dl57{text-align:center}.pol57 h3{margin-top:1rem}.pol57 p{line-height:1.9}
