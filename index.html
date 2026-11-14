@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v93";
+const UI_VERSION = "2026-11-14-v94";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18746,6 +18746,25 @@ const _DOMAINS93 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS93(); con
 if (Array.isArray(KIT) && !KIT.some(k => k[0] === "adhkar")) KIT.push(["adhkar", "📿", "الأذكار", "Daily adhkar", ["الصباح والمساء والنوم والصلاة", "عدّاد لكل ذكر"], ["Morning, evening, sleep, prayer", "Tap counters"], "#/adhkar", "#059669"]);
 RST81.adhkar = ["adkT"];
 document.head.insertAdjacentHTML("beforeend", `<style>.adkl{display:grid;gap:.6rem}.adk{text-align:start;cursor:pointer;font:inherit;color:var(--fg);transition:transform .1s}.adk:active{transform:scale(.98)}.adk p{font:1.3rem/2.1 'Amiri',serif;margin:0 0 .4rem}.adk.ok{opacity:.6;border-color:#16a34a}.adkn{font-weight:800;font-size:1.1rem;min-width:4rem;text-align:center;padding:.2rem .6rem;border-radius:99px;background:color-mix(in srgb,var(--accent) 12%,var(--card))}</style>`);
+
+/* ================= v94: المصحف الملوّن — اختيار السورة فوق النص مباشرة، وتصحيح المعلم يظهر على الكلمة زي ما اتكتب بالظبط ================= */
+function mush94(app) {
+  if (!app) return;
+  app.querySelectorAll(".tjtext").forEach(tx => {
+    const card = tx.closest(".card"); if (!card || card.dataset.m94) return; card.dataset.m94 = 1;
+    const sel = [...card.querySelectorAll("select")].find(s => /smpLock|tj\.surah|allAccess\(\)&&!\[1,112\]|tjGo/.test(s.getAttribute("onchange") || "")); if (!sel) return;
+    const bar = document.createElement("div"); bar.className = "tjsel94"; bar.innerHTML = `<span>📖 ${state.lang === "ar" ? "السورة:" : "Surah:"}</span>`; bar.appendChild(sel);
+    const anchor = card.querySelector(".tjpgbar, .tjpnav, .tjtools") && tx.previousElementSibling && /tjpg|tjpnav/.test(tx.previousElementSibling.className || "") ? tx.previousElementSibling : tx; anchor.parentNode.insertBefore(bar, anchor);
+  });
+  const u = typeof mmUser === "function" ? mmUser() : null; if (!u) return;
+  app.querySelectorAll(".tj2 .w.mk").forEach(w => {
+    if (w.querySelector(".mkn94")) return; const vk = w.dataset.v, i = +w.dataset.i; const s = +vk.split(":")[0]; const ms = (state.data[`mm:${u}:${s}`] || []); const m = Array.isArray(ms) ? ms.filter(x => x.vkey === vk && x.w === i && !x.resolved).pop() : null;
+    if (m && m.note) { const n = document.createElement("span"); n.className = "mkn94 notr"; n.textContent = m.note; n.setAttribute("lang", "ar"); w.appendChild(n); }
+  });
+}
+const _render94 = render; render = function () { const r = _render94.apply(this, arguments); try { mush94(document.getElementById("app")); } catch (e) {} return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>.tjsel94{display:flex;gap:.5rem;align-items:center;margin:.6rem 0;padding:.5rem .7rem;border-radius:12px;background:color-mix(in srgb,var(--accent) 8%,var(--card));position:sticky;top:3.6rem;z-index:4}.tjsel94 select{flex:1;max-width:22rem}
+.tj2 .w.mk{position:relative}.mkn94{display:inline-block;font:600 .8rem/1.3 'Cairo',sans-serif;color:#fff;background:#dc2626;border-radius:8px;padding:.05rem .4rem;margin-inline-start:.2rem;vertical-align:super;white-space:nowrap;max-width:14rem;overflow:hidden;text-overflow:ellipsis}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
