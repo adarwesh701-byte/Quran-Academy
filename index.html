@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v122";
+const UI_VERSION = "2026-11-14-v123";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20065,6 +20065,27 @@ if (Array.isArray(KIT) && !KIT.some(k => k[0] === "alam")) KIT.push(["alam", "�
 Object.assign(HELP, { alam: { ar: ["اختار المجموعة أو دوّر بالاسم.", "اقرأ المختصر، ودوس «عرض بالتفصيل» لسيرته كاملة ومرجعها."], en: ["Filter or search.", "Tap Details for the full bio."] } });
 BEN.alam = "تعرف قدوتك من الصحابة والأئمة وتتعلم من سيرتهم.";
 RST81.alam = ["alG", "alO", "alQ"];
+
+/* ================= v123: أسماء الدرجات بالـ Do Re Mi في كل مكان (بدل الأسماء العربية رست/دوكاه/سيكاه…) — الراست = Do ================= */
+const SOLF = ["Do", "Do♯", "Re", "Mi♭", "Mi", "Fa", "Fa♯", "Sol", "La♭", "La", "Si♭", "Si"];
+function solf(cents) { const c = Math.round(cents / 50) * 50; const oct = Math.floor(c / 1200); const r = ((c % 1200) + 1200) % 1200; const semi = Math.floor(r / 100); const half = r % 100 === 50;
+  let n; if (!half) n = SOLF[semi]; else { const up = SOLF[(semi + 1) % 12]; n = up.replace(/[♯♭]/g, "") + (up.includes("♭") ? "♭♭½" : "½♭"); if (up.includes("♯")) n = SOLF[semi] + "½♯"; }
+  return n + (oct < 0 ? "↓" : oct > 0 ? "↑".repeat(oct) : ""); }
+noteName = function (abs) { return solf(abs); };
+/* نصوص الشرح: نبدّل اسم الدرجة العربي بالـ Do Re Mi (بس لما يكون اسم درجة مش اسم مقام) */
+const DEG_MAP = [["الراست", "Do"], ["رست", "Do"], ["الدوكاه", "Re"], ["دوكاه", "Re"], ["السيكاه", "Mi½♭"], ["الجهاركاه", "Fa"], ["جهاركاه", "Fa"], ["النوا", "Sol"], ["النوى", "Sol"], ["الحسيني", "La"], ["الأوج", "Si½♭"], ["الكردان", "Do↑"], ["المحيّر", "Re↑"], ["المحير", "Re↑"], ["اليكاه", "Sol↓"], ["العشيران", "La↓"], ["العراق", "Si½♭↓"], ["الكوشت", "Si↓"], ["البوسليك", "Mi"], ["الماهور", "Si"], ["الشهناز", "Re♯↑"]];
+const DEG_CTX = /(قرار(?:ه|ها)?|جواب|على|درجة|الدرجة|من|إلى|لحد|عند|فوق|تحت|ل)\s+/;
+function solfText(t) {
+  let s = t;
+  DEG_MAP.forEach(([a, b]) => {
+    if (/^ال(دوكاه|جهاركاه|نوا|نوى|حسيني|أوج|كردان|يكاه|عشيران|كوشت|بوسليك)$/.test(a) || a === "دوكاه" || a === "جهاركاه") s = s.replace(new RegExp("(^|[\\s(«،,.:؛])" + a + "(?=$|[\\s)»،,.:؛])", "g"), (m, p) => p + b);
+    else s = s.replace(new RegExp("(" + DEG_CTX.source + ")" + a + "(?=$|[\\s)»،,.:؛])", "g"), (m, p) => p + b);
+  });
+  return s;
+}
+const SOLF_ROUTES = ["maqamat", "tuner", "tahwil", "mqchallenge", "library", "d", "maqam-game", "placement"];
+function solfDom(root) { if (!root) return; const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement && n.parentElement.closest("script,style,textarea,input,.notr,[contenteditable]") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT }); const L = []; let n; while ((n = w.nextNode())) if (/(راست|رست|دوكاه|سيكاه|جهاركاه|النوا|النوى|الحسيني|الأوج|الكردان|المحي|اليكاه|العشيران|العراق|الكوشت|البوسليك|الماهور|الشهناز)/.test(n.nodeValue)) L.push(n); L.forEach(x => { const v = solfText(x.nodeValue); if (v !== x.nodeValue) x.nodeValue = v; }); }
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { if (SOLF_ROUTES.includes(state.route) && state.lang !== "en") solfDom(document.getElementById("app")); } catch (e) {} return x; }; })(render);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
