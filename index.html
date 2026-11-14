@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v129";
+const UI_VERSION = "2026-11-14-v130";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20431,6 +20431,23 @@ render = function () { if (state.route === "studio") { const app = document.getE
 renderBell = (function (_rb) { return function () { const h = _rb(); if (realRole() !== "owner" || state.preview) return h; return `<button class="ibtn" title="${state.lang === "ar" ? "استوديو المالك (صوت كل درجة، المساعد الذكي، النظرية)" : "Owner studio"}" onclick="go16('studio')">🎛️</button>` + h; }; })(renderBell);
 /* في «درجات المقام»: لو المالك حط صوت شيخ للدرجة دي يظهر زرار يسمعه */
 mqdPlayOne = (function (_p) { return function (i) { _p(i); try { const m = MQ.find(x => x.id === state.mqd.mid); const hz = mqdTonicHz(m) * Math.pow(2, mqDeg(m, i) / 1200); const L = dvFor(hz); if (L.length) { const x = L[Math.floor(Math.random() * L.length)]; setTimeout(() => dvPlay(x.rec, x.k, x.t0, x.t1), 1300); } } catch (e) {} }; })(mqdPlayOne);
+
+/* ================= v130: الطالب مايتوهش — لوحة «ابدأ من هنا» بـ ٤ زراير كبار فوق صفحته: كمّل من مكانك، حصتي الجاية، أقسامي، اسأل المعلم ================= */
+const LEARN_SKIP = ["home", "dashboard", "profile", "pricing", "pay", "login", "signup", "verify-email", "complete", "acl", "studio", "display", "about", "contact", "policy", "privacy"];
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { if (state.auth.user && !LEARN_SKIP.includes(state.route)) { const h1 = document.querySelector("#app h1"); localStorage.setItem("itqan_last", JSON.stringify({ r: state.route, a: state.pageArg || null, s: state.libSec || null, t: (h1 && h1.innerText || "").slice(0, 60), at: Date.now() })); } } catch (e) {} return x; }; })(render);
+function goLast130() { try { const l = JSON.parse(localStorage.getItem("itqan_last") || "null"); if (!l) return navigate("library"); if (l.r === "library" && l.s) return libGo(l.s); if (PAGES16.includes(l.r)) return go16(l.r, l.a || undefined); navigate(l.r); } catch (e) { navigate("library"); } }
+function startPanel130() {
+  const ar = state.lang === "ar"; let last = null; try { last = JSON.parse(localStorage.getItem("itqan_last") || "null"); } catch (e) {}
+  const btn = (ic, t, s, on, cls) => `<button class="sp130b ${cls || ""}" onclick="${on}"><span class="sp130i">${ic}</span><b>${t}</b><small>${s}</small></button>`;
+  return `<div class="sp130" id="sp130"><div class="sp130h"><b>👋 ${ar ? "ابدأ من هنا" : "Start here"}</b><span class="xs muted">${ar ? "أهم ٤ حاجات — والباقي تحت" : "The 4 essentials — everything else below"}</span></div><div class="sp130g">
+    ${btn("▶️", ar ? "كمّل من مكانك" : "Continue", last ? esc(last.t || last.r) : (ar ? "ابدأ أول درس" : "Start your first lesson"), "goLast130()", "main")}
+    ${btn("📅", ar ? "حصتي الجاية" : "My next lesson", ar ? "مواعيدك والفصل" : "Schedule & classroom", "state.dash.tab='lessons';navigate('dashboard')")}
+    ${btn("🧭", ar ? "أقسامي" : "My sections", ar ? "مقامات، تجويد، حفظ، عربي…" : "Maqamat, tajweed, hifz, Arabic…", "navigate('library')")}
+    ${btn("💬", ar ? "اسأل المعلم" : "Ask the teacher", ar ? "ابعت رسالة" : "Send a message", "state.dash.tab='messages';navigate('dashboard')")}
+  </div></div>`;
+}
+render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { if ((state.route === "dashboard" || state.route === "home") && state.auth.user && (realRole() === "student" || state.preview === "student") && !document.getElementById("sp130") && !(state.dash && state.dash.tab && state.route === "dashboard" && !["home", "overview", "lessons", null, undefined, ""].includes(state.dash.tab))) { const app = document.getElementById("app"); const h1 = app && app.querySelector("h1"); const host = h1 ? (h1.closest(".card,section") || h1.parentElement) : (app && app.querySelector("section")); if (host) host.insertAdjacentHTML(h1 ? "afterend" : "afterbegin", startPanel130()); } } catch (e) {} return x; }; })(render);
+document.head.insertAdjacentHTML("beforeend", `<style>.sp130{margin:1rem auto;max-width:1200px;padding:0 1rem}.sp130h{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.5rem}.sp130h b{font-size:1.2rem}.sp130g{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.7rem}.sp130b{display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;text-align:start;border:2px solid var(--line);border-radius:1.1rem;padding:1rem;background:var(--card);color:var(--fg);cursor:pointer;transition:transform .15s,border-color .15s}.sp130b:hover{transform:translateY(-3px);border-color:var(--accent)}.sp130b.main{background:var(--accent);color:var(--accent-fg,#fff);border-color:var(--accent)}.sp130b.main small{color:inherit;opacity:.85}.sp130i{font-size:1.8rem}.sp130b b{font-size:1.1rem}.sp130b small{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
