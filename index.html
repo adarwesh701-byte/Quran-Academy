@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v113";
+const UI_VERSION = "2026-11-14-v114";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -19604,6 +19604,77 @@ function ctlPanel113() {
 }
 function ctlBtn113() { let b = document.getElementById("ctl113"); if (!b) { b = document.createElement("button"); b.id = "ctl113"; b.onclick = ctlPanel113; document.body.appendChild(b); } b.innerHTML = `🌐<span>${state.lang === "ar" ? "اللغة والعرض" : "Language & display"}</span>`; }
 render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { ctlBtn113(); } catch (e) {} return x; }; })(render);
+
+/* ================= v114: التسجيل — صفحة «أكّد إيميلك» واضحة فورًا بعد التسجيل + الدخول بجوجل أو فيسبوك بدون تأكيد + استكمال البيانات بعدها ================= */
+PAGES16.push("verify-email", "complete");
+/* ١) صفحة تأكيد الإيميل */
+function renderVerifyEmail() {
+  const ar = state.lang === "ar"; const email = state.verifyEmail || (state.auth.user && state.auth.user.email) || ""; const [nm, url] = mailLink(email);
+  const step = (n, t, s) => `<div class="ve114s"><span>${n}</span><div><b>${t}</b><p class="sm muted">${s}</p></div></div>`;
+  return `<section class="sec"><div class="wrap" style="max-width:34rem"><div class="card ve114"><div style="font-size:4rem;text-align:center">📧</div>
+    <h1 style="text-align:center;font-size:1.6rem">${ar ? "فاضل خطوة واحدة: أكّد إيميلك" : "One step left: confirm your email"}</h1>
+    <div class="notice" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:.8rem;padding:.7rem;margin:.6rem 0;text-align:center"><b>⚠️ ${ar ? "مش هتقدر تدخل حسابك غير لما تأكّد الإيميل" : "You can't log in until you confirm your email"}</b></div>
+    <p style="text-align:center">${ar ? "بعتنالك رسالة على" : "We sent a message to"} <b dir="ltr">${esc(email)}</b></p>
+    ${step("١", ar ? "افتح الإيميل بتاعك" : "Open your email", ar ? `دوس الزرار تحت يفتحلك ${esc(nm)} — ولو مش لاقي الرسالة دوّر في «Spam» أو «الرسائل غير المرغوب فيها».` : `Tap below to open ${esc(nm)} — check Spam if you can't find it.`)}
+    ${step("٢", ar ? "دوس «تأكيد» جوه الرسالة" : "Press “Confirm” in the message", ar ? "الرسالة جاية من «أكاديمية إتقان» — دوسة واحدة وحسابك يتفعّل." : "One tap activates your account.")}
+    ${step("٣", ar ? "ارجع هنا وادخل" : "Come back and log in", ar ? "بعد التأكيد هتدخل علطول — أو ادخل بإيميلك وباسوردك." : "After confirming you'll be signed in — or log in with email and password.")}
+    <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:1rem">
+      <a class="btn btn-p btn-lg btn-full" href="${esc(url)}" target="_blank" rel="noopener">📬 ${ar ? "افتح" : "Open"} ${esc(nm)}</a>
+      <button class="btn btn-o btn-full" onclick="verifyResend(${esc(JSON.stringify(email))})">🔁 ${ar ? "ابعت الرسالة تاني" : "Resend the email"}</button>
+      <button class="btn btn-o btn-full" onclick="state.authMsg=null;navigate('login')">✅ ${ar ? "أكّدت — ادخل دلوقتي" : "I confirmed — log in"}</button>
+      <button class="btn btn-o btn-full" onclick="oauthGo114('google')">${GICON114} ${ar ? "أو ادخل بجوجل علطول من غير تأكيد" : "Or continue with Google — no confirmation needed"}</button>
+    </div></div></div></section>`;
+}
+document.head.insertAdjacentHTML("beforeend", `<style>.ve114s{display:flex;gap:.8rem;align-items:flex-start;margin:.8rem 0}.ve114s>span{flex:none;width:2.2rem;height:2.2rem;border-radius:50%;background:var(--accent);color:var(--accent-fg,#fff);display:flex;align-items:center;justify-content:center;font-weight:800}.ve114s p{margin:.15rem 0 0}
+.oa114{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem}.oa114 .btn{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--card);border:1px solid var(--line);color:var(--fg)}.oa114 .fb{background:#1877f2;color:#fff;border-color:#1877f2}.oa114hr{display:flex;align-items:center;gap:.6rem;color:var(--muted);font-size:.85rem;margin-top:1rem}.oa114hr:before,.oa114hr:after{content:"";flex:1;border-top:1px solid var(--line)}</style>`);
+/* بعد التسجيل: الصفحة دي تظهر علطول (بدل الرسالة الصغيرة) */
+const _signUpUser114 = signUpUser;
+signUpUser = async function (o) { const r = await _signUpUser114(o); if (r === "confirm") { state.verifyEmail = o.email; state.authMsg = null; state.route = "verify-email"; try { history.pushState(null, "", "#/verify-email"); } catch (e) {} setTimeout(() => { const m = document.getElementById("fpM"); if (m) m.remove(); window.scrollTo({ top: 0 }); }, 60); } return r; };
+/* لو حاول يدخل قبل التأكيد */
+const _doLogin114 = doLogin;
+doLogin = async function () { const em = ((document.getElementById("au_email") || {}).value || "").trim(); const orig = toast; let hit = false; toast = function (m, e) { if (/not confirmed/i.test(String(m))) { hit = true; return; } return orig.apply(this, arguments); }; try { await _doLogin114.apply(this, arguments); } finally { toast = orig; } if (hit) { state.busy = false; state.verifyEmail = em; navigate("verify-email"); } };
+/* ٢) الدخول بجوجل أو فيسبوك */
+const GICON114 = `<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+async function oauthGo114(p) {
+  const ar = state.lang === "ar"; try { localStorage.setItem("itqan_oauth", p); } catch (e) {}
+  const { error } = await sb.auth.signInWithOAuth({ provider: p, options: { redirectTo: location.origin + location.pathname } });
+  if (error) toast(/not enabled|Unsupported provider/i.test(error.message) ? (ar ? `الدخول بـ${p === "google" ? "جوجل" : "فيسبوك"} لسه متفعّلش — جرّب بالإيميل دلوقتي` : "This sign-in option isn't enabled yet — use email for now") : error.message, true);
+}
+const _renderAuth114 = renderAuth;
+renderAuth = function () {
+  const h = _renderAuth114(); const ar = state.lang === "ar"; const su = state.route === "signup";
+  const box = `<div class="oa114hr">${ar ? "أو" : "or"}</div><div class="oa114"><button type="button" class="btn btn-lg" onclick="oauthGo114('google')">${GICON114} ${su ? (ar ? "سجّل بجوجل — بدون تأكيد إيميل" : "Sign up with Google — no email confirmation") : (ar ? "ادخل بجوجل" : "Continue with Google")}</button><button type="button" class="btn btn-lg fb" onclick="oauthGo114('facebook')"><b style="font:900 1.1rem Arial">f</b> ${su ? (ar ? "سجّل بفيسبوك" : "Sign up with Facebook") : (ar ? "ادخل بفيسبوك" : "Continue with Facebook")}</button></div>`;
+  return h.replace("</form>", "</form>" + box);
+};
+/* ٣) استكمال البيانات بعد جوجل/فيسبوك */
+function oauthUser114() { const u = state.auth.user; if (!u) return false; const pr = (u.app_metadata && u.app_metadata.provider) || ""; return pr === "google" || pr === "facebook" || (u.identities || []).some(i => i.provider === "google" || i.provider === "facebook"); }
+function needsComplete114() { const u = state.auth.user, p = state.auth.profile; if (!u || !p || !oauthUser114()) return false; if (lsGet("itqan_done_" + u.id)) return false; return !p.phone || !p.country; }
+function renderComplete() {
+  const ar = state.lang === "ar"; const u = state.auth.user; const p = state.auth.profile || {}; if (!u) return renderAuth();
+  const c = p.country || guessCountry();
+  return `<section class="sec"><div class="wrap" style="max-width:30rem"><div class="card"><div style="text-align:center;font-size:3rem">🎉</div><h1 style="text-align:center;font-size:1.5rem">${ar ? "أهلًا بيك! كمّل بياناتك" : "Welcome! Complete your details"}</h1><p class="sm muted" style="text-align:center">${ar ? "دخلت بنجاح — فاضل شوية بيانات عشان نظبطلك المواعيد والأسعار." : "You're in — a few details so we can set your schedule and prices."}</p>
+    <form onsubmit="event.preventDefault();complete114()" style="display:flex;flex-direction:column;gap:.8rem;margin-top:.8rem">
+      <div><label class="l">${L("fullName")}</label><input class="in" id="cp_name" value="${esc(p.real_name || (u.user_metadata || {}).full_name || (u.user_metadata || {}).name || "")}" required></div>
+      <div><label class="l">${L("phone")} <span class="xs muted">— ${ar ? "للتواصل على واتساب" : "for WhatsApp"}</span></label><input class="in" id="cp_phone" type="tel" dir="ltr" placeholder="+20 10..." value="${esc(p.phone || "")}" required></div>
+      <div class="fgrid"><div><label class="l">${L("country")}</label>${countrySelect("cp_country", c, "document.getElementById('cp_cur').value=countryCur(this.value)")}</div><div><label class="l">${L("currency")}</label>${currencySelect("cp_cur", p.currency || countryCur(c))}</div></div>
+      <div><label class="l">${ar ? "اعمل باسورد (اختياري)" : "Create a password (optional)"} <span class="xs muted">— ${ar ? "عشان تقدر تدخل بالإيميل كمان" : "so you can also log in by email"}</span></label><input class="in" id="cp_pw" type="password" minlength="6" autocomplete="new-password"></div>
+      <button class="btn btn-p btn-lg btn-full">✅ ${ar ? "حفظ وابدأ" : "Save & start"}</button>
+      <button type="button" class="btn btn-o btn-full" onclick="lsSet('itqan_done_'+state.auth.user.id,'1');navigate('dashboard')">${ar ? "بعدين" : "Later"}</button>
+    </form></div></div></section>`;
+}
+async function complete114() {
+  const ar = state.lang === "ar"; const u = state.auth.user; const v = id => ((document.getElementById(id) || {}).value || "").trim();
+  const upd = { real_name: v("cp_name"), phone: v("cp_phone"), country: v("cp_country"), currency: v("cp_cur") }; if (!upd.phone) return toast(L("fillAll"), true);
+  const { error } = await sb.from("profiles").update(upd).eq("id", u.id); if (error) return toast(error.message, true);
+  const pw = v("cp_pw"); if (pw) { if (pw.length < 6) return toast(L("pwShort"), true); const r = await sb.auth.updateUser({ password: pw }); if (r.error) toast(r.error.message, true); }
+  lsSet("itqan_done_" + u.id, "1"); await loadProfile(); toast("✅ " + (ar ? "اتحفظ — أهلًا بيك في الأكاديمية!" : "Saved — welcome!")); navigate("dashboard");
+}
+const _render114 = render;
+render = function () {
+  if (state.route === "verify-email" || state.route === "complete") { const app = document.getElementById("app"); if (!app) return; let b; try { b = state.route === "complete" ? renderComplete() : renderVerifyEmail(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter(); try { applyOv(app); uilApply(); } catch (e) {} return; }
+  if (state.auth && state.auth.user && state.route !== "complete" && needsComplete114() && !state.__cp114) { state.__cp114 = true; state.route = "complete"; try { history.replaceState(null, "", "#/complete"); } catch (e) {} return render(); }
+  return _render114.apply(this, arguments);
+};
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
