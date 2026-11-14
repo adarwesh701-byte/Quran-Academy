@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-13-v55";
+const UI_VERSION = "2026-11-14-v56";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16195,6 +16195,245 @@ document.head.insertAdjacentHTML("beforeend", `<style>.rm-hostb{position:absolut
 
 /* التابلت: تصميم خاص — محتوى أكبر وأعمدة أكتر */
 document.head.insertAdjacentHTML("beforeend", `<style>@media (min-width:700px) and (max-width:1280px) and (hover:none){html{font-size:17.5px}.wrap{max-width:100%!important;padding-inline:1.4rem!important}.dmgrid,.hvgrid,.libgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.kitgrid,.stgrid,.pmap{grid-template-columns:repeat(3,minmax(0,1fr))!important}.tjtext,.mtv{font-size:2.1rem!important;line-height:2.5!important}.btn,.rm-btn,.opt{min-height:48px}.bnav a{font-size:.85rem}.hvcard{min-height:180px}.lvstage{max-height:78vh}}@media (min-width:700px) and (max-width:1280px) and (hover:none) and (orientation:landscape){.dmgrid,.hvgrid,.libgrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}</style>`);
+
+/* ================= v56: هيكل جديد للهيدر والشريط ومساحتي + ترتيب الرئيسية + المعلم أولًا + تحسينات المصحف وكارت الآية ================= */
+Object.assign(UI.ar, { mbgT: "اختيار خلفية المصحف", n56Join: "انضم كمعلم", n56Tools: "الأدوات", n56Pk: "باقات الاشتراك مع مدرس", n56Free: "احصل على اشتراك مجاني", n56Sim: "المحاكي", n56MyT: "مساحتي", n56MyS: "كل حاجاتك في مكان واحد", n56Dash: "لوحة التحكم الكاملة", n56ToolsS: "كل أدوات الأكاديمية — اختار وابدأ", n56AddB: "➕ أضف قسم للرئيسية", n56Srch: "دوّر في القرآن كله (من غير تشكيل)…", n56Res: "نتيجة", n56Pick: "اختار السورة والآية", n56Load: "بنحمّل المصحف للبحث…", n56Rec: "اسم القارئ / الشيخ", n56AyTo: "لحد آية", n56Voice: "بصوت", n56Lnk: "رابط الحصة", n56LnkS: "الرابط ده هو رابط الحصة نفسها: الطالب يقدر يدخل بيه في أي وقت طول ما الحصة لسه ما اتأكدتش، وبعد تأكيد الحصة بيقفل تلقائيًا. محدش غير طالب الحصة ومعلمها يقدر يدخل.", n56Teach: "معلمك + الموقع = إتقان أسرع", n56TeachS: "طول ما انت مشترك مع معلم في مسار، كل محتوى المسار ده في الموقع مفتوح لك مجانًا. أدوات الموقع والذكاء الاصطناعي بتساعدك تتمرن، لكن المعلم هو اللي بيسمعك ويصحّحلك ويوجّهك — ومفيش حاجة تغني عنه.", n56Open: "مفتوح لك مع معلمك:" });
+Object.assign(UI.en, { mbgT: "Mushaf background", n56Join: "Join as a teacher", n56Tools: "Tools", n56Pk: "Packages with a teacher", n56Free: "Get a free subscription", n56Sim: "Simulator", n56MyT: "My space", n56MyS: "Everything of yours in one place", n56Dash: "Full dashboard", n56ToolsS: "All academy tools — pick one and start", n56AddB: "➕ Add a home section", n56Srch: "Search the whole Quran (no diacritics needed)…", n56Res: "results", n56Pick: "Pick the surah and ayah", n56Load: "Loading the mushaf for search…", n56Rec: "Reciter / sheikh name", n56AyTo: "to ayah", n56Voice: "Voice of", n56Lnk: "Lesson link", n56LnkS: "This is the lesson's own link: the student can enter with it any time while the lesson is not yet confirmed; once the lesson is confirmed it closes automatically. Only the lesson's student and teacher can enter.", n56Teach: "Your teacher + the site = faster mastery", n56TeachS: "While you are subscribed with a teacher in a track, all of that track's content on the site is open to you for free. The site's tools and AI help you practise — but your teacher is the one who listens, corrects and guides you, and nothing replaces that.", n56Open: "Open for you with your teacher:" });
+
+/* ---------- 1) المعلم: الطالب المشترك مع معلم ياخد محتوى المسار مجانًا ---------- */
+function tTracks() {
+  if (!state.auth.user || role() !== "student") return [];
+  const d = useData("tTracks56", async () => { const since = new Date(Date.now() - 45 * 864e5).toISOString(); const { data } = await sb.from("lessons").select("track,status,start_time").eq("student_id", state.auth.user.id).gte("start_time", since).limit(300); return [[...new Set((data || []).filter(l => !/cancel/i.test(l.status || "")).map(l => l.track).filter(Boolean))]]; });
+  return Array.isArray(d) && Array.isArray(d[0]) ? d[0] : [];
+}
+function secRootTrack(s) { const secs = sectionsData(); let x = s, g = 0; while (x && x.parent_id && g++ < 8) x = Array.isArray(secs) ? secs.find(y => y.id === x.parent_id) : null; const t = ((x && x.title) || {}).ar || ""; if (/^التجويد/.test(t)) return "tajweed"; if (/المقامات/.test(t)) return "maqamat"; if (/حفظ|التحفيظ/.test(t)) return "hifz"; if (/تفسير|العلوم/.test(t)) return "tafseer"; if (/عربي|العربية/.test(t)) return "arabic"; return ""; }
+function tHas(k) { const t = tTracks(); if (k === "tajweed") return t.includes("tajweed") || t.includes("ijaza"); if (k === "arabic") return t.some(x => ["arabic", "egyptian", "gulf", "levantine"].includes(x)); return t.includes(k); }
+const _mqPremium56 = mqPremium; mqPremium = function () { return _mqPremium56.apply(this, arguments) || tHas("maqamat"); };
+const _secUnlocked56 = secUnlocked; secUnlocked = function (s) { if (_secUnlocked56.apply(this, arguments)) return true; const k = s ? secRootTrack(s) : ""; return !!k && tHas(k); };
+const _laOpen56 = laOpen; laOpen = function (u, tr) { return _laOpen56.apply(this, arguments) || tHas("arabic"); };
+const _toolOK56 = toolOK; toolOK = function (t) { if (_toolOK56.apply(this, arguments)) return true; return tTracks().length > 0 && toolMode(t) !== "hidden"; };
+function teacherCard(full) {
+  const t = tTracks(); const ar = state.lang === "ar";
+  return `<div class="card t56card"><h3>👨‍🏫 ${L("n56Teach")}</h3><p class="sm" style="margin:.4rem 0">${L("n56TeachS")}</p>${t.length ? `<p class="sm b">✅ ${L("n56Open")} ${t.map(k => esc(trackTitle(k))).join(" · ")}</p>` : full ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><button class="btn btn-p" onclick="navigate('booking')">✨ ${esc(I18N[state.lang].nav.trial)}</button><button class="btn btn-o" onclick="state.ptab='lessons';navigate('pricing')">👨‍🏫 ${L("n56Pk")}</button></div>` : ""}${ar ? "" : ""}</div>`;
+}
+
+/* ---------- 2) نصوص الدورات: المعلم هو الأساس ---------- */
+(function () {
+  const A = { tajweed: "تعليم أحكام التجويد وقراءة القرآن كما قرأه النبي ﷺ: تلقٍّ مباشر من معلم متقن، تصحيح المخارج والصفات حرفًا حرفًا، وتطبيق عملي على كل حكم في حصص لايف ١:١.", hifz: "حفظ بخطة يومية على مقاسك ومراجعة متباعدة، والمعلم يسمّع لك ويثبّت حفظك ويتابع وردك وواجباتك أسبوعيًا.", maqamat: "تحسين الصوت وأداء التلاوة بالمقامات تحت إشراف معلم: يسمع صوتك ويوجّهك في القرار والجواب والانتقال بين المقامات، مع الالتزام الكامل بأحكام التلاوة.", ijaza: "قراءة كاملة على شيخ مجاز بالسند المتصل إلى النبي ﷺ، بالتصحيح والمتابعة حتى تنال الإجازة.", arabic: "العربية الفصحى من الصفر مع معلم: قراءة وكتابة ونحو ومحادثة بخطة واضحة ومتابعة مستمرة.", tafseer: "فهم معاني الآيات والتدبر مع معلم، من كتب التفسير المعتمدة وبأسلوب هادئ وسهل.", egyptian: "محادثة باللهجة المصرية للحياة اليومية والعمل مع معلم مصري." };
+  const E = { tajweed: "Learn the rules of tajweed and recite the Quran as the Prophet ﷺ recited it: live 1:1 lessons with a qualified teacher who corrects every letter's articulation and traits, with practice on every rule.", hifz: "Memorise with a daily plan made for you and spaced review — your teacher listens to you, consolidates your memorisation and follows up weekly.", maqamat: "Beautify your voice and recitation with the maqamat under a teacher who listens and guides you through low, high and transitions — always within the rules of recitation.", ijaza: "A full recitation to a sheikh with a connected chain (sanad) back to the Prophet ﷺ, with correction and follow-up until you receive the ijazah.", arabic: "Classical Arabic from scratch with a teacher: reading, writing, grammar and conversation with a clear plan.", tafseer: "Understand the meanings of the verses and reflect with a teacher, from the trusted books of tafsir.", egyptian: "Conversational Egyptian Arabic for daily life and work with an Egyptian teacher." };
+  try { Object.entries(A).forEach(([k, v]) => { if (I18N.ar.tracks[k]) I18N.ar.tracks[k].desc = v; }); Object.entries(E).forEach(([k, v]) => { if (I18N.en.tracks[k]) I18N.en.tracks[k].desc = v; }); } catch (e) {}
+})();
+function whyTeacherBlock() {
+  const ar = state.lang === "ar"; const wa = (typeof CONFIG !== "undefined" && CONFIG.whatsapp) || "201091121907";
+  const msg = encodeURIComponent(ar ? "السلام عليكم، عايزين نعمل مجموعة أصحاب في أكاديمية إتقان 👥" : "Assalamu alaikum, we'd like to join Itqan Academy as a group of friends 👥");
+  const P = ar ? [["🎧", "حصة لايف ١:١", "المعلم يسمع تلاوتك ويصحّح كل حرف في نفس اللحظة."], ["🗓️", "خطة على مقاسك", "متابعة أسبوعية وواجبات وتقارير بمستواك الحقيقي."], ["🔓", "محتوى المسار مجانًا", "طول ما انت مع معلم في مسار، كل محتوى المسار ده في الموقع مفتوح لك."], ["🤝", "المعلم أولًا", "الذكاء الاصطناعي أداة تمرين — التصحيح والتوجيه والإجازة من معلم متقن."]]
+    : [["🎧", "Live 1:1 lessons", "Your teacher hears your recitation and corrects every letter on the spot."], ["🗓️", "A plan made for you", "Weekly follow-up, homework and reports at your real level."], ["🔓", "Track content free", "While you study with a teacher in a track, all of that track's site content is open to you."], ["🤝", "Teacher first", "AI is a practice tool — correction, guidance and ijazah come from a qualified teacher."]];
+  return `<section class="sec t56why"><div class="wrap"><h2 class="sec-t" style="text-align:center">👨‍🏫 ${ar ? "ليه تتعلم مع معلم؟" : "Why learn with a teacher?"}</h2><div class="t56grid">${P.map(p => `<div class="card"><div style="font-size:1.6rem">${p[0]}</div><b>${p[1]}</b><p class="sm muted" style="margin-top:.3rem">${p[2]}</p></div>`).join("")}</div>
+    <div class="card t56grp"><div><b>👥 ${ar ? "مجموعة أصحاب؟ سعر أقل لكل واحد" : "A group of friends? A lower price for each"}</b><p class="sm" style="margin:.3rem 0 0">${ar ? "كل ما زاد عددكم قلّ سعر الفرد. كلّمنا على واتساب ونرتّب لكم المعلم والمواعيد." : "The more of you, the less each pays. Message us on WhatsApp and we'll arrange the teacher and times."}</p></div><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${msg}"><i class="fa-brands fa-whatsapp"></i> ${ar ? "كلّمنا واتساب" : "WhatsApp us"}</a></div></div></section>`;
+}
+
+/* ---------- 3) الهيدر: اللغة، الليلي/النهاري، المحاكي (للمالك)، الإشعارات، الرسائل بعدّاد ---------- */
+function msgCount56() { const c = state.data.chatContacts; return Array.isArray(c) ? c.reduce((a, x) => a + (+x.unread || 0), 0) : 0; }
+const _renderBell56 = renderBell;
+renderBell = function () { let h = _renderBell56(); const n = msgCount56(); if (n) h = h.replace('<i class="fa-solid fa-comment-dots"></i></button>', `<i class="fa-solid fa-comment-dots"></i><span class="nb56">${n > 9 ? "9+" : n}</span></button>`);
+  if (realRole() === "owner" && !state.preview) h = `<button class="ibtn" title="${L("n56Sim")}" onclick="state.og='settings';state.dash.tab='sim';navigate('dashboard')">🎭</button>` + h; return h; };
+function strip56() {
+  const cur = (r, a) => state.route === r && (a == null || state.pageArg === a) ? 'aria-current="page"' : ""; const tch = role() === "teacher";
+  return `<div class="dombar"><div class="wrap">
+    <a href="#" onclick="go16('tools');return false;" ${cur("tools")}>🧭 ${L("dbSections")}</a>
+    <a href="#" onclick="go16('alltools');return false;" ${cur("alltools")}>🧰 ${L("n56Tools")}</a>
+    ${tch ? "" : `<a href="#" onclick="state.ptab='lessons';navigate('pricing');return false;" ${state.route === "pricing" && state.ptab === "lessons" ? 'aria-current="page"' : ""}>👨‍🏫 ${L("n56Pk")}</a>`}
+    <a href="#" onclick="go16('d','classroom');return false;" ${cur("d", "classroom")}>🎥 ${esc(((DOMAINS().find(d => d.k === "classroom") || {}).t && locText(DOMAINS().find(d => d.k === "classroom").t)) || L("nvClassroom"))}</a>
+    ${tch ? "" : `<a href="#" onclick="go16('invite');return false;" class="gold" ${cur("invite")}>🎁 ${L("n56Free")}</a>`}
+    ${tch ? "" : `<a href="#" onclick="navigate('pricing');return false;" ${state.route === "pricing" && state.ptab !== "lessons" ? 'aria-current="page"' : ""}>💳 ${L("dbPlans")}</a>`}
+    <a href="#" onclick="go16('guide');return false;" ${cur("guide")}>🗺️ ${L("dbGuide")}</a></div></div>`;
+}
+const _renderHeader56 = renderHeader;
+renderHeader = function () {
+  let h = _renderHeader56(); const r = role(); const tch = r === "teacher";
+  h = h.replace(/<div class="invstrip"[\s\S]*?<\/span><\/div>/, "");
+  h = h.replace(/<a href="#" onclick="(?:state\.menuOpen=false;)?go16\('competitions'\);return false;"[^>]*>[\s\S]*?<\/a>/g, "");
+  h = h.replace(/<button class="ibtn hide-sm" onclick="navigate\('classroom'\)"[^>]*>[\s\S]*?<\/button>/g, "");
+  h = h.replace(/<button class="ibtn(?: hide-sm)?" onclick="navigate\('app'\)"[^>]*>[\s\S]*?<\/button>/g, "");
+  h = h.replace(/<button class="ibtn" onclick="navigate\('dashboard'\)"[^>]*>[\s\S]*?<\/button>/g, "");
+  h = h.replace(/<button class="btn btn-o appdl"[^>]*>[\s\S]*?<\/button>/g, "");
+  if (tch || r === "owner") h = h.replace(/<button class="btn btn-o balchip"[^>]*>[\s\S]*?<\/button>/g, "");
+  if (tch) h = h.replace(/<a href="#" onclick="navigate\('pricing'\);return false;"[^>]*>[\s\S]*?<\/a>/g, "");
+  if (r !== "teacher" && r !== "owner") h = h.replace(`<button class="btn btn-p hide-sm" onclick="navigate('booking')">`, `<button class="btn btn-o hide-sm j56" onclick="navigate('teach')">👨‍🏫 ${L("n56Join")}</button><button class="btn btn-p hide-sm" onclick="navigate('booking')">`);
+  h = h.replace(/<div class="dombar">[\s\S]*?🗺️[^<]*<\/a><\/div><\/div>/, strip56());
+  return h;
+};
+
+/* ---------- 4) القايمة اللي فوق + الشريط اللي تحت: الحاجات المنقولة لـ«مساحتي» ---------- */
+const MOVED56 = /go16\('(competitions|hifz|tools)'\)|navigate\('(classroom|app)'\)|dash\.tab='(homework|billing|mycerts|invite)'/;
+const _navItems56 = navItems;
+navItems = function () {
+  const items = _navItems56().filter(i => !MOVED56.test(i.go || "")); const m = items.find(i => (i.lbl || "") === L("nvMine")) || items[0];
+  if (m) { m.go = "go16('myspace')"; m.act = state.route === "myspace"; m.ic = "fa-solid fa-house-user"; }
+  if (role() === "teacher" || role() === "owner") items.forEach(i => { if (/pricing/.test(i.go || "")) i.hide = 1; });
+  return items.filter(i => !i.hide);
+};
+const _userNavHtml56 = userNavHtml;
+userNavHtml = function () {
+  const nv = _userNavHtml56(); if (!nv) return nv; const items = navItems(); const r = role();
+  const f = re => items.find(i => re.test(i.go || ""));
+  const mine = items[0], tools = { act: state.route === "alltools", go: "go16('alltools')", ic: "fa-solid fa-toolbox", lbl: L("n56Tools") };
+  const sec = r === "owner" ? f(/'overview'/) : r === "teacher" ? f(/'calendar'/) : r === "parent" ? f(/'children'/) : f(/'lessons'/);
+  const msg = f(/'(messages|chats)'/) || f(/notif/);
+  const prof = r === "owner" ? f(/'settings'/) : f(/navigate\('profile'\)/);
+  const pick = [mine, sec, tools, msg, prof].filter(Boolean);
+  const bottom = `<nav class="bnav">${pick.map(i => `<a href="#" aria-current="${!!i.act}" onclick="${i.go};return false;"><i class="${i.ic}"></i><span>${esc(i.lbl)}</span>${i.nb ? `<span class="nb">${i.nb > 9 ? "9+" : i.nb}</span>` : ""}</a>`).join("")}</nav>`;
+  return { top: nv.top, bottom };
+};
+
+/* ---------- 5) صفحة «مساحتي» + صفحة «الأدوات» ---------- */
+PAGES16.push("myspace", "alltools");
+function renderMySpace() {
+  if (!state.auth.user) return pageWrap("🏠", L("n56MyT"), "", needLogin("myspace"));
+  const r = role(); const ar = state.lang === "ar"; const T = (t, e) => ar ? t : e;
+  const it = (ic, t, go, c) => `<button class="mstile" style="--c:${c}" onclick="${go}"><span>${ic}</span><b>${esc(t)}</b></button>`;
+  let L1 = [];
+  if (r === "student" || r === "parent") L1 = [it("📅", L("hubLessons"), "state.dash.tab='lessons';navigate('dashboard')", "#0d9488"), it("🏆", L("cmTitle"), "go16('competitions')", "#b45309"), it("🗺️", L("hzTitle"), "go16('hifz')", "#15803d"), it("🎥", L("nvClassroom"), "navigate('classroom')", "#2563eb"), it("📝", L("hubHomework"), "state.dash.tab='homework';navigate('dashboard')", "#7c3aed"), it("💳", L("hubBilling"), "state.dash.tab='billing';navigate('dashboard')", "#0891b2"), it("🎓", L("hubCerts"), "state.dash.tab='mycerts';navigate('dashboard')", "#a16207"), it("🎁", L("n56Free"), "go16('invite')", "#f59e0b"), it("🎤", T("التسميع", "Recite from memory"), "go16('tasmee')", "#db2777"), it("📱", L("nvApp"), "pwaInstall()", "#475569")];
+  else if (r === "teacher") L1 = [it("📅", L("hubCalendar"), "state.dash.tab='calendar';navigate('dashboard')", "#0d9488"), it("🎥", L("nvClassroom"), "navigate('classroom')", "#2563eb"), it("📝", L("hubHomework"), "state.dash.tab='homework';navigate('dashboard')", "#7c3aed"), it("👨‍🎓", L("hubStudents"), "state.dash.tab='mystudents';navigate('dashboard')", "#15803d"), it("💰", L("hubEarnings"), "state.dash.tab='dues';navigate('dashboard')", "#a16207"), it("🕒", L("hubSchedule"), "state.dash.tab='schedule';navigate('dashboard')", "#0891b2"), it("🏆", L("cmTitle"), "go16('competitions')", "#b45309"), it("📱", L("nvApp"), "pwaInstall()", "#475569")];
+  else L1 = [it("📊", L("hubOverview"), "state.dash.tab='overview';navigate('dashboard')", "#0d9488"), it("🎥", L("nvClassroom"), "navigate('classroom')", "#2563eb"), it("🏆", L("cmTitle"), "go16('competitions')", "#b45309"), it("📣", T("عُدّة التسويق", "Marketing kit"), "go16('kit')", "#db2777"), it("🎭", L("n56Sim"), "state.og='settings';state.dash.tab='sim';navigate('dashboard')", "#7c3aed"), it("⚙️", L("hubSettings"), "state.og='settings';state.dash.tab='settings';navigate('dashboard')", "#475569"), it("📱", L("nvApp"), "pwaInstall()", "#64748b")];
+  return pageWrap("🏠", L("n56MyT"), L("n56MyS"), `<div class="msgrid">${L1.join("")}</div>${r === "student" || r === "parent" ? `<div style="margin-top:1rem">${teacherCard(true)}</div>` : ""}<div style="text-align:center;margin-top:1rem"><button class="btn btn-o" onclick="navigate('dashboard')">📊 ${L("n56Dash")}</button></div>`);
+}
+function renderAllTools() {
+  const ar = state.lang === "ar"; const ks = KIT.filter(k => k[0] !== "competitions");
+  return pageWrap("🧰", L("n56Tools"), L("n56ToolsS"), `<div class="atgrid">${ks.map(k => `<a class="attile" style="--c:${k[7]}" href="${k[6]}"><span>${k[1]}</span><b>${esc(ar ? k[2] : k[3])}</b><small>${esc((ar ? k[4] : k[5]).slice(0, 2).join(" · "))}</small></a>`).join("")}</div>${role() !== "teacher" ? `<div style="margin-top:1rem">${teacherCard(true)}</div>` : ""}`);
+}
+const _render56 = render;
+render = function () {
+  if (state.route === "pricing" && role() === "teacher") { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} }
+  if (state.route === "myspace" || state.route === "alltools") { const app = document.getElementById("app"); if (!app) return; let body; try { body = state.route === "myspace" ? renderMySpace() : renderAllTools(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); visitPing(false); uilApply(); uilBar(); } catch (e) {} return; }
+  return _render56.apply(this, arguments);
+};
+
+/* ---------- 6) ترتيب الرئيسية + أقسام يضيفها المالك ---------- */
+function homeBlocks() { const b = setv("homeBlocks", []); return Array.isArray(b) ? b : []; }
+async function hbAdd() { const t = prompt(state.lang === "ar" ? "عنوان القسم" : "Section title"); if (!t) return; const x = prompt(state.lang === "ar" ? "النص" : "Text") || ""; const b = prompt(state.lang === "ar" ? "نص الزرار (اختياري)" : "Button text (optional)") || ""; const u = b ? (prompt(state.lang === "ar" ? "الرابط (مثلاً #/hifz أو https://…)" : "Link (e.g. #/hifz or https://…)") || "") : ""; await saveSetting16("homeBlocks", homeBlocks().concat([{ t, x, b, u, id: Date.now() }])); render(); }
+async function hbDel(id) { if (!confirm(state.lang === "ar" ? "تمسح القسم ده؟" : "Delete this section?")) return; await saveSetting16("homeBlocks", homeBlocks().filter(x => x.id !== id)); render(); }
+function hbHtml() {
+  const own = realRole() === "owner" && !state.preview; const bs = homeBlocks(); if (!bs.length && !own) return "";
+  return `<section class="sec hb56"><div class="wrap">${bs.map(b => `<div class="card" style="margin-bottom:.7rem;position:relative"><h3>${esc(b.t)}</h3>${b.x ? `<p class="sm" style="margin:.4rem 0;white-space:pre-line">${esc(b.x)}</p>` : ""}${b.b ? `<a class="btn btn-p" href="${esc(b.u || "#")}" ${/^https?:/.test(b.u || "") ? 'target="_blank" rel="noopener"' : ""}>${esc(b.b)}</a>` : ""}${own ? `<button class="btn btn-o" style="position:absolute;top:.5rem;inset-inline-end:.5rem;padding:.15rem .5rem" onclick="hbDel(${b.id})">✕</button>` : ""}</div>`).join("")}${own ? `<button class="btn btn-o" onclick="hbAdd()">${L("n56AddB")}</button> <span class="xs muted">${state.lang === "ar" ? "ولترتيب أي قسم أو إخفاؤه استخدم زرار 🧩" : "To reorder or hide any section use the 🧩 button"}</span>` : ""}</div></section>`;
+}
+function homeOrder56(app) {
+  if (state.route !== "home" || !app) return; const kids = [...app.children];
+  kids.filter(c => c.tagName === "SECTION" && /^\s*📱/.test(c.textContent || "")).forEach(c => c.remove());
+  app.querySelectorAll(".cmband").forEach(c => { const w = c.closest(".wrap"); (w && w.parentElement === app ? w : c).remove(); });
+  app.querySelectorAll(".appdl-m").forEach(c => c.remove());
+  const hero = app.querySelector(":scope > section.hero"); if (!hero) return; const hub = app.querySelector(":scope > section.hub");
+  if (hub && hub.nextElementSibling !== hero) hero.parentNode.insertBefore(hub, hero);
+  const secs = []; let x = hero.nextElementSibling; while (x && secs.length < 5) { if (x.tagName === "SECTION" && x.classList.contains("sec")) secs.push(x); x = x.nextElementSibling; }
+  const courses = secs[0], ready = secs[4] || secs[secs.length - 1];
+  if (courses && !app.querySelector(".t56why")) courses.insertAdjacentHTML("afterend", whyTeacherBlock());
+  const tools = app.querySelector(".hometools"); const tw = tools && tools.closest(".wrap");
+  if (ready) { const hb = hbHtml(); let anchor = ready; if (hb) { ready.insertAdjacentHTML("afterend", hb); anchor = ready.nextElementSibling; } if (tw && tw.parentElement === app) anchor.parentNode.insertBefore(tw, anchor.nextElementSibling); }
+}
+const _uilApply56 = uilApply;
+uilApply = function (root) { try { const app = document.getElementById("app"); homeOrder56(app); if (app) app.querySelectorAll(".invstrip,.appdl-m").forEach(e => e.remove()); } catch (e) { console.error(e); } return _uilApply56.apply(this, arguments); };
+
+/* ---------- 7) من غير قفزة لفوق لما المحتوى يتحمّل في نفس الصفحة ---------- */
+(function () {
+  let lastKey = "", relT = 0;
+  const _r = render;
+  render = function () {
+    const key = [state.route, state.libSec || "", typeof state.pageArg === "string" ? state.pageArg : "", state.og || ""].join("|"); const app = document.getElementById("app");
+    const same = key === lastKey && app; const y = window.scrollY;
+    if (same && y > 0) { app.style.minHeight = Math.max(app.offsetHeight, y + window.innerHeight) + "px"; clearTimeout(relT); relT = setTimeout(() => { const a = document.getElementById("app"); if (a) a.style.minHeight = ""; }, 1800); }
+    else if (app) app.style.minHeight = "";
+    const out = _r.apply(this, arguments); lastKey = key; return out;
+  };
+})();
+
+/* ---------- 8) المصحف الملوّن ---------- */
+(function () {
+  const C = { ham_wasl: "#a8a29e", slnt: "#a8a29e", laam_shamsiyah: "#a8a29e", madda_normal: "#2563eb", madda_permissible: "#06b6d4", madda_obligatory: "#7c3aed", madda_necessary: "#e11d48", qalaqah: "#16a34a", ghunnah: "#f97316", ikhafa: "#d946ef", ikhafa_shafawi: "#9d174d", idgham_ghunnah: "#0d9488", idgham_wo_ghunnah: "#84cc16", idgham_shafawi: "#4f46e5", idgham_mutajanisayn: "#64748b", idgham_mutaqaribayn: "#64748b", iqlab: "#ca8a04", izhar: "#92400e", izhar_shafawi: "#b45309", lam_qamari: "#78350f" };
+  Object.entries(C).forEach(([k, c]) => { if (TJ[k]) TJ[k][0] = c; });
+  document.head.insertAdjacentHTML("beforeend", `<style id="tjc56">${Object.entries(C).map(([k, c]) => `.tjtext .tj-${k},.tj-${k}{color:${c}!important}`).join("")}</style>`);
+})();
+const _tjSafe56 = tjSafe; tjSafe = function (h) { return _tjSafe56(h).replace(/ٵ/g, "ا").replace(/([اٱآ][ً-ْٰٓ]*)ٔ/g, "$1").replace(/ٔ([ً-ْٰ]*ٓ)/g, "$1"); };
+tjTools = function () {
+  const v = state.tjv;
+  return `<div class="tjtop">${mbgPicker()}<div class="row tjmk" style="gap:.35rem;flex-wrap:wrap;margin:.6rem 0 .35rem"><button class="btn ${v.mark ? "btn-p" : "btn-o"}" onclick="state.tjv.mark=!state.tjv.mark;render()">✍️ ${v.mark ? L("mmOn") : L("mmMode")}</button><button class="btn ${v.wq ? "btn-p" : "btn-o"}" onclick="state.tjv.wq=!state.tjv.wq;render()">⏸️ ${L("wqT")}</button></div>
+    ${v.mark ? `<p class="sm" style="margin:.3rem 0;color:var(--gold)">✍️ ${L("mmHint")}</p>` : ""}
+    ${v.wq ? `<div class="wqleg">${Object.values(WQ).map(w => `<span><b class="wq wq-${w[0]} notr" lang="ar">${w[1]}</b> ${esc(state.lang === "ar" ? w[2] : w[3])}</span>`).join("")}</div>` : ""}</div>`;
+};
+const _tjBody56 = tjBody;
+tjBody = function (surah, d) {
+  const v = state.tjv;
+  const head = `<div class="srhead56 notr" lang="ar"><span>سُورَةُ ${esc(SURAHS[surah - 1] || "")}</span></div>`;
+  const play = `<div class="tjtools tjplay56"><span class="row" style="gap:.35rem;align-items:center;flex-wrap:wrap"><span class="sm">🎙️</span>${eaSelect("state.ea=this.value;tjStop()")}<button class="btn btn-p" id="tjPlayBtn" onclick="state.tjv.play?tjStop():tjPlayFrom(Math.max(0,state.tjv.i))">${v.play ? "⏸ " + L("srPause") : "▶ " + L("tjPlayAll")}</button></span></div>`;
+  return head + _tjBody56(surah, d) + play;
+};
+
+/* ---------- 9) كارت الآية: اختار السورة والآية + بحث في القرآن كله ---------- */
+const AYN56 = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+function qNorm(s) { return String(s || "").replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, "").replace(/[إأآٱا]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/\s+/g, " ").trim(); }
+let __qAll = null, __qLoading = false;
+async function qAllLoad() { if (__qAll || __qLoading) return; __qLoading = true; try { const j = await fetch("https://api.alquran.cloud/v1/quran/quran-simple-clean").then(r => r.json()); __qAll = []; j.data.surahs.forEach(s => s.ayahs.forEach(a => __qAll.push({ k: s.number + ":" + a.numberInSurah, t: a.text, n: " " + qNorm(a.text) + " " }))); } catch (e) { toast(L("error"), true); } __qLoading = false; acSearch(); }
+function acSearch() {
+  const i = document.getElementById("acQ"), o = document.getElementById("acRes"); if (!i || !o) return; const q = qNorm(i.value); if (q.length < 2) { o.innerHTML = ""; return; }
+  if (!__qAll) { o.innerHTML = `<p class="xs muted">${L("n56Load")}</p>`; qAllLoad(); return; }
+  const whole = new RegExp("(^|\\s)(و|ف|ب|ل|ك|ال|وال|فال|بال|لل|كال)?" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(\\s|$)");
+  const hits = __qAll.filter(a => q.includes(" ") ? a.n.includes(" " + q + " ") || a.n.includes(q) : whole.test(a.n)); let occ = 0; hits.forEach(a => { occ += Math.max(1, (a.n.split(" ").filter(w => w === q || w.endsWith(q) && w.length - q.length <= 3).length)); });
+  o.innerHTML = `<p class="sm b" style="margin:.4rem 0">${hits.length} ${state.lang === "ar" ? "آية" : "ayahs"} · ${occ} ${state.lang === "ar" ? "مرة" : "times"}</p><div class="acres">${hits.slice(0, 300).map(a => { const [s, n] = a.k.split(":"); return `<button class="acr" onclick="acGo('${a.k}')"><span class="xs muted">${esc(sName(+s))} ${n}</span><span class="acrt notr" lang="ar">${esc(a.t)}</span></button>`; }).join("")}</div>${hits.length > 300 ? `<p class="xs muted">+${hits.length - 300}</p>` : ""}`;
+}
+function acGo(k) { const i = document.getElementById("acK"); if (i) i.value = k; acPick(); try { window.scrollTo({ top: Math.max(0, (document.getElementById("acCv") || document.body).getBoundingClientRect().top + window.scrollY - 90), behavior: "smooth" }); } catch (e) {} }
+function acSurOpts() { const s = +(state.acS || 1); return `<select class="in" id="acS" style="width:auto;max-width:12rem" onchange="state.acS=+this.value;const a=document.getElementById('acA');a.innerHTML=Array.from({length:AYN56[this.value-1]},(_,i)=>'<option>'+(i+1)+'</option>').join('')">${SURAHS.map((n, i) => `<option value="${i + 1}" ${i + 1 === s ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select><select class="in" id="acA" style="width:auto">${Array.from({ length: AYN56[s - 1] }, (_, i) => `<option>${i + 1}</option>`).join("")}</select><button class="btn btn-p" onclick="acGo(document.getElementById('acS').value+':'+document.getElementById('acA').value)">✓</button>`; }
+const _renderAyahCard56 = renderAyahCard;
+renderAyahCard = function () {
+  let h = _renderAyahCard56();
+  const ui = `<div class="card" style="margin-top:1rem"><b>📖 ${L("n56Pick")}</b><div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.5rem 0;align-items:center">${acSurOpts()}</div>
+    <input class="in" id="acQ" placeholder="🔎 ${L("n56Srch")}" oninput="clearTimeout(window.__acT);window.__acT=setTimeout(acSearch,250)" style="margin-top:.4rem"><div id="acRes"></div></div>`;
+  return h.replace(/(<\/div>\s*)$/, "$1" + ui);
+};
+
+/* ---------- 10) تلاوات الأكاديمية: اسم الشيخ + من آية لآية ---------- */
+const _listenTab56 = listenTab;
+listenTab = function (surah) {
+  let h = _listenTab56(surah); const mine = state.data["myrec:" + surah]; const ar = state.lang === "ar";
+  const pub = (p) => sb.storage.from("academy_public").getPublicUrl(String(p).replace(/^academy_public\//, "")).data.publicUrl;
+  if (Array.isArray(mine) && mine.length) {
+    const card = `<div class="card" style="margin-bottom:1rem;border-color:var(--accent)"><h3>⭐ ${L("recMine")}</h3>${mine.map(x => `<div style="margin:.6rem 0">${x.reciter ? `<div class="rec56">🎙️ ${L("n56Voice")} <b>${esc(x.reciter)}</b></div>` : ""}<div class="sm">${x.title ? `<b>${esc(x.title)}</b> · ` : ""}${x.ayah ? `${ar ? "آية" : "Ayah"} ${x.ayah}${x.ayah_to ? "–" + x.ayah_to : ""}` : ""}${x.maqam ? ` · 🎼 ${esc(maqamName(x.maqam))}` : ""}</div><audio controls preload="none" style="width:100%" src="${esc(pub(x.file_path))}"></audio></div>`).join("")}</div>`;
+    h = h.replace(/^<div class="card" style="margin-bottom:1rem;border-color:var\(--accent\)">[\s\S]*?<\/audio><\/div><\/div>/, card);
+  }
+  h = h.replace('<input class="in" id="mr_a" type="number"', `<input class="in" id="mr_r" placeholder="${L("n56Rec")}" style="flex:1;min-width:9rem"><input class="in" id="mr_a" type="number"`).replace(/(<input class="in" id="mr_a"[^>]*>)/, `$1<input class="in" id="mr_a2" type="number" min="1" placeholder="${L("n56AyTo")}" style="width:6rem">`);
+  return h;
+};
+upMyRec = async function (surah) {
+  const g = id => document.getElementById(id); const f = g("mr_f").files[0]; if (!f) return toast(state.lang === "ar" ? "اختار ملف الصوت" : "Choose the audio file", true);
+  const path = `recit/${surah}-${Date.now()}.${(f.name.split(".").pop() || "mp3").replace(/[^a-z0-9]/gi, "")}`;
+  const up = await sb.storage.from("academy_public").upload(path, f, { contentType: f.type }); if (up.error) return toast(up.error.message, true);
+  const row = { surah, ayah: +g("mr_a").value || null, ayah_to: (g("mr_a2") && +g("mr_a2").value) || null, reciter: (g("mr_r") && g("mr_r").value.trim()) || null, maqam: g("mr_m").value || null, title: g("mr_t").value.trim() || null, file_path: path };
+  const { error } = await sb.from("my_recitations").insert(row); if (error) return toast(error.message, true); invalidate("myrec:" + surah); toast(L("upDone")); render();
+};
+
+/* ---------- 11) رابط الحصة من غير «صالح لكام يوم» ---------- */
+const _rmInviteModal56 = rmInviteModal;
+rmInviteModal = function () {
+  if (!RM || RM.kind !== "lesson") { _rmInviteModal56(); const s = rmEl("inv_h"); if (s) { s.value = "720"; s.style.display = "none"; const lb = s.previousElementSibling; if (lb && lb.tagName === "LABEL") lb.style.display = "none"; } return; }
+  const m = rmEl("rmModal"); if (!m) return; const link = roomHref("lesson", RM.id);
+  m.innerHTML = `<div class="rm-game" onclick="if(event.target===this)this.parentNode.innerHTML=''"><div style="width:min(480px,94vw);text-align:start"><div style="display:flex;justify-content:space-between;align-items:center"><b>🔗 ${L("n56Lnk")}</b><button class="rm-pbtn" onclick="rmEl('rmModal').innerHTML=''">✕</button></div>
+    <p class="sm" style="color:#94a3b8;margin:.5rem 0">${L("n56LnkS")}</p><input class="rm-in" dir="ltr" readonly value="${esc(link)}" onclick="this.select()"><div style="display:flex;gap:.4rem;margin-top:.5rem"><button class="rm-pbtn p" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(link)}').then(()=>toast(RL('copied')))">📋</button><a class="rm-pbtn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(link)}"><i class="fa-brands fa-whatsapp"></i></a></div></div></div>`;
+};
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.invstrip,.appdl-m,.cmband{display:none!important}
+.ibtn{position:relative}.nb56{position:absolute;top:-5px;inset-inline-end:-5px;background:#dc2626;color:#fff;border-radius:999px;font-size:.62rem;min-width:1.1rem;height:1.1rem;line-height:1.1rem;padding:0 .2rem;font-weight:800;text-align:center}
+.j56{white-space:nowrap}
+.msgrid,.atgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem}
+.mstile,.attile{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:1rem .6rem;border-radius:16px;border:1px solid var(--line);background:var(--card);cursor:pointer;text-align:center;color:var(--fg);text-decoration:none;border-top:4px solid var(--c);font:inherit;transition:transform .15s}
+.mstile:hover,.attile:hover{transform:translateY(-2px);border-color:var(--c)}.mstile span,.attile span{font-size:1.8rem}.attile small{font-size:.75rem;opacity:.75}
+.t56card{border-inline-start:5px solid var(--accent)}
+.t56grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-top:1rem}
+.t56grp{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1rem;background:linear-gradient(135deg,color-mix(in srgb,#25d366 12%,var(--card)),var(--card))}
+.srhead56{text-align:center;margin:.8rem 0 .5rem}.srhead56 span{display:inline-block;font:700 1.5rem 'Amiri',serif;padding:.35rem 2.2rem;border:3px double #b8860b;border-radius:14px;background:linear-gradient(90deg,transparent,color-mix(in srgb,#b8860b 15%,transparent),transparent);color:#8a6412}
+[data-theme=dark] .srhead56 span{color:#f6d78b}
+.tjplay56{margin-top:.7rem}
+.acres{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:.35rem}.acr{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;text-align:start;padding:.5rem .7rem;border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer;font:inherit;color:var(--fg)}.acr:hover{border-color:var(--accent)}.acrt{font:1.15rem/1.9 'Amiri',serif;direction:rtl}
+.rec56{display:inline-block;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);border-radius:999px;padding:.15rem .7rem;font-size:.85rem;margin-bottom:.25rem}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
