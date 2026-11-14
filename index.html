@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v58";
+const UI_VERSION = "2026-11-14-v59";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16647,6 +16647,126 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .dombar a.fp58{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;font-weight:800}
 .fpcard{display:flex;flex-direction:column;gap:.2rem;cursor:pointer;margin-bottom:.8rem;border:2px dashed #f59e0b;background:color-mix(in srgb,#f59e0b 8%,var(--card))}
 @media(min-width:900px){#fpChip{bottom:1.2rem}}</style>`);
+
+/* ================= v59: صفحة المقام نسخة واحدة من كل حاجة + تسجيلاتك (مرتل/مجود/نشيد/ابتهال) + قارئ لكل قرار + الأجناس + الأذان + آهات أنعم ================= */
+const MQ_JINS59 = {
+  rast: [["راست على الراست", "Rast on Rast"], ["راست على النوا", "Rast on Nawa"], ["النوا", "Nawa"]],
+  bayati: [["بياتي على الدوكاه", "Bayati on Dukah"], ["نهاوند (أو راست) على النوا", "Nahawand (or Rast) on Nawa"], ["النوا", "Nawa"]],
+  saba: [["صبا على الدوكاه", "Saba on Dukah"], ["حجاز على الجهاركاه", "Hijaz on Jaharkah"], ["الجهاركاه", "Jaharkah"]],
+  hijaz: [["حجاز على الدوكاه", "Hijaz on Dukah"], ["راست (أو نهاوند) على النوا", "Rast (or Nahawand) on Nawa"], ["النوا", "Nawa"]],
+  nahawand: [["نهاوند على الراست", "Nahawand on Rast"], ["حجاز (أو كرد) على النوا", "Hijaz (or Kurd) on Nawa"], ["النوا", "Nawa"]],
+  sikah: [["سيكاه على السيكاه", "Sikah on Sikah"], ["راست على النوا", "Rast on Nawa"], ["النوا", "Nawa"]],
+  ajam: [["عجم على العجم عشيران", "Ajam on Ajam Ushayran"], ["عجم على الجهاركاه", "Ajam on Jaharkah"], ["الجهاركاه", "Jaharkah"]],
+  kurd: [["كرد على الدوكاه", "Kurd on Dukah"], ["نهاوند على النوا", "Nahawand on Nawa"], ["النوا", "Nawa"]],
+  husseini: [["بياتي على الدوكاه", "Bayati on Dukah"], ["بياتي على الحسيني", "Bayati on Husseini"], ["الحسيني", "Husseini"]],
+  huzam: [["سيكاه على السيكاه", "Sikah on Sikah"], ["حجاز على النوا", "Hijaz on Nawa"], ["النوا", "Nawa"]],
+  hijazkar: [["حجاز كار على الراست", "Hijazkar on Rast"], ["حجاز على النوا", "Hijaz on Nawa"], ["النوا", "Nawa"]]
+};
+const ADHAN59 = ["اللهُ أَكْبَرُ، اللهُ أَكْبَرُ", "اللهُ أَكْبَرُ، اللهُ أَكْبَرُ", "أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللهُ", "أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللهُ", "أَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ اللهِ", "أَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ اللهِ", "حَيَّ عَلَى الصَّلَاةِ، حَيَّ عَلَى الصَّلَاةِ", "حَيَّ عَلَى الفَلَاحِ، حَيَّ عَلَى الفَلَاحِ", "(في الفجر: الصَّلَاةُ خَيْرٌ مِنَ النَّوْمِ ×٢)", "اللهُ أَكْبَرُ، اللهُ أَكْبَرُ", "لَا إِلَٰهَ إِلَّا اللهُ"];
+const RK59 = [["murattal", "📿", "مرتل", "Murattal"], ["mujawwad", "🎙️", "مجود", "Mujawwad"], ["nasheed", "🌙", "نشيد", "Nasheed"], ["ibtihal", "🤲", "ابتهال", "Ibtihal"]];
+function rkName(k) { const r = RK59.find(x => x[0] === k); return r ? (state.lang === "ar" ? r[2] : r[3]) : k; }
+function recKind59(c) { if (c.rec_kind) return c.rec_kind; if (c.type === "nasheed") return "nasheed"; if (c.type === "ibtihal") return "ibtihal"; const s = (sectionsData() || []).find ? (sectionsData() || []).find(x => x.id === c.section_id) : null; const t = s ? ((s.title || {}).ar || "") : ""; return /مجود/.test(t) ? "mujawwad" : /نشيد|أناشيد/.test(t) ? "nasheed" : /ابتهال/.test(t) ? "ibtihal" : "murattal"; }
+function maqamRecs59(mid) { return useData("mqrec59:" + mid, () => q(sb.from("contents").select("id,title,type,file_path,url,section_id,created_at,maqam,rec_kind,surah,ayah,ayah_to,reciter").eq("maqam", mid).eq("status", "published").order("created_at", { ascending: false }).limit(80))); }
+function ytId59(u) { const m = String(u || "").match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/); return m ? m[1] : null; }
+function recCard59(c, mid) {
+  const ar = state.lang === "ar"; const pub = p => sb.storage.from("academy_public").getPublicUrl(String(p).replace(/^academy_public\//, "")).data.publicUrl; const yt = ytId59(c.url);
+  const meta = [c.surah ? `📖 ${ar ? "سورة" : "Surah"} ${esc(sName(c.surah))}${c.ayah ? ` ${ar ? "آية" : "ayah"} ${c.ayah}${c.ayah_to && c.ayah_to !== c.ayah ? "–" + c.ayah_to : ""}` : ""}` : "", c.reciter ? `🎙️ ${esc(c.reciter)}` : "", `🎼 ${esc(maqamName(mid))}`].filter(Boolean).join(" · ");
+  const media = yt ? `<div class="svmedia"><iframe src="https://www.youtube-nocookie.com/embed/${yt}?rel=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="aspect-ratio:16/9;width:100%;border:0;border-radius:12px"></iframe></div>` : c.file_path ? (c.type === "video" ? `<video controls preload="none" style="width:100%;border-radius:12px" src="${esc(pub(c.file_path))}"></video>` : `<audio controls preload="none" style="width:100%" src="${esc(pub(c.file_path))}"></audio>`) : c.url ? `<a class="btn btn-o" href="${esc(c.url)}" target="_blank" rel="noopener">🔗 ${ar ? "افتح" : "Open"}</a>` : "";
+  const own = realRole() === "owner" && !state.preview;
+  return `<div class="rc59">${c.title && locText(c.title) && !/^recordings\//.test(locText(c.title)) ? `<b>${esc(locText(c.title))}</b>` : ""}<div class="sm rc59m">${meta}</div>${media}${own ? `<button class="btn btn-o rc59x" onclick="recDel59('${c.id}','${mid}')">🗑️</button>` : ""}</div>`;
+}
+async function recDel59(id, mid) { if (!confirm(state.lang === "ar" ? "تمسح التسجيل ده؟" : "Delete this recording?")) return; const { error } = await sb.from("contents").delete().eq("id", id); if (error) return toast(error.message, true); invalidate("mqrec59:" + mid); render(); }
+/* لوحة المالك: سجّل مباشر / ارفع ملف / لينك يوتيوب */
+let __rc59 = null;
+function recPanel59(cur, mid, kind) {
+  const ar = state.lang === "ar"; const s = +(state.rcS || 1);
+  return `<div class="card rcp59"><b>➕ ${ar ? `أضف ${rkName(kind)} على مقام ${maqamName(mid)}` : `Add a ${rkName(kind)} in maqam ${maqamName(mid)}`}</b>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem;align-items:center">
+      ${kind === "murattal" || kind === "mujawwad" ? `<select class="in" id="rc_s" style="width:auto;max-width:11rem" onchange="state.rcS=+this.value">${SURAHS.map((n, i) => `<option value="${i + 1}" ${i + 1 === s ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select><input class="in" id="rc_a" type="number" min="1" placeholder="${ar ? "من آية" : "from ayah"}" style="width:6.5rem"><input class="in" id="rc_b" type="number" min="1" placeholder="${ar ? "لحد آية" : "to ayah"}" style="width:6.5rem">` : `<input class="in" id="rc_t" placeholder="${ar ? "اسم النشيد/الابتهال" : "Title"}" style="flex:1;min-width:10rem">`}
+      <input class="in" id="rc_r" placeholder="${ar ? "اسم الشيخ / القارئ" : "Sheikh / reciter name"}" style="flex:1;min-width:10rem" value="${esc(state.rcR || "")}" oninput="state.rcR=this.value">
+    </div>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem;align-items:center">
+      <button class="btn btn-p" id="rc_rec" onclick="recLive59('${cur.id}','${mid}','${kind}')">🎙️ ${ar ? "سجّل بصوتي دلوقتي" : "Record now"}</button>
+      <label class="btn btn-o">⬆️ ${ar ? "ارفع ملف" : "Upload file"}<input type="file" accept="audio/*,video/*" hidden onchange="recSave59('${cur.id}','${mid}','${kind}',this.files[0])"></label>
+      <input class="in" id="rc_y" placeholder="🔗 ${ar ? "لينك يوتيوب" : "YouTube link"}" dir="ltr" style="flex:1;min-width:12rem"><button class="btn btn-o" onclick="recSave59('${cur.id}','${mid}','${kind}',null)">✓</button>
+    </div><p class="xs muted" style="margin-top:.4rem">${ar ? "التسجيل بيتنشر هنا باسم الآية والشيخ والمقام، ويظهر للطلاب في التبويب ده." : "It is published here with the ayah, sheikh and maqam, and shown to students in this tab."}</p></div>`;
+}
+async function recLive59(sid, mid, kind) {
+  const b = document.getElementById("rc_rec"); const ar = state.lang === "ar";
+  if (__rc59) { __rc59.stop(); return; }
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); } catch (e) { return; }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+  const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; r.ondataavailable = e => e.data.size && ch.push(e.data);
+  r.onstop = () => { st.getTracks().forEach(t => t.stop()); __rc59 = null; const blob = new Blob(ch, { type: r.mimeType || "audio/webm" }); const ext = /mp4/.test(blob.type) ? "m4a" : "webm"; const f = new File([blob], `rec-${Date.now()}.${ext}`, { type: blob.type }); recSave59(sid, mid, kind, f); };
+  __rc59 = r; r.start(); if (b) { b.textContent = "⏹ " + (ar ? "وقّف واحفظ" : "Stop & save"); b.classList.add("rec59on"); }
+}
+async function recSave59(sid, mid, kind, file) {
+  const g = id => document.getElementById(id); const ar = state.lang === "ar"; const yt = (g("rc_y") || {}).value || "";
+  if (!file && !yt.trim()) return toast(ar ? "سجّل أو ارفع ملف أو حط لينك" : "Record, upload or paste a link", true);
+  const surah = g("rc_s") ? +g("rc_s").value : null, ayah = g("rc_a") ? +g("rc_a").value || null : null, ayah_to = g("rc_b") ? +g("rc_b").value || null : null; const reciter = ((g("rc_r") || {}).value || "").trim() || null;
+  const title = g("rc_t") ? g("rc_t").value.trim() : surah ? `${SURAHS[surah - 1]}${ayah ? " " + ayah + (ayah_to ? "–" + ayah_to : "") : ""}` : "";
+  let file_path = null, type = "audio";
+  if (file) { toast(ar ? "⬆️ بنرفع…" : "⬆️ Uploading…"); const path = `recordings/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${(file.name.split(".").pop() || "webm").replace(/[^a-z0-9]/gi, "")}`; const up = await sb.storage.from("academy_public").upload(path, file, { contentType: file.type }); if (up.error) return toast(up.error.message, true); file_path = "academy_public/" + path; type = /^video/.test(file.type) ? "video" : "audio"; } else type = "video";
+  const { error } = await sb.from("contents").insert({ title: { ar: title || maqamName(mid), en: title || maqamName(mid) }, type, status: "published", visibility: "public", section_id: sid, file_path, url: file ? null : yt.trim(), maqam: mid, music_free: true, rec_kind: kind, surah, ayah, ayah_to, reciter });
+  if (error) return toast(error.message, true); invalidate("mqrec59:" + mid, "mqrec:" + mid, "libCt", "contentsAll"); toast(L("upDone")); render();
+}
+/* قارئ لكل قرار */
+const NOTES59 = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+function qararMap() { const m = setv("qararRec", {}); return m && typeof m === "object" ? m : {}; }
+async function qararSet(n, v) { const m = Object.assign({}, qararMap()); if (v) m[n] = v; else delete m[n]; await saveSetting16("qararRec", m); render(); }
+function qararCard59(mid) {
+  const ar = state.lang === "ar"; const own = realRole() === "owner" && !state.preview; const map = qararMap(); const q = myQarar(); const note = q ? hzNote(q).replace(/\d+$/, "") : null; const rec = note && map[note];
+  const eaN = id => { const r = EA.find(x => x[0] === id); return r ? (ar ? r[1] : r[2]) : id; };
+  let h = "";
+  if (rec) h += `<div class="card qr59"><b>🎯 ${ar ? "قارئ يناسب قرار صوتك" : "A reciter matching your voice's qarar"} (${note})</b><p class="sm" style="margin:.3rem 0">${esc(eaN(rec))}</p><button class="btn btn-p" onclick="eaPlay&&eaPlay('${eaUrl(rec, "1:1")}')">▶ ${ar ? "اسمع الفاتحة بصوته" : "Hear Al-Fatihah"}</button></div>`;
+  else if (!q && role() === "student") h += `<p class="xs muted">🎯 ${ar ? "سجّل مساحة صوتك من «اختبر صوتك» عشان نقترحلك قارئ على قرارك." : "Record your voice range in “Test your voice” to get a reciter suggested for your qarar."}</p>`;
+  if (own) h += `<details class="card" style="margin-top:.6rem"><summary class="b">🎯 ${ar ? "حدّد القارئ لكل قرار (للأونر)" : "Set the reciter for each qarar (owner)"}</summary><div class="qrgrid">${NOTES59.map(n => `<label class="sm">${n}<select class="in" onchange="qararSet('${n}',this.value)"><option value="">—</option>${EA.map(r => `<option value="${r[0]}" ${map[n] === r[0] ? "selected" : ""}>${esc(ar ? r[1] : r[2])}</option>`).join("")}</select></label>`).join("")}</div><p class="xs muted">${ar ? "الطالب اللي قراره على النغمة دي بيظهرله القارئ اللي تختاره." : "Students whose qarar is on that note see the reciter you choose."}</p></details>`;
+  return h;
+}
+function jinsCard59(mid) {
+  const j = MQ_JINS59[mid]; if (!j) return ""; const ar = state.lang === "ar"; const i = ar ? 0 : 1;
+  return `<div class="card jn59"><h3>🧩 ${ar ? "تركيب المقام" : "How the maqam is built"}</h3><div class="kv"><span>${ar ? "الجنس الأساسي (تحت)" : "Lower jins"}</span><b>${j[0][i]}</b></div><div class="kv"><span>${ar ? "الجنس الفرعي (فوق)" : "Upper jins"}</span><b>${j[1][i]}</b></div><div class="kv"><span>${ar ? "الغمّاز (نغمة الارتكاز)" : "Ghammaz (pivot note)"}</span><b>${j[2][i]}</b></div><p class="xs muted" style="margin-top:.4rem">${ar ? "الجنس = ٣ أو ٤ نغمات متتالية بمسافات محددة؛ المقام بيتكوّن من جنسين بيتقابلوا عند الغمّاز." : "A jins is 3–4 consecutive notes with set intervals; a maqam joins two ajnas that meet at the ghammaz."}</p></div>`;
+}
+const _maqamOne59 = maqamOne;
+maqamOne = function (cur) {
+  const mid = (cur.meta || {}).maqam; const m = MQ.find(x => x.id === mid); if (!m) return ""; const ar = state.lang === "ar"; const own = realRole() === "owner" && !state.preview;
+  if (["vtest", "info2"].includes(state.mqTab)) state.mqTab = "info";
+  const tabs = [["info", "📘 " + L("mo1")], ["aah", "🗣️ " + L("mo2")], ["murattal", "📿 " + rkName("murattal")], ["mujawwad", "🎙️ " + rkName("mujawwad")], ["nasheed", "🌙 " + (ar ? "نشيد وابتهال" : "Nasheed & ibtihal")], ["guess", "🎧 " + L("amGuess")], ["mod", "🔀 " + (ar ? "التحويل" : "Modulation")]];
+  const t = tabs.some(x => x[0] === state.mqTab) ? state.mqTab : "info"; let body = "";
+  const rs = maqamRecs59(mid); const list = k => !Array.isArray(rs) ? loadingBox() : (() => { const xs = rs.filter(c => (k === "nasheed" ? ["nasheed", "ibtihal"] : [k]).includes(recKind59(c))); return xs.length ? `<div class="rcgrid59">${xs.map(c => recCard59(c, mid)).join("")}</div>` : `<p class="sm muted">${ar ? "لسه مفيش تسجيلات هنا." : "No recordings here yet."}</p>`; })();
+  if (t === "info") body = `<div class="mqinfo59">${_sectionExtra28(cur) || maqamPage("info", mid)}${jinsCard59(mid)}${qararCard59(mid)}</div>`;
+  else if (t === "aah") body = _maqamPage22("aah", mid);
+  else if (t === "murattal" || t === "mujawwad") body = `<div class="card" style="margin-top:1rem"><h3>${t === "murattal" ? "📿" : "🎙️"} ${rkName(t)} — ${esc(mqName(m))}</h3>${list(t)}</div>${own ? recPanel59(cur, mid, t) : ""}`;
+  else if (t === "nasheed") body = `<div class="card" style="margin-top:1rem"><h3>🌙 ${ar ? "أناشيد وابتهالات (من غير موسيقى)" : "Nasheeds & ibtihalat (no music)"} — ${esc(mqName(m))}</h3>${list("nasheed")}</div>${own ? recPanel59(cur, mid, state.rcK === "ibtihal" ? "ibtihal" : "nasheed").replace("<b>➕", `<div class="row" style="gap:.3rem;margin-bottom:.4rem"><button class="btn ${state.rcK !== "ibtihal" ? "btn-p" : "btn-o"}" onclick="state.rcK='nasheed';render()">🌙 ${rkName("nasheed")}</button><button class="btn ${state.rcK === "ibtihal" ? "btn-p" : "btn-o"}" onclick="state.rcK='ibtihal';render()">🤲 ${rkName("ibtihal")}</button></div><b>➕`) : ""}${maqamPage("nasheed", mid)}<div class="card adhan59"><h3>🕌 ${ar ? "كلمات الأذان" : "Words of the Adhan"}</h3><div class="notr" lang="ar">${ADHAN59.map(l => `<p>${l}</p>`).join("")}</div></div>`;
+  const head = `<div class="motabs">${tabs.map(([k, n]) => `<button class="${k === t ? "on" : ""}" onclick="state.mqTab='${k}';${k === "guess" ? "state.qz=null;" : ""}aahStop();render()">${n}</button>`).join("")}</div>`;
+  if (t === "guess" || t === "mod") { state.mqTab = t; const h = _maqamOne59(cur); const i = h.indexOf('<div class="motabs">'); const j = h.indexOf("</div>", i) + 6; return head + h.slice(j); }
+  return head + body;
+};
+/* الآهات: صوت أنعم شبه الذكاء الاصطناعي (كورال خفيف + صدى + فيبراتو طبيعي) */
+const _aahSing59 = aahSing;
+aahSing = function (notes, tonicHz, voice, onStep) {
+  const ac = aahCtx(); if (!AAH.rev) { const len = ac.sampleRate * 2.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); } AAH.rev = b; }
+  const realDest = ac.destination; const bus = ac.createGain(); const dry = ac.createGain(); dry.gain.value = .78; const wet = ac.createGain(); wet.gain.value = .32; const cv = ac.createConvolver(); cv.buffer = AAH.rev;
+  bus.connect(dry); dry.connect(realDest); bus.connect(cv); cv.connect(wet); wet.connect(realDest);
+  const d1 = ac.createDelay(); d1.delayTime.value = .018; const g1 = ac.createGain(); g1.gain.value = .35; bus.connect(d1); d1.connect(g1); g1.connect(realDest);
+  const lfo = ac.createOscillator(); lfo.frequency.value = .35; const lg = ac.createGain(); lg.gain.value = .004; lfo.connect(lg); lg.connect(d1.delayTime); lfo.start();
+  Object.defineProperty(ac, "destination", { configurable: true, get: () => bus });
+  try { _aahSing59(notes, tonicHz, voice, onStep); } finally { delete ac.destination; }
+  AAH.nodes = (AAH.nodes || []).concat([lfo, bus]);
+};
+/* التفسير: عدد قليل من المشايخ بس */
+const FEW59 = ["Husary_128kbps", "Minshawy_Murattal_128kbps", "Abdul_Basit_Murattal_192kbps", "Alafasy_128kbps", "Abdurrahmaan_As-Sudais_192kbps", "Maher_AlMuaiqly_64kbps"];
+const _clean59 = clean57;
+clean57 = function (app) { _clean59(app); if (!app || !state.sr || state.sr.tab !== "tafsir") return; app.querySelectorAll(".easel").forEach(s => { const c = s.closest(".card"); if (!c || !/📖/.test((c.querySelector("h3") || {}).textContent || "")) return; [...s.options].forEach(o => { if (!FEW59.includes(o.value) && !o.selected) o.remove(); }); }); };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.motabs{display:flex;flex-wrap:wrap;gap:.35rem;margin:.6rem 0}.motabs button{flex:0 0 auto}
+.rcgrid59{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.7rem;margin-top:.6rem}
+.rc59{position:relative;border:1px solid var(--line);border-radius:14px;padding:.7rem;background:var(--bg);display:flex;flex-direction:column;gap:.4rem}.rc59m{color:var(--muted)}.rc59x{position:absolute;top:.4rem;inset-inline-end:.4rem;padding:.1rem .4rem}
+.rcp59{margin-top:1rem;border:1.5px dashed var(--accent)}.rec59on{background:#dc2626!important;border-color:#dc2626!important;animation:fpPulse 1s infinite}
+.mqinfo59{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.8rem;align-items:start}.mqinfo59>*{margin-top:1rem!important}
+.qrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.4rem;margin-top:.5rem}.qrgrid label{display:flex;flex-direction:column;gap:.2rem}
+.adhan59 p{font:1.35rem/2.2 'Amiri',serif;text-align:center;margin:0}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
