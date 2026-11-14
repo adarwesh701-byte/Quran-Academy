@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v73";
+const UI_VERSION = "2026-11-14-v74";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17625,6 +17625,112 @@ wbEl = function () {
   return el;
 };
 const _wbCursor73 = wbCursor; wbCursor = function () { _wbCursor73(); if (WB.cv) WB.cv.style.cursor = WB.tool === "pan" ? "grab" : WB.cv.style.cursor; };
+
+/* ================= v74: تلاوات المقامات (من آية لآية + شيخ من الموقع + مرتل/مجود/تحويل) + قسم «التحويل من مقام لمقام» + غرفة اجتماع المالك بموافقته + تأكيد الإيميل الاحترافي + تسجيل الموبايل ================= */
+/* ---------- 1) التلاوات ---------- */
+function mqSecId(mid) { const s = (sectionsData() || []).find ? (sectionsData() || []).find(x => (x.meta || {}).maqam === mid && (x.meta || {}).kind === "maqam") || (sectionsData() || []).find(x => (x.meta || {}).maqam === mid) : null; return s ? s.id : null; }
+maqamRecs59 = function (mid) { return useData("mqrec59:" + mid, () => q(sb.from("contents").select("id,title,type,file_path,url,section_id,created_at,maqam,maqam_to,rec_kind,surah,ayah,ayah_to,reciter").or(`maqam.eq.${mid},maqam_to.eq.${mid}`).eq("status", "published").order("created_at", { ascending: false }).limit(150))); };
+const _recKind74 = recKind59; recKind59 = function (c) { return c.rec_kind === "modulation" || c.maqam_to ? "modulation" : _recKind74(c); };
+let __pl74 = null;
+function plPlay(rec, s, a, b, btn) { const ar = state.lang === "ar"; if (__pl74 && __pl74.btn === btn) { __pl74.au.pause(); __pl74 = null; if (btn) btn.textContent = "▶ " + (ar ? "تشغيل" : "Play"); return; } if (__pl74) { __pl74.au.pause(); if (__pl74.btn) __pl74.btn.textContent = "▶ " + (ar ? "تشغيل" : "Play"); }
+  const au = new Audio(); __pl74 = { au, btn, i: a }; const go = () => { if (!__pl74 || __pl74.au !== au) return; if (__pl74.i > b) { __pl74 = null; if (btn) btn.textContent = "▶ " + (ar ? "تشغيل" : "Play"); return; } au.src = eaUrl(rec, `${s}:${__pl74.i}`); au.title = `${sName(s)} ${__pl74.i}`; au.play().catch(() => {}); if (btn) btn.textContent = `⏸ ${__pl74.i}/${b}`; __pl74.i++; }; au.onended = go; go(); }
+const _recCard74 = recCard59;
+recCard59 = function (c, mid) {
+  const ar = state.lang === "ar"; let h = _recCard74(c, mid);
+  if (/^ea:/.test(c.url || "")) { const rec = c.url.slice(3); const nm = (EA.find(x => x[0] === rec) || [rec, rec, rec]); h = h.replace(/<a class="btn btn-o" href="ea:[^"]*"[^>]*>[\s\S]*?<\/a>/, `<button class="btn btn-p" onclick="plPlay('${rec}',${c.surah || 1},${c.ayah || 1},${c.ayah_to || c.ayah || 1},this)">▶ ${ar ? "تشغيل" : "Play"}</button>`); if (!c.reciter) h = h.replace(`🎼 ${esc(maqamName(mid))}`, `🎙️ ${esc(ar ? nm[1] : nm[2])} · 🎼 ${esc(maqamName(mid))}`); }
+  if (c.maqam_to) { const other = c.maqam === mid ? c.maqam_to : c.maqam; h = h.replace(`🎼 ${esc(maqamName(mid))}`, `🔀 ${esc(maqamName(c.maqam))} ⇄ ${esc(maqamName(c.maqam_to))}`); }
+  return h;
+};
+function addRecForm(pre) {
+  pre = pre || {}; const ar = state.lang === "ar"; const f = state.arf || (state.arf = Object.assign({ s: 1, kind: "murattal", src: "site", rec: HUSARY }, pre)); Object.assign(f, pre && pre._force ? pre : {});
+  const mqOpts = (sel, id) => `<select class="in" id="${id}" style="width:auto">${MQ.map(m => `<option value="${m.id}" ${sel === m.id ? "selected" : ""}>${esc(mqName(m))}</option>`).join("")}</select>`;
+  return `<div class="card arf"><h3>➕ ${ar ? "أضف تلاوة على مقام" : "Add a recitation to a maqam"}</h3>
+    <div class="arfg"><label>${ar ? "السورة" : "Surah"}<select class="in" id="arf_s" onchange="state.arf.s=+this.value">${SURAHS.map((n, i) => `<option value="${i + 1}" ${f.s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select></label>
+      <label>${ar ? "من آية" : "From ayah"}<input class="in" id="arf_a" type="number" min="1" value="${f.a || 1}"></label><label>${ar ? "لحد آية" : "To ayah"}<input class="in" id="arf_b" type="number" min="1" value="${f.b || 5}"></label>
+      <label>${ar ? "النوع" : "Type"}<select class="in" id="arf_k" onchange="state.arf.kind=this.value;render()"><option value="murattal" ${f.kind === "murattal" ? "selected" : ""}>📿 ${rkName("murattal")}</option><option value="mujawwad" ${f.kind === "mujawwad" ? "selected" : ""}>🎙️ ${rkName("mujawwad")}</option><option value="modulation" ${f.kind === "modulation" ? "selected" : ""}>🔀 ${ar ? "تحويل بين مقامين" : "Modulation"}</option></select></label>
+      <label>${f.kind === "modulation" ? (ar ? "من مقام" : "From maqam") : (ar ? "المقام" : "Maqam")}${mqOpts(f.m || "bayati", "arf_m")}</label>${f.kind === "modulation" ? `<label>${ar ? "لمقام" : "To maqam"}${mqOpts(f.m2 || "hijaz", "arf_m2")}</label>` : ""}</div>
+    <div class="row" style="gap:.3rem;flex-wrap:wrap;margin:.6rem 0">${[["site", "🕌 " + (ar ? "شيخ من الموقع" : "Site reciter")], ["file", "⬆️ " + (ar ? "ملف / تسجيل" : "File / record")], ["yt", "▶️ YouTube"]].map(([k, n]) => `<button class="btn ${f.src === k ? "btn-p" : "btn-o"}" onclick="state.arf.src='${k}';render()">${n}</button>`).join("")}</div>
+    ${f.src === "site" ? `<label class="sm">${ar ? "الشيخ" : "Reciter"} <select class="in" id="arf_r" onchange="state.arf.rec=this.value">${EA.map(r => `<option value="${r[0]}" ${f.rec === r[0] ? "selected" : ""}>${esc(ar ? r[1] : r[2])}</option>`).join("")}</select></label><button class="btn btn-o" style="margin-top:.4rem" onclick="plPlay(document.getElementById('arf_r').value,+document.getElementById('arf_s').value,+document.getElementById('arf_a').value,+document.getElementById('arf_b').value,this)">▶ ${ar ? "جرّب" : "Preview"}</button>`
+      : f.src === "file" ? `<input class="in" id="arf_n" placeholder="${ar ? "اسم الشيخ / القارئ" : "Sheikh / reciter name"}"><div class="row" style="gap:.4rem;margin-top:.4rem;flex-wrap:wrap"><label class="btn btn-o">⬆️ ${ar ? "اختار ملف" : "Choose file"}<input type="file" id="arf_f" hidden accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.amr,.3gp,.webm"></label><label class="btn btn-o">📱 ${ar ? "سجّل بالموبايل" : "Record with phone"}<input type="file" id="arf_c" hidden accept="audio/*" capture></label><button class="btn btn-o" id="arf_rec" onclick="arfRec()">🎙️ ${ar ? "سجّل هنا" : "Record here"}</button></div>`
+      : `<input class="in" id="arf_y" dir="ltr" placeholder="https://youtu.be/…"><input class="in" id="arf_n" placeholder="${ar ? "اسم الشيخ" : "Sheikh name"}" style="margin-top:.4rem">`}
+    <div style="margin-top:.7rem"><button class="btn btn-p btn-lg" onclick="arfSave()">💾 ${ar ? "انشرها" : "Publish"}</button></div><p class="xs muted">${ar ? "بتظهر في صفحة المقام في القسم اللي اخترته، ولو «تحويل» بتظهر في قسم «التحويل من مقام لمقام» من الاتجاهين." : "It appears on the maqam page in the chosen section; modulations appear in the modulation section in both directions."}</p></div>`;
+}
+let __arfR = null;
+async function arfRec() { const b = document.getElementById("arf_rec"); const ar = state.lang === "ar"; if (__arfR && __arfR.r) { __arfR.r.stop(); return; } let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } }); } catch (e) { return; } const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; r.ondataavailable = e => e.data.size && ch.push(e.data); r.onstop = () => { st.getTracks().forEach(t => t.stop()); const bl = new Blob(ch, { type: r.mimeType || "audio/webm" }); __arfR = { f: new File([bl], `rec-${Date.now()}.${/mp4/.test(bl.type) ? "m4a" : "webm"}`, { type: bl.type }) }; if (b) { b.textContent = "✅ " + (ar ? "اتسجل" : "Recorded"); b.classList.remove("rec59on"); } }; __arfR = { r }; r.start(); if (b) { b.textContent = "⏹ " + (ar ? "وقّف" : "Stop"); b.classList.add("rec59on"); } }
+async function arfSave() {
+  const g = id => document.getElementById(id); const ar = state.lang === "ar"; const f = state.arf; const s = +g("arf_s").value, a = +g("arf_a").value || 1, b = Math.max(a, +g("arf_b").value || a); const kind = g("arf_k").value; const m = g("arf_m").value; const m2 = g("arf_m2") ? g("arf_m2").value : null;
+  if (kind === "modulation" && (!m2 || m2 === m)) return toast(ar ? "اختار مقامين مختلفين" : "Choose two different maqamat", true);
+  let url = null, file_path = null, type = "audio", reciter = null;
+  if (f.src === "site") { url = "ea:" + g("arf_r").value; const r = EA.find(x => x[0] === g("arf_r").value); reciter = r ? r[1] : null; }
+  else if (f.src === "yt") { url = (g("arf_y").value || "").trim(); type = "video"; reciter = (g("arf_n").value || "").trim() || null; if (!ytId59(url)) return toast(ar ? "لينك يوتيوب مش صحيح" : "Invalid YouTube link", true); }
+  else { const fl = (g("arf_f").files[0]) || (g("arf_c").files[0]) || (__arfR && __arfR.f); if (!fl) return toast(ar ? "اختار ملف أو سجّل" : "Choose a file or record", true); reciter = (g("arf_n").value || "").trim() || null; toast(ar ? "⬆️ بنرفع…" : "⬆️ Uploading…"); const ext = ((fl.name.split(".").pop() || "webm").replace(/[^a-z0-9]/gi, "") || "webm").toLowerCase(); const path = `recordings/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`; const up = await sb.storage.from("academy_public").upload(path, fl, { contentType: fl.type || (ext === "mp3" ? "audio/mpeg" : ext === "m4a" ? "audio/mp4" : "audio/" + ext) }); if (up.error) return toast(up.error.message, true); file_path = "academy_public/" + path; type = /^video/.test(fl.type) ? "video" : "audio"; }
+  const title = `${SURAHS[s - 1]} ${a}${b > a ? "–" + b : ""}`;
+  const { error } = await sb.from("contents").insert({ title: { ar: title, en: title }, type, status: "published", visibility: "public", section_id: mqSecId(m), file_path, url, maqam: m, maqam_to: kind === "modulation" ? m2 : null, music_free: true, rec_kind: kind, surah: s, ayah: a, ayah_to: b, reciter });
+  if (error) return toast(error.message, true); __arfR = null; Object.keys(state.data).forEach(k => { if (/^mqrec59:|^tahwil/.test(k)) delete state.data[k]; }); toast("✅ " + (ar ? "اتنشرت" : "Published")); render();
+}
+/* في صفحة «اسمع القرآن» للمالك */
+const _amOwnerCard74 = amOwnerCard; amOwnerCard = function () { if (!canTagMq()) return ""; return `<div style="margin-top:1rem">${addRecForm({ s: (state.ls || {}).s || 1 })}</div>` + _amOwnerCard74(); };
+/* ---------- 2) قسم «التحويل من مقام لمقام» ---------- */
+PAGES16.push("tahwil");
+function tahwilAll() { return useData("tahwil:all", () => q(sb.from("contents").select("id,title,type,file_path,url,maqam,maqam_to,rec_kind,surah,ayah,ayah_to,reciter,created_at").eq("rec_kind", "modulation").eq("status", "published").order("created_at", { ascending: false }).limit(500))); }
+function renderTahwil() {
+  const ar = state.lang === "ar"; const all = tahwilAll(); const a = state.thA, b = state.thB; const own = realRole() === "owner" && !state.preview;
+  if (!Array.isArray(all)) return pageWrap("🔀", ar ? "التحويل من مقام لمقام" : "Modulation between maqamat", "", loadingBox());
+  const pair = (x, y) => all.filter(c => (c.maqam === x && c.maqam_to === y) || (c.maqam === y && c.maqam_to === x));
+  const cnt = x => all.filter(c => c.maqam === x || c.maqam_to === x).length;
+  let body;
+  if (!a) body = `<p class="sm">${ar ? "اختار المقام اللي هتبدأ منه:" : "Choose the starting maqam:"}</p><div class="thgrid">${MQ.map(m => `<button class="thm" onclick="state.thA='${m.id}';render()"><b>${esc(mqName(m))}</b><small>${cnt(m.id)} ${ar ? "تلاوة" : "recitations"}</small></button>`).join("")}</div>`;
+  else if (!b) body = `<p class="sm">${ar ? `من <b>${esc(maqamName(a))}</b> لأي مقام؟` : `From <b>${esc(maqamName(a))}</b> to which maqam?`}</p><div class="thgrid">${MQ.filter(m => m.id !== a).map(m => { const n = pair(a, m.id).length; return `<button class="thm ${n ? "has" : ""}" onclick="state.thB='${m.id}';render()"><b>${esc(mqName(m))}</b><small>${n} ${ar ? "تلاوة" : "recitations"}</small></button>`; }).join("")}</div>`;
+  else { const xs = pair(a, b); body = `<div class="row" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem"><h3 style="margin:0">🔀 ${esc(maqamName(a))} ⇄ ${esc(maqamName(b))}</h3><button class="btn btn-o" onclick="const t=state.thA;state.thA=state.thB;state.thB=t;render()">⇄</button></div>${xs.length ? `<div class="rcgrid59">${xs.map(c => recCard59(c, a)).join("")}</div>` : `<p class="sm muted">${ar ? "لسه مفيش تلاوات بين المقامين دول." : "No recitations between these two yet."}</p>`}${own ? addRecForm({ _force: 1, kind: "modulation", m: a, m2: b }) : ""}`; }
+  const crumbs = `<div class="row" style="gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">${a ? `<button class="btn btn-o" onclick="state.thA=null;state.thB=null;render()">↩️ ${ar ? "كل المقامات" : "All maqamat"}</button>` : ""}${b ? `<button class="btn btn-o" onclick="state.thB=null;render()">↩️ ${esc(maqamName(a))}</button>` : ""}</div>`;
+  return pageWrap("🔀", ar ? "التحويل من مقام لمقام" : "Modulation between maqamat", ar ? "اختار مقام البداية ثم مقام الوصول — التلاوات بتظهر من الاتجاهين" : "Pick a starting maqam, then a target — recitations show in both directions", crumbs + body);
+}
+const _render74 = render;
+render = function () { if (state.route === "tahwil") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderTahwil(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render74.apply(this, arguments); };
+const _DOMAINS74 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS74(); const a = ds.find(d => d.k === "maqamat"); if (a && a.tools && !a.tools.some(t => String(t[2]).includes("tahwil"))) a.tools.splice(1, 0, ["🔀", state.lang === "ar" ? "التحويل من مقام لمقام" : "Modulation between maqamat", "go16('tahwil')", ""]); return ds; };
+if (Array.isArray(KIT) && !KIT.some(k => k[0] === "tahwil")) KIT.splice(2, 0, ["tahwil", "🔀", "التحويل من مقام لمقام", "Maqam modulation", ["اختار مقامين", "تلاوات من الاتجاهين"], ["Pick two maqamat", "Recitations both ways"], "#/tahwil", "#7c3aed"]);
+/* تبويب «التحويل» جوه صفحة المقام = نفس البيانات */
+const _maqamOne74 = maqamOne;
+maqamOne = function (cur) { const mid = (cur.meta || {}).maqam; if (state.mqTab !== "mod") return _maqamOne74(cur); const h = _maqamOne74(cur); const ar = state.lang === "ar"; const rs = maqamRecs59(mid); const xs = Array.isArray(rs) ? rs.filter(c => c.maqam_to) : []; return h + `<div class="card" style="margin-top:1rem"><h3>🔀 ${ar ? "تلاوات فيها تحويل من/إلى" : "Recitations modulating from/to"} ${esc(maqamName(mid))}</h3>${xs.length ? `<div class="rcgrid59">${xs.map(c => recCard59(c, mid)).join("")}</div>` : `<p class="sm muted">${ar ? "لسه مفيش." : "None yet."}</p>`}<button class="btn btn-o" style="margin-top:.5rem" onclick="state.thA='${mid}';state.thB=null;go16('tahwil')">🔀 ${ar ? "كل التحويلات" : "All modulations"}</button></div>`; };
+/* ---------- 3) غرفة اجتماع المالك: لينك + الضيف يدخل بموافقتك ---------- */
+PAGES16.push("meet");
+const _readHash74 = readHash;
+readHash = function () { const p = (location.hash || "").replace(/^#\/?/, "").split("/"); if (p[0] === "room" && p[1] === "meet" && /^[0-9a-f-]{36}$/i.test(p[2] || "")) { state.route = "room"; state.roomKind = "meet"; state.roomId = p[2]; return; } return _readHash74(); };
+async function meetCreate() { const ar = state.lang === "ar"; const t = prompt(ar ? "اسم الاجتماع (مثلاً: لقاء طلبة المقامات)" : "Meeting title") || ""; const { data, error } = await sb.from("owner_meetings").insert({ title: t || null }).select().single(); if (error) return toast(error.message, true); const link = location.origin + location.pathname + "#/meet/" + data.token; try { await navigator.clipboard.writeText(link); } catch (e) {} toast(ar ? "📋 اتنسخ لينك الدعوة" : "📋 Invite link copied"); location.hash = "#/room/meet/" + data.id; }
+function renderMeetJoin() {
+  const ar = state.lang === "ar"; const tok = state.pageArg; const st = state.mj || (state.mj = {});
+  if (st.waiting) return pageWrap("🚪", ar ? "مستني موافقة المضيف…" : "Waiting for the host to let you in…", "", `<div class="card" style="text-align:center"><div style="font-size:3rem" class="rdlive">⏳</div><p>${ar ? "المضيف هيشوف إنك عايز تدخل ويوافق عليك. خلّي الصفحة مفتوحة." : "The host will see your request. Keep this page open."}</p></div>`);
+  return pageWrap("🎥", ar ? "انضم للاجتماع" : "Join the meeting", "", `<div class="card" style="max-width:420px;margin:auto;text-align:center"><input class="in" id="mj_n" placeholder="${ar ? "اكتب اسمك" : "Your name"}" value="${esc((state.auth.profile && (state.auth.profile.display_name || state.auth.profile.real_name)) || "")}"><button class="btn btn-p btn-lg" style="margin-top:.6rem" onclick="meetKnock('${esc(tok)}')">🚪 ${ar ? "اطلب الدخول" : "Ask to join"}</button><p class="xs muted" style="margin-top:.5rem">${ar ? "مش محتاج حساب." : "No account needed."}</p></div>`);
+}
+async function meetKnock(tok) {
+  const ar = state.lang === "ar"; const name = ((document.getElementById("mj_n") || {}).value || "").trim(); if (!name) return toast(ar ? "اكتب اسمك" : "Enter your name", true);
+  if (!state.auth.user) { const { error } = await sb.auth.signInAnonymously({ options: { data: { display_name: name } } }); if (error) return toast(ar ? "الدخول كضيف مش مفعّل لسه — سجّل دخول بحسابك." : "Guest access isn't enabled yet — please log in.", true); await new Promise(r => setTimeout(r, 600)); }
+  const { data, error } = await sb.rpc("meet_knock", { p_token: tok, p_name: name }); if (error) return toast(/closed/.test(error.message) ? (ar ? "الاجتماع مقفول" : "Meeting is closed") : error.message, true);
+  if (data.approved) { location.hash = "#/room/meet/" + data.id; return; }
+  state.mj.waiting = data.id; render(); clearInterval(meetKnock.t);
+  meetKnock.t = setInterval(async () => { const r = await sb.rpc("room_access", { p_kind: "meet", p_id: data.id }); if (r.data) { clearInterval(meetKnock.t); state.mj = {}; location.hash = "#/room/meet/" + data.id; } else if (Date.now() % 30000 < 3000) sb.rpc("meet_knock", { p_token: tok, p_name: name }); }, 3000);
+}
+const _render74b = render;
+render = function () { if (state.route === "meet") { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + renderMeetJoin() + renderFooter(); return; } return _render74b.apply(this, arguments); };
+/* المضيف: طلبات الدخول */
+setInterval(async () => { try { if (!RM || RM.kind !== "meet" || !RM.joined || !rmIsHost()) return; const { data } = await sb.rpc("meet_waiting", { p_meet: RM.id }); const box = rmEl("rmKnock") || (() => { const d = document.createElement("div"); d.id = "rmKnock"; (rmEl("rmRoot") || document.body).appendChild(d); return d; })(); const ar = state.lang === "ar";
+  box.innerHTML = (data || []).map(w => `<div class="rmkn"><b>🚪 ${esc(w.display_name || "?")}</b> ${ar ? "عايز يدخل" : "wants to join"}<button class="rm-pbtn p" onclick="sb.rpc('meet_admit',{p_meet:'${RM.id}',p_user:'${w.user_id}',p_ok:true}).then(()=>this.parentNode.remove())">✅ ${ar ? "دخّله" : "Admit"}</button><button class="rm-pbtn" onclick="sb.rpc('meet_admit',{p_meet:'${RM.id}',p_user:'${w.user_id}',p_ok:false}).then(()=>this.parentNode.remove())">✕</button></div>`).join(""); } catch (e) {} }, 4000);
+/* زرار «اجتماع جديد» للمالك في مساحتي */
+const _renderMySpace74 = renderMySpace; renderMySpace = function () { const h = _renderMySpace74(); if (realRole() !== "owner") return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#16a34a" onclick="meetCreate()"><span>👥</span><b>${state.lang === "ar" ? "اجتماع جماعي جديد (لينك)" : "New group meeting (link)"}</b></button>`); };
+/* ---------- 4) تأكيد الإيميل: شاشة كبيرة + فتح البريد + إعادة الإرسال ---------- */
+function verifyModal(email) { const ar = state.lang === "ar"; const [nm, url] = mailLink(email); const old = document.getElementById("fpM"); if (old) old.remove(); const m = document.createElement("div"); m.id = "fpM";
+  m.innerHTML = `<div class="fpbox card vrf"><div class="vrfic">✉️</div><h2>${ar ? "أكّد إيميلك عشان حسابك يتفعّل" : "Confirm your email to activate your account"}</h2><p>${ar ? "بعتنالك رسالة تأكيد على" : "We sent a confirmation email to"}<br><b dir="ltr">${esc(email)}</b></p><a class="btn btn-p btn-lg btn-full" href="${url}" target="_blank" rel="noopener">📬 ${ar ? "افتح" : "Open"} ${esc(nm)}</a><button class="btn btn-o btn-full" style="margin-top:.5rem" onclick="verifyResend('${esc(email)}')">🔁 ${ar ? "ابعت الرسالة تاني" : "Resend the email"}</button><p class="xs muted" style="margin-top:.6rem">${ar ? "مش لاقيها؟ بص في Spam أو «الترويجات». بعد ما تدوس «تأكيد» في الرسالة هترجع للموقع وحسابك شغال." : "Not there? Check Spam or Promotions. After pressing “Confirm” you'll come back here with your account active."}</p><button class="btn btn-o" style="margin-top:.4rem" onclick="document.getElementById('fpM').remove()">${ar ? "تمام" : "OK"}</button></div>`; document.body.appendChild(m); }
+async function verifyResend(email) { const { error } = await sb.auth.resend({ type: "signup", email, options: { emailRedirectTo: location.origin + location.pathname + "#/home" } }); toast(error ? error.message : (state.lang === "ar" ? "✓ اتبعتت تاني" : "✓ Sent again"), !!error); }
+const _signUpUser74 = signUpUser;
+signUpUser = async function (o) { const r = await _signUpUser74(o); if (r === "confirm") setTimeout(() => verifyModal(o.email), 300); return r; };
+(function () { const orig = sb.auth.signInWithPassword.bind(sb.auth); sb.auth.signInWithPassword = async function (cred) { const r = await orig(cred); if (r && r.error && /confirm/i.test(r.error.message || "") && cred && cred.email) setTimeout(() => verifyModal(cred.email), 200); return r; }; })();
+/* ---------- 5) الموبايل: سجّل بتطبيق التسجيل لو الميكروفون في المتصفح مش شغال ---------- */
+const _sfTasks74 = sfTasks;
+sfTasks = function (uid, x) { const ar = state.lang === "ar"; return _sfTasks74(uid, x).replace(/<label class="btn btn-o">📎 ([^<]*)<input type="file" id="sff_([^"]+)" multiple hidden><\/label>/g, (m, t, id) => `<label class="btn btn-o">📎 ${t}<input type="file" id="sff_${id}" multiple hidden accept="audio/*,video/*,image/*,.pdf,.doc,.docx,.mp3,.m4a,.aac,.wav,.ogg,.opus,.amr,.3gp"></label><label class="btn btn-o">📱 ${ar ? "سجّل بالموبايل" : "Record with phone"}<input type="file" hidden accept="audio/*" capture onchange="if(this.files[0]){__sfRec['${id}']={f:this.files[0]};toast('✅')}"></label>`); };
+document.head.insertAdjacentHTML("beforeend", `<style>.arf{border:1.5px dashed var(--accent)}.arfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem}.arfg label,.arf label.sm{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem}
+.thgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem}.thm{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:.8rem .5rem;border:1px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;font:inherit;color:var(--fg)}.thm.has{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card))}.thm small{opacity:.7}
+#rmKnock{position:absolute;top:3.4rem;inset-inline-end:.6rem;z-index:60;display:flex;flex-direction:column;gap:.4rem}.rmkn{background:#0f172a;color:#fff;border:1px solid #334155;border-radius:12px;padding:.5rem .7rem;display:flex;gap:.4rem;align-items:center}
+.vrf{text-align:center;max-width:440px}.vrfic{font-size:4.5rem;animation:fpPulse 1.6s infinite}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
