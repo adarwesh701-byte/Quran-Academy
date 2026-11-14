@@ -2124,7 +2124,7 @@ function ownerBookings(P) {
         <button class="btn btn-o" onclick="ownerBooking('${x.id}',{payment_status:'waived'})">${L("markWaived")}</button>` : ""}
       ${x.status !== "cancelled" ? `
         <div><label class="l xs">${L("assignTeacher")}</label><select class="in" id="bt_${x.id}">${teacherOptions(P, x.teacher_id)}</select></div>
-        <div><label class="l xs">${L("duration")}</label><select class="in" id="bd_${x.id}">${durOptions(setv("trialMinutes", 25))}</select></div>
+        <div><label class="l xs">${L("duration")}</label><select class="in" id="bd_${x.id}">${durOptions(x.trial_minutes || setv("trialMinutes", 25))}</select></div>
         <button class="btn btn-o" onclick="scheduleTrial('${x.id}')">${L("createTrial")}</button>
         <button class="btn btn-o" style="color:var(--danger)" onclick="ownerBooking('${x.id}',{status:'cancelled'})">${L("cancelBooking")}</button>` : ""}
     </div>
@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v60";
+const UI_VERSION = "2026-11-14-v61";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16889,6 +16889,95 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .sfchip{display:inline-flex;gap:.3rem;border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;font-size:.85rem}
 .sfchk{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px dashed var(--line)}.sfchk label{flex:1;cursor:pointer}.sfchk.ok b{text-decoration:line-through;opacity:.6}.sfx{padding:.05rem .4rem}
 .sfnew{margin-bottom:.6rem}</style>`);
+
+/* ================= v61: نظام الحصص — مواعيد بنص الساعة، تأكيد الحصة، الإلغاء والتأجيل بحدود، حصص أسبوعية ثابتة، حصة يضيفها المعلم بموافقة الطالب، تجريبية 25/50 ================= */
+/* ---------- 1) مواعيد المعلم بنص الساعة ---------- */
+availFor = function (teacherId) {
+  if (!teacherId) return null;
+  const a = useData("avail:" + teacherId, () => q(sb.from("teacher_availability").select("day_of_week,hour,minute").eq("teacher_id", teacherId).eq("is_available", true)));
+  if (!Array.isArray(a)) return null; const by = {};
+  a.forEach(r => { const L1 = (by[r.day_of_week] = by[r.day_of_week] || []); if (r.minute == null || r.minute === 0) L1.push(r.hour); if (r.minute == null || r.minute === 30) L1.push(r.hour + .5); });
+  Object.values(by).forEach(v => v.sort((x, y) => x - y)); return by;
+};
+schedFillDay = function (d, on) { state.schedDraft[d] = on ? Array.from({ length: 48 }, (_, i) => i / 2) : []; render(); };
+saveSchedule = async function () {
+  const uid = state.auth.user.id; const rows = [];
+  Object.keys(state.schedDraft).forEach(d => { const v = state.schedDraft[d]; for (let h = 0; h < 24; h++) { const a = v.includes(h), b = v.includes(h + .5); if (a && b) rows.push({ teacher_id: uid, day_of_week: +d, hour: h, minute: null, is_available: true }); else if (a) rows.push({ teacher_id: uid, day_of_week: +d, hour: h, minute: 0, is_available: true }); else if (b) rows.push({ teacher_id: uid, day_of_week: +d, hour: h, minute: 30, is_available: true }); } });
+  state.busy = true; render();
+  try { await q(sb.from("teacher_availability").delete().eq("teacher_id", uid)); if (rows.length) await q(sb.from("teacher_availability").insert(rows)); await sb.from("profiles").update({ timezone: BROWSER_TZ }).eq("id", uid); invalidate("avail:" + uid); state.schedDraft = null; toast(L("saved")); } catch (e) { toast(e.message, true); }
+  state.busy = false; render();
+};
+renderScheduleEditor = function () {
+  const tr = I18N[state.lang]; const draft = getMyAvail(); if (!draft) return loadingBox(); const ar = state.lang === "ar";
+  const lab = v => `${String(Math.floor(v)).padStart(2, "0")}:${v % 1 ? "30" : "00"}`;
+  return `<div class="card"><p class="muted sm" style="margin-bottom:.4rem">${L("tOnbSub")} <b>(${esc(BROWSER_TZ)})</b></p><p class="xs muted" style="margin-bottom:1rem">${ar ? "كل مربع = نص ساعة. حصة الـ25 دقيقة بتاخد نص ساعة، وحصة الـ50 دقيقة بتاخد ساعة." : "Each box = half an hour. A 25-min lesson takes half an hour; a 50-min lesson takes an hour."}</p>
+    <div style="display:flex;flex-direction:column;gap:1rem">${[6, 0, 1, 2, 3, 4, 5].map(d => `<fieldset><legend>${esc(tr.days[d])} <span class="xs muted">(${draft[d].length / 2}h)</span> <a href="#" class="xs accent" onclick="schedFillDay(${d},true);return false;">24h</a> · <a href="#" class="xs muted" onclick="schedFillDay(${d},false);return false;">✕</a></legend>
+      <div class="hour-grid hg61">${Array.from({ length: 48 }, (_, i) => i / 2).map(v => `<button type="button" class="hourbtn" aria-pressed="${draft[d].includes(v)}" onclick="toggleSched(${d},${v})">${lab(v)}</button>`).join("")}</div></fieldset>`).join("")}</div>
+    <button class="btn btn-p btn-full btn-lg" style="margin-top:1.2rem" ${state.busy ? "disabled" : ""} onclick="saveSchedule()">${L("save")}</button></div>`;
+};
+/* ---------- 2) الإلغاء والتأجيل للمعلم (بسبب، وبحدود شهرية) ---------- */
+function lcModal(id) {
+  const ar = state.lang === "ar"; const m = document.createElement("div"); m.id = "fpM";
+  m.innerHTML = `<div class="fpbox card" style="text-align:start;max-width:520px"><b>🗓️ ${ar ? "إلغاء أو تأجيل الحصة" : "Cancel or reschedule the lesson"}</b>
+    <div class="row" style="gap:.3rem;flex-wrap:wrap;margin:.6rem 0">${[["postpone", ar ? "⏭️ تأجيل" : "⏭️ Postpone"], ["change_time", ar ? "🔁 تغيير الميعاد" : "🔁 Change time"], ["excuse", ar ? "🩺 عذر غياب" : "🩺 Excuse"], ["cancel", ar ? "✕ إلغاء" : "✕ Cancel"]].map(([k, n], i) => `<label class="btn btn-o" style="padding:.25rem .6rem"><input type="radio" name="lck" value="${k}" ${i ? "" : "checked"} onchange="document.getElementById('lcT').style.display=/postpone|change_time/.test(this.value)?'':'none'"> ${n}</label>`).join("")}</div>
+    <input class="in" id="lcT" type="datetime-local" step="1800"><textarea class="in" id="lcR" rows="2" placeholder="${ar ? "السبب (إجباري)" : "Reason (required)"}" style="margin-top:.4rem"></textarea>
+    <p class="xs muted" style="margin-top:.4rem">${ar ? "قبل الحصة بـ12 ساعة أو أكتر: ليك 5 إلغاءات و10 تأجيلات في الشهر. أقل من 12 ساعة: لازم الطالب يوافق." : "12h+ before: 5 cancellations and 10 postponements a month. Under 12h: the student must agree."}</p>
+    <div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-p" onclick="lcSend('${id}')">${ar ? "تأكيد" : "Confirm"}</button><button class="btn btn-o" onclick="document.getElementById('fpM').remove()">✕</button></div></div>`;
+  document.body.appendChild(m);
+}
+async function lcSend(id) {
+  const ar = state.lang === "ar"; const k = (document.querySelector('input[name="lck"]:checked') || {}).value; const r = (document.getElementById("lcR") || {}).value || ""; const t = (document.getElementById("lcT") || {}).value;
+  if (!r.trim()) return toast(ar ? "اكتب السبب" : "Write the reason", true);
+  const ns = /postpone|change_time/.test(k) && t ? new Date(t) : null; if (ns) { ns.setMinutes(ns.getMinutes() < 30 ? 0 : 30, 0, 0); }
+  const { data, error } = await sb.rpc("teacher_change_lesson", { p_lesson: id, p_kind: k, p_reason: r, p_new_start: ns ? ns.toISOString() : null });
+  if (error) { const M = { limit_cancel_5: ar ? "خلصت الـ5 إلغاءات بتوع الشهر ده" : "You used your 5 cancellations this month", limit_postpone_10: ar ? "خلصت الـ10 تأجيلات بتوع الشهر ده" : "You used your 10 postponements this month", slot_unavailable: ar ? "الميعاد الجديد مش متاح" : "The new time is not available", new_time_required: ar ? "اختار الميعاد الجديد" : "Pick the new time" }; return toast(Object.keys(M).find(x => (error.message || "").includes(x)) ? M[Object.keys(M).find(x => error.message.includes(x))] : errMsg(error), true); }
+  document.getElementById("fpM").remove(); invalidateCal(); toast(data === "needs_student_ok" ? (ar ? "📨 اتبعت للطالب يوافق (أقل من 12 ساعة)" : "📨 Sent to the student for approval (under 12h)") : "✓"); render();
+}
+const _renderLessonDetails61 = renderLessonDetails;
+renderLessonDetails = function (l, map) {
+  let h = _renderLessonDetails61(l, map); const ar = state.lang === "ar"; const mine = state.auth.user && l.teacher_id === state.auth.user.id;
+  const extra = [];
+  if ((mine || realRole() === "owner") && l.status === "scheduled" && new Date(l.start_time) > new Date()) extra.push(`<button class="btn btn-o" onclick="lcModal('${l.id}')">🗓️ ${ar ? "إلغاء / تأجيل" : "Cancel / postpone"}</button>`);
+  if ((mine || realRole() === "owner") && l.status === "scheduled") extra.push(`<button class="btn btn-o" onclick="rcMake('${l.teacher_id}','${l.student_id}','${l.start_time}',${Math.round((new Date(l.end_time) - new Date(l.start_time)) / 6e4)})">🔁 ${ar ? "خلّي الميعاد ده ثابت كل أسبوع" : "Make this a weekly slot"}</button>`);
+  if (l.needs_student_ok) extra.push(`<span class="badge">${l.student_ok === true ? "✅ " + (ar ? "الطالب وافق" : "Student agreed") : l.student_ok === false ? "❌ " + (ar ? "الطالب ما وافقش" : "Student declined") : "⏳ " + (ar ? "مستني موافقة الطالب" : "Awaiting the student")}</span>`);
+  if (l.status === "on_hold") extra.push(`<span class="badge" style="background:#fee2e2;color:#991b1b">⏸️ ${ar ? "موقوفة (3 غيابات)" : "On hold (3 absences)"}</span>`);
+  return extra.length ? h.replace(/(<div class="row" style="margin-top:\.8rem;gap:\.5rem">)/, `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem">${extra.join("")}</div>$1`) : h;
+};
+async function rcMake(t, s, st, mins) { const ar = state.lang === "ar"; if (!confirm(ar ? "تثبّت الميعاد ده كل أسبوع للطالب؟ المكان هيتحجز في جدول المعلم ومحدش يحجز فيه، والحصص بتتعمل تلقائي طول ما الطالب عنده رصيد." : "Make this a fixed weekly slot? It stays reserved in the teacher's schedule and lessons are created automatically while the student has credit.")) return; const { error } = await sb.rpc("create_recurring", { p_teacher: t, p_student: s, p_start: st, p_minutes: mins }); if (error) return toast(errMsg(error), true); toast("✓ " + (ar ? "اتثبت أسبوعيًا" : "Weekly slot set")); invalidate("rcMine"); render(); }
+/* ---------- 3) الإشعارات: أزرار الرد ---------- */
+const N61 = { lesson_confirm: ["✅ أكّد إن الحصة اتعملت؟", "✅ Confirm the lesson took place?"], lesson_added: ["📅 المعلم ضاف حصة جديدة — موافق؟", "📅 Your teacher added a lesson — OK?"], lesson_change_ask: ["🗓️ المعلم طالب تغيير في الحصة — موافق؟", "🗓️ Your teacher asks to change a lesson — OK?"], lesson_changed: ["🗓️ اتغيّر ميعاد/حالة حصتك", "🗓️ Your lesson was changed"], lesson_cancelled: ["✕ الطالب لغى حصة", "✕ A student cancelled a lesson"], lessons_on_hold: ["⏸️ حصصك الجاية اتوقفت بعد 3 غيابات — أكّد إنك هتكمل", "⏸️ Your next lessons are on hold after 3 absences — confirm to continue"], lessons_on_hold_t: ["⏸️ حصص طالب اتوقفت (3 غيابات)", "⏸️ A student's lessons are on hold (3 absences)"], recurring_new: ["🔁 اتثبت ميعاد أسبوعي", "🔁 A weekly slot was set"], recurring_released: ["⚠️ ميعادك الأسبوعي اتشال لأن مفيش رصيد — جدّد عشان يرجع", "⚠️ Your weekly slot was released (no credit) — renew to get it back"], recurring_released_t: ["⚠️ ميعاد أسبوعي لطالب اتشال (مفيش رصيد)", "⚠️ A student's weekly slot was released (no credit)"], lesson_added_answer: ["📅 الطالب رد على الحصة اللي ضفتها", "📅 The student answered about the added lesson"], lesson_change_answer: ["🗓️ الطالب رد على طلب التغيير", "🗓️ The student answered your change request"] };
+const _notifText61 = notifText; notifText = function (n) { const x = N61[n.kind]; if (x) { const d = n.data || {}; return x[state.lang === "ar" ? 0 : 1] + (d.at ? " · " + fmtDT(d.at) : "") + (d.ok === true ? " ✅" : d.ok === false ? " ❌" : ""); } return _notifText61(n); };
+function ntModal(title, body, btns) { const m = document.createElement("div"); m.id = "fpM"; m.innerHTML = `<div class="fpbox card"><h3>${title}</h3>${body}<div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.8rem">${btns}<button class="btn btn-o" onclick="document.getElementById('fpM').remove()">${state.lang === "ar" ? "بعدين" : "Later"}</button></div></div>`; document.body.appendChild(m); }
+async function ntDo(rpc, args, msg) { const { error } = await sb.rpc(rpc, args); const m = document.getElementById("fpM"); if (m) m.remove(); if (error) return toast(errMsg(error), true); toast(msg || "✓"); invalidate("myLessons"); try { invalidateCal(); } catch (e) {} render(); }
+const _openNotif61 = openNotif;
+openNotif = async function (id) {
+  const n = (state.notif.list || []).find(x => x.id === id); if (!n || !N61[n.kind]) return _openNotif61(id); const d = n.data || {}; const ar = state.lang === "ar";
+  state.notif.open = false; if (!n.read_at) { n.read_at = new Date().toISOString(); sb.from("notifications").update({ read_at: n.read_at }).eq("id", id).then(() => {}, () => {}); } render();
+  const when = d.at ? `<p class="sm">🕒 ${esc(fmtDT(d.at))}${d.new ? ` → <b>${esc(fmtDT(d.new))}</b>` : ""}</p>` : ""; const why = d.reason ? `<p class="sm muted">${esc(d.reason)}</p>` : "";
+  if (n.kind === "lesson_confirm") return ntModal(N61[n.kind][ar ? 0 : 1], when + `<p class="xs muted">${ar ? "لو ما رديتش خلال يومين بتتأكد تلقائي." : "If you don't reply within 2 days it is confirmed automatically."}</p>`, `<button class="btn btn-p" onclick="ntDo('confirm_lesson',{p_lesson:'${d.lesson}'})">✅ ${ar ? "أيوه اتعملت" : "Yes, it happened"}</button><button class="btn btn-o" onclick="document.getElementById('fpM').remove();state.dash.tab='lessons';navigate('dashboard')">⚠️ ${ar ? "فيه مشكلة" : "Report a problem"}</button>`);
+  if (n.kind === "lesson_added") return ntModal(N61[n.kind][ar ? 0 : 1], when + `<p class="xs muted">${ar ? "لو رفضت ومحضرتش، رصيدك بيرجع. لو حضرت بتتحسب عادي." : "If you decline and don't attend, your credit is returned. If you attend, it counts normally."}</p>`, `<button class="btn btn-p" onclick="ntDo('student_ok_lesson',{p_lesson:'${d.lesson}',p_ok:true})">✅ ${ar ? "موافق" : "OK"}</button><button class="btn btn-o" onclick="ntDo('student_ok_lesson',{p_lesson:'${d.lesson}',p_ok:false})">❌ ${ar ? "مش موافق" : "Decline"}</button>`);
+  if (n.kind === "lesson_change_ask") return ntModal(N61[n.kind][ar ? 0 : 1], when + why, `<button class="btn btn-p" onclick="ntDo('respond_lesson_change',{p_change:'${d.change}',p_ok:true})">✅ ${ar ? "موافق" : "Agree"}</button><button class="btn btn-o" onclick="ntDo('respond_lesson_change',{p_change:'${d.change}',p_ok:false})">❌ ${ar ? "مش موافق" : "Refuse"}</button>`);
+  if (n.kind === "lessons_on_hold") return ntModal(N61[n.kind][ar ? 0 : 1], "", `<button class="btn btn-p" onclick="ntDo('resume_lessons',{},'${ar ? "✓ رجعت حصصك" : "✓ Lessons resumed"}')">▶ ${ar ? "هكمل الحصص" : "I'll continue"}</button>`);
+  if (/^recurring_released$/.test(n.kind)) return ntModal(N61[n.kind][ar ? 0 : 1], when, `<button class="btn btn-p" onclick="document.getElementById('fpM').remove();state.ptab='lessons';navigate('pricing')">💳 ${ar ? "جدّد" : "Renew"}</button>`);
+  state.dash.tab = role() === "teacher" ? "calendar" : "lessons"; navigate("dashboard");
+};
+/* ---------- 4) الطالب: لغي قبل 12 ساعة بس ---------- */
+cancelMyLesson = async function (id, early) {
+  const ar = state.lang === "ar"; const hrs = setv("cancelHours", 12);
+  if (!early) return toast(ar ? `الإلغاء متاح قبل الحصة بـ${hrs} ساعة بس — كلّم معلمك من الرسائل لو فيه ظرف.` : `Cancelling is only possible ${hrs}h before — message your teacher if something came up.`, true);
+  const r = prompt(ar ? "سبب الإلغاء (عذر / تأجيل / تغيير ميعاد):" : "Reason (excuse / postpone / change time):"); if (r === null) return;
+  const { error } = await sb.rpc("student_cancel_lesson", { p_lesson: id, p_reason: r }); if (error) return toast(errMsg(error), true);
+  Object.keys(state.data).forEach(k => { if (/^(slots:|avail:|bal:|childUp:)/.test(k)) delete state.data[k]; }); invalidate("myLessons"); toast(L("cancelledFree")); render();
+};
+/* ---------- 5) الحصة التجريبية: 25 دقيقة أو 50 دقيقة ---------- */
+state.booking = state.booking || {}; if (!state.booking.tmins) state.booking.tmins = 25;
+const _bookingPayload61 = bookingPayload;
+bookingPayload = function () { const p = _bookingPayload61(); const m = state.booking.tmins === 50 ? 50 : 25; p.trial_minutes = m; p.amount = Math.round((+(CONFIG.trial && CONFIG.trial.fee) || 2) * (m / 25) * 100) / 100; return p; };
+const _renderBooking61 = renderBooking;
+renderBooking = function () { let h = _renderBooking61(); const ar = state.lang === "ar"; const fee = +(CONFIG.trial && CONFIG.trial.fee) || 2; const m = state.booking.tmins === 50 ? 50 : 25;
+  const pick = `<div class="trmins"><b class="sm">${ar ? "مدة الحصة التجريبية" : "Trial lesson length"}</b><div class="row" style="gap:.4rem;margin-top:.3rem">${[25, 50].map(x => `<button type="button" class="btn ${m === x ? "btn-p" : "btn-o"}" onclick="state.booking.tmins=${x};render()">⏱️ ${x} ${ar ? "دقيقة" : "min"} — $${Math.round(fee * x / 25 * 100) / 100}</button>`).join("")}</div></div>`;
+  return h.replace(/(<div class="tbnote">[\s\S]*?<\/div>)/, `$1${pick}`).replace(L("tbNote").replace("{fee}", "$" + fee), L("tbNote").replace("{fee}", "$" + Math.round(fee * m / 25 * 100) / 100)); };
+document.head.insertAdjacentHTML("beforeend", `<style>.hg61{grid-template-columns:repeat(auto-fill,minmax(62px,1fr))!important}.hg61 .hourbtn{font-size:.78rem;padding:.3rem .2rem}.trmins{margin:.6rem 0 1rem;padding:.6rem .8rem;border:1px dashed var(--accent);border-radius:12px}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
