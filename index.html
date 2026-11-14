@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v78";
+const UI_VERSION = "2026-11-14-v79";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18134,6 +18134,44 @@ const _DOMAINS78 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS78(); con
 if (Array.isArray(KIT) && !KIT.some(k => k[0] === "ilm")) KIT.splice(1, 0, ["ilm", "🎓", "منهج العلوم الشرعية", "Islamic sciences curriculum", ["عقيدة وفقه وحديث وسيرة وتفسير وآداب", "مسار للأطفال"], ["Creed, fiqh, hadith, seerah, tafsir, manners", "Kids track"], "#/ilm", "#b45309"]);
 document.head.insertAdjacentHTML("beforeend", `<style>.ilmc{margin:.8rem 0}.ilmc ul{line-height:2;padding-inline-start:1.2rem}.ilmd p{font:1.15rem/2 'Amiri',serif;border-inline-start:3px solid var(--accent);padding-inline-start:.7rem;margin:.5rem 0}
 .ilmo{display:grid;gap:.5rem}.ilmk{display:grid;gap:.5rem;margin-top:.8rem}.ilmk .card{text-align:start;font:inherit;font-size:1.15rem;color:var(--fg);cursor:pointer;display:flex;gap:.6rem;align-items:center}.ilmk span{font-size:1.4rem}</style>`);
+
+/* ================= v79: «تحدّي المقام» — ١٠ مقاطع حقيقية من التسجيلات المرفوعة، خمّن المقام، نقط وسلسلة، ولوحة شرف أسبوعية ================= */
+PAGES16.push("mqchallenge");
+function mcWeek() { const d = new Date(); const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return t.getUTCFullYear() + "-W" + Math.ceil(((t - y) / 864e5 + 1) / 7); }
+function mcPool() { return useData("mcpool", () => q(sb.from("contents").select("id,file_path,maqam,rec_kind,title").not("file_path", "is", null).not("maqam", "is", null).in("rec_kind", ["murattal", "mujawwad"]).limit(500))); }
+function mcBoard() { return useData("mcboard:" + mcWeek(), () => q(sb.from("maqam_scores").select("display_name,score,user_id").eq("week", mcWeek()).order("score", { ascending: false }).limit(50))); }
+function mcUrl(p) { return sb.storage.from("academy_public").getPublicUrl(String(p).replace(/^academy_public\//, "")).data.publicUrl; }
+let __mcA = null;
+function mcStart() {
+  const pool = mcPool(); if (!Array.isArray(pool)) return; const ms = [...new Set(pool.map(x => x.maqam))]; if (ms.length < 2) return toast(state.lang === "ar" ? "محتاجين تسجيلات لمقامين على الأقل" : "Need recordings in at least two maqamat", true);
+  const rnd = a => a.slice().sort(() => Math.random() - .5); const rounds = rnd(pool).slice(0, 10).map(c => ({ c, opts: rnd([c.maqam, ...rnd(ms.filter(m => m !== c.maqam)).slice(0, 3)]) }));
+  state.mc = { rounds, n: 0, score: 0, streak: 0, best: 0, pick: null, t0: Date.now() }; render(); mcPlay();
+}
+function mcPlay() { const z = state.mc; const r = z && z.rounds[z.n]; if (!r) return; if (!__mcA) __mcA = new Audio(); __mcA.pause(); __mcA.src = mcUrl(r.c.file_path); __mcA.onloadedmetadata = () => { const d = __mcA.duration || 0; __mcA.currentTime = d > 25 ? Math.random() * (d - 15) : 0; __mcA.play().catch(() => {}); clearTimeout(mcPlay.t); mcPlay.t = setTimeout(() => __mcA.pause(), 12000); }; z.t0 = Date.now(); }
+function mcPick(m) {
+  const z = state.mc; if (z.pick != null) return; z.pick = m; const r = z.rounds[z.n]; const ok = m === r.c.maqam; const sec = (Date.now() - z.t0) / 1000;
+  if (ok) { z.streak++; z.best = Math.max(z.best, z.streak); z.score += 10 + Math.max(0, Math.round(10 - sec)) + (z.streak >= 3 ? 5 : 0); } else z.streak = 0;
+  try { sfxSafe(ok ? "correct" : "wrong"); } catch (e) {} render();
+}
+async function mcNext() { const z = state.mc; z.n++; z.pick = null; if (z.n >= z.rounds.length) { if (__mcA) __mcA.pause(); if (state.auth.user) { const pr = state.auth.profile || {}; const nm = (pr.full_name || pr.real_name || pr.name) || (state.auth.user.email || "").split("@")[0]; await sb.from("maqam_scores").insert({ user_id: state.auth.user.id, display_name: nm, score: Math.min(1000, z.score), week: mcWeek() }); delete state.data["mcboard:" + mcWeek()]; } render(); return; } render(); mcPlay(); }
+function renderMc() {
+  const ar = state.lang === "ar"; const z = state.mc; const pool = mcPool();
+  const board = () => { const b = mcBoard(); if (!Array.isArray(b)) return state.auth.user ? loadingBox() : ""; const best = {}; b.forEach(x => { if (!best[x.user_id] || best[x.user_id].score < x.score) best[x.user_id] = x; }); const xs = Object.values(best).sort((a, c) => c.score - a.score).slice(0, 10);
+    return `<div class="card" style="margin-top:1rem"><h3>🏆 ${ar ? "لوحة شرف الأسبوع" : "This week's leaderboard"}</h3>${xs.length ? xs.map((x, i) => `<div class="kv"><span>${["🥇", "🥈", "🥉"][i] || (i + 1) + "."} ${esc(x.display_name || "—")}</span><b>${x.score}</b></div>`).join("") : `<p class="sm muted">${ar ? "لسه محدش لعب الأسبوع ده — كن الأول!" : "No one yet this week — be the first!"}</p>`}</div>`; };
+  if (z && z.n >= z.rounds.length) return pageWrap("🏆", ar ? "خلصت التحدي!" : "Challenge done!", "", `<div class="card" style="text-align:center"><div style="font-size:3rem">🎉</div><h2>${z.score} ${ar ? "نقطة" : "pts"}</h2><p>🔥 ${ar ? "أطول سلسلة" : "Best streak"}: ${z.best}</p>${state.auth.user ? "" : `<p class="sm muted">${ar ? "سجّل دخول عشان نتيجتك تظهر في لوحة الشرف" : "Sign in to appear on the leaderboard"}</p>`}<button class="btn btn-p" onclick="mcStart()">${ar ? "العب تاني" : "Play again"}</button></div>${board()}`);
+  if (z) {
+    const r = z.rounds[z.n]; const shown = z.pick != null;
+    return pageWrap("🎧", ar ? "تحدّي المقام" : "Maqam challenge", `${z.n + 1} / ${z.rounds.length}`, `<div class="card" style="text-align:center"><div class="row" style="justify-content:space-between"><b>⭐ ${z.score}</b><b>🔥 ${z.streak}</b></div><div style="font-size:3rem;margin:.5rem 0">🎧</div><p class="sm muted">${ar ? "اسمع المقطع (١٢ ثانية) وخمّن المقام — كل ما تجاوب أسرع النقط تزيد" : "Listen (12 s) and guess the maqam — faster answers score more"}</p><button class="btn btn-o" onclick="mcPlay()">🔁 ${ar ? "اسمع تاني" : "Replay"}</button>
+      <div class="fuopts" style="margin-top:.8rem">${r.opts.map(m => `<button class="opt ${shown ? (m === r.c.maqam ? "ok" : m === z.pick ? "bad" : "") : ""}" onclick="mcPick('${m}')">${esc(maqamName(m))}</button>`).join("")}</div>
+      ${shown ? `<p style="margin-top:.6rem">${z.pick === r.c.maqam ? "✅" : "❌"} ${ar ? "المقام" : "Maqam"}: <b>${esc(maqamName(r.c.maqam))}</b>${r.c.title ? ` — ${esc(locText(r.c.title) || "")}` : ""}</p><button class="btn btn-p" onclick="mcNext()">${ar ? "التالي ←" : "Next →"}</button>` : ""}</div>`);
+  }
+  const n = Array.isArray(pool) ? pool.length : 0;
+  return pageWrap("🎧", ar ? "تحدّي المقام" : "Maqam challenge", ar ? "١٠ مقاطع من تلاوات حقيقية — اسمع وخمّن المقام، واجمع نقط، وادخل لوحة الشرف" : "10 real recitation clips — guess the maqam, score points, top the board", `<div class="card" style="text-align:center"><div style="font-size:3.4rem">🎧🎼</div><p>${!Array.isArray(pool) ? "…" : n ? `${n} ${ar ? "تسجيل جاهز للتحدي" : "recordings ready"}` : (ar ? "لسه مفيش تسجيلات مرفوعة بمقاماتها." : "No tagged recordings yet.")}</p><button class="btn btn-p btn-lg" ${n < 4 ? "disabled" : ""} onclick="mcStart()">▶ ${ar ? "ابدأ التحدي" : "Start"}</button></div>${board()}`);
+}
+const _render79 = render;
+render = function () { if (state.route === "mqchallenge") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderMc(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } if (__mcA && state.route !== "mqchallenge") __mcA.pause(); return _render79.apply(this, arguments); };
+const _DOMAINS79 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS79(); const s = ds.find(d => d.k === "maqamat"); if (s && s.tools && !s.tools.some(t => String(t[2]).includes("mqchallenge"))) s.tools.splice(1, 0, ["🏆", state.lang === "ar" ? "تحدّي المقام" : "Maqam challenge", "go16('mqchallenge')", ""]); return ds; };
+if (Array.isArray(KIT) && !KIT.some(k => k[0] === "mqchallenge")) KIT.splice(4, 0, ["mqchallenge", "🏆", "تحدّي المقام", "Maqam challenge", ["خمّن المقام من تلاوات حقيقية", "لوحة شرف أسبوعية"], ["Guess the maqam from real recitations", "Weekly leaderboard"], "#/mqchallenge", "#7c3aed"]);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
