@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v65";
+const UI_VERSION = "2026-11-14-v66";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17282,6 +17282,48 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 #rmYT,#rmPG{position:absolute;top:.5rem;bottom:.5rem;inset-inline-start:.5rem;width:min(62%,900px);z-index:35;background:#0b1220;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #rmYTp,#rmYT iframe{flex:1;width:100%;border:0}#rmPG iframe{flex:1;width:100%;border:0;background:#fff}.rmyth{display:flex;align-items:center;gap:.4rem;padding:.35rem .6rem;color:#e2e8f0}
 @media (max-width:760px){#rmYT,#rmPG{width:auto;inset-inline-end:.5rem;bottom:45%}}</style>`);
+
+/* ================= v66: آية اليوم (ما بتتكررش) + شاشة «افتح بريدك» بعد التسجيل + شريط تشغيل ثابت تحت + الزووم ================= */
+const DA_KEYS = ["2:152", "2:153", "2:186", "2:286", "3:139", "3:159", "3:173", "3:200", "5:2", "6:162", "7:56", "8:46", "9:51", "10:57", "11:88", "12:87", "13:11", "13:28", "14:7", "15:49", "16:97", "16:128", "17:23", "17:82", "18:10", "18:46", "20:25", "20:114", "21:87", "23:1", "24:35", "25:63", "28:24", "29:69", "30:21", "31:17", "33:41", "33:70", "35:2", "39:10", "39:53", "40:60", "41:30", "42:36", "49:10", "49:13", "50:16", "51:56", "55:13", "57:4", "58:11", "59:18", "64:16", "65:2", "65:3", "67:2", "73:20", "76:9", "93:5", "94:5", "94:6", "103:3", "2:45", "2:155", "3:8", "3:92", "4:28", "6:59", "7:23", "8:2", "9:40", "10:62", "11:115", "12:64", "14:34", "16:18", "17:80", "18:24", "19:96", "20:46", "21:83", "22:78", "23:118", "25:74", "26:80", "27:62", "28:77", "29:45", "31:18", "33:3", "34:39", "38:29", "40:44", "42:19", "47:7", "48:4", "52:48", "53:39", "57:20", "61:13", "62:10", "66:8", "70:5", "84:6", "87:14", "89:27", "90:10", "92:5", "96:1", "99:7", "108:1", "110:3", "113:1", "114:1"];
+function daPick() {
+  let st; try { st = JSON.parse(localStorage.getItem("itqan_da") || "{}"); } catch (e) { st = {}; } const today = new Date().toDateString();
+  if (st.day === today && st.k) return st.k; const used = new Set(st.used || []); let pool = DA_KEYS.filter(k => !used.has(k)); if (!pool.length) { used.clear(); pool = DA_KEYS.slice(); }
+  const fri = new Date().getDay() === 5 && pool.find(k => k.startsWith("18:")); const h = new Date().getHours(); const k = fri || pool[(new Date().getDate() * 7 + h) % pool.length];
+  used.add(k); st = { day: today, k, used: [...used] }; try { localStorage.setItem("itqan_da", JSON.stringify(st)); } catch (e) {} return k;
+}
+function daData(k) { return useData("da:" + k + ":" + state.lang, async () => { const tr = TR_IDS[state.lang]; const v = await fetch(`https://api.quran.com/api/v4/verses/by_key/${k}?fields=text_uthmani${tr ? "&translations=" + tr : ""}`).then(r => r.json()); let ex = ""; if (state.lang === "ar") { try { const t = await fetch(`https://api.quran.com/api/v4/tafsirs/16/by_ayah/${k}`).then(r => r.json()); ex = htmlText((t.tafsir || {}).text || ""); } catch (e) {} } return [{ ar: v.verse.text_uthmani, tr: v.verse.translations && v.verse.translations[0] ? htmlText(v.verse.translations[0].text) : "", ex }]; }); }
+function dailyAyahCard() {
+  const k = daPick(); const d = daData(k); const ar = state.lang === "ar"; const [s, a] = k.split(":");
+  if (!Array.isArray(d)) return `<div class="card da66">${loadingBox()}</div>`; const x = d[0];
+  daNotify(k, x);
+  return `<div class="card da66"><div class="row" style="justify-content:space-between;align-items:center"><b>🌅 ${ar ? "آية اليوم" : "Ayah of the day"}</b><span class="xs muted">${esc(sName(+s))} · ${a}</span></div><p class="da66a notr" lang="ar">${esc(x.ar)}</p>${x.tr ? `<p class="sm">${esc(x.tr)}</p>` : ""}${x.ex ? `<details><summary class="sm b">🌿 ${ar ? "التأمل (التفسير الميسر)" : "Reflection"}</summary><p class="sm" style="line-height:1.9">${esc(x.ex)}</p></details>` : ""}<div class="row" style="gap:.4rem;margin-top:.4rem"><button class="btn btn-o" onclick="eaPlay('${eaUrl(HUSARY, k)}')">🔊 ${ar ? "اسمعها" : "Listen"}</button><button class="btn btn-o" onclick="state.ac=Object.assign(state.ac||{},{key:'${k}'});go16('ayahcard');setTimeout(()=>acGo('${k}'),400)">🖼️ ${ar ? "اعملها بطاقة" : "Make a card"}</button></div></div>`;
+}
+function daNotify(k, x) { try { const day = new Date().toDateString(); if (localStorage.getItem("itqan_dan") === day) return; if (!("Notification" in window) || Notification.permission !== "granted") return; localStorage.setItem("itqan_dan", day); const n = new Notification(state.lang === "ar" ? "🌅 آية اليوم" : "🌅 Ayah of the day", { body: x.ar + (x.tr ? "\n" + x.tr : ""), icon: "/icons/icon-192.png", tag: "itqan-da" }); n.onclick = () => { window.focus(); navigate("home"); }; } catch (e) {} }
+const _homeOrder66 = homeOrder56;
+homeOrder56 = function (app) { _homeOrder66(app); if (state.route !== "home" || !app || !state.auth.user || app.querySelector(".da66")) return; const hub = app.querySelector(":scope > section.hub .wrap") || app.querySelector(":scope > section.hub"); if (hub) hub.insertAdjacentHTML("beforeend", `<div style="margin-top:1rem">${dailyAyahCard()}</div>`); };
+/* شاشة «افتح بريدك» بعد التسجيل */
+function mailLink(email) { const d = String(email || "").split("@")[1] || ""; if (/gmail|googlemail/.test(d)) return ["Gmail", "https://mail.google.com/mail/u/0/#search/from%3Asupabase+OR+itqan"]; if (/outlook|hotmail|live|msn/.test(d)) return ["Outlook", "https://outlook.live.com/mail/0/inbox"]; if (/yahoo/.test(d)) return ["Yahoo Mail", "https://mail.yahoo.com/"]; if (/icloud|me\.com/.test(d)) return ["iCloud Mail", "https://www.icloud.com/mail"]; return [d, "https://" + d]; }
+const _doSignup66 = doSignup;
+doSignup = async function () {
+  const email = ((document.getElementById("au_email") || {}).value || "").trim(); const r = await _doSignup66.apply(this, arguments);
+  setTimeout(() => { const u = state.auth.user; const confirmed = u && (u.email_confirmed_at || u.confirmed_at); if (!email || confirmed) return; const ar = state.lang === "ar"; const [nm, url] = mailLink(email);
+    const m = document.createElement("div"); m.id = "fpM"; m.innerHTML = `<div class="fpbox card"><div style="font-size:3rem">📧</div><h3>${ar ? "خطوة أخيرة: أكّد إيميلك" : "One last step: confirm your email"}</h3><p class="sm">${ar ? `بعتنالك رسالة على <b dir="ltr">${esc(email)}</b> — افتحها واضغط «تأكيد» عشان حسابك يتفعّل.` : `We sent a message to <b>${esc(email)}</b> — open it and press “Confirm” to activate your account.`}</p><a class="btn btn-p btn-lg" href="${url}" target="_blank" rel="noopener">📬 ${ar ? "افتح" : "Open"} ${esc(nm)}</a><p class="xs muted" style="margin-top:.5rem">${ar ? "مش لاقيها؟ بص في Spam أو «الترويجات»." : "Can't find it? Check Spam or Promotions."}</p><button class="btn btn-o" style="margin-top:.4rem" onclick="document.getElementById('fpM').remove()">${ar ? "تمام" : "OK"}</button></div>`; document.body.appendChild(m); }, 900);
+  return r;
+};
+/* شريط تشغيل ثابت تحت (أي صوت شغال في الموقع) */
+const AB = { a: null, t: 0 };
+(function () { const op = HTMLMediaElement.prototype.play; HTMLMediaElement.prototype.play = function () { try { if (this.tagName === "AUDIO" && !this.closest?.("#abar66") && !this.muted && !this.__noBar) { AB.a = this; abShow(); } } catch (e) {} return op.apply(this, arguments); }; })();
+function abName(a) { const s = decodeURIComponent((a.src || "").split("/").pop() || "").replace(/\.(mp3|m4a|webm|ogg).*$/, ""); const m = s.match(/^(\d{3})(\d{3})$/); if (m) return `${sName(+m[1])} · ${+m[2]}`; return a.title || (state.lang === "ar" ? "تشغيل" : "Playing"); }
+function abShow() { let b = document.getElementById("abar66"); const a = AB.a; if (!a) return; if (!b) { b = document.createElement("div"); b.id = "abar66"; document.body.appendChild(b); b.innerHTML = `<button id="ab_p" class="ibtn">⏸</button><div class="ab_m"><b id="ab_n"></b><input id="ab_s" type="range" min="0" max="100" value="0"></div><input id="ab_v" type="range" min="0" max="1" step=".05" value="1" title="volume"><button class="ibtn" id="ab_x">✕</button>`;
+    b.querySelector("#ab_p").onclick = () => { if (!AB.a) return; AB.a.paused ? AB.a.play() : AB.a.pause(); }; b.querySelector("#ab_x").onclick = () => { if (AB.a) AB.a.pause(); AB.a = null; b.remove(); };
+    b.querySelector("#ab_s").oninput = e => { if (AB.a && AB.a.duration) AB.a.currentTime = AB.a.duration * e.target.value / 100; }; b.querySelector("#ab_v").oninput = e => { if (AB.a) AB.a.volume = +e.target.value; }; }
+  b.querySelector("#ab_n").textContent = abName(a); b.querySelector("#ab_v").value = a.volume; clearInterval(AB.t); AB.t = setInterval(() => { const x = AB.a, bb = document.getElementById("abar66"); if (!x || !bb) return clearInterval(AB.t); bb.querySelector("#ab_p").textContent = x.paused ? "▶" : "⏸"; if (x.duration) bb.querySelector("#ab_s").value = x.currentTime / x.duration * 100; if (x.ended && !x.loop) bb.classList.add("done"); else bb.classList.remove("done"); }, 400); }
+document.head.insertAdjacentHTML("beforeend", `<style>
+.da66{border-inline-start:5px solid #f59e0b}.da66a{font:1.7rem/2.2 'Amiri',serif;text-align:center;margin:.5rem 0;direction:rtl}
+#abar66{position:fixed;left:50%;transform:translateX(-50%);bottom:4.8rem;z-index:880;display:flex;align-items:center;gap:.5rem;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:.35rem .7rem;box-shadow:0 6px 20px rgba(0,0,0,.18);width:min(560px,94vw)}#abar66 .ab_m{flex:1;min-width:0}#abar66 b{font-size:.8rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#abar66 input[type=range]{width:100%}#ab_v{width:70px!important}#abar66.done{opacity:.7}
+@media(min-width:900px){#abar66{bottom:1rem}}
+@media (max-height:520px){header,.hdr{position:static!important}.bnav{display:none!important}#abar66{bottom:.4rem}}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
