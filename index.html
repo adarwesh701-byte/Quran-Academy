@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v59";
+const UI_VERSION = "2026-11-14-v60";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -16767,6 +16767,128 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .qrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.4rem;margin-top:.5rem}.qrgrid label{display:flex;flex-direction:column;gap:.2rem}
 .adhan59 p{font:1.35rem/2.2 'Amiri',serif;text-align:center;margin:0}
 </style>`);
+
+/* ================= v60: ملف الطالب — التقدّم في كل قسم + الواجبات بالملفات والتذكير + تشيك ليست + مصحفه وأخطاؤه + تواصل ================= */
+PAGES16.push("sfile");
+const SF_AREAS = [["tajweed", "🕌", "التجويد", "Tajweed"], ["hifz", "🧠", "الحفظ", "Memorization"], ["review", "🔁", "المراجعة", "Review"], ["tasmee", "🎤", "التسميع", "Recitation checks"], ["maqamat", "🎼", "المقامات", "Maqamat"], ["arabic", "🗣️", "العربي", "Arabic"], ["reading", "🔤", "القراءة من الصفر", "Reading from zero"]];
+const sfA = k => { const a = SF_AREAS.find(x => x[0] === k); return a ? a[1] + " " + (state.lang === "ar" ? a[2] : a[3]) : (k || ""); };
+function sfCanEdit(uid) { return realRole() === "owner" || role() === "teacher" || (state.auth.user && state.auth.user.id === uid); }
+function sfStaff() { return realRole() === "owner" || role() === "teacher"; }
+function sfData(uid) { return useData("sf:" + uid, async () => { const [t, p] = await Promise.all([sb.from("student_tasks").select("*").eq("student_id", uid).order("created_at", { ascending: false }).limit(200), sb.from("student_progress").select("*").eq("student_id", uid)]); return [{ tasks: t.data || [], prog: p.data || [] }]; }); }
+function sfInv(uid) { invalidate("sf:" + uid); render(); }
+async function sfOpen(path) { const { data, error } = await sb.storage.from("student_uploads").createSignedUrl(path, 3600); if (error) return toast(state.lang === "ar" ? "الملف اتمسح (الملفات بتتمسح بعد 3 أيام)" : "File removed (uploads are deleted after 3 days)", true); window.open(data.signedUrl, "_blank", "noopener"); }
+async function sfUpload(uid, files, keep) { const out = []; for (const f of files) { const p = `${uid}/${keep ? "keep/" : ""}${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_").slice(-60)}`; const r = await sb.storage.from("student_uploads").upload(p, f, { contentType: f.type || "application/octet-stream" }); if (r.error) { toast(r.error.message, true); continue; } out.push({ p, n: f.name, t: f.type, at: new Date().toISOString() }); } return out; }
+function sfFiles(fs, uid) { fs = Array.isArray(fs) ? fs : []; if (!fs.length) return ""; const own = realRole() === "owner" && !state.preview; return `<div class="row" style="gap:.3rem;flex-wrap:wrap;margin-top:.3rem">${fs.map(f => `<span class="sfchip"><a href="#" onclick="sfOpen('${esc(f.p)}');return false;">${/^audio/.test(f.t) ? "🎧" : /^video/.test(f.t) ? "🎬" : /^image/.test(f.t) ? "🖼️" : "📎"} ${esc(f.n || "file")}</a>${own && /^(audio|video)/.test(f.t) ? ` <a href="#" title="publish" onclick="sfPublish('${esc(f.p)}','${esc(f.t)}');return false;">📢</a>` : ""}</span>`).join("")}</div>`; }
+/* ---- التقدّم ---- */
+function sfProgress(uid, x) {
+  const ar = state.lang === "ar"; const ed = sfCanEdit(uid);
+  return `<div class="sfgrid">${SF_AREAS.map(([k, ic, a, e]) => { const p = x.prog.find(r => r.area === k) || {}; const pct = Math.max(0, Math.min(100, +p.pct || 0));
+    return `<div class="card sfarea"><div class="row" style="justify-content:space-between;align-items:center"><b>${ic} ${ar ? a : e}</b><span class="sm b">${pct}%</span></div><div class="sfbar"><i style="width:${pct}%"></i></div>
+      ${ed ? `<input class="in" id="sfp_${k}" value="${esc(p.position || "")}" placeholder="${ar ? "وصل لفين؟ (مثلاً: سورة الملك آية 10 / الإخفاء)" : "Where is he now? (e.g. Al-Mulk 10 / Ikhfa)"}"><div class="row" style="gap:.4rem;align-items:center;margin-top:.3rem"><input type="range" min="0" max="100" step="5" value="${pct}" id="sfr_${k}" style="flex:1" oninput="this.nextElementSibling.textContent=this.value+'%'"><span class="xs">${pct}%</span><button class="btn btn-p" style="padding:.2rem .6rem" onclick="sfSaveProg('${uid}','${k}')">💾</button></div>` : `<p class="sm" style="margin-top:.3rem">${esc(p.position || "—")}</p>`}
+      ${p.updated_at ? `<p class="xs muted" style="margin-top:.2rem">${ar ? "آخر تحديث" : "Updated"}: ${esc(fmtDT(p.updated_at))}${p.updated_by && p.updated_by !== uid ? " · 👨‍🏫" : ""}</p>` : ""}</div>`; }).join("")}</div>`;
+}
+async function sfSaveProg(uid, k) { const pos = (document.getElementById("sfp_" + k) || {}).value || ""; const pct = +(document.getElementById("sfr_" + k) || {}).value || 0; const { error } = await sb.from("student_progress").upsert({ student_id: uid, area: k, position: pos, pct, updated_by: state.auth.user.id, updated_at: new Date().toISOString() }); if (error) return toast(error.message, true); toast("✓"); sfInv(uid); }
+/* ---- الواجبات والتشيك ليست ---- */
+function sfTaskForm(uid) {
+  const ar = state.lang === "ar";
+  return `<details class="card sfnew" ${state.sfNew ? "open" : ""}><summary class="b">➕ ${ar ? "واجب جديد / بند في التشيك ليست" : "New homework / checklist item"}</summary>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><select class="in" id="sft_k" style="width:auto"><option value="homework">📝 ${ar ? "واجب" : "Homework"}</option><option value="check">☑️ ${ar ? "بند تشيك ليست" : "Checklist item"}</option><option value="note">💬 ${ar ? "ملاحظة/تصحيح" : "Note / correction"}</option></select><select class="in" id="sft_a" style="width:auto">${SF_AREAS.map(a => `<option value="${a[0]}">${sfA(a[0])}</option>`).join("")}</select><input class="in" id="sft_d" type="date" style="width:auto" title="${ar ? "آخر ميعاد" : "Due"}"></div>
+    <input class="in" id="sft_t" placeholder="${ar ? "العنوان (مثلاً: احفظ سورة الملك 1–10)" : "Title (e.g. memorise Al-Mulk 1–10)"}" style="margin-top:.4rem"><textarea class="in" id="sft_b" rows="3" placeholder="${ar ? "التفاصيل والتعليمات" : "Details & instructions"}" style="margin-top:.4rem"></textarea>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem;align-items:center"><label class="btn btn-o">📎 ${ar ? "ملفات" : "Files"}<input type="file" id="sft_f" multiple hidden onchange="this.parentNode.lastChild.textContent=' ('+this.files.length+')'"> </label><label class="sm"><input type="checkbox" id="sft_r" checked> 🔔 ${ar ? "فكّره كل يوم لحد ما يسلّم" : "Remind daily until submitted"}</label><button class="btn btn-p" onclick="sfAddTask('${uid}')">${ar ? "أضف" : "Add"}</button></div></details>`;
+}
+async function sfAddTask(uid) {
+  const g = id => document.getElementById(id); const title = g("sft_t").value.trim(); if (!title) return toast(state.lang === "ar" ? "اكتب العنوان" : "Write a title", true);
+  const files = g("sft_f").files.length ? await sfUpload(uid, [...g("sft_f").files], true) : [];
+  const { error } = await sb.from("student_tasks").insert({ student_id: uid, created_by: state.auth.user.id, kind: g("sft_k").value, area: g("sft_a").value, title, body: g("sft_b").value.trim() || null, due_date: g("sft_d").value || null, remind: g("sft_r").checked, files });
+  if (error) return toast(error.message, true);
+  if (uid !== state.auth.user.id) sb.from("notifications").insert({ user_id: uid, kind: "hw_new", data: { title, from: state.auth.user.id } }).then(() => {}, () => {});
+  state.sfNew = false; toast("✓"); sfInv(uid);
+}
+function sfTasks(uid, x) {
+  const ar = state.lang === "ar"; const me = state.auth.user.id; const staff = sfStaff(); const P = peopleMap();
+  const flt = state.sfF || "open"; const list = x.tasks.filter(t => flt === "all" || (flt === "open" ? t.status !== "done" : t.status === "done"));
+  const chk = x.tasks.filter(t => t.kind === "check"); const dn = chk.filter(t => t.status === "done").length;
+  const card = t => { const by = t.created_by && t.created_by !== uid ? `👨‍🏫 ${esc(personName(t.created_by, P.map))}` : ""; const over = t.due_date && t.status === "open" && new Date(t.due_date) < new Date(new Date().toDateString());
+    if (t.kind === "check") return `<div class="sfchk ${t.status === "done" ? "ok" : ""}"><label><input type="checkbox" ${t.status === "done" ? "checked" : ""} onchange="sfCheck('${uid}','${t.id}',this.checked)"> <b>${esc(t.title)}</b></label><span class="xs muted">${sfA(t.area)}</span>${staff || t.created_by === me ? `<button class="btn btn-o sfx" onclick="sfDel('${uid}','${t.id}')">✕</button>` : ""}</div>`;
+    return `<div class="card sftask st-${t.status}"><div class="row" style="justify-content:space-between;gap:.4rem;flex-wrap:wrap"><b>${t.kind === "note" ? "💬" : "📝"} ${esc(t.title)}</b><span class="badge ${t.status === "done" ? "badge-g" : ""}">${t.status === "open" ? (ar ? "مطلوب" : "Open") : t.status === "submitted" ? (ar ? "اتسلّم — مستني التصحيح" : "Submitted") : (ar ? "خلص ✓" : "Done ✓")}</span></div>
+      <div class="xs muted">${sfA(t.area)} ${by ? " · " + by : ""} · ${esc(fmtDT(t.created_at))}${t.due_date ? ` · <b style="color:${over ? "#dc2626" : "inherit"}">⏰ ${esc(t.due_date)}</b>` : ""}</div>
+      ${t.body ? `<p class="sm" style="white-space:pre-line;margin:.4rem 0">${esc(t.body)}</p>` : ""}${sfFiles(t.files, uid)}
+      ${t.submission || (t.sub_files || []).length ? `<div class="sfsub"><b class="xs">📤 ${ar ? "تسليم الطالب" : "Student's submission"} ${t.submitted_at ? "· " + esc(fmtDT(t.submitted_at)) : ""}</b>${t.submission ? `<p class="sm" style="white-space:pre-line">${esc(t.submission)}</p>` : ""}${sfFiles(t.sub_files, uid)}${t.submitted_at && !(t.sub_files || []).length ? "" : `<p class="xs muted">${ar ? "الملفات بتتمسح بعد 3 أيام، والتقدّم بيفضل." : "Files are deleted after 3 days; progress stays."}</p>`}</div>` : ""}
+      ${t.feedback || t.grade != null ? `<div class="sffb"><b class="xs">👨‍🏫 ${ar ? "تصحيح المعلم" : "Teacher's feedback"}</b>${t.grade != null ? ` <b>${t.grade}/10</b>` : ""}${t.feedback ? `<p class="sm" style="white-space:pre-line">${esc(t.feedback)}</p>` : ""}</div>` : ""}
+      ${t.kind === "homework" && t.status !== "done" && me === uid ? `<details style="margin-top:.4rem"><summary class="btn btn-p" style="display:inline-flex">📤 ${ar ? "سلّم الواجب" : "Submit"}</summary><textarea class="in" id="sfs_${t.id}" rows="3" placeholder="${ar ? "اكتب حلّك أو ملاحظتك" : "Write your answer or note"}" style="margin-top:.4rem">${esc(t.submission || "")}</textarea><div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem;align-items:center"><label class="btn btn-o">📎 ${ar ? "ملف" : "File"}<input type="file" id="sff_${t.id}" multiple hidden></label><button class="btn btn-o" id="sfrec_${t.id}" onclick="sfRec('${t.id}')">🎙️ ${ar ? "سجّل صوتك" : "Record"}</button><button class="btn btn-p" onclick="sfSubmit('${uid}','${t.id}')">${ar ? "سلّم" : "Submit"}</button></div></details>` : ""}
+      ${staff && t.kind === "homework" && t.status !== "open" ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem;align-items:center"><input class="in" id="sfg_${t.id}" type="number" min="0" max="10" placeholder="/10" style="width:5rem" value="${t.grade ?? ""}"><input class="in" id="sfb_${t.id}" placeholder="${ar ? "تصحيحك" : "Your feedback"}" style="flex:1;min-width:12rem" value="${esc(t.feedback || "")}"><button class="btn btn-p" onclick="sfReview('${uid}','${t.id}')">✓ ${ar ? "صحّح" : "Review"}</button><button class="btn btn-o" onclick="sfReopen('${uid}','${t.id}')">↩️ ${ar ? "يعيده" : "Redo"}</button></div>` : ""}
+      ${staff ? `<div style="text-align:end"><button class="btn btn-o" style="padding:.15rem .5rem;margin-top:.3rem" onclick="sfDel('${uid}','${t.id}')">🗑️</button></div>` : ""}</div>`; };
+  return `${chk.length ? `<div class="card"><div class="row" style="justify-content:space-between"><b>☑️ ${ar ? "التشيك ليست" : "Checklist"}</b><span class="sm b">${dn}/${chk.length}</span></div><div class="sfbar"><i style="width:${Math.round(dn / chk.length * 100)}%"></i></div>${chk.map(card).join("")}</div>` : ""}
+    <div class="row" style="gap:.3rem;margin:.8rem 0 .4rem">${[["open", ar ? "الحالي" : "Current"], ["done", ar ? "اللي خلص" : "Done"], ["all", ar ? "الكل" : "All"]].map(([k, n]) => `<button class="btn ${flt === k ? "btn-p" : "btn-o"}" style="padding:.2rem .7rem" onclick="state.sfF='${k}';render()">${n}</button>`).join("")}</div>
+    ${list.filter(t => t.kind !== "check").map(card).join("") || `<p class="sm muted">${ar ? "مفيش حاجة هنا." : "Nothing here."}</p>`}`;
+}
+async function sfCheck(uid, id, on) { await sb.from("student_tasks").update({ status: on ? "done" : "open", reviewed_at: on ? new Date().toISOString() : null }).eq("id", id); sfInv(uid); }
+async function sfDel(uid, id) { if (!confirm(state.lang === "ar" ? "تمسح ده؟" : "Delete?")) return; const { error } = await sb.from("student_tasks").delete().eq("id", id); if (error) return toast(error.message, true); sfInv(uid); }
+const __sfRec = {};
+async function sfRec(id) {
+  const b = document.getElementById("sfrec_" + id); if (__sfRec[id] && __sfRec[id].r) { __sfRec[id].r.stop(); return; }
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { return; }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+  const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; r.ondataavailable = e => e.data.size && ch.push(e.data);
+  r.onstop = () => { st.getTracks().forEach(t => t.stop()); const bl = new Blob(ch, { type: r.mimeType || "audio/webm" }); __sfRec[id] = { f: new File([bl], `recording-${Date.now()}.${/mp4/.test(bl.type) ? "m4a" : "webm"}`, { type: bl.type }) }; if (b) { b.textContent = "✅ " + (state.lang === "ar" ? "اتسجل" : "Recorded"); b.classList.remove("rec59on"); } };
+  __sfRec[id] = { r }; r.start(); if (b) { b.textContent = "⏹ " + (state.lang === "ar" ? "وقّف" : "Stop"); b.classList.add("rec59on"); }
+}
+async function sfSubmit(uid, id) {
+  const txt = (document.getElementById("sfs_" + id) || {}).value || ""; const fi = document.getElementById("sff_" + id); const fs = fi && fi.files.length ? [...fi.files] : []; if (__sfRec[id] && __sfRec[id].f) fs.push(__sfRec[id].f);
+  if (!txt.trim() && !fs.length) return toast(state.lang === "ar" ? "اكتب حاجة أو ارفع ملف أو سجّل" : "Write, upload or record something", true);
+  const up = fs.length ? await sfUpload(uid, fs, false) : []; const t = (sfData(uid) || [{ tasks: [] }])[0].tasks.find(x => x.id === id) || {};
+  const { error } = await sb.from("student_tasks").update({ submission: txt.trim() || null, sub_files: (t.sub_files || []).concat(up), status: "submitted", submitted_at: new Date().toISOString() }).eq("id", id); if (error) return toast(error.message, true);
+  if (t.created_by && t.created_by !== uid) sb.from("notifications").insert({ user_id: t.created_by, kind: "hw_submitted", data: { task: id, student: uid, title: t.title } }).then(() => {}, () => {});
+  delete __sfRec[id]; toast(state.lang === "ar" ? "✓ اتسلّم — معلمك هيشوفه" : "✓ Submitted — your teacher will see it"); sfInv(uid);
+}
+async function sfReview(uid, id) { const g = +(document.getElementById("sfg_" + id) || {}).value; const fb = (document.getElementById("sfb_" + id) || {}).value || ""; const { error } = await sb.from("student_tasks").update({ status: "done", grade: isNaN(g) || (document.getElementById("sfg_" + id) || {}).value === "" ? null : g, feedback: fb.trim() || null, reviewed_at: new Date().toISOString() }).eq("id", id); if (error) return toast(error.message, true); sb.from("notifications").insert({ user_id: uid, kind: "hw_reviewed", data: { task: id } }).then(() => {}, () => {}); sfInv(uid); }
+async function sfReopen(uid, id) { const fb = (document.getElementById("sfb_" + id) || {}).value || ""; await sb.from("student_tasks").update({ status: "open", feedback: fb.trim() || null }).eq("id", id); sfInv(uid); }
+async function sfPublish(path, type) {
+  const secs = (sectionsData() || []).filter(s => s.is_visible !== false); const ar = state.lang === "ar";
+  const m = document.createElement("div"); m.id = "fpM"; m.innerHTML = `<div class="fpbox card" style="text-align:start"><b>📢 ${ar ? "انشر التسجيل ده في قسم على الموقع" : "Publish this recording to a site section"}</b><select class="in" id="pubS" style="margin-top:.5rem">${secs.map(s => `<option value="${s.id}">${esc(secTitle(s))}</option>`).join("")}</select><select class="in" id="pubM" style="margin-top:.4rem"><option value="">${ar ? "المقام (اختياري)" : "Maqam (optional)"}</option>${MQ.map(x => `<option value="${x.id}">${esc(mqName(x))}</option>`).join("")}</select><input class="in" id="pubT" placeholder="${ar ? "العنوان" : "Title"}" style="margin-top:.4rem"><div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-p" id="pubGo">${ar ? "انشر" : "Publish"}</button><button class="btn btn-o" onclick="document.getElementById('fpM').remove()">✕</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector("#pubGo").onclick = async () => { const { data, error } = await sb.storage.from("student_uploads").download(path); if (error) return toast(error.message, true); const np = `recordings/${Date.now()}-${path.split("/").pop()}`; const up = await sb.storage.from("academy_public").upload(np, data, { contentType: type }); if (up.error) return toast(up.error.message, true); const t = m.querySelector("#pubT").value.trim() || path.split("/").pop(); const mq = m.querySelector("#pubM").value || null; const r = await sb.from("contents").insert({ title: { ar: t, en: t }, type: /^video/.test(type) ? "video" : "audio", status: "published", visibility: "public", section_id: m.querySelector("#pubS").value, file_path: "academy_public/" + np, maqam: mq, music_free: true }); if (r.error) return toast(r.error.message, true); m.remove(); invalidate("libCt", "contentsAll"); toast("✓"); };
+}
+/* ---- الصفحة ---- */
+function sfMyStudents() {
+  const me = state.auth.user.id; const own = realRole() === "owner";
+  const d = useData("sfMine", async () => { if (own) return [[...new Set(((await sb.from("profiles").select("id").eq("role", "student").limit(500)).data || []).map(x => x.id))]]; const [a, l] = await Promise.all([sb.from("student_teacher_assignments").select("student_id").eq("teacher_id", me), sb.from("lessons").select("student_id").eq("teacher_id", me).gte("start_time", new Date(Date.now() - 90 * 864e5).toISOString())]); return [[...new Set([...(a.data || []), ...(l.data || [])].map(x => x.student_id).filter(Boolean))]]; });
+  return Array.isArray(d) ? d[0] : null;
+}
+function renderSFile() {
+  if (!state.auth.user) return pageWrap("📂", "—", "", needLogin("sfile")); const ar = state.lang === "ar"; const me = state.auth.user.id;
+  let uid = typeof state.pageArg === "string" && /^[0-9a-f-]{36}$/.test(state.pageArg) ? state.pageArg : null;
+  if (!uid && !sfStaff()) uid = me;
+  if (!uid) { const ids = sfMyStudents(); const P = peopleMap(); const qv = (state.sfQ || "").toLowerCase();
+    return pageWrap("📂", ar ? "ملفات طلابي" : "My students' files", ar ? "اختار الطالب وادخل على كل حاجة بتاعته" : "Pick a student to open everything of theirs", !Array.isArray(ids) ? loadingBox() : `<input class="in" placeholder="🔎 ${ar ? "دوّر باسم الطالب" : "Search by name"}" value="${esc(state.sfQ || "")}" oninput="state.sfQ=this.value;clearTimeout(window.__sfq);window.__sfq=setTimeout(render,300)" style="margin-bottom:.7rem"><div class="msgrid">${ids.map(id => P.map[id] || { id }).filter(p => !qv || (personName(p.id, P.map) || "").toLowerCase().includes(qv)).map(p => `<button class="mstile" style="--c:var(--accent)" onclick="go16('sfile','${p.id}')"><span>👤</span><b>${esc(personName(p.id, P.map))}</b></button>`).join("") || `<p class="muted">${ar ? "لسه مفيش طلاب مرتبطين بيك." : "No linked students yet."}</p>`}</div>`); }
+  if (uid !== me && !sfStaff() && role() !== "parent") return pageWrap("📂", "—", "", `<div class="card muted">—</div>`);
+  const d = sfData(uid); const P = peopleMap(); const name = uid === me ? (ar ? "ملفي ومتابعتي" : "My file & progress") : personName(uid, P.map);
+  const tab = state.sfTab || "tasks"; const x = Array.isArray(d) ? d[0] : null;
+  const tabs = [["tasks", "📝 " + (ar ? "الواجبات والتشيك ليست" : "Homework & checklist")], ["prog", "🗺️ " + (ar ? "وصل لفين" : "Progress map")], ["mushaf", "📕 " + (ar ? "مصحفه وأخطاؤه" : "Mushaf & mistakes")], ...(sfStaff() && uid !== me ? [["all", "📊 " + (ar ? "كل نشاطه" : "Full activity")]] : [])];
+  const tajSec = (sectionsData() || []).find ? (sectionsData() || []).find(s => (s.meta || {}).kind === "tajcolor") : null;
+  let body = !x ? loadingBox() : tab === "prog" ? sfProgress(uid, x) : tab === "tasks" ? (sfStaff() && uid !== me ? sfTaskForm(uid) : sfTaskForm(uid).replace('<option value="homework">', '<option value="homework" disabled>').replace('<option value="note">', '<option value="note" disabled>').replace('<option value="check">', '<option value="check" selected>')) + sfTasks(uid, x)
+    : tab === "mushaf" ? `<div class="card"><p class="sm">${ar ? "مصحف الطالب الملوّن: الأخطاء اللي المعلم بيعلّمها بتفضل ظاهرة عند الطالب لحد ما يقرأها صح والمعلم يقفلها." : "The student's colour mushaf: mistakes the teacher marks stay visible to the student until read correctly and closed by the teacher."}</p><button class="btn btn-p" onclick="state.mmUser='${uid}';state.tjv=Object.assign(state.tjv||{},{mark:${sfStaff() ? "true" : "false"}});${tajSec ? `libGo('${tajSec.id}')` : "go16('d','tajweed')"}">📕 ${ar ? "افتح مصحفه" : "Open the mushaf"}</button></div>${typeof mmListCard === "function" ? (() => { const o = state.mmUser; state.mmUser = uid; let h = ""; try { h = mmListCard(); } catch (e) {} state.mmUser = o; return h; })() : ""}`
+    : s360(uid).replace(/<details class="card s360"[^>]*><summary><b>(💳|⏱️)[\s\S]*?<\/details>/g, m => realRole() === "owner" ? m : "");
+  const chat = uid !== me ? `<button class="btn btn-o" onclick="openChatWith('${uid}')">💬 ${ar ? "راسل الطالب" : "Message"}</button>` : "";
+  return pageWrap("📂", name, ar ? "كل حاجة في مكان واحد — للطالب ومعلمه والإدارة بس" : "Everything in one place — for the student, their teacher and the admin only", `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">${sfStaff() ? `<button class="btn btn-o" onclick="go16('sfile')">↩️ ${ar ? "كل الطلاب" : "All students"}</button>` : ""}${chat}${typeof RM !== "undefined" && RM && RM.id ? `<button class="btn btn-o" onclick="toast('${ar ? "ارجع للفصل واضغط «اعرض صفحة»" : "Go back to class and press “Show page”"}')">📺 ${ar ? "اعرضها في الفصل" : "Show in class"}</button>` : ""}</div><div class="motabs">${tabs.map(([k, n]) => `<button class="${k === tab ? "on" : ""}" onclick="state.sfTab='${k}';render()">${n}</button>`).join("")}</div>${body}`);
+}
+const _render60 = render;
+render = function () { if (state.route === "sfile") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderSFile(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render60.apply(this, arguments); };
+/* مداخل: مساحتي + إشعارات */
+const _renderMySpace60 = renderMySpace;
+renderMySpace = function () { const ar = state.lang === "ar"; const t = sfStaff() ? `<button class="mstile" style="--c:#0ea5e9" onclick="go16('sfile')"><span>📂</span><b>${ar ? "ملفات طلابي" : "Students' files"}</b></button>` : `<button class="mstile" style="--c:#0ea5e9" onclick="go16('sfile')"><span>📂</span><b>${ar ? "ملفي ومتابعتي" : "My file & progress"}</b></button>`; return _renderMySpace60().replace('<div class="msgrid">', '<div class="msgrid">' + t); };
+const _notifText60 = notifText;
+notifText = function (n) { const ar = state.lang === "ar"; const d = n.data || {}; if (n.kind === "hw_remind") return (ar ? "🔔 فكّرك بالواجب: " : "🔔 Homework reminder: ") + (d.title || ""); if (n.kind === "hw_new") return (ar ? "📝 واجب جديد: " : "📝 New homework: ") + (d.title || ""); if (n.kind === "hw_submitted") return (ar ? "📤 طالب سلّم الواجب: " : "📤 Homework submitted: ") + (d.title || ""); if (n.kind === "hw_reviewed") return ar ? "✅ المعلم صحّح واجبك" : "✅ Your teacher reviewed your homework"; return _notifText60(n); };
+const _openNotif60 = openNotif;
+openNotif = async function (id) { const n = (state.notif.list || []).find(x => x.id === id); if (n && /^hw_/.test(n.kind)) { state.notif.open = false; if (!n.read_at) { n.read_at = new Date().toISOString(); sb.from("notifications").update({ read_at: n.read_at }).eq("id", id).then(() => {}, () => {}); } state.sfTab = "tasks"; return go16("sfile", n.kind === "hw_submitted" ? (n.data || {}).student : undefined); } return _openNotif60(id); };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.sfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.7rem}.sfarea .in{margin-top:.4rem}
+.sfbar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:.4rem 0}.sfbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#22c55e);border-radius:99px}
+.sftask{margin-bottom:.6rem;border-inline-start:4px solid var(--accent)}.sftask.st-submitted{border-inline-start-color:#f59e0b}.sftask.st-done{border-inline-start-color:#22c55e;opacity:.9}
+.sfsub{margin-top:.5rem;padding:.5rem .7rem;border-radius:10px;background:color-mix(in srgb,#f59e0b 10%,var(--bg))}.sffb{margin-top:.5rem;padding:.5rem .7rem;border-radius:10px;background:color-mix(in srgb,#22c55e 10%,var(--bg))}
+.sfchip{display:inline-flex;gap:.3rem;border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;font-size:.85rem}
+.sfchk{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px dashed var(--line)}.sfchk label{flex:1;cursor:pointer}.sfchk.ok b{text-decoration:line-through;opacity:.6}.sfx{padding:.05rem .4rem}
+.sfnew{margin-bottom:.6rem}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
