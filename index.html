@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v75";
+const UI_VERSION = "2026-11-14-v75b";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17733,13 +17733,19 @@ document.head.insertAdjacentHTML("beforeend", `<style>.arf{border:1.5px dashed v
 
 /* ================= v75: TURN يقبل نص Metered كما هو + أصوات الحروف بالحركات ترفعها انت + «المصحف المعلّم للأطفال» ================= */
 /* 1) إعدادات TURN: الصق الكود زي ما هو من Metered */
+function iceParse(raw) {
+  raw = String(raw || "").replace(/[\u201C\u201D\u201E\u2033]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/\u00A0/g, " ").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+  let from = 0; const k = raw.search(/iceServers/); if (k >= 0) from = k;
+  let i = raw.indexOf("[", from); if (i < 0) { i = raw.indexOf("{"); if (i < 0) throw 0; raw = "[" + raw.slice(i) + "]"; i = 0; }
+  let d = 0, j = -1, q = null; for (let n = i; n < raw.length; n++) { const ch = raw[n]; if (q) { if (ch === q && raw[n - 1] !== "\\") q = null; continue; } if (ch === '"' || ch === "'") { q = ch; continue; } if (ch === "[") d++; else if (ch === "]") { d--; if (!d) { j = n; break; } } }
+  if (j < 0) throw 0; let t = raw.slice(i, j + 1);
+  t = t.replace(/'([^'\n]*)'/g, (m, x) => JSON.stringify(x)).replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":').replace(/,\s*([}\]])/g, "$1");
+  let v = JSON.parse(t); if (!Array.isArray(v)) v = [v]; v = v.filter(x => x && x.urls); if (!v.length) throw 0; return v;
+}
 saveIceSettings = async function () {
-  let raw = document.getElementById("ice_json").value.trim(); let v = null; const ar = state.lang === "ar";
+  const raw = document.getElementById("ice_json").value.trim(); let v = null; const ar = state.lang === "ar";
   if (raw) {
-    raw = raw.replace(/^[\s\S]*?=\s*/, m => /\[/.test(m) ? m : "").replace(/^(const|let|var)\s+\w+\s*=\s*/, "");
-    const first = raw.indexOf("["), last = raw.indexOf("];") > 0 ? raw.indexOf("];") : raw.lastIndexOf("]"); if (first >= 0 && last > first) raw = raw.slice(first, last + 1);
-    const js = raw.replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":').replace(/,\s*([}\]])/g, "$1");
-    try { v = JSON.parse(js); if (!Array.isArray(v)) v = [v]; if (!v.every(x => x && x.urls)) throw 0; } catch (e) { return toast(RL("badJson"), true); }
+    try { v = iceParse(raw); } catch (e) { return toast((ar ? "مش قادر أقرا الكود — انسخه تاني من Metered كامل" : "Couldn't read that — copy the whole snippet from Metered again") + " (" + UI_VERSION + ")", true); }
     if (v.some(x => /<PASSWORD>|PASSWORD/i.test(x.credential || ""))) return toast(ar ? "⚠️ كلمة السر لسه مكتوبة <PASSWORD> — من Metered دوس «Show» أو «Copy» جنب الـ credential وانسخ الكود تاني." : "⚠️ The password still reads <PASSWORD> — click Show/Copy next to the credential in Metered and paste again.", true);
   }
   const ps = state.data.privSettings; const cur = Array.isArray(ps) && ps[0] ? ps[0].data || {} : {};
