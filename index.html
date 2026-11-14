@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v68";
+const UI_VERSION = "2026-11-14-v69";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17035,7 +17035,7 @@ function rdQView() {
   const z = state.rdQ; const ar = state.lang === "ar";
   if (z.i < z.qs.length) { const q = z.qs[z.i]; return `<div class="card rdq"><div class="xs muted">${z.i + 1} / ${z.qs.length}</div><h3 class="notr" lang="ar" dir="rtl" style="font:1.6rem/2 'Amiri',serif">${esc(q.t)}</h3><div class="rdopts">${q.opts.map(o => `<button class="btn ${z.pick == null ? "btn-o" : o === q.ans ? "btn-p" : z.pick === o ? "bad" : "btn-o"}" dir="ltr" onclick="${z.pick == null ? `rdQPick('${o}')` : ""}">${esc(o)}</button>`).join("")}</div></div>`; }
   const pct = Math.round(z.sc / z.qs.length * 100);
-  if (z.kind === "place") { const order = ["letters", "marks", "words", "sentences"]; let st = order.find(s => (z.right[s] || 0) / (z.tot[s] || 1) < .67) || "quran"; const p = rdP(); p.placed = st; p.st = p.st || {}; RD_STAGES.forEach(s => { if (RD_STAGES.findIndex(x => x[0] === s[0]) < RD_STAGES.findIndex(x => x[0] === st)) p.st[s[0]] = 1; }); rdSave(p);
+  if (z.kind === "place") { const order = ["letters", "marks", "words", "sentences"]; let st = order.find(s => (z.right[s] || 0) / (z.tot[s] || 1) < .67) || "quran"; if (st === "marks") st = "short"; const p = rdP(); p.placed = st; p.st = p.st || {}; RD_STAGES.forEach(s => { if (RD_STAGES.findIndex(x => x[0] === s[0]) < RD_STAGES.findIndex(x => x[0] === st)) p.st[s[0]] = 1; }); rdSave(p);
     return `<div class="card" style="text-align:center"><div style="font-size:2.6rem">🧭</div><h3>${ar ? "نتيجتك" : "Your result"}: ${pct}%</h3><p>${ar ? "هنبدأ معاك من" : "You start at"}: <b>${RD_STAGES.find(s => s[0] === st)[ar ? 2 : 3]}</b></p><button class="btn btn-p" onclick="state.rdQ=null;state.rdS='${st}';render()">▶ ${ar ? "يلا نبدأ" : "Let's start"}</button></div>`; }
   if (pct >= 80) { rdMark("final"); const p = rdP(); p.cert = p.cert || new Date().toISOString(); p.certScore = pct; rdSave(p); }
   return `<div class="card" style="text-align:center"><div style="font-size:2.6rem">${pct >= 80 ? "🎓" : "💪"}</div><h3>${pct}%</h3><p>${pct >= 80 ? (ar ? "مبروك! نجحت وتقدر تطبع شهادتك." : "Congratulations! You passed — print your certificate.") : (ar ? "محتاج 80% — راجع وجرّب تاني." : "You need 80% — review and try again.")}</p>${pct >= 80 ? `<button class="btn btn-p" onclick="state.rdQ=null;state.rdS='final';render()">🎓 ${ar ? "شهادتي" : "My certificate"}</button>` : `<button class="btn btn-p" onclick="rdQuiz('final')">🔁 ${ar ? "حاول تاني" : "Try again"}</button>`}</div>`;
@@ -17359,6 +17359,72 @@ render = function () { if (state.route === "nahw") { const app = document.getEle
 const _DOMAINS67 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS67(); const a = ds.find(d => d.k === "arabic"); if (a && a.tools && !a.tools.some(t => String(t[2]).includes("nahw"))) a.tools.splice(1, 0, ["📐", state.lang === "ar" ? "النحو من الصفر للقمة" : "Arabic grammar", "go16('nahw')", ""]); return ds; };
 if (Array.isArray(KIT) && !KIT.some(k => k[0] === "nahw")) KIT.splice(2, 0, ["nahw", "📐", "النحو من الصفر للقمة", "Arabic grammar", ["14 درس بالإعراب", "اختبار بعد كل درس"], ["14 parsed lessons", "A test after each lesson"], "#/nahw", "#7c3aed"]);
 document.head.insertAdjacentHTML("beforeend", `<style>.nhgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem}.nhcard{display:flex;align-items:center;gap:.5rem;padding:.7rem;border:1px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;font:inherit;color:var(--fg);text-align:start}.nhcard span{font-weight:800;color:var(--accent);min-width:1.6rem}.nhcard b{flex:1}.nhcard.done{background:color-mix(in srgb,#22c55e 10%,var(--card))}.nhex{display:flex;flex-direction:column;gap:.1rem;padding:.5rem .7rem;margin:.3rem 0;border-radius:10px;background:var(--bg)}.nhex span:first-child{font:1.4rem 'Amiri',serif}</style>`);
+
+/* ================= v69: «القراءة من الصفر» موسّعة على ترتيب نور البيان — مواضع الحروف، المدود، السكون، التنوين، الشدة، همزة الوصل واللام، كلمات القرآن + تمارين لا نهائية + وضع الأطفال ================= */
+const RD_CONS = "بتثجحخدذرزسشصضطظعغفقكلمنهي".split("");
+const RD_HAR = [["َ", "a"], ["ُ", "u"], ["ِ", "i"]];
+const RD_LONG = [["َا", "aa"], ["ُو", "oo"], ["ِي", "ee"]];
+const RD_TAN = [["ً", "an"], ["ٌ", "un"], ["ٍ", "in"]];
+const RD_QW = [["اللَّهُ", "allaahu"], ["رَبِّ", "rabbi"], ["الْعَالَمِينَ", "al-3aalameen"], ["الرَّحْمَٰنِ", "ar-ra7maani"], ["الرَّحِيمِ", "ar-ra7eemi"], ["يَوْمِ", "yawmi"], ["الدِّينِ", "ad-deeni"], ["نَعْبُدُ", "na3budu"], ["نَسْتَعِينُ", "nasta3eenu"], ["الصِّرَاطَ", "aS-SiraaTa"], ["الْمُسْتَقِيمَ", "al-mustaqeema"], ["أَنْعَمْتَ", "2an3amta"], ["قُلْ", "qul"], ["أَحَدٌ", "2a7adun"], ["الصَّمَدُ", "aS-Samadu"], ["يَلِدْ", "yalid"], ["كُفُوًا", "kufuwan"], ["أَعُوذُ", "2a3oodhu"], ["النَّاسِ", "an-naasi"], ["الْفَلَقِ", "al-falaqi"], ["الْكَوْثَرَ", "al-kawthara"], ["فَصَلِّ", "faSalli"], ["وَانْحَرْ", "wan7ar"], ["الْعَصْرِ", "al-3aSri"], ["خُسْرٍ", "khusrin"], ["آمَنُوا", "2aamanoo"], ["الصَّالِحَاتِ", "aS-Saali7aati"], ["بِالْحَقِّ", "bil-7aqqi"], ["بِالصَّبْرِ", "biS-Sabri"], ["نَصْرُ", "naSru"], ["الْفَتْحُ", "al-fat7u"], ["أَفْوَاجًا", "2afwaajan"]];
+const RD_SUN = "تثدذرزسشصضطظلن".split("");
+const RD_AL = [["الْقَمَرُ", "al-qamaru", "moon"], ["الْكِتَابُ", "al-kitaabu", "moon"], ["الْبَيْتُ", "al-baytu", "moon"], ["الْعِلْمُ", "al-3ilmu", "moon"], ["الْحَمْدُ", "al-7amdu", "moon"], ["الشَّمْسُ", "ash-shamsu", "sun"], ["النُّورُ", "an-nooru", "sun"], ["الرَّحْمَٰنُ", "ar-ra7maanu", "sun"], ["الدِّينُ", "ad-deenu", "sun"], ["السَّمَاءُ", "as-samaa2u", "sun"], ["الطَّالِبُ", "aT-Taalibu", "sun"], ["اللَّيْلُ", "al-laylu", "sun"]];
+const R = a => a[Math.floor(Math.random() * a.length)];
+function rdDrill(kind) {
+  const n = 12; const items = [];
+  for (let i = 0; i < n; i++) { const c = R(kind === "sukoon" || kind === "long" ? RD_CONS.filter(x => x !== "ي") : RD_CONS);
+    if (kind === "short") { const h = R(RD_HAR); items.push([c + h[0], RD_FR[c] + h[1]]); }
+    else if (kind === "long") { const h = R(RD_LONG); items.push([c + h[0], RD_FR[c] + h[1]]); }
+    else if (kind === "sukoon") { const h = R(RD_HAR); const al = h[1] === "a" ? "أَ" : h[1] === "u" ? "أُ" : "إِ"; items.push([al + c + "ْ", "2" + h[1] + RD_FR[c]]); }
+    else if (kind === "tanween") { const h = R(RD_TAN); items.push([c + h[0] + (h[1] === "an" && !"ةء".includes(c) ? "ا" : ""), RD_FR[c] + h[1]]); }
+    else if (kind === "shadda") { const h = R(RD_HAR); items.push(["أَ" + c + "ّ" + h[0], "2a" + RD_FR[c] + RD_FR[c] + h[1]]); }
+    else if (kind === "positions") { const pos = R([0, 1, 2, 3]); const f = rdForms(c)[pos]; items.push([f, RD_FR[c], c]); } }
+  state.rdD = { kind, items, sel: null }; render();
+}
+function rdDrillView(kind) {
+  const ar = state.lang === "ar"; if (!state.rdD || state.rdD.kind !== kind) { state.rdD = null; setTimeout(() => rdDrill(kind), 0); return loadingBox(); } const d = state.rdD;
+  const kid = !!state.rdKid; const line = d.items.map(x => x[0]).join(" ");
+  return `<div class="card rddrill ${kid ? "kid" : ""}"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><b>🏋️ ${ar ? "تمرين قراءة — اضغط على أي مقطع تسمعه" : "Reading drill — tap any syllable to hear it"}</b><div class="row" style="gap:.3rem"><button class="btn btn-o" onclick="rdDrill('${kind}')">🔀 ${ar ? "تمرين جديد" : "New drill"}</button><button class="btn btn-o" onclick="rdHearQ('${kind}')">🎧 ${ar ? "اسمع واختار" : "Hear & choose"}</button></div></div>
+    <div class="rdgridd notr" lang="ar">${d.items.map((x, i) => `<button class="rdsyl big" onclick="rdSay(${esc(JSON.stringify(x[2] ? x[2] + "َ" : x[0]))})">${x[0]}<small>${x[1]}</small></button>`).join("")}</div>
+    ${kind !== "positions" ? `<div style="text-align:center;margin-top:.5rem"><button class="btn btn-p" onclick="rdListen(${esc(JSON.stringify(line))},'rdOutD')">🎙️ ${ar ? "اقرأ السطر كله وأنا أصحّح" : "Read the whole line — I'll check"}</button><div id="rdOutD"></div></div>` : `<p class="xs muted" style="text-align:center">${ar ? "كل حرف ليه شكل في أول الكلمة ووسطها وآخرها — الحروف (ا د ذ ر ز و) ما بتتوصلش باللي بعدها." : "Each letter has a shape at the start, middle and end of a word — (ا د ذ ر ز و) never join the next letter."}</p>`}
+    ${d.q ? `<div class="rdhq"><p class="sm b">🎧 ${ar ? "أنهي واحد سمعته؟" : "Which one did you hear?"} ⭐ ${d.sc || 0}</p><div class="rdrow notr" lang="ar">${d.q.opts.map(o => `<button class="rdsyl big ${d.q.pick != null ? (o === d.q.ans ? "ok" : d.q.pick === o ? "bad" : "") : ""}" onclick="rdHearPick(${esc(JSON.stringify(o))})">${o}</button>`).join("")}</div><button class="btn btn-o" onclick="rdSay(${esc(JSON.stringify(d.q.ans))})">🔊 ${ar ? "تاني" : "Again"}</button></div>` : ""}</div>`;
+}
+function rdHearQ(kind) { const d = state.rdD; if (!d) return; const pool = d.items.map(x => x[0]); const ans = R(pool); const opts = [...new Set([ans, ...pool.sort(() => Math.random() - .5)])].slice(0, 4).sort(() => Math.random() - .5); d.q = { ans, opts, pick: null }; render(); setTimeout(() => rdSay(ans), 250); }
+function rdHearPick(o) { const d = state.rdD; if (!d || !d.q || d.q.pick != null) return; d.q.pick = o; if (o === d.q.ans) { d.sc = (d.sc || 0) + 1; try { sfxSafe("correct"); } catch (e) {} } else { try { sfxSafe("wrong"); } catch (e) {} } render(); setTimeout(() => rdHearQ(d.kind), 1100); }
+const RD_INFO = {
+  positions: ["مواضع الحروف", "Letter positions", "الحرف بيتغيّر شكله حسب مكانه في الكلمة: لوحده، في الأول، في النص، في الآخر. اتعلم تتعرّف عليه في كل الأشكال.", "A letter changes shape by position: alone, start, middle, end. Learn to recognise every form."],
+  short: ["الحركات القصيرة", "Short vowels", "الفتحة = a، الضمة = u، الكسرة = i. اقرأ كل مقطع بسرعة ووضوح.", "Fatha = a, damma = u, kasra = i. Read each syllable quickly and clearly."],
+  long: ["المدود (الحركات الطويلة)", "Long vowels", "ألف بعد فتحة = aa، واو بعد ضمة = oo، ياء بعد كسرة = ee — بنمدّهم حركتين.", "Alif after fatha = aa, waw after damma = oo, yaa after kasra = ee — held for two counts."],
+  sukoon: ["السكون", "Sukoon", "السكون معناه الحرف من غير حركة: بتقف عليه. أَبْ = 2ab.", "Sukoon means no vowel: you stop on the letter. أَبْ = 2ab."],
+  tanween: ["التنوين", "Tanween", "التنوين = نون ساكنة بنسمعها في الآخر ومش بنكتبها: بًا = ban، بٌ = bun، بٍ = bin.", "Tanween is an n you hear but don't write: بًا = ban, بٌ = bun, بٍ = bin."],
+  shadda: ["الشدة", "Shadda", "الشدة = حرفين: الأول ساكن والتاني متحرك. أَبَّ = 2ab-ba.", "Shadda = a doubled letter: the first with sukoon, the second voweled. أَبَّ = 2ab-ba."],
+  al: ["همزة الوصل واللام القمرية والشمسية", "Hamzat al-wasl, moon & sun letters", "«ال» في أول الكلمة: قبل الحروف القمرية اللام بتتنطق (الْقَمَر)، وقبل الشمسية بتختفي والحرف اللي بعدها يتشدّد (الشَّمْس). وهمزة الوصل بتتنطق في أول الكلام بس.", "“Al-”: before moon letters the L is pronounced (الْقَمَر); before sun letters it disappears and the next letter doubles (الشَّمْس). The connecting hamza is only pronounced at the start of speech."],
+  qwords: ["كلمات من القرآن", "Words from the Quran", "كلمات متكررة في السور القصيرة — اقرأها وسجّل صوتك.", "Frequent words from the short surahs — read them and record yourself."]
+};
+const NEW_STAGES = [["positions", "🔡"], ["short", "◌َ"], ["long", "〰️"], ["sukoon", "◌ْ"], ["tanween", "◌ً"], ["shadda", "◌ّ"], ["al", "ال"], ["qwords", "🕋"]];
+(function () { const iMarks = RD_STAGES.findIndex(s => s[0] === "marks"); if (iMarks >= 0) RD_STAGES.splice(iMarks, 1, ...NEW_STAGES.map(([k, ic]) => [k, ic, RD_INFO[k][0], RD_INFO[k][1]])); })();
+const _rdStage69 = rdStage;
+rdStage = function (k) {
+  const ar = state.lang === "ar"; const I = RD_INFO[k]; if (!I) return _rdStage69(k);
+  const intro = `<div class="card rdintro"><h3>${ar ? I[0] : I[1]}</h3><p>${ar ? I[2] : I[3]}</p></div>`;
+  const done = `<div style="text-align:center;margin-top:.8rem"><button class="btn btn-p" onclick="rdMark('${k}');state.rdD=null;state.rdS=(RD_STAGES[RD_STAGES.findIndex(s=>s[0]==='${k}')+1]||[])[0]||'final';render();window.scrollTo({top:0})">✅ ${ar ? "خلّصت المرحلة دي — اللي بعدها" : "I've finished this stage — next"}</button></div>`;
+  if (k === "al") return intro + `<div class="rdgrid">${RD_AL.map(w => `<button class="card rdw" onclick="rdSay(${esc(JSON.stringify(w[0]))})"><span class="notr" lang="ar">${w[0]}</span><small>${w[1]}</small><span class="badge" style="font-size:.7rem">${w[2] === "sun" ? "☀️ " + (ar ? "شمسية" : "sun") : "🌙 " + (ar ? "قمرية" : "moon")}</span></button>`).join("")}</div><div class="card"><p class="sm b">☀️ ${ar ? "الحروف الشمسية" : "Sun letters"}:</p><div class="rdrow notr" lang="ar">${RD_SUN.map(c => `<span class="rdsyl">${c}</span>`).join("")}</div><p class="xs muted">${ar ? "باقي الحروف قمرية — اجمعها: «ابغِ حجّك وخف عقيمه»." : "All others are moon letters."}</p></div>${rdAlGame()}` + done;
+  if (k === "qwords") { const i = Math.min(state.rdQi || 0, RD_QW.length - 1); const w = RD_QW[i];
+    return intro + `<div class="card rdfocus"><div class="xs muted">${i + 1} / ${RD_QW.length}</div><div class="rdbig notr" lang="ar">${w[0]}</div><div class="rdfr">${w[1]}</div><div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap"><button class="btn btn-o" onclick="rdSay(${esc(JSON.stringify(w[0]))})">🔊</button><button class="btn btn-o rdmic" onclick="rdListen(${esc(JSON.stringify(w[0]))},'rdOut')">🎙️ ${ar ? "اقرأ" : "Read"}</button></div><div id="rdOut"></div><div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem"><button class="btn btn-o" ${i ? "" : "disabled"} onclick="state.rdQi=${i - 1};render()">→</button><button class="btn btn-p" onclick="state.rdQi=${(i + 1) % RD_QW.length};render()">${ar ? "اللي بعدها" : "Next"} ←</button></div></div>` + done; }
+  return intro + rdDrillView(k) + (k === "positions" ? rdGames() : "") + done;
+};
+function rdAlGame() { const ar = state.lang === "ar"; const g = state.rdAG || (state.rdAG = { w: R(RD_AL), sc: 0 }); return `<div class="card rdgames"><h3>🎮 ${ar ? "شمسية ولا قمرية؟" : "Sun or moon?"} ⭐ ${g.sc}</h3><div class="rdbig notr" lang="ar">${g.w[0].replace(/[ًٌٍَُِّْ]/g, "")}</div><div class="row" style="gap:.4rem;justify-content:center"><button class="btn btn-o" onclick="rdAlPick('sun')">☀️ ${ar ? "شمسية" : "Sun"}</button><button class="btn btn-o" onclick="rdAlPick('moon')">🌙 ${ar ? "قمرية" : "Moon"}</button></div></div>`; }
+function rdAlPick(x) { const g = state.rdAG; if (x === g.w[2]) { g.sc++; try { sfxSafe("correct"); } catch (e) {} } else { try { sfxSafe("wrong"); } catch (e) {} toast(g.w[0] + " — " + g.w[1], true); } rdSay(g.w[0]); g.w = R(RD_AL); setTimeout(render, 500); }
+/* وضع الأطفال */
+const _renderReading69 = renderReading;
+renderReading = function () { const ar = state.lang === "ar"; const h = _renderReading69(); return h.replace('<div class="rdmap">', `<div style="text-align:end;margin-bottom:.4rem"><button class="btn ${state.rdKid ? "btn-p" : "btn-o"}" onclick="state.rdKid=!state.rdKid;try{localStorage.setItem('itqan_rdkid',state.rdKid?'1':'')}catch(e){};render()">🧒 ${ar ? "وضع الأطفال" : "Kids mode"}</button></div><div class="rdmap ${state.rdKid ? "kid" : ""}">`).replace(/<div class="pgwrap/, `<div class="${state.rdKid ? "rdkidwrap " : ""}pgwrap`); };
+try { state.rdKid = !!localStorage.getItem("itqan_rdkid"); } catch (e) {}
+const _rdShow69 = rdShow; rdShow = function (t, s, sc, id) { _rdShow69(t, s, sc, id); if (state.rdKid && sc >= .75) { try { sfxSafe("correct"); } catch (e) {} const o = document.getElementById(id); if (o) o.insertAdjacentHTML("afterbegin", `<div class="rdkidstar">🌟🎉🌟</div>`); } };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rdgridd{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.4rem;direction:rtl;margin-top:.6rem}.rdgridd .rdsyl{display:flex;flex-direction:column;align-items:center}.rdgridd small{font:600 .7rem ui-monospace,monospace;color:var(--accent)}
+.rddrill.kid .rdsyl.big{font-size:2.6rem;border-radius:20px;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border:0}
+.rdmap.kid .rdst{background:linear-gradient(135deg,#e0f2fe,#fce7f3)}.rdmap.kid .rdst span{font-size:2rem}
+.rdkidwrap .rdbig{font-size:4.4rem;color:#7c3aed}.rdkidstar{font-size:2.4rem;text-align:center;animation:fpPulse .8s 3}
+.rdintro{border-inline-start:5px solid var(--accent)}.rdhq{margin-top:.8rem;text-align:center;border-top:1px dashed var(--line);padding-top:.6rem}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
