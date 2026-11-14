@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v116";
+const UI_VERSION = "2026-11-14-v117";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -19787,6 +19787,87 @@ const _tcMap116 = tcMap; tcMap = function () { return lvBanner("tajweed") + _tcM
 const _DOMAINS116 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS116(); const ar = state.lang === "ar"; ds.forEach(d => { if (d.tools && !d.tools.some(t => String(t[2]).includes("'level'"))) d.tools.unshift(["🎯", ar ? "حدد مستواك (A1–C2)" : "Find your level (A1–C2)", "state.lvT=null;go16('level')", ""]); }); return ds; };
 if (Array.isArray(KIT) && !KIT.some(k => k[0] === "level")) KIT.unshift(["level", "🎯", "حدد مستواك (A1 → C2)", "Find your level (A1 → C2)", ["اختبار كبير لكل قسم", "وابدأ من مستواك مش من الصفر"], ["A full test per section", "Start at your level"], "#/level", "#dc2626"]);
 RST81.level = [];
+
+/* ================= v117: الأصوات — أي سؤال «اسمع» لازم يتسمع + صفحة «العربية بين يديك» بأصوات الكتاب الأصلية (المالك بيرفع ملفات الباور بوينت والموقع يطلّع منها الأصوات لوحده) ================= */
+/* ١) الصوت الطبيعي يشتغل للزوار كمان، والعامية بصوت مصري، ولو مفيش أي صوت عربي على الجهاز يظهر النص مكتوب عشان السؤال يتحل */
+ttsPlay = async function (text, voice, slow) {
+  const k = voice + "|" + (slow ? 1 : 0) + "|" + text; let url = TTSC.get(k);
+  if (!url) {
+    try { let tok = null; try { const { data: s } = await sb.auth.getSession(); tok = s && s.session ? s.session.access_token : null; } catch (e) {} tok = tok || SB_KEY;
+      const r = await fetch(`${SB_URL}/functions/v1/tts`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: SB_KEY }, body: JSON.stringify({ text, voice, rate: slow ? "slow" : "" }) });
+      if (!r.ok) throw r.status; const key = r.headers.get("x-k"); const b = new Uint8Array(await r.arrayBuffer()); const kb = key.match(/../g).map(h => parseInt(h, 16)); for (let i = 0; i < b.length; i++) b[i] ^= kb[i % kb.length];
+      url = URL.createObjectURL(new Blob([b], { type: "audio/mpeg" })); TTSC.set(k, url);
+    } catch (e) { state.ttsNoKey117 = e === 404; return say117(text, voice.startsWith("eg") ? "eg" : "fu", voice.endsWith("b") ? 1.2 : .9); }
+  }
+  return new Promise(res => { const a = new Audio(url); a.onended = res; a.onerror = res; a.play().catch(res); state.ttsAudio = a; });
+};
+function arVoices117() { try { return (speechSynthesis.getVoices() || []).filter(v => /^ar/i.test(v.lang)); } catch (e) { return []; } }
+try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; } catch (e) {}
+function say117(text, dialect, pitch) {
+  if (!arVoices117().length) { sayBubble117(text); return new Promise(r => setTimeout(r, 1200 + String(text).length * 60)); }
+  return say(text, dialect, pitch);
+}
+function sayBubble117(text) {
+  const ar = state.lang === "ar"; let b = document.getElementById("say117"); if (!b) { b = document.createElement("div"); b.id = "say117"; document.body.appendChild(b); }
+  const own = typeof realRole === "function" && realRole() === "owner";
+  b.innerHTML = `<div class="xs muted">🔇 ${ar ? "جهازك مافيهوش صوت عربي — ده اللي المفروض تسمعه:" : "No Arabic voice on this device — here's what you'd hear:"}</div><div class="notr" lang="ar" style="font:1.6rem/1.8 'Amiri',serif">${esc(text)}</div>${own ? `<div class="xs" style="margin-top:.3rem;color:#b45309">${ar ? "للمالك: فعّل «أصوات المحادثات الطبيعية» (مفتاح Azure المجاني) من الإعدادات عشان كل الأسئلة تتسمع بصوت حقيقي على كل الأجهزة." : "Owner: add the free Azure Speech key in Settings so every question has real audio."}</div>` : ""}`;
+  b.classList.add("on"); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove("on"), 4500 + String(text).length * 80);
+}
+document.head.insertAdjacentHTML("beforeend", `<style>#say117{position:fixed;left:50%;bottom:6rem;transform:translateX(-50%) translateY(150%);z-index:400;background:var(--card);border:2px solid var(--accent);border-radius:1rem;padding:.6rem 1rem;max-width:min(30rem,92vw);text-align:center;box-shadow:0 12px 30px #0003;transition:transform .25s;pointer-events:none}#say117.on{transform:translateX(-50%) translateY(0)}</style>`);
+rdSay = (function (_prev) { return function (t) { try { const u = vUrl84 && vUrl84("t:" + t); if (u && !state.vMode84) return vPlayUrl84(u); } catch (e) {} if (state.vMode84) return _prev(t); return ttsPlay(t, state.route === "egyptian" ? "eg-a" : "fu-a", true); }; })(rdSay);
+
+/* ٢) «العربية بين يديك» — المالك يختار ملفات الـ pptx، والموقع يطلّع الأصوات ويرفعها ويعمل فهرس بالوحدة والدرس */
+PAGES16.push("arabiya");
+const ABY_N = ["", "الكتاب الأول", "الكتاب الثاني", "الكتاب الثالث", "الكتاب الرابع"];
+function abyIndex() { return useData("aby:index", async () => { const u = sb.storage.from("academy_public").getPublicUrl("arabiya/index.json").data.publicUrl; try { const r = await fetch(u + "?v=" + Date.now()); if (!r.ok) return [[]]; return [await r.json()]; } catch (e) { return [[]]; } }); }
+function abyUrl(f) { return sb.storage.from("academy_public").getPublicUrl("arabiya/" + f).data.publicUrl; }
+async function abyLoadZip() { if (window.JSZip) return; await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+async function abyUpload(files) {
+  const ar = state.lang === "ar"; files = [...(files || [])].filter(f => /\.pptx$/i.test(f.name)); if (!files.length) return toast(ar ? "اختار ملفات .pptx" : "Pick .pptx files", true);
+  await abyLoadZip(); const idx0 = (abyIndex() || [[]])[0] || []; const idx = idx0.slice(); const log = document.getElementById("abyLog");
+  const say_ = m => { if (log) log.insertAdjacentHTML("beforeend", `<div>${esc(m)}</div>`); };
+  for (const f of files) {
+    const path = (f.webkitRelativePath || f.name); const lvM = path.match(/(الأول|الثاني|الثالث|الرابع)/) || path.match(/\b([1-4])(st|nd|rd|th)\b/i); const lv = lvM ? ({ "الأول": 1, "الثاني": 2, "الثالث": 3, "الرابع": 4 }[lvM[1]] || +lvM[1]) : (+(state.abyLv || 1));
+    const um = f.name.match(/U(\d+)/i); const unit = um ? +um[1] : 0; if (!unit) { say_("⏭️ " + f.name + (ar ? " — مش وحدة (تخطّيته)" : " — skipped")); continue; }
+    say_(`📂 ${ABY_N[lv]} — ${ar ? "الوحدة" : "Unit"} ${unit}…`);
+    let z; try { z = await JSZip.loadAsync(f); } catch (e) { say_("❌ " + f.name); continue; }
+    const rels = Object.keys(z.files).filter(n => /^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/.test(n)).sort((a, b) => +a.match(/slide(\d+)/)[1] - +b.match(/slide(\d+)/)[1]);
+    let n = 0;
+    for (const r of rels) {
+      const x = await z.file(r).async("string"); const meds = [...new Set([...x.matchAll(/Target="\.\.\/media\/([^"]+\.(mp3|m4a|wav|wma|mp4|m4v))"/gi)].map(m => m[1]))]; if (!meds.length) continue;
+      const sn = r.match(/slide(\d+)/)[1]; let txt = ""; try { const sx = await z.file(`ppt/slides/slide${sn}.xml`).async("string"); txt = [...sx.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(m => m[1]).join(" ").replace(/\s+/g, " ").trim(); } catch (e) {}
+      const lesson = (txt.match(/الدَّ?رْ?سُ?\s*\(\s*(\d+)\s*\)/) || txt.match(/الدرس\s*\(?\s*(\d+)/) || [])[1]; const title = (txt.replace(/الوَ?حدَ?ةُ?\s*\(\s*\d+\s*\)/, "").replace(/الدَّ?رْ?سُ?\s*\(\s*\d+\s*\)/, "").replace(/ـ+/g, "").trim().split(" ").slice(0, 6).join(" "));
+      for (const m of meds) {
+        const fz = z.file("ppt/media/" + m); if (!fz) continue; const blob = await fz.async("blob"); const ext = m.split(".").pop().toLowerCase(); const key = `L${lv}/U${String(unit).padStart(2, "0")}/s${sn}_${m.replace(/[^\w.]/g, "")}`;
+        const type = /mp4|m4v/.test(ext) ? "video/mp4" : ext === "wav" ? "audio/wav" : ext === "m4a" ? "audio/mp4" : "audio/mpeg";
+        const up = await sb.storage.from("academy_public").upload("arabiya/" + key, blob, { contentType: type, upsert: true }); if (up.error) { say_("❌ " + up.error.message); continue; }
+        const i = idx.findIndex(o => o.f === key); const o = { lv, unit, lesson: lesson ? +lesson : null, slide: +sn, title, f: key, video: /mp4|m4v/.test(ext) }; if (i >= 0) idx[i] = o; else idx.push(o); n++;
+      }
+    }
+    say_(`✅ ${ABY_N[lv]} — ${ar ? "الوحدة" : "Unit"} ${unit}: ${n} ${ar ? "ملف صوت" : "audio files"}`);
+    await sb.storage.from("academy_public").upload("arabiya/index.json", new Blob([JSON.stringify(idx)], { type: "application/json" }), { contentType: "application/json", upsert: true });
+  }
+  delete state.data["aby:index"]; toast("✅"); render();
+}
+function renderArabiya() {
+  const ar = state.lang === "ar"; const own = realRole() === "owner" && !state.preview; const d = abyIndex(); const all = Array.isArray(d) ? d[0] || [] : null; const lv = +(state.abyLv || 1);
+  const up = own ? `<div class="card" style="margin-bottom:.8rem;border:2px dashed var(--accent)"><b>📤 ${ar ? "للمالك: ارفع ملفات الباور بوينت" : "Owner: upload the PowerPoint files"}</b><p class="xs muted">${ar ? "اختار فولدر «Arabya pptx» كله (أو ملفات U01…U16) — الموقع بيطلّع الأصوات من كل شريحة ويرفعها ويرتبها بالكتاب والوحدة والدرس لوحده. الملفات الكبيرة بتاخد وقت؛ سيب الصفحة مفتوحة." : "Pick the whole “Arabya pptx” folder — audio is extracted per slide and organised by book, unit and lesson."}</p>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap"><label class="btn btn-p">📁 ${ar ? "اختار الفولدر كله" : "Pick folder"}<input type="file" hidden webkitdirectory multiple onchange="abyUpload(this.files)"></label><label class="btn btn-o">📄 ${ar ? "اختار ملفات" : "Pick files"}<input type="file" hidden multiple accept=".pptx" onchange="abyUpload(this.files)"></label></div><div id="abyLog" class="xs" style="max-height:10rem;overflow:auto;margin-top:.4rem"></div></div>` : "";
+  const tabs = `<div class="motabs">${[1, 2, 3, 4].map(n => `<button class="${n === lv ? "on" : ""}" onclick="state.abyLv=${n};render()">📗 ${ABY_N[n]}${all ? ` <small>(${all.filter(o => o.lv === n).length})</small>` : ""}</button>`).join("")}</div>`;
+  let body;
+  if (!all) body = loadingBox();
+  else { const L = all.filter(o => o.lv === lv).sort((a, b) => a.unit - b.unit || (a.lesson || 0) - (b.lesson || 0) || a.slide - b.slide);
+    if (!L.length) body = `<div class="card" style="text-align:center"><div style="font-size:2.5rem">🎧</div><p>${ar ? "أصوات الكتاب ده لسه ماترفعتش." : "Audio for this book isn't uploaded yet."}</p></div>`;
+    else { const units = [...new Set(L.map(o => o.unit))]; body = units.map(u => { const it = L.filter(o => o.unit === u); return `<details class="card abyu" ${state.abyU === u ? "open" : ""} ontoggle="if(this.open)state.abyU=${u}"><summary><b>📘 ${ar ? "الوحدة" : "Unit"} ${u}</b> <span class="xs muted">${esc(it[0].title || "")} · ${it.length} 🎧</span></summary>${it.map(o => `<div class="abyr"><span class="sm"><b>${o.lesson ? (ar ? "الدرس " : "Lesson ") + o.lesson : (ar ? "شريحة " : "Slide ") + o.slide}</b></span>${o.video ? `<video controls preload="none" src="${abyUrl(o.f)}" style="width:100%;max-height:16rem"></video>` : `<audio controls preload="none" src="${abyUrl(o.f)}" style="width:100%"></audio>`}${own ? `<button class="btn btn-o xs" title="${ar ? "امسح" : "Delete"}" onclick="abyDel('${o.f}')">🗑️</button>` : ""}</div>`).join("")}</details>`; }).join(""); } }
+  return pageWrap("📗", ar ? "العربية بين يديك — بالأصوات الأصلية" : "Al-Arabiyyah Bayna Yadayk — original audio", ar ? "تسجيلات الاستماع لكل وحدة ودرس من الكتب الأربعة — اسمع، وكرّر، وارجع للدرس" : "Listening tracks for every unit and lesson of the four books", up + tabs + `<div style="margin-top:.8rem">${body}</div>`);
+}
+async function abyDel(f) { if (!confirm(state.lang === "ar" ? "تمسح الملف ده؟" : "Delete?")) return; await sb.storage.from("academy_public").remove(["arabiya/" + f]); const idx = ((abyIndex() || [[]])[0] || []).filter(o => o.f !== f); await sb.storage.from("academy_public").upload("arabiya/index.json", new Blob([JSON.stringify(idx)], { type: "application/json" }), { contentType: "application/json", upsert: true }); delete state.data["aby:index"]; render(); }
+document.head.insertAdjacentHTML("beforeend", `<style>.abyu summary{cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.abyr{display:grid;grid-template-columns:6rem 1fr auto;gap:.5rem;align-items:center;padding:.4rem 0;border-top:1px dashed var(--line)}@media(max-width:560px){.abyr{grid-template-columns:1fr}}</style>`);
+const _render117 = render;
+render = function () { if (state.route === "arabiya") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderArabiya(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render117.apply(this, arguments); };
+const _DOMAINS117 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS117(); const s = ds.find(d => d.k === "arabic"); if (s && s.tools && !s.tools.some(t => String(t[2]).includes("arabiya"))) s.tools.splice(1, 0, ["📗", state.lang === "ar" ? "العربية بين يديك (بالأصوات الأصلية)" : "Arabiyyah Bayna Yadayk (audio)", "go16('arabiya')", ""]); return ds; };
+if (Array.isArray(KIT) && !KIT.some(k => k[0] === "arabiya")) KIT.push(["arabiya", "📗", "العربية بين يديك — بالأصوات", "Arabiyyah Bayna Yadayk — audio", ["تسجيلات الاستماع الأصلية لكل درس", "الكتب الأربعة"], ["Original listening tracks", "All four books"], "#/arabiya", "#16a34a"]);
+RST81.arabiya = ["abyLv", "abyU"];
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
