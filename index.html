@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v72";
+const UI_VERSION = "2026-11-14-v73";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -17606,6 +17606,25 @@ const _fuUnit72 = fuUnit; fuUnit = function (i) { let h = _fuUnit72(i); if (stat
 const _DOMAINS72 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS72(); const a = ds.find(d => d.k === "arabic"); if (a && a.tools && !a.tools.some(t => String(t[2]).includes("kidsar"))) a.tools.splice(2, 0, ["🧒", state.lang === "ar" ? "عربي للأطفال" : "Arabic for kids", "go16('kidsar')", ""]); return ds; };
 if (Array.isArray(KIT) && !KIT.some(k => k[0] === "kidsar")) KIT.splice(4, 0, ["kidsar", "🧒", "عربي للأطفال", "Arabic for kids", ["صور وصوت وألعاب", "10 وحدات"], ["Pictures, audio, games", "10 units"], "#/kidsar", "#f59e0b"]);
 document.head.insertAdjacentHTML("beforeend", `<style>.kidsar .fuw{background:linear-gradient(135deg,#fef9c3,#fce7f3);border:0;border-radius:22px}.kidsar .fuw span.notr{font-size:2rem;color:#7c3aed}.kaemo{font-size:2.6rem}.kidsar .nhcard{border-radius:20px;background:linear-gradient(135deg,#e0f2fe,#fef3c7)}.kidsar .nhcard span{font-size:1.8rem}</style>`);
+
+/* ================= v73: السبورة — أداة ✋ تحريك (سحب الصفحة يمين وشمال وفوق وتحت) + زرار يوتيوب على السبورة ================= */
+const _wbToolbar73 = wbToolbar;
+wbToolbar = function () { _wbToolbar73(); const b = WB.el && WB.el.querySelector("#wbBar"); if (!b || b.querySelector("#wbPan")) return; const ar = state.lang === "ar";
+  b.insertAdjacentHTML("afterbegin", `<button id="wbPan" class="${WB.tool === "pan" ? "on" : ""}" title="${ar ? "تحريك الصفحة" : "Pan"}" onclick="wbTool('pan')">✋</button>`);
+  if (rmIsHost()) { const sp = b.querySelector('span[style="flex:1"]'); const yt = `<button title="YouTube" onclick="rmYtStart()" style="width:auto;padding:0 .4rem">▶️</button>`; if (sp) sp.insertAdjacentHTML("beforebegin", yt); else b.insertAdjacentHTML("beforeend", yt); } };
+const _wbEl73 = wbEl;
+wbEl = function () {
+  const fresh = !WB.el; const el = _wbEl73();
+  if (fresh) { const wrap = el.querySelector("#wbWrap"); let drag = null;
+    const down = e => { if (WB.tool !== "pan") return; e.stopPropagation(); e.preventDefault(); const p = e.touches ? e.touches[0] : e; drag = { x: p.clientX, y: p.clientY, l: wrap.scrollLeft, t: wrap.scrollTop }; if ((WB.zoom || 1) === 1) toast(state.lang === "ar" ? "كبّر الأول (+) عشان تحرّك الصفحة" : "Zoom in (+) first to pan"); };
+    const move = e => { if (!drag || WB.tool !== "pan") return; e.stopPropagation(); e.preventDefault(); const p = e.touches ? e.touches[0] : e; wrap.scrollLeft = drag.l - (p.clientX - drag.x); wrap.scrollTop = drag.t - (p.clientY - drag.y); };
+    const up = () => { drag = null; };
+    wrap.addEventListener("pointerdown", down, true); wrap.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true);
+    wrap.addEventListener("touchstart", e => { if (WB.tool === "pan" && e.touches.length === 1) down(e); }, { capture: true, passive: false }); wrap.addEventListener("touchmove", e => { if (WB.tool === "pan" && e.touches.length === 1) move(e); }, { capture: true, passive: false });
+  }
+  return el;
+};
+const _wbCursor73 = wbCursor; wbCursor = function () { _wbCursor73(); if (WB.cv) WB.cv.style.cursor = WB.tool === "pan" ? "grab" : WB.cv.style.cursor; };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
