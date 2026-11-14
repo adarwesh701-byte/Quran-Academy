@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v81";
+const UI_VERSION = "2026-11-14-v81b";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -18306,7 +18306,7 @@ function installBtn(full) {
   if (IS_STANDALONE || (!deferredInstall && !IS_IOS)) return "";
   return `<button class="btn btn-o ${full ? "btn-full" : ""}" style="${full ? "margin-top:.5rem" : ""}" onclick="installApp()"><i class="fa-solid fa-mobile-screen-button"></i> ${L("installApp")}</button>`;
 }
-if ("serviceWorker" in navigator && location.protocol === "https:") window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(r => { try { r.update(); } catch (e) {} }).catch(() => {})); let __swr = false; const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !__swr) { __swr = true; location.reload(); } }); }
 
 // بدء التشغيل
 document.addEventListener('DOMContentLoaded', () => {
