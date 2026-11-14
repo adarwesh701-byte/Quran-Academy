@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v104";
+const UI_VERSION = "2026-11-14-v105";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -19103,6 +19103,189 @@ render = function () { if (state.route === "display") { const app = document.get
 const _renderBell104 = renderBell;
 renderBell = function () { const h = _renderBell104(); const ar = state.lang === "ar"; return `<button class="ibtn" title="${ar ? "مظهري: الحجم والخطوط" : "Display: size & fonts"}" onclick="navigate('display')" style="font-weight:800">Aa</button>` + h; };
 const _ownerSettings104 = ownerSettings; ownerSettings = function () { const ar = state.lang === "ar"; return `<div class="card" style="margin-bottom:1rem"><div class="row" style="justify-content:space-between;align-items:center"><b>🎨 ${ar ? "الحجم والخطوط" : "Size & fonts"}</b><button class="btn btn-o" onclick="navigate('display')">${ar ? "افتح «مظهري»" : "Open display"}</button></div></div>` + _ownerSettings104(); };
+
+/* ================= v105: قسم القراءات المتكامل — مصحف المقارنة مع حفص (الملوّن + الهامش)، أصول كل قراءة، والمصاحف الصوتية لكل رواية =================
+   النصوص: بيانات مجمع الملك فهد لطباعة المصحف (qurancomplex.gov.sa) لروايات ورش وقالون والبزي وقنبل والدوري والسوسي وشعبة، والفروق محسوبة كلمة بكلمة مقابل حفص.
+   الأصول: ملخّصة من «حرز الأماني» (الشاطبية) و«الدرة المضية» وشرحيهما «الوافي» و«الإيضاح» لعبد الفتاح القاضي، و«البدور الزاهرة» (المكتبة الشاملة).
+   الصوتيات: mp3quran.net */
+const QRR = [
+ // [key, reader index in QR, name ar, name en, has full text, audio [[name, server, surahs]]]
+ ["warsh", 0, "ورش عن نافع", "Warsh 'an Nafi'", 1, [["محمود خليل الحصري", "https://cdn.mp3quran.net/audio/mahmoud-husary/r3/"], ["عبد الباسط عبد الصمد", "https://cdn.mp3quran.net/audio/abdulbasit-abdulsamad/r2/"], ["إبراهيم الدوسري", "https://cdn.mp3quran.net/audio/ibrahim-dosari/r1/"], ["ياسين الجزائري", "https://cdn.mp3quran.net/audio/yassen-jazairi/r1/"], ["عمر القزابري", "https://cdn.mp3quran.net/audio/omar-kazabri/r1/"], ["العيون الكوشي", "https://cdn.mp3quran.net/audio/laayoun-kouchi/r1/"], ["عبد المجيب بنكيران", "https://cdn.mp3quran.net/audio/abdelmoujib-benkirane/r1/"], ["رشيد بلعالية", "https://cdn.mp3quran.net/audio/rachid-belalia/r1/"], ["محمد سايد", "https://cdn.mp3quran.net/audio/muhammad-saayed/r1/"], ["أحمد دبيان (الأزرق)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r7/"], ["محمد عبد الكريم (الأصبهاني)", "https://cdn.mp3quran.net/audio/muhammad-abdulkareem/r2/"]]],
+ ["qaloon", 0, "قالون عن نافع", "Qalun 'an Nafi'", 1, [["محمود خليل الحصري", "https://cdn.mp3quran.net/audio/mahmoud-husary/r5/"], ["علي الحذيفي", "https://cdn.mp3quran.net/audio/ali-hudhaifi/r2/"], ["أحمد الطرابلسي", "https://cdn.mp3quran.net/audio/ahmad-tarabulsi/r1/"], ["الدوكالي محمد العالم", "https://cdn.mp3quran.net/audio/dokali-alim/r1/"], ["طارق دعوب", "https://cdn.mp3quran.net/audio/tareq-daawob/r1/"], ["مروان العكري", "https://cdn.mp3quran.net/audio/marwan-akri/r1/"], ["محمد أبو سنينة", "https://cdn.mp3quran.net/audio/muhammad-abusnaina/r1/"], ["محمد الأمين قنيوة", "https://cdn.mp3quran.net/audio/muhammad-qeniwa/r1/"], ["إبراهيم كشيدان", "https://cdn.mp3quran.net/audio/ibrahim-kshidan/r1/"], ["وليد النائحي (أبي نشيط)", "https://cdn.mp3quran.net/audio/waleed-naehi/r1/"], ["أحمد دبيان", "https://cdn.mp3quran.net/audio/ahmad-deeban/r5/"], ["صابر عبد الحكم (القصر مع السكون)", "https://cdn.mp3quran.net/audio/saber-abdulhakam/r3/"], ["صابر عبد الحكم — مجوّد (صلة الميم)", "https://cdn.mp3quran.net/audio/saber-abdulhakam/r10/"]]],
+ ["bazzi", 1, "البزي عن ابن كثير", "Al-Bazzi 'an Ibn Kathir", 1, [["أحمد دبيان", "https://cdn.mp3quran.net/audio/ahmad-deeban/r4/"], ["عكاشة كميني", "https://cdn.mp3quran.net/audio/okasha-kameny/r2/"], ["محمد عبد الحكيم العبد الله (البزي وقنبل)", "https://cdn.mp3quran.net/audio/muhammad-abdullah/r1/"]]],
+ ["qumbul", 1, "قنبل عن ابن كثير", "Qunbul 'an Ibn Kathir", 1, [["أحمد دبيان", "https://cdn.mp3quran.net/audio/ahmad-deeban/r3/"], ["محمد عبد الحكيم العبد الله (البزي وقنبل)", "https://cdn.mp3quran.net/audio/muhammad-abdullah/r1/"]]],
+ ["doori", 2, "الدوري عن أبي عمرو", "Ad-Duri 'an Abi 'Amr", 1, [["محمود خليل الحصري", "https://cdn.mp3quran.net/audio/mahmoud-husary/r4/"], ["مفتاح السلطني", "https://cdn.mp3quran.net/audio/muftah-saltani/r1/"], ["نورين محمد صديق", "https://cdn.mp3quran.net/audio/noreen-siddiq/r1/"], ["الفاتح محمد الزبير", "https://cdn.mp3quran.net/audio/fateh-zubair/r1/"], ["أحمد دبيان", "https://cdn.mp3quran.net/audio/ahmad-deeban/r6/"], ["صابر عبد الحكم (التوسط)", "https://cdn.mp3quran.net/audio/saber-abdulhakam/r4/"]]],
+ ["soosi", 2, "السوسي عن أبي عمرو", "As-Susi 'an Abi 'Amr", 1, [["عبد الرشيد صوفي", "https://cdn.mp3quran.net/audio/abdulrasheed-sufi/r2/"], ["أحمد دبيان (سور مختارة)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r9/"]]],
+ ["hisham", 3, "هشام عن ابن عامر", "Hisham 'an Ibn 'Amir", 0, [["أحمد دبيان (سور مختارة)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r12/"]]],
+ ["ibndhakwan", 3, "ابن ذكوان عن ابن عامر", "Ibn Dhakwan 'an Ibn 'Amir", 0, [["مفتاح السلطني", "https://cdn.mp3quran.net/audio/muftah-saltani/r5/"], ["أحمد دبيان (سور مختارة)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r8/"]]],
+ ["shouba", 4, "شعبة عن عاصم", "Shu'bah 'an 'Asim", 1, [["علي الحذيفي", "https://cdn.mp3quran.net/audio/ali-hudhaifi/r3/"], ["أحمد دبيان", "https://cdn.mp3quran.net/audio/ahmad-deeban/r2/"], ["صابر عبد الحكم — مجوّد", "https://cdn.mp3quran.net/audio/saber-abdulhakam/r7/"], ["مفتاح السلطني (سور مختارة)", "https://cdn.mp3quran.net/audio/muftah-saltani/r4/"]]],
+ ["khalaf", 5, "خلف عن حمزة", "Khalaf 'an Hamzah", 0, [["عبد الرشيد صوفي", "https://cdn.mp3quran.net/audio/abdulrasheed-sufi/r1/"], ["أحمد دبيان (سور مختارة)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r11/"]]],
+ ["khallad", 5, "خلاد عن حمزة", "Khallad 'an Hamzah", 0, []],
+ ["abulharith", 6, "أبو الحارث عن الكسائي", "Abu al-Harith 'an al-Kisa'i", 0, []],
+ ["doorikisai", 6, "الدوري عن الكسائي", "Ad-Duri 'an al-Kisa'i", 0, [["مفتاح السلطني", "https://cdn.mp3quran.net/audio/muftah-saltani/r2/"], ["محمد عبد الحكيم العبد الله", "https://cdn.mp3quran.net/audio/muhammad-abdullah/r2/"], ["محمود الشيمي", "https://cdn.mp3quran.net/audio/mahmoud-sheimy/r1/"], ["أحمد دبيان (سور مختارة)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r10/"]]],
+ ["ibnwardan", 7, "ابن وردان عن أبي جعفر", "Ibn Wardan 'an Abi Ja'far", 0, []],
+ ["ibnjammaz", 7, "ابن جماز عن أبي جعفر", "Ibn Jammaz 'an Abi Ja'far", 0, [["أحمد دبيان (سور مختارة)", "https://cdn.mp3quran.net/audio/ahmad-deeban/r13/"]]],
+ ["ruways", 8, "رويس عن يعقوب", "Ruways 'an Ya'qub", 0, [["ياسر المزروعي (رويس وروح)", "https://cdn.mp3quran.net/audio/yasser-mazrouei/r1/"], ["أحمد عيسى المعصراوي (رويس وروح)", "https://cdn.mp3quran.net/audio/ahmad-masarawi/r2/"]]],
+ ["rawh", 8, "روح عن يعقوب", "Rawh 'an Ya'qub", 0, [["ياسر المزروعي (رويس وروح)", "https://cdn.mp3quran.net/audio/yasser-mazrouei/r1/"], ["أحمد عيسى المعصراوي (رويس وروح)", "https://cdn.mp3quran.net/audio/ahmad-masarawi/r2/"]]],
+ ["ishaq", 9, "إسحاق عن خلف العاشر", "Ishaq 'an Khalaf", 0, []],
+ ["idris", 9, "إدريس عن خلف العاشر", "Idris 'an Khalaf", 0, []]
+];
+/* أصول كل قارئ — [عنوان الباب، الحكم] — مختصرة من الشاطبية والدرة وشروحهما */
+const QRU = [
+ [ // 0 نافع
+  ["بين السورتين", "قالون: البسملة. ورش: البسملة، أو السكت، أو الوصل."],
+  ["ميم الجمع", "قالون: الإسكان والصلة بواو قبل المتحرك (وجهان: «عليهمُو غير»). ورش: يصلها إذا جاء بعدها همزة قطع فقط: «عليهمُو ءأنذرتهم»."],
+  ["المد المتصل والمنفصل", "قالون: المتصل ٤ أو ٥، والمنفصل بالقصر أو التوسط. ورش (من طريق الأزرق): الإشباع ٦ حركات في النوعين."],
+  ["مد البدل واللين المهموز", "ورش: البدل بالقصر والتوسط والطول («ءامنوا، إيمان، أوتوا»)، واللين المهموز («شيء، سوء») بالتوسط والطول. قالون: القصر في البدل."],
+  ["الهمزتان من كلمة", "قالون: تسهيل الثانية مع إدخال ألف بينهما («ءَا۬نذرتهم»). ورش: تسهيل الثانية بلا إدخال، وله في المفتوحتين إبدال الثانية حرف مد."],
+  ["الهمزتان من كلمتين", "المتفقتان: قالون يسهّل الأولى في المكسورتين والمضمومتين ويُسقطها في المفتوحتين، وورش يسهّل الثانية أو يبدلها حرف مد. المختلفتان: تسهيل الثانية أو إبدالها بحسب حركتها."],
+  ["الهمز المفرد", "ورش: يبدل الهمزة الساكنة إذا كانت فاء الكلمة حرف مد («يُومنون، ياكلون») إلا باب «الإيواء»، ويبدل المفتوحة بعد ضم إذا كانت فاء الكلمة واوًا («يُواخذ، مُوَجلا»). قالون: يحقق."],
+  ["النقل", "ورش: ينقل حركة الهمزة إلى الساكن الصحيح قبلها ويحذفها: «قَدَ افلح، الَارض، مَنَ امن»."],
+  ["الإمالة والتقليل", "ورش: يقلّل (بين بين) ذوات الراء («النار، الأبصار، ذكرى»)، وله الفتح والتقليل في ذوات الياء، ويقلّل رؤوس الآي في السور الإحدى عشرة. قالون: يميل «هارٍ» في التوبة إمالة كبرى، ولا يُميل غيرها في الأشهر."],
+  ["الراءات واللامات", "ورش: يرقق الراء المفتوحة والمضمومة بعد كسرة لازمة أو ياء ساكنة («خبيرًا، بصيرًا، المرء»)، ويغلّظ اللام المفتوحة إذا سبقتها صاد أو طاء أو ظاء مفتوحة أو ساكنة («الصلاة، الطلاق، ظلم»)."],
+  ["هاء الضمير بعد الواو والفاء واللام", "قالون: يُسكّن الهاء في «وهْو، فهْي، لهْو»."],
+  ["ياءات الإضافة", "نافع يفتح كثيرًا منها وصلًا مثل «عباديَ، لعليَ»، ويسكّن «محياي» بخلف."]
+ ],
+ [ // 1 ابن كثير
+  ["بين السورتين", "البسملة."],
+  ["ميم الجمع", "صلتها بواو قبل المتحرك مطلقًا: «عليهمُو غير، أنذرتهمُو أم»."],
+  ["هاء الكناية", "يصل الهاء إذا وقعت بين ساكن ومتحرك: «فيهِي هدى، منهُو آيات»."],
+  ["المد", "قصر المنفصل (حركتان)، وتوسط المتصل."],
+  ["الهمزتان من كلمة", "تسهيل الثانية بلا إدخال."],
+  ["الهمزتان من كلمتين", "البزي: كقالون (تسهيل الأولى، وإسقاطها في المفتوحتين). قنبل: تسهيل الثانية أو إبدالها حرف مد."],
+  ["الصراط", "قنبل: «السِّراط» بالسين حيث وقع. البزي: بالصاد."],
+  ["تاءات البزي", "يشدّد التاء وصلًا في نحو واحد وثلاثين موضعًا مثل «ولا تَّيمّموا، ولا تَّفرّقوا»."],
+  ["كلمة «القرآن»", "«القُرَان» بنقل حركة الهمزة إلى الراء حيث وقعت."],
+  ["الإمالة", "لا إمالة له."],
+  ["ياءات الزوائد", "يثبت كثيرًا منها وصلًا ووقفًا مثل «الداعِي، دعانِي»."]
+ ],
+ [ // 2 أبو عمرو
+  ["بين السورتين", "البسملة، أو السكت، أو الوصل."],
+  ["المد", "قصر المنفصل أو توسطه، وتوسط المتصل."],
+  ["الهمزتان من كلمة", "تسهيل الثانية مع الإدخال."],
+  ["الهمزتان من كلمتين", "المتفقتان: إسقاط الأولى في الأنواع الثلاثة («جا أمرنا»)."],
+  ["الهمز المفرد", "السوسي: يبدل كل همزة ساكنة حرف مد («ياكلون، المومنون، بير») إلا كلمات مستثناة. الدوري: يحقق."],
+  ["الإدغام الكبير", "السوسي: يدغم الحرف المتحرك في مثله أو مقاربه من كلمتين («الرحيمّ ملك، قالّ لهم»). والدوري له الإظهار في الأشهر."],
+  ["الإمالة", "يميل الألف قبل راء مكسورة متطرفة إمالة كبرى («النار، الأبصار، الدار»)، ويقلّل ألفات «فُعلى» («موسى، عيسى»)، ويميل ذوات الراء من ذوات الياء («ذكرى، القرى»)."],
+  ["هاء الضمير", "«وهْو، فهْي، لهْو» بالإسكان."],
+  ["«بارئكم، يأمركم»", "الإسكان أو الاختلاس (للدوري) في «بارئْكم، يأمرْكم، ينصرْكم، يشعرْكم»."]
+ ],
+ [ // 3 ابن عامر
+  ["بين السورتين", "البسملة."],
+  ["المد", "توسط المتصل والمنفصل."],
+  ["الهمزتان من كلمة", "هشام: التحقيق والتسهيل مع الإدخال وعدمه بتفصيل في الكتب. ابن ذكوان: التحقيق بلا إدخال."],
+  ["«إبراهام»", "«إبراهام» بالألف في ثلاثة وثلاثين موضعًا منها مواضع البقرة كلها، ولابن ذكوان الخلاف في البقرة."],
+  ["الإمالة", "ابن ذكوان يميل بعض الأفعال مثل «جاء، شاء، زاد» في مواضع معروفة."],
+  ["من الفرش", "«كُنْ فيكونَ» بالنصب في مواضع، و«قالوا اتخذ الله» بلا واو في البقرة."]
+ ],
+ [ // 4 عاصم
+  ["بين السورتين", "البسملة."],
+  ["المد", "حفص: المتصل والمنفصل ٤ أو ٥. شعبة: التوسط فيهما."],
+  ["السكت", "حفص: السكت على «عِوَجًا، مرقدِنا، مَنْ راق، بَلْ ران» من طريق الشاطبية. شعبة: لا سكت."],
+  ["«رُضوان»", "شعبة: بضم الراء حيث وقع إلا «مَن اتبع رِضوانه» في المائدة."],
+  ["الإمالة", "حفص: يميل «مجريها» فقط. شعبة: يميل كلمات معدودة مثل «رمى» في الأنفال و«أعمى» في الإسراء."],
+  ["الهمز", "يحققان الهمز في كل القرآن."]
+ ],
+ [ // 5 حمزة
+  ["بين السورتين", "الوصل بلا بسملة."],
+  ["المد", "الإشباع (٦ حركات) في المتصل والمنفصل."],
+  ["السكت", "خلف: يسكت على الساكن قبل الهمز (لام «أل»، و«شيء»، والساكن المفصول). خلاد: يسكت على «أل» و«شيء» بخلف."],
+  ["الوقف على الهمز", "يغيّر الهمز وقفًا بالتسهيل والإبدال والنقل والحذف بقواعد باب «وقف حمزة وهشام»."],
+  ["هاء «عليهم»", "يضم الهاء في «عليهُم، إليهُم، لديهُم» وصلًا ووقفًا."],
+  ["الصراط", "إشمام الصاد صوت الزاي: خلف حيث وقع، وخلاد في الموضع الأول من الفاتحة بخلف."],
+  ["الإمالة", "يميل إمالة كبرى كل ألف منقلبة عن ياء («موسى، الهدى، أتى») وألفات التأنيث، وبعض الأفعال الثلاثية («جاء، شاء، زاد، خاف»)."],
+  ["الإدغام", "يدغم لام «هل وبل» وذال «إذ» ودال «قد» وتاء التأنيث في حروف معينة."]
+ ],
+ [ // 6 الكسائي
+  ["بين السورتين", "البسملة."],
+  ["المد", "التوسط في المتصل والمنفصل."],
+  ["الإمالة", "يوافق حمزة في أغلب الإمالات، ويزيد إمالة هاء التأنيث وما قبلها عند الوقف («رحمهْ، الجنهْ»)، وللدوري عنه إمالة ذوات الراء («النار، الأبرار»)."],
+  ["الإدغام", "أبو الحارث: يدغم اللام في الذال في «يفعلْ ذلك». ويدغم الكسائي لام «هل وبل» في حروف معينة."],
+  ["من الفرش", "«مالِك يوم الدين» بالألف، و«الصراط» بالصاد."]
+ ],
+ [ // 7 أبو جعفر
+  ["ميم الجمع", "صلتها بواو قبل المتحرك مطلقًا."],
+  ["المد", "قصر المنفصل، وتوسط المتصل."],
+  ["الهمز", "يبدل الهمزة الساكنة حرف مد في الغالب، ويسهّل الثانية من الهمزتين في كلمة مع الإدخال."],
+  ["السكت على فواتح السور", "يسكت على كل حرف من الحروف المقطعة: «ألفْ، لامْ، ميمْ»."],
+  ["النون الساكنة والتنوين", "يخفيهما عند الخاء والغين («منخنقة، من غلّ») إلا كلمات مستثناة."],
+  ["الإمالة", "لا إمالة له."]
+ ],
+ [ // 8 يعقوب
+  ["هاء الضمير", "يضم هاء الضمير بعد ياء ساكنة في التثنية والجمع: «عليهُم، فيهُما، إليهُنّ»."],
+  ["المد", "قصر المنفصل، وتوسط المتصل."],
+  ["الصراط", "رويس: «السراط» بالسين. روح: بالصاد."],
+  ["هاء السكت", "يقف بهاء السكت على «ما» الاستفهامية المجرورة: «عمّهْ، فيمهْ، لِمهْ»."],
+  ["ياءات الزوائد", "يثبتها وصلًا ووقفًا في كل القرآن."],
+  ["الإمالة", "لا إمالة له في الأشهر."]
+ ],
+ [ // 9 خلف العاشر
+  ["الاختيار", "اختياره لا يخرج عن قراءات الكوفيين (حمزة والكسائي وشعبة)، فيوافق حمزة والكسائي في أغلب الأصول."],
+  ["السكت", "لا يسكت قبل الهمز (بخلاف خلف في روايته عن حمزة)."],
+  ["الإمالة", "يوافق حمزة والكسائي في الإمالة."]
+ ]
+];
+const QR_SRC105 = "الأصول ملخّصة من «حرز الأماني» للشاطبي و«الدرة المضية» لابن الجزري، وشرحيهما «الوافي» و«الإيضاح» لعبد الفتاح القاضي، و«البدور الزاهرة» — وكلها على المكتبة الشاملة (shamela.ws). لكل باب تفصيلات وخلافات دقيقة تُؤخذ بالتلقي من شيخ مجاز.";
+document.head.insertAdjacentHTML("beforeend", `<style>${QRR.filter(r => r[4]).map(r => `@font-face{font-family:"qr-${r[0]}";src:url(/qr/${r[0]}/font.woff2) format("woff2");font-display:swap}`).join("")}
+.qrcmp{display:grid;grid-template-columns:1fr 17rem;gap:1rem;align-items:start}@media(max-width:860px){.qrcmp{grid-template-columns:1fr}}
+.qrtext{font:1.65rem/2.6 'Amiri Quran','Amiri',serif;text-align:justify;direction:rtl}.qrw{border-radius:.35rem;cursor:pointer;padding:0 .08em}.qrw.dif{background:#fef3c7;box-shadow:inset 0 -3px 0 #f59e0b}.qrw.dif.on{background:#fde68a;outline:2px solid #d97706}
+.qrside{position:sticky;top:5rem;display:flex;flex-direction:column;gap:.7rem;max-height:calc(100vh - 6rem);overflow:auto}@media(max-width:860px){.qrside{position:static;max-height:none}}
+.qrham{font-size:.9rem}.qrham li{list-style:none;border-bottom:1px dashed var(--line);padding:.35rem 0;cursor:pointer}.qrham li:hover,.qrham li.on{background:#fffbeb}.qrham .h{font-family:'Amiri Quran','Amiri',serif;font-size:1.15rem}.qrham .r{font-size:1.25rem;color:#b45309}
+.qrpop{position:fixed;z-index:90;background:var(--card);border:2px solid #f59e0b;border-radius:.8rem;padding:.6rem .9rem;box-shadow:0 10px 30px #0003;max-width:20rem;text-align:center}
+.qrrdr{display:grid;grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:.4rem}.qrrdr button{text-align:start}.qrusul td{padding:.45rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}.qrusul td:first-child{font-weight:800;white-space:nowrap;color:var(--accent)}</style>`);
+function qrR105() { return QRR.find(r => r[0] === state.qrK) || QRR[0]; }
+function qrDiff105(k, s) { return useData("qrd:" + k + ":" + s, async () => { const r = await fetch(`/qr/${k}/${s}.json`); if (!r.ok) return [{}]; return [await r.json()]; }); }
+function qrTj105(s) { return useData("tj:" + s, async () => { const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=text_uthmani_tajweed&per_page=300`).then(r => r.json()); return (r.verses || []).map(v => v.text_uthmani_tajweed); }); }
+const qrBare105 = w => String(w).replace(/<[^>]*>/g, "").replace(/[ً-ٰٟۖ-ۭـࣰ-ࣲ]/g, "").replace(/[ٱأإآ]/g, "ا").replace(/ى/g, "ي").trim();
+function qrPlay105(url, name) { const a = document.getElementById("qrAu"); if (!a) return; a.src = url; a.play().catch(() => {}); const n = document.getElementById("qrAuN"); if (n) n.textContent = "▶ " + name; a.onerror = () => toast(state.lang === "ar" ? "السورة دي مش متاحة بصوت القارئ ده — اختار قارئ تاني" : "Not available for this reciter", true); }
+function qrPick105(a, i) { document.querySelectorAll(".qrw.on,.qrham li.on").forEach(x => x.classList.remove("on")); const w = document.querySelector(`.qrw[data-a="${a}"][data-i="${i}"]`); const li = document.querySelector(`.qrham li[data-a="${a}"][data-i="${i}"]`); if (w) { w.classList.add("on"); w.scrollIntoView({ block: "center", behavior: "smooth" }); } if (li) { li.classList.add("on"); li.scrollIntoView({ block: "nearest" }); } }
+function qrPop105(ev, a, i) {
+  ev.stopPropagation(); const R = qrR105(); const d = qrDiff105(R[0], +(state.qrS || 1)); const x = Array.isArray(d) && d[0][a] ? d[0][a].find(z => z[0] === i) : null; if (!x) return; qrPick105(a, i);
+  const old = document.getElementById("qrPop"); if (old) old.remove(); const p = document.createElement("div"); p.id = "qrPop"; p.className = "qrpop"; const ar = state.lang === "ar";
+  p.innerHTML = `<div class="xs muted">${ar ? "حفص" : "Hafs"}</div><div style="font:1.5rem 'Amiri Quran',serif">${esc(x[1])}</div><div class="xs muted" style="margin-top:.3rem">${esc(ar ? R[2] : R[3])}</div><div style="font:1.7rem 'qr-${R[0]}','Amiri Quran',serif;color:#b45309">${esc(x[2])}</div>`;
+  document.body.appendChild(p); const r = ev.target.getBoundingClientRect(); p.style.top = Math.max(8, r.top - p.offsetHeight - 8) + "px"; p.style.left = Math.min(innerWidth - p.offsetWidth - 8, Math.max(8, r.left + r.width / 2 - p.offsetWidth / 2)) + "px";
+  setTimeout(() => document.addEventListener("click", function c() { p.remove(); document.removeEventListener("click", c); }), 0);
+}
+function qrCompare105() {
+  const ar = state.lang === "ar"; const R = qrR105(); const s = +(state.qrS || 1); const tj = qrTj105(s); const df = R[4] ? qrDiff105(R[0], s) : [{}];
+  const rsel = `<select class="in" style="width:auto;font-weight:800" onchange="state.qrK=this.value;render()">${QR.map((q, qi) => `<optgroup label="${esc(ar ? q[0] : q[1])}">${QRR.filter(r => r[1] === qi).map(r => `<option value="${r[0]}" ${r[0] === R[0] ? "selected" : ""}>${esc(ar ? r[2] : r[3])}${r[4] ? " ✓" : ""}</option>`).join("")}</optgroup>`).join("")}</select>`;
+  const ssel = `<select class="in" style="width:auto" onchange="state.qrS=+this.value;render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select>`;
+  let body, ham = [], cnt = 0;
+  if (!Array.isArray(tj) || !Array.isArray(df)) body = loadingBox();
+  else {
+    const D = df[0] || {};
+    body = `<div class="qrtext notr" lang="ar">${s !== 1 && s !== 9 ? `<div style="text-align:center">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : ""}${tj.map((raw, ai) => {
+      const a = ai + 1; const words = tjWords(raw); const L = (D[a] || []).slice(); const used = {};
+      L.forEach(x => { const first = String(x[1]).split(" ")[0]; const fb = qrBare105(first); let j = x[0]; if (!(words[j] && qrBare105(words[j]) === fb)) { for (let k = 1; k < 4; k++) { if (words[j + k] && qrBare105(words[j + k]) === fb) { j = j + k; break; } if (words[j - k] && qrBare105(words[j - k]) === fb) { j = j - k; break; } } } used[j] = x; x.j = j; });
+      L.forEach(x => { cnt++; ham.push(`<li data-a="${a}" data-i="${x[0]}" onclick="qrPick105(${a},${x[0]})"><b class="xs muted">﴿${a}﴾</b> <span class="h">${esc(x[1])}</span> ← <span class="r" style="font-family:'qr-${R[0]}','Amiri Quran',serif">${esc(x[2])}</span></li>`); });
+      return words.map((w, j) => used[j] ? `<span class="qrw dif" data-a="${a}" data-i="${used[j][0]}" onclick="qrPop105(event,${a},${used[j][0]})">${tjSafe(w)}</span>` : tjSafe(w)).join(" ") + ` <span class="end">﴿${a}﴾</span>`;
+    }).join(" ")}</div>`;
+  }
+  const au = R[5]; const pad = String(s).padStart(3, "0");
+  const side = `<div class="card"><b>📝 ${ar ? "الهامش — فروق" : "Margin — differences"} ${esc(ar ? R[2] : R[3])} ${ar ? "عن حفص" : "vs Hafs"} ${R[4] ? `<span class="chip on">${cnt}</span>` : ""}</b>${R[4] ? (ham.length ? `<ul class="qrham" style="padding:0;margin:.4rem 0 0">${ham.join("")}</ul>` : `<p class="xs muted">${Array.isArray(df) ? (ar ? "مفيش فروق مكتوبة في السورة دي." : "No written differences here.") : ""}</p>`) : `<p class="sm">${ar ? "النص الكامل لهذه الرواية مش متاح رقميًا من المجمع لسه، فالمقارنة كلمة بكلمة متاحة لـ ٧ روايات (✓). اقرأ أصولها في تبويب «الأصول» واسمعها من المصاحف الصوتية." : "Full text not yet available digitally; see usul tab and audio."}</p>`}</div>
+
+    <div class="card"><b>🎧 ${ar ? "المصاحف الصوتية لـ" : "Audio mushafs —"} ${esc(ar ? R[2] : R[3])}</b>${au.length ? `<audio id="qrAu" controls preload="none" style="width:100%;margin:.4rem 0"></audio><div id="qrAuN" class="xs muted"></div><div class="row" style="gap:.3rem"><select class="in" id="qrAuSel" style="flex:1;min-width:0">${au.map((x, i) => `<option value="${i}">${esc(x[0])}</option>`).join("")}</select><button class="btn btn-p" onclick="const x=qrR105()[5][+document.getElementById('qrAuSel').value];qrPlay105(x[1]+'${pad}.mp3',x[0])">▶</button></div>` : `<p class="xs muted">${ar ? "لسه مفيش مصحف صوتي كامل مجاني متاح لهذه الرواية على المصادر المفتوحة." : "No free complete audio found yet."}</p>`}</div>
+    <div class="card xs muted">${ar ? "🟨 الكلمة المظللة بتتقرأ بشكل مختلف في الرواية — دوس عليها تشوفها. النص الملوّن: حفص (quran.com). نصوص الروايات: مجمع الملك فهد لطباعة المصحف الشريف." : "Highlighted words differ — tap to see. Colored text: Hafs; narrations: KFGQPC."}</div>`;
+  return `<div class="card" style="margin-bottom:.8rem"><div class="row" style="gap:.5rem;flex-wrap:wrap;align-items:center"><span class="b">📖 ${ar ? "اختار الرواية:" : "Narration:"}</span>${rsel}<span class="b">${ar ? "السورة:" : "Surah:"}</span>${ssel}<button class="btn btn-o" onclick="state.qrT='usul';render()">📚 ${ar ? "أصول" : "Usul of"} ${esc(ar ? QR[R[1]][0] : QR[R[1]][1])}</button></div></div>
+    <div class="qrcmp"><div class="card">${body}</div><div class="qrside">${side}</div></div>`;
+}
+function qrUsul105() {
+  const ar = state.lang === "ar"; const qi = state.qrU != null ? +state.qrU : qrR105()[1]; const q = QR[qi];
+  return `<div class="qrrdr" style="margin-bottom:.8rem">${QR.map((x, i) => `<button class="btn ${i === qi ? "btn-p" : "btn-o"}" onclick="state.qrU=${i};render()">${esc(ar ? x[0] : x[1])}</button>`).join("")}</div>
+    <div class="card"><h3>📚 ${ar ? "أصول قراءة" : "Usul of"} ${esc(ar ? q[0] : q[1])}</h3><p class="sm muted">${ar ? "الراويان" : "Narrators"}: ${esc(ar ? q[2][0] : q[2][1])} — ${esc(ar ? q[3][0] : q[3][1])} · ${ar ? "البلد" : "City"}: ${esc(q[4])}</p>
+    <table class="qrusul" style="width:100%;border-collapse:collapse">${(QRU[qi] || []).map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.8rem">${QRR.filter(r => r[1] === qi).map(r => `<button class="btn btn-o" onclick="state.qrK='${r[0]}';state.qrT='cmp';render()">📖 ${ar ? "مصحف" : "Mushaf:"} ${esc(ar ? r[2] : r[3])} ${ar ? "بالمقارنة" : "compared"}</button>`).join("")}</div>
+    <p class="xs muted" style="margin-top:.8rem">📚 ${QR_SRC105}</p></div>`;
+}
+const _renderQiraat105 = renderQiraat;
+renderQiraat = function () {
+  const ar = state.lang === "ar"; if (!state.qrT || state.qrT === "listen" || state.qrT === "qurra0") state.qrT = "cmp"; const t = state.qrT;
+  const tabs = [["cmp", "📖 " + (ar ? "مصحف المقارنة مع حفص" : "Compare with Hafs")], ["usul", "📚 " + (ar ? "أصول كل قراءة" : "Usul of each reading")], ["qurra", "👥 " + (ar ? "القراء ورواتهم" : "Readers")], ["diff", "🔍 " + (ar ? "أشهر الفروق" : "Famous differences")], ["pdf", "📕 " + (ar ? "مصاحف PDF" : "PDF mushafs")]];
+  const bar = `<div class="motabs">${tabs.map(([k, l]) => `<button class="${t === k ? "on" : ""}" onclick="state.qrT='${k}';render()">${l}</button>`).join("")}</div>`;
+  if (t !== "cmp" && t !== "usul") return _renderQiraat105().replace(/<div class="motabs">[\s\S]*?<\/div>/, bar);
+  return pageWrap("📜", ar ? "القراءات العشر" : "The ten Qira'at", ar ? "اختار الرواية من فوق: مصحف حفص الملوّن قدامك، والكلمات اللي بتختلف متعلّمة، والهامش جنبه بقراءتها — ومعاه المصاحف الصوتية للرواية وأصولها كاملة" : "Pick a narration: colored Hafs mushaf with differing words marked, the margin with the narration's reading, audio mushafs and usul", bar + `<div style="margin-top:.8rem">${t === "cmp" ? qrCompare105() : qrUsul105()}</div>`, 1300);
+};
+RST81.qiraat = ["qrT", "qrS", "qrK", "qrU"];
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
