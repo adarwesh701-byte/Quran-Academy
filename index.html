@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v135";
+const UI_VERSION = "2026-11-14-v136";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20776,6 +20776,22 @@ document.addEventListener("click", e => {
 }, true);
 document.head.insertAdjacentHTML("beforeend", `<style>#uilany{position:fixed;top:72px;inset-inline-end:12px;z-index:1250;background:#7c3aed;color:#fff;border:0;border-radius:999px;padding:.5rem .9rem;font-weight:700;box-shadow:0 6px 18px rgba(124,58,237,.35);cursor:pointer}
 body.pick135 #app *:hover{outline:2px dashed #7c3aed!important;outline-offset:2px;cursor:crosshair!important}.uilany{opacity:.35;outline:2px dashed #dc2626;outline-offset:2px}</style>`);
+
+/* ================= v136: «التجويد المفصّل» بالإنجليزي من كتب التجويد الإنجليزية نفسها (عمدة البيان + التيسير في أحكام التجويد) بدل الترجمة الآلية ================= */
+function tjbEn() { return useData("tjben136", async () => { const r = await fetch("tjb_en.json?v=" + UI_VERSION); if (!r.ok) throw new Error("tjben"); return await r.json(); }); }
+const _renderTjb136 = renderTjb;
+renderTjb = function () {
+  const ar = state.lang === "ar"; const st = state.tjb || (state.tjb = { c: null, q: "" }); if (st.bk == null) st.bk = ar ? 0 : 1;
+  const E = tjbEn(); const books = [["📘", "التجويد المصور (عربي)", "Illustrated Tajweed (Arabic)"]].concat(E && E.books ? E.books.map(b => ["📗", b.src, b.src]) : []);
+  const tabs = `<div class="motabs" style="margin-bottom:.6rem">${books.map((b, i) => `<button class="${st.bk === i ? "on" : ""}" onclick="state.tjb={bk:${i},c:null,q:''};render()">${b[0]} ${esc(ar ? b[1] : b[2])}</button>`).join("")}</div>`;
+  if (!st.bk || !E || !E.books) return _renderTjb136().replace('<div class="card" style="margin-bottom:.8rem">', tabs + '<div class="card" style="margin-bottom:.8rem">');
+  const B = E.books[st.bk - 1]; if (!B) { st.bk = 0; return renderTjb(); }
+  let body;
+  if (st.c) { const c = B.chs.find(x => x.n === st.c) || B.chs[0]; const ix = B.chs.indexOf(c); const pv = B.chs[ix - 1], nx = B.chs[ix + 1];
+    body = `<div class="card notr" lang="en" dir="ltr"><button class="btn btn-o" onclick="state.tjb.c=null;render()">← Contents</button><div class="tjbch"><h3>${c.n}. ${esc(c.t)}</h3>${c.items.map(it => it.h ? `<h4 class="tjbh">${esc(it.h)}</h4>` : `<div class="tjbi">${esc(it.t)}</div>`).join("")}</div><div class="row" style="justify-content:space-between;margin-top:1rem">${pv ? `<button class="btn btn-o" onclick="state.tjb.c=${pv.n};render();window.scrollTo({top:0})">← ${esc(pv.t)}</button>` : "<span></span>"}${nx ? `<button class="btn btn-p" onclick="state.tjb.c=${nx.n};render();window.scrollTo({top:0})">${esc(nx.t)} →</button>` : ""}</div></div>`; }
+  else body = `<div class="tjbgrid notr" lang="en" dir="ltr">${B.chs.map(c => `<button class="tjbcard" onclick="state.tjb.c=${c.n};render();window.scrollTo({top:0})"><span class="n">${c.n}</span><b>${esc(c.t)}</b><small>${c.items.filter(x => !x.h).length} points</small></button>`).join("")}</div>`;
+  return pageWrap("📘", ar ? "التجويد المفصّل" : "Detailed Tajweed", ar ? "كتب التجويد الإنجليزية بنصها — للطلاب الإنجليز بدل الترجمة الآلية" : "The English Tajweed books in their own words — no machine translation", tabs + `<p class="xs muted">📖 Source: ${esc(B.src)}</p>` + body);
+};
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
