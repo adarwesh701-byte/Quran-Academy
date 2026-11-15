@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v164";
+const UI_VERSION = "2026-11-16-v165";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23522,6 +23522,124 @@ html,body{max-width:100%;overflow-x:hidden}
     const out = _r.apply(this, arguments);
     try { idImgs(); nmHide(); } catch (e) {}
     return out;
+  };
+})();
+
+
+/* ================= v165: الصفحة مابتطلعش لفوق لما تختار حاجة (من غير «نطّة») + الضغط على الكلمة يفتح الخطأ علطول للمعلم + كل أحكام التجويد بالتفصيل في الأخطاء + لوجو آية اليوم = اللوجو اللي اخترته + تمارين الصوت لكل مقام + الصفحة الرئيسية الجديدة (اقتراح الطالب — بمعاينة) + شيل أسماء المصادر ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e); const own = () => realRole() === "owner" && !state.preview;
+  const staff = () => ["owner", "teacher"].includes(realRole()) && !state.preview;
+
+  /* ---------- 1) من غير «نطّة»: نثبّت طول الصفحة أثناء الرسم ونرجّع نفس المكان ---------- */
+  const key = () => state.route + "|" + (state.pageArg || "") + "|" + (state.libSec || "");
+  let lastK = null, guardUntil = 0;
+  const _st = window.scrollTo.bind(window);
+  window.scrollTo = function (a, b) { const top = typeof a === "object" ? a && a.top : b; if (Date.now() < guardUntil && (top === 0 || top == null)) return; return _st(a, b); };
+  const _siv = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = function () { if (Date.now() < guardUntil && this.closest && this.closest(".hdr, header")) return; return _siv.apply(this, arguments); };
+
+  /* ---------- 2) الأحكام بالتفصيل في نافذة الخطأ ---------- */
+  const D = [
+    ["🔗", "النون الساكنة والتنوين", "Nūn sākinah & tanwīn", [["izhar_h", "إظهار حلقي", "Iẓhār ḥalqī"], ["idgham_g", "إدغام بغنة", "Idghām with ghunnah"], ["idgham_ng", "إدغام بغير غنة", "Idghām without ghunnah"], ["iqlab", "إقلاب", "Iqlāb"], ["ikhfa", "إخفاء حقيقي", "Ikhfāʾ"]]],
+    ["👄", "الميم الساكنة", "Mīm sākinah", [["ikhfa_sh", "إخفاء شفوي", "Ikhfāʾ shafawī"], ["idgham_sh", "إدغام متماثلين صغير", "Idghām shafawī"], ["izhar_sh", "إظهار شفوي", "Iẓhār shafawī"]]],
+    ["👃", "الغنة", "Ghunnah", [["ghunna_m", "غنة النون والميم المشددتين", "Ghunnah of doubled ن/م"], ["ghunna_len", "طول الغنة (حركتين)", "Ghunnah length (2 counts)"]]],
+    ["〰️", "المدود", "Madd", [["madd_t", "مد طبيعي (حركتين)", "Natural madd (2)"], ["madd_mt", "مد واجب متصل (4–5)", "Obligatory connected madd (4–5)"], ["madd_mn", "مد جائز منفصل", "Separated madd"], ["madd_lz", "مد لازم (6)", "Necessary madd (6)"], ["madd_ar", "مد عارض للسكون", "Madd for a pause"], ["madd_ln", "مد اللين", "Madd al-līn"], ["madd_bd", "مد البدل", "Madd al-badal"], ["madd_iw", "مد العوض", "Madd al-ʿiwaḍ"], ["madd_sl", "مد الصلة (صغرى/كبرى)", "Madd aṣ-ṣilah"], ["madd_eq", "تسوية المدود (نفس الطول)", "Keeping madd lengths equal"]]],
+    ["💥", "القلقلة", "Qalqalah", [["qal_s", "قلقلة صغرى (وسط الكلمة)", "Minor qalqalah"], ["qal_k", "قلقلة كبرى (عند الوقف)", "Major qalqalah"]]],
+    ["🔊", "التفخيم والترقيق", "Heavy & light", [["tf_ist", "حروف الاستعلاء (خص ضغط قظ)", "Heavy letters (خص ضغط قظ)"], ["tf_ra", "الراء (تفخيم/ترقيق)", "Rāʾ heavy/light"], ["tf_lam", "لام لفظ الجلالة", "Lām of Allāh"], ["tf_alif", "الألف بعد حرف مفخّم/مرقّق", "Alif after heavy/light letter"]]],
+    ["🔤", "اللامات والهمزات", "Lāms & hamzahs", [["lam_sh", "اللام الشمسية", "Sun lām"], ["lam_q", "اللام القمرية", "Moon lām"], ["hamz_w", "همزة الوصل", "Hamzat al-waṣl"], ["hamz_q", "همزة القطع", "Hamzat al-qaṭʿ"]]],
+    ["👅", "المخارج والصفات", "Articulation & attributes", [["mk_h", "حروف الحلق (ء هـ ع ح غ خ)", "Throat letters"], ["mk_sad", "الصاد والسين والزاي (الصفير)", "Whistling letters"], ["mk_dad", "الضاد", "Ḍād"], ["mk_tha", "الثاء والذال والظاء", "ث ذ ظ"], ["sf_hams", "الهمس والجهر", "Whisper & voicing"], ["sf_shidda", "الشدة والرخاوة", "Strength & softness"]]],
+    ["✏️", "الحركات والتشكيل", "Vowels", [["hr_f", "فتحة", "Fatḥah"], ["hr_d", "ضمة", "Ḍammah"], ["hr_k", "كسرة", "Kasrah"], ["hr_s", "سكون", "Sukūn"], ["hr_sh", "شدة", "Shaddah"]]],
+    ["⏸️", "الوقف والابتداء", "Stopping & starting", [["wq_bad", "وقف قبيح", "Bad stop"], ["wq_start", "ابتداء خاطئ", "Wrong restart"], ["wq_breath", "نفَس في وسط الكلمة", "Breath mid-word"]]],
+    ["🧠", "الحفظ", "Memorisation", [["hf_forget", "نسيان", "Forgot"], ["hf_swap", "تبديل كلمة", "Swapped a word"], ["hf_add", "زيادة", "Added a word"], ["hf_skip", "إسقاط", "Skipped a word"]]]
+  ];
+  const DMAP = {}; D.forEach(g => g[3].forEach(x => DMAP["d:" + x[0]] = [g[0], x[1], x[2]]));
+  if (typeof mmKind === "function") { const _k = mmKind; mmKind = function (k) { if (DMAP[k]) return ar() ? DMAP[k][1] : DMAP[k][2]; return _k(k); }; }
+  if (typeof mmOpen === "function") {
+    const _o = mmOpen;
+    mmOpen = function () {
+      _o.apply(this, arguments); const box = document.getElementById("mmModal"); const kinds = box && box.querySelector(".mmkinds"); if (!kinds || box.querySelector(".dt165")) return;
+      const det = document.createElement("details"); det.className = "dt165"; det.open = true; det.style.margin = ".5rem 0";
+      det.innerHTML = `<summary class="b sm">🎯 ${T("اختار الحكم بالتفصيل", "Pick the exact rule")}</summary>` + D.map(g => `<div style="margin:.35rem 0"><b class="xs">${g[0]} ${esc(T(g[1], g[2]))}</b><div class="row" style="gap:.25rem;flex-wrap:wrap;margin-top:.2rem">${g[3].map(x => `<label class="chip" style="border:1px solid var(--line,#e5e7eb);border-radius:999px;padding:.1rem .5rem;font-size:.78rem;cursor:pointer"><input type="radio" name="mmk" value="d:${x[0]}" style="margin:0 .2rem 0 0"> ${esc(T(x[1], x[2]))}</label>`).join("")}</div></div>`).join("");
+      kinds.before(det);
+    };
+  }
+  /* المعلم/الأونر: دوسة على الكلمة = تعليم الخطأ علطول (من غير وضع التعليم) */
+  document.addEventListener("click", ev => {
+    if (!staff() || !state.tjv || state.tjv.mark) return; const w = ev.target.closest && ev.target.closest(".tj2 .w"); if (!w || w.classList.contains("mk")) return;
+    if (ev.target.closest("button,a")) return; ev.preventDefault(); ev.stopImmediatePropagation(); mmOpen(w.dataset.v, +w.dataset.i, w.innerText.trim());
+  }, true);
+  if (typeof tjTools === "function") { const _tt = tjTools; tjTools = function () { let h = _tt.apply(this, arguments); if (staff()) h = h.replace(/<button class="btn [^"]*" onclick="state\.tjv\.mark=!state\.tjv\.mark;render\(\)">[^<]*<\/button>/, `<span class="xs muted">✍️ ${T("دوس على أي كلمة عشان تعلّم عليها خطأ", "Tap any word to mark a mistake")}</span>`); return h; }; }
+
+  /* ---------- 3) لوجو آية اليوم والصور = اللوجو اللي اخترته ---------- */
+  function logoData() {
+    try { const d = Object.assign({ logo: "default" }, setv("design157", {}) || {}, state.dz157 || {}); if (d.logo === "default") return null; const L = (window.DESIGN157 || {}).LOGO || []; const lg = L.find(x => x.id === d.logo); if (!lg) return null;
+      const c = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#0f766e"; let svg = lg.svg(c).replace("<svg ", "<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' "); return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); } catch (e) { return null; }
+  }
+  const desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "src");
+  Object.defineProperty(HTMLImageElement.prototype, "src", { configurable: true, enumerable: desc.enumerable, get() { return desc.get.call(this); }, set(v) { if (/\/icons\/icon-(512|192)\.png/.test(String(v))) { const d = logoData(); if (d) v = d; } return desc.set.call(this, v); } });
+
+  /* ---------- 4) تمارين الصوت (تبويب جديد في صفحة كل مقام) ---------- */
+  const EX = [
+    ["🫁", "التنفّس (أساس كل حاجة)", "Breathing (the base of everything)", [["شهيق 4 – حبس 4 – زفير 8 بحرف «سسس»", "Inhale 4 – hold 4 – exhale 8 on “sss”", 60], ["زفير طويل على «ففف» وزوّد ثانية كل يوم (هدفك 30 ثانية)", "Long exhale on “fff”, add a second every day (aim for 30 s)", 45], ["نفَس من البطن: إيدك على بطنك، تطلع مع الشهيق مش كتافك", "Belly breathing: hand on your belly — it rises, not your shoulders", 45]]],
+    ["😮‍💨", "إحماء وتنقية الصوت", "Warm-up & clearing the voice", [["اهتزاز الشفايف «برررر» صعود ونزول", "Lip trill “brrrr” up and down", 40], ["همهمة «مممم» على القرار، حس الاهتزاز في وشّك", "Hum “mmmm” on your tonic — feel it buzz in your face", 40], ["«نننن» → «آآآ»: افتح الهمهمة لصوت واضح", "“nnnn” → “aaa”: open the hum into a clear sound", 40], ["تثاؤب خفيف وانت بتقول «هااا» عشان الحلق يفتح", "A gentle yawn on “haaa” to open the throat", 30]]],
+    ["🎯", "ثبات النغمة", "Holding a steady note", [["امسك «آآآ» على القرار 8 ثواني والمُوالف مفتوح (الإبرة في النص)", "Hold “aaa” on the tonic for 8 s with the tuner open (needle centred)", 60], ["نفس التمرين على الدرجة الخامسة (الغمّاز)", "Same on the fifth (the ghammaz)", 60], ["صوت هادي جدًا ← عالي ← هادي، من غير ما النغمة تتهز", "Very soft → loud → soft without the note wobbling", 45]]],
+    ["🪜", "السلالم والمسافات", "Scales & intervals", [["اطلع وانزل سلم المقام درجة درجة ببطء (استخدم «🎼 درجات المقام»)", "Climb and descend the maqam scale slowly (use “🎼 Maqam degrees”)", 90], ["قفزات: 1-3-5-3-1 ثم 1-5-8-5-1", "Leaps: 1-3-5-3-1, then 1-5-8-5-1", 60], ["ركّز على الربع تون في المقامات اللي فيها (بياتي، صبا، سيكاه، راست)", "Focus on the quarter tones (Bayātī, Ṣabā, Sīkāh, Rāst)", 90]]],
+    ["⚡", "المرونة والزخارف", "Agility & ornaments", [["5 درجات سريعة صعود ونزول على «آ»", "Five quick notes up and down on “a”", 45], ["«عُرَب» خفيفة: تموّج صغير على الدرجة وارجع لها", "Light “ʿurab”: a small ripple on the note, then back", 60], ["انزل من الجواب للقرار بنعومة (سلايد) من غير ما الصوت يتكسر", "Glide from jawāb down to qarār without breaking", 45]]],
+    ["🔈", "الرنين والجواب", "Resonance & the high register", [["«نغ» (زي آخر sing) على درجات عالية — بيحمي الحلق", "“ng” (as in sing) on high notes — protects the throat", 45], ["اطلع للجواب بالتدريج يوم بعد يوم، ووقّف لو حسيت بشد", "Reach for the jawāb gradually; stop if you feel strain", 60], ["صوت «ماسك» قدّام في الوش بدل الحلق", "Place the sound forward in the face, not the throat", 45]]],
+    ["📖", "تطبيق على التلاوة", "Applying it to recitation", [["اقرأ آية على المقام، سجّلها، وقارن بالشيخ", "Recite an āyah in the maqam, record it, compare with the shaykh", 120], ["اقفل كل آية على القرار (القفلة)", "Close every āyah on the tonic (the qaflah)", 90], ["حافظ على أحكام التجويد وطول المدود أثناء النغم", "Keep the tajweed rules and madd lengths while you sing", 60]]]
+  ];
+  const TIPS = [["💧 اشرب مية دافية كتير، وابعد عن التلج والحاجات الساقعة قبل التلاوة.", "💧 Drink plenty of warm water; avoid ice and cold drinks before reciting."], ["😴 النوم الكويس أهم تمرين للصوت.", "😴 Good sleep is the most important voice exercise."], ["🚫 ماتزعقش وماتهمسش بقوة — الاتنين بيتعبوا الأحبال.", "🚫 Don't shout or force a whisper — both strain the vocal folds."], ["⏱️ 15–20 دقيقة يوميًا أحسن من ساعتين مرة في الأسبوع.", "⏱️ 15–20 minutes a day beats two hours once a week."], ["🩺 لو البحة فضلت أكتر من أسبوعين، روح لدكتور أنف وأذن.", "🩺 If hoarseness lasts over two weeks, see an ENT doctor."]];
+  window.ex165 = { timer: null };
+  window.ex165Go = function (btn, sec) { clearInterval(ex165.timer); document.querySelectorAll(".ex165t").forEach(b => b.textContent = b.dataset.l); let s = sec; btn.textContent = "⏱️ " + s; ex165.timer = setInterval(() => { s--; btn.textContent = s > 0 ? "⏱️ " + s : "✅"; if (s <= 0) clearInterval(ex165.timer); }, 1000); };
+  function exercises() {
+    return `<div class="card" style="margin-top:1rem"><h3>🏋️ ${T("تمارين الصوت — قوّي صوتك ونقّيه", "Voice exercises — strengthen and clear your voice")}</h3><p class="sm">${T("اعمل التمارين بالترتيب كل يوم (حوالي 15 دقيقة). دوس ⏱️ جنب أي تمرين يبدأ العدّاد. خلّي المُوالف مفتوح في تمارين النغمة.", "Do them in order every day (about 15 minutes). Tap ⏱️ next to any exercise to start the timer. Keep the tuner open for pitch exercises.")}</p>
+      ${EX.map((g, gi) => `<details ${gi < 2 ? "open" : ""} style="margin:.5rem 0"><summary class="b">${g[0]} ${esc(T(g[1], g[2]))}</summary>${g[3].map(x => `<div class="kv" style="align-items:center"><span class="sm">${esc(T(x[0], x[1]))}</span><button class="btn btn-o ex165t" style="padding:.2rem .6rem" data-l="⏱️ ${x[2]}${T("ث", "s")}" onclick="ex165Go(this,${x[2]})">⏱️ ${x[2]}${T("ث", "s")}</button></div>`).join("")}</details>`).join("")}
+      <div class="row" style="gap:.4rem;margin:.6rem 0;flex-wrap:wrap"><button class="btn btn-p" onclick="go16('tuner')">🎤 ${T("افتح المُوالف", "Open the tuner")}</button><button class="btn btn-o" onclick="state.mqTab='aah';render()">🗣️ ${T("الآهات", "Aahs")}</button></div>
+      <h4 style="margin:.6rem 0 .2rem">💡 ${T("نصايح لصحة الصوت", "Voice-care tips")}</h4>${TIPS.map(t => `<p class="sm" style="margin:.15rem 0">${esc(T(t[0], t[1]))}</p>`).join("")}</div>`;
+  }
+  if (typeof maqamOne === "function") {
+    const _mo = maqamOne;
+    maqamOne = function (cur) {
+      const t = state.mqTab; if (t === "ex165") { state.mqTab = "info"; let h = _mo.apply(this, arguments); state.mqTab = "ex165"; const i = h.indexOf('<div class="motabs">'); const j = i >= 0 ? h.indexOf("</div>", i) + 6 : -1; h = j > 0 ? h.slice(0, j) + exercises() : h + exercises(); return addTab(h.replace(/(<div class="motabs">[\s\S]*?)class="on"/, "$1class=\"\"")); }
+      return addTab(_mo.apply(this, arguments));
+    };
+    function addTab(h) { return h.replace(/(<div class="motabs">[\s\S]*?)(<\/div>)/, (m, a, b) => a.includes("ex165") ? m : `${a}<button class="${state.mqTab === "ex165" ? "on" : ""}" onclick="state.mqTab='ex165';render()">🏋️ ${T("تمارين الصوت", "Voice exercises")}</button>${b}`); }
+  }
+
+  /* ---------- 5) الصفحة الرئيسية الجديدة (اقتراح الطالب) — للمعاينة، وتتفعّل للكل بزرار ---------- */
+  const HOME = () => setv("home165", "off");
+  window.home165 = async v => { await saveSetting16("home165", v); toast("✅"); render(); };
+  function homeNew() {
+    const A = ar();
+    const cards = [["📖", T("تحفيظ القرآن والمتابعة", "Quran memorisation"), "library"], ["🎨", T("التجويد والمصحف الملوّن", "Tajweed & colour mushaf"), "library"], ["🎼", T("المقامات وتجميل التلاوة", "Maqamat & beautiful recitation"), "library"], ["🗣️", T("العربية", "Arabic"), "library"], ["🕌", T("العلوم الإسلامية", "Islamic sciences"), "library"], ["👦", T("للأطفال", "For children"), "library"]];
+    const why = [["🧭", T("تعلّم منظّم", "Structured learning"), T("مسارات واضحة بتوصلك خطوة بخطوة.", "Clear pathways that support steady progress.")], ["🐢", T("على راحتك", "Learn at your own pace"), T("تبني ثقتك من غير ضغط.", "Build confidence without unnecessary pressure.")], ["💡", T("تعلّم له معنى", "Meaningful learning"), T("القرآن مربوط بالقيم والحياة اليومية.", "Quranic knowledge connected to values and daily life.")], ["🌱", T("تجربة إيجابية", "A positive experience"), T("حافز واستمرار وحب للقرآن.", "Motivation, consistency and a love for the Quran.")]];
+    return `<section class="sec hm165"><div class="wrap">
+      <div class="card" style="text-align:center;padding:2rem 1rem;background:linear-gradient(135deg,var(--accent,#0f766e),color-mix(in srgb,var(--accent,#0f766e) 60%,#000));color:#fff;border:0"><h1 style="margin:.2rem 0;color:#fff">${T("رحلتك مع القرآن تبدأ هنا", "Your Journey with the Quran Begins Here")}</h1><p style="font-size:1.15rem;opacity:.95;margin:.2rem 0">${T("تعلّم. تدبّر. انمُ.", "Learn. Reflect. Grow.")}</p><p style="max-width:40rem;margin:.6rem auto;opacity:.92">${T("أهلًا بيك في أكاديمية إتقان — مكان دافئ للتعلّم، بتقوّي فيه معرفتك بالقرآن وتلاوتك، وتبني علاقة بكلام الله تعيش معاك العمر كله.", "Welcome to Itqan Academy — a nurturing space where you deepen your Quranic knowledge, strengthen your recitation and build a lifelong connection with the words of Allah.")}</p><button class="btn" style="background:#fde68a;color:#111;font-weight:800;margin-top:.4rem" onclick="navigate('booking')">✨ ${T("ابدأ بحصة تجريبية مجانية", "Start with a free trial lesson")}</button></div>
+      <div class="card" style="margin-top:1rem"><h2 style="margin-top:0">${T("أكتر من مجرد تعلّم القراءة", "More Than Just Learning to Read the Quran")}</h2><p>${T("في إتقان شايفين إن تعليم القرآن أكبر من التلاوة والحفظ: هدفنا الفهم والتدبّر والأخلاق، وعلاقة حقيقية بالقرآن.", "At Itqan, we believe Quranic education goes beyond recitation and memorisation. We aim to nurture understanding, reflection, good character and a meaningful relationship with the Quran.")}</p><p>${T("بتجارب تعلّم منظّمة وممتعة، كل طالب بيتقدّم على قدّه، وبيكتسب ثقة وحب للتعلّم.", "Through structured, engaging learning, every student progresses at their own pace while gaining confidence and a love for learning.")}</p></div>
+      <h2>${T("برامجنا", "Explore our programmes")}</h2><div class="cu158">${cards.map(c => `<button onclick="navigate('${c[2]}')"><span>${c[0]}</span><b>${esc(c[1])}</b></button>`).join("")}</div>
+      <h2>${T("ليه إتقان؟", "Why choose Itqan Academy?")}</h2><div class="cu158">${why.map(w => `<div class="card" style="text-align:center"><div style="font-size:1.8rem">${w[0]}</div><b>${esc(w[1])}</b><p class="sm muted" style="margin:.3rem 0 0">${esc(w[2])}</p></div>`).join("")}</div>
+      <div class="card" style="margin-top:1rem;text-align:center"><h2 style="margin-top:0">${T("كل رحلة مع القرآن بتبدأ بخطوة", "Every Quran Journey Begins with a Single Step")}</h2><p>${T("سواء بتبدأ تعرف الحروف، أو بتحسّن تلاوتك، أو بتقوّي حفظك — كل مجهود بيقرّبك من القرآن.", "Whether you are beginning to recognise Arabic letters, improving your recitation or strengthening your memorisation, every effort brings you closer to the Quran.")}</p><button class="btn btn-p" onclick="navigate('signup')">${T("ابدأ رحلتك النهارده", "Begin your journey today")}</button></div>
+    </div></section>`;
+  }
+  function homeApply() {
+    if (state.route !== "home") return; const mode = HOME(); const show = mode === "on" || (own() && state.hm165prev);
+    if (own() && !document.getElementById("hmb165")) { const w = document.querySelector("#app .hdr ~ section .wrap"); if (w) { const b = document.createElement("div"); b.id = "hmb165"; b.className = "row"; b.style.cssText = "gap:.4rem;margin:.4rem 0;flex-wrap:wrap"; b.innerHTML = `<button class="btn btn-o" onclick="state.hm165prev=!state.hm165prev;render()">👁 ${state.hm165prev ? T("اقفل معاينة الرئيسية الجديدة", "Close new-home preview") : T("عاين الرئيسية الجديدة (اقتراح الطالب)", "Preview the new home (student's idea)")}</button>${state.hm165prev || mode === "on" ? `<button class="btn ${mode === "on" ? "btn-o" : "btn-p"}" onclick="home165('${mode === "on" ? "off" : "on"}')">${mode === "on" ? T("رجّع الرئيسية القديمة للكل", "Restore the old home for everyone") : T("✅ طبّقها للكل", "✅ Use it for everyone")}</button>` : ""}`; w.prepend(b); } }
+    if (!show || document.querySelector(".hm165")) return; const hdr = document.querySelector("#app .hdr"); if (!hdr) return; const tmp = document.createElement("div"); tmp.innerHTML = homeNew(); hdr.after(tmp.firstElementChild);
+  }
+
+  /* ---------- 6) شيل أسماء المصادر من الكلام ---------- */
+  const SRC = /\s*[(（]?\s*(?:النص\s+)?(?:من\s+)?(?:Quran\.com|quran\.com|mp3quran(?:\.net)?|EveryAyah|everyayah\.com)\s*[)）]?\s*\.?/g;
+  function srcClean() { const w = document.createTreeWalker(document.getElementById("app") || document.body, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { if (/quran\.com|mp3quran|everyayah/i.test(n.data)) n.data = n.data.replace(SRC, " ").replace(/\s{2,}/g, " ").replace(/\s+([.،,])/g, "$1"); } }
+
+  const _r = render;
+  render = function () {
+    const k = key(); const same = k === lastK; const y = window.scrollY; const app = document.getElementById("app");
+    if (same && app) { app.style.minHeight = app.offsetHeight + "px"; guardUntil = Date.now() + 600; }
+    const out = _r.apply(this, arguments);
+    try { homeApply(); srcClean(); } catch (e) { console.error(e); }
+    if (same) { if (Math.abs(window.scrollY - y) > 2) _st(0, y); requestAnimationFrame(() => { if (Math.abs(window.scrollY - y) > 2) _st(0, y); if (app) setTimeout(() => app.style.minHeight = "", 250); }); }
+    lastK = k; return out;
   };
 })();
 
