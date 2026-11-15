@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v158";
+const UI_VERSION = "2026-11-15-v159";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -22420,7 +22420,7 @@ body.side158 .hdr .nav,body.side158 .hdr .menu-btn{display:none!important}
 #rail158.R{right:0;border-right:0;border-radius:16px 0 0 16px}
 #rail158:hover,#rail158.open,#rail158:focus-within{max-width:19rem}
 #rail158 .rh{width:1.5rem;flex:0 0 1.5rem;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--accent,#0f766e);cursor:pointer;background:color-mix(in srgb,var(--accent,#0f766e) 10%,transparent)}
-#rail158 .ri{display:flex;flex-direction:column;gap:.2rem;padding:.5rem;overflow:auto;min-width:15rem}
+#rail158 .ri{display:flex;flex-direction:column;gap:.2rem;padding:.5rem;overflow-y:auto;overflow-x:hidden;min-width:15rem;max-width:17.5rem}#rail158 .ri>*{overflow:hidden;text-overflow:ellipsis}
 #rail158 .ri>*{position:static!important;transform:none!important;margin:0!important;width:100%;justify-content:flex-start!important;text-align:start;display:flex!important;align-items:center;gap:.45rem;border-radius:10px!important;padding:.4rem .6rem!important;white-space:nowrap;box-shadow:none!important}
 #rail158 .ri>a{color:inherit;text-decoration:none;font-weight:700;font-size:.9rem}
 #rail158 .ri>a:hover,#rail158 .ri>button:hover{background:color-mix(in srgb,var(--accent,#0f766e) 10%,transparent)}
@@ -22504,7 +22504,7 @@ body.gi158on .gi158h:hover>.gi158{display:block}
     let r = document.getElementById("rail158"); const isNew = !r;
     if (!r) { r = document.createElement("div"); r.id = "rail158"; r.innerHTML = `<span class="rh"></span><div class="ri"></div>`; r.querySelector(".rh").onclick = () => r.classList.toggle("open"); document.body.appendChild(r); }
     const rtl = document.documentElement.dir === "rtl" || ar(); const startLeft = !rtl; const left = (e.railSide === "start") === startLeft;
-    r.className = (e.mode === "dock" ? "dock " : "") + (left ? "L" : "R"); r.querySelector(".rh").textContent = e.mode === "dock" ? "▲" : (left ? "▸" : "◂");
+    const wasOpen = r.classList.contains("open"); r.className = (e.mode === "dock" ? "dock " : "") + (left ? "L" : "R") + (wasOpen ? " open" : ""); r.querySelector(".rh").textContent = e.mode === "dock" ? "▲" : (left ? "▸" : "◂");
     if (fresh || isNew) r.querySelector(".ri").innerHTML = ""; r.dataset.k158 = "rail"; return r;
   }
   function shellApply() {
