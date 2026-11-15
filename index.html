@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v134";
+const UI_VERSION = "2026-11-14-v135";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20707,6 +20707,76 @@ const _renderArabiya134 = renderArabiya;
 renderArabiya = function () { return _renderArabiya134().replace(/العربية بين يديك — بالأصوات الأصلية/g, ABY_NAME.ar + " (بالأصوات الأصلية)").replace(/Al-Arabiyyah Bayna Yadayk — original audio/g, ABY_NAME.en + " (original audio)"); };
 const _DOMAINS134 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS134(); ds.forEach(d => (d.tools || []).forEach(t => { if (String(t[2]).includes("arabiya")) t[1] = state.lang === "ar" ? ABY_NAME.ar : ABY_NAME.en; })); return ds; };
 try { KIT.forEach(k => { if (k[0] === "arabiya") { k[2] = ABY_NAME.ar; k[3] = ABY_NAME.en; } }); } catch (e) {}
+/* ================= v135: زرار تسجيل حساس (يقف بلمسة أو لوحده) + آهات بصوتك أنعم + الترجمة ماتلمسش القرآن واللي بين الأقواس ومابتعلقش + إخفاء أي عنصر في الموقع من المحاكي ================= */
+/* 1) أي تسجيل في الموقع: شريط أحمر كبير فوق فيه العداد وزرار «وقّف» — بيقف من أول لمسة، وبيقف لوحده لما المدة تخلص، ومفيش تسجيل جديد يبدأ وهو بيتحفظ */
+const REC135 = { r: null, t0: 0, max: 0, saving: 0, timer: 0 };
+(function () {
+  if (!window.MediaRecorder) return; const P = MediaRecorder.prototype; const _st = P.start, _sp = P.stop;
+  P.start = function () { const r = this; REC135.r = r; REC135.t0 = Date.now(); REC135.max = 0; r.addEventListener("stop", () => { if (REC135.r === r) { REC135.r = null; REC135.saving = Date.now(); recPill135(); setTimeout(recPill135, 1600); } }); setTimeout(recPill135, 0); clearInterval(REC135.timer); REC135.timer = setInterval(recPill135, 250); return _st.apply(this, arguments); };
+  P.stop = function () { try { if (this.state === "inactive") return; } catch (e) {} return _sp.apply(this, arguments); };
+  const _gum = navigator.mediaDevices && navigator.mediaDevices.getUserMedia && navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  if (_gum) navigator.mediaDevices.getUserMedia = function (c) { if (c && c.audio && !c.video && Date.now() - REC135.saving < 1500 && !REC135.r) return Promise.reject(new Error("saving")); return _gum(c); };
+  const _sto = window.setTimeout; window.setTimeout = function (fn, ms) { try { if (REC135.r && !REC135.max && ms >= 3000 && ms <= 300000 && Date.now() - REC135.t0 < 400) REC135.max = ms; } catch (e) {} return _sto.apply(this, arguments); };
+})();
+function recStop135() { try { if (REC135.r && REC135.r.state !== "inactive") REC135.r.stop(); } catch (e) {} }
+function recPill135() {
+  let p = document.getElementById("recpill"); const ar = state.lang === "ar";
+  if (!p) { p = document.createElement("div"); p.id = "recpill"; p.className = "notr gpskip"; p.addEventListener("pointerdown", e => { e.preventDefault(); recStop135(); }); document.body.appendChild(p); }
+  if (REC135.r && REC135.r.state === "recording") { const s = Math.floor((Date.now() - REC135.t0) / 1000); const mx = REC135.max ? Math.round(REC135.max / 1000) : 0; p.className = "on gpskip notr"; p.innerHTML = `<span class="dot"></span><b>${ar ? "بيسجّل" : "Recording"} ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}${mx ? ` / ${Math.floor(mx / 60)}:${String(mx % 60).padStart(2, "0")}` : ""}</b><span class="stp">⏹ ${ar ? "وقّف" : "Stop"}</span>${mx ? `<i style="width:${Math.min(100, s * 100000 / REC135.max)}%"></i>` : ""}`; return; }
+  clearInterval(REC135.timer);
+  if (Date.now() - REC135.saving < 1500) { p.className = "on save gpskip notr"; p.innerHTML = `<b>⏳ ${ar ? "بيتحفظ…" : "Saving…"}</b>`; return; }
+  p.className = "gpskip notr";
+}
+document.head.insertAdjacentHTML("beforeend", `<style>#recpill{position:fixed;top:10px;left:50%;transform:translate(-50%,-160%);z-index:1300;display:flex;align-items:center;gap:.6rem;background:#dc2626;color:#fff;border-radius:999px;padding:.55rem 1rem;box-shadow:0 8px 24px rgba(220,38,38,.4);cursor:pointer;user-select:none;transition:transform .2s;overflow:hidden;min-width:220px;justify-content:center;touch-action:manipulation}
+#recpill.on{transform:translate(-50%,0)}#recpill.save{background:#0f766e;box-shadow:none}#recpill .dot{width:.7rem;height:.7rem;border-radius:50%;background:#fff;animation:fpPulse 1s infinite}#recpill .stp{background:#fff;color:#dc2626;border-radius:999px;padding:.2rem .7rem;font-weight:800}#recpill i{position:absolute;bottom:0;inset-inline-start:0;height:3px;background:#fde68a}</style>`);
+
+/* 2) الآهات بصوتك: لفّة ناعمة من غير تقطيع (تداخل بين نسختين)، واهتزاز خفيف طبيعي، وبتختار أقرب عيّنة لكل نوتة */
+aahSing = (function (_prev) {
+  return function (notes, tonicHz, voice, onStep) {
+    try { if (vcSet87().aah !== "clone" || voice === "f" || !vcReady87()) return _prev.apply(this, arguments); } catch (e) { return _prev.apply(this, arguments); }
+    aahStop(); const ac = aahCtx(); const t0 = ac.currentTime + .08; const hz = c => tonicHz * Math.pow(2, c / 1200);
+    if (!AAH.rev) { const len = ac.sampleRate * 2.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); } AAH.rev = b; }
+    const out = ac.createGain(); out.gain.value = AAH.vol == null ? 1 : AAH.vol; const cv = ac.createConvolver(); cv.buffer = AAH.rev; const wet = ac.createGain(); wet.gain.value = .22; out.connect(ac.destination); out.connect(cv); cv.connect(wet); wet.connect(ac.destination);
+    const lfo = ac.createOscillator(); lfo.frequency.value = 5.2; const lg = ac.createGain(); lg.gain.value = 9; lfo.connect(lg); lfo.start(t0);
+    let t = t0; const nodes = [lfo], marks = [];
+    notes.forEach(([c, d]) => {
+      const f = hz(c); const k = Object.keys(VC87.buf).sort((a, b) => Math.abs(Math.log2(VC87.f0[a] / f)) - Math.abs(Math.log2(VC87.f0[b] / f)))[0]; const buf = VC87.buf[k]; const L = buf.duration; const rate = f / VC87.f0[k];
+      const a0 = L * .22, a1 = L * .78; const seg = Math.max(.25, (a1 - a0) / rate); const g = ac.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.95, t + .07); g.gain.setValueAtTime(.95, t + Math.max(.08, d - .07)); g.gain.linearRampToValueAtTime(0, t + d + .08); g.connect(out);
+      let tt = t, i = 0; const xf = Math.min(.12, seg / 3);
+      while (tt < t + d + .1 && i < 60) { const s = ac.createBufferSource(); s.buffer = buf; s.playbackRate.value = rate; if (d > .5) lg.connect(s.detune); const sg = ac.createGain(); sg.gain.setValueAtTime(i ? 0 : 1, tt); if (i) sg.gain.linearRampToValueAtTime(1, tt + xf); sg.gain.setValueAtTime(1, tt + seg - xf); sg.gain.linearRampToValueAtTime(0, tt + seg); s.connect(sg); sg.connect(g); s.start(tt, i ? a0 + (i % 2) * .03 : L * .12); s.stop(tt + seg + .02); nodes.push(s); tt += seg - xf; i++; }
+      marks.push([t, c]); t += d;
+    });
+    lfo.stop(t + .3); AAH.nodes = nodes; AAH.playing = true;
+    const tick = () => { if (!AAH.playing) return; const now = ac.currentTime; const cur = marks.filter(m => m[0] <= now).pop(); if (cur && onStep) onStep(cur[1]); if (now < t + .3) AAH.timer = setTimeout(tick, 60); else aahStop(); };
+    tick(); const b = document.getElementById("mqStopBtn"); if (b) b.style.display = "";
+  };
+})(aahSing);
+try { if (vcSet87().aah === "clone") setTimeout(() => vcLoad87(), 2500); } catch (e) {}
+
+/* 3) الترجمة: القرآن، وأي كلام بين «» أو ﴿﴾ أو أقواس فيها تشكيل، والاقتباسات العربي — مابتتترجمش. ولو الترجمة اتأخرت ٨ ثواني ماتعلقش الصفحة */
+const _tt135 = translateTexts;
+translateTexts = function (src, sl, tl) { const P = {}; const S = {}; Object.keys(src || {}).forEach(k => { const q = []; S[k] = String(src[k]).replace(/﴿[^﴾]*﴾|«[^»]{1,80}»|\((?=[^)]*[ً-ْ])[^)]{1,60}\)|\[[^\]]*[ً-ْ][^\]]*\]/g, m => { q.push(m); return " ⟨" + (q.length - 1) + "⟩ "; }); P[k] = q; });
+  const pr = _tt135(S, sl, tl).then(o => { const r = {}; Object.keys(o || {}).forEach(k => { r[k] = String(o[k]).replace(/\s*⟨\s*(\d+)\s*⟩\s*/g, (m, i) => " " + ((P[k] || [])[+i] || "") + " ").replace(/\s{2,}/g, " ").trim(); }); return r; });
+  return Promise.race([pr, new Promise(res => setTimeout(() => res({}), 8000))]); };
+const _dtQuran135 = dtQuran;
+dtQuran = function (s) { if (_dtQuran135(s)) return true; const t = String(s).trim(); if (/^[«﴿(\[].*[»﴾)\]]$/.test(t) && /[ء-ي]/.test(t) && t.length < 90) return true; return false; };
+setInterval(() => { try { if (DT.busy && DT.__b && Date.now() - DT.__b > 12000) DT.busy = false; if (DT.busy && !DT.__b) DT.__b = Date.now(); if (!DT.busy) DT.__b = 0; if (!DT.busy && DT.pend.size) dtFlush(); } catch (e) {} }, 3000);
+
+/* 4) المحاكي: «🎯 اختار أي عنصر» — دوس على أي حاجة في الصفحة (كلمة، لينك، زرار، كارت) واخفيها أو رجّعها */
+function uilPath135(el) { const app = document.getElementById("app"); const p = []; let x = el; while (x && x !== app && p.length < 14) { const par = x.parentElement; if (!par) break; const same = [...par.children].filter(c => c.tagName === x.tagName); p.unshift(x.tagName.toLowerCase() + ":" + same.indexOf(x)); x = par; } return p.join(">"); }
+function uilFind135(h) { const app = document.getElementById("app"); if (!app) return null; let x = app; for (const s of h.p.split(">")) { const [tg, i] = s.split(":"); const c = x && [...x.children].filter(c => c.tagName.toLowerCase() === tg)[+i]; if (!c) { x = null; break; } x = c; } const txt = e => (e.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); if (x && (!h.t || txt(x) === h.t)) return x; if (h.t) return [...app.querySelectorAll(h.tg || "*")].find(e => txt(e) === h.t && e.children.length <= 3) || null; return null; }
+function uilAnyApply135() { try { const D = uilData(); const L = ((D.any || {})[state.route]) || []; const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; L.forEach(h => { const el = uilFind135(h); if (!el) return; if (edit) el.classList.add("uilany"); else el.style.display = "none"; }); } catch (e) {} }
+const _uilApply135 = uilApply; uilApply = function () { const r = _uilApply135.apply(this, arguments); uilAnyApply135(); uilAnyBtn135(); return r; };
+function uilAnyBtn135() { const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; let b = document.getElementById("uilany"); if (!edit) { if (b) b.remove(); return; } if (b) return; const ar = state.lang === "ar"; b = document.createElement("button"); b.id = "uilany"; b.className = "notr"; b.textContent = state.__pick135 ? (ar ? "🎯 دوس على العنصر…" : "🎯 Tap an element…") : (ar ? "🎯 اخفي/اظهر أي عنصر" : "🎯 Hide/show any element"); b.onclick = e => { e.stopPropagation(); state.__pick135 = !state.__pick135; b.textContent = state.__pick135 ? (ar ? "🎯 دوس على العنصر…" : "🎯 Tap an element…") : (ar ? "🎯 اخفي/اظهر أي عنصر" : "🎯 Hide/show any element"); document.body.classList.toggle("pick135", !!state.__pick135); }; document.body.appendChild(b); }
+document.addEventListener("click", e => {
+  if (!state.__pick135 || !state.uiEdit) return; const app = document.getElementById("app"); const el = e.target; if (!app || !app.contains(el) || el.closest(".uiltb,.uilmv,#uilany")) return; e.preventDefault(); e.stopPropagation();
+  const t = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); const D = UIL_DRAFT = uilData(); D.any = D.any || {}; const L = D.any[state.route] = D.any[state.route] || []; const p = uilPath135(el); const i = L.findIndex(h => h.p === p || (h.t && h.t === t && h.tg === el.tagName.toLowerCase()));
+  if (i >= 0) L.splice(i, 1); else L.push({ p, t, tg: el.tagName.toLowerCase() }); state.__pick135 = false; document.body.classList.remove("pick135"); render(); toast(state.lang === "ar" ? (i >= 0 ? "👁 رجع ظاهر — دوس «حفظ» تحت" : "🙈 اتخفى — دوس «حفظ» تحت عشان يتطبق") : (i >= 0 ? "Shown — press Save" : "Hidden — press Save"));
+}, true);
+document.head.insertAdjacentHTML("beforeend", `<style>#uilany{position:fixed;top:72px;inset-inline-end:12px;z-index:1250;background:#7c3aed;color:#fff;border:0;border-radius:999px;padding:.5rem .9rem;font-weight:700;box-shadow:0 6px 18px rgba(124,58,237,.35);cursor:pointer}
+body.pick135 #app *:hover{outline:2px dashed #7c3aed!important;outline-offset:2px;cursor:crosshair!important}.uilany{opacity:.35;outline:2px dashed #dc2626;outline-offset:2px}</style>`);
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
