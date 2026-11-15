@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v152";
+const UI_VERSION = "2026-11-15-v153";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21851,6 +21851,170 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
     try { hlpSide(); sdEnsure(); } catch (e) {}
     try { aahFix(); } catch (e) {}
     try { if (typeof SOLF_ROUTES !== "undefined" && SOLF_ROUTES.includes(state.route)) solfLatinDom(document.getElementById("app")); } catch (e) {}
+    return out;
+  };
+})();
+
+
+/* ================= v153: إعدادات الأونر (أقسام بتتقفل + فهرس جانبي + حفظ لكل قسم) + «لوحة اليوم» + فيديو الشهادة + صفحة تقدّم الطالب للمشاركة ================= */
+(function () {
+  const ar = () => state.lang === "ar";
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.st152>.st152h{cursor:pointer;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.st152>.st152h::before{content:"▸";font-weight:900;color:var(--accent,#0f766e);transition:transform .2s}
+.st152.open>.st152h::before{transform:rotate(90deg)}
+[dir=rtl] .st152>.st152h::before{content:"◂"}
+[dir=rtl] .st152.open>.st152h::before{transform:rotate(-90deg)}
+.st152:not(.open)>:not(.st152h){display:none!important}
+.st152 .st152save{margin-inline-start:auto;font-size:.8rem;padding:.25rem .7rem}
+#stx152{position:fixed;top:120px;inset-inline-start:.6rem;z-index:300;width:13.5rem;max-height:calc(100vh - 160px);overflow:auto;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-radius:14px;padding:.5rem;box-shadow:0 8px 24px #0002;font-size:.85rem}
+#stx152 a{display:block;padding:.3rem .45rem;border-radius:8px;color:inherit;text-decoration:none}
+#stx152 a:hover,#stx152 a.on{background:color-mix(in srgb,var(--accent,#0f766e) 12%,transparent)}
+#stx152 .row{gap:.3rem;margin-bottom:.35rem}
+@media (max-width:1100px){#stx152{position:static;width:auto;max-height:none;margin:.6rem 0}}
+@media (min-width:1101px){body.stx152on #app .wrap{padding-inline-start:14.5rem}}
+.td153{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;margin-top:.6rem}
+.td153 button{display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;text-align:start;padding:.7rem .8rem;border-radius:14px;border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);cursor:pointer;color:inherit}
+.td153 button b{font-size:1.6rem;line-height:1}
+.td153 button.hot{border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 10%,var(--card,#fff))}
+.pg153{max-width:44rem;margin:0 auto}
+.pg153 .big{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem;margin:.8rem 0}
+.pg153 .big div{background:color-mix(in srgb,var(--accent,#0f766e) 8%,var(--card,#fff));border-radius:14px;padding:.8rem;text-align:center}
+.pg153 .big b{display:block;font-size:1.8rem}
+</style>`);
+
+  /* ---------- 1) صفحة الإعدادات: كل قسم بيتقفل ويتفتح + فهرس على الجنب + حفظ جنب كل قسم ---------- */
+  state.st152 = state.st152 || {};
+  function stTitle(card) { const h = card.querySelector("h3"); return h ? h.textContent.replace(/\s+/g, " ").trim() : ""; }
+  window.st152Toggle = function (t) { state.st152[t] = !state.st152[t]; const c = [...document.querySelectorAll(".st152")].find(x => x.dataset.t === t); if (c) c.classList.toggle("open", !!state.st152[t]); stIndexMark(); };
+  window.st152Go = function (t) { state.st152[t] = true; const c = [...document.querySelectorAll(".st152")].find(x => x.dataset.t === t); if (c) { c.classList.add("open"); c.scrollIntoView({ behavior: "smooth", block: "start" }); } stIndexMark(); };
+  window.st152All = function (open) { document.querySelectorAll(".st152").forEach(c => { state.st152[c.dataset.t] = open; c.classList.toggle("open", open); }); stIndexMark(); };
+  window.st152Save = async function (btn) {
+    const card = btn.closest(".st152"); if (!card) return;
+    const saves = [...card.querySelectorAll("button")].filter(b => b !== btn && !b.classList.contains("st152save") && /حفظ|احفظ|Save|💾/i.test(b.textContent) && !b.disabled);
+    if (!saves.length) return toast(ar() ? "✓ التعديلات في القسم ده بتتحفظ لوحدها أول ما تغيّرها" : "✓ Changes in this section save automatically");
+    btn.disabled = true; for (const b of saves) { try { b.click(); } catch (e) {} await new Promise(r => setTimeout(r, 250)); } btn.disabled = false;
+  };
+  function stIndexMark() { document.querySelectorAll("#stx152 a").forEach(a => a.classList.toggle("on", !!state.st152[a.dataset.t])); }
+  function stApply() {
+    const isSet = state.route === "dashboard" && state.dash && state.dash.tab === "settings" && (realRole ? realRole() : role()) === "owner";
+    let idx = document.getElementById("stx152");
+    document.body.classList.toggle("stx152on", isSet);
+    if (!isSet) { if (idx) idx.remove(); return; }
+    const app = document.getElementById("app"); if (!app) return;
+    const cards = [...app.querySelectorAll(".card")].filter(c => !c.parentElement.closest(".card") && c.querySelector("h3") && !c.closest(".dtabs,.tabs,header,footer"));
+    const titles = [];
+    cards.forEach(c => {
+      const t = stTitle(c); if (!t) return; titles.push(t);
+      if (c.classList.contains("st152")) return;
+      c.classList.add("st152"); c.dataset.t = t; if (state.st152[t]) c.classList.add("open");
+      const h3 = c.querySelector("h3"); let head = h3; while (head.parentElement && head.parentElement !== c) head = head.parentElement;
+      head.classList.add("st152h"); head.addEventListener("click", (e) => { if (e.target.closest("button,a,input,select,label")) return; st152Toggle(t); });
+      const sv = document.createElement("button"); sv.type = "button"; sv.className = "btn btn-p st152save"; sv.textContent = "💾 " + (ar() ? "حفظ" : "Save"); sv.onclick = (e) => { e.stopPropagation(); if (!c.classList.contains("open")) { st152Toggle(t); } st152Save(sv); };
+      head.appendChild(sv);
+    });
+    if (!idx) { idx = document.createElement("div"); idx.id = "stx152"; }
+    idx.innerHTML = `<div class="row"><b style="flex:1">⚙️ ${ar() ? "أقسام الإعدادات" : "Settings sections"}</b></div><div class="row"><button class="btn btn-o" style="padding:.15rem .5rem;font-size:.75rem" onclick="st152All(true)">${ar() ? "افتح الكل" : "Open all"}</button><button class="btn btn-o" style="padding:.15rem .5rem;font-size:.75rem" onclick="st152All(false)">${ar() ? "اقفل الكل" : "Close all"}</button></div>` +
+      titles.map(t => `<a href="#" data-t="${esc(t)}" onclick="st152Go(this.dataset.t);return false;">${esc(t)}</a>`).join("");
+    if (window.innerWidth <= 1100) { const first = cards[0]; if (first && idx.parentElement !== first.parentElement) first.parentElement.insertBefore(idx, first); }
+    else if (idx.parentElement !== document.body) document.body.appendChild(idx);
+    stIndexMark();
+  }
+
+  /* ---------- 2) «لوحة اليوم» للأونر في الرئيسية ---------- */
+  function today153() {
+    if (!state.auth.user || role() !== "owner") return "";
+    const d = useData("today153", async () => {
+      const s = new Date(); s.setHours(0, 0, 0, 0); const e = new Date(s.getTime() + 864e5);
+      const cnt = async (qb) => { const r = await qb; return r.count || 0; };
+      const [les, nextL, reqs, books, pays, posts, apps] = await Promise.all([
+        cnt(sb.from("lessons").select("id", { count: "exact", head: true }).gte("start_time", s.toISOString()).lt("start_time", e.toISOString()).neq("status", "cancelled")),
+        sb.from("lessons").select("start_time").gte("start_time", new Date().toISOString()).neq("status", "cancelled").order("start_time").limit(1),
+        cnt(sb.from("lesson_requests").select("id", { count: "exact", head: true }).eq("status", "pending")),
+        cnt(sb.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending")),
+        cnt(sb.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", "submitted")),
+        cnt(sb.from("showcase_posts").select("id", { count: "exact", head: true }).eq("status", "pending")),
+        cnt(sb.from("teacher_applications").select("id", { count: "exact", head: true }).eq("status", "pending"))]);
+      return { les, next: nextL.data && nextL.data[0] ? nextL.data[0].start_time : null, reqs, books, pays, posts, apps };
+    });
+    const A = ar();
+    if (!d || Array.isArray(d)) return `<section class="sec" style="padding-bottom:0"><div class="wrap"><div class="card">${loadingBox()}</div></div></section>`;
+    const tile = (n, ic, t, go) => `<button class="${n ? "hot" : ""}" onclick="${go}"><span>${ic}</span><b>${n}</b><span class="sm">${t}</span></button>`;
+    const nx = d.next ? new Date(d.next).toLocaleString(A ? "ar-EG" : "en-GB", { weekday: "long", hour: "2-digit", minute: "2-digit" }) : (A ? "مفيش" : "none");
+    return `<section class="sec" style="padding-bottom:0"><div class="wrap"><div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>☀️ ${A ? "لوحة اليوم" : "Today"}</h3><span class="sm muted">⏭️ ${A ? "الحصة الجاية:" : "Next lesson:"} <b>${esc(nx)}</b></span></div>
+      <div class="td153">${tile(d.les, "📅", A ? "حصص النهارده" : "Lessons today", "state.dash=state.dash||{};state.dash.tab='calendar';navigate('dashboard')")}${tile(d.reqs, "🔁", A ? "طلبات تغيير ميعاد" : "Reschedule requests", "state.dash=state.dash||{};state.dash.tab='requests';navigate('dashboard')")}${tile(d.books, "🆕", A ? "حجوزات تجريبية جديدة" : "New trial bookings", "state.dash=state.dash||{};state.dash.tab='bookings';navigate('dashboard')")}${tile(d.pays, "💳", A ? "مدفوعات مستنية تأكيد" : "Payments to confirm", "state.dash=state.dash||{};state.dash.tab='orders';navigate('dashboard')")}${tile(d.posts, "🎙️", A ? "تسجيلات مستنية موافقتك" : "Recordings to approve", "state.dash=state.dash||{};state.dash.tab='content';navigate('dashboard')")}${tile(d.apps, "👨‍🏫", A ? "طلبات معلمين" : "Teacher applications", "state.dash=state.dash||{};state.dash.tab='teacherApps';navigate('dashboard')")}</div></div></div></section>`;
+  }
+  const _rh = renderHome;
+  renderHome = function () { const h = _rh.apply(this, arguments); const t = today153(); if (!t) return h; const k = h.indexOf("</section>"); return k > 0 ? h.slice(0, k + 10) + t + h.slice(k + 10) : t + h; };
+
+  /* ---------- 3) فيديو الشهادة (لما الطالب يخلص جزء أو مستوى) ---------- */
+  window.certVideo153 = async function (id) {
+    const c = ((state.data["cert:" + id] || [])[0]) || ((state.data.myCerts || []).find(x => x.id === id)); if (!c) return toast("…", true);
+    const A = ar(); const name = A ? "أكاديمية إتقان" : "Itqan Academy"; const site = (location.host || "").replace(/^www\./, "");
+    const title = c.juz ? (A ? `إتمام حفظ الجزء ${c.juz}` : `Completed memorizing Juzʾ ${c.juz}`) : (c.title || (A ? "شهادة إتمام" : "Certificate"));
+    const ov = document.createElement("div"); ov.id = "vid152"; ov.innerHTML = `<div class="box"><b>🎬 ${A ? "بنعمل فيديو الشهادة…" : "Making your certificate video…"}</b><canvas width="720" height="1280"></canvas><button class="btn btn-o" onclick="document.getElementById('vid152').remove()">✕</button></div>`;
+    document.body.appendChild(ov); const cv = ov.querySelector("canvas"), ctx = cv.getContext("2d"), W = cv.width, H = cv.height;
+    const logo = new Image(); logo.src = "/icons/icon-512.png"; await new Promise(r => { logo.onload = r; logo.onerror = r; });
+    const t0 = performance.now(); let raf = 0; const DUR = 8;
+    const draw = () => {
+      const t = (performance.now() - t0) / 1000;
+      const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#1e1b4b"); g.addColorStop(.5, "#0f766e"); g.addColorStop(1, "#052e2b"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 60; i++) { const x = (i * 137.5 % W), y = ((i * 71 + t * (40 + i % 9) * 3) % H); ctx.fillStyle = ["#fde68a", "#f472b6", "#60a5fa", "#34d399"][i % 4]; ctx.globalAlpha = .7; ctx.fillRect(x, y, 6, 12); }
+      ctx.globalAlpha = 1; ctx.strokeStyle = "#fde68a"; ctx.lineWidth = 6; ctx.strokeRect(40, 40, W - 80, H - 80); ctx.lineWidth = 2; ctx.strokeRect(58, 58, W - 116, H - 116);
+      const R = 80 + 5 * Math.sin(t * 3); ctx.save(); ctx.translate(W / 2, 250); ctx.rotate(Math.sin(t) * .05); ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.clip(); if (logo.naturalWidth) ctx.drawImage(logo, -R, -R, R * 2, R * 2); ctx.restore();
+      ctx.textAlign = "center"; ctx.fillStyle = "#fff"; ctx.direction = A ? "rtl" : "ltr";
+      const a = Math.min(1, t / 1); ctx.globalAlpha = a; ctx.font = "bold 40px Tajawal, sans-serif"; ctx.fillText(name, W / 2, 400);
+      ctx.font = "bold 60px Tajawal, sans-serif"; ctx.fillStyle = "#fde68a"; ctx.fillText("🎓 " + (A ? "شهادة" : "Certificate"), W / 2, 540);
+      ctx.globalAlpha = Math.min(1, Math.max(0, t - .8)); ctx.fillStyle = "#fff"; ctx.font = "30px Tajawal, sans-serif"; ctx.fillText(A ? "تشهد أكاديمية إتقان بأن" : "Itqan Academy certifies that", W / 2, 640);
+      ctx.font = "bold 58px Amiri, Tajawal, serif"; ctx.fillText(c.student_name || "", W / 2, 730);
+      ctx.globalAlpha = Math.min(1, Math.max(0, t - 1.6)); ctx.font = "36px Tajawal, sans-serif"; ctx.fillStyle = "#fde68a"; ctx.fillText(title, W / 2, 830);
+      ctx.fillStyle = "#fff"; ctx.font = "26px Tajawal, sans-serif"; if (c.grade) ctx.fillText((A ? "التقدير: " : "Grade: ") + c.grade, W / 2, 890);
+      ctx.fillText(new Date(c.issued_at || c.created_at).toLocaleDateString(A ? "ar-EG" : "en-GB"), W / 2, 940);
+      ctx.globalAlpha = 1; ctx.direction = "ltr"; ctx.font = "22px monospace"; ctx.fillStyle = "rgba(255,255,255,.75)"; if (c.code) ctx.fillText("#" + c.code, W / 2, H - 170);
+      ctx.font = "bold 28px Tajawal, sans-serif"; ctx.fillStyle = "#fde68a"; ctx.fillText(site, W / 2, H - 115);
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const mime = ["video/mp4", "video/webm;codecs=vp9", "video/webm"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "video/webm";
+    let mr; try { mr = new MediaRecorder(cv.captureStream(30), { mimeType: mime }); } catch (e) { cancelAnimationFrame(raf); ov.remove(); return toast(A ? "المتصفح ده مش بيدعم عمل فيديو — جرّب Chrome" : "This browser can't make videos — try Chrome", true); }
+    const chunks = []; mr.ondataavailable = e => e.data.size && chunks.push(e.data); const done = new Promise(r => mr.onstop = r); mr.start(250);
+    await new Promise(r => setTimeout(r, DUR * 1000)); mr.stop(); await done; cancelAnimationFrame(raf);
+    const ext = mime.includes("mp4") ? "mp4" : "webm"; const blob = new Blob(chunks, { type: mime.split(";")[0] }); const fu = URL.createObjectURL(blob); const fname = `itqan-certificate${c.juz ? "-juz" + c.juz : ""}.${ext}`; const file = new File([blob], fname, { type: blob.type });
+    const share = `${name} — ${location.origin}/#/verify/${c.code || ""}`;
+    ov.querySelector(".box").innerHTML = `<b>✅ ${A ? "فيديو الشهادة جاهز" : "Your certificate video is ready"}</b><video src="${fu}" controls playsinline></video><div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem"><a class="btn btn-p" href="${fu}" download="${fname}">⬇️ ${A ? "نزّل" : "Download"}</a>${navigator.canShare && navigator.canShare({ files: [file] }) ? `<button class="btn btn-o" id="cv153sh">📤 ${A ? "شارك" : "Share"}</button>` : ""}<button class="btn btn-o" onclick="document.getElementById('vid152').remove()">✕</button></div>`;
+    const b = document.getElementById("cv153sh"); if (b) b.onclick = () => navigator.share({ files: [file], title: name, text: share }).catch(() => {});
+  };
+  const _rc = renderCertPage;
+  renderCertPage = function () { const h = _rc.apply(this, arguments); const id = state.track; if (!id || !Array.isArray(state.data["cert:" + id]) || !state.data["cert:" + id].length) return h; return h.replace(`<button class="btn btn-p" onclick="window.print()">`, `<button class="btn btn-o" onclick="certVideo153('${id}')">🎬 ${ar() ? "فيديو الشهادة" : "Certificate video"}</button><button class="btn btn-p" onclick="window.print()">`); };
+
+  /* ---------- 4) صفحة تقدّم الطالب — لينك يبعته لأهله ---------- */
+  if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("progress")) HASH_ROUTES.push("progress");
+  window.shareProgress153 = async function () {
+    const { data, error } = await sb.rpc("my_share_code"); if (error || !data) return toast((error && error.message) || "—", true);
+    const url = `${location.origin}/#/progress/${data}`; const A = ar();
+    try { if (navigator.share) { await navigator.share({ title: A ? "تقدّمي في أكاديمية إتقان" : "My progress at Itqan Academy", url }); return; } } catch (e) {}
+    try { await navigator.clipboard.writeText(url); toast(A ? "✅ اتنسخ اللينك — ابعته لأهلك" : "✅ Link copied — send it to your family"); } catch (e) { prompt("", url); }
+  };
+  function progressPage() {
+    const code = state.track; const A = ar();
+    const d = useData("pg153:" + code, async () => { const { data, error } = await sb.rpc("public_progress", { p_code: code }); if (error) throw error; return data || {}; });
+    let body;
+    if (!d) body = loadingBox();
+    else if (d.__error || !d.name) body = `<div class="card">${A ? "اللينك ده مش صالح." : "This link isn't valid."}</div>`;
+    else body = `<div class="card" style="text-align:center"><div style="font-size:2.6rem">🌟</div><h2>${esc(d.name)}</h2><p class="muted">${A ? "تقدّمه في أكاديمية إتقان" : "Progress at Itqan Academy"}${d.since ? ` · ${A ? "معانا من" : "with us since"} ${new Date(d.since).toLocaleDateString(A ? "ar-EG" : "en-GB")}` : ""}</p>
+      <div class="big"><div><b>${d.juz_done || 0}</b>${A ? "أجزاء خلّصها" : "Juzʾ completed"}</div><div><b>${d.pages || 0}</b>${A ? "صفحة محفوظة" : "pages memorized"}</div><div><b>${d.lessons || 0}</b>${A ? "حصة حضرها" : "lessons attended"}</div><div><b>${d.certs || 0}</b>${A ? "شهادات" : "certificates"}</div><div><b>${d.maqamat || 0}</b>${A ? "مقامات اتدرّب عليها" : "maqamat practised"}</div></div>
+      ${Array.isArray(d.juz_list) && d.juz_list.length ? `<p>${A ? "🏅 الأجزاء:" : "🏅 Juzʾ:"} ${d.juz_list.map(j => `<span class="badge">${j}</span>`).join(" ")}</p>` : ""}
+      <button class="btn btn-p" style="margin-top:.8rem" onclick="navigate('home')">${A ? "اعرف أكتر عن الأكاديمية" : "Discover the academy"}</button></div>`;
+    return `<section class="sec"><div class="wrap pg153">${body}</div></section>`;
+  }
+
+  const _r = render;
+  render = function () {
+    if (state.route === "progress") { const app = document.getElementById("app"); if (app) { let b; try { b = progressPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter(); } return; }
+    const out = _r.apply(this, arguments);
+    try { stApply(); } catch (e) { console.error(e); }
+    /* زرار «شارك تقدّمي» في لوحة الطالب */
+    try { if (state.route === "dashboard" && role() === "student" && !document.getElementById("sp153")) { const app = document.getElementById("app"); const w = app && app.querySelector(".wrap"); if (w) { const b = document.createElement("button"); b.id = "sp153"; b.className = "btn btn-o"; b.style.margin = ".5rem 0"; b.textContent = "📤 " + (ar() ? "شارك تقدّمي مع أهلي" : "Share my progress with family"); b.onclick = shareProgress153; w.insertBefore(b, w.children[1] || null); } } } catch (e) {}
     return out;
   };
 })();
