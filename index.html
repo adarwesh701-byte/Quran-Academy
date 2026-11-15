@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v153";
+const UI_VERSION = "2026-11-15-v154";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21867,7 +21867,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
 [dir=rtl] .st152.open>.st152h::before{transform:rotate(-90deg)}
 .st152:not(.open)>:not(.st152h){display:none!important}
 .st152 .st152save{margin-inline-start:auto;font-size:.8rem;padding:.25rem .7rem}
-#stx152{position:fixed;top:120px;inset-inline-start:.6rem;z-index:300;width:13.5rem;max-height:calc(100vh - 160px);overflow:auto;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-radius:14px;padding:.5rem;box-shadow:0 8px 24px #0002;font-size:.85rem}
+#stx152{position:fixed;top:120px;inset-inline-start:.6rem;z-index:300;width:13.5rem;max-height:calc(100vh - 120px - 10rem);overflow:auto;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-radius:14px;padding:.5rem;box-shadow:0 8px 24px #0002;font-size:.85rem}
 #stx152 a{display:block;padding:.3rem .45rem;border-radius:8px;color:inherit;text-decoration:none}
 #stx152 a:hover,#stx152 a.on{background:color-mix(in srgb,var(--accent,#0f766e) 12%,transparent)}
 #stx152 .row{gap:.3rem;margin-bottom:.35rem}
@@ -21877,6 +21877,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
 .td153 button{display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;text-align:start;padding:.7rem .8rem;border-radius:14px;border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);cursor:pointer;color:inherit}
 .td153 button b{font-size:1.6rem;line-height:1}
 .td153 button.hot{border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 10%,var(--card,#fff))}
+#app .hlp121{display:none!important}
 .pg153{max-width:44rem;margin:0 auto}
 .pg153 .big{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem;margin:.8rem 0}
 .pg153 .big div{background:color-mix(in srgb,var(--accent,#0f766e) 8%,var(--card,#fff));border-radius:14px;padding:.8rem;text-align:center}
@@ -21929,7 +21930,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
       const cnt = async (qb) => { const r = await qb; return r.count || 0; };
       const [les, nextL, reqs, books, pays, posts, apps] = await Promise.all([
         cnt(sb.from("lessons").select("id", { count: "exact", head: true }).gte("start_time", s.toISOString()).lt("start_time", e.toISOString()).neq("status", "cancelled")),
-        sb.from("lessons").select("start_time").gte("start_time", new Date().toISOString()).neq("status", "cancelled").order("start_time").limit(1),
+        sb.from("lessons").select("start_time").gte("start_time", new Date().toISOString()).lt("start_time", new Date(Date.now() + 60 * 864e5).toISOString()).neq("status", "cancelled").order("start_time").limit(1),
         cnt(sb.from("lesson_requests").select("id", { count: "exact", head: true }).eq("status", "pending")),
         cnt(sb.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending")),
         cnt(sb.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", "submitted")),
@@ -22013,6 +22014,12 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
     if (state.route === "progress") { const app = document.getElementById("app"); if (app) { let b; try { b = progressPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter(); } return; }
     const out = _r.apply(this, arguments);
     try { stApply(); } catch (e) { console.error(e); }
+    try {
+      const box = document.querySelector("#app .hlp121"); let b = document.getElementById("hlp152");
+      if (box && !b) { b = document.createElement("button"); b.id = "hlp152"; b.textContent = "❓ " + (ar() ? "إزاي أستخدم الصفحة؟" : "How to use this page"); document.body.appendChild(b); }
+      if (b) b.onclick = () => { const bx = document.querySelector("#app .hlp121"); if (!bx) return helpOpen(); const m = document.createElement("div"); m.className = "hlpov"; m.onclick = (e) => { if (e.target === m) m.remove(); }; m.innerHTML = `<div class="hlpbox"><div class="row" style="justify-content:space-between"><h3>💡 ${ar() ? "إزاي تستخدم الصفحة" : "How to use this page"}</h3><button class="ibtn" onclick="this.closest('.hlpov').remove()">✕</button></div>${(bx.querySelector(".hlp121g") || bx).innerHTML}</div>`; document.body.appendChild(m); };
+      const sd = document.getElementById("sd152"); if (b && sd && b.parentElement !== sd) { sd.insertBefore(b, sd.children[1] || null); sd.style.display = ""; }
+    } catch (e) {}
     /* زرار «شارك تقدّمي» في لوحة الطالب */
     try { if (state.route === "dashboard" && role() === "student" && !document.getElementById("sp153")) { const app = document.getElementById("app"); const w = app && app.querySelector(".wrap"); if (w) { const b = document.createElement("button"); b.id = "sp153"; b.className = "btn btn-o"; b.style.margin = ".5rem 0"; b.textContent = "📤 " + (ar() ? "شارك تقدّمي مع أهلي" : "Share my progress with family"); b.onclick = shareProgress153; w.insertBefore(b, w.children[1] || null); } } } catch (e) {}
     return out;
