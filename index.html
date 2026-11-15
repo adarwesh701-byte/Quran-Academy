@@ -20705,9 +20705,8 @@ document.head.insertAdjacentHTML("beforeend", `<style>.dtw{color:transparent!imp
 const ABY_NAME = { ar: "العربية الفصحى — المنهج المتكامل", en: "Standard Arabic — full course" };
 const _renderArabiya134 = renderArabiya;
 renderArabiya = function () { return _renderArabiya134().replace(/العربية بين يديك — بالأصوات الأصلية/g, ABY_NAME.ar + " (بالأصوات الأصلية)").replace(/Al-Arabiyyah Bayna Yadayk — original audio/g, ABY_NAME.en + " (original audio)"); };
-const _DOMAINS134 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS134(); ds.forEach(d => (d.tools || []).forEach(t => { if (String(t[2]).includes("arabiya")) t[1] = state.lang === "ar" ? "📗 " + ABY_NAME.ar : ABY_NAME.en; })); return ds; };
+const _DOMAINS134 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS134(); ds.forEach(d => (d.tools || []).forEach(t => { if (String(t[2]).includes("arabiya")) t[1] = state.lang === "ar" ? ABY_NAME.ar : ABY_NAME.en; })); return ds; };
 try { KIT.forEach(k => { if (k[0] === "arabiya") { k[2] = ABY_NAME.ar; k[3] = ABY_NAME.en; } }); } catch (e) {}
-
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
