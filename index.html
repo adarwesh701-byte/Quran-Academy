@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v141";
+const UI_VERSION = "2026-11-14-v142";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20765,7 +20765,7 @@ setInterval(() => { try { if (DT.busy && DT.__b && Date.now() - DT.__b > 12000) 
 
 /* 4) المحاكي: «🎯 اختار أي عنصر» — دوس على أي حاجة في الصفحة (كلمة، لينك، زرار، كارت) واخفيها أو رجّعها */
 function uilPath135(el) { const app = document.getElementById("app"); const p = []; let x = el; while (x && x !== app && p.length < 14) { const par = x.parentElement; if (!par) break; const same = [...par.children].filter(c => c.tagName === x.tagName); p.unshift(x.tagName.toLowerCase() + ":" + same.indexOf(x)); x = par; } return p.join(">"); }
-function uilFind135(h) { const app = document.getElementById("app"); if (!app) return null; let x = app; for (const s of h.p.split(">")) { const [tg, i] = s.split(":"); const c = x && [...x.children].filter(c => c.tagName.toLowerCase() === tg)[+i]; if (!c) { x = null; break; } x = c; } const txt = e => (e.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); if (x && (!h.t || txt(x) === h.t)) return x; if (h.t) return [...app.querySelectorAll(h.tg || "*")].find(e => txt(e) === h.t && e.children.length <= 3) || null; return null; }
+function uilFind135(h) { const app = document.getElementById("app"); if (!app) return null; let x = app; for (const s of h.p.split(">")) { const [tg, i] = s.split(":"); const c = x && [...x.children].filter(c => c.tagName.toLowerCase() === tg)[+i]; if (!c) { x = null; break; } x = c; } const txt = e => { if (!e.querySelector(".uiltb,.uilmv,.lk142b,.uilmore")) return (e.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); const c = e.cloneNode(true); c.querySelectorAll(".uiltb,.uilmv,.lk142b,.uilmore").forEach(z => z.remove()); return (c.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); }; if (x && (!h.t || txt(x) === h.t)) return x; if (h.t) return [...app.querySelectorAll(h.tg || "*")].find(e => txt(e) === h.t && e.children.length <= 3) || null; return null; }
 function uilAnyApply135() { try { const D = uilData(); const L = ((D.any || {})[state.route]) || []; const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; L.forEach(h => { const el = uilFind135(h); if (!el) return; if (edit) el.classList.add("uilany"); else el.style.display = "none"; }); } catch (e) {} }
 const _uilApply135 = uilApply; uilApply = function () { const r = _uilApply135.apply(this, arguments); uilAnyApply135(); uilAnyBtn135(); return r; };
 function uilAnyBtn135() { const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; let b = document.getElementById("uilany"); if (!edit) { if (b) b.remove(); return; } if (b) return; const ar = state.lang === "ar"; b = document.createElement("button"); b.id = "uilany"; b.className = "notr"; b.textContent = state.__pick135 ? (ar ? "🎯 دوس على العنصر…" : "🎯 Tap an element…") : (ar ? "🎯 اخفي/اظهر أي عنصر" : "🎯 Hide/show any element"); b.onclick = e => { e.stopPropagation(); state.__pick135 = !state.__pick135; b.textContent = state.__pick135 ? (ar ? "🎯 دوس على العنصر…" : "🎯 Tap an element…") : (ar ? "🎯 اخفي/اظهر أي عنصر" : "🎯 Hide/show any element"); document.body.classList.toggle("pick135", !!state.__pick135); }; document.body.appendChild(b); }
@@ -21233,6 +21233,87 @@ function vc141Card() {
     <p class="xs muted" style="margin:.4rem 0 0">⏱️ السيرفر المجاني بيعمل جملة كل ١٠–٣٠ ثانية تقريبًا، فالمئات بتاخد ساعات — بيشتغل لوحده كل دقيقتين حتى وإنت قافل.</p></div>`;
 }
 const _voiceCard141 = voiceCard87; voiceCard87 = function () { return _voiceCard141() + vc141Card(); };
+
+/* ---------- v142: المحاكي — «🔗 الروابط»: شوف كل زرار/لينك بيودّي فين، عدّله، وضيف زراير جديدة بلينكات جديدة ---------- */
+function lk142Target(el) {
+  const h = el.getAttribute("href"); const oc = el.getAttribute("onclick") || "";
+  const g = oc.match(/(?:go16|navigate)\(\s*['"]([^'"]+)['"](?:\s*,\s*['"]([^'"]*)['"])?/); if (g) return "#/" + g[1] + (g[2] ? "/" + g[2] : "");
+  const r = oc.match(/state\.route\s*=\s*['"]([^'"]+)['"]/); if (r) return "#/" + r[1];
+  const lh = oc.match(/location(?:\.href)?\s*=\s*['"]([^'"]+)['"]/); if (lh) return lh[1];
+  const wo = oc.match(/window\.open\(\s*['"]([^'"]+)['"]/); if (wo) return wo[1];
+  if (h && h !== "#" && !/^javascript:/i.test(h)) return h;
+  if (oc) return "⚙️ " + oc.replace(/\s+/g, " ").slice(0, 60);
+  return "";
+}
+function lk142Txt(el) { const c = el.cloneNode(true); c.querySelectorAll(".uiltb,.uilmv,.lk142b,.uilmore").forEach(x => x.remove()); return (c.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); }
+function lk142Els() { const app = document.getElementById("app"); if (!app) return []; return [...app.querySelectorAll("a, button, [onclick]")].filter(el => !el.closest(".uiltb,.uilmv,#uilany,#lk142,#lk142pop") && (el.textContent || "").trim()); }
+function lk142Go(to) {
+  to = String(to || "").trim(); if (!to) return;
+  if (/^#\//.test(to)) { const [r, ...a] = to.slice(2).split("/"); if (PAGES16.includes(r)) return go16(r, a.join("/") || undefined); return navigate(r, a.join("/") || undefined); }
+  if (/^https?:\/\//i.test(to)) { if (to.indexOf(location.host) >= 0) location.href = to; else window.open(to, "_blank", "noopener"); return; }
+  if (/^[a-z0-9-]+$/i.test(to)) return lk142Go("#/" + to);
+  location.href = to;
+}
+function lk142Apply() {
+  try {
+    const D = uilData(); const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; const app = document.getElementById("app"); if (!app) return;
+    (((D.links || {})[state.route]) || []).forEach(h => { const el = uilFind135(h); if (el) { el.dataset.lnk = h.to; el.classList.add("lk142ed"); } });
+    app.querySelectorAll(".lk142add").forEach(x => x.remove());
+    (((D.add || {})[state.route]) || []).forEach((b, i) => {
+      const a = document.createElement("a"); a.className = "btn " + (b.st || "btn-p") + " lk142add"; a.textContent = b.label; a.dataset.lnk = b.to; a.dataset.lki = i; a.href = /^#\//.test(b.to) ? b.to : "#";
+      const anc = b.p ? uilFind135(b) : null; if (anc && anc.parentElement) anc.insertAdjacentElement("afterend", a); else { let row = app.querySelector(".lk142row"); if (!row) { row = document.createElement("div"); row.className = "lk142row"; const hd = app.querySelector("header, .hdr, nav"); (hd && hd.parentElement === app ? hd : app.firstElementChild || app).insertAdjacentElement(hd && hd.parentElement === app ? "afterend" : "afterend", row); } row.appendChild(a); }
+    });
+    if (edit && state.__lk142) lk142Badges(); else document.querySelectorAll(".lk142b").forEach(x => x.remove());
+  } catch (e) { console.warn(e); }
+}
+function lk142Badges() { document.querySelectorAll(".lk142b").forEach(x => x.remove()); lk142Els().forEach(el => { const t = el.dataset.lnk || lk142Target(el); if (!t) return; const b = document.createElement("span"); b.className = "lk142b" + (el.dataset.lnk ? " ed" : "") + (t.startsWith("⚙️") ? " fn" : ""); b.textContent = "🔗 " + (t.startsWith("⚙️") ? "إجراء" : t.replace(/^https?:\/\/(www\.)?/, "").slice(0, 28)); b.title = t; b.onclick = (e) => { e.preventDefault(); e.stopPropagation(); lk142Edit(el); }; el.style.position = el.style.position || (getComputedStyle(el).position === "static" ? "relative" : ""); el.appendChild(b); }); }
+function lk142Edit(el) {
+  const ar = state.lang === "ar"; const D = UIL_DRAFT = uilData(); D.links = D.links || {}; D.add = D.add || {};
+  const txt = lk142Txt(el);
+  if (el.classList.contains("lk142add")) { const L = D.add[state.route] || []; const b = L[+el.dataset.lki]; if (!b) return; const lbl = prompt("اسم الزرار (فاضي = امسحه):", b.label); if (lbl === null) return; if (!lbl.trim()) { L.splice(+el.dataset.lki, 1); } else { const to = prompt("اللينك:\n#/tools = صفحة في الموقع · https://… = لينك خارجي", b.to); if (to === null) return; b.label = lbl.trim(); b.to = to.trim(); } render(); return; }
+  const cur = el.dataset.lnk || ""; const orig = lk142Target(el);
+  const v = prompt(`«${txt}»\nبيودّي دلوقتي على: ${orig || "—"}${cur ? "\n(متعدّل لـ: " + cur + ")" : ""}\n\nاكتب اللينك الجديد:\n#/tools أو #/maqamat = صفحة في الموقع\nhttps://… = لينك خارجي\nفاضي = يرجع للأصلي`, cur || (orig.startsWith("⚙️") ? "" : orig));
+  if (v === null) return; const L = D.links[state.route] = D.links[state.route] || []; const p = uilPath135(el); const i = L.findIndex(h => h.p === p || (h.t && h.t === txt && h.tg === el.tagName.toLowerCase()));
+  if (i >= 0) L.splice(i, 1); if (v.trim() && v.trim() !== orig) L.push({ p, t: txt, tg: el.tagName.toLowerCase(), to: v.trim() });
+  render(); toast(ar ? "✅ اتعدّل — دوس «💾 احفظ للكل» تحت" : "Changed — press Save");
+}
+function lk142AddNew() {
+  const lbl = prompt("اسم الزرار الجديد:"); if (!lbl || !lbl.trim()) return; const to = prompt("بيودّي فين؟\n#/tools أو #/maqamat = صفحة في الموقع\nhttps://… = لينك خارجي"); if (to === null || !to.trim()) return;
+  const where = confirm("تحب تختار مكانه في الصفحة؟\nOK = هتدوس على العنصر اللي يتحط بعده\nCancel = يتحط فوق الصفحة");
+  const st = confirm("لونه أساسي (أخضر)؟\nOK = أساسي · Cancel = عادي") ? "btn-p" : "btn-o";
+  const b = { label: lbl.trim(), to: to.trim(), st };
+  const fin = () => { const D = UIL_DRAFT = uilData(); D.add = D.add || {}; (D.add[state.route] = D.add[state.route] || []).push(b); render(); toast("✅ اتضاف — دوس «💾 احفظ للكل»"); };
+  if (!where) return fin();
+  state.__lk142pick = (el) => { b.p = uilPath135(el); b.t = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); b.tg = el.tagName.toLowerCase(); fin(); };
+  document.body.classList.add("pick135"); toast("🎯 دوس على العنصر اللي الزرار يتحط بعده");
+}
+function lk142List() {
+  const old = document.getElementById("lk142pop"); if (old) { old.remove(); return; }
+  const els = lk142Els(); const pop = document.createElement("div"); pop.id = "lk142pop"; pop.className = "notr";
+  pop.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:.4rem"><b>🔗 كل روابط الصفحة (${els.length})</b><button class="btn btn-o btn-sm" onclick="document.getElementById('lk142pop').remove()">✕</button></div><button class="btn btn-p btn-sm" style="margin-bottom:.5rem" onclick="lk142AddNew()">➕ زرار جديد بلينك جديد</button><div class="lk142ls">${els.map((el, i) => { const t = el.dataset.lnk || lk142Target(el); return `<div class="lk142r ${el.dataset.lnk ? "ed" : ""}"><span class="tx">${esc(lk142Txt(el))}</span><code>${esc(t || "—")}</code><button data-i="${i}" class="btn btn-o btn-sm">✏️</button><button data-s="${i}" class="btn btn-o btn-sm">👁️</button></div>`; }).join("")}</div>`;
+  pop.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.i) { pop.remove(); lk142Edit(els[+b.dataset.i]); } if (b.dataset.s) { const el = els[+b.dataset.s]; el.scrollIntoView({ block: "center", behavior: "smooth" }); el.classList.add("lk142flash"); setTimeout(() => el.classList.remove("lk142flash"), 1800); } });
+  document.body.appendChild(pop);
+}
+function lk142Btn() {
+  const edit = !!state.uiEdit && realRole() === "owner" && !state.preview; let b = document.getElementById("lk142"); if (!edit) { if (b) b.remove(); document.querySelectorAll(".lk142b").forEach(x => x.remove()); return; }
+  if (!b) { b = document.createElement("div"); b.id = "lk142"; b.className = "notr"; document.body.appendChild(b); }
+  b.innerHTML = `<button onclick="state.__lk142=!state.__lk142;lk142Apply();lk142Btn()">${state.__lk142 ? "🔗 خبّي اللينكات" : "🔗 اظهر لينك كل زرار"}</button><button onclick="lk142List()">📋 كل الروابط</button><button onclick="lk142AddNew()">➕ زرار جديد</button>`;
+}
+const _uilApply142 = uilApply; uilApply = function () { const r = _uilApply142.apply(this, arguments); lk142Apply(); lk142Btn(); return r; };
+/* تنفيذ اللينك المعدّل/الجديد بدل الأصلي */
+document.addEventListener("click", (e) => {
+  if (state.__lk142pick) { const app = document.getElementById("app"); const el = e.target; if (app && app.contains(el)) { e.preventDefault(); e.stopPropagation(); const f = state.__lk142pick; state.__lk142pick = null; document.body.classList.remove("pick135"); f(el); } return; }
+  if (state.__pick135) return; if (e.target.closest(".lk142b")) return;
+  const el = e.target.closest("[data-lnk]"); if (!el) return; if (state.uiEdit && state.__lk142) return;
+  e.preventDefault(); e.stopPropagation(); lk142Go(el.dataset.lnk);
+}, true);
+/* «احفظ» بيحفظ links و add مع باقي الترتيب (نفس الكائن) */
+const _uilGet142 = uilGet; uilGet = function () { const o = _uilGet142(); o.links = o.links || {}; o.add = o.add || {}; return o; };
+document.head.insertAdjacentHTML("beforeend", `<style>#lk142{position:fixed;top:118px;inset-inline-end:12px;z-index:1250;display:flex;flex-direction:column;gap:.35rem}#lk142 button{background:#0f766e;color:#fff;border:0;border-radius:999px;padding:.45rem .85rem;font-weight:700;box-shadow:0 6px 18px rgba(15,118,110,.35);cursor:pointer;font-size:.85rem}
+.lk142b{position:absolute;top:-.7rem;inset-inline-start:-.2rem;z-index:30;background:#1e293b;color:#fff;font-size:.65rem;line-height:1.2;padding:.12rem .35rem;border-radius:6px;white-space:nowrap;cursor:pointer;direction:ltr;max-width:14rem;overflow:hidden;text-overflow:ellipsis;font-weight:600}.lk142b.ed{background:#dc2626}.lk142b.fn{background:#64748b}
+.lk142ed{outline:2px dashed #dc2626;outline-offset:2px}.lk142row{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;margin:.6rem auto;max-width:1100px;padding:0 .8rem}.lk142add{margin:.25rem}
+#lk142pop{position:fixed;inset-inline-end:12px;top:200px;z-index:1300;width:min(30rem,94vw);max-height:65vh;overflow:auto;background:var(--card,#fff);border:2px solid #0f766e;border-radius:14px;padding:.8rem;box-shadow:0 18px 40px #0004}
+.lk142r{display:grid;grid-template-columns:1fr 1.2fr auto auto;gap:.3rem;align-items:center;padding:.3rem 0;border-top:1px dashed var(--line,#ddd);font-size:.8rem}.lk142r code{direction:ltr;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lk142r.ed code{color:#dc2626;font-weight:700}.lk142flash{outline:4px solid #f59e0b!important;outline-offset:3px}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
