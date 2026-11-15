@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v160";
+const UI_VERSION = "2026-11-15-v161";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23143,6 +23143,206 @@ body.pk160 #app *{cursor:crosshair}
   };
   /* جوه شاشة المعاينة: من غير أدوات الأونر عشان الفيو يبان زي الطالب */
   if (/embed160=1/.test(location.search)) document.head.insertAdjacentHTML("beforeend", `<style>#sd152,#rail158,#ctl113,#edbar158,.ai-widget{display:none!important}</style>`);
+})();
+
+
+/* ================= v161: الشريط الجانبي «محتوى الصفحة» بطول الصفحة + كل حاجة تتطوّع لعرض الشاشة من غير ما تطلع برّه + أزرار صفحات المصحف + استوديو التسجيل (كل الجمل اللي محتاجة صوت + المستنسخ المستني موافقتك) + «مكتبي» (بوستات/واتساب/تيك توك/إنستجرام/الدفع/التسويق) + لوجوهات أكتر ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e); const own = () => realRole() === "owner" && !state.preview;
+  document.head.insertAdjacentHTML("beforeend", `<style>
+/* 1) الشريط الجانبي: حتة رفيعة مكتوب عليها «محتوى الصفحة» بالطول، ولما تقرّب يفتح بطول الصفحة */
+#rail158:not(.dock){top:0!important;bottom:0;transform:none!important;max-height:none;height:100vh;border-radius:0!important;border-top:0;border-bottom:0;max-width:1.9rem}
+#rail158:not(.dock):hover,#rail158:not(.dock).open,#rail158:not(.dock):focus-within{max-width:20rem;box-shadow:0 0 40px #0003}
+#rail158:not(.dock) .rh{width:1.9rem;flex:0 0 1.9rem;writing-mode:vertical-rl;text-orientation:mixed;font-size:.78rem;letter-spacing:.06em;font-weight:800;gap:.4rem;padding:.6rem 0;color:#fff;background:linear-gradient(180deg,var(--accent,#0f766e),color-mix(in srgb,var(--accent,#0f766e) 70%,#000))}
+#rail158:not(.dock) .ri{min-width:17rem;max-width:18rem;height:100%;padding:4.6rem .6rem 1rem}
+#rail158 .ri::before{content:attr(data-t);display:block;font-weight:900;font-size:.95rem;margin:0 .3rem .5rem;color:var(--accent,#0f766e)}
+/* 2) كل حاجة تتطوّع لعرض الشاشة — مفيش حاجة تطلع برّه */
+html,body{max-width:100%;overflow-x:hidden}
+#app img,#app video,#app iframe,#app canvas,#app svg{max-width:100%;height:auto}
+#app .card,#app .dmcard,#app section,#app .wrap{min-width:0;overflow-wrap:anywhere}
+#app table{max-width:100%}
+#app .card>table,#app .wrap>table{display:block;overflow-x:auto}
+#app pre,#app code{white-space:pre-wrap;word-break:break-word}
+#app .row{flex-wrap:wrap}
+#app .grid,#app [class*="grid"]{min-width:0}
+@media (max-width:640px){#app .btn{white-space:normal}}
+/* 4) استوديو التسجيل */
+.st161 .ln{display:flex;gap:.5rem;align-items:center;padding:.55rem .4rem;border-bottom:1px solid var(--line,#e5e7eb)}
+.st161 .ln.on{background:color-mix(in srgb,var(--accent,#0f766e) 8%,transparent);border-radius:10px}
+.st161 .tx{flex:1;font:1.15rem/1.8 'Amiri',serif;min-width:0}
+.st161 .rec{border:0;border-radius:999px;width:2.6rem;height:2.6rem;font-size:1.1rem;cursor:pointer;background:#ef4444;color:#fff;flex:0 0 auto}
+.st161 .rec.go{animation:pulse157 1s infinite;background:#b91c1c}
+.st161 audio{height:2rem;max-width:12rem}
+/* 5) مكتبي */
+.of161{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(20rem,100%),1fr));gap:.8rem}
+.of161 .card{position:relative}
+.of161 .x{position:absolute;top:.4rem;inset-inline-end:.4rem}
+.of161 .cp{border:1px dashed var(--line,#cbd5e1);border-radius:10px;padding:.5rem;margin:.35rem 0;font-size:.88rem;white-space:pre-wrap;cursor:pointer}
+.of161 .cp:hover{background:color-mix(in srgb,var(--accent,#0f766e) 6%,transparent)}
+.oftabs{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem}
+.oftabs button{border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:999px;padding:.4rem .85rem;font:inherit;font-weight:700;cursor:pointer;color:inherit}
+.oftabs button.on{background:var(--accent,#0f766e);color:#fff;border-color:var(--accent,#0f766e)}
+</style>`);
+
+  /* 1) عنوان الشريط */
+  function railLabel() { const r = document.getElementById("rail158"); if (!r || r.classList.contains("dock")) return; const h = r.querySelector(".rh"); if (h) h.textContent = T("☰ محتوى الصفحة", "☰ Page contents"); const ri = r.querySelector(".ri"); if (ri) ri.dataset.t = T("محتوى الصفحة", "Page contents"); }
+
+  /* 3) أزرار الصفحات في المصحف: «اللي قبلها» على اليمين و«الجاية» على الشمال */
+  if (typeof tjBody === "function") {
+    const _tb = tjBody;
+    tjBody = function () {
+      const h = _tb.apply(this, arguments);
+      return h.replace(/<div class="tjpnav">(<button[^>]*>[^<]*<\/button>)(<b>[^<]*<\/b>)(<button[^>]*>[^<]*<\/button>)<\/div>/g, (m, a, b, c) => `<div class="tjpnav">${c}${b}${a}</div>`);
+    };
+  }
+
+  /* 4) استوديو التسجيل */
+  const ST = state.st161 = state.st161 || { q: "", page: 0, tab: "rec" };
+  let mr = null, chunks = [], recIdx = -1;
+  async function hash(t) { return typeof vlHash === "function" ? vlHash(t) : ""; }
+  window.st161Go = () => go16("rec161");
+  window.st161Tab = t => { ST.tab = t; ST.page = 0; render(); };
+  window.st161Q = v => { ST.q = v; ST.page = 0; delete state.data.st161p; render(); };
+  window.st161Pg = d => { ST.page = Math.max(0, ST.page + d); delete state.data.st161p; delete state.data.st161r; render(); };
+  window.st161Rec = async function (i) {
+    const list = state.data.st161p || []; const row = list[i]; if (!row) return;
+    if (mr && mr.state === "recording") { mr.stop(); return; }
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); chunks = []; recIdx = i;
+      mr = new MediaRecorder(s); mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+      mr.onstop = async () => {
+        s.getTracks().forEach(t => t.stop()); const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" }); const b = document.getElementById("st161b" + i); if (b) { b.classList.remove("go"); b.textContent = "⏳"; }
+        try {
+          const t = row.text.trim(); const h = await hash(t); const ext = /mp4/.test(blob.type) ? "m4a" : "webm"; const path = `o/human/${h}-m.${ext}`;
+          const up = await sb.storage.from("voice").upload(path, blob, { upsert: true, contentType: blob.type }); if (up.error) throw up.error;
+          const url = sb.storage.from("voice").getPublicUrl(path).data.publicUrl + "?v=" + Date.now();
+          await sb.from("voice_lines").delete().eq("h", h).eq("kind", "m").eq("src", "human");
+          const r = await sb.from("voice_lines").insert({ h, text: t, kind: "m", src: "human", url, status: "approved" }); if (r.error) throw r.error;
+          await sb.from("vclone_jobs").update({ status: "done", file: path, updated_at: new Date().toISOString() }).eq("text", row.text);
+          row.done = url; try { VLC && VLC.clear && VLC.clear(); } catch (e) {} delete state.data.st161n;
+          toast("✅ " + T("اتسجّلت واتنشرت", "Recorded & published")); render();
+          setTimeout(() => { const nx = document.getElementById("st161b" + (i + 1)); if (nx) nx.scrollIntoView({ block: "center", behavior: "smooth" }); }, 300);
+        } catch (e) { toast(e.message || String(e), true); render(); }
+      };
+      mr.start(); const b = document.getElementById("st161b" + i); if (b) { b.classList.add("go"); b.textContent = "■"; }
+      document.querySelectorAll(".st161 .ln").forEach((l, k) => l.classList.toggle("on", k === i));
+    } catch (e) { toast(T("اسمح للمايك", "Allow the microphone"), true); }
+  };
+  window.st161Ok = async (id, st) => { if (st === "del") await sb.from("voice_lines").delete().eq("id", id); else await sb.from("voice_lines").update({ status: st }).eq("id", id); delete state.data.st161r; delete state.data.st161n; try { VLC.clear(); } catch (e) {} render(); };
+  window.st161OkAll = async () => { if (!confirm(T("تعتمد كل الأصوات المستنسخة اللي مستنية؟ (اسمع شوية منهم الأول)", "Approve every waiting cloned line? (listen to a few first)"))) return; const { error } = await sb.from("voice_lines").update({ status: "approved" }).eq("status", "review"); if (error) return toast(error.message, true); delete state.data.st161r; delete state.data.st161n; try { VLC.clear(); } catch (e) {} toast("✅"); render(); };
+  document.addEventListener("keydown", e => { if (state.route !== "rec161" || ST.tab !== "rec" || e.target.closest("input,textarea")) return; if (e.code === "Space") { e.preventDefault(); const i = mr && mr.state === "recording" ? recIdx : (state.data.st161p || []).findIndex(x => !x.done); if (i >= 0) st161Rec(i); } });
+  function studio() {
+    if (!own()) return pageWrap("🎙️", T("استوديو التسجيل", "Recording studio"), "", `<div class="card">${T("للأونر بس.", "Owner only.")}</div>`);
+    const N = useData("st161n", async () => { const c = async (t, f) => { let q = sb.from(t).select("*", { count: "exact", head: true }); Object.entries(f).forEach(([k, v]) => q = q.eq(k, v)); const r = await q; return r.count || 0; }; return [{ pend: await c("vclone_jobs", { status: "pending" }), rev: await c("voice_lines", { status: "review" }), ok: await c("voice_lines", { status: "approved" }) }]; });
+    const n = Array.isArray(N) ? N[0] : {}; const PG = 30;
+    const tabs = `<div class="oftabs"><button class="${ST.tab === "rec" ? "on" : ""}" onclick="st161Tab('rec')">🎙️ ${T("سجّل بصوتك", "Record yourself")} (${n.pend ?? "…"})</button><button class="${ST.tab === "rev" ? "on" : ""}" onclick="st161Tab('rev')">🤖 ${T("المستنسخ المستني موافقتك", "Cloned, waiting for approval")} (${n.rev ?? "…"})</button><span class="badge" style="align-self:center">✅ ${n.ok ?? "…"} ${T("صوت شغال على الموقع", "live on the site")}</span></div>`;
+    let body = "";
+    if (ST.tab === "rec") {
+      const L = useData("st161p", async () => { let q = sb.from("vclone_jobs").select("text,status").eq("status", "pending").order("created_at").range(ST.page * PG, ST.page * PG + PG - 1); if (ST.q) q = q.ilike("text", "%" + ST.q + "%"); const r = await q; return r.data || []; });
+      body = `<p class="sm">${T("دوس 🔴 واقرا الجملة وبعدين دوس ■ — بتترفع وتشتغل على الموقع علطول بدل الصوت الآلي، وبيروح للجملة اللي بعدها. أو استخدم زرار المسافة (Space) للبدء والوقف.", "Press 🔴, read the line, then ■ — it uploads and replaces the computer voice right away, and moves to the next line. The Space bar starts/stops too.")}</p>
+        <input class="in" placeholder="🔍 ${T("دوّر على جملة", "Search a line")}" value="${esc(ST.q)}" onchange="st161Q(this.value)" style="margin:.4rem 0">
+        <div class="st161">${!Array.isArray(L) ? loadingBox() : L.length ? L.map((x, i) => `<div class="ln"><button class="rec" id="st161b${i}" onclick="st161Rec(${i})">${x.done ? "↻" : "🔴"}</button><span class="tx">${esc(x.text)}</span>${x.done ? `<audio controls src="${esc(x.done)}"></audio>` : ""}</div>`).join("") : `<p class="muted">🎉 ${T("مفيش جمل ناقصة", "Nothing left to record")}</p>`}</div>`;
+    } else {
+      const R = useData("st161r", async () => { const r = await sb.from("voice_lines").select("id,text,url,kind").eq("status", "review").order("created_at").range(ST.page * PG, ST.page * PG + PG - 1); return r.data || []; });
+      body = `<p class="sm">${T("دي الجمل اللي اتعملت بصوتك المستنسخ. اسمع، واعتمد اللي كويس أو امسح اللي وحش (لو مسحته يرجع لقايمة «سجّل بصوتك»).", "Lines made with your cloned voice. Listen, approve the good ones, delete the bad ones (deleted lines go back to “Record yourself”).")}</p>
+        <button class="btn btn-p" onclick="st161OkAll()">✅ ${T("اعتمد الكل", "Approve all")}</button>
+        <div class="st161" style="margin-top:.5rem">${!Array.isArray(R) ? loadingBox() : R.length ? R.map(x => `<div class="ln"><span class="tx">${esc(x.text)}</span><audio controls preload="none" src="${esc(x.url)}"></audio><button class="btn btn-o" style="padding:.2rem .5rem" onclick="st161Ok('${x.id}','approved')">✅</button><button class="btn btn-o" style="padding:.2rem .5rem" onclick="st161Ok('${x.id}','del')">🗑️</button></div>`).join("") : `<p class="muted">—</p>`}</div>`;
+    }
+    const nav = `<div class="row" style="gap:.4rem;margin-top:.8rem;justify-content:center"><button class="btn btn-o" ${ST.page ? "" : "disabled"} onclick="st161Pg(-1)">${T("السابق", "Previous")}</button><b class="sm" style="align-self:center">${T("صفحة", "Page")} ${ST.page + 1}</b><button class="btn btn-o" onclick="st161Pg(1)">${T("التالي", "Next")}</button></div>`;
+    return pageWrap("🎙️", T("استوديو التسجيل", "Recording studio"), T("كل جملة في الموقع محتاجة صوت — سجّلها بصوتك أو اعتمد صوتك المستنسخ", "Every line on the site that needs audio — record it or approve your cloned voice"), `<div class="card">${tabs}${body}${nav}</div>`);
+  }
+
+  /* 5) مكتبي: الماركتنج والبوستات والدفع — كروت تقدر تشيلها */
+  const OF = {
+    posts: ["📣", "البوستات", "Posts", [
+      ["بوست آية اليوم", "📖 آية اليوم من أكاديمية إتقان\n[صورة الآية من «اعمل صورة» في الموقع]\nاسمعها بصوت قارئك المفضّل واقرأ تفسيرها على الموقع 👇\n#القرآن #تجويد #أكاديمية_إتقان"],
+      ["حصة تجريبية مجانية", "🎁 أول حصة مجانًا!\nتعلّم التجويد والمقامات مع معلم متخصص — أونلاين من أي مكان.\nاحجز حصتك التجريبية من الموقع النهارده 👇"],
+      ["تحدّي خمّن المقام", "🎧 تحدّي الأسبوع: القارئ ده بيقرأ على أنهي مقام؟\nاكتب إجابتك في الكومنتات — والإجابة الصح يوم الجمعة 👀\nجرّب اللعبة كاملة على الموقع."],
+      ["قبل وبعد", "🎙️ ده صوت طالبنا في أول حصة… وده بعد شهرين.\nالفرق في المد والغنة والمقام 👂\n(بإذن الطالب)"]
+    ]],
+    wa: ["💬", "واتساب بيزنس", "WhatsApp Business", [
+      ["رسالة الترحيب", "أهلًا بيك في أكاديمية إتقان 🌙\nاكتب رقم:\n1️⃣ حصة تجريبية مجانية\n2️⃣ الباقات والأسعار\n3️⃣ كلّم المعلم"],
+      ["كتالوج الباقات", "اعمل «كتالوج» في واتساب بيزنس فيه كل باقة بسعرها ولينك الاشتراك من الموقع."],
+      ["حالة يومية", "انزل كل يوم «حالة» بصورة آية اليوم أو فيديو قصير من «آية اليوم» على الموقع."],
+      ["قناة واتساب", "اعمل قناة (Channel) للأكاديمية: درس قصير كل أسبوع + تذكير بالمسابقات."]
+    ]],
+    tt: ["🎵", "تيك توك وريلز وشورتس", "TikTok, Reels & Shorts", [
+      ["فيديو آية اليوم", "من الموقع ← آية اليوم ← 🎬 اعمل الفيديو ← نزّله على تيك توك وريلز وشورتس بنفس الكلام."],
+      ["فرق المقامات في 30 ثانية", "نفس الآية على 3 مقامات (بياتي / صبا / حجاز) — واسأل: أنهي أحلى؟"],
+      ["غلطة تجويد شائعة", "«الغلطة دي 90% بيقعوا فيها» + المثال الصح بصوتك — 20 ثانية."],
+      ["طالب بيقرأ", "مقطع قصير لطالب (بإذنه) + «عايز تقرأ كده؟ أول حصة مجانًا»."]
+    ]],
+    ig: ["📸", "إنستجرام وفيسبوك", "Instagram & Facebook", [
+      ["كاروسيل تعليمي", "5 شرايح: «أحكام النون الساكنة في دقيقة» بألوان المصحف الملوّن من الموقع."],
+      ["لايف شهري", "لايف ساعة: تسميع مفتوح + أسئلة — وفي الآخر خصم لمدة 24 ساعة."],
+      ["إعلان ممول", "ميزانية صغيرة يوميًا، الهدف: «رسائل» أو «زيارات للموقع»، الجمهور: العرب في أوروبا والخليج + المهتمين بالقرآن. الإعلان على الحصة التجريبية المجانية."],
+      ["ستوري أسبوعية", "استفتاء: «عايز درس الأسبوع الجاي عن إيه؟» — وتعمله."]
+    ]],
+    mk: ["📈", "التسويق والطلبة", "Marketing & students", [
+      ["الطلبة بيسوّقوا", "نظام الإحالة في الموقع: كل صاحب يشترك من لينك الطالب = رصيد في محفظته. اعمل مسابقة شهرية لأكتر طالب جاب مشتركين."],
+      ["شهادات قابلة للمشاركة", "كل شهادة إتمام ليها لينك تحقق — شجّع الطلاب ينزلوها على لينكدإن وفيسبوك."],
+      ["شراكات", "مساجد ومراكز إسلامية في أوروبا: حصص جماعية بسعر خاص."],
+      ["جوجل", "اعمل Google Business Profile واطلب من الطلاب تقييم."]
+    ]],
+    pay: ["💳", "الدفع", "Payments", [
+      ["الخطة", "1) دلوقتي: الدفع اليدوي (إنستاباي + فودافون كاش + IBAN).\n2) افتح حساب Paymob باسمك.\n3) حط المفاتيح في الإعدادات ← 💳 بوابات الدفع.\n4) قولّي «اربط Paymob» وأربطه.\n5) جرّب وبعدين «أظهر للطلاب».\n6) إيطاليا (Stripe باسم الوالد) بعدين لو طلاب أوروبا كتروا."],
+      ["الدليل الكامل", "دليل الدفع لأكاديمية إتقان — مصر وإيطاليا (الدوك اللي عملته ليك في المحادثة)."],
+      ["محاسب", "قبل ما تظهر الدفع للطلاب: محاسب مصري يقولك تسجّل الدخل إزاي."]
+    ]]
+  };
+  const ofGet = () => Object.assign({ hide: [], notes: [] }, setv("office161", {}) || {});
+  window.of161Tab = t => { state.of161 = t; render(); };
+  window.of161Hide = async k => { const o = ofGet(); o.hide = [...new Set(o.hide.concat(k))]; await saveSetting16("office161", o); render(); };
+  window.of161Show = async () => { const o = ofGet(); o.hide = []; await saveSetting16("office161", o); render(); };
+  window.of161Note = async () => { const t = prompt(T("اكتب ملاحظة / فكرة:", "Write a note / idea:")); if (!t) return; const o = ofGet(); o.notes = o.notes.concat({ id: Date.now().toString(36), t: t.trim(), s: state.of161 || "posts" }); await saveSetting16("office161", o); render(); };
+  window.of161Copy = el => { navigator.clipboard.writeText(el.innerText).then(() => toast("📋 " + T("اتنسخ", "Copied"))); };
+  function office() {
+    if (!own()) return pageWrap("🗂️", T("مكتبي", "My office"), "", `<div class="card">${T("للأونر بس.", "Owner only.")}</div>`);
+    const o = ofGet(); const t = state.of161 || "posts"; const [ic, a, e, items] = OF[t];
+    const tabs = `<div class="oftabs">${Object.entries(OF).map(([k, v]) => `<button class="${k === t ? "on" : ""}" onclick="of161Tab('${k}')">${v[0]} ${esc(T(v[1], v[2]))}</button>`).join("")}</div>`;
+    const cards = items.map((x, i) => ({ k: t + ":" + i, h: x[0], b: x[1] })).concat(o.notes.filter(n => n.s === t).map(n => ({ k: "n:" + n.id, h: "📝", b: n.t }))).filter(c => !o.hide.includes(c.k));
+    return pageWrap("🗂️", T("مكتبي", "My office"), T("أفكار جاهزة للنسخ — دوس على أي نص يتنسخ، و✕ يشيل الكارت", "Ready-to-copy ideas — tap any text to copy it, ✕ removes the card"),
+      `${tabs}<div class="of161">${cards.map(c => `<div class="card"><button class="ibtn x" title="${T("شيل", "Remove")}" onclick="of161Hide('${c.k}')">✕</button><h3 style="margin:0 0 .3rem">${esc(c.h)}</h3><div class="cp" onclick="of161Copy(this)">${esc(c.b)}</div></div>`).join("")}</div>
+      <div class="row" style="gap:.4rem;margin-top:.8rem"><button class="btn btn-p" onclick="of161Note()">➕ ${T("ضيف فكرة", "Add an idea")}</button>${o.hide.length ? `<button class="btn btn-o" onclick="of161Show()">↺ ${T("رجّع اللي شلته", "Restore removed")} (${o.hide.length})</button>` : ""}</div>`);
+  }
+
+  /* لوجوهات زيادة */
+  try {
+    const LG = window.DESIGN157 && window.DESIGN157.LOGO;
+    if (LG && !LG.some(x => x.id === "ring")) LG.push(
+      { id: "ring", n: ["حلقة ذهبية", "Golden ring"], svg: c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='27' fill='${c}'/><circle cx='32' cy='32' r='21' fill='none' stroke='#d4a017' stroke-width='2.5'/><text x='32' y='42' text-anchor='middle' font-size='26' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+      { id: "shield", n: ["درع", "Shield"], svg: c => `<svg viewBox='0 0 64 64'><path d='M32 4l24 8v18c0 16-11 26-24 30C19 56 8 46 8 30V12z' fill='${c}'/><path d='M32 12l16 5v13c0 11-7 18-16 21' fill='none' stroke='#fde68a' stroke-width='2'/><text x='30' y='42' text-anchor='middle' font-size='22' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+      { id: "dome", n: ["قبّة", "Dome"], svg: c => `<svg viewBox='0 0 64 64'><path d='M10 54h44v-6H10z' fill='${c}'/><path d='M14 48c0-14 8-24 18-28c10 4 18 14 18 28z' fill='${c}'/><path d='M32 6v12' stroke='#d4a017' stroke-width='2'/><circle cx='32' cy='6' r='3' fill='#d4a017'/></svg>` },
+      { id: "kufi", n: ["كوفي «إتقان»", "Kufic “Itqan”"], svg: c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='10' fill='${c}'/><g fill='#fff'><rect x='12' y='14' width='6' height='36'/><rect x='22' y='30' width='20' height='6'/><rect x='36' y='14' width='6' height='22'/><rect x='46' y='14' width='6' height='36'/><rect x='22' y='44' width='30' height='6'/></g></svg>` },
+      { id: "pen", n: ["قلم الخط", "Calligraphy pen"], svg: c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/><path d='M18 46l22-26 6 5-22 26z' fill='#fde68a'/><path d='M16 50l2-4 6 5z' fill='#fff'/></svg>` },
+      { id: "star16", n: ["نجمة 16", "16-point star"], svg: c => `<svg viewBox='0 0 64 64'><g fill='${c}'><rect x='14' y='14' width='36' height='36'/><rect x='14' y='14' width='36' height='36' transform='rotate(22.5 32 32)'/><rect x='14' y='14' width='36' height='36' transform='rotate(45 32 32)'/><rect x='14' y='14' width='36' height='36' transform='rotate(67.5 32 32)'/></g><circle cx='32' cy='32' r='12' fill='#fde68a'/><text x='32' y='39' text-anchor='middle' font-size='16' font-family='Amiri,serif' fill='${c}'>إ</text></svg>` },
+      { id: "wave2", n: ["موجة صوت ✨", "Sound wave ✨"], anim: 1, svg: c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='16' fill='${c}'/><g fill='#fde68a'>${[14, 22, 30, 38, 46].map((x, i) => `<rect x='${x}' y='22' width='4' height='20' rx='2'><animate attributeName='height' values='8;28;8' dur='${0.8 + i * 0.15}s' repeatCount='indefinite'/><animate attributeName='y' values='28;18;28' dur='${0.8 + i * 0.15}s' repeatCount='indefinite'/></rect>`).join("")}</g></svg>` },
+      { id: "orbit", n: ["مدار ✨", "Orbit ✨"], anim: 1, svg: c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='20' fill='${c}'/><text x='32' y='40' text-anchor='middle' font-size='20' font-family='Amiri,serif' fill='#fff'>إ</text><g class='a-spin'><circle cx='32' cy='6' r='4' fill='#d4a017'/><circle cx='32' cy='32' r='26' fill='none' stroke='#d4a01755' stroke-width='1'/></g></svg>` },
+      { id: "mono", n: ["حروف «IA»", "“IA” monogram"], svg: c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='14' fill='#fff' stroke='${c}' stroke-width='4'/><text x='32' y='42' text-anchor='middle' font-size='24' font-weight='800' font-family='Georgia,serif' fill='${c}'>IA</text></svg>` },
+      { id: "leaf", n: ["ورقة وكتاب", "Leaf & book"], svg: c => `<svg viewBox='0 0 64 64'><path d='M32 6c14 10 16 26 0 36c-16-10-14-26 0-36z' fill='#16a34a'/><path d='M8 44c10-4 18-4 24 2c6-6 14-6 24-2v12c-10-4-18-4-24 2c-6-6-14-6-24-2z' fill='${c}'/></svg>` }
+    );
+  } catch (e) {}
+
+  /* الصفحات + الدرج */
+  ["rec161", "office161"].forEach(r => { if (!PAGES16.includes(r)) PAGES16.push(r); });
+  function drawer() { const sd = document.getElementById("sd152"); if (!sd || !own()) return; [["st161b", "🎙️ " + T("استوديو التسجيل", "Recording studio"), () => go16("rec161")], ["of161b", "🗂️ " + T("مكتبي (بوستات/دفع/تسويق)", "My office (posts/payments/marketing)"), () => go16("office161")]].forEach(([id, t, f]) => { let b = document.getElementById(id); if (!b) { b = document.createElement("button"); b.id = id; sd.appendChild(b); } b.textContent = t; b.onclick = f; }); }
+  const _r = render;
+  render = function () {
+    const real = state.route;
+    if (real === "rec161" || real === "office161") {
+      const arg = state.pageArg; let out; state.route = "cp158"; state.pageArg = "x161";
+      try { out = _r.apply(this, arguments); } finally { state.route = real; state.pageArg = arg; }
+      try { const app = document.getElementById("app"); const hdr = app && app.querySelector(".hdr"); let n = hdr && hdr.nextElementSibling; while (n && n.classList.contains("md158")) n = n.nextElementSibling;
+        let b; try { b = real === "rec161" ? studio() : office(); } catch (e) { console.error(e); b = `<div class="card">${esc(e.message)}</div>`; }
+        const tmp = document.createElement("div"); tmp.innerHTML = b; if (n) { n.replaceWith(...tmp.childNodes); } } catch (e) { console.error(e); }
+      try { drawer(); railLabel(); } catch (e) {}
+      return out;
+    }
+    const out = _r.apply(this, arguments);
+    try { drawer(); railLabel(); } catch (e) {}
+    return out;
+  };
+  if (/^#\/(rec161|office161)/.test(location.hash)) state.route = location.hash.slice(2).split("/")[0];
 })();
 
 // بدء التشغيل
