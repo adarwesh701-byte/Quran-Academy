@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v140";
+const UI_VERSION = "2026-11-14-v141";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21203,6 +21203,36 @@ render = function () { if (state.route === "abyb") { const app = document.getEle
 const _DOMAINS140 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS140(); const s = ds.find(d => d.k === "arabic"); if (s && s.tools && !s.tools.some(t => String(t[2]).includes("'abyb'"))) s.tools.unshift(["📗", state.lang === "ar" ? "العربية الفصحى — الكتاب التفاعلي (صفحات + تمارين + صوت)" : "Fusha — interactive book (pages, exercises, audio)", "go16('abyb')", ""]); return ds; };
 try { const _sr140 = srIndex109; srIndex109 = function () { const a = _sr140(); try { a.push(["📗 العربية الفصحى — الكتاب التفاعلي", "go16('abyb')", "العربية بين يديك كتاب تفاعلي تمارين حلول اختبار وحدة استماع حوار arabiyya bayna yadayk"]); } catch (e) {} return a; }; } catch (e) {}
 (function () { const st = document.createElement("style"); st.textContent = `.abybst{position:relative;width:100%;background:#fff;border-radius:10px;overflow:hidden;container-type:inline-size;border:1px solid var(--line)}.abybin{position:absolute}.abybin>img{position:absolute;object-fit:fill}.abybb{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;color:#b91c1c;font-weight:700;font-family:'Amiri','Noto Naskh Arabic',serif;line-height:1.2;cursor:pointer;border-radius:6px}.abybb.t:not(.open){background:#fde68a;color:#92400e;border:1.5px dashed #d97706;font-size:var(--abyf)!important}.abybb.t.open{background:rgba(255,251,235,.82)}.abybb.img:not(.open){background:#fde68a;border:1.5px dashed #d97706}.abybb.img img{width:100%;height:100%;object-fit:contain}.abybb.inp{background:#eff6ff;border:1.5px solid #3b82f6;color:#1e3a8a;padding:0 .2rem}.abybb.inp.ok{background:#dcfce7;border-color:#16a34a}.abybb.inp.bad{background:#fee2e2;border-color:#dc2626}.abybb.dim{opacity:.35}.abybb.inp.focus{box-shadow:0 0 0 4px #f59e0b88}.abyblessons{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.6rem}.abyblessons button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:.2rem .45rem;font-size:.8rem;cursor:pointer}.abyblessons button.on{background:var(--accent);color:#fff}.abybgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.6rem;margin-top:.8rem}.abybcard{position:relative;text-align:start;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:.8rem;cursor:pointer;display:flex;flex-direction:column;gap:.25rem}.abybcard .n{font-size:1.4rem;font-weight:800;color:var(--accent)}.abybcard small{opacity:.7}.abybcard em{position:absolute;top:.5rem;left:.6rem;font-style:normal;font-size:.75rem}.abybaud{margin-bottom:.5rem}.abybsegw{display:inline-flex;align-items:center;margin:.15rem}.abybseg.on{background:var(--accent);color:#fff}.abybrep{border:0;background:none;cursor:pointer;font-size:.8rem}`; document.head.appendChild(st); })();
+
+/* ---------- v141: صوت الأونر المستنسخ للكلام (XTTS-v2 مجاني) — بيتولّد على السيرفر جملة جملة ويتشغّل بدل الأصوات الحالية لما تختاره. مش بيتعمل للقرآن أبدًا ---------- */
+const VC141 = { q: new Set(), t: null };
+const _vUrl141 = vUrl84;
+vUrl84 = function (key) {
+  try { if (String(key).startsWith("t:") && vcSet87().speech === "clone") { const l = vList84(); const names = Array.isArray(l) ? l[0] : []; const h = "c_" + vh84(key); const n = names.find(x => x.startsWith(h + ".")); if (n) return sb.storage.from("academy_public").getPublicUrl("voices/" + n).data.publicUrl; vc141Want(String(key).slice(2)); } } catch (e) {}
+  return _vUrl141(key);
+};
+function vc141Want(t) { t = String(t || "").trim(); if (!t || t.length > 400 || /[﴿﴾ۖ-ۭ]/.test(t) || !/[ء-ي]/.test(t)) return; VC141.q.add(t); clearTimeout(VC141.t); VC141.t = setTimeout(vc141Flush, 1500); }
+async function vc141Flush() { const a = [...VC141.q]; VC141.q.clear(); for (let i = 0; i < a.length; i += 200) { try { await sb.rpc("vclone_enqueue", { p_texts: a.slice(i, i + 200) }); } catch (e) {} } }
+async function vc141Stats() { const g = async (s) => { const r = await sb.from("vclone_jobs").select("text", { count: "exact", head: true }).eq("status", s); return r.count || 0; }; const [d, p, w, f] = await Promise.all([g("done"), g("pending"), g("working"), g("failed")]); const last = await sb.from("vclone_jobs").select("text,file").eq("status", "done").order("updated_at", { ascending: false }).limit(1); return { d, p: p + w, f, last: last.data && last.data[0] }; }
+async function vc141Crawl(btn) {
+  const src = [...document.scripts].map(s => s.textContent).join("\n"); const routes = [...new Set([...src.matchAll(/go16\('([a-z0-9-]+)'/g)].map(m => m[1]))].filter(r => !/^(mqc|dashboard|settings|login|logout|room|classroom)$/.test(r));
+  const back = state.route; const all = new Set(); let i = 0;
+  const harvest = () => { document.querySelectorAll("[onclick*='rdSay(']").forEach(el => { const s = el.getAttribute("onclick"); for (const m of s.matchAll(/rdSay\(("(?:[^"\\]|\\.)*")/g)) { try { all.add(JSON.parse(m[1])); } catch (e) {} } }); };
+  for (const r of routes) { i++; if (btn) btn.textContent = `🕷️ ${i}/${routes.length} — ${all.size} جملة`; try { state.route = r; render(); } catch (e) {} await new Promise(z => setTimeout(z, 900)); harvest(); document.querySelectorAll("#app .tabs a, #app .motabs button").forEach((t, k) => { if (k < 6) { try { t.click(); harvest(); } catch (e) {} } }); }
+  state.route = back; render(); const arr = [...all].filter(t => !/[﴿﴾ۖ-ۭ]/.test(t)); let n = 0;
+  for (let k = 0; k < arr.length; k += 200) { const r = await sb.rpc("vclone_enqueue", { p_texts: arr.slice(k, k + 200) }); n += (r.data || 0); }
+  toast(`✅ لقيت ${arr.length} جملة — اتضاف ${n} جديدة للاستنساخ`); delete state.data.vc141; render();
+}
+function vc141Card() {
+  const st = useData("vc141", async () => [await vc141Stats()]); const s = Array.isArray(st) ? st[0] : null;
+  const smp = s && s.last ? sb.storage.from("academy_public").getPublicUrl("voices/" + s.last.file).data.publicUrl : "";
+  return `<div class="card" style="margin-top:.6rem;border:2px solid var(--accent)"><b>🧬 صوتك المستنسخ للكلام (XTTS-v2 — مجاني)</b>
+    <p class="xs muted" style="margin:.3rem 0">عيّنة الكلام بتاعتك (أحسن ٥٠ ثانية منها) بتتبعت لموديل XTTS-v2 على Hugging Face، وكل جملة في الموقع بتتولّد بصوتك وتتحفظ. أول ما تختار «🎙️ المستنسخ من صوتي» فوق، أي جملة ملهاش صوت لسه بتتضاف للطابور لوحدها. <b>القرآن مستبعد تمامًا.</b></p>
+    ${s ? `<div class="row" style="gap:.6rem;flex-wrap:wrap;align-items:center"><span>✅ جاهز: <b>${s.d}</b></span><span>⏳ في الطابور: <b>${s.p}</b></span>${s.f ? `<span>⚠️ فشل: <b>${s.f}</b></span>` : ""}${smp ? `<button class="btn btn-o btn-sm" onclick="new Audio('${smp}').play()">▶ اسمع آخر جملة: «${esc(String(s.last.text).slice(0, 40))}»</button>` : ""}<button class="btn btn-o btn-sm" onclick="delete state.data.vc141;render()">🔄</button></div>` : loadingBox()}
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><button class="btn btn-p btn-sm" onclick="vc141Crawl(this)">🕷️ اجمع كل جمل الموقع وابعتها للاستنساخ</button></div>
+    <p class="xs muted" style="margin:.4rem 0 0">⏱️ السيرفر المجاني بيعمل جملة كل ١٠–٣٠ ثانية تقريبًا، فالمئات بتاخد ساعات — بيشتغل لوحده كل دقيقتين حتى وإنت قافل.</p></div>`;
+}
+const _voiceCard141 = voiceCard87; voiceCard87 = function () { return _voiceCard141() + vc141Card(); };
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
