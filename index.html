@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v145";
+const UI_VERSION = "2026-11-14-v146";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21442,6 +21442,36 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .hdr>.wrap{flex-wrap:wrap}.hdr>.wrap>.nav{order:5;flex:0 0 100%;display:flex!important;gap:.25rem;justify-content:center;overflow-x:auto;scrollbar-width:none;padding:.35rem 0 .1rem;border-top:1px solid var(--line,#e5e7eb);margin-top:.35rem;white-space:nowrap}.hdr>.wrap>.nav::-webkit-scrollbar{display:none}.hdr>.wrap>.nav a{flex:0 0 auto;padding:.3rem .7rem;border-radius:999px;font-size:.88rem}
 @media(max-width:700px){.hdr>.wrap>.nav{justify-content:flex-start}}
 </style>`);
+
+/* ---------- v146: إنجليزي طبيعي مش «مترجم»: قاموس مكتوب يدوي لنصوص الموقع + الأونر يقدر يصحّح أي جملة إنجليزي بدوسة ---------- */
+const EN146 = { nat: null, loading: false, on: false };
+async function en146Load() { if (EN146.nat || EN146.loading) return; EN146.loading = true; try { const r = await fetch("en_natural.json?v=" + UI_VERSION); EN146.nat = r.ok ? await r.json() : {}; } catch (e) { EN146.nat = {}; } EN146.loading = false; if (state.lang === "en") { en146Merge(); try { dtRun(); en146Fix(); } catch (e) {} } }
+function en146Merge() { if (DT.lang !== "en" || !EN146.nat) return; Object.assign(DT.mem, EN146.nat); }
+const _dtLoad146 = dtLoad; dtLoad = function (lang) { const was = DT.lang; _dtLoad146.apply(this, arguments); if (lang === "en" && was !== "en") { if (EN146.nat) en146Merge(); else en146Load(); } };
+function en146Map() { const m = setv("enfix", null); return (m && typeof m === "object") ? m : {}; }
+function en146Fix(root) {
+  if (state.lang !== "en") return; const M = en146Map(); if (!Object.keys(M).length) return; root = root || document.body; if (!root) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const k = n.data.trim(); if (k && M[k] != null && M[k] !== k) n.data = n.data.replace(k, M[k]); }
+}
+const _dtRun146 = dtRun; dtRun = function () { const r = _dtRun146.apply(this, arguments); try { en146Fix(); } catch (e) {} return r; };
+const _render146 = render; render = function () { const r = _render146.apply(this, arguments); try { if (state.lang === "en") { en146Fix(); en146Btn(); } else { const b = document.getElementById("en146"); if (b) b.remove(); } } catch (e) {} return r; };
+function en146Btn() {
+  if (realRole() !== "owner" || state.preview) return; let b = document.getElementById("en146"); if (!b) { b = document.createElement("button"); b.id = "en146"; document.body.appendChild(b); b.onclick = () => { EN146.on = !EN146.on; document.body.classList.toggle("en146on", EN146.on); en146Btn(); toast(EN146.on ? "Tap any English text to rewrite it — saved for everyone." : "Edit mode off"); }; }
+  b.textContent = EN146.on ? "✅ Done fixing English" : "✏️ Fix English wording";
+}
+document.addEventListener("click", async (e) => {
+  if (!EN146.on || state.lang !== "en") return; if (e.target.closest("#en146")) return; const el = e.target; if (!el || el.closest("#toast")) return;
+  const tn = [...el.childNodes].filter(x => x.nodeType === 3 && x.data.trim()); const cur = (tn.length ? tn.map(x => x.data).join(" ") : el.textContent || "").replace(/\s+/g, " ").trim(); if (!cur) return;
+  e.preventDefault(); e.stopPropagation();
+  const v = prompt("Rewrite this in natural English (saved for everyone):", cur); if (v == null || !v.trim() || v.trim() === cur) return;
+  const M = Object.assign({}, en146Map()); M[cur] = v.trim();
+  /* لو الجملة جاية من ترجمة نص عربي، صحّحها من الأصل كمان */
+  try { Object.keys(DT.mem).forEach(k => { if (String(DT.mem[k]).trim() === cur) DT.mem[k] = v.trim(); }); dtSave(); } catch (e2) {}
+  try { await saveSetting16("enfix", M); } catch (e3) { return toast(e3.message || "error", true); }
+  (tn.length ? tn : []).forEach(x => { x.data = x.data.replace(x.data.trim(), v.trim()); }); if (!tn.length) el.textContent = v.trim(); toast("✅ Saved");
+}, true);
+setTimeout(() => { if (state.lang === "en") en146Load(); }, 300);
+document.head.insertAdjacentHTML("beforeend", `<style>#en146{position:fixed;bottom:5.5rem;inset-inline-start:12px;z-index:1250;background:#1d4ed8;color:#fff;border:0;border-radius:999px;padding:.5rem .9rem;font-weight:700;box-shadow:0 6px 18px #1d4ed855;cursor:pointer}.en146on #app *:hover{outline:2px dashed #1d4ed8;outline-offset:2px;cursor:text}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
