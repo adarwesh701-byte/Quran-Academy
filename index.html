@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v157";
+const UI_VERSION = "2026-11-15-v158";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -22396,6 +22396,543 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
   const _r = render;
   render = function () { const out = _r.apply(this, arguments); try { tjfApply(); } catch (e) {} try { dApply(); } catch (e) {} return out; };
   try { dApply(); } catch (e) {}
+})();
+
+
+/* ================= v158: محرّر الشكل الكامل — أوضاع الواجهة (كلاسيك/شريط جانبي/مختلط/Dock) + عرض الصفحة كامل + تحريك أي أيقونة بشبكة مرقّمة واقتراحات + تصميمات محفوظة ترجعلها + صورة خلفية + أيقوناتك وصفحاتك + قايمة جانبية تفتح جوه الصفحة + طلبات تصحيح الكلام + نطق الكلمات الحقيقي + تطوير تعليم الأخطاء ================= */
+(function () {
+  const ar = () => state.lang === "ar";
+  const own = () => realRole() === "owner" && !state.preview;
+  const T = (a, e) => (ar() ? a : e);
+  const clone = o => JSON.parse(JSON.stringify(o || {}));
+  const DEF = { mode: "classic", full: false, md: true, pos: {}, place: {}, byRoute: {}, railSide: "start" };
+  const saved = () => Object.assign(clone(DEF), clone(setv("shell158", {}) || {}));
+  const S = () => state.sh158 || saved();
+  const eff = () => { const s = S(); const r = (s.byRoute || {})[state.route] || {}; return Object.assign({}, s, r.mode ? { mode: r.mode } : {}, { pos: Object.assign({}, s.pos, r.pos || {}), place: Object.assign({}, s.place, r.place || {}) }); };
+  const keyOf = el => el.dataset.k158 || el.id || (el.title || "").trim() || (el.getAttribute("aria-label") || "") || (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 28);
+
+  document.head.insertAdjacentHTML("beforeend", `<style>
+body.full158 .wrap{max-width:none!important;width:100%!important;padding-inline:clamp(.75rem,2.5vw,2.5rem)!important}
+body.full158 #app{min-height:100vh}
+body.side158 .hdr .nav,body.side158 .hdr .menu-btn{display:none!important}
+#rail158{position:fixed;top:50%;transform:translateY(-50%);z-index:2147482500;display:flex;align-items:stretch;max-height:86vh;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);box-shadow:0 10px 30px #0002;transition:max-width .25s ease;max-width:1.5rem;overflow:hidden}
+#rail158.L{left:0;border-left:0;border-radius:0 16px 16px 0;flex-direction:row-reverse}
+#rail158.R{right:0;border-right:0;border-radius:16px 0 0 16px}
+#rail158:hover,#rail158.open,#rail158:focus-within{max-width:19rem}
+#rail158 .rh{width:1.5rem;flex:0 0 1.5rem;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--accent,#0f766e);cursor:pointer;background:color-mix(in srgb,var(--accent,#0f766e) 10%,transparent)}
+#rail158 .ri{display:flex;flex-direction:column;gap:.2rem;padding:.5rem;overflow:auto;min-width:15rem}
+#rail158 .ri>*{position:static!important;transform:none!important;margin:0!important;width:100%;justify-content:flex-start!important;text-align:start;display:flex!important;align-items:center;gap:.45rem;border-radius:10px!important;padding:.4rem .6rem!important;white-space:nowrap;box-shadow:none!important}
+#rail158 .ri>a{color:inherit;text-decoration:none;font-weight:700;font-size:.9rem}
+#rail158 .ri>a:hover,#rail158 .ri>button:hover{background:color-mix(in srgb,var(--accent,#0f766e) 10%,transparent)}
+#rail158 .ri>[data-l]::after{content:attr(data-l);font-size:.82rem;font-weight:700}
+#rail158 .ri hr{border:0;border-top:1px solid var(--line,#e5e7eb);margin:.3rem 0;padding:0!important}
+#rail158.dock{top:auto;bottom:0;left:50%;right:auto;transform:translateX(-50%);border-radius:16px 16px 0 0;border-bottom:0;flex-direction:column-reverse;max-width:none;max-height:1.4rem}
+#rail158.dock:hover,#rail158.dock.open,#rail158.dock:focus-within{max-height:60vh}
+#rail158.dock .rh{width:auto;height:1.4rem;flex:0 0 1.4rem}
+#rail158.dock .ri{flex-direction:row;flex-wrap:wrap;justify-content:center;min-width:0;max-width:94vw}
+#rail158.dock .ri>*{width:auto}
+#rail158.dock .ri>[data-l]::after{display:none}
+.flt158{position:fixed!important;z-index:2147481000!important;transform:translate(-50%,-50%)!important;margin:0!important}
+#ctl113.hide158{display:none!important}body.ed158 #ctl113.hide158{display:flex!important}
+.ai-widget:not(:has(.ai-box.open)) .ai-toggle{display:none!important}
+.hide158{display:none!important}
+body.ed158 .hide158{display:inline-flex!important;opacity:.35;outline:2px dashed #ef4444}
+#grid158{position:fixed;inset:0;z-index:2147483300;pointer-events:none;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr)}
+#grid158 i{border:1px dashed #0ea5e955;font:700 .7rem/1 system-ui;color:#0369a1aa;display:flex;align-items:flex-start;justify-content:flex-start;padding:.2rem;font-style:normal}
+#grid158 i.ok{background:#22c55e14;color:#15803d;border-color:#22c55e88}
+#grid158 i.ok::after{content:" ✓";margin-inline-start:.15rem}
+#grid158 i.hot{background:#0ea5e933;outline:3px solid #0ea5e9}
+body.ed158 .mv158{outline:2px dashed #0ea5e9!important;outline-offset:2px;cursor:grab!important}
+#zones158{position:fixed;z-index:2147483400;top:50%;left:50%;transform:translate(-50%,-50%);display:none;gap:.5rem}
+body.drag158 #zones158{display:flex}
+#zones158 div{background:#0f172aee;color:#fff;border-radius:14px;padding:.8rem 1rem;font-weight:800;min-width:7rem;text-align:center;border:2px solid transparent}
+#zones158 div.hot{border-color:#fde68a;background:#0f766e}
+#ghost158{position:fixed;z-index:2147483500;pointer-events:none;background:#0f172a;color:#fff;border-radius:10px;padding:.3rem .55rem;font-weight:800;font-size:.8rem;transform:translate(12px,12px);white-space:nowrap}
+#edbar158{position:fixed;z-index:2147483450;top:.5rem;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;border-radius:14px;padding:.45rem .6rem;display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;max-width:96vw;box-shadow:0 10px 30px #0006}
+#edbar158 .btn{padding:.3rem .6rem}
+#edbar158 small{opacity:.8}
+.md158{position:fixed;top:5rem;bottom:1rem;inset-inline-start:.6rem;width:14.5rem;z-index:50;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-radius:16px;box-shadow:0 8px 24px #0001;overflow:auto;padding:.5rem}
+.md158 h4{margin:.2rem .3rem .5rem;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:.3rem}
+.md158 button.it{display:block;width:100%;text-align:start;border:0;background:none;color:inherit;padding:.45rem .55rem;border-radius:10px;font:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md158 button.it:hover{background:color-mix(in srgb,var(--accent,#0f766e) 8%,transparent)}
+.md158 button.it.on{background:var(--accent,#0f766e);color:#fff}
+body.md158on #app>section,body.md158on #app>main,body.md158on #app>.sec{margin-inline-start:15.5rem}
+@media (max-width:860px){.md158{position:sticky;top:0;bottom:auto;inset-inline-start:auto;width:auto;display:flex;gap:.3rem;overflow-x:auto;border-radius:0;margin:0 0 .5rem;z-index:40}.md158 h4{display:none}.md158 button.it{width:auto;flex:0 0 auto}body.md158on #app>section,body.md158on #app>main,body.md158on #app>.sec{margin-inline-start:0}}
+body.solo158 .oggroups,body.solo158 .dtabs{display:none!important}
+.pb158{height:clamp(140px,22vw,260px);border-radius:18px;background-size:cover;background-position:center;margin:.5rem 0 1rem;box-shadow:0 10px 30px #0002}
+.cimg158{background-size:cover!important;background-position:center!important;min-height:7rem}
+.cimg158>*{position:relative}
+.cimg158::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0000 30%,#000a);border-radius:inherit}
+.cimg158{position:relative;color:#fff!important}
+.gi158{position:absolute;top:.3rem;inset-inline-end:.3rem;z-index:3;display:none;border:0;border-radius:999px;background:#0f172acc;color:#fff;font-size:.8rem;padding:.15rem .45rem;cursor:pointer}
+body.gi158on .gi158h:hover>.gi158{display:block}
+.gi158h{position:relative}
+.cu158{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem}
+.cu158 button{border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:14px;padding:.8rem;cursor:pointer;color:inherit;font:inherit;display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.cu158 button span{font-size:1.8rem}
+.cu158.list{grid-template-columns:1fr}
+.cu158.list button{flex-direction:row}
+.sh158g{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.6rem;margin:.5rem 0}
+.sh158g button{border:2px solid var(--line,#e5e7eb);border-radius:14px;background:var(--card,#fff);padding:.4rem;cursor:pointer;color:inherit;font:inherit;text-align:start}
+.sh158g button.on{border-color:var(--accent,#0f766e);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0f766e) 25%,transparent)}
+.sh158g svg{width:100%;height:auto;display:block;border-radius:8px;background:#f1f5f9}
+.sh158g b{display:block;font-size:.82rem;margin-top:.3rem}
+.sh158g small{display:block;font-size:.72rem;opacity:.75}
+.mmx158{margin:.5rem 0;padding:.5rem;border-radius:12px;background:color-mix(in srgb,var(--accent,#0f766e) 6%,transparent)}
+.mmx158 .chips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem}
+.mmx158 .chip{border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:999px;padding:.15rem .55rem;cursor:pointer;font:inherit;font-size:.8rem;color:inherit}
+.mmx158 .chip.on{background:var(--accent,#0f766e);color:#fff;border-color:var(--accent,#0f766e)}
+.mmx158 .lt{font:1.4rem/1.2 'Amiri',serif;min-width:2.2rem}
+.sug158{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.25rem}
+.sug158 button{border:1px dashed var(--line,#cbd5e1);background:none;border-radius:999px;padding:.1rem .5rem;font:inherit;font-size:.75rem;cursor:pointer;color:inherit}
+.tr158on #app *{cursor:help}
+</style>`);
+
+  /* ---------- حفظ مع نسخة احتياطية تلقائية (عشان ترجع لأي تصميم قبل كده) ---------- */
+  function curDesign() { return { shell158: saved(), design157: clone(setv("design157", {}) || {}), bgimg158: clone(setv("bgimg158", {}) || {}) }; }
+  async function snapAuto(label) {
+    const L = (setv("snaps158", []) || []).slice(); L.unshift({ id: "a" + Date.now(), auto: 1, name: label || T("قبل آخر تعديل", "Before last change"), at: new Date().toISOString(), data: curDesign() });
+    const autos = L.filter(x => x.auto); const keep = L.filter(x => !x.auto).concat(autos.slice(0, 6));
+    await saveSetting16("snaps158", keep);
+  }
+  async function saveShell(sh, label) { await snapAuto(label); await saveSetting16("shell158", sh); state.sh158 = null; }
+  window.sh158Save = saveShell;
+
+  /* ---------- 1) الشريط الجانبي / Dock / مختلط + الأماكن ---------- */
+  function lbl(el) { const t = (el.title || el.getAttribute("aria-label") || "").trim(); if (t && !el.dataset.l && (el.textContent || "").trim().length <= 3) el.dataset.l = t; }
+  function railEnsure(e, fresh) {
+    let r = document.getElementById("rail158"); const isNew = !r;
+    if (!r) { r = document.createElement("div"); r.id = "rail158"; r.innerHTML = `<span class="rh"></span><div class="ri"></div>`; r.querySelector(".rh").onclick = () => r.classList.toggle("open"); document.body.appendChild(r); }
+    const rtl = document.documentElement.dir === "rtl" || ar(); const startLeft = !rtl; const left = (e.railSide === "start") === startLeft;
+    r.className = (e.mode === "dock" ? "dock " : "") + (left ? "L" : "R"); r.querySelector(".rh").textContent = e.mode === "dock" ? "▲" : (left ? "▸" : "◂");
+    if (fresh || isNew) r.querySelector(".ri").innerHTML = ""; r.dataset.k158 = "rail"; return r;
+  }
+  function shellApply() {
+    const e = eff(); const b = document.body; const ed = !!state.ed158;
+    b.classList.toggle("full158", !!e.full); b.classList.toggle("side158", e.mode === "side" || e.mode === "dock");
+    const needRail = e.mode !== "classic" || Object.values(e.place).includes("rail") || custItems().some(x => x.where === "rail");
+    const hdrTools = [...document.querySelectorAll(".hdr .tools > *")].filter(x => !x.classList.contains("lghdr"));
+    const navs = [...document.querySelectorAll(".hdr .nav > a")];
+    let r = document.getElementById("rail158"); if (!needRail) { if (r) r.remove(); r = null; } else r = railEnsure(e, navs.length + hdrTools.length > 0);
+    const ri = r && r.querySelector(".ri");
+    if (r) {
+      if (e.mode === "side" || e.mode === "dock") navs.forEach(a => ri.appendChild(a));
+      if (e.mode !== "classic") { if (ri.children.length) ri.appendChild(document.createElement("hr")); hdrTools.filter(x => !/menu/.test(x.getAttribute("onclick") || "")).forEach(x => { lbl(x); ri.appendChild(x); }); }
+    }
+    /* أماكن مخصوصة لكل أيقونة */
+    const all = [...document.querySelectorAll(".hdr .tools > *, .hdr .nav > a, #rail158 .ri > *, #sd152 > button, #ctl113, .cust158i")].filter(x => x.tagName !== "HR");
+    all.forEach(el => {
+      const k = keyOf(el); el.classList.remove("hide158", "flt158"); const p = e.place[k];
+      if (!p) return;
+      if (p === "rail" && ri && el.parentElement !== ri) { lbl(el); ri.appendChild(el); }
+      else if (p === "drawer") { const sd = document.getElementById("sd152") || (typeof sdEnsure === "function" && sdEnsure()); const d = document.getElementById("sd152"); if (d && el.parentElement !== d) { d.appendChild(el); d.style.display = ""; } }
+      else if (p === "header") { const t = document.querySelector(".hdr .tools"); if (t && el.parentElement !== t) t.insertBefore(el, t.firstChild); }
+      else if (p === "hide") el.classList.add("hide158");
+      else if (p === "float") { if (el.parentElement !== document.body) document.body.appendChild(el); el.classList.add("flt158"); }
+    });
+    /* أماكن حرة بالشبكة */
+    Object.entries(e.pos).forEach(([k, v]) => {
+      const el = k === "rail" ? r : k === "sd152" ? document.getElementById("sd152") : all.find(x => keyOf(x) === k) || document.getElementById(k); if (!el || !v) return;
+      if (k === "rail" || k === "sd152") { el.style.top = v.y + "%"; return; }
+      if (el.classList.contains("flt158") || k === "ctl113") { el.classList.add("flt158"); el.style.cssText += `;inset-inline-start:auto;inset-inline-end:auto;right:auto;bottom:auto;left:${v.x}%;top:${v.y}%`; }
+    });
+  }
+
+  /* ---------- 2) محرر التحريك بالشبكة المرقمة ---------- */
+  const COLS = 12, ROWS = 8;
+  function cellOf(x, y) { const c = Math.min(COLS - 1, Math.max(0, Math.floor(x / innerWidth * COLS))), r = Math.min(ROWS - 1, Math.max(0, Math.floor(y / innerHeight * ROWS))); return { n: r * COLS + c + 1, c, r, x: (c + .5) / COLS * 100, y: (r + .5) / ROWS * 100 }; }
+  function freeCells() {
+    const ok = new Set();
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const edge = r === 0 || r === ROWS - 1 || c === 0 || c === COLS - 1 || c === 1 || c === COLS - 2; if (!edge) continue;
+      const x = (c + .5) / COLS * innerWidth, y = (r + .5) / ROWS * innerHeight;
+      const st = document.elementsFromPoint(x, y).filter(el => !el.closest("#grid158,#edbar158,#zones158"));
+      const busy = st.some(el => el.matches("button,a,input,select,textarea,img,h1,h2,h3,p,li,label,.card,.ibtn,.btn,#rail158,#sd152,#ctl113,.flt158"));
+      if (!busy) ok.add(r * COLS + c + 1);
+    }
+    return ok;
+  }
+  function gridShow() {
+    let g = document.getElementById("grid158"); if (!g) { g = document.createElement("div"); g.id = "grid158"; document.body.appendChild(g); }
+    const ok = freeCells(); g.innerHTML = Array.from({ length: COLS * ROWS }, (_, i) => `<i data-n="${i + 1}" class="${ok.has(i + 1) ? "ok" : ""}">${i + 1}</i>`).join("");
+    let z = document.getElementById("zones158"); if (!z) { z = document.createElement("div"); z.id = "zones158"; document.body.appendChild(z); }
+    z.innerHTML = `<div data-z="rail">⬅ ${T("الشريط الجانبي", "Side rail")}</div><div data-z="drawer">⋮ ${T("الدرج المستخبي", "Hidden drawer")}</div><div data-z="header">🔝 ${T("الهيدر", "Header")}</div><div data-z="hide">🙈 ${T("إخفاء", "Hide")}</div>`;
+    return ok;
+  }
+  function edBar() {
+    let b = document.getElementById("edbar158"); if (!state.ed158) { if (b) b.remove(); ["grid158", "zones158"].forEach(i => { const x = document.getElementById(i); if (x) x.remove(); }); document.body.classList.remove("ed158"); return; }
+    document.body.classList.add("ed158"); const ok = gridShow();
+    if (!b) { b = document.createElement("div"); b.id = "edbar158"; document.body.appendChild(b); }
+    const sug = [...ok].slice(0, 10).join("، ");
+    b.innerHTML = `<b>📐 ${T("حرّك أي أيقونة", "Move any icon")}</b><small>${T("اسحب أي حاجة عليها إطار أزرق وسيبها في خانة برقمها، أو على «الشريط/الدرج/الهيدر/إخفاء». الخانات الخضرا ✓ فاضية ومقترحة:", "Drag anything with a blue outline onto a numbered cell, or onto Rail/Drawer/Header/Hide. Green ✓ cells are free and suggested:")} <b>${sug || "—"}</b></small>
+      <button class="btn btn-p" onclick="ed158Save('all')">💾 ${T("احفظ للكل", "Save for all pages")}</button><button class="btn btn-o" onclick="ed158Save('route')">📄 ${T("للصفحة دي بس", "This page only")}</button><button class="btn btn-o" onclick="state.sh158=null;state.ed158=false;render()">✕</button>`;
+    document.querySelectorAll(".hdr .tools > *, .hdr .nav > a, #rail158, #rail158 .ri > *, #sd152, #sd152 > button, #ctl113, .flt158, .cust158i").forEach(x => x.classList.add("mv158"));
+  }
+  window.ed158Toggle = function () { state.ed158 = !state.ed158; if (state.ed158) { state.sh158 = saved(); state.ed158ch = {}; } else state.sh158 = null; render(); };
+  window.ed158Save = async function (scope) {
+    const d = state.sh158 || saved(); let sh = d;
+    if (scope === "route") { const base = saved(); const br = Object.assign({ pos: {}, place: {} }, (base.byRoute || {})[state.route] || {}); Object.keys(state.ed158ch || {}).forEach(k => { if (d.pos[k]) br.pos[k] = d.pos[k]; if (d.place[k]) br.place[k] = d.place[k]; }); base.byRoute = Object.assign({}, base.byRoute, { [state.route]: br }); sh = base; }
+    try { await saveShell(sh, T("قبل تحريك الأيقونات", "Before moving icons")); } catch (e) { return toast(e.message, true); }
+    state.ed158 = false; toast("✅ " + T("اتحفظ — والقديم متخزّن في «التصميمات المحفوظة»", "Saved — the previous layout is kept in Saved designs")); render();
+  };
+  let drag = null;
+  document.addEventListener("pointerdown", ev => {
+    if (!state.ed158) return; const t = ev.target.closest(".mv158"); if (!t || t.closest("#edbar158")) return;
+    let el = t; if (t.id === "rail158" && ev.target.closest("#rail158 .ri > *")) el = ev.target.closest("#rail158 .ri > *"); if (t.id === "sd152" && ev.target.closest("#sd152 > button")) el = ev.target.closest("#sd152 > button");
+    ev.preventDefault(); ev.stopPropagation(); drag = { el, k: keyOf(el), moved: false };
+    const g = document.createElement("div"); g.id = "ghost158"; g.textContent = (el.textContent || el.title || "").trim().slice(0, 30) || "⬚"; document.body.appendChild(g); document.body.classList.add("drag158");
+  }, true);
+  document.addEventListener("pointermove", ev => {
+    if (!drag) return; drag.moved = true; const g = document.getElementById("ghost158"); const c = cellOf(ev.clientX, ev.clientY);
+    const z = document.elementsFromPoint(ev.clientX, ev.clientY).find(x => x.dataset && x.dataset.z);
+    document.querySelectorAll("#zones158 div").forEach(d => d.classList.toggle("hot", d === z)); document.querySelectorAll("#grid158 i.hot").forEach(i => i.classList.remove("hot"));
+    if (!z) { const i = document.querySelector(`#grid158 i[data-n="${c.n}"]`); if (i) i.classList.add("hot"); }
+    if (g) { g.style.left = ev.clientX + "px"; g.style.top = ev.clientY + "px"; const ok = document.querySelector(`#grid158 i[data-n="${c.n}"].ok`); g.textContent = z ? "→ " + z.textContent : `${T("خانة", "Cell")} ${c.n}${ok ? " ✓ " + T("مقترحة", "suggested") : ""}`; }
+  }, true);
+  document.addEventListener("pointerup", ev => {
+    if (!drag) return; const d = drag; drag = null; document.body.classList.remove("drag158"); const g = document.getElementById("ghost158"); if (g) g.remove();
+    if (!d.moved) return; const sh = state.sh158 || (state.sh158 = saved()); state.ed158ch = state.ed158ch || {}; state.ed158ch[d.k] = 1;
+    const z = document.elementsFromPoint(ev.clientX, ev.clientY).find(x => x.dataset && x.dataset.z); const c = cellOf(ev.clientX, ev.clientY);
+    if (z) { sh.place[d.k] = z.dataset.z; delete sh.pos[d.k]; }
+    else if (d.k === "rail" || d.k === "sd152") { sh.pos[d.k] = { x: c.x, y: c.y, n: c.n }; if (d.k === "rail") sh.railSide = (c.x < 50) === !(ar()) ? "start" : "end"; }
+    else { sh.place[d.k] = "float"; sh.pos[d.k] = { x: c.x, y: c.y, n: c.n }; }
+    render();
+  }, true);
+  document.addEventListener("click", ev => { if (state.ed158 && ev.target.closest(".mv158") && !ev.target.closest("#edbar158")) { ev.preventDefault(); ev.stopPropagation(); } }, true);
+
+  /* ---------- 3) قايمة جانبية تفتح جوه الصفحة (بدل ما كل أيقونة تفتح صفحة لوحدها) ---------- */
+  const TILE = ".w147t, .toolsgrid > *, .libgrid > *, .dmgrid > *, .hvgrid > *, .cu158 > button";
+  document.addEventListener("click", ev => {
+    if (state.ed158) return;
+    if (ev.target.closest(".hdr, #rail158 .ri > *")) { state.md158 = null; state.solo158 = !!ev.target.closest('[aria-label="messages"]'); return; }
+    if (!eff().md || ev.target.closest(".md158")) return; const t = ev.target.closest(TILE); if (!t || !t.closest("#app")) return;
+    const par = t.parentElement; const sib = [...par.querySelectorAll(":scope > *")].filter(x => x.matches(TILE) && (x.getAttribute("onclick") || x.querySelector("[onclick]")));
+    if (sib.length < 3) return;
+    const h = document.querySelector("#app h1, #app h2"); state.md158 = { from: state.route + "|" + (state.pageArg || ""), title: h ? h.textContent.trim().slice(0, 40) : "", cur: sib.indexOf(t), items: sib.map(x => ({ l: (x.innerText || "").replace(/\s+/g, " ").trim().slice(0, 60), oc: x.getAttribute("onclick") || (x.querySelector("[onclick]") || {}).getAttribute?.("onclick") || "" })) };
+  }, true);
+  window.md158Go = function (i) { const m = state.md158; if (!m) return; m.cur = i; const oc = m.items[i].oc; try { new Function(oc)(); } catch (e) { console.error(e); } };
+  window.md158Close = function () { const m = state.md158; state.md158 = null; if (m) { const [r, a] = m.from.split("|"); if (PAGES16.includes(r) || r === "world" || r === "cp158") go16(r, a || null); else navigate(r); } };
+  function mdApply() {
+    const m = state.md158; const old = document.querySelector(".md158"); if (old) old.remove(); document.body.classList.remove("md158on");
+    if (!m || !eff().md || (state.route + "|" + (state.pageArg || "")) === m.from) { if (m && (state.route + "|" + (state.pageArg || "")) === m.from) state.md158 = null; return; }
+    const a = document.createElement("aside"); a.className = "md158"; a.innerHTML = `<h4><span>${esc(m.title)}</span><button class="ibtn" title="${T("قفل القايمة", "Close")}" onclick="md158Close()">✕</button></h4>` + m.items.map((x, i) => `<button class="it ${i === m.cur ? "on" : ""}" onclick="md158Go(${i})" title="${esc(x.l)}">${esc(x.l)}</button>`).join("");
+    const app = document.getElementById("app"); const hdr = app && app.querySelector(".hdr"); if (!app) return; if (hdr && hdr.nextSibling) app.insertBefore(a, hdr.nextSibling); else app.prepend(a); document.body.classList.add("md158on");
+  }
+  function soloApply() { const on = !!state.solo158 && state.route === "dashboard" && (state.dash || {}).tab === "chats"; document.body.classList.toggle("solo158", on); if (!on && state.route !== "dashboard") state.solo158 = false; }
+
+  /* ---------- 4) صورة خلفية بتاعتك ---------- */
+  const bgGet = () => Object.assign({ url: "", size: "cover", pos: "center", rep: false, fix: true, dim: 70, scope: "all" }, setv("bgimg158", {}) || {}, state.bgi158 || {});
+  function bgApply() {
+    const b = bgGet(); let st = document.getElementById("bgi158s"); if (!st) { st = document.createElement("style"); st.id = "bgi158s"; document.head.appendChild(st); }
+    if (!b.url || (b.scope === "home" && state.route !== "home")) { st.textContent = ""; return; }
+    const dark = state.theme === "dark"; const a = Math.max(0, Math.min(95, +b.dim || 0)) / 100; const ov = dark ? `rgba(2,6,23,${a})` : `rgba(255,255,255,${a})`;
+    const size = /^\d+$/.test(String(b.size)) ? b.size + "%" : b.size;
+    st.textContent = `body{background-image:linear-gradient(${ov},${ov}),url("${String(b.url).replace(/"/g, "")}")!important;background-size:auto,${size}!important;background-position:center,${b.pos}!important;background-repeat:no-repeat,${b.rep ? "repeat" : "no-repeat"}!important;background-attachment:${b.fix ? "fixed,fixed" : "scroll,scroll"}!important}`;
+  }
+  window.bgi158 = function (k, v) { state.bgi158 = Object.assign({}, state.bgi158 || {}, { [k]: v }); bgApply(); };
+  window.bgi158Up = async function (inp) {
+    const f = inp.files && inp.files[0]; if (!f) return; if (f.size > 8e6) return toast(T("الصورة أكبر من 8 ميجا", "Image over 8 MB"), true);
+    const path = `bg/${Date.now()}-${f.name.replace(/[^a-z0-9.]+/gi, "_")}`; toast("⏳");
+    const { error } = await sb.storage.from("academy_public").upload(path, f, { upsert: false, contentType: f.type }); if (error) return toast(error.message, true);
+    const { data } = sb.storage.from("academy_public").getPublicUrl(path); bgi158("url", data.publicUrl); render();
+  };
+  window.bgi158Save = async function () { await snapAuto(T("قبل تغيير صورة الخلفية", "Before background image change")); await saveSetting16("bgimg158", Object.assign({}, bgGet())); state.bgi158 = null; toast("✅"); render(); };
+
+  /* ---------- 5) أيقوناتك وصفحاتك ---------- */
+  const custGet = () => Object.assign({ items: [], pages: [] }, clone(setv("cust158", {}) || {}));
+  function custItems() { return custGet().items; }
+  function actJs(a) {
+    a = String(a || ""); if (a.startsWith("page:")) return `go16('cp158','${a.slice(5)}')`;
+    if (a.startsWith("url:")) return `window.open(${JSON.stringify(a.slice(4)).replace(/"/g, "&quot;")},'_blank','noopener')`;
+    if (a.startsWith("js:")) return a.slice(3);
+    if (a.startsWith("route:")) return `navigate('${a.slice(6)}')`; return a;
+  }
+  function actions() {
+    const L = [["route:home", "🏠 " + T("الرئيسية", "Home")], ["route:library", "📚 " + T("المحتوى", "Library")], ["route:tracks", "🎓 " + T("الكورسات", "Courses")], ["route:pricing", "💳 " + T("الباقات", "Pricing")], ["route:booking", "✨ " + T("حصة تجريبية", "Trial lesson")], ["route:dashboard", "🧑‍🎓 " + T("لوحتي", "Dashboard")], ["js:go16('tools')", "🧭 " + T("الأقسام والأدوات", "Sections & tools")], ["js:state.og='people';state.dash.tab='chats';state.solo158=true;navigate('dashboard')", "💬 " + T("الرسايل", "Messages")]];
+    try { DOMAINS().forEach(d => (d.tools || []).forEach(t => L.push(["js:" + t[2], `${t[0]} ${t[1]}`]))); } catch (e) {}
+    custGet().pages.forEach(p => L.push(["page:" + p.id, `${p.ic} ${T("صفحتك:", "Your page:")} ${ar() ? p.ar : p.en || p.ar}`]));
+    return L;
+  }
+  function custRender() {
+    document.querySelectorAll(".cust158i").forEach(x => x.remove());
+    const C = custGet(); if (!C.items.length) return;
+    C.items.forEach(it => {
+      if (String(it.where).startsWith("page:") || it.where === "home") return;
+      const b = document.createElement("button"); b.className = "ibtn cust158i"; b.dataset.k158 = "c:" + it.id; b.title = ar() ? it.ar : it.en || it.ar; b.textContent = it.ic || "⭐"; b.setAttribute("onclick", actJs(it.act));
+      if (it.where === "rail") { const r = document.getElementById("rail158"); if (r) { b.dataset.l = b.title; r.querySelector(".ri").appendChild(b); } }
+      else if (it.where === "drawer") { const d = document.getElementById("sd152"); if (d) { b.textContent = (it.ic || "⭐") + " " + b.title; d.appendChild(b); d.style.display = ""; } }
+      else { const t = document.querySelector(".hdr .tools"); if (t) t.insertBefore(b, t.firstChild); }
+    });
+    if (state.route === "home") { const items = C.items.filter(x => x.where === "home"); const w = document.querySelector("#app .hdr + section .wrap, #app section .wrap"); if (items.length && w && !document.getElementById("cuh158")) { const d = document.createElement("div"); d.id = "cuh158"; d.className = "cu158"; d.style.margin = "1rem 0"; d.innerHTML = items.map(it => `<button onclick="${esc(actJs(it.act))}"><span>${esc(it.ic || "⭐")}</span><b>${esc(ar() ? it.ar : it.en || it.ar)}</b></button>`).join(""); w.appendChild(d); } }
+  }
+  function cpPage() {
+    const C = custGet(); const p = C.pages.find(x => x.id === state.pageArg); if (!p) return pageWrap("🧱", T("الصفحة مش موجودة", "Page not found"), "", "");
+    const items = C.items.filter(x => x.where === "page:" + p.id);
+    const txt = String((ar() ? p.bar : p.ben || p.bar) || "").split(/\n{2,}/).map(x => `<p>${esc(x).replace(/\n/g, "<br>")}</p>`).join("");
+    return pageWrap(p.ic || "🧱", ar() ? p.ar : p.en || p.ar, "", `${p.img ? `<div class="pb158" style="background-image:url('${esc(p.img)}')"></div>` : ""}<div class="card">${txt || ""}${items.length ? `<div class="cu158 ${p.lay === "list" ? "list" : ""}" style="margin-top:.8rem">${items.map(it => `<button onclick="${esc(actJs(it.act))}"><span>${esc(it.ic || "⭐")}</span><b>${esc(ar() ? it.ar : it.en || it.ar)}</b></button>`).join("")}</div>` : (own() ? `<p class="sm muted">${T("ضيف أيقونات للصفحة دي من الإعدادات ← «🧱 أيقوناتك وصفحاتك» واختار مكانها «جوه الصفحة دي».", "Add icons to this page from Settings → Your icons & pages, placed “inside this page”.")}</p>` : "")}</div>`);
+  }
+  if (!PAGES16.includes("cp158")) PAGES16.push("cp158");
+  window.cu158Add = async function (kind) {
+    const C = custGet(); const v = id => ((document.getElementById(id) || {}).value || "").trim();
+    if (kind === "item") { if (!v("cu158ar")) return toast(T("اكتب اسم الأيقونة", "Name the icon"), true); C.items.push({ id: Date.now().toString(36), ic: v("cu158ic") || "⭐", ar: v("cu158ar"), en: v("cu158en"), act: v("cu158url") ? "url:" + v("cu158url") : v("cu158act"), where: v("cu158wh") || "rail" }); }
+    else { if (!v("cp158ar")) return toast(T("اكتب اسم الصفحة", "Name the page"), true); const id = "p" + Date.now().toString(36); C.pages.push({ id, ic: v("cp158ic") || "🧱", ar: v("cp158ar"), en: v("cp158en"), bar: v("cp158bar"), ben: v("cp158ben"), lay: v("cp158lay") || "grid", img: v("cp158img") }); if (v("cp158wh") && v("cp158wh") !== "none") C.items.push({ id: Date.now().toString(36) + "i", ic: v("cp158ic") || "🧱", ar: v("cp158ar"), en: v("cp158en"), act: "page:" + id, where: v("cp158wh") }); }
+    await saveSetting16("cust158", C); toast("✅"); render();
+  };
+  window.cu158Del = async function (kind, id) { const C = custGet(); if (kind === "item") C.items = C.items.filter(x => x.id !== id); else { C.pages = C.pages.filter(x => x.id !== id); C.items = C.items.filter(x => x.act !== "page:" + id && x.where !== "page:" + id); } await saveSetting16("cust158", C); render(); };
+
+  /* ---------- 6) كارت «شكل الموقع» في الإعدادات ---------- */
+  const thumb = m => {
+    const hd = `<rect x="0" y="0" width="120" height="12" fill="#0f766e"/>`; const body = `<rect x="10" y="20" width="100" height="10" rx="2" fill="#cbd5e1"/><rect x="10" y="34" width="46" height="26" rx="3" fill="#e2e8f0"/><rect x="62" y="34" width="46" height="26" rx="3" fill="#e2e8f0"/>`;
+    if (m === "classic") return `<svg viewBox="0 0 120 70">${hd}<g fill="#fff"><rect x="40" y="4" width="10" height="4"/><rect x="54" y="4" width="10" height="4"/><rect x="68" y="4" width="10" height="4"/><rect x="96" y="3" width="5" height="6"/><rect x="104" y="3" width="5" height="6"/></g>${body}</svg>`;
+    if (m === "side") return `<svg viewBox="0 0 120 70"><rect x="0" y="0" width="120" height="8" fill="#0f766e"/><rect x="0" y="12" width="16" height="54" rx="3" fill="#0f766e" opacity=".85"/><g fill="#fff"><rect x="3" y="18" width="10" height="3"/><rect x="3" y="25" width="10" height="3"/><rect x="3" y="32" width="10" height="3"/><rect x="3" y="39" width="10" height="3"/></g><g transform="translate(10 0)">${body}</g></svg>`;
+    if (m === "mixed") return `<svg viewBox="0 0 120 70">${hd}<g fill="#fff"><rect x="40" y="4" width="10" height="4"/><rect x="54" y="4" width="10" height="4"/><rect x="68" y="4" width="10" height="4"/></g><rect x="112" y="20" width="8" height="34" rx="2" fill="#0f766e" opacity=".85"/>${body}</svg>`;
+    return `<svg viewBox="0 0 120 70"><rect x="0" y="0" width="120" height="8" fill="#0f766e"/>${body}<rect x="30" y="62" width="60" height="8" rx="3" fill="#0f766e"/><g fill="#fff"><circle cx="40" cy="66" r="2"/><circle cx="50" cy="66" r="2"/><circle cx="60" cy="66" r="2"/><circle cx="70" cy="66" r="2"/><circle cx="80" cy="66" r="2"/></g></svg>`;
+  };
+  const MODES = [["classic", "الكلاسيك (زي ما هو)", "Classic (as is)", "الشرايط فوق زي الأول", "Bars on top, unchanged"], ["side", "شريط جانبي مستخبي", "Hidden side rail", "كل الأيقونات والروابط في شريط بيطلع لما تقرّب أو تدوس السهم", "All links & icons in a rail that slides out"], ["mixed", "مختلط", "Mixed", "الروابط فوق والأيقونات في الجنب", "Links on top, icons in the rail"], ["dock", "Dock تحت", "Bottom dock", "الأيقونات في شريط تحت في النص زي الماك", "Icons in a bottom dock"]];
+  const PRESETS = [
+    { n: ["🏛️ الأصلي", "🏛️ Original"], d: { shell158: clone(DEF), design157: { bg: "none", logo: "default" } } },
+    { n: ["🌙 ليل وشريط جانبي", "🌙 Night + side rail"], d: { shell158: Object.assign(clone(DEF), { mode: "side" }), design157: { bg: "night", logo: "pulse" } } },
+    { n: ["✨ ذهبي فاخر", "✨ Golden luxe"], d: { shell158: Object.assign(clone(DEF), { mode: "mixed", full: true }), design157: { bg: "goldara", logo: "shine" } } },
+    { n: ["🕌 قباب هادية", "🕌 Calm domes"], d: { shell158: Object.assign(clone(DEF), { mode: "classic", full: true }), design157: { bg: "domes", logo: "arch" } } },
+    { n: ["💎 زمرّدي + Dock", "💎 Emerald + dock"], d: { shell158: Object.assign(clone(DEF), { mode: "dock" }), design157: { bg: "emerald", logo: "spin" } } },
+    { n: ["🧩 زليج مغربي", "🧩 Moroccan zellige"], d: { shell158: Object.assign(clone(DEF), { mode: "mixed" }), design157: { bg: "zellige", logo: "hex" } } },
+    { n: ["📜 مخطوطة قديمة", "📜 Old manuscript"], d: { shell158: Object.assign(clone(DEF), { mode: "side", full: true }), design157: { bg: "parch", logo: "rehal" } } },
+    { n: ["🏮 فوانيس رمضان", "🏮 Ramadan lanterns"], d: { shell158: Object.assign(clone(DEF), { mode: "classic" }), design157: { bg: "lantern", logo: "lantern" } } }
+  ];
+  window.sh158Preview = function (d) { state.sh158 = Object.assign(clone(DEF), clone(d.shell158 || {})); state.dz157 = d.design157 ? clone(d.design157) : null; if (d.bgimg158) state.bgi158 = clone(d.bgimg158); render(); toast(T("👁 معاينة عندك بس — دوس «طبّق على الكل» لو عجبتك", "👁 Preview for you only — press “Apply to all” if you like it")); };
+  window.sh158Pre = i => sh158Preview(PRESETS[i].d);
+  window.sh158Snap = id => { const s = (setv("snaps158", []) || []).find(x => x.id === id); if (s) sh158Preview(s.data); };
+  window.sh158Apply = async function () {
+    const d = { shell158: S(), design157: Object.assign({ bg: "none", logo: "default" }, setv("design157", {}) || {}, state.dz157 || {}), bgimg158: bgGet() };
+    await snapAuto(T("قبل تطبيق تصميم", "Before applying a design")); await saveSetting16("shell158", d.shell158); await saveSetting16("design157", d.design157); await saveSetting16("bgimg158", d.bgimg158);
+    state.sh158 = null; state.dz157 = null; state.bgi158 = null; toast("✅ " + T("اتطبّق على الموقع كله", "Applied site-wide")); render();
+  };
+  window.sh158SaveAs = async function () { const n = prompt(T("اسم التصميم:", "Design name:")); if (!n) return; const L = (setv("snaps158", []) || []).slice(); L.unshift({ id: "s" + Date.now(), name: n.trim(), at: new Date().toISOString(), data: { shell158: S(), design157: Object.assign({}, setv("design157", {}) || {}, state.dz157 || {}), bgimg158: bgGet() } }); await saveSetting16("snaps158", L); toast("✅"); render(); };
+  window.sh158DelSnap = async function (id) { await saveSetting16("snaps158", (setv("snaps158", []) || []).filter(x => x.id !== id)); render(); };
+  window.sh158Set = function (k, v) { const s = state.sh158 || (state.sh158 = saved()); s[k] = v; render(); };
+  window.sh158ResetRoute = async function (r) { const s = saved(); delete (s.byRoute || {})[r]; await saveShell(s); render(); };
+  function shellCard() {
+    const s = S(); const snaps = setv("snaps158", []) || []; const C = custGet(); const b = bgGet(); const draft = !!(state.sh158 || state.dz157 || state.bgi158);
+    const br = Object.keys(saved().byRoute || {});
+    return `<div class="card" style="margin-top:1rem"><h3>🧭 ${T("شكل الموقع والتصميمات", "Site layout & designs")}</h3>
+      <p class="sm">${T("أي اختيار هنا بيظهر عندك بس كمعاينة. لما يعجبك دوس «طبّق على الكل». وأي تصميم قبل كده بيتحفظ لوحده تحت في «تصميماتك» عشان ترجعله.", "Every choice here is a preview for you only until you press “Apply to all”. Every previous design is kept below so you can go back.")}</p>
+      <h4 style="margin:.6rem 0 .2rem">${T("شكل الشرايط", "Bars layout")}</h4><div class="sh158g">${MODES.map(m => `<button class="${s.mode === m[0] ? "on" : ""}" onclick="sh158Set('mode','${m[0]}')">${thumb(m[0])}<b>${esc(T(m[1], m[2]))}</b><small>${esc(T(m[3], m[4]))}</small></button>`).join("")}</div>
+      <div class="row" style="gap:.6rem;flex-wrap:wrap;align-items:center">
+        <label class="sm"><input type="checkbox" ${s.full ? "checked" : ""} onchange="sh158Set('full',this.checked)"> ↔️ ${T("الصفحة بعرض الشاشة كلها (من أولها لآخرها)", "Full-width pages (edge to edge)")}</label>
+        <label class="sm"><input type="checkbox" ${s.md ? "checked" : ""} onchange="sh158Set('md',this.checked)"> 📑 ${T("الأقسام اللي فيها أيقونات كتير: قايمة طولية في الجنب واللي تختاره يفتح جوه نفس الصفحة", "Pages with many icons: vertical side list, the chosen one opens inside the page")}</label>
+        <label class="sm">${T("مكان الشريط", "Rail side")}: <select class="in" style="width:auto" onchange="sh158Set('railSide',this.value)"><option value="start" ${s.railSide !== "end" ? "selected" : ""}>${T("أول الصفحة (يمين)", "Start")}</option><option value="end" ${s.railSide === "end" ? "selected" : ""}>${T("آخر الصفحة (شمال)", "End")}</option></select></label>
+      </div>
+      <div class="row" style="gap:.4rem;margin:.6rem 0;flex-wrap:wrap"><button class="btn btn-o" onclick="ed158Toggle()">📐 ${T("حرّك الأيقونات بإيدك (شبكة بالأرقام)", "Move icons by hand (numbered grid)")}</button><button class="btn btn-o" onclick="state.uiEdit=true;render()">🧩 ${T("رتّب/سمّي/اخفي/حط جوه أيقونة", "Reorder / rename / hide / nest")}</button></div>
+      ${br.length ? `<p class="xs">${T("صفحات ليها شكل خاص:", "Pages with their own layout:")} ${br.map(r => `<span class="badge">${esc(r)} <a href="#" onclick="sh158ResetRoute('${esc(r)}');return false">✕</a></span>`).join(" ")}</p>` : ""}
+      <h4 style="margin:.8rem 0 .2rem">💡 ${T("تصميمات مقترحة جاهزة (عاين واختار)", "Ready-made suggestions (preview & pick)")}</h4>
+      <div class="row" style="gap:.35rem;flex-wrap:wrap">${PRESETS.map((p, i) => `<button class="btn btn-o" onclick="sh158Pre(${i})">${esc(T(p.n[0], p.n[1]))}</button>`).join("")}</div>
+      <h4 style="margin:.8rem 0 .2rem">🗂️ ${T("تصميماتك المحفوظة", "Your saved designs")} (${snaps.length})</h4>
+      ${snaps.length ? snaps.map(x => `<div class="kv"><span>${x.auto ? "🕘" : "⭐"} <b>${esc(x.name)}</b> <span class="xs muted">${esc(typeof fmtDT === "function" ? fmtDT(x.at) : x.at)}</span></span><span class="row" style="gap:.25rem"><button class="btn btn-o" style="padding:.2rem .5rem" onclick="sh158Snap('${x.id}')">👁 ${T("رجّعه/عاين", "Restore/preview")}</button><button class="btn btn-o" style="padding:.2rem .5rem" onclick="sh158DelSnap('${x.id}')">🗑️</button></span></div>`).join("") : `<p class="xs muted">${T("لسه مفيش. أول ما تغيّر حاجة، القديم بيتحفظ هنا لوحده.", "None yet. The old design is saved here automatically as soon as you change something.")}</p>`}
+      <div class="row" style="gap:.4rem;margin-top:.8rem;flex-wrap:wrap"><button class="btn btn-p" onclick="sh158Apply()">✅ ${T("طبّق على الكل", "Apply to all")}</button><button class="btn btn-o" onclick="sh158SaveAs()">💾 ${T("احفظ الحالي باسم", "Save current as…")}</button>${draft ? `<button class="btn btn-o" onclick="state.sh158=null;state.dz157=null;state.bgi158=null;render()">↺ ${T("الغي المعاينة", "Cancel preview")}</button>` : ""}</div></div>
+
+      <div class="card" style="margin-top:1rem"><h3>🖼️ ${T("صورة خلفية بتاعتك", "Your own background image")}</h3>
+      <p class="sm">${T("ارفع صورة أو حط لينك، واختار حجمها ومكانها وقد إيه تبهت عشان الكلام يبان فوقها.", "Upload or link an image, then pick its size, position and fade so content stays readable.")}</p>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><input type="file" accept="image/*" onchange="bgi158Up(this)"><input class="in" style="flex:1;min-width:14rem;direction:ltr" placeholder="https://…" value="${esc(b.url)}" onchange="bgi158('url',this.value.trim())">${b.url ? `<button class="btn btn-o" onclick="bgi158('url','');render()">🗑️</button>` : ""}</div>
+      <div class="row" style="gap:.6rem;flex-wrap:wrap;margin-top:.5rem;align-items:center">
+        <label class="sm">${T("الحجم", "Size")}: <select class="in" style="width:auto" onchange="bgi158('size',this.value)">${[["cover", T("يملا الشاشة", "Cover")], ["contain", T("الصورة كاملة", "Contain")], ["auto", T("حجمها الأصلي", "Original")], ["50", "50%"], ["30", "30%"]].map(o => `<option value="${o[0]}" ${String(b.size) === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></label>
+        <label class="sm">${T("المكان", "Position")}: <select class="in" style="width:auto" onchange="bgi158('pos',this.value)">${["center", "top", "bottom", "left", "right"].map(o => `<option ${b.pos === o ? "selected" : ""}>${o}</option>`).join("")}</select></label>
+        <label class="sm">${T("تبهيت", "Fade")}: <input type="range" min="0" max="95" value="${b.dim}" oninput="bgi158('dim',+this.value)"></label>
+        <label class="sm"><input type="checkbox" ${b.rep ? "checked" : ""} onchange="bgi158('rep',this.checked)"> ${T("تتكرر", "Repeat")}</label>
+        <label class="sm"><input type="checkbox" ${b.fix ? "checked" : ""} onchange="bgi158('fix',this.checked)"> ${T("ثابتة وانت بتنزل", "Fixed while scrolling")}</label>
+        <label class="sm">${T("فين", "Where")}: <select class="in" style="width:auto" onchange="bgi158('scope',this.value)"><option value="all" ${b.scope === "all" ? "selected" : ""}>${T("كل الصفحات", "All pages")}</option><option value="home" ${b.scope === "home" ? "selected" : ""}>${T("الرئيسية بس", "Home only")}</option></select></label>
+      </div><button class="btn btn-p" style="margin-top:.6rem" onclick="bgi158Save()">💾 ${T("احفظ للكل", "Save for all")}</button></div>
+
+      <div class="card" style="margin-top:1rem"><h3>🧱 ${T("أيقوناتك وصفحاتك", "Your icons & pages")}</h3>
+      <p class="sm">${T("ضيف أيقونة بالشكل اللي تحبه وحط جواها أي أداة من الموقع أو صفحة عملتها أو لينك، واختار مكانها. أو اعمل صفحة لوحدها أو صفحة جوه صفحة.", "Add an icon, point it to any site tool, one of your pages or a link, and choose where it lives. Or build a standalone page, or a page inside another page.")}</p>
+      ${C.items.map(it => `<div class="kv"><span>${esc(it.ic)} <b>${esc(ar() ? it.ar : it.en || it.ar)}</b> <span class="xs muted">→ ${esc(it.where)}</span></span><button class="btn btn-o" style="padding:.2rem .5rem" onclick="cu158Del('item','${it.id}')">🗑️</button></div>`).join("")}
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.5rem"><input class="in" id="cu158ic" style="width:4rem;text-align:center" placeholder="⭐" maxlength="4"><input class="in" id="cu158ar" style="width:11rem" placeholder="${T("الاسم بالعربي", "Arabic name")}"><input class="in" id="cu158en" style="width:11rem" placeholder="${T("الاسم بالإنجليزي (مكتوب زي ما هو)", "English name (shown as written)")}">
+        <select class="in" id="cu158act" style="width:auto;max-width:18rem">${actions().map(a => `<option value="${esc(a[0])}">${esc(a[1])}</option>`).join("")}</select><input class="in" id="cu158url" style="width:12rem;direction:ltr" placeholder="${T("أو لينك https://", "or a link https://")}">
+        <select class="in" id="cu158wh" style="width:auto"><option value="rail">⬅ ${T("الشريط الجانبي", "Side rail")}</option><option value="drawer">⋮ ${T("الدرج المستخبي", "Hidden drawer")}</option><option value="header">🔝 ${T("الهيدر", "Header")}</option><option value="home">🏠 ${T("الرئيسية", "Home")}</option>${C.pages.map(p => `<option value="page:${p.id}">📄 ${T("جوه صفحة:", "Inside page:")} ${esc(p.ar)}</option>`).join("")}</select>
+        <button class="btn btn-p" onclick="cu158Add('item')">➕ ${T("ضيف الأيقونة", "Add icon")}</button></div>
+      <h4 style="margin:1rem 0 .2rem">📄 ${T("صفحاتك", "Your pages")}</h4>
+      ${C.pages.map(p => `<div class="kv"><span>${esc(p.ic)} <b>${esc(p.ar)}</b> <a href="#" onclick="go16('cp158','${p.id}');return false">${T("افتحها", "Open")}</a></span><button class="btn btn-o" style="padding:.2rem .5rem" onclick="cu158Del('page','${p.id}')">🗑️</button></div>`).join("")}
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.4rem"><input class="in" id="cp158ic" style="width:4rem;text-align:center" placeholder="🧱"><input class="in" id="cp158ar" style="width:11rem" placeholder="${T("اسم الصفحة بالعربي", "Arabic title")}"><input class="in" id="cp158en" style="width:11rem" placeholder="${T("اسمها بالإنجليزي", "English title")}"><input class="in" id="cp158img" style="width:12rem;direction:ltr" placeholder="${T("صورة فوق (لينك، اختياري)", "Top image URL (optional)")}">
+        <select class="in" id="cp158lay" style="width:auto"><option value="grid">▦ ${T("أيقونات شبكة", "Icon grid")}</option><option value="list">☰ ${T("قايمة", "List")}</option></select>
+        <select class="in" id="cp158wh" style="width:auto"><option value="rail">${T("أيقونتها في الشريط الجانبي", "Its icon in the rail")}</option><option value="header">${T("في الهيدر", "In the header")}</option><option value="drawer">${T("في الدرج", "In the drawer")}</option><option value="home">${T("في الرئيسية", "On home")}</option>${C.pages.map(p => `<option value="page:${p.id}">${T("جوه صفحة:", "Inside page:")} ${esc(p.ar)}</option>`).join("")}<option value="none">${T("من غير أيقونة", "No icon")}</option></select></div>
+      <textarea class="in" id="cp158bar" rows="3" style="margin-top:.35rem" placeholder="${T("كلام الصفحة بالعربي (اختياري)", "Page text in Arabic (optional)")}"></textarea><textarea class="in" id="cp158ben" rows="3" style="margin-top:.35rem" placeholder="${T("كلام الصفحة بالإنجليزي — بيظهر زي ما انت كاتبه بالظبط", "Page text in English — shown exactly as you write it")}"></textarea>
+      <button class="btn btn-p" style="margin-top:.4rem" onclick="cu158Add('page')">➕ ${T("اعمل الصفحة", "Create page")}</button></div>`;
+  }
+  const _os = ownerSettings; ownerSettings = function () { return shellCard() + _os.apply(this, arguments); };
+
+  /* ---------- 7) الدرج: الذكاء الاصطناعي + صورة للصفحة + طلبات التصحيح + اقتراح تصحيح للطالب ---------- */
+  window.ai158Open = function () { state.og = "settings"; state.dash.tab = "settings"; navigate("dashboard"); setTimeout(() => { const c = document.querySelector(".ai156"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" }); }, 500); };
+  const pageKey = () => "page:" + state.route + (state.pageArg ? ":" + state.pageArg : "") + (state.route === "library" && state.libSec ? ":" + state.libSec : "");
+  window.pg158Img = async function () {
+    const h = document.querySelector("#app h1, #app h2"); const def = (h ? h.textContent.trim() : state.route) + " — " + T("خلفية هادية بروح إسلامية", "calm Islamic-themed banner");
+    const p = prompt(T("وصف الصورة اللي عايزها للصفحة دي (من غير أشخاص):", "Describe the banner for this page (no people):"), def); if (!p) return;
+    toast("⏳ " + T("بتتعمل… هتلاقيها في «صور مستنية موافقتك»", "Generating… it will wait in “Images waiting for approval”"));
+    try { const r = await ai156({ task: "image", prompt: p, target: pageKey(), style: "no people, no faces, no text, islamic art atmosphere, cinematic light" }); toast("✅ " + (r.provider || "")); delete state.data.ai156gal; } catch (e) { toast(e.message, true); }
+  };
+  window.gi158Toggle = function () { document.body.classList.toggle("gi158on"); toast(document.body.classList.contains("gi158on") ? T("قرّب على أي كارت ودوس 🖼️ عشان تعمله صورة", "Hover any card and press 🖼️ to make it an image") : "✓"); };
+  window.gi158Make = async function (ev, key, title) {
+    ev.preventDefault(); ev.stopPropagation(); const p = prompt(T("وصف الصورة (من غير أشخاص):", "Describe the image (no people):"), title + " — " + T("لوحة فنية هادية", "calm artistic illustration")); if (!p) return;
+    toast("⏳"); try { await ai156({ task: "image", prompt: p, target: key, style: "no people, no faces, no text, soft illustration" }); toast("✅ " + T("مستنية موافقتك في الإعدادات ← 🔌", "Waiting for your approval in Settings → 🔌")); delete state.data.ai156gal; } catch (e) { toast(e.message, true); }
+  };
+  function cardImgs() {
+    const cards = document.querySelectorAll("#app .w147t, #app .libgrid > *, #app .dmgrid > *, #app .toolsgrid > *, #app .hvgrid > *, #app .cu158 > button");
+    cards.forEach(c => {
+      if (!c.dataset.t158) c.dataset.t158 = (c.innerText || "").replace(/\s+/g, " ").trim().slice(0, 80); const t = c.dataset.t158; if (!t) return; const key = "card:" + (typeof artHash === "function" ? artHash(t) : t.length);
+      if (ART && ART[key]) { c.classList.add("cimg158"); c.style.backgroundImage = `url('${ART[key]}')`; }
+      if (own() && !c.querySelector(".gi158")) { c.classList.add("gi158h"); const b = document.createElement("button"); b.className = "gi158"; b.textContent = "🖼️"; b.title = T("ولّد صورة للكارت ده", "Generate an image for this card"); b.onclick = ev => gi158Make(ev, key, t); c.appendChild(b); }
+    });
+    const k = pageKey(); const w = document.querySelector("#app .hdr ~ section .wrap, #app .hdr ~ .sec .wrap"); if (ART && ART[k] && w && !w.querySelector(".pb158")) { const d = document.createElement("div"); d.className = "pb158"; d.style.backgroundImage = `url('${ART[k]}')`; w.insertBefore(d, w.firstChild); }
+  }
+  /* طلبات التصحيح / منع الترجمة */
+  function srcOf(txt) { if (ar()) return txt; try { const m = DT.mem || {}; const k = Object.keys(m).find(a => String(m[a]).trim() === txt); return k || null; } catch (e) { return null; } }
+  window.tr158Toggle = function () { state.tr158 = !state.tr158; document.body.classList.toggle("tr158on", state.tr158); toast(state.tr158 ? T("دوس على الجملة اللي فيها غلط", "Tap the sentence that has a mistake") : "✓"); drawer(); };
+  document.addEventListener("click", ev => {
+    if (!state.tr158) return; const el = ev.target; if (!el || el.closest("#sd152,#rail158,.hlpov,#ctl113,#ctl113p")) return; if (!el.closest("#app")) return;
+    const tn = [...el.childNodes].filter(x => x.nodeType === 3 && x.data.trim()); const cur = (tn.length ? tn.map(x => x.data).join(" ") : el.textContent || "").replace(/\s+/g, " ").trim(); if (!cur || cur.length > 1500) return;
+    ev.preventDefault(); ev.stopPropagation(); state.tr158 = false; document.body.classList.remove("tr158on"); trForm(cur);
+  }, true);
+  function trForm(cur) {
+    const m = document.createElement("div"); m.className = "hlpov"; m.onclick = e => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="hlpbox"><h3>📝 ${T("اقترح تصحيح", "Suggest a correction")}</h3><p class="sm" style="background:var(--bg,#f8fafc);padding:.5rem;border-radius:10px">${esc(cur)}</p>
+      <label class="sm"><input type="radio" name="tr158k" value="fix" checked> ✏️ ${T("الكلام ده فيه غلط — ده الصح:", "This is wrong — here is the right wording:")}</label><textarea class="in" id="tr158p" rows="3">${esc(cur)}</textarea>
+      ${ar() ? "" : `<label class="sm"><input type="radio" name="tr158k" value="notr"> 🚫🌐 ${T("ماتترجمش الجملة دي (سيبها بالعربي)", "Don't translate this (keep the Arabic)")}</label>`}
+      <input class="in" id="tr158n" placeholder="${T("ملاحظة (اختياري)", "Note (optional)")}" style="margin-top:.4rem">
+      <p class="xs muted">${T("الطلب بيروح للأستاذ، ومش بيتغيّر حاجة غير لما يوافق.", "Your request goes to the teacher; nothing changes until approved.")}</p>
+      <div class="row" style="gap:.4rem"><button class="btn btn-p" id="tr158go">📨 ${T("ابعت", "Send")}</button><button class="btn btn-o" onclick="this.closest('.hlpov').remove()">${T("إلغاء", "Cancel")}</button></div></div>`;
+    document.body.appendChild(m);
+    m.querySelector("#tr158go").onclick = async () => {
+      const kind = (m.querySelector('input[name="tr158k"]:checked') || {}).value || "fix"; let proposed = m.querySelector("#tr158p").value.trim();
+      if (kind === "notr") proposed = srcOf(cur) || ""; if (kind === "fix" && (!proposed || proposed === cur)) return toast(T("اكتب التصحيح", "Write the correction"), true);
+      if (own()) { await trApprove({ lang: state.lang, kind, original: cur, proposed }); m.remove(); return; }
+      const { error } = await sb.from("text_requests").insert({ lang: state.lang, kind, original: cur, proposed: proposed || null, note: m.querySelector("#tr158n").value.trim() || null, route: location.hash.slice(0, 200) });
+      if (error) return toast(error.message, true); m.remove(); toast("✅ " + T("اتبعت للأستاذ", "Sent to the teacher"));
+    };
+  }
+  async function trApprove(r) {
+    if (r.kind === "notr") {
+      if (!r.proposed) return toast(T("مش لاقي الأصل العربي للجملة دي — صحّحها بإيدك بـ«✏️ صحّح أي كلام»", "Couldn't find the Arabic source — fix it with “✏️ Fix wording”"), true);
+      const L = (setv("notrWords", []) || []).slice(); if (!L.includes(r.proposed)) L.push(r.proposed); await saveSetting16("notrWords", L);
+      const all = Object.assign({}, setv("txfix", {}) || {}); all[r.lang] = Object.assign({}, all[r.lang] || {}, { [r.original]: r.proposed }); await saveSetting16("txfix", all);
+    } else { const all = Object.assign({}, setv("txfix", {}) || {}); all[r.lang] = Object.assign({}, all[r.lang] || {}, { [r.original]: r.proposed }); await saveSetting16("txfix", all); try { Object.keys(DT.mem).forEach(k => { if (String(DT.mem[k]).trim() === r.original) DT.mem[k] = r.proposed; }); dtSave(); } catch (e) {} }
+    if (r.id) await sb.from("text_requests").update({ status: "approved" }).eq("id", r.id); delete state.data.tr158; toast("✅"); render();
+  }
+  window.tr158Ok = async id => { const r = (state.data.tr158 || []).find(x => x.id === id); if (r) await trApprove(r); trList(); };
+  window.tr158No = async id => { await sb.from("text_requests").update({ status: "rejected" }).eq("id", id); delete state.data.tr158; trList(); render(); };
+  async function trList() {
+    const { data } = await sb.from("text_requests").select("*").eq("status", "pending").order("created_at").limit(100); state.data.tr158 = data || [];
+    let m = document.getElementById("trl158"); if (!m) { m = document.createElement("div"); m.id = "trl158"; m.className = "hlpov"; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); }
+    m.innerHTML = `<div class="hlpbox" style="max-width:40rem"><div class="row" style="justify-content:space-between"><h3>📥 ${T("طلبات تصحيح الكلام", "Wording requests")} (${data ? data.length : 0})</h3><button class="ibtn" onclick="this.closest('.hlpov').remove()">✕</button></div>
+      ${(data || []).map(r => `<div class="card" style="margin:.4rem 0;padding:.6rem"><p class="xs muted">${esc(r.lang)} · ${r.kind === "notr" ? "🚫🌐 " + T("منع ترجمة", "Keep Arabic") : "✏️ " + T("تصحيح", "Fix")} · ${esc(r.route || "")}</p><p class="sm" style="text-decoration:line-through;opacity:.7">${esc(r.original)}</p><p class="sm"><b>${esc(r.proposed || "—")}</b></p>${r.note ? `<p class="xs">💬 ${esc(r.note)}</p>` : ""}<div class="row" style="gap:.3rem"><button class="btn btn-p" style="padding:.2rem .6rem" onclick="tr158Ok('${r.id}')">✅ ${T("وافق", "Approve")}</button><button class="btn btn-o" style="padding:.2rem .6rem" onclick="tr158No('${r.id}')">✕ ${T("ارفض", "Reject")}</button></div></div>`).join("") || `<p class="sm muted">${T("مفيش طلبات", "No requests")}</p>`}</div>`;
+  }
+  window.tr158List = trList;
+  function drawer() {
+    if (!document.getElementById("sd152")) { const d = document.createElement("div"); d.id = "sd152"; d.innerHTML = `<span class="sdh" title="${T("الأدوات", "Tools")}">⋮</span>`; d.querySelector(".sdh").onclick = () => d.classList.toggle("open"); document.body.appendChild(d); }
+    const sd = document.getElementById("sd152"); if (!sd) return;
+    const add = (id, txt, fn, show) => { let b = document.getElementById(id); if (!show) { if (b) b.remove(); return; } if (!b) { b = document.createElement("button"); b.id = id; sd.appendChild(b); } else if (b.parentElement !== sd && !b.classList.contains("flt158")) sd.appendChild(b); b.textContent = txt; b.onclick = fn; };
+    const o = own(); const u = !!(state.auth && state.auth.user);
+ add("aiw158", "💬 " + T("المساعد الذكي", "AI assistant"), () => { state.aiOpen = !state.aiOpen; render(); }, !!document.querySelector(".ai-widget"));
+    add("ai158", "🤖 " + T("الذكاء الاصطناعي والصور", "AI & images"), ai158Open, o);
+    add("pi158", "🖼️ " + T("صورة للصفحة دي", "Banner for this page"), pg158Img, o);
+    add("gc158", "🎴 " + T("صور للكروت", "Images for cards"), gi158Toggle, o);
+    add("ed158b", "📐 " + T("حرّك الأيقونات", "Move icons"), ed158Toggle, o);
+    const n = o ? useData("trn158", async () => { const { count } = await sb.from("text_requests").select("id", { count: "exact", head: true }).eq("status", "pending"); return [count || 0]; }) : null;
+    add("trl158b", "📥 " + T("طلبات التصحيح", "Wording requests") + (Array.isArray(n) && n[0] ? ` (${n[0]})` : ""), trList, o);
+    add("tr158b", state.tr158 ? "✅ " + T("خلاص", "Done") : "📝 " + T("في غلط في الكلام؟", "Spotted a mistake?"), tr158Toggle, u && !o);
+    sd.style.display = sd.children.length > 1 ? "" : "none";
+  }
+
+  /* ---------- 8) نطق الكلمة الحقيقي (تلاوة كلمة بكلمة) + الحصري للآية ---------- */
+  const WBW = {}; let wAu = null;
+  async function wordAudio(vkey, li) {
+    if (!WBW[vkey]) { const j = await fetch(`https://api.quran.com/api/v4/verses/by_key/${vkey}?words=true&word_fields=audio_url`).then(r => r.json()); WBW[vkey] = ((j.verse || {}).words || []).filter(w => w.char_type_name === "word" && w.audio_url).map(w => w.audio_url); }
+    const u = WBW[vkey][li]; return u ? (/^https?:/.test(u) ? u : "https://audio.qurancdn.com/" + u) : null;
+  }
+  function letterIdx(vkey, w) {
+    const [s, a] = vkey.split(":").map(Number); const d = state.data["tj:" + s]; let toks = null;
+    if (Array.isArray(d) && d[a - 1] && typeof tjWords === "function") { try { toks = tjWords(d[a - 1]); } catch (e) {} }
+    if (!toks) { const els = [...document.querySelectorAll(`.tj2 .w[data-v="${vkey}"]`)]; toks = els.map(e => e.innerHTML); }
+    let n = 0; for (let i = 0; i < Math.min(w, toks.length); i++) if (/[ء-يٱ]/.test(String(toks[i]).replace(/<[^>]*>/g, ""))) n++; return n;
+  }
+  window.wSay158 = async function (vkey, w, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } try { const u = await wordAudio(vkey, letterIdx(vkey, w)); if (!u) return toast(T("مفيش تسجيل للكلمة دي", "No recording for this word"), true); if (!wAu) wAu = new Audio(); wAu.src = u; wAu.play().catch(() => {}); } catch (e) { toast(e.message, true); } };
+  window.aSay158 = function (vkey, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } if (!wAu) wAu = new Audio(); wAu.src = eaUrl("Husary_128kbps", vkey); wAu.play().catch(() => {}); };
+  document.addEventListener("click", ev => { if (!state.tjv || !state.tjv.wsay || state.tjv.mark) return; const w = ev.target.closest && ev.target.closest(".tj2 .w"); if (!w || w.classList.contains("mk")) return; ev.preventDefault(); wSay158(w.dataset.v, +w.dataset.i); }, true);
+  if (typeof tjTools === "function") { const _tt = tjTools; tjTools = function () { const h = _tt.apply(this, arguments); const on = state.tjv && state.tjv.wsay; return h.replace('<div class="tjf157">', `<div class="row" style="gap:.35rem;margin:.4rem 0"><button class="btn ${on ? "btn-p" : "btn-o"}" onclick="state.tjv.wsay=!state.tjv.wsay;render()">🔊 ${on ? T("دوسة على أي كلمة = تسمع نطقها الحقيقي ✓", "Tap any word = hear it recited ✓") : T("اسمع نطق أي كلمة", "Hear any word")}</button></div><div class="tjf157">`); }; }
+
+  /* ---------- 9) تعليم الأخطاء: الأحكام اللي في الكلمة فوق + الصفات/التفخيم بالحرف + الإكمال التلقائي + كلمتين + النطق ---------- */
+  const L2 = { sifat: ["🔤", "صفات حرف", "Letter attributes"] }; Object.assign(MM_KINDS, L2);
+  const _mk = mmKind; mmKind = function (k) { if (String(k).startsWith("tj:")) { const v = TJ[k.slice(3)]; return v ? (ar() ? v[1] : v[2]) : k; } return _mk(k); };
+  function wordRules(vkey, w) { const fix = (setv("tjfix158", {}) || {})[vkey + ":" + w]; if (Array.isArray(fix)) return fix; const el = document.querySelector(`.tj2 .w[data-v="${vkey}"][data-i="${w}"]`); if (!el) return []; return [...new Set([...el.querySelectorAll("[class*='tj-']")].map(x => (x.className.match(/tj-([a-z_]+)/) || [])[1]).filter(k => k && TJ[k] && !["slnt", "ham_wasl", "laam_shamsiyah"].includes(k)))]; }
+  const letters = word => [...new Set(String(word).replace(/[^ء-يٱ]/g, "").split(""))];
+  window.mmx158 = { letter: "", tf: "" };
+  window.mmx158Pick = function (k, v, btn) { mmx158[k] = v; btn.parentElement.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === btn)); };
+  window.mmx158Rule = function (r) { const box = document.getElementById("mmModal"); if (!box) return; let inp = box.querySelector(`input[name="mmk"][value="tj:${r}"]`); if (!inp) { const lab = document.createElement("label"); lab.innerHTML = `<input type="radio" name="mmk" value="tj:${r}"> 🎨 ${esc(ar() ? TJ[r][1] : TJ[r][2])}`; box.querySelector(".mmkinds").prepend(lab); inp = lab.querySelector("input"); } inp.checked = true; mmxShow(); };
+  window.mmx158FixRules = async function (vkey, w) {
+    const cur = new Set(wordRules(vkey, w)); const keys = Object.keys(TJ).filter(k => !["slnt", "ham_wasl", "laam_shamsiyah"].includes(k));
+    const m = document.createElement("div"); m.className = "hlpov"; m.style.zIndex = "2147483600"; m.onclick = e => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="hlpbox"><h3>✏️ ${T("صحّح أحكام الكلمة", "Fix this word's rules")}</h3>${keys.map(k => `<label class="sm" style="display:block"><input type="checkbox" value="${k}" ${cur.has(k) ? "checked" : ""}> <span style="color:${TJ[k][0]}">●</span> ${esc(ar() ? TJ[k][1] : TJ[k][2])}</label>`).join("")}<button class="btn btn-p" style="margin-top:.6rem" id="fx158">💾 ${T("احفظ", "Save")}</button></div>`;
+    document.body.appendChild(m);
+    m.querySelector("#fx158").onclick = async () => { const all = Object.assign({}, setv("tjfix158", {}) || {}); all[vkey + ":" + w] = [...m.querySelectorAll("input:checked")].map(i => i.value); await saveSetting16("tjfix158", all); m.remove(); const b = document.getElementById("mmModal"); if (b) { b.remove(); } toast("✅"); };
+  };
+  function prevNotes() { const u = mmUser(); const all = state.data["mmAll:" + u]; const mine = Array.isArray(all) ? all : []; const glob = state.data.mmNotes158 || []; return [...new Set(mine.concat(glob).map(m => (m.note || "").replace(/^\[[^\]]*\]\s*/, "").trim()).filter(Boolean))]; }
+  function loadNotes() { if (state.data.mmNotes158 || !own()) return; state.data.mmNotes158 = []; sb.from("mushaf_marks").select("note").not("note", "is", null).order("created_at", { ascending: false }).limit(300).then(r => { state.data.mmNotes158 = r.data || []; }); }
+  function mmxShow() { const box = document.getElementById("mmModal"); if (!box) return; const k = (box.querySelector('input[name="mmk"]:checked') || {}).value; const p = box.querySelector("#mmxL158"); if (p) p.style.display = (k === "sifat" || k === "tafkhim" || k === "makhraj") ? "" : "none"; const tf = box.querySelector("#mmxT158"); if (tf) tf.style.display = k === "tafkhim" ? "" : "none"; }
+  const _open = mmOpen;
+  mmOpen = function (vkey, w, word) {
+    _open.apply(this, arguments); loadNotes(); mmx158.letter = ""; mmx158.tf = "";
+    const box = document.getElementById("mmModal"); if (!box) return; const eb = box.querySelector(".edbox"); box.style.zIndex = "2147483550";
+    const rules = wordRules(vkey, w); const lts = letters(word); const nxt = document.querySelector(`.tj2 .w[data-v="${vkey}"][data-i="${w + 1}"]`);
+    const top = document.createElement("div"); top.className = "mmx158";
+    top.innerHTML = `<div class="row" style="gap:.3rem;flex-wrap:wrap;align-items:center"><button class="btn btn-o" style="padding:.15rem .5rem" onclick="wSay158('${vkey}',${w},event)">🔊 ${T("الكلمة", "Word")}</button><button class="btn btn-o" style="padding:.15rem .5rem" onclick="aSay158('${vkey}',event)">📖 ${T("الآية (الحصري)", "Āyah (Ḥuṣarī)")}</button></div>
+      <b class="sm" style="display:block;margin-top:.4rem">🎯 ${T("الأحكام اللي في الكلمة دي:", "Rules in this word:")}</b><div class="chips">${rules.length ? rules.map(r => `<button class="chip" style="border-color:${TJ[r][0]};color:${TJ[r][0]}" onclick="mmx158Rule('${r}')">${esc(ar() ? TJ[r][1] : TJ[r][2])}</button>`).join("") : `<span class="xs muted">${T("مفيش أحكام ملوّنة هنا", "No coloured rules here")}</span>`}${own() ? `<button class="chip" onclick="mmx158FixRules('${vkey}',${w})">✏️ ${T("صحّح الأحكام", "Fix rules")}</button>` : ""}</div>
+      <div id="mmxL158" style="display:none;margin-top:.4rem"><b class="sm">🔤 ${T("أنهي حرف؟", "Which letter?")}</b><div class="chips">${lts.map(l => `<button class="chip lt" onclick="mmx158Pick('letter','${l}',this)">${l}</button>`).join("")}</div></div>
+      <div id="mmxT158" style="display:none;margin-top:.3rem"><div class="chips"><button class="chip" onclick="mmx158Pick('tf','${T("تفخيم", "Tafkhīm")}',this)">🔊 ${T("المفروض تفخيم", "Should be heavy (tafkhīm)")}</button><button class="chip" onclick="mmx158Pick('tf','${T("ترقيق", "Tarqīq")}',this)">🔉 ${T("المفروض ترقيق", "Should be light (tarqīq)")}</button></div></div>
+      ${nxt ? `<label class="sm" style="display:block;margin-top:.4rem"><input type="checkbox" id="mmx2w158"> 📎 ${T("الحكم ده بين الكلمة دي واللي بعدها:", "This rule spans this word and the next:")} <b class="mmw">${esc(nxt.innerText.trim())}</b></label>` : ""}`;
+    eb.insertBefore(top, eb.querySelector(".mmkinds"));
+    const kinds = eb.querySelector(".mmkinds"); if (kinds && !kinds.querySelector('input[value="sifat"]')) { const lab = document.createElement("label"); lab.innerHTML = `<input type="radio" name="mmk" value="sifat"> 🔤 ${T("صفات حرف", "Letter attributes")}`; kinds.appendChild(lab); }
+    kinds.addEventListener("change", mmxShow);
+    if (rules.length) mmx158Rule(rules[0]);
+    const ta = eb.querySelector("#mmNote"); const sg = document.createElement("div"); sg.className = "sug158"; ta.after(sg);
+    const upd = () => { const v = ta.value.trim(); const L = prevNotes().filter(n => !v || n.includes(v)).slice(0, 8); sg.innerHTML = L.map(n => `<button type="button">${esc(n)}</button>`).join(""); sg.querySelectorAll("button").forEach((b, i) => b.onclick = () => { ta.value = L[i]; upd(); }); };
+    ta.addEventListener("input", upd); ta.addEventListener("focus", upd); setTimeout(upd, 600);
+    const sv = eb.querySelector(".btn.btn-p"); if (sv) sv.setAttribute("onclick", `mmSave158('${vkey}',${w},${esc(JSON.stringify(word))})`);
+  };
+  window.mmSave158 = async function (vkey, w, word) {
+    const box = document.getElementById("mmModal"); const k = (box.querySelector('input[name="mmk"]:checked') || {}).value || "other"; let note = (box.querySelector("#mmNote") || {}).value.trim();
+    const tag = [mmx158.letter && T("حرف: ", "Letter: ") + mmx158.letter, (k === "tafkhim" && mmx158.tf) || ""].filter(Boolean).join(" · "); if (tag) note = `[${tag}] ` + note;
+    const two = box.querySelector("#mmx2w158"); const nxt = two && two.checked ? document.querySelector(`.tj2 .w[data-v="${vkey}"][data-i="${w + 1}"]`) : null;
+    const rows = [{ user_id: mmUser(), vkey, w, word, kind: k, note: (nxt ? note + (note ? " " : "") + "↔ " + nxt.innerText.trim() : note) || null }];
+    if (nxt) rows.push({ user_id: mmUser(), vkey, w: w + 1, word: nxt.innerText.trim(), kind: k, note: ((note ? note + " " : "") + "↔ " + word) });
+    const r = await sb.from("mushaf_marks").insert(rows); if (r.error) return toast(r.error.message, true);
+    mmInv(+vkey.split(":")[0]); box.remove(); toast(L("saved")); render();
+  };
+  const _ml = mmListCard;
+  mmListCard = function (surah) {
+    let h = _ml.apply(this, arguments); const u = mmUser(); const all = state.data["mmAll:" + u]; if (!Array.isArray(all)) return h; const open = all.filter(m => !m.resolved).slice(0, 40); let i = 0;
+    return h.replace(/<b class="mmw">/g, m => { const x = open[i++]; return x ? `<button class="ibtn" style="font-size:.85rem" title="${T("انطق الكلمة", "Say the word")}" onclick="wSay158('${x.vkey}',${x.w},event)">🔊</button><button class="ibtn" style="font-size:.85rem" title="${T("الآية بصوت الحصري", "Āyah by Ḥuṣarī")}" onclick="aSay158('${x.vkey}',event)">📖</button>` + m : m; });
+  };
+
+  /* ---------- تطبيق الصور المعتمدة لما تكون الصورة بنفس المفتاح ---------- */
+  window.ai156Ok = async function (key) {
+    const row = (state.data.ai156gal || []).find(x => x.key === key); if (!row) return; const t = (row.meta && row.meta.target) || null;
+    if (t && t !== key) { const { error } = await sb.from("art_assets").upsert({ key: t, prompt: row.prompt, status: "done", url: row.url }); if (error) return toast(error.message, true); await sb.from("art_assets").delete().eq("key", key); }
+    else { const { error } = await sb.from("art_assets").update({ status: "done" }).eq("key", key); if (error) return toast(error.message, true); }
+    try { if (t || key) ART[t || key] = row.url; } catch (e) {} delete state.data.ai156gal; toast("✅ " + T("اتنشرت", "Published")); render();
+  };
+
+  /* ---------- التشغيل بعد كل رسم ---------- */
+  const _r = render;
+  render = function () {
+    if (state.route === "cp158") { const app = document.getElementById("app"); if (app) { let b; try { b = cpPage(); } catch (e) { b = `<div class="card">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); uilApply(); uilBar(); } catch (e) {} } }
+    const out = state.route === "cp158" ? undefined : _r.apply(this, arguments);
+    try { drawer(); } catch (e) { console.error(e); }
+    try { shellApply(); } catch (e) { console.error(e); }
+    try { custRender(); } catch (e) { console.error(e); }
+    try { mdApply(); soloApply(); } catch (e) { console.error(e); }
+    try { bgApply(); } catch (e) {}
+    try { cardImgs(); } catch (e) {}
+    try { edBar(); } catch (e) { console.error(e); }
+    return out;
+  };
+  if (/^#\/cp158\//.test(location.hash)) { state.route = "cp158"; state.pageArg = location.hash.split("/")[2]; }
 })();
 
 // بدء التشغيل
