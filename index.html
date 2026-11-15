@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v147";
+const UI_VERSION = "2026-11-14-v148";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21551,6 +21551,26 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 #nt147{position:fixed;bottom:8.4rem;inset-inline-start:12px;z-index:1250;background:#b91c1c;color:#fff;border:0;border-radius:999px;padding:.5rem .7rem;font-weight:700;cursor:pointer}.en146on #app *:hover{outline:2px dashed #1d4ed8;outline-offset:2px;cursor:text}
 
 </style>`);
+
+/* ---------- v148: مين يشوف كل أداة (الكل / المسجلين / المعلمين / الأونر) من المنظّم + صفحة «اليوم» بـ٣ مهام ---------- */
+const VIS148 = [["all", "👥 الكل"], ["user", "🔑 المسجلين بس"], ["teacher", "👨‍🏫 المعلمين والأونر"], ["owner", "👑 الأونر بس"]];
+function vis148Ok(v) { if (!v || v === "all") return true; const r = realRole(); if (r === "owner") return true; if (v === "owner") return false; if (v === "teacher") return r === "teacher"; if (v === "user") return !!(state.auth && state.auth.user); return true; }
+const _orgApply148 = orgApply; orgApply = function (ds, all) { const out = _orgApply148(ds, all); if (all) return out; const O = orgGet(); return out.filter(d => vis148Ok(((O.d || {})[d.k] || {}).vis)).map(d => Object.assign(d, { tools: (d.tools || []).filter(t => vis148Ok(((O.t || {})[t.__id || String(t[2])] || {}).vis)) })); };
+const _orgItemMenu148 = orgItemMenu; orgItemMenu = function (id, dom) { _orgItemMenu148(id, dom); const m = document.querySelector("#orgMenu .orgmenu"); if (!m) return; const cur = ((orgGet().t || {})[id] || {}).vis || "all"; m.insertAdjacentHTML("beforeend", `<label class="row" style="gap:.3rem">👁️ مين يشوفها: <select onchange="orgSetT(${esc(JSON.stringify(id))},{vis:this.value})">${VIS148.map(([k, t]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${t}</option>`).join("")}</select></label>`); };
+const _orgBody148 = orgBody; orgBody = function () { let h = _orgBody148(); orgRaw().forEach(d => { const cur = ((orgGet().d || {})[d.k] || {}).vis || "all"; h = h.replace(`<span class="orgfb"><label class="xs" title="الباب">`, `<span class="orgfb" data-k="${d.k}"><label class="xs" title="مين يشوف القسم"><select onchange="orgSetD('${d.k}',{vis:this.value})">${VIS148.map(([k, t]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${t.split(" ")[0]}</option>`).join("")}</select></label><label class="xs" title="الباب">`); }); return h; };
+/* صفحة اليوم */
+function renderToday148() {
+  const ar = state.lang === "ar"; const d = new Date(); const key = "itqan_today_" + d.toISOString().slice(0, 10); let done = {}; try { done = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+  const T = [["hz", "📖", ar ? "وِرد الحفظ والمراجعة" : "Memorization & review", ar ? "جلسة اليوم من خطة الحفظ" : "Today's session from your plan", "state.hzTab='today';go16('hifz')"], ["mq", "🎼", ar ? "تمرين صوت ٥ دقايق" : "5-minute voice drill", ar ? "سلّم مقام وآهات مع الموالف" : "A maqam ladder with aahs and the tuner", "go16('maqamat')"], ["ar", "✍️", ar ? "١٠ دقايق عربي" : "10 minutes of Arabic", ar ? "كمّل درسك في الفصحى أو المصري" : "Continue your Fusha or Egyptian lesson", "go16('lang','fu')"]];
+  const n = T.filter(t => done[t[0]]).length;
+  return pageWrap("☀️", ar ? "اليوم" : "Today", ar ? "٣ حاجات بس كل يوم — خلّصهم وخلاص" : "Just three things a day — finish them and you're done", `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><b>${n}/3 ${n === 3 ? "🎉" : ""}</b><div class="tjbbar" style="flex:1;margin-inline-start:.8rem"><i style="width:${n * 33.4}%"></i></div></div></div>${T.map(t => `<div class="card t148 ${done[t[0]] ? "ok" : ""}"><span class="i">${t[1]}</span><div style="flex:1"><b>${t[2]}</b><p class="xs muted" style="margin:.1rem 0 0">${t[3]}</p></div><button class="btn btn-p" onclick="${esc(t[4])}">${ar ? "ابدأ" : "Start"}</button><label class="t148c"><input type="checkbox" ${done[t[0]] ? "checked" : ""} onchange="t148Set('${key}','${t[0]}',this.checked)"> ✔</label></div>`).join("")}`);
+}
+function t148Set(key, k, v) { let d = {}; try { d = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {} if (v) d[k] = 1; else delete d[k]; try { localStorage.setItem(key, JSON.stringify(d)); } catch (e) {} if (Object.keys(d).length === 3) { try { qzCelebrate(); } catch (e) {} } render(); }
+PAGES16.push("today");
+const _render148 = render;
+render = function () { if (state.route === "today") { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + renderToday148() + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render148.apply(this, arguments); };
+const _doors148 = doors147Html; doors147Html = function () { const h = _doors148(); const ar = state.lang === "ar"; return h.replace('<div class="dr147">', `<div style="text-align:center;margin:-.3rem 0 .8rem"><button class="btn btn-o" onclick="go16('today')">☀️ ${ar ? "مهام اليوم (٣ بس)" : "Today's 3 tasks"}</button></div><div class="dr147">`); };
+document.head.insertAdjacentHTML("beforeend", `<style>.t148{display:flex;align-items:center;gap:.7rem;margin-top:.6rem}.t148 .i{font-size:2rem}.t148.ok{opacity:.6}.t148.ok b{text-decoration:line-through}.t148c{font-weight:700;white-space:nowrap}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
