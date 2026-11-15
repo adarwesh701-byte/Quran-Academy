@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v163";
+const UI_VERSION = "2026-11-15-v164";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23390,6 +23390,139 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="btn ${TR162.running ? "btn-o" : "btn-p"}" onclick="tr162Run()">${TR162.running ? "⏸ " + T("وقّف", "Pause") : "▶ " + T("ابدأ", "Start")}</button> <span class="sm" id="tr162p">${TR162.total ? `${TR162.done} / ${TR162.total}` : ""}${TR162.err ? " — " + esc(TR162.err) : ""}</span></div>`;
   }
   const _os = ownerSettings; ownerSettings = function () { return _os.apply(this, arguments) + card(); };
+})();
+
+
+/* ================= v164: صور كل المحتوى (أوتوماتيك + موافقة جماعية بالقسم) + حالة الأصوات في الإعدادات + الزائر يشوف الأيقونات والمحتوى بالتسجيل + المصحف: تكبير الخط/دليل ألوان ثابت/المفخّم والمرقّق/تصحيح الخطأ من غير ما النافذة تتقفل + «بدون موسيقى» بس على الأناشيد + صوت الآهات والسلم يرجع زي الأول ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e); const own = () => realRole() === "owner" && !state.preview;
+  const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.tj2{font-size:calc(1em * var(--tjz,1))!important}
+.tjf157{position:sticky;top:0;z-index:30;background:var(--card,#fff);padding:.4rem;border-radius:12px;box-shadow:0 4px 14px #0001}
+.tjz164{display:inline-flex;gap:.25rem;align-items:center;margin-inline-start:.5rem}
+.tjz164 button{border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:8px;padding:.1rem .5rem;font-weight:800;cursor:pointer;color:inherit}
+.tf164{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.4rem;font:1.25rem/1.4 'Amiri',serif}
+.tf164 span{border-radius:8px;padding:0 .4rem}
+.tf164 .h{background:#fee2e2;color:#b91c1c}.tf164 .l{background:#dbeafe;color:#1d4ed8}.tf164 .c{background:#fef3c7;color:#92400e}
+.gl164{position:fixed;inset:0;z-index:2147483600;background:#0008;display:flex;align-items:center;justify-content:center;padding:1rem}
+.gl164 .bx{background:var(--card,#fff);border-radius:20px;max-width:26rem;width:100%;padding:1.4rem;text-align:center;box-shadow:0 20px 60px #0005}
+.gl164 .bx h3{margin:.3rem 0}.gl164 .bx .row{justify-content:center;gap:.5rem;margin-top:1rem}
+.ag164 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem;margin-top:.5rem}
+.ag164 label{display:block;border:2px solid var(--line,#e5e7eb);border-radius:12px;overflow:hidden;cursor:pointer;background:var(--card,#fff)}
+.ag164 label.on{border-color:var(--accent,#0f766e)}
+.ag164 img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.ag164 small{display:block;padding:.25rem .4rem;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vs164 .n{font-size:1.6rem;font-weight:900}
+</style>`);
+
+  /* ---------- 1) صوت الآهات والسلم: الافتراضي يرجع الصوت البشري زي الأول ---------- */
+  function voiceFix() {
+    if (setv("aahvoice164", "std") === "mine") return;
+    if (!state.__v164v) { state.__v164v = true; state.__v152voice = true; ["mq", "mqd", "thp"].forEach(k => { if (state[k] && state[k].voice === "mine") { state[k].voice = "m"; if (k === "mq") state.mq.mine = false; } }); try { const M = window.MQCA; if (M && M.voice === "mine") M.voice = "m"; } catch (e) {} }
+  }
+
+  /* ---------- 2) الصور: عرض صورة كل قسم/محتوى (بعد موافقتك) + موافقة جماعية ---------- */
+  function idImgs() {
+    if (typeof ART === "undefined") return;
+    document.querySelectorAll("#app .libgrid > *, #app .dmgrid > *, #app .hvgrid > *, #app .toolsgrid > *, #app .w147t, #app .dmcard").forEach(c => {
+      const oc = (c.getAttribute("onclick") || "") + " " + ((c.querySelector("[onclick]") || {}).getAttribute ? (c.querySelector("[onclick]").getAttribute("onclick") || "") : "");
+      const m = oc.match(UUID); if (!m) return; const u = ART["id:" + m[0]]; if (!u || c.classList.contains("cimg158")) return;
+      c.classList.add("cimg158"); c.style.backgroundImage = `url('${u}')`;
+    });
+  }
+  const AG = state.ag164 = state.ag164 || { sel: {}, grp: "" };
+  window.ag164Grp = g => { AG.grp = g; render(); };
+  window.ag164Tog = k => { AG.sel[k] = !AG.sel[k]; render(); };
+  window.ag164All = on => { (state.data.ag164 || []).filter(x => !AG.grp || (x.meta || {}).group === AG.grp).forEach(x => AG.sel[x.key] = on); render(); };
+  window.ag164Do = async ok => {
+    const rows = (state.data.ag164 || []).filter(x => AG.sel[x.key]); if (!rows.length) return toast(T("اختار صور الأول", "Select images first"), true);
+    if (!ok && !confirm(T(`تمسح ${rows.length} صورة؟`, `Delete ${rows.length} images?`))) return;
+    toast("⏳ " + rows.length);
+    for (const r of rows) {
+      const t = (r.meta && r.meta.target) || r.key;
+      if (!ok) { await sb.from("art_assets").delete().eq("key", r.key); continue; }
+      if (t !== r.key) { await sb.from("art_assets").upsert({ key: t, prompt: r.prompt, status: "done", url: r.url }); await sb.from("art_assets").delete().eq("key", r.key); }
+      else await sb.from("art_assets").update({ status: "done" }).eq("key", r.key);
+      try { ART[t] = r.url; } catch (e) {}
+    }
+    AG.sel = {}; delete state.data.ag164; delete state.data.ai156gal; delete state.data.ag164n; toast("✅ " + rows.length); render();
+  };
+  function galCard() {
+    const L = useData("ag164", async () => { const r = await sb.from("art_assets").select("key,url,prompt,meta").eq("status", "review").order("updated_at", { ascending: false }).limit(400); return r.data || []; });
+    const N = useData("ag164n", async () => { const c = async s => (await sb.from("art_assets").select("key", { count: "exact", head: true }).eq("status", s)).count || 0; return [{ p: await c("pending"), r: await c("review"), d: await c("done") }]; });
+    const n = Array.isArray(N) ? N[0] : {}; const rows = Array.isArray(L) ? L : []; const groups = [...new Set(rows.map(x => (x.meta || {}).group || T("بدون قسم", "No section")))];
+    const vis = rows.filter(x => !AG.grp || ((x.meta || {}).group || T("بدون قسم", "No section")) === AG.grp); const sc = vis.filter(x => AG.sel[x.key]).length;
+    return `<div class="card ag164" style="margin-top:1rem"><h3>🖼️ ${T("صور المحتوى (أوتوماتيك — بموافقتك)", "Content images (automatic — with your approval)")}</h3>
+      <p class="sm">${T("الموقع بيعمل صورة لكل قسم ومحتوى لوحده (حوالي صورة كل دقيقة). ولا صورة بتظهر للطلاب غير لما توافق. اختار قسم أو «حدد الكل» ووافق مرة واحدة.", "The site makes an image for every section and item by itself (about one a minute). None shows to students until you approve. Pick a section or “Select all” and approve in one go.")}</p>
+      <p class="sm">⏳ ${T("في الطابور", "Queued")}: <b>${n.p ?? "…"}</b> · 🗂️ ${T("مستنية موافقتك", "Waiting")}: <b>${n.r ?? "…"}</b> · ✅ ${T("منشورة", "Live")}: <b>${n.d ?? "…"}</b></p>
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center"><select class="in" style="width:auto;max-width:16rem" onchange="ag164Grp(this.value)"><option value="">${T("كل الأقسام", "All sections")} (${rows.length})</option>${groups.map(g => `<option ${AG.grp === g ? "selected" : ""}>${esc(g)}</option>`).join("")}</select>
+        <button class="btn btn-o" onclick="ag164All(true)">☑️ ${T("حدد الكل", "Select all")}</button><button class="btn btn-o" onclick="ag164All(false)">⬜ ${T("الغي التحديد", "Clear")}</button>
+        <button class="btn btn-p" onclick="ag164Do(true)">✅ ${T("وافق على المحدد", "Approve selected")} (${sc})</button><button class="btn btn-o" onclick="ag164Do(false)">🗑️ ${T("امسح المحدد", "Delete selected")}</button></div>
+      ${!Array.isArray(L) ? loadingBox() : vis.length ? `<div class="grid">${vis.slice(0, 120).map(x => `<label class="${AG.sel[x.key] ? "on" : ""}"><input type="checkbox" style="display:none" ${AG.sel[x.key] ? "checked" : ""} onchange="ag164Tog('${esc(x.key)}')"><img src="${esc(x.url)}" loading="lazy" alt=""><small>${AG.sel[x.key] ? "☑️ " : ""}${esc(String(x.prompt || "").split(" — ")[0].slice(0, 50))}</small></label>`).join("")}</div>` : `<p class="sm muted">—</p>`}</div>`;
+  }
+
+  /* ---------- 3) حالة الأصوات في الإعدادات ---------- */
+  function voiceCard() {
+    const N = useData("vs164", async () => { const c = async (t, f) => { let q = sb.from(t).select("*", { count: "exact", head: true }); Object.entries(f).forEach(([k, v]) => q = q.eq(k, v)); return (await q).count || 0; }; return [{ need: await c("vclone_jobs", { status: "pending" }), live: await c("voice_lines", { status: "approved" }), clone: await c("voice_lines", { status: "approved", src: "clone" }), human: await c("voice_lines", { status: "approved", src: "human" }) }]; });
+    const n = Array.isArray(N) ? N[0] : {}; const cur = setv("aahvoice164", "std");
+    return `<div class="card vs164" style="margin-top:1rem"><h3>🔊 ${T("الأصوات", "Voices")}</h3>
+      <div class="row" style="gap:1rem;flex-wrap:wrap"><div><div class="n">${n.need ?? "…"}</div><span class="xs muted">${T("جملة لسه محتاجة صوت", "lines still need audio")}</span></div><div><div class="n">${n.live ?? "…"}</div><span class="xs muted">${T("صوت شغال على الموقع", "live on the site")}</span></div><div><div class="n">${n.clone ?? "…"}</div><span class="xs muted">${T("منهم مستنسخ", "of them cloned")}</span></div><div><div class="n">${n.human ?? "…"}</div><span class="xs muted">${T("منهم بصوتك مباشر", "recorded by you")}</span></div></div>
+      <p class="xs muted" style="margin:.5rem 0">${T("الأصوات المستنسخة بتترفع وتشتغل علطول من Colab (التاب «itqan_voice_colab» في المتصفح اللي جوه برنامج Claude على جهازك — سيبه مفتوح).", "Cloned lines go live as soon as Colab makes them (the “itqan_voice_colab” tab in the browser inside the Claude app on your computer — keep it open).")}</p>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><button class="btn btn-p" onclick="go16('rec161')">🎙️ ${T("افتح استوديو التسجيل", "Open the recording studio")}</button>
+        <label class="sm">${T("صوت الآهات والسلم الافتراضي:", "Default voice for aahs & ladders:")} <select class="in" style="width:auto" onchange="saveSetting16('aahvoice164',this.value).then(()=>{state.__v164v=false;render()})"><option value="std" ${cur !== "mine" ? "selected" : ""}>${T("الصوت البشري (زي الأول)", "Human voice (as before)")}</option><option value="mine" ${cur === "mine" ? "selected" : ""}>${T("صوتي المسجّل", "My recorded voice")}</option></select></label></div></div>`;
+  }
+  const _os = ownerSettings; ownerSettings = function () { return voiceCard() + galCard() + _os.apply(this, arguments); };
+
+  /* ---------- 4) الزائر: يشوف الأيقونات، وأي محتوى يتفتح بالتسجيل المجاني ---------- */
+  const isGuest = () => { if (state.auth && state.auth.user) return false; try { return !Object.keys(localStorage).some(k => /^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)); } catch (e) { return !state.auth || !state.auth.user; } };
+  const OPEN = /navigate\('(home|pricing|about|contact|booking|signup|login|app|policy|terms|privacy|teachers)'\)|langModal|setTheme|menuOpen|aiOpen|ctlPanel|lghdr|state\.lang|go16\('(level|placement)'/;
+  const LOCK = /libGo|go16\(|navigate\('|openContent|eaPlay|tjPlay|playAudio|mqPlay|spOpen|story|daVideo|daPick/;
+  window.gl164 = function () {
+    if (document.querySelector(".gl164")) return; const m = document.createElement("div"); m.className = "gl164"; m.onclick = e => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="bx"><div style="font-size:2.4rem">🔒</div><h3>${T("سجّل مجانًا وافتح كل ده", "Sign up free to open all of this")}</h3><p class="sm">${T("التسجيل بياخد دقيقة (أو بضغطة بجوجل/فيسبوك) ويفتحلك محتوى مجاني في كل مسار + حصة تجريبية.", "Signing up takes a minute (or one tap with Google/Facebook) and unlocks free content in every track + a trial lesson.")}</p>
+      <div class="row"><button class="btn btn-p" onclick="this.closest('.gl164').remove();navigate('signup')">✨ ${T("سجّل مجانًا", "Sign up free")}</button><button class="btn btn-o" onclick="this.closest('.gl164').remove();navigate('login')">${T("عندي حساب", "I have an account")}</button></div></div>`;
+    document.body.appendChild(m);
+  };
+  document.addEventListener("click", ev => {
+    if (!isGuest() || !(setv("guestlock164", true))) return; const el = ev.target.closest && ev.target.closest("[onclick], a[href^='#/']"); if (!el || !el.closest("#app") || el.closest(".hdr .tools, .gl164, form, .auth, .ai-widget")) return;
+    const oc = el.getAttribute("onclick") || el.getAttribute("href") || ""; if (OPEN.test(oc) || !LOCK.test(oc)) return;
+    ev.preventDefault(); ev.stopImmediatePropagation(); gl164();
+  }, true);
+  const FREE = ["home", "pricing", "about", "contact", "booking", "signup", "login", "app", "policy", "terms", "privacy", "teachers", "cert", "level", "placement"];
+  function guard() { if (isGuest() && setv("guestlock164", true) && !FREE.includes(state.route)) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} setTimeout(gl164, 300); return true; } return false; }
+
+  /* ---------- 5) المصحف: حجم الخط + المفخّم والمرقّق + تصحيح من غير ما النافذة تقفل ---------- */
+  const z = () => +(localStorage.getItem("itqan_tjz") || 1);
+  window.tjz164 = d => { const v = Math.max(.7, Math.min(2.2, Math.round((z() + d) * 10) / 10)); localStorage.setItem("itqan_tjz", v); document.documentElement.style.setProperty("--tjz", v); const s = document.getElementById("tjzv"); if (s) s.textContent = Math.round(v * 100) + "%"; };
+  document.documentElement.style.setProperty("--tjz", z());
+  if (typeof tjTools === "function") { const _tt = tjTools; tjTools = function () { const h = _tt.apply(this, arguments); return h.replace('<div class="tjf157">', `<div class="tjf157"><span class="tjz164"><button onclick="tjz164(-.1)" title="${T("صغّر الخط", "Smaller")}">A−</button><span class="xs" id="tjzv">${Math.round(z() * 100)}%</span><button onclick="tjz164(.1)" title="${T("كبّر الخط", "Bigger")}">A+</button></span>`); }; }
+  const HEAVY = "خصضغطقظ", COND = "رلا";
+  function tfLetters(word) { const ls = [...new Set(String(word).replace(/[^ء-يٱ]/g, "").split(""))]; return `<div class="tf164">${ls.map(l => `<span class="${HEAVY.includes(l) ? "h" : COND.includes(l) ? "c" : "l"}" title="${HEAVY.includes(l) ? T("مفخّم دايمًا", "Always heavy") : COND.includes(l) ? T("مفخّم أو مرقّق حسب الحالة", "Heavy or light depending on context") : T("مرقّق", "Light")}">${l}</span>`).join("")}</div><p class="xs muted" style="margin:.2rem 0 0"><span style="color:#b91c1c">■</span> ${T("مفخّم", "Heavy")} · <span style="color:#92400e">■</span> ${T("حسب الحالة (ر، ل، الألف)", "Depends (ر, ل, alif)")} · <span style="color:#1d4ed8">■</span> ${T("مرقّق", "Light")}</p>`; }
+  if (typeof mmOpen === "function") {
+    const _mo = mmOpen;
+    mmOpen = function (vkey, w, word) { _mo.apply(this, arguments); state.mm164 = { vkey, w, word }; const box = document.getElementById("mmModal"); const top = box && box.querySelector(".mmx158"); if (top && !top.querySelector(".tf164")) top.insertAdjacentHTML("beforeend", `<b class="sm" style="display:block;margin-top:.5rem">🔤 ${T("حروف الكلمة: المفخّم والمرقّق", "Letters: heavy and light")}</b>` + tfLetters(word)); };
+    const reopen = () => { const m = state.mm164; if (!m) return; setTimeout(() => mmOpen(m.vkey, m.w, m.word), 350); };
+    const _res = mmResolve; mmResolve = async function () { await _res.apply(this, arguments); toast("✅ " + T("اتقفل الخطأ", "Mistake closed")); reopen(); };
+    const _del = mmDel; mmDel = async function () { await _del.apply(this, arguments); reopen(); };
+  }
+
+  /* ---------- 6) «بدون موسيقى» تظهر على الأناشيد والابتهالات بس ---------- */
+  function nmHide() {
+    document.querySelectorAll("#app .badge, #app .chip, #app span, #app small").forEach(el => {
+      if (el.children.length > 2) return; const t = (el.textContent || "").trim(); if (!/^(🚫\s*🎵\s*)?(بدون موسيقى|No music)$/.test(t.replace(/\s+/g, " "))) return;
+      const card = el.closest(".card, .dmcard, .rcgrid59 > *, [class*='card']"); const ct = card ? card.textContent : ""; if (/نشيد|أناشيد|ابتهال|nasheed|ibtihal/i.test(ct)) return; el.style.display = "none";
+    });
+  }
+
+  const _r = render;
+  render = function () {
+    try { voiceFix(); } catch (e) {}
+    try { guard(); } catch (e) {}
+    const out = _r.apply(this, arguments);
+    try { idImgs(); nmHide(); } catch (e) {}
+    return out;
+  };
 })();
 
 // بدء التشغيل
