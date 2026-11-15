@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v139";
+const UI_VERSION = "2026-11-14-v140";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21050,6 +21050,159 @@ render = function () { if (state.route === "mqc") { const app = document.getElem
 const _DOMAINS139 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS139(); try { if (realRole() === "owner") { const t = ds.find(d => d.k === "maqamat" || d.k === "maqam"); if (t && t.tools && !t.tools.some(x => String(x[2]).includes("'mqc'"))) t.tools.unshift(["🎼", "موسوعة المقامات المتشابهة (خاصة بيك)", "go16('mqc')", ""]); } } catch (e) {} return ds; };
 try { const _sr139 = srIndex109; srIndex109 = function () { const a = _sr139(); try { if (realRole() === "owner") a.push(["🎼 موسوعة المقامات المتشابهة", "go16('mqc')", "شهناز حجاز كار شد عربان سوزدلار نكريز نوا أثر أثر كرد لامي كرد سيكا هزام عراق راحة الأرواح مقامات متشابهة"]); } catch (e) {} return a; }; } catch (e) {}
 (function () { const st = document.createElement("style"); st.textContent = `.mqcsvg .mqcd{transition:r .15s}.mqcsvg .mqcd.on{fill:#f59e0b!important;r:11}.mqcul{margin:.3rem 1.2rem;line-height:1.9}.mqcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem;margin-top:.6rem}.mqcm{border:1px solid var(--b,#e5e7eb);border-radius:12px;padding:.6rem}.mqcctl .btn-sm{padding:.3rem .6rem;font-size:.85rem}`; document.head.appendChild(st); })();
+
+/* ---------- v140: «العربية الفصحى» — الكتاب التفاعلي من ملفات الباور بوينت (صفحة الكتاب + الإجابات مكانها + الصوت مقسّم جمل) ---------- */
+const ABYB = { lv: 1, u: null, s: 0, mode: "read", shown: {}, inp: {}, seg: {}, test: null };
+function abybKey(lv, u) { return `book/L${lv}/U${String(u).padStart(2, "0")}`; }
+function abybIndex() { return useData("abyb:index", async () => { try { const r = await fetch(abyUrl("book/index.json") + "?v=" + Date.now()); if (!r.ok) return [[]]; return [await r.json()]; } catch (e) { return [[]]; } }); }
+function abybUnit(lv, u) { return useData("abyb:" + lv + ":" + u, async () => { try { const r = await fetch(abyUrl(abybKey(lv, u) + ".json") + "?v=" + (state.abybBust || 1)); if (!r.ok) return null; return await r.json(); } catch (e) { return null; } }); }
+const abybEmu = (v) => +v || 0;
+/* تحليل ملف وحدة: كل شريحة = صورة صفحة الكتاب + مربعات الإجابات بمكانها الأصلي + الأصوات */
+async function abybParse(f) {
+  const z = await JSZip.loadAsync(f); const rd = async (n) => { const x = z.file(n); return x ? x.async("string") : ""; };
+  const pres = await rd("ppt/presentation.xml"); const sz = pres.match(/sldSz cx="(\d+)" cy="(\d+)"/) || [0, 12192000, 6858000]; const W = +sz[1], H = +sz[2];
+  const slides = Object.keys(z.files).filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a, b) => +a.match(/(\d+)\.xml/)[1] - +b.match(/(\d+)\.xml/)[1]);
+  const media = {}; const out = []; let unitTitle = "";
+  for (const sp of slides) {
+    const sn = +sp.match(/(\d+)\.xml/)[1]; const xml = await rd(sp); const relx = await rd(`ppt/slides/_rels/slide${sn}.xml.rels`);
+    const rel = {}; for (const m of relx.matchAll(/Id="([^"]+)"[^>]*?Target="([^"]+)"/g)) rel[m[1]] = m[2].replace(/^\.\.\/media\//, "");
+    const allTxt = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(m => m[1]).join(" ").replace(/\s+/g, " ");
+    const plain = allTxt.replace(/[\u064B-\u0652\u0640]/g, ""); const lesson = +((plain.match(/الدرس\s*\(?\s*(\d+)/) || [])[1] || 0);
+    let page = null; const boxes = []; const aud = [];
+    for (const m of xml.matchAll(/<p:(sp|pic)>([\s\S]*?)<\/p:\1>/g)) {
+      const b = m[2]; const o = b.match(/<a:off x="(-?\d+)" y="(-?\d+)"\/>\s*<a:ext cx="(\d+)" cy="(\d+)"/); if (!o) continue;
+      const r = [abybEmu(o[1]) / W, abybEmu(o[2]) / H, abybEmu(o[3]) / W, abybEmu(o[4]) / H].map(v => Math.round(v * 10000) / 10000);
+      if (/hlinkClick|hlinkshowjump|hlinksldjump/.test(b)) continue;
+      const media_ = b.match(/<a:(audioFile|videoFile)[^>]*r:link="([^"]+)"/) || b.match(/p14:media[^>]*r:embed="([^"]+)"/);
+      if (media_) { const t = rel[media_[2] || media_[1]]; if (t && /\.(mp3|m4a|wav|mp4|m4v|wma)$/i.test(t) && !aud.includes(t)) aud.push(t); continue; }
+      if (m[1] === "pic") {
+        const e = (b.match(/r:embed="([^"]+)"/) || [])[1]; const t = rel[e]; if (!t || !/\.(png|jpe?g|gif|webp)$/i.test(t)) continue;
+        if (r[2] > .97 && r[3] > .97) continue; /* الإطار */
+        const area = r[2] * r[3]; if (area > .18) { if (!page || area > page.r[2] * page.r[3]) page = { img: t, r }; continue; }
+        if (r[1] > .86) continue; /* أزرار تحت */
+        boxes.push({ k: "img", img: t, r }); continue;
+      }
+      const txt = [...b.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(x => x[1]).join("").replace(/\s+/g, " ").trim(); if (!txt) continue;
+      const fs = +((b.match(/ sz="(\d+)"/) || [])[1] || 2400) / 100;
+      const tp = txt.replace(/[\u064B-\u0652\u0640]/g, ""); if (r[1] < .13 && (fs >= 30 || /الوحدة|الدرس|^\(?\s*\d+\s*\)?$/.test(tp))) { if (!unitTitle && fs >= 36 && !/الوحدة|الدرس|\d/.test(tp)) unitTitle = txt.replace(/ـ+/g, ""); continue; }
+      if (/^الإجابات$|^التالي$|^رجوع$/.test(txt)) continue;
+      boxes.push({ k: "t", t: txt, r, fs });
+    }
+    for (const m of relx.matchAll(/Target="\.\.\/media\/([^"]+\.(mp3|m4a|wav|wma|mp4|m4v))"/gi)) if (!aud.includes(m[1])) aud.push(m[1]);
+    if (!page && !boxes.length && !aud.length) continue;
+    if (!page && !aud.length) continue; /* الغلاف والفهرس */
+    [page && page.img, ...boxes.filter(x => x.img).map(x => x.img), ...aud].filter(Boolean).forEach(t => media[t] = 1);
+    out.push({ n: sn, lesson, page, boxes, aud });
+  }
+  return { W, H, title: unitTitle, slides: out, media: Object.keys(media), z };
+}
+async function abybUpload(files) {
+  files = [...(files || [])].filter(f => /U\d+\.pptx$/i.test(f.name)); if (!files.length) return toast("اختار ملفات U01.pptx … U16.pptx", true);
+  await abyLoadZip(); const log = document.getElementById("abybLog"); const say_ = (m) => { if (log) { log.insertAdjacentHTML("beforeend", `<div>${esc(m)}</div>`); log.scrollTop = 1e9; } };
+  const idx = ((abybIndex() || [[]])[0] || []).slice();
+  for (const f of files) {
+    const path = f.webkitRelativePath || f.name; const lvM = path.match(/(الأول|الثاني|الثالث|الرابع)/); const lv = lvM ? { "الأول": 1, "الثاني": 2, "الثالث": 3, "الرابع": 4 }[lvM[1]] : ABYB.lv; const unit = +f.name.match(/U(\d+)/i)[1];
+    if (lv === 4) { say_(`⏭️ الكتاب الرابع — U${unit} (هنضيفه بعد ما نخلص الأول والتاني والتالت)`); continue; }
+    if (!unit) continue; say_(`📂 ${ABY_N[lv]} — الوحدة ${unit}: بقرأ الملف…`);
+    let P; try { P = await abybParse(f); } catch (e) { say_("❌ " + f.name + ": " + e.message); continue; }
+    const base = abybKey(lv, unit); let k = 0;
+    for (const m of P.media) {
+      const fz = P.z.file("ppt/media/" + m); if (!fz) continue; const ext = m.split(".").pop().toLowerCase();
+      const type = { mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", mp4: "video/mp4", m4v: "video/mp4", png: "image/png", gif: "image/gif", webp: "image/webp" }[ext] || "image/jpeg";
+      const up = await sb.storage.from("academy_public").upload(`arabiya/${base}/${m}`, await fz.async("blob"), { contentType: type, upsert: true }); if (up.error) say_("⚠️ " + m + ": " + up.error.message); k++;
+      if (k % 10 === 0) say_(`   ⬆️ ${k}/${P.media.length}`);
+    }
+    const J = { lv, unit, title: P.title, W: P.W, H: P.H, slides: P.slides };
+    await sb.storage.from("academy_public").upload(`arabiya/${base}.json`, new Blob([JSON.stringify(J)], { type: "application/json" }), { contentType: "application/json", upsert: true });
+    const ls = [...new Set(P.slides.map(s => s.lesson).filter(Boolean))]; const o = { lv, unit, title: P.title, lessons: ls, slides: P.slides.length, ans: P.slides.reduce((s, x) => s + x.boxes.length, 0), aud: P.slides.reduce((s, x) => s + x.aud.length, 0) };
+    const i = idx.findIndex(x => x.lv === lv && x.unit === unit); if (i >= 0) idx[i] = o; else idx.push(o);
+    await sb.storage.from("academy_public").upload("arabiya/book/index.json", new Blob([JSON.stringify(idx)], { type: "application/json" }), { contentType: "application/json", upsert: true });
+    say_(`✅ الوحدة ${unit} «${P.title}»: ${o.slides} صفحة · ${o.ans} إجابة · ${o.aud} صوت`);
+  }
+  delete state.data["abyb:index"]; state.abybBust = Date.now(); toast("✅ خلص"); render();
+}
+/* تقسيم الصوت لجمل بالسكتات */
+async function abybSplit(url) {
+  if (ABYB.seg[url]) return ABYB.seg[url];
+  const ac = aahCtx(); const buf = await ac.decodeAudioData(await (await fetch(url)).arrayBuffer()); const d = buf.getChannelData(0), sr = buf.sampleRate, hop = Math.floor(sr * .02);
+  const en = []; for (let i = 0; i < d.length; i += hop) { let s = 0; for (let j = i; j < Math.min(i + hop, d.length); j++) s += d[j] * d[j]; en.push(Math.sqrt(s / hop)); }
+  const sorted = en.slice().sort((a, b) => a - b); const thr = Math.max(sorted[Math.floor(sorted.length * .2)] * 2.2, .006);
+  const segs = []; let st = -1, sil = 0; const minSil = 18; /* 0.36 ث */
+  en.forEach((e, i) => { if (e > thr) { if (st < 0) st = i; sil = 0; } else if (st >= 0) { sil++; if (sil >= minSil) { const end = i - sil + 1; if (end - st > 12) segs.push([Math.max(0, st - 4) * .02, (end + 6) * .02]); st = -1; sil = 0; } } });
+  if (st >= 0) segs.push([Math.max(0, st - 4) * .02, en.length * .02]);
+  ABYB.seg[url] = { segs, dur: buf.duration }; return ABYB.seg[url];
+}
+function abybPlaySeg(url, i, rep) {
+  const S = ABYB.seg[url]; if (!S) return; const [a, b] = S.segs[i]; let el = document.getElementById("abybAud"); if (!el) return;
+  if (el.src !== url) el.src = url; let n = rep || 1; el.currentTime = a; el.play();
+  document.querySelectorAll(".abybseg").forEach(x => x.classList.toggle("on", +x.dataset.i === i));
+  clearInterval(ABYB.segT); ABYB.segT = setInterval(() => { if (el.currentTime >= b) { if (--n > 0) { el.currentTime = a; } else { el.pause(); clearInterval(ABYB.segT); } } }, 40);
+}
+async function abybSplitUi(url, id) { const box = document.getElementById(id); if (!box) return; box.innerHTML = "⏳ بقسّم الصوت لجمل…"; try { const S = await abybSplit(url); box.innerHTML = `<div class="xs muted" style="margin-bottom:.3rem">🎧 ${S.segs.length} جملة — اضغط الجملة تسمعها، و🔁 تتكرر ٣ مرات</div>` + S.segs.map((s, i) => `<span class="abybsegw"><button class="btn btn-o btn-sm abybseg" data-i="${i}" onclick="abybPlaySeg('${url}',${i})">${i + 1}</button><button class="abybrep" title="كرر ٣ مرات" onclick="abybPlaySeg('${url}',${i},3)">🔁</button></span>`).join(""); } catch (e) { box.innerHTML = "⚠️ " + esc(e.message); } }
+function abybNorm(s) { return String(s || "").replace(/[\u064B-\u0652\u0670\u0640]/g, "").replace(/[إأآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[^\u0621-\u064A0-9a-z]/gi, ""); }
+function abybStage(U, S, si) {
+  const base = abyUrl(abybKey(U.lv, U.unit)) + "/"; const solve = ABYB.mode === "solve"; const all = ABYB.shown[si] === "all";
+  const rs = [S.page && S.page.r, ...S.boxes.map(b => b.r)].filter(Boolean); let bx = Math.max(0, Math.min(...rs.map(r => r[0])) - .01), by = Math.max(0, Math.min(...rs.map(r => r[1])) - .01), bx2 = Math.min(1, Math.max(...rs.map(r => r[0] + r[2])) + .01), by2 = Math.min(1, Math.max(...rs.map(r => r[1] + r[3])) + .01); if (!rs.length) { bx = by = 0; bx2 = by2 = 1; }
+  const bw = bx2 - bx, bh = by2 - by;
+  let h = `<div class="abybst" style="aspect-ratio:${(bw * U.W).toFixed(0)}/${(bh * U.H).toFixed(0)};--abyf:${(1.3 / bw).toFixed(3)}cqw"><div class="abybin" style="left:${-bx / bw * 100}%;top:${-by / bh * 100}%;width:${100 / bw}%;height:${100 / bh}%">`;
+  if (S.page) h += `<img src="${base}${encodeURIComponent(S.page.img)}" style="left:${S.page.r[0] * 100}%;top:${S.page.r[1] * 100}%;width:${S.page.r[2] * 100}%;height:${S.page.r[3] * 100}%" loading="lazy" alt="">`;
+  S.boxes.forEach((b, bi) => {
+    const id = si + "_" + bi; const pos = `left:${b.r[0] * 100}%;top:${b.r[1] * 100}%;width:${b.r[2] * 100}%;min-height:${b.r[3] * 100}%`;
+    const open = (all && ABYB.shown[id] !== 0) || ABYB.shown[id];
+    if (b.k === "img") { h += `<div class="abybb img ${open ? "open" : ""}" style="${pos};height:${b.r[3] * 100}%" onclick="ABYB.shown['${id}']=1;abybRe()">${open ? `<img src="${base}${encodeURIComponent(b.img)}" alt="">` : "❓"}</div>`; return; }
+    const fz = `font-size:calc(${b.fs / 24} * var(--abyf))`;
+    if (solve && !open) { const v = ABYB.inp[id] || ""; const st = ABYB.inp[id + "!"]; h += `<input class="abybb inp ${st || ""}" style="${pos};${fz}" value="${esc(v)}" dir="rtl" oninput="ABYB.inp['${id}']=this.value" onkeydown="if(event.key==='Enter')abybCheck()" placeholder="…">`; return; }
+    h += `<div class="abybb t ${open ? "open" : ""}" style="${pos};${fz}" onclick="ABYB.shown['${id}']=1;abybRe()">${open ? esc(b.t) : "👆"}</div>`;
+  });
+  return h + `</div></div>`;
+}
+function abybCheck() {
+  const U = (abybUnit(ABYB.lv, ABYB.u) || null); if (!U || !U.slides) return; const S = U.slides[ABYB.s]; let ok = 0, n = 0;
+  S.boxes.forEach((b, bi) => { if (b.k !== "t") return; const id = ABYB.s + "_" + bi; const v = ABYB.inp[id]; if (v == null || v === "") { ABYB.inp[id + "!"] = ""; return; } n++; const good = abybNorm(v) === abybNorm(b.t) || (abybNorm(b.t).length > 6 && abybNorm(b.t).includes(abybNorm(v)) && abybNorm(v).length >= abybNorm(b.t).length * .8); ABYB.inp[id + "!"] = good ? "ok" : "bad"; if (good) ok++; });
+  try { const p = JSON.parse(localStorage.getItem("itqan_abyb") || "{}"); p[`${ABYB.lv}-${ABYB.u}-${ABYB.s}`] = [ok, S.boxes.filter(b => b.k === "t").length]; localStorage.setItem("itqan_abyb", JSON.stringify(p)); } catch (e) {}
+  toast(n ? `✅ ${ok} من ${n} صح` : "اكتب إجاباتك الأول"); abybRe();
+}
+function abybRe() { const b = document.getElementById("abybBody"); if (b) b.innerHTML = abybBody(); else render(); }
+function abybTestNew(U) { const pool = []; U.slides.forEach((S, si) => S.boxes.forEach((b, bi) => { if (b.k === "t" && abybNorm(b.t).length >= 2 && abybNorm(b.t).length <= 40) pool.push([si, bi]); })); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; } ABYB.test = { q: pool.slice(0, 12), i: 0, ok: 0, ans: null }; }
+function abybBody() {
+  const ix = abybIndex(); const all = Array.isArray(ix) ? (ix[0] || []) : null; const own = realRole() === "owner" && !state.preview;
+  const up = own ? `<div class="card" style="margin-bottom:.8rem;border:2px dashed var(--accent)"><b>📤 للمالك: ارفع وحدات الكتاب (المستويات ١–٣)</b><p class="xs muted" style="margin:.3rem 0 .5rem">اختار فولدر «Arabya pptx» كله أو فولدر مستوى. الموقع بيقرأ كل شريحة على جهازك: صفحة الكتاب، ومربعات الإجابات في مكانها بالظبط، وصح/غلط، والأصوات — ويرفعهم ويرتبهم بالوحدة والدرس. الكتاب الرابع بيتخطّى دلوقتي. سيب الصفحة مفتوحة لحد ما يخلص.</p>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap"><label class="btn btn-p">📁 اختار الفولدر<input type="file" hidden webkitdirectory multiple onchange="abybUpload(this.files)"></label><label class="btn btn-o">📄 اختار ملفات<input type="file" hidden multiple accept=".pptx" onchange="abybUpload(this.files)"></label></div><div id="abybLog" class="xs" style="max-height:12rem;overflow:auto;margin-top:.4rem"></div></div>` : "";
+  const tabs = `<div class="motabs">${[1, 2, 3].map(n => `<button class="${n === ABYB.lv ? "on" : ""}" onclick="ABYB.lv=${n};ABYB.u=null;abybRe()">📗 ${ABY_N[n]}${all ? ` <small>(${all.filter(o => o.lv === n).length})</small>` : ""}</button>`).join("")}</div>`;
+  if (!all) return up + tabs + loadingBox();
+  if (ABYB.u == null) {
+    const L = all.filter(o => o.lv === ABYB.lv).sort((a, b) => a.unit - b.unit); let prog = {}; try { prog = JSON.parse(localStorage.getItem("itqan_abyb") || "{}"); } catch (e) {}
+    return up + tabs + (L.length ? `<div class="abybgrid">${L.map(o => { const dn = Object.keys(prog).filter(k => k.startsWith(`${o.lv}-${o.unit}-`)).length; return `<button class="abybcard" onclick="ABYB.u=${o.unit};ABYB.s=0;ABYB.test=null;abybRe();window.scrollTo({top:0})"><span class="n">${o.unit}</span><b>${esc(o.title || "الوحدة " + o.unit)}</b><small>${o.lessons.length ? "الدروس " + Math.min(...o.lessons) + "–" + Math.max(...o.lessons) + " · " : ""}${o.slides} صفحة · ${o.ans} تمرين · ${o.aud} 🎧</small>${dn ? `<em>✍️ ${dn}</em>` : ""}</button>`; }).join("")}</div>` : `<div class="card" style="text-align:center"><div style="font-size:2.5rem">📗</div><p>وحدات الكتاب ده لسه ماترفعتش${own ? " — ارفعها من فوق." : "."}</p></div>`);
+  }
+  const U = abybUnit(ABYB.lv, ABYB.u); if (U === undefined) return up + tabs + loadingBox(); if (!U || !U.slides) return up + tabs + `<div class="card">⚠️ الوحدة مش موجودة.</div>`;
+  const head = `<div class="card abybhead"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><button class="btn btn-o" onclick="ABYB.u=null;abybRe()">← الوحدات</button><b>📘 الوحدة ${U.unit}: ${esc(U.title || "")}</b><span style="margin-inline-start:auto"></span>
+    ${[["read", "📖 اقرأ واسمع"], ["solve", "✍️ حلّ بنفسك"], ["test", "📝 اختبار الوحدة"]].map(([k, t]) => `<button class="btn ${ABYB.mode === k ? "btn-p" : "btn-o"} btn-sm" onclick="ABYB.mode='${k}';${k === "test" ? "abybTestNew(abybUnit(ABYB.lv,ABYB.u));" : ""}abybRe()">${t}</button>`).join("")}</div>
+    ${ABYB.mode !== "test" ? `<div class="abyblessons">${U.slides.map((S, i) => `<button class="${i === ABYB.s ? "on" : ""}" onclick="ABYB.s=${i};abybRe()" title="${S.lesson ? "الدرس " + S.lesson : ""}">${S.lesson && (i === 0 || U.slides[i - 1].lesson !== S.lesson) ? `<b>د${S.lesson}</b> ` : ""}${i + 1}${S.aud.length ? "🎧" : ""}</button>`).join("")}</div>` : ""}</div>`;
+  if (ABYB.mode === "test") {
+    const T = ABYB.test; if (!T || !T.q.length) return up + head + `<div class="card">مفيش تمارين كفاية في الوحدة دي.</div>`;
+    if (T.i >= T.q.length) return up + head + `<div class="card" style="text-align:center"><div style="font-size:3rem">${T.ok >= T.q.length * .8 ? "🏆" : "💪"}</div><h3>نتيجتك: ${T.ok} / ${T.q.length}</h3><button class="btn btn-p" onclick="abybTestNew(abybUnit(ABYB.lv,ABYB.u));abybRe()">🔁 اختبار جديد</button></div>`;
+    const [si, bi] = T.q[T.i]; const S = U.slides[si]; const save = [ABYB.mode, ABYB.shown]; ABYB.shown = { [si]: "all" }; ABYB.shown[si + "_" + bi] = 0; ABYB.mode = "solve";
+    const st = abybStage(U, Object.assign({}, S, { boxes: S.boxes.map((b, j) => j === bi ? b : Object.assign({}, b, { _o: 1 })) }), si).replace(/<div class="abybb (t|img)[^"]*"/g, (m0) => m0.replace(/abybb (t|img)/, "abybb $1 open dim"));
+    ABYB.mode = save[0]; ABYB.shown = save[1];
+    const b = S.boxes[bi]; const done = T.ans != null;
+    return up + head + `<div class="card"><div class="row" style="justify-content:space-between"><b>سؤال ${T.i + 1} من ${T.q.length}</b><b>✅ ${T.ok}</b></div><p class="sm muted" style="margin:.3rem 0">اكتب الإجابة الناقصة في المربع الفاضي على الصفحة (المربع المتلوّن):</p>${st.replace(/(<input class="abybb inp)/, '$1 focus')}
+      <div class="row" style="gap:.4rem;margin-top:.6rem;flex-wrap:wrap">${done ? `<div class="sm" style="flex:1">${T.ans ? "✅ صح!" : `❌ الإجابة: <b class="notr">${esc(b.t)}</b>`}</div><button class="btn btn-p" onclick="ABYB.test.i++;ABYB.test.ans=null;abybRe()">التالي ←</button>` : `<button class="btn btn-p" onclick="abybTestAns()">تأكيد</button><button class="btn btn-o" onclick="ABYB.test.ans=false;abybRe()">مش عارف</button>`}</div></div>`;
+  }
+  const si = ABYB.s; const S = U.slides[si]; const base = abyUrl(abybKey(U.lv, U.unit)) + "/";
+  const audH = S.aud.length ? S.aud.map((a, k) => /mp4|m4v/i.test(a) ? `<video controls preload="none" src="${base}${encodeURIComponent(a)}" style="width:100%;max-height:18rem"></video>` : `<div class="abybaud"><audio id="${k ? "" : "abybAud"}" controls preload="metadata" src="${base}${encodeURIComponent(a)}" style="width:100%"></audio>${k ? "" : `<div id="abybSeg"><button class="btn btn-o btn-sm" onclick="abybSplitUi('${base}${encodeURIComponent(a)}','abybSeg')">✂️ قسّم التسجيل جملة جملة</button></div>`}</div>`).join("") : "";
+  const nT = S.boxes.filter(b => b.k === "t").length, nI = S.boxes.length - nT;
+  const ctl = S.boxes.length ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.5rem 0">${ABYB.mode === "solve" ? `<button class="btn btn-p btn-sm" onclick="abybCheck()">✔️ صحّح</button>` : ""}<button class="btn btn-o btn-sm" onclick="ABYB.shown[${si}]=ABYB.shown[${si}]==='all'?0:'all';abybRe()">${ABYB.shown[si] === "all" ? "🙈 خبّي الإجابات" : "👁️ الإجابات"}</button><span class="xs muted">${nT ? nT + " إجابة مكتوبة" : ""}${nI ? " · " + nI + " صح/غلط" : ""} — ${ABYB.mode === "solve" ? "اكتب في المربعات وبعدين صحّح" : "اضغط 👆 على أي مربع تكشفه"}</span></div>` : "";
+  const nav = `<div class="row" style="justify-content:space-between;margin-top:.6rem">${si > 0 ? `<button class="btn btn-o" onclick="ABYB.s--;abybRe()">→ السابق</button>` : "<span></span>"}<span class="xs muted">${S.lesson ? "الدرس " + S.lesson + " · " : ""}صفحة ${si + 1}/${U.slides.length}</span>${si < U.slides.length - 1 ? `<button class="btn btn-p" onclick="ABYB.s++;abybRe()">التالي ←</button>` : "<span></span>"}</div>`;
+  return up + head + `<div class="card">${audH}${ctl}${abybStage(U, S, si)}${nav}</div>`;
+}
+function abybTestAns() { const T = ABYB.test; const U = abybUnit(ABYB.lv, ABYB.u); const [si, bi] = T.q[T.i]; const el = document.querySelector(".abybb.inp"); const v = el ? el.value : ""; const t = U.slides[si].boxes[bi].t; T.ans = !!v && abybNorm(v) === abybNorm(t); if (T.ans) T.ok++; abybRe(); }
+function renderAbyb() { return pageWrap("📗", "العربية الفصحى — الكتاب التفاعلي", "صفحات الكتاب نفسها، والإجابات من ملفات الشرح في مكانها، والتسجيلات جملة جملة — للمستويات الأول والتاني والتالت", `<div id="abybBody">${abybBody()}</div>`); }
+PAGES16.push("abyb");
+const _render140 = render;
+render = function () { if (state.route === "abyb") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderAbyb(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } const r_ = _render140.apply(this, arguments); try { if (state.route === "arabiya") { const pw = document.querySelector("#app .card"); if (pw && !document.getElementById("abybLink")) pw.insertAdjacentHTML("beforebegin", `<div id="abybLink" class="card" style="margin-bottom:.8rem;background:linear-gradient(135deg,#ecfdf5,#fff)"><b>📗 جديد: الكتاب التفاعلي</b><p class="xs muted" style="margin:.3rem 0 .5rem">صفحات الكتاب نفسها، والتمارين بحلولها، واختبار لكل وحدة، والتسجيلات جملة جملة.</p><button class="btn btn-p" onclick="go16('abyb')">افتح الكتاب التفاعلي ←</button></div>`); } } catch (e) {} return r_; };
+const _DOMAINS140 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS140(); const s = ds.find(d => d.k === "arabic"); if (s && s.tools && !s.tools.some(t => String(t[2]).includes("'abyb'"))) s.tools.unshift(["📗", state.lang === "ar" ? "العربية الفصحى — الكتاب التفاعلي (صفحات + تمارين + صوت)" : "Fusha — interactive book (pages, exercises, audio)", "go16('abyb')", ""]); return ds; };
+try { const _sr140 = srIndex109; srIndex109 = function () { const a = _sr140(); try { a.push(["📗 العربية الفصحى — الكتاب التفاعلي", "go16('abyb')", "العربية بين يديك كتاب تفاعلي تمارين حلول اختبار وحدة استماع حوار arabiyya bayna yadayk"]); } catch (e) {} return a; }; } catch (e) {}
+(function () { const st = document.createElement("style"); st.textContent = `.abybst{position:relative;width:100%;background:#fff;border-radius:10px;overflow:hidden;container-type:inline-size;border:1px solid var(--line)}.abybin{position:absolute}.abybin>img{position:absolute;object-fit:fill}.abybb{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;color:#b91c1c;font-weight:700;font-family:'Amiri','Noto Naskh Arabic',serif;line-height:1.2;cursor:pointer;border-radius:6px}.abybb.t:not(.open){background:#fde68a;color:#92400e;border:1.5px dashed #d97706;font-size:var(--abyf)!important}.abybb.t.open{background:rgba(255,251,235,.82)}.abybb.img:not(.open){background:#fde68a;border:1.5px dashed #d97706}.abybb.img img{width:100%;height:100%;object-fit:contain}.abybb.inp{background:#eff6ff;border:1.5px solid #3b82f6;color:#1e3a8a;padding:0 .2rem}.abybb.inp.ok{background:#dcfce7;border-color:#16a34a}.abybb.inp.bad{background:#fee2e2;border-color:#dc2626}.abybb.dim{opacity:.35}.abybb.inp.focus{box-shadow:0 0 0 4px #f59e0b88}.abyblessons{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.6rem}.abyblessons button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:.2rem .45rem;font-size:.8rem;cursor:pointer}.abyblessons button.on{background:var(--accent);color:#fff}.abybgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.6rem;margin-top:.8rem}.abybcard{position:relative;text-align:start;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:.8rem;cursor:pointer;display:flex;flex-direction:column;gap:.25rem}.abybcard .n{font-size:1.4rem;font-weight:800;color:var(--accent)}.abybcard small{opacity:.7}.abybcard em{position:absolute;top:.5rem;left:.6rem;font-style:normal;font-size:.75rem}.abybaud{margin-bottom:.5rem}.abybsegw{display:inline-flex;align-items:center;margin:.15rem}.abybseg.on{background:var(--accent);color:#fff}.abybrep{border:0;background:none;cursor:pointer;font-size:.8rem}`; document.head.appendChild(st); })();
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
