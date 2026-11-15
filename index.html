@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v138";
+const UI_VERSION = "2026-11-14-v139";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20857,6 +20857,199 @@ document.addEventListener("click", e => { const b = e.target.closest && e.target
 const _render138 = render;
 render = function () { const r = _render138.apply(this, arguments); try { document.querySelectorAll("#app button.tjw[onclick^='wbwPlay(']").forEach(b => { if (b.nextElementSibling && b.nextElementSibling.classList.contains("tjwm")) return; const m = b.getAttribute("onclick").match(/wbwPlay\((\d+),(\d+),(\d+),(\d+)/); if (!m) return; const x = document.createElement("button"); x.className = "tjwm"; x.title = state.lang === "ar" ? "سمّعني: سجّل الكلمة وقارن صوتك بالقارئ" : "Record & compare with the reciter"; x.textContent = "🎙️"; Object.assign(x.dataset, { s: m[1], a: m[2], w: m[3], n: m[4] }); b.after(x); }); } catch (e) {} return r; };
 document.head.insertAdjacentHTML("beforeend", `<style>.tjwm{border:1px dashed var(--line);background:transparent;border-radius:999px;cursor:pointer;padding:0 .35rem;margin-inline-start:-.1rem;vertical-align:middle}.smres{display:inline-flex;gap:.35rem;align-items:center;background:color-mix(in srgb,#16a34a 10%,var(--card));border:1px solid #16a34a55;border-radius:12px;padding:.1rem .5rem;margin:.15rem;font-size:.85rem}.smres b{color:#16a34a;font-size:1rem}</style>`);
+
+/* ---------- v139: موسوعة المقامات المتشابهة (خاصة بالأونر) ---------- */
+(function () {
+  const add = (o) => { if (!MQ.some(m => m.id === o.id)) MQ.push(o); };
+  add({ id: "shahnaz", ar: "شهناز", en: "Shahnaz", fam: "hijaz", tonic: 200, sc: [0, 100, 400, 500, 700, 800, 1100, 1200], use: "حجاز كار من قرار الدوكاه" });
+  add({ id: "suzidil", ar: "سوزدلار", en: "Suzidil", fam: "hijaz", tonic: -300, sc: [0, 100, 400, 500, 700, 800, 1100, 1200], use: "حجاز كار من قرار العشيران" });
+})();
+const MQC = {
+  groups: [
+    { id: "hjk", t: "عائلة الحجاز كار: شد عربان · سوزدلار · حجاز كار · شهناز", ms: ["shadaraban", "suzidil", "hijazkar", "shahnaz"],
+      th: ["الأربعة <b>نفس الأبعاد بالظبط</b>: جنس حجاز على القرار (نص تون – تون ونص – نص تون)، وبعده تون، وبعده جنس حجاز تاني فوق (على الخامسة). يعني السابعة «حسّاس» نص تون تحت الجواب.",
+        "الفرق الوحيد نظريًا هو <b>مكان القرار</b>: شد عربان على اليكاه (صول واطي)، سوزدلار على العشيران (لا واطي)، حجاز كار على الرست (دو)، شهناز على الدوكاه (ري).",
+        "حسب موقع Maqam World: الثلاثة (شد عربان، سوزدلار، شهناز) هم الحجاز كار متنقل لقرار تاني، وأساميهم مختلفة «لأسباب تاريخية» وكان ليهم سير مختلف زمان."],
+      pr: ["لو سمعت كل واحد لوحده من غير مرجع، ودنك <b>مش هتفرق</b> بينهم، لأن الودن بتحس بالأبعاد مش بالطبقة المطلقة. ده مش عيب في ودنك، ده طبيعي.",
+        "الفرق بيبان لما يكون فيه <b>مرجع ثابت</b>، زي آلة مضبوطة على الرست أو مقام قبله في نفس التلاوة. شغّل «درون الرست» تحت وهتسمع: الشهناز قاعد تون فوق الرست، والشد عربان تحت بخامسة.",
+        "الفرق بينهم وبين <b>الحجاز العادي</b> (على الدوكاه) في الفوق: الحجاز سابعته تون كامل تحت الجواب، أما عيلة الحجاز كار فالسابعة نص تون تحت الجواب، فبتحس إن الجملة «بتتسحب» للجواب."],
+      vo: ["شغّل درون الرست، واعمل همهمة «مممم» على قرار كل مقام لحد ما تثبت.", "اطلع جنس الحجاز ببطء، وخلي المسافة الكبيرة (تون ونص) بين التانية والتالتة واضحة ومتعمدة.", "ركّز على السابعة: اقعد عليها شوية، وبعدين اطلع للجواب نص تون بس.", "غنّي نفس الجملة من الأربع قرارات ورا بعض. هتحس إن الشد عربان في الصدر وعميق، والشهناز أعلى وأحدّ، مع إن الجملة واحدة."] },
+    { id: "hjd", t: "على الدوكاه: حجاز · شهناز · صبا · صبا زمزم", ms: ["hijaz", "shahnaz", "saba", "zamzam"],
+      th: ["الحجاز والشهناز ليهم <b>نفس الجنس الأول</b> (حجاز على الدوكاه).", "الحجاز فوق النوا بيكمّل بنهاوند (أو رست)، أما الشهناز فبيكمّل بحجاز على الحسيني. عشان كده الفرق بينهم في السابعة: الحجاز كردان، والشهناز «شهناز» نص تون تحت الجواب.", "الصبا والزمزم الرابعة فيهم مخفوضة (حجاز♭)، وده اللي بيدّيهم الحزن. الزمزم تانيته كرد (نص تون) بدل ¾."],
+      pr: ["تحت (من القرار للنوا) الحجاز والشهناز ممكن يتلخبطوا. الفيصل لما تطلع فوق الحسيني: لو نازل من الجواب بنص تون يبقى شهناز، ولو بتون يبقى حجاز.", "الصبا تعرفه من الرابعة: بتحس إنك «اتزنقت» ومش قادر تفتح للنوا براحة."],
+      vo: ["قول «دو كاه – كرد – حجاز» (ري – مي♭ – فا#) ببطء.", "اطلع للجواب مرة بسابعة كردان ومرة بسابعة شهناز، وسجّل نفسك وقارن.", "في الصبا: اقعد على الرابعة المخفوضة وارجع منها للتالتة، دي قفلة الصبا المشهورة."] },
+    { id: "krd", t: "الكرد واللامي وأخواتهم: كرد · لامي · حجاز كار كرد · بياتي", ms: ["kurd", "lami", "hijazkarkurd", "bayati"],
+      th: ["الكرد على الدوكاه: تانية نص تون (كرد) وكل الأبعاد بعد كده طبيعية.", "اللامي: زي الكرد بس <b>الخامسة مخفوضة</b> (حصار بدل النوا)، فمفيش نوا صافي.", "الحجاز كار كرد = الكرد نفسه بس قراره الرست. ده نفس قصة الحجاز كار والشهناز: نفس الأبعاد، قرار مختلف.", "البياتي يفرق عن الكرد في <b>التانية</b> بس: ¾ تون بدل نص تون."],
+      pr: ["الكرد والبياتي هم أكتر اتنين بيتلخبطوا. اقعد على التانية: في الكرد بتحسها لازقة في القرار، وفي البياتي فيها «ميلة» ربع تون.", "اللامي بتحس فيه إن الجملة «مكسورة» وحزينة أكتر، لأن النوا اللي بنستريح عليه في أغلب المقامات مش موجود."],
+      vo: ["بدّل بين مي♭ (كرد) ومي½♭ (بياتي) على نفس الهمهمة لحد ما تحس الفرق في حلقك.", "في اللامي: اطلع للخامسة المخفوضة واقعد عليها وانزل. متطلعش للنوا الطبيعي."] },
+    { id: "nkr", t: "النكريز والنوا أثر والأثر كرد (مقارنة بالنهاوند)", ms: ["nahawand", "nakriz", "nawaathar", "atharkurd"],
+      th: ["النكريز = جنس نكريز على الرست (دو – ري – مي♭ – <b>فا#</b> – صول) وبعده نهاوند على النوا (حسب Maqam World).", "النوا أثر = نفس جنس النكريز تحت، بس فوق النوا <b>حجاز</b> (لا♭ – سي).", "الأثر كرد = النوا أثر بس تانيته كرد (ري♭).", "النهاوند للمقارنة: الرابعة فيه طبيعية (فا)."],
+      pr: ["العلامة المشتركة للنكريز والنوا أثر: الرابعة المرفوعة (فا#)، ودي اللي بتعمل «اللفة» الشرقية حوالين النوا.", "النكريز والنوا أثر بيتفرقوا فوق النوا بس: النكريز فوقه هادي (لا – سي♭)، والنوا أثر فوقه حجاز حاد (لا♭ – سي)."],
+      vo: ["قول «مي♭ – فا# – صول» وحس بالمسافة الكبيرة (تون ونص) بين مي♭ وفا#.", "اعمل جملة حوالين النوا: صول – فا# – مي♭ – فا# – صول. دي بصمة النكريز.", "بعدين اطلع فوق النوا مرة بنهاوند (نكريز) ومرة بحجاز (نوا أثر)."] },
+    { id: "sik", t: "السيكا والهزام والعراق وراحة الأرواح", ms: ["sikah", "huzam", "iraq", "rahat"],
+      th: ["السيكا والهزام بيبدأوا بنفس جنس السيكا على المي½♭.", "الهزام فوق بيكمّل بحجاز على النوا، والسيكا بيكمّل طبيعي.", "راحة الأرواح = الهزام نفسه متنقل لقرار العراق (حسب Maqam World)، يعني نفس قصة الحجاز كار والشد عربان.", "العراق مش نسخة كاملة من السيكا: بيبدأ بجنس سيكاه على العراق، وبعده بياتي على الدوكاه، فالأبعاد فوق مختلفة."],
+      pr: ["الهزام تعرفه لما تطلع للنوا وتسمع الحجاز: صول – لا♭ – سي.", "الفرق بين الهزام وراحة الأرواح مش هتسمعه غير بمرجع ثابت، فشغّل درون الرست. أما العراق فهتحس فيه ببياتي لما يطلع للدوكاه."],
+      vo: ["السيكا صعب لأن القرار نفسه ربع تون. ثبّته الأول بدرون على القرار، وبعدين جرّب مع درون الرست.", "اعمل همهمة على القرار وانزل منه للدرجة اللي تحته وارجع. دي قفلة السيكا."] },
+    { id: "rst", t: "الرست وفروعه: رست · يكاه · سوزناك · نيروز · ماهور", ms: ["rast", "yakah", "suznak", "nairuz", "mahur"],
+      th: ["كلهم بيبدأوا بجنس رست (التالتة سيكاه ¾).", "السوزناك: حجاز على النوا. النيروز: بياتي على النوا. الماهور: السابعة ماهور (طبيعية) بدل الأوج. اليكاه: الرست نفسه من قرار اليكاه (أوطى بخامسة)."],
+      pr: ["كلهم تحت متشابهين. الفرق بيظهر فوق النوا، فاسمع الجزء العلوي كويس.", "في التلاوة الرست بيتنزّل في الغالب بسابعة كوشت أو أوج، والماهور بيطلع بسابعة طبيعية مشرقة."],
+      vo: ["اعمل نفس الجملة فوق النوا ٤ مرات: طبيعي، بحجاز، ببياتي، بماهور، وسجّل نفسك."] },
+    { id: "nhw", t: "النهاوند والفرحفزا والنهاوند المرصّع", ms: ["nahawand", "farahfaza", "murassa"],
+      th: ["الفرحفزا = النهاوند من قرار اليكاه.", "النهاوند المرصّع: فيه حجاز على الجهاركاه، فالخامسة بتتغير."],
+      pr: ["النهاوند والفرحفزا مش هتفرق بينهم غير بمرجع.", "المرصّع تعرفه من الحجاز اللي في النص."],
+      vo: ["جرب الجملة الطالعة في النهاوند والمرصّع ورا بعض، وحس بالخامسة."] },
+    { id: "byt", t: "البياتي والحسيني والكرد والصبا", ms: ["bayati", "husseini", "kurd", "saba"],
+      th: ["البياتي والحسيني نفس التحت. الحسيني فوق بيكمّل بياتي على الحسيني (السادسة ¾).", "الكرد: التانية نص تون. الصبا: الرابعة مخفوضة."],
+      pr: ["البياتي ← الحسيني: الفرق في السادسة. البياتي ← الكرد: الفرق في التانية. البياتي ← الصبا: الفرق في الرابعة."],
+      vo: ["اعمل همهمة على البياتي، وبعدين غيّر درجة واحدة بس كل مرة، وسمّع نفسك."] },
+    { id: "ajm", t: "العجم والجهاركاه والماهور", ms: ["ajam", "jiharkah", "mahur"],
+      th: ["العجم (هنا من العجم عشيران) سلم ماجير طبيعي.", "الجهاركاه: عجم من قرار الجهاركاه بسابعة أوج.", "الماهور: رست بسابعة طبيعية، فتحت فيه ربع تون (السيكاه)."],
+      pr: ["العجم والماهور بيتلخبطوا فوق. الفرق تحت: الماهور تالتته ¾ (سيكاه)، والعجم تالتته طبيعية."],
+      vo: ["اعمل التالتة مرة ¾ ومرة طبيعية على نفس القرار."] }
+  ],
+  g: "hjk", sel: null, mode: "aah", pat: 0, drone: "", voice: "m", tr: 0, speed: 1, quiz: null, score: [0, 0], live: null
+};
+function mqcM(id) { return MQ.find(m => m.id === id); }
+function mqcG() { return MQC.groups.find(g => g.id === MQC.g) || MQC.groups[0]; }
+function mqcRastHz() { return (MQC.voice === "f" ? 261.63 : 130.81) * Math.pow(2, MQC.tr / 12); }
+function mqcAbs(m) { return m.sc.map(c => c + m.tonic); }
+/* الفروق النظرية بتتحسب أوتوماتيك من الأبعاد */
+function mqcDiff(g) {
+  const ms = g.ms.map(mqcM).filter(Boolean); const out = {}; const nn = (c) => noteName(c) || (c + "¢");
+  ms.forEach(m => {
+    const notes = []; const shape = ms.filter(o => o !== m && o.sc.join() === m.sc.join()); const same = ms.filter(o => o !== m && o.tonic === m.tonic && o.sc.join() !== m.sc.join());
+    if (shape.length) notes.push(`نفس أبعاد ${shape.map(o => o.ar).join(" و")} بالظبط، بس القرار على ${nn(m.tonic)}`);
+    same.forEach(o => { const d = []; m.sc.slice(1, 7).forEach((c, k) => { const i = k + 1; if (o.sc[i] !== c) d.push(`الدرجة ${i + 1}: ${nn(c + m.tonic)} بدل ${nn(o.sc[i] + o.tonic)}`); }); if (d.length) notes.push(`عن ${o.ar} ← ${d.join("، ")}`); });
+    out[m.id] = notes;
+  });
+  return out;
+}
+function mqcLadder(g) {
+  const ms = g.ms.map(mqcM).filter(Boolean); const lo = Math.min(...ms.map(m => m.tonic)) - 50, hi = Math.max(...ms.map(m => m.tonic + 1200)) + 50;
+  const W = 900, rowH = 46, X = (c) => 70 + (c - lo) / (hi - lo) * (W - 90);
+  const marks = NOTE_NAMES.filter(([c, n]) => c >= lo && c <= hi && !/تيك|\?/.test(n));
+  let s = `<svg viewBox="0 0 ${W} ${ms.length * rowH + 50}" class="mqcsvg" style="width:100%;min-width:640px;direction:ltr">`;
+  marks.forEach(([c, n]) => { s += `<line x1="${X(c)}" x2="${X(c)}" y1="18" y2="${ms.length * rowH + 22}" stroke="var(--b,#ddd)" stroke-dasharray="${c % 1200 === 0 ? "" : "2 4"}" opacity=".6"/><text x="${X(c)}" y="12" font-size="9" text-anchor="middle" fill="currentColor" opacity=".7">${n}</text>`; });
+  s += `<rect id="mqcLive" x="0" y="18" width="3" height="${ms.length * rowH}" fill="#e11d48" opacity="0"/>`;
+  ms.forEach((m, r) => {
+    const y = 40 + r * rowH, ab = mqcAbs(m);
+    s += `<text x="4" y="${y + 4}" font-size="12" font-weight="700" fill="currentColor" text-anchor="start">${m.ar}</text><line x1="${X(ab[0])}" x2="${X(ab[7])}" y1="${y}" y2="${y}" stroke="currentColor" opacity=".25" stroke-width="2"/>`;
+    ab.forEach((c, i) => { const uniq = ms.some(o => o !== m) && !ms.filter(o => o !== m).some(o => mqcAbs(o).includes(c)); const st = i < 7 ? m.sc[i + 1] - m.sc[i] : 0;
+      if (i < 7) s += `<text x="${(X(c) + X(ab[i + 1])) / 2}" y="${y - 7}" font-size="8" text-anchor="middle" fill="currentColor" opacity=".6">${st === 100 ? "½" : st === 150 ? "¾" : st === 200 ? "1" : st === 250 ? "1¼" : st === 300 ? "1½" : st + "¢"}</text>`;
+      s += `<circle class="mqcd" data-m="${m.id}" data-c="${m.sc[i]}" cx="${X(c)}" cy="${y}" r="${i === 0 || i === 7 ? 8 : 6}" fill="${i === 0 ? "#0f766e" : uniq ? "#e11d48" : "#64748b"}" stroke="#fff" stroke-width="1.5"><title>${noteName(c)}</title></circle>`; });
+  });
+  return s + `<text x="${W - 10}" y="${ms.length * rowH + 44}" text-anchor="end" font-size="10" fill="currentColor" opacity=".8">● أخضر = القرار · ● أحمر = نغمة مش موجودة في باقي المقامات اللي في المجموعة · ½ ¾ 1 1½ = الأبعاد بالتون</text></svg>`;
+}
+/* ---- صوت: آلة نقر (قانون تقريبي) + همهمة + درون ---- */
+const MQCA = { nodes: [], timers: [], drone: null, mic: null };
+function mqcStop() { try { aahStop(); } catch (e) {} MQCA.nodes.forEach(n => { try { n.stop(); } catch (e) {} }); MQCA.nodes = []; MQCA.timers.forEach(clearTimeout); MQCA.timers = []; document.querySelectorAll(".mqcd.on").forEach(e => e.classList.remove("on")); }
+function mqcPluck(ac, f, t, d, vol) {
+  const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.32 * vol, t + .006); g.gain.exponentialRampToValueAtTime(.001, t + Math.max(.6, d * 1.6));
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(f * 9, t); lp.frequency.exponentialRampToValueAtTime(f * 2, t + .5); lp.connect(g); g.connect(ac.destination);
+  [[1, "triangle", 1], [2, "sine", .35], [3, "sine", .12]].forEach(([k, ty, a]) => { const o = ac.createOscillator(); o.type = ty; o.frequency.value = f * k; const og = ac.createGain(); og.gain.value = a; o.connect(og); og.connect(lp); o.start(t); o.stop(t + Math.max(.7, d * 1.7)); MQCA.nodes.push(o); });
+  /* قانون: نقرتين خفاف في النغمات الطويلة (ترعيد) */
+  if (d > .8) for (let k = 1; k < 3; k++) { const tt = t + d * .45 + k * .09; const o = ac.createOscillator(); o.type = "triangle"; o.frequency.value = f; const og = ac.createGain(); og.gain.setValueAtTime(.12 * vol, tt); og.gain.exponentialRampToValueAtTime(.001, tt + .35); o.connect(og); og.connect(lp); o.start(tt); o.stop(tt + .4); MQCA.nodes.push(o); }
+}
+function mqcHum(ac, notes, tonicHz, t0) {
+  const N = 12, re = new Float32Array(N), im = new Float32Array(N); for (let k = 1; k < N; k++) im[k] = Math.pow(k, -2);
+  const o = ac.createOscillator(); o.setPeriodicWave(ac.createPeriodicWave(re, im)); const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 650; lp.Q.value = 2;
+  const env = ac.createGain(); env.gain.value = 0; const vib = ac.createOscillator(); vib.frequency.value = 5; const vg = ac.createGain(); vg.gain.value = tonicHz * .008; vib.connect(vg); vg.connect(o.frequency);
+  o.connect(lp); lp.connect(env); env.connect(ac.destination); let t = t0;
+  env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(.5, t + .15);
+  notes.forEach(([c, d]) => { o.frequency.setTargetAtTime(tonicHz * Math.pow(2, c / 1200), t, .04); t += d; });
+  env.gain.setTargetAtTime(0, t - .05, .12); o.start(t0); vib.start(t0); o.stop(t + .8); vib.stop(t + .8); MQCA.nodes.push(o, vib); return t;
+}
+function mqcDroneSet(v) {
+  MQC.drone = v; try { if (MQCA.drone) { const d = MQCA.drone; d.g.gain.setTargetAtTime(0, d.ac.currentTime, .15); setTimeout(() => d.os.forEach(o => { try { o.stop(); } catch (e) {} }), 600); MQCA.drone = null; } } catch (e) {}
+  if (!v) return mqcUi();
+  const ac = aahCtx(); const m = mqcM(MQC.sel || mqcG().ms[0]); const cents = v === "rast" ? 0 : (m ? m.tonic : 0); let f = mqcRastHz() * Math.pow(2, cents / 1200); while (f > 160) f /= 2;
+  const g = ac.createGain(); g.gain.value = 0; g.gain.linearRampToValueAtTime(.09, ac.currentTime + .6); const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900; lp.connect(g); g.connect(ac.destination);
+  const os = [[1, "sawtooth"], [1.5, "sine"], [2, "sine"]].map(([k, ty], i) => { const o = ac.createOscillator(); o.type = ty; o.frequency.value = f * k * (1 + (i - 1) * .0012); const og = ac.createGain(); og.gain.value = [.5, .35, .3][i]; o.connect(og); og.connect(lp); o.start(); return o; });
+  MQCA.drone = { ac, g, os }; mqcUi();
+}
+function mqcPhrase(m) {
+  const P = MQC.pat, sp = MQC.speed;
+  if (P === 9) { /* حوالين النغمة المميزة */ const d = mqcDiff(mqcG())[m.id] || []; const k = m.sc.findIndex((c, i) => i && d.some(x => x.startsWith(`الدرجة ${i + 1}:`))); const i = k > 0 ? k : 2; return [[0, .7], [i - 1, .5], [i, 1.1], [i - 1, .45], [i, .45], [i + 1, .6], [i, 1], [i - 1, .5], [0, 1.4]].map(([j, d]) => [mqDeg(m, j), d / sp]); }
+  return mqPattern(m, P, sp);
+}
+function mqcPlay(id, after) {
+  mqcStop(); const m = mqcM(id); if (!m) return; MQC.sel = id; mqcUi();
+  const notes = mqcPhrase(m); const tHz = mqcRastHz() * Math.pow(2, m.tonic / 1200); const ac = aahCtx(); const t0 = ac.currentTime + .1;
+  const hi = (c) => { document.querySelectorAll(".mqcd.on").forEach(e => e.classList.remove("on")); const e = document.querySelector(`.mqcd[data-m="${id}"][data-c="${((c % 1200) + 1200) % 1200 === c ? c : c}"]`) || document.querySelector(`.mqcd[data-m="${id}"][data-c="${((c % 1200) + 1200) % 1200}"]`); if (e) e.classList.add("on"); };
+  const mode = MQC.mode; let total = notes.reduce((s, n) => s + n[1], 0);
+  if (mode === "aah" || mode === "both") aahSing(notes, tHz, MQC.voice, hi);
+  if (mode === "hum") mqcHum(ac, notes, tHz, t0);
+  if (mode === "music" || mode === "both") { let t = t0; notes.forEach(([c, d]) => { mqcPluck(ac, tHz * Math.pow(2, c / 1200) * (MQC.voice === "f" ? 1 : 2), t, d, mode === "both" ? .6 : 1); t += d; }); }
+  if (mode !== "aah" && mode !== "both") { let t = 0; notes.forEach(([c, d]) => { MQCA.timers.push(setTimeout(() => hi(c), t * 1000 + 100)); t += d; }); }
+  MQCA.timers.push(setTimeout(() => { document.querySelectorAll(".mqcd.on").forEach(e => e.classList.remove("on")); if (after) after(); }, (total + .6) * 1000));
+}
+function mqcAB() { const ms = mqcG().ms.slice(); const nx = () => { const id = ms.shift(); if (id) mqcPlay(id, () => MQCA.timers.push(setTimeout(nx, 700))); }; nx(); }
+function mqcQuiz(ans) {
+  const g = mqcG();
+  if (ans === undefined) { MQC.quiz = { id: g.ms[Math.floor(Math.random() * g.ms.length)], done: null }; if (!MQC.drone) mqcDroneSet("rast"); mqcUi(); setTimeout(() => mqcPlayQ(), 300); return; }
+  if (!MQC.quiz || MQC.quiz.done) return; const ok = ans === MQC.quiz.id; MQC.quiz.done = ans; MQC.score[1]++; if (ok) MQC.score[0]++; mqcUi();
+}
+function mqcPlayQ() { if (!MQC.quiz) return; const s = MQC.sel; mqcPlay(MQC.quiz.id); MQC.sel = s; }
+/* ---- قياس صوتك لايف على السلم ---- */
+async function mqcMic() {
+  if (MQCA.mic) { try { MQCA.mic.st.getTracks().forEach(t => t.stop()); cancelAnimationFrame(MQCA.mic.raf); } catch (e) {} MQCA.mic = null; MQC.live = null; const r = document.getElementById("mqcLive"); if (r) r.setAttribute("opacity", 0); return mqcUi(); }
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } }); } catch (e) { return toast("المايك مش متاح", true); }
+  const ac = aahCtx(); const src = ac.createMediaStreamSource(st); const an = ac.createAnalyser(); an.fftSize = 2048; src.connect(an); const buf = new Float32Array(an.fftSize);
+  MQCA.mic = { st, an, raf: 0 }; mqcUi();
+  const loop = () => { if (!MQCA.mic) return; an.getFloatTimeDomainData(buf); const hz = mqcAcf(buf, ac.sampleRate); if (hz) mqcShowLive(hz); MQCA.mic.raf = requestAnimationFrame(loop); }; loop();
+}
+function mqcAcf(b, sr) {
+  let rms = 0; for (let i = 0; i < b.length; i++) rms += b[i] * b[i]; rms = Math.sqrt(rms / b.length); if (rms < .015) return 0;
+  const mn = Math.floor(sr / 900), mx = Math.floor(sr / 60); let best = 0, bl = 0;
+  for (let l = mn; l < mx; l++) { let s = 0; for (let i = 0; i < b.length - l; i += 2) s += b[i] * b[i + l]; if (s > best) { best = s; bl = l; } }
+  return bl ? sr / bl : 0;
+}
+function mqcShowLive(hz) {
+  let c = 1200 * Math.log2(hz / mqcRastHz()); const m = mqcM(MQC.sel || mqcG().ms[0]); if (!m) return;
+  /* قرّب للأوكتاف الأقرب لسلم المقام */
+  const ab = mqcAbs(m); while (c < ab[0] - 600) c += 1200; while (c > ab[7] + 600) c -= 1200;
+  let bi = 0, bd = 1e9; ab.forEach((a, i) => { const d = Math.abs(a - c); if (d < bd) { bd = d; bi = i; } }); const dev = Math.round(c - ab[bi]);
+  const el = document.getElementById("mqcLiveTxt"); if (el) el.innerHTML = `🎙️ إنت دلوقتي على: <b>${noteName(Math.round(c / 50) * 50) || Math.round(c) + "¢"}</b> · أقرب درجة في ${m.ar}: <b>${noteName(ab[bi])}</b> · <b style="color:${Math.abs(dev) < 20 ? "#16a34a" : Math.abs(dev) < 45 ? "#d97706" : "#e11d48"}">${dev > 0 ? "+" : ""}${dev}¢</b> ${Math.abs(dev) < 20 ? "✅ مظبوط" : dev > 0 ? "⬇️ نزّل شوية" : "⬆️ علّي شوية"}`;
+  const svg = document.querySelector(".mqcsvg"), r = document.getElementById("mqcLive"); if (svg && r) { const ms = mqcG().ms.map(mqcM).filter(Boolean); const lo = Math.min(...ms.map(x => x.tonic)) - 50, hi = Math.max(...ms.map(x => x.tonic + 1200)) + 50; r.setAttribute("x", 70 + (c - lo) / (hi - lo) * 810 - 1.5); r.setAttribute("opacity", .85); }
+}
+function mqcUi() { const b = document.getElementById("mqcBody"); if (b) b.innerHTML = mqcBody(); }
+function mqcBody() {
+  const g = mqcG(); const ms = g.ms.map(mqcM).filter(Boolean); const diff = mqcDiff(g); const sel = MQC.sel && g.ms.includes(MQC.sel) ? MQC.sel : g.ms[0];
+  const btn = (on, js, txt) => `<button class="btn ${on ? "btn-p" : "btn-o"} btn-sm" onclick="${js}">${txt}</button>`;
+  const modes = [["aah", "🗣️ آهات"], ["hum", "🤐 همهمة"], ["music", "🎻 موسيقى بس"], ["both", "🎶 آهات + موسيقى"]];
+  const pats = [[0, "السلم طالع ونازل"], [1, "القفلة"], [2, "تمويجة"], [3, "جملة في الجواب"], [4, "حوالين القرار"], [5, "آهات طويلة"], [9, "حوالين النغمة المميزة"]];
+  const Q = MQC.quiz;
+  return `<div class="card"><div class="row" style="gap:.35rem;flex-wrap:wrap">${MQC.groups.map(x => btn(x.id === g.id, `MQC.g='${x.id}';MQC.sel=null;MQC.quiz=null;mqcStop();mqcUi()`, x.t.split(":")[0].replace(/ \(.*/, ""))).join("")}</div>
+    <h3 style="margin:.8rem 0 .3rem">${g.t}</h3>
+    <div style="overflow-x:auto">${mqcLadder(g)}</div></div>
+  <div class="card mqcctl"><div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center"><b>الصوت:</b>${modes.map(([k, t]) => btn(MQC.mode === k, `MQC.mode='${k}';mqcUi()`, t)).join("")}</div>
+    <div class="row" style="gap:.35rem;flex-wrap:wrap;align-items:center;margin-top:.5rem"><b>الجملة:</b>${pats.map(([k, t]) => btn(MQC.pat === k, `MQC.pat=${k};mqcUi()`, t)).join("")}</div>
+    <div class="row" style="gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.5rem"><b>المرجع (درون):</b>${btn(!MQC.drone, "mqcDroneSet('')", "بدون")}${btn(MQC.drone === "rast", "mqcDroneSet('rast')", "🎯 درون الرست الثابت")}${btn(MQC.drone === "qarar", "mqcDroneSet('qarar')", "درون على قرار المقام")}
+      <span style="margin-inline-start:auto"></span>${btn(MQC.voice === "m", "MQC.voice='m';mqcUi()", "رجالي")}${btn(MQC.voice === "f", "MQC.voice='f';mqcUi()", "حريمي")}
+      <label class="xs row" style="gap:.3rem">طبقتي <input type="range" min="-7" max="7" value="${MQC.tr}" oninput="MQC.tr=+this.value;this.nextElementSibling.textContent=(this.value>0?'+':'')+this.value"><span>${MQC.tr > 0 ? "+" : ""}${MQC.tr}</span></label>
+      <label class="xs row" style="gap:.3rem">السرعة <select onchange="MQC.speed=+this.value">${[.6, .8, 1, 1.25].map(v => `<option ${MQC.speed === v ? "selected" : ""} value="${v}">${v}×</option>`).join("")}</select></label></div>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.7rem">${ms.map(m => `<button class="btn ${sel === m.id ? "btn-p" : "btn-o"}" onclick="mqcPlay('${m.id}')">▶️ ${m.ar}</button>`).join("")}<button class="btn btn-o" onclick="mqcAB()">🔁 شغّلهم ورا بعض (نفس الجملة)</button><button class="btn btn-o" onclick="mqcStop()">⏹️</button></div>
+    <p class="xs muted" style="margin:.5rem 0 0">💡 لما المقامات «نفس الأبعاد وقرار مختلف»، شغّل <b>درون الرست الثابت</b> الأول، من غيره ودنك مش هتسمع فرق.</p></div>
+  <div class="card"><h3>🔬 الفرق نظريًا</h3><ul class="mqcul">${g.th.map(x => `<li>${x}</li>`).join("")}</ul>
+    <div class="mqcgrid">${ms.map(m => `<div class="mqcm"><b>${m.ar}</b> <small class="muted">${esc(m.use || "")}</small><div class="xs" style="margin-top:.3rem">القرار: <b>${noteName(m.tonic)}</b> · السلم: ${mqcAbs(m).map(c => noteName(c) || c + "¢").join(" – ")}</div>${(diff[m.id] || []).map(x => `<div class="xs" style="margin-top:.3rem;color:#e11d48">✳️ ${x}</div>`).join("")}</div>`).join("")}</div></div>
+  <div class="card"><h3>👂 الفرق عمليًا (بالودن)</h3><ul class="mqcul">${g.pr.map(x => `<li>${x}</li>`).join("")}</ul></div>
+  <div class="card"><h3>🎤 إزاي تعملها بصوتك</h3><ol class="mqcul">${g.vo.map(x => `<li>${x}</li>`).join("")}</ol>
+    <div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.6rem"><button class="btn ${MQCA.mic ? "btn-p" : "btn-o"}" onclick="mqcMic()">${MQCA.mic ? "⏹️ وقف المايك" : "🎙️ قيس صوتي لايف على السلم"}</button><span id="mqcLiveTxt" class="sm">${MQCA.mic ? "اعمل آهة ثابتة…" : "اختار مقام من فوق، وبعدين افتح المايك وغنّي: الخط الأحمر في الرسمة هيوريك إنت فين."}</span></div></div>
+  <div class="card"><h3>🎯 اختبر ودنك</h3><p class="sm">هشغّلك مقام من المجموعة (مع درون الرست)، وإنت تقول هو أنهي.</p>
+    <div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-p" onclick="mqcQuiz()">${Q ? "🎲 سؤال جديد" : "▶️ ابدأ"}</button>${Q ? `<button class="btn btn-o" onclick="mqcPlayQ()">🔊 تاني</button>` : ""}<b style="margin-inline-start:auto">النتيجة: ${MQC.score[0]}/${MQC.score[1]}</b></div>
+    ${Q ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem">${ms.map(m => `<button class="btn ${Q.done ? (m.id === Q.id ? "btn-p" : Q.done === m.id ? "btn-d" : "btn-o") : "btn-o"}" onclick="mqcQuiz('${m.id}')">${m.ar}${Q.done && m.id === Q.id ? " ✅" : Q.done === m.id ? " ❌" : ""}</button>`).join("")}</div>` : ""}</div>
+  <p class="xs muted">📖 المصادر: تركيب المقامات والتحويلات من Maqam World (maqamworld.com) وجدول المقامات اللي في الأكاديمية. الأبعاد بالتقريب الشرقي (ربع التون = 50 سنت). الفروق «اللي بيميّزه» محسوبة أوتوماتيك من الأبعاد. الشرح العملي وتمارين الصوت نصايح تدريب عامة مش منقولة من كتاب معيّن.</p>`;
+}
+function renderMqc() {
+  if (realRole() !== "owner") return pageWrap("🎼", "موسوعة المقامات المتشابهة", "", `<div class="card">🔒 الأداة دي خاصة بالأونر.</div>`);
+  return pageWrap("🎼", "موسوعة المقامات المتشابهة", "شهناز وحجاز كار وشد عربان، نكريز ونوا أثر، كرد ولامي… الفرق نظري وعملي، بآهات وهمهمة وموسيقى، وقياس صوتك لايف", `<div id="mqcBody" class="notr">${mqcBody()}</div>`);
+}
+PAGES16.push("mqc");
+const _render139 = render;
+render = function () { if (state.route === "mqc") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderMqc(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } if (MQCA.drone || MQCA.mic) { try { mqcDroneSet(""); if (MQCA.mic) mqcMic(); } catch (e) {} } return _render139.apply(this, arguments); };
+const _DOMAINS139 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS139(); try { if (realRole() === "owner") { const t = ds.find(d => d.k === "maqamat" || d.k === "maqam"); if (t && t.tools && !t.tools.some(x => String(x[2]).includes("'mqc'"))) t.tools.unshift(["🎼", "موسوعة المقامات المتشابهة (خاصة بيك)", "go16('mqc')", ""]); } } catch (e) {} return ds; };
+try { const _sr139 = srIndex109; srIndex109 = function () { const a = _sr139(); try { if (realRole() === "owner") a.push(["🎼 موسوعة المقامات المتشابهة", "go16('mqc')", "شهناز حجاز كار شد عربان سوزدلار نكريز نوا أثر أثر كرد لامي كرد سيكا هزام عراق راحة الأرواح مقامات متشابهة"]); } catch (e) {} return a; }; } catch (e) {}
+(function () { const st = document.createElement("style"); st.textContent = `.mqcsvg .mqcd{transition:r .15s}.mqcsvg .mqcd.on{fill:#f59e0b!important;r:11}.mqcul{margin:.3rem 1.2rem;line-height:1.9}.mqcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem;margin-top:.6rem}.mqcm{border:1px solid var(--b,#e5e7eb);border-radius:12px;padding:.6rem}.mqcctl .btn-sm{padding:.3rem .6rem;font-size:.85rem}`; document.head.appendChild(st); })();
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
