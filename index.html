@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v159";
+const UI_VERSION = "2026-11-15-v160";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -22933,6 +22933,216 @@ body.gi158on .gi158h:hover>.gi158{display:block}
     return out;
   };
   if (/^#\/cp158\//.test(location.hash)) { state.route = "cp158"; state.pageArg = location.hash.split("/")[2]; }
+})();
+
+
+/* ================= v160: «مارس المقام بصوتك» جنب «عن المقام» + أطفال/كبار لكل قسم ليه نسخة أطفال + التسميع «لآخر السورة» + المصحف الملوّن من التحفيظ يفتح علطول + من غير ما الصفحة تطلع لفوق + تعديل أي أيقونة (نسخ/حجم/لينك/معاينة الفيو وحفظه) + «أول حاجة تظهر» لكل صفحة + بوابات الدفع (مخفية لحد ما تظهرها) ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e); const own = () => realRole() === "owner" && !state.preview;
+  const secs = () => { const s = typeof sectionsData === "function" ? sectionsData() : null; return Array.isArray(s) ? s : []; };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.ka160{display:flex;gap:.4rem;margin:.2rem 0 1rem;flex-wrap:wrap}
+.ka160 button{border:2px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:999px;padding:.45rem 1rem;font:inherit;font-weight:800;cursor:pointer;color:inherit}
+.ka160 button.on{background:var(--accent,#0f766e);border-color:var(--accent,#0f766e);color:#fff}
+body.ed158 .lk160{outline:2px dotted #a855f7!important;outline-offset:2px;cursor:pointer!important}
+.ip160 .row{gap:.4rem;flex-wrap:wrap;align-items:center}
+.ip160 iframe{width:100%;height:min(62vh,560px);border:1px solid var(--line,#e5e7eb);border-radius:12px;background:#fff}
+.land160{animation:land160 2.4s ease}
+@keyframes land160{0%,60%{box-shadow:0 0 0 4px var(--gold,#d4a017)}100%{box-shadow:none}}
+body.pk160 #app *{cursor:crosshair}
+.lt160 td,.lt160 th{padding:.35rem .45rem;border-bottom:1px solid var(--line,#e5e7eb);font-size:.82rem;vertical-align:top;text-align:start}
+.lt160 code{font-size:.72rem;word-break:break-all}
+</style>`);
+
+  /* ---------- 1) «مارس المقام بصوتك» تبويب جنب «عن المقام» ---------- */
+  if (typeof maqamOne === "function") {
+    const _mo = maqamOne;
+    maqamOne = function (cur) {
+      let h = _mo.apply(this, arguments); const vt = secs().find(s => s.parent_id === cur.id && (s.meta || {}).kind === "vtest");
+      if (!vt) return h; state.vt160 = vt.id;
+      return h.replace(/(<div class="motabs">\s*<button[^>]*>[\s\S]*?<\/button>)/, `$1<button onclick="libGo('${vt.id}')">🎤 ${esc(T("مارس المقام بصوتك", "Practise with your voice"))}</button>`);
+    };
+  }
+  function vtHide() { const id = state.vt160; if (!id) return; document.querySelectorAll(`#app [onclick*="${id}"]`).forEach(el => { if (el.closest(".motabs")) return; const c = el.closest(".dmcard, .card, .sccard, a, button"); (c || el).style.display = "none"; }); }
+
+  /* ---------- 2) أطفال / كبار: أي قسم ليه نسخة أطفال (meta.kidsOf) يظهر فوقه زرارين ---------- */
+  function kaBar() {
+    if (state.route !== "library" || !state.libSec) return; const S = secs(); const cur = S.find(s => s.id === state.libSec); if (!cur) return;
+    const kid = S.find(s => (s.meta || {}).kidsOf === cur.id); const adult = (cur.meta || {}).kidsOf ? S.find(s => s.id === cur.meta.kidsOf) : null;
+    const pair = kid ? [cur, kid] : adult ? [adult, cur] : null; if (!pair) return;
+    const w = document.querySelector("#app .hdr ~ section .wrap, #app .hdr ~ .sec .wrap"); if (!w || w.querySelector(".ka160")) return;
+    const d = document.createElement("div"); d.className = "ka160";
+    d.innerHTML = `<button class="${cur.id === pair[0].id ? "on" : ""}" onclick="libGo('${pair[0].id}')">🧑 ${T("الكبار", "Adults")}</button><button class="${cur.id === pair[1].id ? "on" : ""}" onclick="libGo('${pair[1].id}')">👦 ${T("الأطفال", "Kids")}</button>`;
+    const h = w.querySelector("h1, h2"); if (h && h.nextSibling) h.parentElement.insertBefore(d, h.nextSibling); else w.prepend(d);
+  }
+
+  /* ---------- 3) التسميع: «من أول السورة» و«لآخر السورة» ---------- */
+  if (typeof renderTasmee === "function") {
+    const _rt = renderTasmee;
+    renderTasmee = function () {
+      const h = _rt.apply(this, arguments); const t = state.ts || {}; if (!t.s) return h; const mx = SURAH_AYAHS[t.s - 1];
+      const i = h.indexOf('onchange="state.ts.b='); if (i < 0) return h; const j = h.indexOf("</label>", i); if (j < 0) return h;
+      return h.slice(0, j + 8) + `<button class="btn btn-o" style="padding:.2rem .55rem" onclick="state.ts.a=1;state.ts.res=null;render()">⤒ ${T("من أول السورة", "From the start")}</button><button class="btn btn-o" style="padding:.2rem .55rem" onclick="state.ts.b=${mx};state.ts.res=null;render()">⤓ ${T("لآخر السورة", "To the end")} (${mx})</button>` + h.slice(j + 8);
+    };
+  }
+
+  /* ---------- 4) المصحف الملوّن من أي مكان يفتح المصحف علطول ---------- */
+  document.addEventListener("click", ev => {
+    const el = ev.target.closest && ev.target.closest('[onclick*="hzMushaf=true"]'); if (!el || state.ed158) return;
+    const tc = secs().find(s => (s.meta || {}).kind === "tajcolor"); if (!tc) return; ev.preventDefault(); ev.stopImmediatePropagation(); libGo(tc.id);
+  }, true);
+
+  /* ---------- 5) من غير ما الصفحة تطلع لفوق: لو فضلت في نفس الصفحة، نفضل في نفس المكان ---------- */
+  let lastKey = null;
+  const pgKey = () => state.route + "|" + (state.pageArg || "") + "|" + (state.libSec || "");
+
+  /* ---------- 6) تعديل أي أيقونة: نسخ / حجم / لينك / معاينة الفيو وحفظه ---------- */
+  const views = () => setv("views160", {}) || {};
+  const icfg = () => setv("icons160", {}) || {}; /* {key:{size, act}} */
+  const TILE = ".w147t, .toolsgrid > *, .libgrid > *, .dmgrid > *, .hvgrid > *, .cu158 > button, .dmcard, .motabs > button";
+  const keyT = el => el.dataset.k158 || el.id || (el.title || "").trim() || (el.getAttribute("aria-label") || "") || "t:" + (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
+  function ocOf(el) { return el.getAttribute("onclick") || ((el.querySelector("[onclick]") || {}).getAttribute ? el.querySelector("[onclick]").getAttribute("onclick") : "") || (el.getAttribute("href") && el.getAttribute("href") !== "#" ? `location.href=${JSON.stringify(el.getAttribute("href"))}` : ""); }
+  const SNAP = ["route", "pageArg", "libSec", "mqTab", "og", "hv", "sfTab", "tc", "tj", "ts", "stT", "hzMushaf", "lvT", "rcK", "qz"];
+  function snapState(st) { const o = {}; SNAP.forEach(k => { if (st[k] !== undefined) { try { o[k] = JSON.parse(JSON.stringify(st[k])); } catch (e) {} } }); if (st.dash) o.dash = { tab: st.dash.tab }; if (st.tjv) o.tjv = { surah: st.tjv.surah, pgm: st.tjv.pgm, page: st.tjv.page }; return o; }
+  window.view160 = function (id) {
+    const v = views()[id]; if (!v) return toast("—", true); const s = v.st || {};
+    Object.keys(s).forEach(k => { if (k === "dash") state.dash = Object.assign(state.dash || {}, s.dash); else if (k === "tjv") state.tjv = Object.assign(state.tjv || {}, s.tjv); else state[k] = s[k]; });
+    try { history.pushState(null, "", v.hash || "#/" + state.route); } catch (e) {} state.menuOpen = false; render();
+    setTimeout(() => window.scrollTo({ top: v.y || 0, behavior: "smooth" }), 350);
+  };
+  function actJs(a) { a = String(a || ""); if (a.startsWith("view:")) return `view160('${a.slice(5)}')`; if (a.startsWith("url:")) return `window.open(${JSON.stringify(a.slice(4)).replace(/"/g, "&quot;")},'_blank','noopener')`; if (a.startsWith("js:")) return a.slice(3); return a; }
+  function iconsApply() {
+    const C = icfg(); if (!Object.keys(C).length && !state.ed158) return;
+    document.querySelectorAll(`.hdr .tools > *, .hdr .nav > a, #rail158 .ri > *, #sd152 > button, #ctl113, .cust158i, #app ${TILE.split(", ").join(", #app ")}`).forEach(el => {
+      const k = keyT(el); const c = C[k]; if (state.ed158) el.classList.add("lk160"); if (!c) return;
+      if (c.size && c.size !== 1) el.style.zoom = c.size; if (c.act) { el.setAttribute("onclick", actJs(c.act) + ";return false"); if (el.tagName === "A") el.setAttribute("href", "#"); el.querySelectorAll("[onclick]").forEach(x => x.removeAttribute("onclick")); }
+    });
+  }
+  async function icSave(k, patch) { const all = Object.assign({}, icfg()); all[k] = Object.assign({}, all[k] || {}, patch); Object.keys(all[k]).forEach(x => { if (all[k][x] == null || all[k][x] === "") delete all[k][x]; }); if (!Object.keys(all[k]).length) delete all[k]; await saveSetting16("icons160", all); }
+  function siteUrl(hash) { return location.origin + location.pathname + "?embed160=1" + (hash || "#/home"); }
+  function iconPanel(el) {
+    const k = keyT(el); const c = icfg()[k] || {}; const oc = ocOf(el); const label = (el.innerText || el.title || "").replace(/\s+/g, " ").trim().slice(0, 50) || k; const ic = ((el.innerText || el.textContent || "").trim().match(/^\p{Extended_Pictographic}/u) || ["⭐"])[0];
+    const m = document.createElement("div"); m.className = "hlpov ip160"; m.style.zIndex = "2147483600"; m.onclick = e => { if (e.target === m) m.remove(); };
+    const v = c.act && c.act.startsWith("view:") ? views()[c.act.slice(5)] : null;
+    m.innerHTML = `<div class="hlpbox" style="max-width:52rem;width:96vw"><div class="row" style="justify-content:space-between"><h3>🛠️ ${esc(label)}</h3><button class="ibtn" onclick="this.closest('.hlpov').remove()">✕</button></div>
+      <p class="xs muted">${T("بيفتح دلوقتي:", "Currently opens:")} <code dir="ltr">${esc(c.act ? c.act : oc || "—")}</code>${v ? ` · ${T("فيو محفوظ:", "Saved view:")} <code dir="ltr">${esc(v.hash || "")}</code>` : ""}</p>
+      <div class="row"><b class="sm">📏 ${T("الحجم", "Size")}</b><input type="range" min="0.6" max="2.2" step="0.1" value="${c.size || 1}" id="ip160s" style="width:12rem"><span id="ip160sv" class="sm">${c.size || 1}×</span></div>
+      <div class="row" style="margin-top:.5rem"><b class="sm">🔗 ${T("تفتح إيه", "Opens")}</b><input class="in" id="ip160u" style="flex:1;min-width:14rem;direction:ltr" placeholder="${T("لينك https://… (اختياري)", "A link https://… (optional)")}" value="${esc(c.act && c.act.startsWith("url:") ? c.act.slice(4) : "")}"></div>
+      <div class="row" style="margin-top:.6rem"><button class="btn btn-o" id="ip160p">👁 ${T("عاين اللي بتفتحه (وتقدر تتنقّل جوه)", "Preview where it goes (you can browse inside)")}</button><button class="btn btn-o" id="ip160d">📋 ${T("كرّر الأيقونة", "Duplicate icon")}</button>${c.act ? `<button class="btn btn-o" id="ip160r">↺ ${T("رجّعها زي الأصل", "Reset to original")}</button>` : ""}</div>
+      <div id="ip160f" style="margin-top:.6rem"></div>
+      <div class="row" style="margin-top:.6rem"><button class="btn btn-p" id="ip160ok">💾 ${T("احفظ", "Save")}</button></div></div>`;
+    document.body.appendChild(m);
+    const s = m.querySelector("#ip160s"); s.oninput = () => { m.querySelector("#ip160sv").textContent = s.value + "×"; el.style.zoom = s.value; };
+    m.querySelector("#ip160p").onclick = () => {
+      const f = m.querySelector("#ip160f"); const start = v ? v.hash : (location.hash || "#/home");
+      f.innerHTML = `<p class="xs">${T("ده الموقع جوه شاشة صغيرة: اتنقّل لحد الفيو اللي عايز الأيقونة تفتحه بالظبط (الصفحة والتبويب ومكان النزول)، وبعدين دوس «احفظ الفيو ده».", "This is the site in a small window: browse to the exact view the icon should open (page, tab and scroll position), then press “Save this view”.")}</p><iframe id="ip160if" src="${esc(siteUrl(start))}"></iframe><div class="row" style="margin-top:.4rem"><button class="btn btn-p" id="ip160sv2">📌 ${T("احفظ الفيو ده للأيقونة", "Save this view for the icon")}</button><span class="xs muted" id="ip160h"></span></div>`;
+      const ifr = f.querySelector("#ip160if");
+      ifr.onload = () => { try { const w = ifr.contentWindow; if (!v && oc) setTimeout(() => { try { w.eval(oc.replace(/;?return false;?$/, "")); } catch (e) {} }, 900); const upd = () => { try { f.querySelector("#ip160h").textContent = w.location.hash; } catch (e) {} }; setInterval(upd, 800); } catch (e) {} };
+      f.querySelector("#ip160sv2").onclick = async () => {
+        let w; try { w = ifr.contentWindow; } catch (e) {} if (!w || !w.state) return toast(T("استنى الصفحة تحمّل", "Wait for the page to load"), true);
+        const id = "v" + Date.now().toString(36); const all = Object.assign({}, views()); all[id] = { hash: w.location.hash, y: Math.round(w.scrollY || 0), st: snapState(w.state), label };
+        await saveSetting16("views160", all); await icSave(k, { act: "view:" + id, size: +s.value === 1 ? null : +s.value }); m.remove(); toast("✅ " + T("الأيقونة دي هتفتح الفيو ده بالظبط", "This icon now opens exactly that view")); render();
+      };
+    };
+    m.querySelector("#ip160d").onclick = async () => {
+      const C = Object.assign({ items: [], pages: [] }, JSON.parse(JSON.stringify(setv("cust158", {}) || {})));
+      const where = prompt(T("تتحط فين؟ اكتب: rail (الشريط) / drawer (الدرج) / header (الهيدر) / home (الرئيسية)", "Where? Type: rail / drawer / header / home"), "home"); if (!where) return;
+      const name = prompt(T("اسم النسخة الجديدة:", "Name of the copy:"), label); if (!name) return;
+      const u = m.querySelector("#ip160u").value.trim(); C.items.push({ id: Date.now().toString(36), ic, ar: name, en: name, act: u ? "url:" + u : c.act || ("js:" + oc), where: where.trim() });
+      await saveSetting16("cust158", C); toast("✅ " + T("اتكررت — وتقدر تفتحها هي كمان وتغيّر حجمها ولينكها", "Duplicated — you can open the copy too and change its size and link")); m.remove(); render();
+    };
+    const r = m.querySelector("#ip160r"); if (r) r.onclick = async () => { await icSave(k, { act: null }); m.remove(); render(); };
+    m.querySelector("#ip160ok").onclick = async () => { const u = m.querySelector("#ip160u").value.trim(); await icSave(k, { size: +s.value === 1 ? null : +s.value, act: u ? "url:" + u : c.act || null }); m.remove(); toast("✅"); render(); };
+  }
+  document.addEventListener("click", ev => {
+    if (!state.ed158) return; const el = ev.target.closest(".lk160"); if (!el || ev.target.closest("#edbar158,.hlpov")) return;
+    ev.preventDefault(); ev.stopImmediatePropagation(); iconPanel(el);
+  }, true);
+  /* قايمة كل الأيقونات ولينكاتها */
+  window.lk160All = function () {
+    const els = [...document.querySelectorAll(`.hdr .tools > *, .hdr .nav > a, #rail158 .ri > *, #sd152 > button, .cust158i, #app ${TILE.split(", ").join(", #app ")}`)].filter(e => e.tagName !== "HR" && (e.innerText || e.title || "").trim());
+    window.__lk160 = els; const C = icfg(); const V = views();
+    const m = document.createElement("div"); m.className = "hlpov"; m.onclick = e => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="hlpbox" style="max-width:56rem;width:96vw"><div class="row" style="justify-content:space-between"><h3>🔗 ${T("كل الأيقونات في الصفحة دي ولينكاتها", "Every icon on this page and its link")} (${els.length})</h3><button class="ibtn" onclick="this.closest('.hlpov').remove()">✕</button></div>
+      <table class="lt160" style="width:100%;border-collapse:collapse"><tr><th>${T("الأيقونة", "Icon")}</th><th>${T("بتفتح", "Opens")}</th><th></th></tr>${els.map((e, i) => { const k = keyT(e); const c = C[k] || {}; const vv = c.act && c.act.startsWith("view:") ? V[c.act.slice(5)] : null; return `<tr><td>${esc((e.innerText || e.title || "").replace(/\s+/g, " ").trim().slice(0, 40))}</td><td><code dir="ltr">${esc(vv ? "👁 " + vv.hash : c.act || ocOf(e) || "—")}</code></td><td><button class="btn btn-o" style="padding:.15rem .5rem" onclick="this.closest('.hlpov').remove();lk160Open(${i})">🛠️</button></td></tr>`; }).join("")}</table></div>`;
+    document.body.appendChild(m);
+  };
+  window.lk160Open = i => { const e = (window.__lk160 || [])[i]; if (e) iconPanel(e); };
+
+  /* ---------- 7) «أول حاجة تظهر» لكل صفحة ---------- */
+  const lands = () => setv("land160", {}) || {};
+  window.land160Pick = function () { state.pk160 = !state.pk160; document.body.classList.toggle("pk160", state.pk160); toast(state.pk160 ? T("دوس على الجزء اللي عايز الطالب يشوفه أول ما يدخل الصفحة دي", "Tap the part students should see first on this page") : "✓"); };
+  document.addEventListener("click", async ev => {
+    if (!state.pk160) return; const t = ev.target; if (!t.closest("#app") || t.closest(".hdr")) return;
+    const blk = t.closest(".card, .dmcard, .libgrid, .dmgrid, .toolsgrid, .hvgrid, .motabs, section > .wrap > *"); if (!blk) return;
+    ev.preventDefault(); ev.stopImmediatePropagation(); state.pk160 = false; document.body.classList.remove("pk160");
+    const txt = (blk.innerText || "").replace(/\s+/g, " ").trim().slice(0, 60); if (!txt) return;
+    const mode = confirm(T("«موافق» = يتحط أول الصفحة فوق خالص.\n«إلغاء» = يفضل مكانه والصفحة تنزل عليه علطول.", "OK = move it to the very top.\nCancel = keep it in place and scroll straight to it.")) ? "top" : "scroll";
+    const all = Object.assign({}, lands()); const k = pgKey(); all[k] = (all[k] || []).filter(x => x.txt !== txt).concat([{ txt, mode }]); await saveSetting16("land160", all); toast("✅ " + T("اتحفظ للصفحة دي", "Saved for this page")); render();
+  }, true);
+  window.land160Reset = async function () { const all = Object.assign({}, lands()); delete all[pgKey()]; await saveSetting16("land160", all); toast("↺"); render(); };
+  function landApply(entered) {
+    const L = lands()[pgKey()]; if (!L || !L.length) return; const cands = [...document.querySelectorAll("#app .card, #app .dmcard, #app .libgrid, #app .dmgrid, #app .toolsgrid, #app .hvgrid, #app .motabs, #app section > .wrap > *")];
+    const find = txt => cands.find(c => (c.innerText || "").replace(/\s+/g, " ").trim().startsWith(txt));
+    L.filter(x => x.mode === "top").slice().reverse().forEach(x => { const b = find(x.txt); if (!b) return; const w = b.closest(".wrap"); if (!w) return; const h = w.querySelector(":scope > h1, :scope > h2, :scope > .pghead, :scope > header"); const after = h ? h.nextSibling : w.firstChild; if (b !== after) w.insertBefore(b, after); });
+    if (entered) { const s = L.find(x => x.mode === "scroll"); const b = s && find(s.txt); if (b) setTimeout(() => { b.scrollIntoView({ behavior: "smooth", block: "start" }); b.classList.add("land160"); }, 250); }
+  }
+
+  /* ---------- 8) بوابات الدفع: المفاتيح سرية، والطرق مخفية عن الطلاب لحد ما تدوس «أظهر» ---------- */
+  const GW = [
+    ["paymob", "Paymob", "🇪🇬", ["API key", "Secret key", "Public key", "Integration ID (cards)", "Integration ID (wallets)", "HMAC"]],
+    ["paytabs", "PayTabs", "🇪🇬", ["Profile ID", "Server key", "Client key"]],
+    ["kashier", "Kashier", "🇪🇬", ["Merchant ID", "API key", "Secret key"]],
+    ["fawry", "Fawry", "🇪🇬", ["Merchant code", "Security key"]],
+    ["stripe", "Stripe (Italia / EU)", "🇮🇹", ["Publishable key", "Secret key", "Webhook secret"]],
+    ["paypal", "PayPal", "🌍", ["Client ID", "Secret"]],
+    ["lemon", "Lemon Squeezy / Paddle (merchant of record)", "🌍", ["Store ID", "API key", "Webhook secret"]],
+    ["instapay", "InstaPay (يدوي)", "🇪🇬", ["عنوان InstaPay (name@instapay)", "اسم صاحب الحساب"]],
+    ["wallet", "فودافون كاش / محافظ (يدوي)", "🇪🇬", ["رقم المحفظة", "اسم صاحب المحفظة"]],
+    ["bank", "تحويل بنكي (يدوي)", "🏦", ["اسم البنك", "IBAN", "SWIFT", "اسم صاحب الحساب"]]
+  ];
+  window.pay160Save = async function () {
+    const { data: rows } = await sb.from("private_settings").select("data").eq("id", 1); const data = Object.assign({}, (rows && rows[0] && rows[0].data) || {}); const pay = Object.assign({}, data.pay || {});
+    document.querySelectorAll("[data-pay160]").forEach(i => { const [g, f] = i.dataset.pay160.split("|"); const v = i.value.trim(); if (!v) return; pay[g] = Object.assign({}, pay[g] || {}, { [f]: v }); i.value = ""; });
+    data.pay = pay; const { error } = await sb.from("private_settings").update({ data }).eq("id", 1); if (error) return toast(error.message, true);
+    const pub = Object.assign({}, setv("pay160", {}) || {}); document.querySelectorAll("[data-pay160on]").forEach(c => { pub[c.dataset.pay160on] = c.checked; }); await saveSetting16("pay160", pub);
+    delete state.data.pay160k; toast("✅ " + T("اتحفظت (المفاتيح متخزّنة سرّية ومحدش يشوفها)", "Saved (keys are stored privately)")); render();
+  };
+  window.pay160Show = async function (on) { const pub = Object.assign({}, setv("pay160", {}) || {}); pub.visible = !!on; await saveSetting16("pay160", pub); toast(on ? T("✅ طرق الدفع ظهرت للطلاب", "✅ Payment methods are now visible") : T("🙈 اتخفت", "🙈 Hidden")); render(); };
+  function payCard() {
+    const pub = setv("pay160", {}) || {}; const have = useData("pay160k", async () => { const { data } = await sb.from("private_settings").select("data").eq("id", 1); const p = ((data && data[0] && data[0].data) || {}).pay || {}; const o = {}; Object.keys(p).forEach(g => o[g] = Object.keys(p[g] || {})); return [o]; });
+    const H = Array.isArray(have) ? have[0] : {};
+    return `<div class="card" style="margin-top:1rem"><h3>💳 ${T("بوابات الدفع", "Payment gateways")}</h3>
+      <p class="sm">${T("حط مفاتيح أي بوابة لما تعمل حسابك فيها. المفاتيح بتتخزّن سرّية (محدش يشوفها ولا حتى في الموقع بعد الحفظ)، وطرق الدفع مخفية عن الكل لحد ما تدوس «أظهر للطلاب».", "Add each gateway's keys once you have an account. Keys are stored privately (not even shown back after saving), and payment methods stay hidden until you press “Show to students”.")}</p>
+      <p class="sm"><b>${pub.visible ? "🟢 " + T("ظاهرة للطلاب", "Visible to students") : "🙈 " + T("مخفية عن الكل", "Hidden from everyone")}</b> <button class="btn ${pub.visible ? "btn-o" : "btn-p"}" style="padding:.2rem .6rem" onclick="pay160Show(${!pub.visible})">${pub.visible ? T("اخفيها", "Hide") : T("أظهر للطلاب", "Show to students")}</button></p>
+      ${GW.map(([id, n, fl, fields]) => `<details style="margin:.35rem 0"><summary class="b sm">${fl} ${esc(n)} ${(H[id] || []).length ? `<span class="badge badge-g">✓ ${(H[id] || []).length} ${T("مفاتيح محفوظة", "keys saved")}</span>` : ""} <label class="xs" style="margin-inline-start:.5rem" onclick="event.stopPropagation()"><input type="checkbox" data-pay160on="${id}" ${pub[id] ? "checked" : ""}> ${T("مفعّلة", "Enabled")}</label></summary>
+        <div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.35rem">${fields.map(f => `<input class="in" type="password" autocomplete="off" data-pay160="${id}|${esc(f)}" placeholder="${esc(f)}${(H[id] || []).includes(f) ? " ✓" : ""}" style="width:14rem">`).join("")}</div></details>`).join("")}
+      <button class="btn btn-p" style="margin-top:.5rem" onclick="pay160Save()">💾 ${T("احفظ", "Save")}</button></div>`;
+  }
+  const _os = ownerSettings; ownerSettings = function () { return _os.apply(this, arguments) + payCard(); };
+
+  /* ---------- الدرج ---------- */
+  function drawer() {
+    const sd = document.getElementById("sd152"); if (!sd || !own()) { ["lk160b", "ld160b", "ld160r"].forEach(i => { const b = document.getElementById(i); if (b) b.remove(); }); return; }
+    const add = (id, txt, fn) => { let b = document.getElementById(id); if (!b) { b = document.createElement("button"); b.id = id; sd.appendChild(b); } b.textContent = txt; b.onclick = fn; };
+    add("lk160b", "🔗 " + T("كل الأيقونات ولينكاتها", "All icons & links"), lk160All);
+    add("ld160b", "📌 " + T("أول حاجة تظهر في الصفحة دي", "What shows first on this page"), land160Pick);
+    if ((lands()[pgKey()] || []).length) add("ld160r", "↺ " + T("رجّع ترتيب الصفحة دي", "Reset this page's order"), land160Reset); else { const b = document.getElementById("ld160r"); if (b) b.remove(); }
+  }
+
+  const _r = render;
+  render = function () {
+    const k = pgKey(); const same = k === lastKey; const y = window.scrollY;
+    const out = _r.apply(this, arguments);
+    try { vtHide(); kaBar(); } catch (e) {}
+    try { iconsApply(); } catch (e) { console.error(e); }
+    try { landApply(!same); } catch (e) {}
+    try { drawer(); } catch (e) {}
+    if (same && y > 0 && Math.abs(window.scrollY - y) > 4) { try { window.scrollTo(0, y); } catch (e) {} }
+    lastKey = k; return out;
+  };
+  /* جوه شاشة المعاينة: من غير أدوات الأونر عشان الفيو يبان زي الطالب */
+  if (/embed160=1/.test(location.search)) document.head.insertAdjacentHTML("beforeend", `<style>#sd152,#rail158,#ctl113,#edbar158,.ai-widget{display:none!important}</style>`);
 })();
 
 // بدء التشغيل
