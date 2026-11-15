@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v165";
+const UI_VERSION = "2026-11-16-v166";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23641,6 +23641,74 @@ html,body{max-width:100%;overflow-x:hidden}
     if (same) { if (Math.abs(window.scrollY - y) > 2) _st(0, y); requestAnimationFrame(() => { if (Math.abs(window.scrollY - y) > 2) _st(0, y); if (app) setTimeout(() => app.style.minHeight = "", 250); }); }
     lastK = k; return out;
   };
+})();
+
+
+/* ================= v166: أصوات الحروف بالحركات (فتحة/ضمة/كسرة/سكون) من تلاوة حقيقية — مقطع من أول كلمة في القرآن بتبدأ بالحرف ده بالحركة دي ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e);
+  const MAP = () => setv("lqw166", {}) || {};
+  let ctx = null; const BUF = {};
+  async function buf(url) {
+    if (BUF[url]) return BUF[url]; ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const ab = await fetch(url).then(r => r.arrayBuffer()); const b = await ctx.decodeAudioData(ab);
+    const d = b.getChannelData(0); let peak = 0; for (let i = 0; i < d.length; i += 64) peak = Math.max(peak, Math.abs(d[i]));
+    let on = 0; const th = peak * 0.08; for (let i = 0; i < d.length; i += 32) if (Math.abs(d[i]) > th) { on = i / b.sampleRate; break; }
+    return (BUF[url] = { b, on: Math.max(0, on - 0.015) });
+  }
+  async function clip(e) {
+    const x = await buf(e.u); const g = ctx.createGain(); const s = ctx.createBufferSource(); s.buffer = x.b; s.connect(g); g.connect(ctx.destination);
+    const dur = (e.ms || 340) / 1000 * (+(setv("lqwk166", 1)) || 1); const t = ctx.currentTime; g.gain.setValueAtTime(1, t); g.gain.setValueAtTime(1, t + Math.max(.05, dur - .06)); g.gain.linearRampToValueAtTime(0, t + dur);
+    s.start(t, x.on, dur + .02);
+  }
+  window.lq166 = async function (c, h) { const e = MAP()[c + "_" + h]; if (!e) return false; try { await clip(e); return true; } catch (er) { console.warn(er); return false; } };
+  window.lq166Word = function (c, h) { const e = MAP()[c + "_" + h]; if (e) new Audio(e.u).play().catch(() => {}); };
+  /* الأولوية: صوتك المرفوع ← مقطع التلاوة الحقيقية ← الصوت الآلي */
+  if (typeof lhPlay === "function") { const _lp = lhPlay; lhPlay = function (c, h, fb) { if (typeof lhUrl === "function" && lhUrl(c, h)) return _lp.apply(this, arguments); const args = arguments; lq166(c, h).then(ok => { if (!ok) _lp.apply(this, args); }); }; }
+  if (typeof rdSay === "function") {
+    const _rs = rdSay;
+    rdSay = function (t) {
+      const m = String(t).match(/^([ء-ي])([َُِْ])?$/) || String(t).match(/^أَ([ء-ي])ْ$/);
+      if (m && !(typeof lhUrl === "function" && lhUrl(m[1], String(t).startsWith("أَ") ? "s" : ({ "َ": "a", "ُ": "u", "ِ": "i", "ْ": "s" })[m[2] || "َ"]))) {
+        const c = m[1]; const h = String(t).startsWith("أَ") ? "s" : ({ "َ": "a", "ُ": "u", "ِ": "i", "ْ": "s" })[m[2] || "َ"]; const args = arguments;
+        return lq166(c === "أ" || c === "إ" ? "ء" : c, h).then(ok => ok ? undefined : _rs.apply(this, args));
+      }
+      return _rs.apply(this, arguments);
+    };
+  }
+  /* بناء الخريطة (الأونر — مرة واحدة) */
+  window.lq166Build = async function (btn) {
+    const L = Object.keys(typeof MK_L === "object" ? MK_L : {}).filter(c => c !== "ا"); if (!L.length) return toast("MK_L?", true);
+    const need = new Set(); L.forEach(c => ["a", "u", "i", "s"].forEach(h => need.add(c + "_" + h))); const map = {};
+    const V = { "َ": "a", "ُ": "u", "ِ": "i" }; const SUK = /[ْۡ]/; const LET = /[ء-ي]/; const LONG = /[اوىيٰۥۦ]/;
+    const strip = w => w.replace(/[ـۖ-ۜ۟۠ۢ-ۭ]/g, "");
+    const firstL = ch => (ch === "أ" || ch === "إ" || ch === "ؤ" || ch === "ئ") ? "ء" : ch;
+    const order = []; for (let s = 114; s >= 1; s--) order.push(s);
+    for (const s of order) {
+      if (![...need].some(k => !map[k])) break;
+      for (let p = 1; p < 20; p++) {
+        const j = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?words=true&word_fields=text_uthmani,audio_url&per_page=50&page=${p}`).then(r => r.json()).catch(() => null); if (!j) break;
+        (j.verses || []).forEach(v => (v.words || []).forEach(w => {
+          if (w.char_type_name !== "word" || !w.audio_url) return; const t = strip(w.text_uthmani || ""); const u = /^https?:/.test(w.audio_url) ? w.audio_url : "https://audio.qurancdn.com/" + w.audio_url;
+          const c0 = firstL(t[0]); const v1 = V[t[1]];
+          if (c0 && v1 && t[2] && LET.test(t[2]) && !LONG.test(t[2]) && t[2] !== "ّ") { const k = c0 + "_" + v1; if (need.has(k) && !map[k]) map[k] = { u, w: w.text_uthmani, ms: 330 }; }
+          if ((t[0] === "أ") && t[1] === "َ" && t[2] && LET.test(t[2]) && t[3] && SUK.test(t[3])) { const k = firstL(t[2]) + "_s"; if (need.has(k) && !map[k]) map[k] = { u, w: w.text_uthmani, ms: 520 }; }
+        }));
+        if (btn) btn.textContent = `⏳ ${Object.keys(map).length}/${need.size} — ${T("سورة", "Sūrah")} ${s}`;
+        if (!j.pagination || !j.pagination.next_page) break;
+      }
+    }
+    await saveSetting16("lqw166", map); if (btn) btn.textContent = `✅ ${Object.keys(map).length}/${need.size}`; toast("✅ " + Object.keys(map).length); return map;
+  };
+  function card() {
+    const n = Object.keys(MAP()).length;
+    return `<div class="card" style="margin-top:1rem"><h3>🔤 ${T("أصوات الحروف بالحركات من التلاوة", "Letter sounds from real recitation")}</h3><p class="sm">${T("كل حرف بالفتحة والضمة والكسرة والسكون بيتقري بمقطع من كلمة حقيقية في القرآن (نفس صوت قراءة الكلمة في المصحف الملوّن). لو رفعت صوتك لحرف، صوتك هو اللي بيشتغل.", "Each letter with fatḥah, ḍammah, kasrah and sukūn plays a clip from a real Quran word (the same voice as word-by-word in the colour mushaf). If you upload your own recording for a letter, yours plays instead.")}</p>
+      <p class="sm">${T("جاهز", "Ready")}: <b>${n}</b> ${T("صوت", "sounds")}</p>
+      <div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap"><button class="btn btn-p" onclick="lq166Build(this)">🔄 ${n ? T("حدّث الأصوات", "Rebuild") : T("جهّز الأصوات", "Build the sounds")}</button>
+      <label class="sm">${T("طول المقطع", "Clip length")}: <input type="range" min="0.7" max="1.6" step="0.05" value="${+(setv("lqwk166", 1)) || 1}" onchange="saveSetting16('lqwk166',+this.value)"></label>
+      <button class="btn btn-o" onclick="lq166('ل','a').then(()=>setTimeout(()=>lq166('ل','u'),700)).then(()=>setTimeout(()=>lq166('ل','i'),1400)).then(()=>setTimeout(()=>lq166('ل','s'),2100))">▶ ${T("جرّب: لَ لُ لِ أَلْ", "Try: la lu li al")}</button></div></div>`;
+  }
+  const _os = ownerSettings; ownerSettings = function () { return _os.apply(this, arguments) + card(); };
 })();
 
 // بدء التشغيل
