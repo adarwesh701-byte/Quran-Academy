@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v143";
+const UI_VERSION = "2026-11-14-v144";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20644,7 +20644,7 @@ function gpSync() {
   if (b.dataset.k !== key) {
     b.dataset.k = key;
     b.innerHTML = `<button class="gpb" onclick="gpToggle()" title="${ar ? "تشغيل/إيقاف" : "Play/Pause"}">${media && !el.paused ? "⏸" : syn && !media ? "⏹" : "▶"}</button>${media ? `<button class="gpb" onclick="gpSeek(-5)" title="-5s">⏪</button><button class="gpb" onclick="gpSeek(5)" title="+5s">⏩</button>` : ""}
-      <div class="gpmid"><div class="gpt" dir="auto">${esc(GP.title)}</div>${media ? `<div class="gprow"><span id="gpc">${gpFmt(cur)}</span><input id="gpr" type="range" min="0" max="1000" value="${dur ? Math.round(cur / dur * 1000) : 0}" oninput="gpTo(this.value)"><span>${gpFmt(dur)}</span></div>` : `<div class="xs" style="opacity:.75">${ar ? "صوت المقام / الآهات" : "Maqam / aah sound"}</div>`}</div>
+      <div class="gpmid"><div class="gpt ${/[ء-ي]/.test(GP.title) && String(GP.title).trim().split(/\s+/).length <= 4 ? "notr" : ""}" dir="auto" ${/[ء-ي]/.test(GP.title) && String(GP.title).trim().split(/\s+/).length <= 4 ? 'lang="ar"' : ""}>${esc(GP.title)}</div>${media ? `<div class="gprow"><span id="gpc">${gpFmt(cur)}</span><input id="gpr" type="range" min="0" max="1000" value="${dur ? Math.round(cur / dur * 1000) : 0}" oninput="gpTo(this.value)"><span>${gpFmt(dur)}</span></div>` : `<div class="xs" style="opacity:.75">${ar ? "صوت المقام / الآهات" : "Maqam / aah sound"}</div>`}</div>
       <label class="gpv" title="${ar ? "مستوى الصوت" : "Volume"}">🔊<input type="range" min="0" max="100" value="${Math.round(GP.vol * 100)}" oninput="gpVol(this.value/100)"></label>
       ${media ? `<select class="gps" onchange="gpRate(this.value)" title="${ar ? "السرعة" : "Speed"}">${[0.5, 0.75, 1, 1.25, 1.5, 2].map(r => `<option value="${r}" ${Math.abs((el.playbackRate || 1) - r) < .01 ? "selected" : ""}>${r}×</option>`).join("")}</select>` : ""}<button class="gpb gpx" onclick="gpClose()" title="${ar ? "قفل" : "Close"}">✕</button>`;
   } else if (media) { const r = document.getElementById("gpr"); if (r && document.activeElement !== r && dur) r.value = Math.round(cur / dur * 1000); const c = document.getElementById("gpc"); if (c) c.textContent = gpFmt(cur); }
@@ -20674,8 +20674,8 @@ function qSmart(root) {
   if (!dtActive() || !root || !root.querySelectorAll) return;
   root.querySelectorAll(".tftx,.lvc h3,.qsm").forEach(q => {
     if (q.dataset.qs) return; q.dataset.qs = 1; q.classList.remove("notr"); q.removeAttribute("lang");
-    const txt = q.textContent || ""; const onlyQuote = /^\s*«[^»]+»\s*$/.test(txt) || (/___|…/.test(txt) && !/[«»]/.test(txt));
-    if (onlyQuote || dtQuran(txt)) { q.classList.add("notr"); q.setAttribute("lang", "ar"); q.dataset.qmode = "form"; return; }
+    const txt = q.textContent || ""; const onlyQuote = /^\s*«[^»]+»\s*$/.test(txt) || (/___|…/.test(txt) && !/[«»]/.test(txt)); const bare = txt.trim(); const vocab = /[ء-ي]/.test(bare) && bare.split(/\s+/).length <= 3 && !/[؟?:،.!]/.test(bare) && !/^(ما|ماذا|اختر|اختار|إيه|ايه|معنى|اكتب|رتب|أكمل|كمّل)/.test(bare);
+    if (onlyQuote || vocab || dtQuran(txt)) { q.classList.add("notr"); q.setAttribute("lang", "ar"); q.dataset.qmode = "form"; return; }
     if (q.children.length === 0) q.innerHTML = esc(txt).replace(/«([^»]+)»/g, (m, x) => `«<span class="notr" lang="ar">${x}</span>»`);
     q.dataset.qmode = QMEAN.test(txt) && !QFORM.test(txt.replace(/«[^»]*»/g, "")) ? "mean" : "form";
   });
@@ -21351,6 +21351,7 @@ render = function () { if (state.route === "bk") { const app = document.getEleme
 const _DOMAINS143 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS143(); BKS143.forEach(B => { const d = ds.find(x => x.k === B.dom) || ds.find(x => x.k === "sciences"); if (d && d.tools && !d.tools.some(t => String(t[2]).includes("'bk','" + B.id + "'"))) d.tools.unshift([B.ic, state.lang === "ar" ? B.t + " (مشروح منظّم)" : B.en, `go16('bk','${B.id}')`, ""]); }); return ds; };
 try { const _sr143 = srIndex109; srIndex109 = function () { const a = _sr143(); try { BKS143.forEach(B => a.push([B.ic + " " + B.t, `go16('bk','${B.id}')`, B.kw])); } catch (e) {} return a; }; } catch (e) {}
 document.head.insertAdjacentHTML("beforeend", `<style>.bkay{font-family:'Amiri Quran','Amiri',serif;color:#0f766e;font-size:1.08em;line-height:2.1}</style>`);
+
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
