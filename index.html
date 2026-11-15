@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v162";
+const UI_VERSION = "2026-11-15-v163";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23336,6 +23336,7 @@ html,body{max-width:100%;overflow-x:hidden}
         let b; try { b = real === "rec161" ? studio() : office(); } catch (e) { console.error(e); b = `<div class="card">${esc(e.message)}</div>`; }
         const tmp = document.createElement("div"); tmp.innerHTML = b; if (n) { n.replaceWith(...tmp.childNodes); } } catch (e) { console.error(e); }
       try { drawer(); railLabel(); } catch (e) {}
+      if (["st161n", "st161p", "st161r"].some(k => state.data[k] === null)) setTimeout(() => render(), 700);
       return out;
     }
     const out = _r.apply(this, arguments);
