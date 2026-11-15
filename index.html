@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v151";
+const UI_VERSION = "2026-11-15-v152";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21631,6 +21631,229 @@ function installBtn(full) {
   return `<button class="btn btn-o ${full ? "btn-full" : ""}" style="${full ? "margin-top:.5rem" : ""}" onclick="installApp()"><i class="fa-solid fa-mobile-screen-button"></i> ${L("installApp")}</button>`;
 }
 if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(r => { try { r.update(); } catch (e) {} }).catch(() => {})); let __swr = false; const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !__swr) { __swr = true; location.reload(); } }); }
+
+
+/* ================= v152: درج جانبي لأدوات الأونر + زرار «؟» + اللغة أوضح + التسجيل أولًا + أسماء الدرجات Do Re Mi + «صوتي» افتراضي + المصحف الملوّن (طالب + آية) + آية اليوم (كل القرّاء + فيديو) + مزايا الطلاب والباقات ================= */
+(function () {
+  const ar = () => state.lang === "ar";
+  document.head.insertAdjacentHTML("beforeend", `<style>
+#sd152{position:fixed;top:38%;inset-inline-end:0;z-index:1260;display:flex;flex-direction:column;gap:.35rem;padding:.45rem .45rem .45rem 1.5rem;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-inline-end:0;border-start-start-radius:14px;border-end-start-radius:14px;box-shadow:0 8px 24px #0002;transform:translateX(calc(100% - 1.25rem));transition:transform .25s ease;max-height:70vh;overflow:auto}
+[dir=rtl] #sd152{transform:translateX(calc(-100% + 1.25rem));padding:.45rem 1.5rem .45rem .45rem}
+#sd152:hover,#sd152.open,#sd152:focus-within{transform:none}
+#sd152 .sdh{position:absolute;inset-block:0;inset-inline-start:0;width:1.25rem;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--accent,#0f766e);cursor:pointer;background:color-mix(in srgb,var(--accent,#0f766e) 10%,transparent)}
+#sd152>button,#sd152>div,#sd152 #lk142{position:static!important;inset:auto!important;transform:none!important;box-shadow:none!important;margin:0!important;white-space:nowrap}
+#sd152 #lk142{display:flex;flex-direction:column;gap:.35rem}
+#sd152 #lk142>*{position:static!important}
+#hlp152{background:linear-gradient(135deg,#7c3aed,#059669);color:#fff;border:0;border-radius:999px;padding:.5rem .9rem;font-weight:800;cursor:pointer}
+.hlpq,.hlpfab{display:none!important}
+#ctl113{background:var(--accent,#0f766e)!important;color:#fff!important;border:0!important;font-size:.95rem!important;padding:.6rem 1.05rem!important;box-shadow:0 6px 18px #0003!important}
+#ctl113 span{display:inline!important}
+@media (max-width:760px){#ctl113{padding:.5rem .8rem!important}}
+.pk152{border:2px solid var(--accent,#0f766e);background:color-mix(in srgb,var(--accent,#0f766e) 7%,var(--card,#fff))}
+.pk152 ul{margin:.5rem 0 0;padding-inline-start:1.2rem;line-height:1.9}
+.tjsel152{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
+.tj2 .ay.go152{background:color-mix(in srgb,var(--gold,#d4a017) 30%,transparent);border-radius:8px}
+#vid152{position:fixed;inset:0;z-index:9700;background:#000c;display:flex;align-items:center;justify-content:center;padding:1rem}
+#vid152 .box{background:var(--card,#fff);color:var(--fg,#111);border-radius:18px;padding:1rem;width:min(26rem,96vw);max-height:92vh;overflow:auto;text-align:center}
+#vid152 canvas,#vid152 video{width:100%;border-radius:12px;background:#000}
+</style>`);
+
+  /* 1) درج جانبي: أدوات الأونر بتستخبى في الجنب وتطلع لما تقرّب الماوس أو تدوس السهم */
+  const SIDE = ["hlp152", "en146", "nt147", "uilany", "lk142"];
+  function sdEnsure() {
+    let d = document.getElementById("sd152");
+    if (!d) { d = document.createElement("div"); d.id = "sd152"; d.innerHTML = `<span class="sdh" title="${ar() ? "الأدوات" : "Tools"}">⋮</span>`; d.querySelector(".sdh").onclick = () => d.classList.toggle("open"); document.body.appendChild(d); }
+    SIDE.forEach(id => { const el = document.getElementById(id); if (el && el.parentElement !== d) d.appendChild(el); });
+    d.style.display = d.children.length > 1 ? "" : "none";
+  }
+  /* زرار «؟» في الدرج بدل ما يكون جوه الصفحة */
+  function hlpSide() {
+    let b = document.getElementById("hlp152"); const has = typeof helpFor === "function" && helpFor();
+    if (!has) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement("button"); b.id = "hlp152"; b.onclick = () => helpOpen(); document.body.appendChild(b); }
+    b.textContent = "❓ " + (ar() ? "إزاي أستخدم الصفحة؟" : "How to use this page");
+  }
+  /* شرح أوسع شوية في كل صفحة */
+  const EXTRA = {
+    ar: ["🌐 تقدر تغيّر اللغة وحجم الخط من زرار «اللغة والعرض».", "🔊 أي صوت بتشغّله بيظهر في الشريط اللي تحت: إيقاف، تقديم ورجوع، رفع وخفض الصوت، والسرعة.", "💾 تقدّمك واختباراتك بتتحفظ لوحدها على حسابك.", "🎁 العلامة دي معناها مفتوح للتجربة، و🔒 للمشتركين.", "💬 لو وقفت في حاجة، كلّمنا على الواتساب من زرار الدعم."],
+    en: ["🌐 Change the language and text size from the “Language & display” button.", "🔊 Any audio you play appears in the bar at the bottom: pause, skip, volume and speed.", "💾 Your progress and quiz results are saved to your account automatically.", "🎁 means free to try; 🔒 means for subscribers.", "💬 Stuck? Message us on WhatsApp from the support button."]
+  };
+  if (typeof helpFor === "function") { const _hf = helpFor; helpFor = function () { const h = _hf.apply(this, arguments); if (!h) return h; const out = {}; Object.keys(h).forEach(l => { const base = Array.isArray(h[l]) ? h[l] : []; const ex = EXTRA[l] || EXTRA.en; out[l] = base.concat(ex.filter(x => !base.includes(x))); }); return out; }; }
+
+  /* 2) أسماء الدرجات بالحروف اللاتينية (Do Re Mi) بدل «دو ري مي» في صفحات المقامات */
+  const SOLAR = { "دو": "Do", "ري": "Re", "مي": "Mi", "فا": "Fa", "صول": "Sol", "سي": "Si" };
+  const SB = "(^|[\\s(«،,.:؛\\-–—/+>])";
+  const SE = "(?=$|[\\s)»،,.:؛\\-–—/+<])";
+  function solfLatin(t) {
+    let s = t;
+    s = s.replace(new RegExp(SB + "(دو|ري|مي|فا|صول|لا|سي)\\s+(?:نص|نصف)\\s+بيمول" + SE, "g"), (m, p, n) => p + (SOLAR[n] || "La") + "½♭");
+    s = s.replace(new RegExp(SB + "(دو|ري|مي|فا|صول|لا|سي)\\s+سيكاه" + SE, "g"), (m, p, n) => p + (SOLAR[n] || "La") + "½♭");
+    s = s.replace(new RegExp(SB + "(دو|ري|مي|فا|صول|لا|سي)\\s+بيمول" + SE, "g"), (m, p, n) => p + (SOLAR[n] || "La") + "♭");
+    s = s.replace(new RegExp(SB + "(دو|ري|مي|فا|صول|لا|سي)\\s+دييز" + SE, "g"), (m, p, n) => p + (SOLAR[n] || "La") + "♯");
+    s = s.replace(new RegExp("(درجة|لدرجة|الدرجة|قرار|جواب)\\s+ال(دو|ري|مي|فا|صول|لا|سي)" + SE, "g"), (m, p, n) => p + " " + (SOLAR[n] || "La"));
+    s = s.replace(new RegExp(SB + "(دو|ري|مي|فا|صول|سي)" + SE, "g"), (m, p, n) => p + SOLAR[n]);
+    /* «لا» كلمة عادية كمان، فبنغيّرها بس جوه سلسلة درجات (جنب درجة تانية بشرطة) */
+    s = s.replace(/(Do|Re|Mi|Fa|Sol|Si)([♭♯½]*\s*[–—-]\s*)لا(?=$|[\s–—-])/g, "$1$2La").replace(/(^|\s)لا(\s*[–—-]\s*)(Do|Re|Mi|Fa|Sol|Si)/g, "$1La$2$3");
+    s = s.replace(/(Do|Re|Mi|Fa|Sol|La|Si)\s+فلات/g, "$1♭").replace(/(Do|Re|Mi|Fa|Sol|La|Si)\s+شارب/g, "$1♯");
+    s = s.replace(/(Re|Mi|La|Si|Sol|Do|Fa)\s+—\s+(Re|Mi|La|Si|Sol|Do|Fa)\b/g, (m, a, b) => a === b ? a : m);
+    return s;
+  }
+  function solfLatinDom(root) {
+    if (!root) return; const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement && n.parentElement.closest("script,style,textarea,input,.notr,[lang=ar].ayah,[contenteditable]") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const L_ = []; let n; while ((n = w.nextNode())) if (/(^|[\s(«،,.:؛\-–—/+])(دو|ري|مي|فا|صول|سي|لا)(?=$|[\s)»،,.:؛\-–—/+])|درجة ال|بيمول|دييز/.test(n.nodeValue)) L_.push(n);
+    L_.forEach(t => { const v = solfLatin(t.nodeValue); if (v !== t.nodeValue) t.nodeValue = v; });
+  }
+
+  /* 3) زرار «آهة جديدة» بنفس شكل باقي الزراير + «صوتي» هو الاختيار الأول لما يكون الطالب سجّل مساحة صوته */
+  function aahFix() {
+    document.querySelectorAll("button[onclick=\"mqPlay('gen')\"].btn-p").forEach(b => { b.classList.remove("btn-p"); b.classList.add("btn-o"); });
+    let has = false; try { has = !!myQarar(); } catch (e) {}
+    if (has && !state.__v152voice) {
+      state.__v152voice = true;
+      if (state.mq) { state.mq.voice = "mine"; state.mq.mine = true; }
+      if (state.mqd) state.mqd.voice = "mine";
+      if (state.thp) state.thp.voice = "mine";
+      try { const M = window.MQCA || null; if (M && M.voice === "m") M.voice = "mine"; } catch (e) {}
+    }
+  }
+  if (typeof vrRecord === "function") { const _vr = vrRecord; vrRecord = async function () { const r = await _vr.apply(this, arguments); state.__v152voice = false; return r; }; }
+
+  /* 4) أول مرة على الجهاز ده: «اعمل حساب» بيظهر بدل «تسجيل الدخول» */
+  const _nav = navigate;
+  navigate = function (route, param) {
+    if (route === "login" && !(state.auth && state.auth.user) && !lsGet("itqan_known")) route = "signup";
+    return _nav.call(this, route, param);
+  };
+
+  /* 5) زراير جوجل وفيسبوك: تظهر بس لو متفعّلة فعلًا في Supabase */
+  (async () => {
+    try {
+      const r = await fetch(SB_URL + "/auth/v1/settings", { headers: { apikey: SB_KEY } }); const j = await r.json(); const ex = j.external || {};
+      state.__oa152 = { google: !!ex.google, facebook: !!ex.facebook };
+      document.head.insertAdjacentHTML("beforeend", `<style>${ex.google ? "" : ".oa114 button[onclick*=google]{display:none!important}"}${ex.facebook ? "" : ".oa114 button[onclick*=facebook]{display:none!important}"}${!ex.google && !ex.facebook ? ".oa114,.oa114hr{display:none!important}" : ""}</style>`);
+    } catch (e) {}
+  })();
+
+  /* 6) المصحف الملوّن: الأونر/المعلم يختار طالب ويشوف علاماته + اختيار الآية جنب السورة */
+  function studs152() {
+    const r = role(); if (r !== "owner" && r !== "teacher") return null;
+    return useData("v152studs", async () => {
+      if (r === "owner") { const { data } = await sb.from("profiles").select("id,display_name,real_name,email").eq("role", "student").order("display_name").limit(500); return data || []; }
+      const { data: a } = await sb.from("student_teacher_assignments").select("student_id").eq("teacher_id", state.auth.user.id); const ids = [...new Set((a || []).map(x => x.student_id))]; if (!ids.length) return [];
+      const { data } = await sb.from("profiles").select("id,display_name,real_name,email").in("id", ids); return data || [];
+    });
+  }
+  window.tjStudent152 = function (id) { state.mmUser = id || null; Object.keys(state.data || {}).forEach(k => { if (/^mmAll:|^mm:/.test(k)) delete state.data[k]; }); render(); };
+  window.tjGo152 = function (n) {
+    n = +n; if (!n) return; document.querySelectorAll(".tj2 .ay.go152").forEach(x => x.classList.remove("go152"));
+    const el = document.getElementById("tay_" + n); if (!el) return; el.classList.add("go152"); el.scrollIntoView({ block: "center", behavior: "smooth" }); state.tjv = state.tjv || {}; state.tjv.i = n - 1;
+  };
+  if (typeof tjTools === "function") {
+    const _tt = tjTools;
+    tjTools = function () {
+      let h = _tt.apply(this, arguments); const s = (state.tj || {}).surah || 1; const d = state.data["tj:" + s]; const n = Array.isArray(d) ? d.length : 0;
+      const st = studs152(); const me = state.auth.user && state.auth.user.id;
+      const pick = Array.isArray(st) ? `<label class="sm">👤 ${ar() ? "افتح مصحف طالب:" : "Open a student's muṣḥaf:"}</label><select class="in" style="width:auto;max-width:100%" onchange="tjStudent152(this.value)"><option value="">${ar() ? "— مصحفي أنا —" : "— my own —"}</option>${st.map(p => `<option value="${p.id}" ${state.mmUser === p.id ? "selected" : ""}>${esc(p.display_name || p.real_name || p.email || p.id.slice(0, 6))}</option>`).join("")}</select>` : "";
+      const ay = n ? `<label class="sm">📍 ${ar() ? "روح للآية:" : "Go to āyah:"}</label><select class="in" style="width:auto" onchange="tjGo152(this.value)"><option value="">—</option>${Array.from({ length: n }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select>` : "";
+      return `<div class="tjsel152">${ay}${pick}${state.mmUser && state.mmUser !== me ? `<span class="badge">👁 ${ar() ? "بتشوف علامات الطالب" : "Viewing the student's marks"}</span>` : ""}</div>` + h;
+    };
+  }
+
+  /* 7) آية اليوم: كل القرّاء (الافتراضي المنشاوي مجوّد) + فيديو للمشاركة */
+  window.daRec152 = function (v) { state.daRec = v; try { localStorage.setItem("itqan_darec", v); } catch (e) {} render(); };
+  const daRec = () => state.daRec || lsGet("itqan_darec") || "Minshawy_Mujawwad_192kbps";
+  if (typeof dailyAyahCard === "function") {
+    const _da = dailyAyahCard;
+    dailyAyahCard = function () {
+      let h = _da.apply(this, arguments); const k = daPick(); const rec = daRec();
+      h = h.replace(/everyayah\.com\/data\/Minshawy_Mujawwad_192kbps\//g, `everyayah.com/data/${rec}/`);
+      const e = EA.find(x => x[0] === rec); h = h.replace(/\((المنشاوي مجوّد|Al-Minshawi, mujawwad)\)/, "(" + esc(e ? (ar() ? e[1] : e[2]) : rec) + ")");
+      const sel = `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem;align-items:center"><span class="sm">🎙️</span><select class="in" style="width:auto;max-width:100%" onchange="daRec152(this.value)">${EA.filter(x => !String(x[0]).includes("/")).map(x => `<option value="${x[0]}" ${x[0] === rec ? "selected" : ""}>${esc(ar() ? x[1] : x[2])}</option>`).join("")}</select><button class="btn btn-o" onclick="daVideo152('${k}')">🎬 ${ar() ? "اعمل فيديو للآية" : "Make a video"}</button></div>`;
+      return h.replace(/<\/div>\s*$/, sel + "</div>");
+    };
+  }
+  function wrapLines(ctx, text, maxW) { const words = String(text).split(/\s+/); const lines = []; let cur = ""; words.forEach(w => { const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; }
+  window.daVideo152 = async function (k) {
+    const d = (state.data || {})["da:" + k + ":" + state.lang]; const x = Array.isArray(d) ? d[0] : null; if (!x) return toast("…", true);
+    const [s, a] = k.split(":"); const rec = daRec(); const url = eaUrl(rec, k); const recName = (EA.find(e => e[0] === rec) || [rec, rec, rec])[ar() ? 1 : 2];
+    const site = (location.host || "itqan-academy").replace(/^www\./, ""); const name = ar() ? "أكاديمية إتقان" : "Itqan Academy";
+    const ov = document.createElement("div"); ov.id = "vid152"; ov.innerHTML = `<div class="box"><b>🎬 ${ar() ? "بنعمل الفيديو… سيب الصفحة مفتوحة" : "Making your video… keep this page open"}</b><canvas width="720" height="1280"></canvas><p class="xs muted" id="vid152s">${ar() ? "بيتسجّل مع صوت الشيخ" : "Recording with the reciter's audio"}</p><button class="btn btn-o" onclick="document.getElementById('vid152').remove()">✕</button></div>`;
+    document.body.appendChild(ov); const cv = ov.querySelector("canvas"); const ctx = cv.getContext("2d"); const W = cv.width, H = cv.height;
+    const logo = new Image(); logo.src = "/icons/icon-512.png"; await new Promise(r => { logo.onload = r; logo.onerror = r; });
+    try { await document.fonts.load("48px Amiri"); } catch (e) {}
+    const au = new Audio(); au.crossOrigin = "anonymous"; au.src = url; let stream = cv.captureStream(30), acx = null, hasAudio = false;
+    try { acx = new (window.AudioContext || window.webkitAudioContext)(); const src = acx.createMediaElementSource(au); const dst = acx.createMediaStreamDestination(); src.connect(dst); src.connect(acx.destination); dst.stream.getAudioTracks().forEach(t => stream.addTrack(t)); hasAudio = true; } catch (e) {}
+    const t0 = performance.now(); let raf = 0;
+    const draw = () => {
+      const t = (performance.now() - t0) / 1000;
+      const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#052e2b"); g.addColorStop(.55, "#0f766e"); g.addColorStop(1, "#1e1b4b"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 40; i++) { const px = (Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1 * W; const py = ((i * 97 + t * (12 + i % 7)) % (H + 40)) - 20; ctx.globalAlpha = .12 + .1 * Math.sin(t * 2 + i); ctx.fillStyle = "#fde68a"; ctx.beginPath(); ctx.arc(px, H - py, 2 + (i % 3), 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1; ctx.strokeStyle = "rgba(253,230,138,.55)"; ctx.lineWidth = 3; ctx.strokeRect(36, 36, W - 72, H - 72);
+      ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.direction = "rtl"; let fs = 54; ctx.font = `${fs}px Amiri, 'Amiri Quran', serif`; let lines = wrapLines(ctx, x.ar, W - 140);
+      while (lines.length > 9 && fs > 30) { fs -= 4; ctx.font = `${fs}px Amiri, 'Amiri Quran', serif`; lines = wrapLines(ctx, x.ar, W - 140); }
+      const lh = fs * 1.75, top = H / 2 - (lines.length * lh) / 2; const fade = Math.min(1, t / 1.2); ctx.globalAlpha = fade; lines.forEach((l, i) => ctx.fillText(l, W / 2, top + i * lh + fs));
+      ctx.font = "28px Tajawal, sans-serif"; ctx.fillStyle = "#fde68a"; ctx.fillText(`﴿ ${sName(+s)} · ${a} ﴾`, W / 2, top + lines.length * lh + 70);
+      ctx.globalAlpha = 1; ctx.direction = "ltr";
+      /* لوجو متحرك: نبض + لمعة دوّارة */
+      const cx = W / 2, cy = 200, R = 70 + 4 * Math.sin(t * 3); ctx.save(); ctx.translate(cx, cy);
+      ctx.strokeStyle = "rgba(253,230,138,.9)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, R + 14, t * 2, t * 2 + Math.PI * 1.3); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.clip(); if (logo.naturalWidth) ctx.drawImage(logo, -R, -R, R * 2, R * 2);
+      const sh = ctx.createLinearGradient(-R + ((t * 160) % (R * 4)) - R * 2, 0, -R + ((t * 160) % (R * 4)) - R, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.45)"); sh.addColorStop(1, "rgba(255,255,255,0)"); ctx.fillStyle = sh; ctx.fillRect(-R, -R, R * 2, R * 2); ctx.restore();
+      ctx.fillStyle = "#fff"; ctx.font = "bold 36px Tajawal, sans-serif"; ctx.globalAlpha = Math.min(1, t / .8); ctx.fillText(name, W / 2, cy + R + 60);
+      ctx.globalAlpha = 1; ctx.font = "24px Tajawal, sans-serif"; ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fillText("🎙️ " + recName, W / 2, H - 150); ctx.fillStyle = "#fde68a"; ctx.font = "bold 26px Tajawal, sans-serif"; ctx.fillText(site, W / 2, H - 100);
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const mime = ["video/mp4", "video/webm;codecs=vp9,opus", "video/webm"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "video/webm";
+    let mr; try { mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 3_000_000 }); } catch (e) { cancelAnimationFrame(raf); ov.remove(); return toast(ar() ? "المتصفح ده مش بيدعم عمل فيديو — جرّب Chrome" : "This browser can't make videos — try Chrome", true); }
+    const chunks = []; mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+    const done = new Promise(r => mr.onstop = r); mr.start(250);
+    let ok = false; try { if (acx && acx.state === "suspended") await acx.resume(); await au.play(); ok = true; } catch (e) {}
+    await new Promise(r => { if (ok) { au.onended = () => setTimeout(r, 900); au.onerror = () => setTimeout(r, 6000); } else setTimeout(r, 8000); setTimeout(r, 90000); });
+    mr.stop(); await done; cancelAnimationFrame(raf); try { acx && acx.close(); } catch (e) {}
+    const ext = mime.includes("mp4") ? "mp4" : "webm"; const blob = new Blob(chunks, { type: mime.split(";")[0] }); const fu = URL.createObjectURL(blob); const fname = `itqan-ayah-${s}-${a}.${ext}`;
+    const file = new File([blob], fname, { type: blob.type });
+    const share = `${name} — ${location.origin}`;
+    ov.querySelector(".box").innerHTML = `<b>✅ ${ar() ? "الفيديو جاهز" : "Your video is ready"}</b><video src="${fu}" controls playsinline></video>${!hasAudio || !ok ? `<p class="xs" style="color:#b45309">${ar() ? "الصوت ماتسجلش في المتصفح ده — الفيديو من غير صوت." : "Audio couldn't be captured in this browser — the video is silent."}</p>` : ""}
+      <div class="row" style="gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem"><a class="btn btn-p" href="${fu}" download="${fname}">⬇️ ${ar() ? "نزّل على موبايلك" : "Download"}</a>${navigator.canShare && navigator.canShare({ files: [file] }) ? `<button class="btn btn-o" id="vid152sh">📤 ${ar() ? "شارك" : "Share"}</button>` : ""}<button class="btn btn-o" onclick="document.getElementById('vid152').remove()">✕</button></div><p class="xs muted" style="margin-top:.4rem">${esc(share)}</p>`;
+    const sb_ = document.getElementById("vid152sh"); if (sb_) sb_.onclick = () => navigator.share({ files: [file], title: name, text: share }).catch(() => {});
+  };
+
+  /* 8) مزايا طلابي والمشتركين في الباقات: أيام مجانية + خصم 50% على محتوى الموقع */
+  function perk152() { if (!state.auth || !state.auth.user) return null; return useData("perk152", async () => { const { data } = await sb.rpc("my_content_perk"); return data || {}; }); }
+  function perkCard(full) {
+    const p = perk152(); const A = ar();
+    let mine = "";
+    if (p && typeof p === "object" && +p.discount > 0) {
+      const fu = p.free_until && new Date(p.free_until) > new Date() ? new Date(p.free_until) : null;
+      mine = `<p class="sm" style="margin-top:.5rem"><b>${fu ? (A ? `✅ محتوى الموقع كله مفتوح ليك لحد ${fu.toLocaleDateString("ar-EG")}` : `✅ All site content is open to you until ${fu.toLocaleDateString()}`) : (A ? "✅ خصم 50% على كل محتوى الموقع مفعّل لحسابك" : "✅ 50% off all site content is active on your account")}</b></p>`;
+    }
+    if (!full) return mine ? `<div class="card pk152" style="margin:1rem 0">${mine}</div>` : "";
+    return `<div class="card pk152" style="margin:1rem 0"><h3>🎁 ${A ? "اشترك في باقة حصص — وخد محتوى الموقع هدية" : "Subscribe to a lesson package — get the site content as a gift"}</h3><ul>
+      <li>${A ? "أول <b>أسبوع</b> من اشتراكك في أي باقة حصص: كل محتوى الموقع مفتوح ليك مجانًا." : "For the first <b>week</b> of any lesson package, all site content is free for you."}</li>
+      <li>${A ? "وبعد كده: <b>خصم 50%</b> على كل محتوى الموقع، طول ما انت معانا." : "After that: <b>50% off</b> all site content, for as long as you're with us."}</li>
+      <li>${A ? "طلاب الشيخ المباشرين: <b>3 أيام</b> مجانًا على كل المحتوى، وبعدها خصم 50%." : "The Sheikh's own students: <b>3 days</b> free on all content, then 50% off."}</li></ul>${mine}</div>`;
+  }
+  function courses152() {
+    const A = ar(); const tr = I18N[state.lang] || I18N.en;
+    return `<div class="card" style="margin:1rem 0"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>🎓 ${A ? "دورات الأكاديمية" : "Academy courses"}</h3><button class="btn btn-o" onclick="navigate('tracks')">${A ? "كل الدورات" : "All courses"}</button></div>
+      <div class="grid" style="margin-top:.6rem">${TRACKS.map(k => `<div class="card card-h" style="cursor:pointer" onclick="navigate('track-detail','${k}')"><div style="font-size:1.8rem">${TRACK_EMOJI[k]}</div><b>${esc(tr.tracks[k].title)}</b><p class="xs muted">${esc(tr.tracks[k].desc)}</p></div>`).join("")}</div>
+      <p class="sm" style="margin-top:.6rem">👨‍🏫 ${A ? "وكمان مسارات بيعملها معلمين الأكاديمية — شوفها في صفحة كل معلم:" : "Plus tracks built by the academy's teachers — see each teacher's page:"} <a href="#" onclick="navigate('teachers');return false;">${A ? "المعلمين" : "Teachers"}</a></p></div>`;
+  }
+  const _rp = renderPricing;
+  renderPricing = function () { const h = _rp.apply(this, arguments); const add = perkCard(true) + courses152(); const i = h.indexOf('<div class="wrap">'); return i >= 0 ? h.slice(0, i + 18) + add + h.slice(i + 18) : add + h; };
+
+  /* كل رندر */
+  const _r = render;
+  render = function () {
+    const out = _r.apply(this, arguments);
+    try { if (state.auth && state.auth.user) { try { localStorage.setItem("itqan_known", "1"); } catch (e) {} } } catch (e) {}
+    try { hlpSide(); sdEnsure(); } catch (e) {}
+    try { aahFix(); } catch (e) {}
+    try { if (typeof SOLF_ROUTES !== "undefined" && SOLF_ROUTES.includes(state.route)) solfLatinDom(document.getElementById("app")); } catch (e) {}
+    return out;
+  };
+})();
 
 // بدء التشغيل
 document.addEventListener('DOMContentLoaded', () => {
