@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v156";
+const UI_VERSION = "2026-11-15-v157";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -22260,6 +22260,142 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
 
   const _r = render;
   render = function () { const out = _r.apply(this, arguments); try { spkHide(); } catch (e) {} return out; };
+})();
+
+
+/* ================= v157: الدرج والـ«؟» وزرار اللغة فوق أي صفحة + آية اليوم: الطالب يختار الآية والقارئ للفيديو + المصحف الملوّن: الأحكام اللي تظهر حسب الطالب + معرض خلفيات ولوجوهات (ثابتة ومتحركة) ================= */
+(function () {
+  const ar = () => state.lang === "ar";
+  document.head.insertAdjacentHTML("beforeend", `<style>
+#sd152{z-index:2147483000!important}
+.hlpov{z-index:2147483100!important}
+#vid152{z-index:2147483200!important}
+#ctl113{z-index:2147482000!important;display:flex!important;visibility:visible!important;opacity:1!important}
+#ctl113p{z-index:2147482100!important}
+.tjf157{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
+.tjf157 .chip{cursor:pointer;border:1px solid var(--line,#e5e7eb);border-radius:999px;padding:.15rem .55rem;font-size:.78rem;background:var(--card,#fff)}
+.tjf157 .chip.on{color:#fff}
+.dz157{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;margin-top:.6rem}
+.dz157 button{border:2px solid var(--line,#e5e7eb);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;background:var(--card,#fff);text-align:start;color:inherit}
+.dz157 button.on{border-color:var(--accent,#0f766e);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0f766e) 30%,transparent)}
+.dz157 .th{height:86px;background-size:auto,cover}
+.dz157 .lg{height:86px;display:flex;align-items:center;justify-content:center;background:var(--bg,#f8fafc)}
+.dz157 .lg svg{width:64px;height:64px}
+.dz157 b{display:block;padding:.35rem .5rem;font-size:.8rem}
+.logo i.lg157{background:none!important;width:auto!important;height:auto!important;box-shadow:none!important;display:inline-flex;align-items:center}
+.logo i.lg157 svg{width:44px;height:44px}
+@keyframes spin157{to{transform:rotate(360deg)}}@keyframes pulse157{50%{transform:scale(1.08);opacity:.85}}@keyframes shine157{0%{transform:translateX(-120%)}60%,100%{transform:translateX(120%)}}@keyframes draw157{0%{stroke-dashoffset:300}55%,100%{stroke-dashoffset:0}}@keyframes tw157{50%{opacity:.25}}@keyframes float157{0%{background-position:0 0,0 0}100%{background-position:0 -600px,0 0}}@keyframes wave157{0%{background-position:0 0,0 0}100%{background-position:800px 0,0 0}}
+.a-spin{transform-origin:50% 50%;animation:spin157 14s linear infinite}.a-pulse{transform-origin:50% 50%;animation:pulse157 2.6s ease-in-out infinite}.a-draw{stroke-dasharray:300;animation:draw157 4.5s ease-in-out infinite alternate}.a-tw{animation:tw157 2.2s ease-in-out infinite}
+</style>`);
+
+  /* ---------- 1) زرار اللغة موجود على كل صفحة دايمًا ---------- */
+  setInterval(() => { try { if (!document.getElementById("ctl113") && typeof ctlBtn113 === "function") ctlBtn113(); const sd = document.getElementById("sd152"); if (sd && sd.parentElement !== document.body) document.body.appendChild(sd); } catch (e) {} }, 1500);
+
+  /* ---------- 2) آية اليوم: اختار أي آية + أي قارئ وبعدين اعمل الفيديو ---------- */
+  window.daPick157 = function () {
+    const A = ar(); const k = (typeof daPick === "function" ? daPick() : "1:1"); const [s0, a0] = k.split(":").map(Number); const rec = state.daRec || lsGet("itqan_darec") || "Minshawy_Mujawwad_192kbps";
+    const m = document.createElement("div"); m.className = "hlpov"; m.onclick = e => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="hlpbox"><div class="row" style="justify-content:space-between"><h3>🎬 ${A ? "فيديو لآية" : "Video for an āyah"}</h3><button class="ibtn" onclick="this.closest('.hlpov').remove()">✕</button></div>
+      <label class="sm">${A ? "السورة" : "Sūrah"}</label><select class="in" id="dp157s">${SURAHS.map((n, i) => `<option value="${i + 1}" ${i + 1 === s0 ? "selected" : ""}>${i + 1}. ${esc(sName(i + 1))}</option>`).join("")}</select>
+      <label class="sm">${A ? "رقم الآية" : "Āyah"}</label><input class="in" id="dp157a" type="number" min="1" value="${a0 || 1}">
+      <label class="sm">🎙️ ${A ? "القارئ" : "Reciter"}</label><select class="in" id="dp157r">${EA.filter(x => !String(x[0]).includes("/")).map(x => `<option value="${x[0]}" ${x[0] === rec ? "selected" : ""}>${esc(A ? x[1] : x[2])}</option>`).join("")}</select>
+      <button class="btn btn-p" style="width:100%;margin-top:.8rem" id="dp157go">🎬 ${A ? "اعمل الفيديو" : "Make the video"}</button></div>`;
+    document.body.appendChild(m);
+    m.querySelector("#dp157go").onclick = async () => {
+      const s = +m.querySelector("#dp157s").value, a = Math.max(1, +m.querySelector("#dp157a").value || 1), r = m.querySelector("#dp157r").value; const key = s + ":" + a;
+      const btn = m.querySelector("#dp157go"); btn.disabled = true; btn.textContent = "⏳";
+      try {
+        const j = await fetch(`https://api.quran.com/api/v4/verses/by_key/${key}?fields=text_uthmani`).then(x => x.json()); const t = j.verse && j.verse.text_uthmani;
+        if (!t) throw new Error(A ? "الآية دي مش موجودة" : "No such āyah");
+        state.data["da:" + key + ":" + state.lang] = [{ ar: t }]; state.daRec = r; try { localStorage.setItem("itqan_darec", r); } catch (e) {}
+        m.remove(); daVideo152(key);
+      } catch (e) { btn.disabled = false; btn.textContent = "🎬 " + (A ? "اعمل الفيديو" : "Make the video"); toast(e.message, true); }
+    };
+  };
+  if (typeof dailyAyahCard === "function") { const _da = dailyAyahCard; dailyAyahCard = function () { return _da.apply(this, arguments).replace(/onclick="daVideo152\('[^']*'\)"/, `onclick="daPick157()"`); }; }
+
+  /* ---------- 3) المصحف الملوّن: اختار الأحكام اللي تتلوّن (أوتوماتيك = اللي الطالب وصلها) ---------- */
+  window.tjf157 = function (k) {
+    const all = Object.keys(TJ); let cur = state.tjf157 ? new Set(state.tjf157) : null;
+    if (k === "auto") cur = null; else if (k === "all") cur = new Set(all); else if (k === "none") cur = new Set();
+    else { if (!cur) cur = new Set(tjfAuto()); cur.has(k) ? cur.delete(k) : cur.add(k); }
+    state.tjf157 = cur ? [...cur] : null; render();
+  };
+  function tjfAuto() { const u = (typeof mmUser === "function" && mmUser()) || (state.auth.user && state.auth.user.id); const r = u && typeof myTjRules === "function" ? myTjRules(u) : null; return Array.isArray(r) ? r.concat(["ham_wasl", "slnt", "laam_shamsiyah"]) : Object.keys(TJ); }
+  function tjfApply() {
+    let st = document.getElementById("tjfs157"); if (!st) { st = document.createElement("style"); st.id = "tjfs157"; document.head.appendChild(st); }
+    if (!document.querySelector("#app .tjsel152")) { st.textContent = ""; return; }
+    const on = new Set(state.tjf157 || tjfAuto()); st.textContent = Object.keys(TJ).filter(k => !on.has(k)).map(k => `#app .tj-${k}{color:inherit!important;background:none!important}`).join("");
+  }
+  if (typeof tjTools === "function") {
+    const _tt = tjTools;
+    tjTools = function () {
+      const h = _tt.apply(this, arguments); const A = ar(); const on = new Set(state.tjf157 || tjfAuto());
+      const chips = Object.entries(TJ).filter(([k]) => !["slnt", "ham_wasl", "laam_shamsiyah"].includes(k)).map(([k, v]) => `<span class="chip ${on.has(k) ? "on" : ""}" style="${on.has(k) ? `background:${v[0]};border-color:${v[0]}` : `color:${v[0]}`}" onclick="tjf157('${k}')">${esc(A ? v[1] : v[2])}</span>`).join("");
+      return h.replace('<div class="tjsel152">', `<div class="tjf157"><b class="sm">🎨 ${A ? "الأحكام اللي تتلوّن:" : "Rules to colour:"}</b><button class="btn ${state.tjf157 ? "btn-o" : "btn-p"}" style="padding:.15rem .55rem" onclick="tjf157('auto')">${A ? "حسب ما الطالب وصل" : "As the student has reached"}</button><button class="btn btn-o" style="padding:.15rem .55rem" onclick="tjf157('all')">${A ? "الكل" : "All"}</button><button class="btn btn-o" style="padding:.15rem .55rem" onclick="tjf157('none')">${A ? "ولا حاجة" : "None"}</button>${chips}</div><div class="tjsel152">`);
+    };
+  }
+
+  /* ---------- 4) معرض الخلفيات واللوجوهات ---------- */
+  const enc = s => "url(\"data:image/svg+xml;utf8," + encodeURIComponent(s) + "\")";
+  const star8 = (c, s = 80, w = 1) => `<svg xmlns='http://www.w3.org/2000/svg' width='${s}' height='${s}' viewBox='0 0 80 80'><g fill='none' stroke='${c}' stroke-width='${w}'><path d='M40 8 L48 32 L72 40 L48 48 L40 72 L32 48 L8 40 L32 32 Z'/><rect x='22' y='22' width='36' height='36' transform='rotate(45 40 40)'/><rect x='22' y='22' width='36' height='36'/></g></svg>`;
+  const BG = [
+    { id: "none", n: ["بدون (الأصلي)", "None (original)"], css: "" },
+    { id: "stars8", n: ["نجوم إسلامية", "Islamic stars"], css: `background:${enc(star8("rgba(15,118,110,.13)"))},linear-gradient(180deg,#f6fbf9,#eef6f3)` },
+    { id: "goldara", n: ["أرابيسك ذهبي", "Golden arabesque"], css: `background:${enc(star8("rgba(180,138,40,.22)", 96, 1.2))},radial-gradient(circle at 20% 10%,#fffaf0,#f5ecd7)` },
+    { id: "night", n: ["سماء الليل ✨ (متحرك)", "Night sky ✨ (animated)"], dark: 1, anim: 1, css: `background:radial-gradient(1px 1px at 20px 30px,#fff,transparent),radial-gradient(1.5px 1.5px at 120px 80px,#fde68a,transparent),radial-gradient(1px 1px at 200px 150px,#fff,transparent),radial-gradient(1px 1px at 320px 60px,#c7d2fe,transparent),linear-gradient(180deg,#0b1026,#1e1b4b 60%,#312e81);background-size:360px 220px,360px 220px,360px 220px,360px 220px,cover;animation:float157 90s linear infinite` },
+    { id: "dunes", n: ["فجر الصحراء", "Desert dawn"], css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='400' viewBox='0 0 1600 400'><path d='M0 300 Q400 200 800 290 T1600 260 V400 H0Z' fill='%23e9c98f' opacity='.55'/><path d='M0 340 Q500 260 1000 340 T1600 320 V400 H0Z' fill='%23d9a865' opacity='.5'/></svg>`).replace(/%23/g, "#")} bottom/100% auto no-repeat fixed,linear-gradient(180deg,#fff7e6,#fde7c7 70%,#f6d5a7)` },
+    { id: "zellige", n: ["زليج مغربي", "Moroccan zellige"], css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><path d='M30 0 L60 30 L30 60 L0 30Z' fill='none' stroke='rgba(14,116,144,.18)'/><circle cx='30' cy='30' r='9' fill='rgba(14,116,144,.08)'/><circle cx='0' cy='0' r='9' fill='rgba(180,83,9,.08)'/><circle cx='60' cy='60' r='9' fill='rgba(180,83,9,.08)'/></svg>`)},#f3faf9` },
+    { id: "parch", n: ["ورق قديم", "Old parchment"], css: `background:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.7),transparent 60%),radial-gradient(ellipse at 80% 90%,rgba(160,110,50,.18),transparent 55%),linear-gradient(135deg,#f6ead0,#ecd9b0)` },
+    { id: "crescent", n: ["هلال ونجوم (متحرك)", "Crescent & stars (animated)"], dark: 1, anim: 1, css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><path d='M220 60a40 40 0 1 0 30 70 32 32 0 1 1-30-70z' fill='rgba(253,230,138,.55)'/><g fill='rgba(255,255,255,.7)'><circle cx='40' cy='50' r='1.4'/><circle cx='150' cy='120' r='1'/><circle cx='80' cy='220' r='1.6'/><circle cx='260' cy='240' r='1.1'/></g></svg>`)} 0 0/300px 300px,linear-gradient(180deg,#062925,#0f3d3a 55%,#134e4a);animation:float157 120s linear infinite` },
+    { id: "waves", n: ["تموجات هادية (متحرك)", "Soft waves (animated)"], anim: 1, css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='200'><path d='M0 100 Q100 60 200 100 T400 100 T600 100 T800 100' fill='none' stroke='rgba(15,118,110,.12)' stroke-width='2'/><path d='M0 140 Q100 100 200 140 T400 140 T600 140 T800 140' fill='none' stroke='rgba(212,160,23,.12)' stroke-width='2'/></svg>`)} 0 0/800px 200px,linear-gradient(180deg,#f8fffd,#ecfdf5);animation:wave157 40s linear infinite` },
+    { id: "grid", n: ["شبكة هندسية رفيعة", "Fine geometry"], css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><path d='M24 0V48M0 24H48M0 0L48 48M48 0L0 48' stroke='rgba(15,23,42,.06)'/></svg>`)},#fbfcfe` },
+    { id: "garden", n: ["حدائق وأوراق", "Garden leaves"], css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g fill='none' stroke='rgba(22,101,52,.16)' stroke-width='1.3'><path d='M60 10c25 20 25 80 0 100c-25-20-25-80 0-100z'/><path d='M10 60c20-25 80-25 100 0c-20 25-80 25-100 0z'/></g></svg>`)},linear-gradient(180deg,#f7fdf8,#eaf7ee)` },
+    { id: "marble", n: ["رخام فاتح", "Light marble"], css: `background:linear-gradient(115deg,transparent 40%,rgba(148,163,184,.12) 41%,transparent 43%),linear-gradient(65deg,transparent 60%,rgba(148,163,184,.10) 61%,transparent 63%),radial-gradient(circle at 70% 30%,#fff,#f1f5f9)` },
+    { id: "goldfloat", n: ["ذرّات ذهبية (متحركة)", "Golden particles (animated)"], anim: 1, css: `background:radial-gradient(2px 2px at 30px 40px,rgba(212,160,23,.45),transparent),radial-gradient(1.5px 1.5px at 160px 120px,rgba(212,160,23,.35),transparent),radial-gradient(2px 2px at 260px 220px,rgba(15,118,110,.3),transparent),linear-gradient(180deg,#fffdf7,#fbf5e6);background-size:320px 280px,320px 280px,320px 280px,cover;animation:float157 70s linear infinite` },
+    { id: "domes", n: ["قباب ومآذن", "Domes skyline"], css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='220' viewBox='0 0 1200 220'><g fill='rgba(15,118,110,.10)'><path d='M0 220V170h80v-20a40 40 0 0 1 80 0v20h60V90h12v80h80v-30a70 70 0 0 1 140 0v30h70V100h12v70h90v-25a50 50 0 0 1 100 0v25h120V80h12v90h80v-15a35 35 0 0 1 70 0v15h82v50z'/></g></svg>`)} bottom/100% auto no-repeat fixed,linear-gradient(180deg,#f9fbfa,#eef5f3)` },
+    { id: "kufi", n: ["كوفي مربّع", "Square kufic"], css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><g fill='rgba(30,64,175,.07)'><rect x='0' y='0' width='16' height='4'/><rect x='0' y='0' width='4' height='16'/><rect x='24' y='8' width='16' height='4'/><rect x='32' y='8' width='4' height='24'/><rect x='48' y='0' width='4' height='16'/><rect x='8' y='40' width='24' height='4'/><rect x='40' y='40' width='4' height='20'/><rect x='48' y='52' width='16' height='4'/></g></svg>`)},#f8fafc` },
+    { id: "glass", n: ["زجاج معشّق", "Stained glass"], css: `background:radial-gradient(circle at 10% 20%,rgba(59,130,246,.10),transparent 30%),radial-gradient(circle at 80% 10%,rgba(234,179,8,.12),transparent 30%),radial-gradient(circle at 70% 80%,rgba(16,185,129,.10),transparent 35%),radial-gradient(circle at 20% 85%,rgba(244,63,94,.08),transparent 30%),#fbfbfd` },
+    { id: "emerald", n: ["زمرّدي فاخر", "Emerald luxe"], dark: 1, css: `background:${enc(star8("rgba(253,230,138,.10)", 96, 1))},radial-gradient(circle at 50% 0%,#115e59,#042f2e 70%)` },
+    { id: "lantern", n: ["فوانيس (متحركة)", "Lanterns (animated)"], anim: 1, css: `background:${enc(`<svg xmlns='http://www.w3.org/2000/svg' width='220' height='260'><g transform='translate(100 30)'><path d='M0 0v20' stroke='rgba(180,83,9,.35)'/><path d='M-14 20h28l6 14-6 40h-28l-6-40z' fill='rgba(234,179,8,.16)' stroke='rgba(180,83,9,.3)'/><circle cx='0' cy='52' r='6' fill='rgba(253,224,71,.4)'/></g></svg>`)} 0 0/220px 260px,linear-gradient(180deg,#fffbeb,#fef3c7);animation:float157 160s linear infinite` }
+  ];
+  const LOGO = [
+    { id: "default", n: ["الأصلي", "Original"], svg: c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='16' fill='${c}'/><text x='32' y='43' text-anchor='middle' font-size='30' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+    { id: "star", n: ["نجمة ثمانية", "Eight-point star"], svg: c => `<svg viewBox='0 0 64 64'><g fill='${c}'><rect x='14' y='14' width='36' height='36' rx='3'/><rect x='14' y='14' width='36' height='36' rx='3' transform='rotate(45 32 32)'/></g><text x='32' y='42' text-anchor='middle' font-size='24' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+    { id: "arch", n: ["محراب", "Mihrab arch"], svg: c => `<svg viewBox='0 0 64 64'><path d='M12 58V30a20 20 0 0 1 40 0v28z' fill='${c}'/><path d='M20 58V32a12 12 0 0 1 24 0v26' fill='none' stroke='#fde68a' stroke-width='2'/><text x='32' y='50' text-anchor='middle' font-size='18' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+    { id: "book", n: ["هلال وكتاب", "Crescent & book"], svg: c => `<svg viewBox='0 0 64 64'><path d='M38 8a14 14 0 1 0 12 22 11 11 0 1 1-12-22z' fill='#d4a017'/><path d='M8 40c10-5 18-5 24 0c6-5 14-5 24 0v14c-10-5-18-5-24 0c-6-5-14-5-24 0z' fill='${c}'/><path d='M32 40v14' stroke='#fff' stroke-width='1.5'/></svg>` },
+    { id: "hex", n: ["سداسي هندسي", "Geometric hexagon"], svg: c => `<svg viewBox='0 0 64 64'><path d='M32 4l24 14v28L32 60 8 46V18z' fill='${c}'/><path d='M32 14l15 9v18L32 50 17 41V23z' fill='none' stroke='#fde68a' stroke-width='1.6'/><text x='32' y='41' text-anchor='middle' font-size='20' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+    { id: "lantern", n: ["فانوس", "Lantern"], svg: c => `<svg viewBox='0 0 64 64'><path d='M32 4v8' stroke='${c}' stroke-width='2'/><path d='M22 12h20l6 10-6 30H22l-6-30z' fill='${c}'/><circle cx='32' cy='32' r='7' fill='#fde68a'/><path d='M24 52h16v6H24z' fill='${c}'/></svg>` },
+    { id: "rehal", n: ["رحل المصحف", "Quran stand"], svg: c => `<svg viewBox='0 0 64 64'><path d='M10 24l22 12 22-12' fill='none' stroke='${c}' stroke-width='5' stroke-linejoin='round'/><path d='M16 56l32-22M48 56L16 34' stroke='${c}' stroke-width='5' stroke-linecap='round'/><path d='M14 22c8-6 14-6 18 0c4-6 10-6 18 0' fill='none' stroke='#d4a017' stroke-width='3'/></svg>` },
+    { id: "wave", n: ["صوت ومقام", "Voice & maqam"], svg: c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/><path d='M14 32h4M20 24v16M26 18v28M32 26v12M38 14v36M44 22v20M50 32h0' stroke='#fff' stroke-width='3' stroke-linecap='round'/></svg>` },
+    { id: "spin", n: ["نجمة دوّارة ✨", "Spinning star ✨"], anim: 1, svg: c => `<svg viewBox='0 0 64 64'><g class='a-spin'><g fill='none' stroke='#d4a017' stroke-width='1.6'><rect x='10' y='10' width='44' height='44' rx='4'/><rect x='10' y='10' width='44' height='44' rx='4' transform='rotate(45 32 32)'/></g></g><circle cx='32' cy='32' r='15' fill='${c}'/><text x='32' y='40' text-anchor='middle' font-size='20' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+    { id: "pulse", n: ["هلال نابض ✨", "Pulsing crescent ✨"], anim: 1, svg: c => `<svg viewBox='0 0 64 64'><g class='a-pulse'><path d='M40 6a26 26 0 1 0 18 44 21 21 0 1 1-18-44z' fill='${c}'/></g><circle cx='46' cy='18' r='2.4' fill='#fde68a' class='a-tw'/><text x='26' y='42' text-anchor='middle' font-size='20' font-family='Amiri,serif' fill='#fff'>إ</text></svg>` },
+    { id: "draw", n: ["محراب بيترسم ✨", "Drawing arch ✨"], anim: 1, svg: c => `<svg viewBox='0 0 64 64'><path class='a-draw' d='M12 58V30a20 20 0 0 1 40 0v28' fill='none' stroke='${c}' stroke-width='4' stroke-linecap='round'/><path class='a-draw' d='M20 58V32a12 12 0 0 1 24 0v26' fill='none' stroke='#d4a017' stroke-width='2.5' style='animation-delay:.6s'/><text x='32' y='52' text-anchor='middle' font-size='16' font-family='Amiri,serif' fill='${c}'>إ</text></svg>` },
+    { id: "shine", n: ["لمعة ذهبية ✨", "Golden shine ✨"], anim: 1, svg: c => `<svg viewBox='0 0 64 64'><defs><clipPath id='cp157'><rect x='4' y='4' width='56' height='56' rx='16'/></clipPath><linearGradient id='gl157' x1='0' x2='1'><stop offset='0' stop-color='#fff' stop-opacity='0'/><stop offset='.5' stop-color='#fff' stop-opacity='.55'/><stop offset='1' stop-color='#fff' stop-opacity='0'/></linearGradient></defs><rect x='4' y='4' width='56' height='56' rx='16' fill='${c}'/><g clip-path='url(#cp157)'><rect x='-20' y='0' width='30' height='64' fill='url(#gl157)' transform='skewX(-20)' style='animation:shine157 3s ease-in-out infinite'/></g><text x='32' y='43' text-anchor='middle' font-size='30' font-family='Amiri,serif' fill='#fde68a'>إ</text></svg>` }
+  ];
+  window.DESIGN157 = { BG, LOGO };
+  const dGet = () => Object.assign({ bg: "none", logo: "default" }, setv("design157", {}) || {}, state.dz157 || {});
+  function dApply() {
+    const d = dGet(); const b = BG.find(x => x.id === d.bg) || BG[0];
+    let st = document.getElementById("dzs157"); if (!st) { st = document.createElement("style"); st.id = "dzs157"; document.head.appendChild(st); }
+    st.textContent = b.css ? `body{${b.css};background-attachment:fixed}${b.dark ? `.hdr,.footer,footer{backdrop-filter:blur(6px)}#app>section>.wrap>h1,#app>section>.wrap>h2,#app .sec>.wrap>h1,#app .sec>.wrap>h2,#app .sec>.wrap>p.muted{color:#f8fafc}` : ""}` : "";
+    const lg = LOGO.find(x => x.id === d.logo) || LOGO[0]; const c = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#0f766e";
+    document.querySelectorAll(".hdr .logo > i").forEach(i => { if (lg.id === "default") { if (i.classList.contains("lg157")) { i.classList.remove("lg157"); i.textContent = "إ"; } return; } if (i.dataset.lg !== lg.id) { i.classList.add("lg157"); i.dataset.lg = lg.id; i.innerHTML = lg.svg(c); } });
+  }
+  window.dz157 = function (k, v) { state.dz157 = Object.assign({}, state.dz157 || {}, { [k]: v }); render(); };
+  window.dz157Save = async function () { const d = dGet(); await saveSetting16("design157", { bg: d.bg, logo: d.logo }); state.dz157 = null; toast("✅ " + (ar() ? "اتطبّقت على الموقع كله" : "Applied to the whole site")); render(); };
+  function designCard() {
+    const A = ar(); const d = dGet(); const c = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#0f766e";
+    return `<div class="card" style="margin-top:1rem"><h3>🎨 ${A ? "الخلفيات واللوجو" : "Backgrounds & logo"}</h3><p class="sm">${A ? "دوس على أي تصميم تشوفه على الموقع فورًا (عندك بس)، ولما تعجبك دوس «اعتمدها» تتطبّق على كل الزوار." : "Tap any design to preview it (only you), then “Apply” to use it for everyone."}</p>
+      <h4 style="margin:.8rem 0 .2rem">🖼️ ${A ? "الخلفية" : "Background"} (${BG.length})</h4><div class="dz157">${BG.map(b => `<button class="${d.bg === b.id ? "on" : ""}" onclick="dz157('bg','${b.id}')"><div class="th" style="${b.css ? b.css.replace(/fixed/g, "") : "background:#fff"}"></div><b>${esc(A ? b.n[0] : b.n[1])}</b></button>`).join("")}</div>
+      <h4 style="margin:.8rem 0 .2rem">🔰 ${A ? "اللوجو" : "Logo"} (${LOGO.length})</h4><div class="dz157">${LOGO.map(l => `<button class="${d.logo === l.id ? "on" : ""}" onclick="dz157('logo','${l.id}')"><div class="lg">${l.svg(c)}</div><b>${esc(A ? l.n[0] : l.n[1])}</b></button>`).join("")}</div>
+      <div class="row" style="gap:.4rem;margin-top:.8rem"><button class="btn btn-p" onclick="dz157Save()">💾 ${A ? "اعتمدها للموقع كله" : "Apply to the whole site"}</button>${state.dz157 ? `<button class="btn btn-o" onclick="state.dz157=null;render()">↺ ${A ? "رجّع المحفوظ" : "Revert"}</button>` : ""}</div></div>`;
+  }
+  const _os = ownerSettings; ownerSettings = function () { return designCard() + _os.apply(this, arguments); };
+
+  const _r = render;
+  render = function () { const out = _r.apply(this, arguments); try { tjfApply(); } catch (e) {} try { dApply(); } catch (e) {} return out; };
+  try { dApply(); } catch (e) {}
 })();
 
 // بدء التشغيل
