@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v155";
+const UI_VERSION = "2026-11-15-v156";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -22181,6 +22181,85 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
 
   const _r = render;
   render = function () { const out = _r.apply(this, arguments); try { rrRows155(); } catch (e) {} return out; };
+})();
+
+
+/* ================= v156: علامة 🔊 بتستخبى عن الطلاب لو مفيش صوت حقيقي (وترجع لوحدها أول ما الصوت يترفع) + «🔌 الذكاء الاصطناعي»: Gemini أولًا وبعدين Pollinations + معرض صور بموافقة الأونر ================= */
+(function () {
+  const ar = () => state.lang === "ar";
+  const staff = () => { const r = realRole(); return r === "owner" || r === "teacher"; };
+
+  /* ---------- 1) إخفاء 🔊 اللي مالهاش صوت حقيقي ---------- */
+  const SPK_RE = /\b(tts\w*|\w*[Ss]ay\w*|\w*[Ss]peak\w*|vlPlay\w*)\(/;
+  const KEEP_RE = /eaPlay|everyayah|qPlay|mushaf|Mushaf|ayah|Ayah|surah|recit|aah|mqPlay|vtPlay|tnPlay|eaUrl|playUrl|audio\.src/;
+  const norm = t => String(t || "").replace(/\\u([0-9a-f]{4})/gi, (m, h) => String.fromCharCode(parseInt(h, 16))).replace(/\\(['"])/g, "$1").split("←").pop().trim();
+  function avail() { return useData("vavail156", async () => { const { data } = await sb.rpc("voice_avail"); const d = data || {}; return { tts: !!d.tts, set: new Set((d.texts || []).map(x => String(x).trim())) }; }); }
+  function spkHide() {
+    if (staff() && !state.preview) { document.querySelectorAll(".nospk156").forEach(e => e.classList.remove("nospk156")); return; }
+    const a = avail(); if (!a || !a.set) return;
+    if (a.tts) { document.querySelectorAll(".nospk156").forEach(e => e.classList.remove("nospk156")); return; }
+    document.querySelectorAll("#app [onclick]").forEach(el => {
+      if (!/🔊|🔈|🔉/.test(el.textContent || "") && !/fa-volume/.test(el.innerHTML)) return;
+      const oc = el.getAttribute("onclick") || ""; if (!SPK_RE.test(oc) || KEEP_RE.test(oc)) return;
+      const m = oc.match(/(['"`])((?:(?!\1)[^\\]|\\.)*[؀-ۿ](?:(?!\1)[^\\]|\\.)*)\1/); if (!m) return;
+      const txt = norm(m[2]); const has = a.set.has(txt) || a.set.has(txt.replace(/[ً-ْ]/g, ""));
+      el.classList.toggle("nospk156", !has);
+    });
+  }
+  document.head.insertAdjacentHTML("beforeend", `<style>.nospk156{display:none!important}
+.ai156 .row{gap:.4rem;flex-wrap:wrap;align-items:center}
+.ai156 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem;margin-top:.6rem}
+.ai156 .gal figure{margin:0;border:1px solid var(--line,#e5e7eb);border-radius:12px;overflow:hidden;background:var(--card,#fff)}
+.ai156 .gal img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.ai156 .gal figcaption{padding:.35rem .45rem;font-size:.75rem;display:flex;gap:.3rem;align-items:center;flex-wrap:wrap}
+</style>`);
+
+  /* ---------- 2) «🔌 الذكاء الاصطناعي» في إعدادات الأونر ---------- */
+  async function aiCall(body) { const { data, error } = await sb.functions.invoke("ai", { body }); if (error) { let msg = error.message; try { const j = await error.context.json(); msg = j.error || msg; if (j.tried) msg += " — " + j.tried.map(x => x.p + ": " + (x.err || x.skip)).join(" | "); } catch (e) {} throw new Error(msg); } return data; }
+  window.ai156 = aiCall;
+  window.ai156SaveKey = async function () {
+    const k = (document.getElementById("ai156k") || {}).value || ""; const ord = (document.getElementById("ai156o") || {}).value || "gemini,pollinations";
+    const { data: rows } = await sb.from("private_settings").select("data").eq("id", 1); const data = Object.assign({}, (rows && rows[0] && rows[0].data) || {});
+    const g = Object.assign({}, data.gemini || {}); if (k.trim()) g.key = k.trim(); g.order = ord.split(","); data.gemini = g;
+    const { error } = await sb.from("private_settings").update({ data }).eq("id", 1); if (error) return toast(error.message, true);
+    const el = document.getElementById("ai156k"); if (el) el.value = ""; delete state.data.ai156st; toast("✅ " + (ar() ? "اتحفظ" : "Saved")); render();
+  };
+  window.ai156Gen = async function () {
+    const target = ((document.getElementById("ai156t") || {}).value || "").trim(); const prompt = ((document.getElementById("ai156p") || {}).value || "").trim();
+    if (!prompt) return toast(ar() ? "اكتب وصف الصورة" : "Describe the image", true);
+    const b = document.getElementById("ai156g"); if (b) { b.disabled = true; b.textContent = "⏳"; }
+    try { const r = await aiCall({ task: "image", prompt, target: target || null, style: "no people, no faces, no text, islamic art atmosphere, cinematic light" }); toast(`✅ ${r.provider}`); delete state.data.ai156gal; render(); }
+    catch (e) { toast(e.message, true); } finally { if (b) { b.disabled = false; b.textContent = "🎨 " + (ar() ? "اعمل صورة" : "Generate"); } }
+  };
+  window.ai156Ok = async function (key) {
+    const row = (state.data.ai156gal || []).find(x => x.key === key); if (!row) return;
+    const t = row.meta && row.meta.target;
+    if (t) { const { error } = await sb.from("art_assets").upsert({ key: t, prompt: row.prompt, status: "done", url: row.url }); if (error) return toast(error.message, true); try { ART[t] = row.url; } catch (e) {} }
+    await sb.from("art_assets").delete().eq("key", key); delete state.data.ai156gal; toast(t ? "✅ " + (ar() ? "اتنشرت" : "Published") : "✅"); render();
+  };
+  window.ai156No = async function (key) { await sb.from("art_assets").delete().eq("key", key); delete state.data.ai156gal; render(); };
+  window.ai156Test = async function () { delete state.data.ai156st; render(); };
+  function aiCard() {
+    const A = ar();
+    const st = useData("ai156st", async () => { try { return await aiCall({ task: "status" }); } catch (e) { return { error: e.message }; } });
+    const gal = useData("ai156gal", () => q(sb.from("art_assets").select("key,url,prompt,meta,updated_at").eq("status", "review").order("updated_at", { ascending: false }).limit(60)));
+    const g = st && st.gemini; const badge = !st ? "…" : st.error ? `❌ ${esc(st.error)}` : !g.configured ? (A ? "⚪ مفيش مفتاح Gemini — شغالين على Pollinations" : "⚪ No Gemini key — using Pollinations") : g.ok ? (A ? "🟢 Gemini شغال" : "🟢 Gemini OK") : g.quota ? (A ? "🟠 Gemini خلص حدّه — بنحوّل على Pollinations لوحدنا" : "🟠 Gemini quota used — falling back to Pollinations") : `🔴 Gemini: ${esc((g.err || "").slice(0, 120))}`;
+    return `<div class="card ai156" style="margin-top:1rem"><h3>🔌 ${A ? "الذكاء الاصطناعي (الصور والعرض الذكي)" : "AI (images & smart display)"}</h3>
+      <p class="sm">${A ? "الترتيب: Gemini الأول بمفتاحك، ولما حدّه يخلص بنحوّل على Pollinations لوحده (مجاني ومن غير حدود). أي صورة بتطلع «مرشّحة» ومش بتظهر لحد غير لما تدوس ✓." : "Gemini first with your key; when its quota runs out we switch to Pollinations automatically. Every image is a candidate until you approve it."}</p>
+      <p class="sm"><b>${badge}</b> <button class="btn btn-o" style="padding:.15rem .55rem" onclick="ai156Test()">↻</button></p>
+      <div class="row"><input class="in" id="ai156k" type="password" autocomplete="off" placeholder="${A ? "مفتاح Gemini (من aistudio.google.com/apikey)" : "Gemini API key (aistudio.google.com/apikey)"}" style="flex:1;min-width:14rem">
+        <select class="in" id="ai156o" style="width:auto"><option value="gemini,pollinations" ${!st || !st.order || st.order[0] === "gemini" ? "selected" : ""}>Gemini → Pollinations</option><option value="pollinations,gemini" ${st && st.order && st.order[0] === "pollinations" ? "selected" : ""}>Pollinations → Gemini</option><option value="pollinations" ${st && st.order && st.order.join() === "pollinations" ? "selected" : ""}>Pollinations ${A ? "بس" : "only"}</option></select>
+        <button class="btn btn-p" onclick="ai156SaveKey()">💾 ${A ? "حفظ" : "Save"}</button></div>
+      <h4 style="margin:1rem 0 .3rem">🎨 ${A ? "اعمل صورة" : "Generate an image"}</h4>
+      <div class="row"><input class="in" id="ai156t" placeholder="${A ? "مكانها (اختياري) زي surah:1:0 أو book:siyar" : "Where it goes (optional), e.g. surah:1:0 or book:siyar"}" style="width:16rem;direction:ltr"><input class="in" id="ai156p" placeholder="${A ? "وصف الصورة بالإنجليزي أحسن" : "Describe the image"}" style="flex:1;min-width:14rem"><button class="btn btn-p" id="ai156g" onclick="ai156Gen()">🎨 ${A ? "اعمل صورة" : "Generate"}</button></div>
+      <h4 style="margin:1rem 0 .3rem">🗂️ ${A ? "صور مستنية موافقتك" : "Images waiting for approval"} (${Array.isArray(gal) ? gal.length : "…"})</h4>
+      ${!Array.isArray(gal) ? loadingBox() : !gal.length ? `<p class="sm muted">—</p>` : `<div class="gal">${gal.map(x => `<figure><a href="${esc(x.url)}" target="_blank" rel="noopener"><img src="${esc(x.url)}" loading="lazy" alt=""></a><figcaption><span class="xs muted" style="flex:1;direction:ltr">${esc((x.meta && x.meta.target) || "—")} · ${esc((x.meta && x.meta.provider) || "")}</span><button class="btn btn-p" style="padding:.1rem .5rem" onclick="ai156Ok('${esc(x.key)}')">✓</button><button class="btn btn-o" style="padding:.1rem .5rem;color:var(--danger)" onclick="ai156No('${esc(x.key)}')">✕</button></figcaption></figure>`).join("")}</div>`}</div>`;
+  }
+  const _os = ownerSettings;
+  ownerSettings = function () { return _os.apply(this, arguments) + aiCard(); };
+
+  const _r = render;
+  render = function () { const out = _r.apply(this, arguments); try { spkHide(); } catch (e) {} return out; };
 })();
 
 // بدء التشغيل
