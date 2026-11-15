@@ -16,11 +16,7 @@ try:
     rows += [{'text': t, 'kind': 'm'} for t in _pend if t.strip() not in _seen]; print('site jobs added:', len(_pend))
 except Exception as e: print('no site jobs', e)
 # الشغل بيتحفظ في Google Drive عشان لو Colab فصل يكمّل من مكان ما وقف (اسمح لـ Drive لما يطلب)
-try:
-    from google.colab import drive; drive.mount('/content/drive')
-    OUT = '/content/drive/MyDrive/itqan-voices-out'
-except Exception as e:
-    print('Drive مش متاح — هيتحفظ مؤقتًا بس', e); OUT = 'out'
+OUT = 'out'  # uploads go straight to the site, no Drive needed
 os.makedirs(OUT, exist_ok=True)
 if os.path.islink('out') or os.path.exists('out'):
     pass
