@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v166";
+const UI_VERSION = "2026-11-16-v167";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23658,7 +23658,7 @@ html,body{max-width:100%;overflow-x:hidden}
   }
   async function clip(e) {
     const x = await buf(e.u); const g = ctx.createGain(); const s = ctx.createBufferSource(); s.buffer = x.b; s.connect(g); g.connect(ctx.destination);
-    const dur = (e.ms || 340) / 1000 * (+(setv("lqwk166", 1)) || 1); const t = ctx.currentTime; g.gain.setValueAtTime(1, t); g.gain.setValueAtTime(1, t + Math.max(.05, dur - .06)); g.gain.linearRampToValueAtTime(0, t + dur);
+    const tot = Math.max(.2, x.b.duration - x.on); const syl = Math.max(1, e.sy || 2); const dur = Math.min(.55, Math.max(.2, tot / syl * .92)) * (+(setv("lqwk166", 1)) || 1); const t = ctx.currentTime; g.gain.setValueAtTime(1, t); g.gain.setValueAtTime(1, t + Math.max(.05, dur - .06)); g.gain.linearRampToValueAtTime(0, t + dur);
     s.start(t, x.on, dur + .02);
   }
   window.lq166 = async function (c, h) { const e = MAP()[c + "_" + h]; if (!e) return false; try { await clip(e); return true; } catch (er) { console.warn(er); return false; } };
@@ -23685,14 +23685,15 @@ html,body{max-width:100%;overflow-x:hidden}
     const firstL = ch => (ch === "أ" || ch === "إ" || ch === "ؤ" || ch === "ئ") ? "ء" : ch;
     const order = []; for (let s = 114; s >= 1; s--) order.push(s);
     for (const s of order) {
-      if (![...need].some(k => !map[k])) break;
+      if (![...need].some(k => !map[k] || !map[k].op)) break;
       for (let p = 1; p < 20; p++) {
         const j = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?words=true&word_fields=text_uthmani,audio_url&per_page=50&page=${p}`).then(r => r.json()).catch(() => null); if (!j) break;
         (j.verses || []).forEach(v => (v.words || []).forEach(w => {
           if (w.char_type_name !== "word" || !w.audio_url) return; const t = strip(w.text_uthmani || ""); const u = /^https?:/.test(w.audio_url) ? w.audio_url : "https://audio.qurancdn.com/" + w.audio_url;
           const c0 = firstL(t[0]); const v1 = V[t[1]];
-          if (c0 && v1 && t[2] && LET.test(t[2]) && !LONG.test(t[2]) && t[2] !== "ّ") { const k = c0 + "_" + v1; if (need.has(k) && !map[k]) map[k] = { u, w: w.text_uthmani, ms: 330 }; }
-          if ((t[0] === "أ") && t[1] === "َ" && t[2] && LET.test(t[2]) && t[3] && SUK.test(t[3])) { const k = firstL(t[2]) + "_s"; if (need.has(k) && !map[k]) map[k] = { u, w: w.text_uthmani, ms: 520 }; }
+          const sy = (t.match(/[ًَُِ-ٍ]/g) || []).length || 1; const open = t[3] && /[َُِ]/.test(t[3]);
+          if (c0 && v1 && t[2] && LET.test(t[2]) && !LONG.test(t[2]) && t[2] !== "ّ") { const k = c0 + "_" + v1; if (need.has(k) && (!map[k] || (open && !map[k].op))) map[k] = { u, w: w.text_uthmani, sy, op: open }; }
+          if ((t[0] === "أ") && t[1] === "َ" && t[2] && LET.test(t[2]) && t[3] && SUK.test(t[3])) { const k = firstL(t[2]) + "_s"; if (need.has(k) && !map[k]) map[k] = { u, w: w.text_uthmani, sy, op: true }; }
         }));
         if (btn) btn.textContent = `⏳ ${Object.keys(map).length}/${need.size} — ${T("سورة", "Sūrah")} ${s}`;
         if (!j.pagination || !j.pagination.next_page) break;
