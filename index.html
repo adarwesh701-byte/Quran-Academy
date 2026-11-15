@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v132";
+const UI_VERSION = "2026-11-14-v133";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20610,6 +20610,97 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .tjbch h3{margin:.2rem 0 .6rem}.tjbi{padding:.5rem .2rem;border-bottom:1px dashed var(--line);line-height:2}.tjbi.ind{padding-inline-start:1.4rem;opacity:.95}.tjbh{margin:1rem 0 .3rem;color:var(--accent)}
 .tjbhit{padding:.4rem 0;border-bottom:1px solid var(--line)}.mk2{max-width:520px}
 </style>`);
+/* ================= v133: مشغّل صوت موحّد تحت لكل صوت في الموقع (إيقاف/تقديم/رجوع/مستوى الصوت/السرعة) + الآهات والمقامات معاه + ترجمة ذكية للأسئلة + منع رعشة الترجمة + السيكا والهزام من «مي» ================= */
+/* 1) السيكا والهزام يرجعوا من درجة «مي ½♭» — وشيل زرار «ري» */
+sikRe = function () { return false; };
+try { localStorage.removeItem("itqan_sikre"); } catch (e) {}
+sikApply();
+mqDegPage = _mqDegPage132;
+
+/* 2) المشغّل الموحّد */
+const GP = { el: null, title: "", vol: 1, rate: 1, ctxs: new Set(), synthUntil: 0, lastLabel: "", hidden: false };
+try { const v = parseFloat(localStorage.getItem("itqan_vol")); if (!isNaN(v)) GP.vol = Math.min(1, Math.max(0, v)); } catch (e) {}
+document.addEventListener("pointerdown", e => { const b = e.target.closest && e.target.closest("button,a,[onclick]"); if (b) { const t = (b.getAttribute("title") || b.innerText || "").replace(/\s+/g, " ").trim(); if (t) GP.lastLabel = t.slice(0, 60); } }, true);
+(function () {
+  const P = HTMLMediaElement.prototype; const _play = P.play;
+  P.play = function () { try { if (!(this instanceof HTMLVideoElement) && !this.closest?.(".gpskip")) { if (GP.el && GP.el !== this && !GP.el.paused && !this.dataset.gpmix) { try { GP.el.pause(); } catch (e) {} } GP.el = this; GP.title = GP.lastLabel || decodeURIComponent((this.currentSrc || this.src || "").split("/").pop().split("?")[0] || "🔊"); GP.hidden = false; this.volume = GP.vol; if (!this.dataset.gprate) this.playbackRate = GP.rate; if (!this.__gp) { this.__gp = 1; ["play", "pause", "ended", "timeupdate", "loadedmetadata", "ratechange"].forEach(ev => this.addEventListener(ev, gpSync)); } setTimeout(gpSync, 0); } } catch (e) {} return _play.apply(this, arguments); };
+  /* أصوات الآهات/البيانو (Web Audio): كل حاجة بتعدّي على مفتاح صوت عام */
+  const BA = window.BaseAudioContext || window.AudioContext; if (BA) {
+    const d = Object.getOwnPropertyDescriptor(BA.prototype, "destination");
+    if (d && d.get) Object.defineProperty(BA.prototype, "destination", { configurable: true, get() { const real = d.get.call(this); if (this instanceof (window.OfflineAudioContext || function () {})) return real; if (!this.__gpg) { try { this.__gpg = this.createGain(); this.__gpg.gain.value = GP.vol; this.__gpg.connect(real); GP.ctxs.add(this); } catch (e) { return real; } } return this.__gpg; } });
+    const S = window.AudioScheduledSourceNode && AudioScheduledSourceNode.prototype; if (S && S.start) { const _st = S.start; S.start = function (when, off, dur) { try { const c = this.context; if (c && !(c instanceof (window.OfflineAudioContext || function () {}))) { if (c.state === "suspended" && c.__gpStopped) { c.__gpStopped = false; c.resume(); } const len = (this.buffer && this.buffer.duration) || dur || 1.5; const end = (when || c.currentTime) - c.currentTime + len; GP.synthUntil = Math.max(GP.synthUntil, performance.now() + Math.min(end, 600) * 1000); GP.synthCtx = c; if (!GP.el || GP.el.paused) { GP.title = GP.lastLabel || "🎵"; GP.hidden = false; } clearTimeout(GP.st); GP.st = setTimeout(gpSync, 30); } } catch (e) {} return _st.apply(this, arguments); }; }
+  }
+  try { const _sp = speechSynthesis.speak.bind(speechSynthesis); speechSynthesis.speak = function (u) { try { u.volume = GP.vol; u.rate = (u.rate || 1) * GP.rate; } catch (e) {} return _sp(u); }; } catch (e) {}
+})();
+function gpFmt(s) { if (!isFinite(s)) return "–:–"; s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function gpSynth() { return performance.now() < GP.synthUntil; }
+function gpBar() { let b = document.getElementById("gpbar"); if (!b) { b = document.createElement("div"); b.id = "gpbar"; b.className = "notr gpskip"; b.setAttribute("dir", "ltr"); document.body.appendChild(b); } return b; }
+function gpSync() {
+  const el = GP.el; const media = el && (!el.paused || el.currentTime > 0) && !el.ended; const syn = gpSynth(); const b = gpBar();
+  if ((!media && !syn) || GP.hidden) { b.classList.remove("on"); if (syn && !GP.hidden) setTimeout(gpSync, 400); return; }
+  const ar = state.lang === "ar"; b.classList.add("on");
+  const dur = media ? el.duration : 0, cur = media ? el.currentTime : 0;
+  const key = (media ? "m" : "s") + "|" + GP.title + "|" + (media && el.paused ? 1 : 0);
+  if (b.dataset.k !== key) {
+    b.dataset.k = key;
+    b.innerHTML = `<button class="gpb" onclick="gpToggle()" title="${ar ? "تشغيل/إيقاف" : "Play/Pause"}">${media && !el.paused ? "⏸" : syn && !media ? "⏹" : "▶"}</button>${media ? `<button class="gpb" onclick="gpSeek(-5)" title="-5s">⏪</button><button class="gpb" onclick="gpSeek(5)" title="+5s">⏩</button>` : ""}
+      <div class="gpmid"><div class="gpt" dir="auto">${esc(GP.title)}</div>${media ? `<div class="gprow"><span id="gpc">${gpFmt(cur)}</span><input id="gpr" type="range" min="0" max="1000" value="${dur ? Math.round(cur / dur * 1000) : 0}" oninput="gpTo(this.value)"><span>${gpFmt(dur)}</span></div>` : `<div class="xs" style="opacity:.75">${ar ? "صوت المقام / الآهات" : "Maqam / aah sound"}</div>`}</div>
+      <label class="gpv" title="${ar ? "مستوى الصوت" : "Volume"}">🔊<input type="range" min="0" max="100" value="${Math.round(GP.vol * 100)}" oninput="gpVol(this.value/100)"></label>
+      ${media ? `<select class="gps" onchange="gpRate(this.value)" title="${ar ? "السرعة" : "Speed"}">${[0.5, 0.75, 1, 1.25, 1.5, 2].map(r => `<option value="${r}" ${Math.abs((el.playbackRate || 1) - r) < .01 ? "selected" : ""}>${r}×</option>`).join("")}</select>` : ""}<button class="gpb gpx" onclick="gpClose()" title="${ar ? "قفل" : "Close"}">✕</button>`;
+  } else if (media) { const r = document.getElementById("gpr"); if (r && document.activeElement !== r && dur) r.value = Math.round(cur / dur * 1000); const c = document.getElementById("gpc"); if (c) c.textContent = gpFmt(cur); }
+  if (syn && !media) { clearTimeout(GP.st); GP.st = setTimeout(gpSync, 500); }
+}
+function gpToggle() { const el = GP.el; if (el && (!el.paused || el.currentTime > 0) && !el.ended) { if (el.paused) el.play(); else el.pause(); return; } if (gpSynth()) gpStopSynth(); }
+function gpStopSynth() { GP.ctxs.forEach(c => { try { if (c.state === "running") { c.__gpStopped = true; c.suspend(); } } catch (e) {} }); try { speechSynthesis.cancel(); } catch (e) {} try { window.aahStop && aahStop(); } catch (e) {} GP.synthUntil = 0; gpSync(); }
+function gpSeek(d) { const el = GP.el; if (!el) return; try { el.currentTime = Math.max(0, Math.min((el.duration || 1e9) - .1, el.currentTime + d)); } catch (e) {} }
+function gpTo(v) { const el = GP.el; if (el && el.duration) el.currentTime = v / 1000 * el.duration; }
+function gpVol(v) { GP.vol = v; try { localStorage.setItem("itqan_vol", v); } catch (e) {} document.querySelectorAll("audio").forEach(a => a.volume = v); if (GP.el) GP.el.volume = v; GP.ctxs.forEach(c => { try { c.__gpg && c.__gpg.gain.setTargetAtTime(v, c.currentTime, .02); } catch (e) {} }); }
+function gpRate(r) { GP.rate = +r; if (GP.el) GP.el.playbackRate = +r; }
+function gpClose() { try { if (GP.el) GP.el.pause(); } catch (e) {} if (gpSynth()) gpStopSynth(); GP.hidden = true; gpBar().classList.remove("on"); }
+document.head.insertAdjacentHTML("beforeend", `<style>
+#gpbar{position:fixed;left:50%;transform:translate(-50%,140%);bottom:14px;z-index:1200;width:min(680px,calc(100vw - 16px));display:flex;align-items:center;gap:.4rem;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:.45rem .6rem;transition:transform .25s ease;font-size:.9rem}
+#gpbar.on{transform:translate(-50%,0)}#gpbar .gpb{border:0;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--fg);width:2.3rem;height:2.3rem;border-radius:50%;cursor:pointer;font-size:1rem;flex:none}
+#gpbar .gpx{background:transparent;opacity:.7}#gpbar .gpmid{flex:1;min-width:0}#gpbar .gpt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;font-size:.85rem}
+#gpbar .gprow{display:flex;align-items:center;gap:.35rem;font-size:.72rem;opacity:.85}#gpbar .gprow input{flex:1;accent-color:var(--accent)}
+#gpbar .gpv{display:flex;align-items:center;gap:.2rem;flex:none}#gpbar .gpv input{width:80px;accent-color:var(--accent)}#gpbar .gps{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:.15rem;flex:none}
+@media (max-width:820px){#gpbar{bottom:calc(66px + env(safe-area-inset-bottom))}#gpbar .gpv input{width:56px}}
+@media (max-width:420px){#gpbar .gps{display:none}#gpbar .gpv input{width:44px}}
+</style>`);
+
+/* 3) ترجمة ذكية للأسئلة: شرح السؤال بلغة الطالب، واللي لازم يقراه عربي يفضل عربي */
+const QMEAN = /معنى|معناها|معناه|يعني|ترجمة|بتتقال|بيتقال|يُقال|المقصود|=|أسلوب|نوع|إعراب|الحكم|حكم|يدل|بتدل|meaning/;
+const QFORM = /جمع|مفرد|مثنى|ماضي|ماض|مضارع|أمر|ضد|عكس|مؤنث|مذكر|الحرف|حرف|وزن|صيغة|أكمل|الصحيح|الصحيحة|اختر الكلمة|الكلمة|___|…|\.\.\.|الرد|نفي|المستقبل|اكتب|تصريف|الفاعل|المفعول|الحال|التمييز|الممنوع/;
+function qSmart(root) {
+  if (!dtActive() || !root || !root.querySelectorAll) return;
+  root.querySelectorAll(".tftx,.lvc h3,.qsm").forEach(q => {
+    if (q.dataset.qs) return; q.dataset.qs = 1; q.classList.remove("notr"); q.removeAttribute("lang");
+    const txt = q.textContent || ""; const onlyQuote = /^\s*«[^»]+»\s*$/.test(txt) || (/___|…/.test(txt) && !/[«»]/.test(txt));
+    if (onlyQuote || dtQuran(txt)) { q.classList.add("notr"); q.setAttribute("lang", "ar"); q.dataset.qmode = "form"; return; }
+    if (q.children.length === 0) q.innerHTML = esc(txt).replace(/«([^»]+)»/g, (m, x) => `«<span class="notr" lang="ar">${x}</span>»`);
+    q.dataset.qmode = QMEAN.test(txt) && !QFORM.test(txt.replace(/«[^»]*»/g, "")) ? "mean" : "form";
+  });
+  root.querySelectorAll(".lvopts .btn,button.opt").forEach(o => {
+    if (o.dataset.qs) return; o.dataset.qs = 1; const t = (o.textContent || "").trim(); if (!/[ء-ي]/.test(t)) return;
+    const card = o.closest(".card") || root; const q = card.querySelector("[data-qmode]"); const mode = q ? q.dataset.qmode : "form";
+    const tashkeel = /[ً-ْ]/.test(t); const short = t.replace(/^[✅❌]\s*/, "").split(/\s+/).length <= 2;
+    if (mode === "form" || tashkeel || (short && mode !== "mean")) { o.classList.add("notr"); o.setAttribute("lang", "ar"); return; }
+    const pre = (t.match(/^[✅❌]\s*/) || [""])[0]; const body = t.slice(pre.length);
+    o.innerHTML = `${pre}<span>${esc(body)}</span> <small class="notr" lang="ar" style="opacity:.75">(${esc(body)})</small>`;
+  });
+}
+/* الأسئلة في اختبار تحديد المستوى: السؤال ماكنش بيتترجم خالص — دلوقتي شرحه بلغة الطالب */
+const _renderLevel133 = renderLevel;
+renderLevel = function () { return _renderLevel133().replace(/<h3 class="notr" lang="ar" style="line-height:1\.9">/g, '<h3 class="qsm" style="line-height:1.9">'); };
+
+/* 4) منع الرعشة: الترجمة المحفوظة تتحط قبل ما الصفحة تظهر، واللي لسه بيتترجم يستخبى لحظة بدل ما يبان عربي وبعدين يتغير */
+const _dtRun133 = dtRun;
+dtRun = function (root) { try { qSmart(root || document.body); } catch (e) {} const r = _dtRun133.apply(this, arguments); try { if (dtActive() && DT.pend.size) { DT.pend.forEach(list => list.forEach(t => { const p = t && t.parentElement; if (p && !p.classList.contains("dtw") && p.childElementCount === 0 && (p.textContent || "").length < 400) { p.classList.add("dtw"); setTimeout(() => p.classList.remove("dtw"), 2500); } })); } } catch (e) {} return r; };
+const _dtFlush133 = dtFlush;
+dtFlush = async function () { const r = await _dtFlush133.apply(this, arguments); try { document.querySelectorAll(".dtw").forEach(p => { if (!/[ء-ي]/.test(p.textContent || "") || p.closest(DT_SKIP)) p.classList.remove("dtw"); }); } catch (e) {} if (!DT.pend.size) document.querySelectorAll(".dtw").forEach(p => p.classList.remove("dtw")); return r; };
+const _render133 = render;
+render = function () { const r = _render133.apply(this, arguments); try { if (dtActive()) { const app = document.getElementById("app"); if (app) dtRun(app); } } catch (e) {} return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>.dtw{color:transparent!important;text-shadow:none!important;background-image:linear-gradient(90deg,color-mix(in srgb,var(--fg) 8%,transparent),color-mix(in srgb,var(--fg) 14%,transparent),color-mix(in srgb,var(--fg) 8%,transparent));background-size:200% 100%;border-radius:6px;animation:dtw 1s linear infinite}@keyframes dtw{to{background-position:-200% 0}}</style>`);
+
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
