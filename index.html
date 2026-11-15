@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v131";
+const UI_VERSION = "2026-11-14-v132";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20449,6 +20449,167 @@ function startPanel130() {
 render = (function (_r) { return function () { const x = _r.apply(this, arguments); try { if ((state.route === "dashboard" || state.route === "home") && state.auth.user && (realRole() === "student" || state.preview === "student") && !document.getElementById("sp130") && !(state.dash && state.dash.tab && state.route === "dashboard" && !["home", "overview", "lessons", null, undefined, ""].includes(state.dash.tab))) { const app = document.getElementById("app"); const h1 = app && app.querySelector("h1"); const host = h1 ? (h1.closest(".card,section") || h1.parentElement) : (app && app.querySelector("section")); if (host) host.insertAdjacentHTML(h1 ? "afterend" : "afterbegin", startPanel130()); } } catch (e) {} return x; }; })(render);
 document.head.insertAdjacentHTML("beforeend", `<style>.sp130{margin:1rem auto;max-width:1200px;padding:0 1rem}.sp130h{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.5rem}.sp130h b{font-size:1.2rem}.sp130g{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.7rem}.sp130b{display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;text-align:start;border:2px solid var(--line);border-radius:1.1rem;padding:1rem;background:var(--card);color:var(--fg);cursor:pointer;transition:transform .15s,border-color .15s}.sp130b:hover{transform:translateY(-3px);border-color:var(--accent)}.sp130b.main{background:var(--accent);color:var(--accent-fg,#fff);border-color:var(--accent)}.sp130b.main small{color:inherit;opacity:.85}.sp130i{font-size:1.8rem}.sp130b b{font-size:1.1rem}.sp130b small{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}</style>`);
 
+/* ================= v132: التجويد المفصّل من «التجويد المصور» كامل + صوت الكلمة نفسها جنب الحكم + مخطط مخارج متحرك + قرار السيكاه على «ري» ================= */
+/* 1) صوت الكلمة (قراءة كلمة كلمة) بدل الآية كاملة */
+const p3_132 = n => String(n).padStart(3, "0");
+function wbwUrl(s, a, w) { return `https://audio.qurancdn.com/wbw/${p3_132(s)}_${p3_132(a)}_${p3_132(w)}.mp3`; }
+let __wbwAu = null, __wbwQ = [], __wbwBtn = null;
+function wbwStop() { __wbwQ = []; if (__wbwAu) { __wbwAu.onended = null; __wbwAu.pause(); } if (__wbwBtn) __wbwBtn.classList.remove("on"); __wbwBtn = null; }
+function wbwPlay(s, a, w, n, btn) {
+  const same = btn && __wbwBtn === btn; wbwStop(); if (same) return;
+  n = Math.max(1, Math.min(n || 1, 40)); __wbwQ = []; for (let i = 0; i < n; i++) __wbwQ.push(wbwUrl(s, a, w + i));
+  __wbwBtn = btn || null; if (btn) btn.classList.add("on");
+  if (!__wbwAu) __wbwAu = new Audio();
+  const next = () => { const u = __wbwQ.shift(); if (!u) { if (__wbwBtn) __wbwBtn.classList.remove("on"); __wbwBtn = null; return; } __wbwAu.src = u; __wbwAu.onended = next; __wbwAu.onerror = () => { __wbwQ = []; try { eaPlay(eaUrl("Husary_128kbps", s + ":" + a)); } catch (e) {} }; __wbwAu.play().catch(() => {}); };
+  next();
+}
+/* مواضع الكلمات في أمثلة دروس التجويد (محسوبة من مصحف المدينة) */
+const TJXW = {"2:62|مَنْ ءَامَنَ":[8,2],"2:8|مَن يَقُولُ":[3,2],"2:5|مِّن رَّبِّهِمْ":[4,2],"2:27|مِنۢ بَعْدِ":[5,2],"2:3|يُنفِقُونَ":[8,1],"105:4|تَرْمِيهِم بِحِجَارَةٍ":[1,2],"2:249|كَم مِّن فِئَةٍ":[49,3],"1:7|عَلَيْهِمْ وَلَا":[7,2],"108:3|إِنَّ شَانِئَكَ":[1,2],"78:1|عَمَّ":[1,1],"91:1|وَالشَّمْسِ":[1,1],"91:2|وَالْقَمَرِ":[1,1],"112:1|اللَّهُ":[3,1],"1:1|بِسْمِ اللَّهِ":[1,2],"1:4|مَٰلِكِ":[1,1],"110:1|جَآءَ":[2,1],"2:21|يَٰٓأَيُّهَا":[1,1],"1:3|الرَّحِيمِ":[2,1],"1:7|الضَّآلِّينَ":[9,1],"113:1|الْفَلَقِ":[4,1],"110:2|يَدْخُلُونَ":[3,1],"1:2|رَبِّ":[3,1],"24:37|رِجَالٌ":[1,1],"1:5|إِيَّاكَ نَعْبُدُ":[1,2],"114:1|قُلْ أَعُوذُ":[1,2],"2:2|لَا رَيْبَ ۛ فِيهِ ۛ":[3,3],"36:52|مِن مَّرْقَدِنَا ۜ":[5,2],"2:60|اضْرِب بِّعَصَاكَ":[6,2],"2:256|قَد تَّبَيَّنَ":[5,2],"2:1|الٓمٓ":[1,1],"10:51|ءَآلْـَٰٔنَ":[7,1]};
+function tjxWord(k, w) { const r = TJXW[k + "|" + w]; const [s, a] = k.split(":").map(Number); return r ? [s, a, r[0], r[1]] : null; }
+function tjChip(k, w, nm) { const r = tjxWord(k, w); const ar = state.lang === "ar"; const [s, a] = k.split(":"); const on = r ? `wbwPlay(${r.join(",")},this)` : `eaPlay('${eaUrl("Husary_128kbps", k)}')`; return `<button class="tjw" onclick="${on}" title="${esc(sName(+s))} ${a}"><span class="notr" lang="ar">${esc(w)}</span> 🔊${nm ? `<small>${esc(ar ? nm : nm)}</small>` : ""}</button>`; }
+
+/* 2) «التجويد المفصّل» — كل محتوى كتاب التجويد المصور مرتّب، وكل مثال جنبه صوته */
+function tjbData() { return useData("tjb132", async () => { const r = await fetch("tjb.json?v=" + UI_VERSION); if (!r.ok) throw new Error("tjb"); return await r.json(); }); }
+const TJB_MAP = { nun: [[10], ["النون الساكنة", "التنوين", "الإظهار", "الإدغام", "القلب", "الإخفاء", "إخفاء", "إدغام", "النون", "أمثلة", "علامة", "آلية"]], mim: [[10], ["الميم"]], ghunna: [[10], ["المشددتان", "أزمنة الغنن", "الغنة"]], lam: [[9, 7], ["لام التعريف", "القمرية", "الشمسية", "اللام", "لفظ الجلالة"]], madd: [[11], null], lazim: [[11], ["اللازم", "المقطعة", "الحروف", "حي طهر", "تنبيه"]], qalqala: [[7], ["القلقلة", "قلقلة", "مراتب القلقلة", "تنبيه"]], ra: [[7], ["الراء"]], tafkhim: [[7], ["التفخيم", "الترقيق", "مراتب", "الألف", "اللام", "الراء", "الاستعلاء"]], makharij: [[5, 6, 8], null], sifat: [[7], null], waqf: [[16], null], sakt: [[16], ["السكت", "السكتات", "السكتتان", "الأنفال"]], mithl: [[9], null], istiadha: [[3], null], hamza: [[19, 20], null], kinaya: [[11], ["الصلة", "هاء", "تنبيه"]], maqtu: [[16, 22], ["مقطوع", "موصول", "المقطوع", "رسم"]], lahn: [[2], null], sakinayn: [[13], null], tamarbuta: [[17], ["هاء التأنيث", "التاء"]], sinsad: [[15], ["الصاد", "ويبسط"]] };
+function tjbItem(it, ci, ii) {
+  const ar = state.lang === "ar"; let t = esc(it.t);
+  t = t.replace(/⟦([^|⟧]+)\|(\d+)⟧/g, (m, w, k) => { const x = (it.a || [])[+k]; if (!x) return w; return `<button class="tjw" onclick="wbwPlay(${x[0]},${x[1]},${x[2]},${x[3]},this)" title="${esc(sName(x[0]))} ${x[1]}"><span class="notr" lang="ar">${w}</span> 🔊</button>`; });
+  t = t.replace(/^([^:،(⟦]{2,42}):/, "<b>$1:</b>");
+  if (it.h) return `<h4 class="tjbh">${esc(it.h)}</h4>`;
+  return `<div class="tjbi ${it.ind ? "ind" : ""}">${t}</div>`;
+}
+function tjbChapter(c, filt) {
+  let items = c.items; if (filt && filt.length) { const f = items.filter(it => filt.some(k => (it.t || it.h || "").includes(k))); if (f.length >= 2) items = f; }
+  return `<div class="tjbch"><h3>${esc(String(c.n))}. ${esc(c.t)} ${c.pg ? `<small class="xs muted">(${esc(c.pg)})</small>` : ""}</h3>${items.map((it, i) => tjbItem(it, c.n, i)).join("")}</div>`;
+}
+function renderTjb() {
+  const ar = state.lang === "ar"; const D = tjbData(); const st = state.tjb || (state.tjb = { c: null, q: "" });
+  if (!D || !Array.isArray(D.chs)) return pageWrap("📘", ar ? "التجويد المفصّل" : "Detailed Tajweed", "", `<div class="card" style="text-align:center">⏳</div>`);
+  let done = {}; try { done = JSON.parse(localStorage.getItem("itqan_tjb") || "{}"); } catch (e) {}
+  const q = (st.q || "").trim();
+  let body;
+  if (q) {
+    const hits = []; D.chs.forEach(c => c.items.forEach((it, i) => { if ((it.t || it.h || "").replace(/⟦([^|]+)\|\d+⟧/g, "$1").includes(q)) hits.push([c, it, i]); }));
+    body = `<div class="card"><h3>🔍 ${hits.length} ${ar ? "نتيجة" : "results"}</h3>${hits.slice(0, 80).map(([c, it, i]) => `<div class="tjbhit"><button class="badge" onclick="state.tjb.c=${c.n};state.tjb.q='';render();window.scrollTo({top:0})">${esc(c.t)}</button>${tjbItem(it, c.n, i)}</div>`).join("") || `<p class="muted">—</p>`}</div>`;
+  } else if (st.c) {
+    const c = D.chs.find(x => x.n === st.c) || D.chs[0]; const ix = D.chs.indexOf(c); const pv = D.chs[ix - 1], nx = D.chs[ix + 1];
+    body = `<div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem"><button class="btn btn-o" onclick="state.tjb.c=null;render()">← ${ar ? "الفهرس" : "Contents"}</button><label class="row xs" style="gap:.3rem;margin-inline-start:auto"><input type="checkbox" ${done[c.n] ? "checked" : ""} onchange="tjbDone(${c.n},this.checked)"> ${ar ? "خلصت الباب ده" : "Done"}</label></div>${tjbChapter(c)}
+      <div class="row" style="gap:.4rem;justify-content:space-between;margin-top:1rem">${pv ? `<button class="btn btn-o" onclick="state.tjb.c=${pv.n};render();window.scrollTo({top:0})">→ ${esc(pv.t)}</button>` : "<span></span>"}${nx ? `<button class="btn btn-p" onclick="state.tjb.c=${nx.n};render();window.scrollTo({top:0})">${esc(nx.t)} ←</button>` : ""}</div></div>`;
+  } else {
+    const nd = D.chs.filter(c => done[c.n]).length;
+    body = `<div class="card"><div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap"><b>📊 ${ar ? "تقدمك" : "Progress"}: ${nd}/${D.chs.length}</b><div class="tjbbar"><i style="width:${Math.round(nd * 100 / D.chs.length)}%"></i></div></div></div>
+      <div class="tjbgrid">${D.chs.map(c => `<button class="tjbcard ${done[c.n] ? "ok" : ""}" onclick="state.tjb.c=${c.n};render();window.scrollTo({top:0})"><span class="n">${c.n}</span><b>${esc(c.t)}</b><small>${c.items.filter(x => !x.h).length} ${ar ? "نقطة" : "points"} · ${c.items.reduce((s, x) => s + ((x.a || []).length), 0)} 🔊</small>${done[c.n] ? "<em>✅</em>" : ""}</button>`).join("")}</div>`;
+  }
+  return pageWrap("📘", ar ? "التجويد المفصّل" : "Detailed Tajweed", ar ? "كل أبواب كتاب «التجويد المصور» مرتّبة بالتفصيل — وكل مثال من القرآن جنبه 🔊 بصوت الكلمة نفسها" : "Every chapter of the illustrated Tajweed book in detail — each Quran example has 🔊 for that exact word", `
+    <div class="card" style="margin-bottom:.8rem"><input class="input" placeholder="${ar ? "🔍 دوّر في كل التجويد (مثلًا: العوض، البدل، الإشمام)" : "🔍 Search all tajweed"}" value="${esc(st.q || "")}" oninput="state.tjb.q=this.value;clearTimeout(window.__tjbT);window.__tjbT=setTimeout(()=>{render();const i=document.querySelector('#app .input');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},350)"><p class="xs muted" style="margin:.4rem 0 0">📖 ${ar ? "المصدر" : "Source"}: ${esc(D.src || "")}. ${ar ? "🔊 = صوت الكلمة من قراءة كلمة بكلمة (quran.com)." : "🔊 = word-by-word recitation (quran.com)."}</p></div>${body}`);
+}
+function tjbDone(n, v) { let d = {}; try { d = JSON.parse(localStorage.getItem("itqan_tjb") || "{}"); } catch (e) {} if (v) d[n] = 1; else delete d[n]; try { localStorage.setItem("itqan_tjb", JSON.stringify(d)); } catch (e) {} render(); }
+PAGES16.push("tjb");
+const _render132 = render;
+render = function () { if (state.route === "tjb") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderTjb(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render132.apply(this, arguments); };
+const _DOMAINS132 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS132(); const t = ds.find(d => d.k === "tajweed"); if (t && t.tools && !t.tools.some(x => String(x[2]).includes("'tjb'"))) t.tools.unshift(["📘", state.lang === "ar" ? "التجويد المفصّل (الكتاب كامل)" : "Detailed Tajweed (full book)", "go16('tjb')", ""]); return ds; };
+if (Array.isArray(KIT) && !KIT.some(k => k[0] === "tjb")) KIT.splice(3, 0, ["tjb", "📘", "التجويد المفصّل", "Detailed Tajweed", ["كل أبواب التجويد المصور", "صوت كل مثال جنبه"], ["Every chapter in detail", "Audio beside each example"], "#/tjb", "#0f766e"]);
+try { const _sr132 = srIndex109; srIndex109 = function () { const a = _sr132(); try { a.push(["📘 " + (state.lang === "ar" ? "التجويد المفصّل" : "Detailed Tajweed"), "go16('tjb')", "تجويد مد عوض بدل صلة إشمام روم وقف ابتداء همزة وصل قطع مخارج صفات tajweed"]); } catch (e) {} return a; }; } catch (e) {}
+
+/* 3) في دروس التجويد: الأمثلة بصوتها جنب كل حكم (مش قسم تحت)، و«عرض بالتفصيل» = الكتاب نفسه */
+function tjMatchCard(b, nm) { const n = s => String(s).replace(/<[^>]+>/g, "").replace(/[ً-ْ]/g, "").replace(/^ال/, ""); const B = n(b), N = n(nm); if (!B || !N) return 0; if (B.includes(N) || N.includes(B)) return 3; const bw = B.split(/\s+/), nw = N.split(/\s+/); return nw.filter(w => w.length > 2 && bw.some(x => x.includes(w) || w.includes(x))).length; }
+const _tcChapter132 = tcChapter;
+tcChapter = function () {
+  let h = _tcChapter132(); const c = TJC.find(x => x.id === state.tc.ch); if (!c || state.tc.step !== "learn" || !TJX[c.id]) return h;
+  h = h.replace(/<div class="card tjxc">[\s\S]*?<\/div><\/div><\/div>(?=<div class="card tjxd">)/, "");
+  const cards = [...h.matchAll(/<div class="tccard" style="--i:(\d+)"><b>([\s\S]*?)<\/b>/g)].map(m => m[2]);
+  const at = {}; TJX[c.id].ex.forEach(([k, w, nm]) => { let best = -1, bs = 0; cards.forEach((b, i) => { const s = tjMatchCard(b, nm); if (s > bs) { bs = s; best = i; } }); if (best < 0) best = 0; (at[best] = at[best] || []).push(tjChip(k, w, nm)); });
+  let i = -1; h = h.replace(/(<div class="tccard" style="--i:\d+"><b>[\s\S]*?<\/b><p>[\s\S]*?<\/p>)/g, m => { i++; return at[i] ? m + `<div class="tjwrow">${at[i].join("")}</div>` : m; });
+  if (!cards.length) { const all = Object.values(at).flat().join(""); h = h.replace('<div class="card tjxd">', `<div class="tjwrow">${all}</div><div class="card tjxd">`); }
+  return h;
+};
+const _tjxBlock132 = tjxBlock;
+tjxBlock = function (id) {
+  const ar = state.lang === "ar"; const h = _tjxBlock132(id).replace(/^<div class="card tjxc">[\s\S]*?(?=<div class="card tjxd">)/, ""); const map = TJB_MAP[id]; if (!map) return h; const open = state.tjxD === id; if (!open) return h;
+  const D = tjbData(); if (!D || !Array.isArray(D.chs)) return h.replace('<div class="tjxdb">', '<div class="tjxdb"><p class="muted">⏳</p>');
+  const chs = map[0].map(n => D.chs.find(c => c.n === n)).filter(Boolean);
+  return h.replace(/<div class="tjxdb">[\s\S]*$/, `<div class="tjxdb"><p class="xs muted">📖 ${ar ? "التفصيل الكامل من" : "Full detail from"} ${esc(D.src || "")}</p>${chs.map(c => tjbChapter(c, map[1])).join("")}${id === "makharij" ? `<button class="btn btn-o" onclick="go16('makharij')">👄 ${ar ? "افتح مخطط المخارج المتحرك" : "Open the animated articulation diagram"}</button>` : ""}${id === "nun" ? tjxNunChart() : ""}<button class="btn btn-p" style="margin-top:.6rem" onclick="state.tjb={c:${chs[0] ? chs[0].n : 1},q:''};go16('tjb')">📘 ${ar ? "افتح الباب كامل في «التجويد المفصّل»" : "Open the full chapter"}</button></div></div>`);
+};
+
+/* 4) مخطط المخارج المتحرك: اللسان والشفايف وسقف الحلق بيتحركوا لمكان الحرف بالظبط، ومسار الهوا والصوت */
+const MK2_REST = [[194, 258], [186, 216], [192, 176], [218, 146], [256, 138], [290, 146], [306, 162]];
+const MK2 = {
+  jawf: { t: MK2_REST, p: [236, 158] }, aqsa_halq: { t: MK2_REST, p: [184, 262], halq: 1 },
+  wast_halq: { t: [[194, 258], [179, 214], [183, 170], [214, 140], [254, 130], [290, 140], [305, 158]], p: [188, 218], halq: 1 },
+  adna_halq: { t: [[194, 258], [181, 208], [183, 158], [204, 122], [248, 124], [288, 140], [305, 158]], p: [186, 166], halq: 1 },
+  aqsa_lisan_q: { t: [[194, 258], [184, 208], [186, 150], [199, 114], [244, 120], [286, 140], [305, 160]], p: [200, 111], stop: 1 },
+  aqsa_lisan_k: { t: [[194, 258], [186, 210], [192, 156], [214, 107], [254, 118], [288, 138], [305, 160]], p: [216, 104], stop: 1 },
+  wast_lisan: { t: [[194, 258], [186, 212], [194, 164], [222, 126], [254, 104], [288, 124], [306, 152]], p: [254, 101] },
+  hafat: { t: [[194, 258], [186, 212], [194, 160], [222, 120], [258, 109], [290, 118], [306, 128]], p: [276, 111], top: "side" },
+  lam: { t: [[194, 258], [186, 214], [194, 168], [222, 140], [256, 136], [286, 130], [302, 124]], p: [302, 122], top: "front" },
+  nun: { t: [[194, 258], [186, 214], [194, 168], [222, 140], [258, 136], [290, 132], [305, 127]], p: [305, 125], nasal: 1 },
+  ra: { t: [[194, 258], [186, 214], [194, 168], [222, 138], [256, 132], [286, 126], [299, 121]], p: [299, 119] },
+  nitiyya: { t: [[194, 258], [186, 214], [194, 168], [222, 140], [258, 136], [292, 134], [309, 130]], p: [310, 128], stop: 1 },
+  lithawiyya: { t: [[194, 258], [186, 214], [194, 168], [224, 142], [262, 138], [300, 146], [321, 152]], p: [321, 150] },
+  asaliyya: { t: [[194, 258], [186, 214], [194, 168], [222, 140], [258, 134], [292, 140], [305, 160]], p: [306, 158] },
+  fa: { t: MK2_REST, p: [317, 155], lip: "fa" }, shafatan: { t: MK2_REST, p: [338, 157], lip: "close" }, khayshum: { t: MK2_REST, p: [262, 84], nasal: 1 }
+};
+function mk2Path(pts) {
+  const P = pts; let d = `M${P[0][0]} ${P[0][1]}`;
+  for (let i = 0; i < P.length - 1; i++) { const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2; const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]; d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0]} ${p2[1]}`; }
+  const t = P[P.length - 1]; d += ` C${t[0] - 4} ${t[1] + 16} 292 186 264 192 C236 199 206 222 194 258 Z`; return d;
+}
+const MK2_LIP = { rest: "M312 170 C328 166 342 172 337 184 C331 190 320 188 311 183 Z", close: "M313 157 C328 150 344 154 340 166 C334 174 322 174 312 170 Z", round: "M318 162 C334 158 348 164 342 174 C336 180 326 180 318 176 Z", fa: "M306 158 C316 152 330 156 330 166 C326 174 316 176 306 172 Z" };
+const MK2_ULIP = { rest: "M314 128 C330 126 344 136 340 148 C336 153 326 152 318 151 Z", round: "M318 130 C336 128 350 140 344 152 C338 157 328 157 320 155 Z" };
+function mkSvg2(c) {
+  const ar = state.lang === "ar"; const [pt, sf] = MK_L[c] || ["jawf", ""]; const k = MK2[pt] || MK2.jawf;
+  const nasal = !!k.nasal || c === "ن" || c === "م"; const lip = c === "و" ? "round" : k.lip || "rest"; const ul = c === "و" ? "round" : "rest";
+  const jahr = /جهر/.test(sf), stop = /شدة/.test(sf); const T = mk2Path(k.t), R = mk2Path(MK2_REST);
+  const anim = (a, b, attr = "d") => `<animate attributeName="${attr}" values="${a};${b};${b};${a}" keyTimes="0;.28;.8;1" dur="3.2s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;0 0 1 1;.4 0 .2 1"/>`;
+  const [px, py] = k.p;
+  const air = k.halq ? `M182 268 L${px} ${py}` : nasal ? `M182 268 C176 220 174 160 178 116 C182 96 214 84 252 84 C290 84 318 90 336 100` : `M182 268 C176 220 176 170 186 140 C200 118 ${px - 30} ${py + 12} ${px} ${py}${stop ? "" : ` L350 ${Math.min(170, py + 10)}`}`;
+  const top = k.top ? `<g transform="translate(366,14)"><rect width="104" height="92" rx="12" fill="var(--card)" stroke="var(--line)"/><text x="52" y="13" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">${ar ? "من فوق" : "top view"}</text><path d="M22 84 C18 40 30 20 52 18 C74 20 86 40 82 84" fill="none" stroke="#94a3b8" stroke-width="7" stroke-dasharray="5 2"/><path d="M30 84 C28 50 36 30 52 28 C68 30 76 50 74 84 Z" fill="#fda4af" stroke="#e11d48" stroke-width="1"/>${k.top === "side" ? `<path d="M30 80 C28 56 31 44 36 38" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"><animate attributeName="opacity" values=".3;1;.3" dur="1.6s" repeatCount="indefinite"/></path><path d="M74 80 C76 56 73 44 68 38" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="3 3" opacity=".6"/>` : `<path d="M36 42 C42 30 62 30 68 42" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"><animate attributeName="opacity" values=".3;1;.3" dur="1.6s" repeatCount="indefinite"/></path>`}</g>` : "";
+  return `<svg viewBox="0 0 480 300" style="direction:ltr" class="mksvg mk2" role="img" aria-label="${esc(c)}">
+  <defs><radialGradient id="mk2g"><stop offset="0" stop-color="#dc2626" stop-opacity=".55"/><stop offset="1" stop-color="#dc2626" stop-opacity="0"/></radialGradient></defs>
+  <path d="M70 296 C58 220 40 150 70 92 C100 34 188 12 258 22 C300 30 320 50 326 72 L333 88 C352 96 358 106 346 112 L336 115 C342 124 346 132 342 140 C348 148 348 156 341 162 C346 170 346 180 338 186 C334 202 322 212 300 216 C282 220 268 222 258 228 L250 296 Z" fill="color-mix(in srgb,#f5d0b5 45%,var(--card))" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M176 70 C210 58 300 62 326 84 C320 96 300 98 250 98 C214 98 190 100 176 104 Z" fill="color-mix(in srgb,#bae6fd 55%,var(--card))" opacity=".85"/>
+  <path d="M190 80 C230 74 280 76 312 86 M196 92 C236 88 282 90 316 94" stroke="#7dd3fc" stroke-width="2" fill="none" opacity=".7"/>
+  <path d="M172 96 L170 290 L206 290 L210 262 C204 240 200 220 202 200 L206 180 C226 178 300 176 312 182 L312 122 C300 108 250 96 214 98 Z" fill="color-mix(in srgb,#7f1d1d 22%,var(--card))"/>
+  <path d="M302 122 C290 104 250 94 214 98" fill="none" stroke="#e7d3b0" stroke-width="7" stroke-linecap="round"/>
+  <path d="M216 100 C200 104 186 112 177 119" fill="none" stroke="#f472b6" stroke-width="8" stroke-linecap="round">${nasal ? anim("M216 100 C200 104 186 112 177 119", "M216 100 C206 112 198 126 193 142") : ""}</path>
+  <path d="M172 96 L170 292" stroke="#c084fc" stroke-width="5" opacity=".6"/>
+  <path d="M188 214 C200 220 204 232 200 244" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+  <g transform="translate(182,266)"><path d="M-10 0 L10 0" stroke="#7c3aed" stroke-width="4" stroke-linecap="round">${jahr ? `<animate attributeName="d" values="M-10 0 L10 0;M-10 -2 Q0 3 10 -2;M-10 0 L10 0" dur=".12s" repeatCount="indefinite"/>` : ""}</path></g>
+  <path d="${R}" fill="#fda4af" stroke="#e11d48" stroke-width="1.6">${anim(R, T)}</path>
+  <polygon points="306,124 318,124 321,151 312,153" fill="#f8fafc" stroke="#94a3b8"/><polygon points="304,188 314,186 318,161 309,159" fill="#f8fafc" stroke="#94a3b8"/>
+  <path d="${MK2_ULIP.rest}" fill="#f87171" opacity=".9">${ul !== "rest" ? anim(MK2_ULIP.rest, MK2_ULIP[ul]) : ""}</path>
+  <path d="${MK2_LIP.rest}" fill="#f87171" opacity=".9">${lip !== "rest" ? anim(MK2_LIP.rest, MK2_LIP[lip]) : ""}</path>
+  <path d="${air}" fill="none" stroke="${jahr ? "#7c3aed" : "#0ea5e9"}" stroke-width="2.5" stroke-dasharray="6 7" opacity=".85"><animate attributeName="stroke-dashoffset" values="60;0" dur="1s" repeatCount="indefinite"/></path>
+  ${k.halq ? `<ellipse cx="${px}" cy="${py}" rx="22" ry="14" fill="url(#mk2g)"/>` : pt === "jawf" ? `<ellipse cx="236" cy="150" rx="70" ry="34" fill="url(#mk2g)"/>` : ""}
+  <circle cx="${px}" cy="${py}" r="5" fill="#dc2626" stroke="#fff" stroke-width="1.5"/><circle cx="${px}" cy="${py}" r="9" fill="none" stroke="#dc2626" stroke-width="2"><animate attributeName="r" values="7;16;7" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.2;1" dur="1.6s" repeatCount="indefinite"/></circle>
+  <text x="${px > 250 ? px - 8 : px + 10}" y="${py < 150 ? py - 10 : py + 4}" text-anchor="${px > 250 ? "end" : "start"}" font-size="13" font-weight="700" fill="#dc2626" class="notr">${esc(c)}</text>
+  ${top}
+  <g font-size="9" fill="currentColor" opacity=".6"><text x="226" y="62">${ar ? "الخيشوم" : "nasal cavity"}</text><text x="232" y="108">${ar ? "الحنك" : "palate"}</text><text x="128" y="160">${ar ? "الحلق" : "pharynx"}</text><text x="196" y="292">${ar ? "الحنجرة" : "larynx"}</text><text x="240" y="178">${ar ? "اللسان" : "tongue"}</text></g>
+  <g font-size="9" transform="translate(366,${k.top ? 118 : 20})"><rect width="10" height="3" y="4" fill="${jahr ? "#7c3aed" : "#0ea5e9"}"/><text x="14" y="9" fill="currentColor" opacity=".85">${jahr ? (ar ? "مجهور: الأوتار بتهتز" : "voiced") : (ar ? "مهموس: النَّفَس بيجري" : "voiceless")}</text>${stop ? `<text x="14" y="23" fill="currentColor" opacity=".85">${ar ? "شديد: الصوت بيتحبس" : "stop"}</text>` : ""}${nasal ? `<text x="14" y="${stop ? 37 : 23}" fill="currentColor" opacity=".85">${ar ? "غنة: الهوا من الأنف" : "nasal"}</text>` : ""}<rect y="44" width="10" height="10" rx="5" fill="#dc2626"/><text x="14" y="53" fill="currentColor" opacity=".85">${ar ? "مكان الحرف بالظبط" : "exact point"}</text></g>
+</svg>`;
+}
+mkSvg = function (pt) { const c = state.mkL && MK_L[state.mkL] ? state.mkL : (Object.keys(MK_L).find(x => MK_L[x][0] === pt) || "ق"); return mkSvg2(c); };
+const _renderMakharij132 = renderMakharij;
+renderMakharij = function () { const h = _renderMakharij132(); const ar = state.lang === "ar"; return h.replace(/المصدر: متن الجزرية[^<]*/, ar ? "المصدر: متن الجزرية، و«التجويد المصور» د. أيمن سويد (باب أعضاء النطق والمخارج والصفات). المخطط متحرك: اللسان والشفايف وسقف الحلق بيروحوا لمكان الحرف، والخط المتقطع مسار الهوا." : "Source: al-Jazariyyah and Ayman Suwayd's illustrated Tajweed. Animated: tongue, lips and soft palate move to the letter's point; the dashed line is the airflow."); };
+
+/* 5) قرار السيكاه: «ري» (المالك قال كده) — مع زرار للرجوع لـ«مي ½♭» */
+function sikRe() { try { const v = localStorage.getItem("itqan_sikre"); return v === null ? true : v === "1"; } catch (e) { return true; } }
+function sikApply() { const on = sikRe(); MQ.forEach(m => { if (m.id === "sikah" || m.id === "huzam") { if (m.__t0 === undefined) m.__t0 = m.tonic; m.tonic = on ? 200 : m.__t0; } }); }
+function sikToggle() { if (state.mqd) state.mqd.mid = null; try { localStorage.setItem("itqan_sikre", sikRe() ? "0" : "1"); } catch (e) {} sikApply(); render(); }
+sikApply();
+const _mqDegPage132 = mqDegPage;
+mqDegPage = function (mid) { const h = _mqDegPage132(mid); if (mid !== "sikah" && mid !== "huzam") return h; const ar = state.lang === "ar"; const on = sikRe(); return `<div id="sik132" class="row xs" style="gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem"><b>${ar ? "قرار السيكاه (الاستقرار):" : "Sikah resting tone:"}</b><button class="badge" style="${on ? "background:var(--accent);color:#fff" : ""}" onclick="${on ? "" : "sikToggle()"}">Re — ${ar ? "ري" : "Re"}</button><button class="badge" style="${!on ? "background:var(--accent);color:#fff" : ""}" onclick="${!on ? "" : "sikToggle()"}">Mi½♭ — ${ar ? "مي نص بيمول" : "E half-flat"}</button></div>` + h; };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.tjw{display:inline-flex;align-items:center;gap:.25rem;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--card));color:var(--fg);border-radius:999px;padding:.05rem .55rem;margin:.1rem .1rem;cursor:pointer;font:inherit;vertical-align:middle}
+.tjw span{font:1.15em/1.6 'Amiri',serif}.tjw small{font-size:.7em;opacity:.75}.tjw.on{background:var(--accent);color:#fff;animation:fpPulse 1.2s infinite}
+.tjwrow{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.45rem}
+.tjbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem;margin-top:.8rem}
+.tjbcard{position:relative;text-align:start;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:.8rem;cursor:pointer;color:var(--fg);display:flex;flex-direction:column;gap:.25rem}
+.tjbcard .n{font-weight:800;color:var(--accent)}.tjbcard small{opacity:.7}.tjbcard.ok{border-color:#16a34a}.tjbcard em{position:absolute;top:.5rem;inset-inline-end:.6rem;font-style:normal}
+.tjbbar{flex:1;min-width:120px;height:8px;border-radius:9px;background:var(--line);overflow:hidden}.tjbbar i{display:block;height:100%;background:var(--accent)}
+.tjbch h3{margin:.2rem 0 .6rem}.tjbi{padding:.5rem .2rem;border-bottom:1px dashed var(--line);line-height:2}.tjbi.ind{padding-inline-start:1.4rem;opacity:.95}.tjbh{margin:1rem 0 .3rem;color:var(--accent)}
+.tjbhit{padding:.4rem 0;border-bottom:1px solid var(--line)}.mk2{max-width:520px}
+</style>`);
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
 function readHash() {
