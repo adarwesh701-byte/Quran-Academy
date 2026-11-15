@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v133";
+const UI_VERSION = "2026-11-14-v134";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20700,6 +20700,13 @@ dtFlush = async function () { const r = await _dtFlush133.apply(this, arguments)
 const _render133 = render;
 render = function () { const r = _render133.apply(this, arguments); try { if (dtActive()) { const app = document.getElementById("app"); if (app) dtRun(app); } } catch (e) {} return r; };
 document.head.insertAdjacentHTML("beforeend", `<style>.dtw{color:transparent!important;text-shadow:none!important;background-image:linear-gradient(90deg,color-mix(in srgb,var(--fg) 8%,transparent),color-mix(in srgb,var(--fg) 14%,transparent),color-mix(in srgb,var(--fg) 8%,transparent));background-size:200% 100%;border-radius:6px;animation:dtw 1s linear infinite}@keyframes dtw{to{background-position:-200% 0}}</style>`);
+
+/* ================= v134: «العربية بين يديك» اسمها بقى «العربية الفصحى» + إضافات كتاب د. سعاد في التجويد المفصّل ================= */
+const ABY_NAME = { ar: "العربية الفصحى — المنهج المتكامل", en: "Standard Arabic — full course" };
+const _renderArabiya134 = renderArabiya;
+renderArabiya = function () { return _renderArabiya134().replace(/العربية بين يديك — بالأصوات الأصلية/g, ABY_NAME.ar + " (بالأصوات الأصلية)").replace(/Al-Arabiyyah Bayna Yadayk — original audio/g, ABY_NAME.en + " (original audio)"); };
+const _DOMAINS134 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS134(); ds.forEach(d => (d.tools || []).forEach(t => { if (String(t[2]).includes("arabiya")) t[1] = state.lang === "ar" ? "📗 " + ABY_NAME.ar : ABY_NAME.en; })); return ds; };
+try { KIT.forEach(k => { if (k[0] === "arabiya") { k[2] = ABY_NAME.ar; k[3] = ABY_NAME.en; } }); } catch (e) {}
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
