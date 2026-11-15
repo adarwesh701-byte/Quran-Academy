@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v144";
+const UI_VERSION = "2026-11-14-v145";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21352,6 +21352,96 @@ const _DOMAINS143 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS143(); B
 try { const _sr143 = srIndex109; srIndex109 = function () { const a = _sr143(); try { BKS143.forEach(B => a.push([B.ic + " " + B.t, `go16('bk','${B.id}')`, B.kw])); } catch (e) {} return a; }; } catch (e) {}
 document.head.insertAdjacentHTML("beforeend", `<style>.bkay{font-family:'Amiri Quran','Amiri',serif;color:#0f766e;font-size:1.08em;line-height:2.1}</style>`);
 
+
+/* ---------- v145: 🗂️ منظّم الموقع (للأونر): الأقسام فولدرات والأدوات ملفات — اسحب وانقل وسمّي وغيّر الأيقونة واللون واخفي وضيف — + الشريط في صف لوحده ---------- */
+const ORG145 = { draft: null, sel: null, emo: null };
+function orgGet() { if (ORG145.draft) return ORG145.draft; const o = setv("org", null); return (o && typeof o === "object") ? o : { d: {}, t: {}, nd: [], nt: [] }; }
+function orgDraft() { if (!ORG145.draft) ORG145.draft = JSON.parse(JSON.stringify(orgGet())); const D = ORG145.draft; D.d = D.d || {}; D.t = D.t || {}; D.nd = D.nd || []; D.nt = D.nt || []; return D; }
+function orgTitle(o, fb) { const ar = state.lang === "ar"; return (ar ? (o.ar || o.en) : (o.en || o.ar)) || fb; }
+function orgApply(ds, all) {
+  const O = orgGet(); if (!all && (!Object.keys(O.d || {}).length && !Object.keys(O.t || {}).length && !(O.nd || []).length && !(O.nt || []).length)) return ds;
+  ds = ds.map(d => Object.assign({}, d, { tools: (d.tools || []).slice() }));
+  (O.nd || []).forEach(n => { if (!ds.some(d => d.k === n.k)) ds.push({ k: n.k, ic: n.ic || "📁", t: { ar: n.ar || n.en || "قسم جديد", en: n.en || n.ar || "New section" }, s: { ar: n.sar || "", en: n.sen || "" }, color: n.color || "#0f766e", tools: [], custom: 1 }); });
+  const items = []; ds.forEach((d, di) => d.tools.forEach((t, ti) => items.push({ id: String(t[2]), t: t.slice(), dom: d.k, o: di * 100 + ti })));
+  (O.nt || []).forEach((n, i) => items.push({ id: n.id, t: [n.ic || "🔗", orgTitle(n, "—"), n.js || "", ""], dom: n.dom, o: 9000 + i, custom: 1 }));
+  items.forEach(it => { const x = (O.t || {})[it.id]; if (!x) return; if (x.ic) it.t[0] = x.ic; const lb = orgTitle(x, ""); if (lb) it.t[1] = lb; if (x.js) it.t[2] = x.js; if (x.dom) it.dom = x.dom; if (x.o != null) it.o = x.o; it.hide = !!x.hide; });
+  ds.forEach(d => { const x = (O.d || {})[d.k]; d.tools = items.filter(it => it.dom === d.k && (all || !it.hide)).sort((a, b) => a.o - b.o).map(it => { const r = it.t; r.__id = it.id; r.__hide = it.hide; r.__custom = it.custom; return r; }); if (x) { if (x.ic) d.ic = x.ic; if (x.ar || x.en) d.t = { ar: x.ar || d.t.ar, en: x.en || d.t.en }; if (x.sar || x.sen) d.s = { ar: x.sar || (d.s || {}).ar, en: x.sen || (d.s || {}).en }; if (x.color) d.color = x.color; d.__hide = !!x.hide; d.__o = x.o; } });
+  ds.forEach((d, i) => { if (d.__o == null) d.__o = i * 10; });
+  return ds.filter(d => all || !d.__hide).sort((a, b) => a.__o - b.__o);
+}
+const _DOMAINS145 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS145.apply(this, arguments); try { return orgApply(ds, !!state.__orgAll); } catch (e) { console.warn(e); return ds; } };
+function orgRaw() { state.__orgAll = true; let ds; try { ds = DOMAINS(); } finally { state.__orgAll = false; } return ds; }
+const ORG_EMO = "📖🕌🎼🎙️🗣️🎧🎵🪜📚📜⚖️✍️🇪🇬🏝️💬🧭🏆🎥👨‍🏫👩‍🏫🧒🎮🧩🎯📝📅🗺️🌳⭐🌟💡🔥❤️💚💙💜🧡📌📁📂🗂️🔗🛠️⚙️🔔📊📈💳🎁🤲📿🌙☀️🕋🕰️🧠👂👄🫁🎤🎬🖼️🗒️✅".match(/\p{Extended_Pictographic}(‍\p{Extended_Pictographic})*|🇪🇬/gu);
+function orgEmoPick(cb) {
+  ORG145.emo = cb; const old = document.getElementById("orgEmo"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "orgEmo"; d.className = "notr";
+  d.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center"><b>😀 اختار أيقونة</b><button class="btn btn-o btn-sm" onclick="document.getElementById('orgEmo').remove()">✕</button></div><div class="orgemo">${ORG_EMO.map(e => `<button onclick="ORG145.emo('${e}');document.getElementById('orgEmo').remove()">${e}</button>`).join("")}</div><div class="row" style="gap:.3rem;margin-top:.4rem"><input class="input" id="orgEmoIn" placeholder="أو الصق أي إيموجي" style="flex:1"><button class="btn btn-p btn-sm" onclick="const v=document.getElementById('orgEmoIn').value.trim();if(v){ORG145.emo(v);document.getElementById('orgEmo').remove()}">تمام</button></div>`;
+  document.body.appendChild(d);
+}
+function orgSetD(k, patch) { const D = orgDraft(); const n = D.nd.find(x => x.k === k); if (n) Object.assign(n, patch); else D.d[k] = Object.assign(D.d[k] || {}, patch); orgRe(); }
+function orgSetT(id, patch) { const D = orgDraft(); const n = D.nt.find(x => x.id === id); if (n && !("hide" in patch) && !("o" in patch)) { Object.assign(n, patch); } else D.t[id] = Object.assign(D.t[id] || {}, patch); orgRe(); }
+function orgRe() { const b = document.getElementById("orgBody"); if (b) b.innerHTML = orgBody(); }
+function orgMove(id, dom, beforeId) {
+  const ds = orgRaw(); const D = orgDraft(); const tgt = ds.find(d => d.k === dom); if (!tgt) return;
+  const list = tgt.tools.map(t => t.__id).filter(x => x !== id); let at = beforeId ? list.indexOf(beforeId) : -1; if (at < 0) at = list.length; list.splice(at, 0, id);
+  list.forEach((x, i) => { const n = D.nt.find(y => y.id === x); if (n) { n.dom = dom; } D.t[x] = Object.assign(D.t[x] || {}, { o: i * 10 }); }); D.t[id] = Object.assign(D.t[id] || {}, { dom }); const n = D.nt.find(y => y.id === id); if (n) n.dom = dom; orgRe();
+}
+function orgMoveD(k, dir) { const ds = orgRaw(); const i = ds.findIndex(d => d.k === k); const j = i + dir; if (i < 0 || j < 0 || j >= ds.length) return; const ks = ds.map(d => d.k); [ks[i], ks[j]] = [ks[j], ks[i]]; const D = orgDraft(); ks.forEach((x, n) => { const nd = D.nd.find(y => y.k === x); if (nd) nd.__o = n; D.d[x] = Object.assign(D.d[x] || {}, { o: n * 10 }); }); orgRe(); }
+function orgItemMenu(id, dom) {
+  const ds = orgRaw(); const t = ds.flatMap(d => d.tools.map(x => [d, x])).find(([d, x]) => x.__id === id); if (!t) return; const [d, x] = t;
+  const old = document.getElementById("orgMenu"); if (old) old.remove(); const m = document.createElement("div"); m.id = "orgMenu"; m.className = "notr";
+  m.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center"><b>${esc(x[0])} ${esc(x[1])}</b><button class="btn btn-o btn-sm" onclick="document.getElementById('orgMenu').remove()">✕</button></div>
+    <div class="orgmenu">
+      <button onclick="const a=prompt('الاسم بالعربي:',${esc(JSON.stringify(x[1]))});if(a!==null){const e=prompt('الاسم بالإنجليزي (اختياري):','');orgSetT(${esc(JSON.stringify(id))},{ar:a.trim(),en:(e||'').trim()||undefined})}">✏️ غيّر الاسم</button>
+      <button onclick="orgEmoPick(e=>orgSetT(${esc(JSON.stringify(id))},{ic:e}))">😀 غيّر الأيقونة</button>
+      <button onclick="const v=prompt('اللينك:\\n#/tools أو #/maqamat = صفحة في الموقع\\nhttps://… = لينك خارجي',${esc(JSON.stringify(lk142Show(x[2])))});if(v!==null&&v.trim())orgSetT(${esc(JSON.stringify(id))},{js:lk142Js(v.trim())})">🔗 غيّر اللينك</button>
+      <button onclick="orgSetT(${esc(JSON.stringify(id))},{hide:${x.__hide ? "false" : "true"}})">${x.__hide ? "👁️ اظهره" : "🙈 اخفيه"}</button>
+      <label class="row" style="gap:.3rem">📂 انقله لـ <select onchange="orgMove(${esc(JSON.stringify(id))},this.value);document.getElementById('orgMenu').remove()">${ds.map(o => `<option value="${o.k}" ${o.k === d.k ? "selected" : ""}>${esc(o.ic)} ${esc(orgTitle(o.t, o.k))}</option>`).join("")}</select></label>
+      <button onclick="lk142Go(lk142Show(${esc(JSON.stringify(x[2]))}))">▶️ جرّبه</button>
+      ${x.__custom ? `<button onclick="const D=orgDraft();D.nt=D.nt.filter(n=>n.id!==${esc(JSON.stringify(id))});orgRe();document.getElementById('orgMenu').remove()">🗑️ امسحه</button>` : ""}
+    </div>`;
+  document.body.appendChild(m);
+}
+function lk142Show(js) { const g = String(js || "").match(/(?:go16|navigate)\(\s*['"]([^'"]+)['"](?:\s*,\s*['"]([^'"]*)['"])?/); if (g) return "#/" + g[1] + (g[2] ? "/" + g[2] : ""); const lg = String(js || "").match(/libGo\(\s*['"]([^'"]+)['"]/); if (lg) return "lib:" + lg[1]; return String(js || ""); }
+function lk142Js(v) { if (/^lib:/.test(v)) return `libGo('${v.slice(4).replace(/'/g, "")}')`; if (/^[a-z]+\(/i.test(v)) return v; return `lk142Go(${JSON.stringify(v)})`; }
+function orgNewDom() { const a = prompt("اسم القسم الجديد (عربي):"); if (!a || !a.trim()) return; const e = prompt("الاسم بالإنجليزي:", "") || ""; const D = orgDraft(); const k = "u_" + Math.random().toString(36).slice(2, 7); D.nd.push({ k, ar: a.trim(), en: e.trim(), ic: "📁", color: "#0f766e" }); D.d[k] = { o: 999 }; orgRe(); }
+function orgNewItem(dom) { const a = prompt("اسم الزرار/الأداة (عربي):"); if (!a || !a.trim()) return; const e = prompt("الاسم بالإنجليزي (اختياري):", "") || ""; const v = prompt("بيودّي فين؟\n#/tools أو #/maqamat = صفحة في الموقع\nhttps://… = لينك خارجي"); if (!v || !v.trim()) return; const D = orgDraft(); D.nt.push({ id: "n_" + Math.random().toString(36).slice(2, 8), ar: a.trim(), en: e.trim(), ic: "🔗", js: lk142Js(v.trim()), dom }); orgRe(); }
+async function orgSave() { const D = orgDraft(); await saveSetting16("org", D); ORG145.draft = null; toast("✅ اتحفظ للكل"); render(); }
+function orgBody() {
+  const ds = orgRaw(); const dirty = !!ORG145.draft;
+  return `<div class="card orgtop"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><button class="btn btn-o" onclick="orgNewDom()">📁➕ قسم جديد</button><span style="margin-inline-start:auto"></span>${dirty ? `<span class="badge badge-g">✏️ فيه تعديلات مش محفوظة</span><button class="btn btn-o" onclick="ORG145.draft=null;orgRe()">↩️ إلغاء</button>` : ""}<button class="btn btn-p" onclick="orgSave()" ${dirty ? "" : "disabled"}>💾 احفظ للكل</button><button class="btn btn-o" onclick="if(confirm('ترجّع ترتيب الأقسام والأدوات للأصلي؟'))saveSetting16('org',null).then(()=>{ORG145.draft=null;render()})">🧹 الأصلي</button></div>
+    <p class="xs muted" style="margin:.5rem 0 0">💡 <b>اسحب</b> أي أداة وحطها في قسم تاني أو في مكان تاني جوه نفس القسم. على الموبايل: دوس على الأداة ← «📂 انقله لـ». دوس على الأداة كمان عشان تغيّر الاسم والأيقونة واللينك أو تخفيها. التغييرات بتظهر للكل بعد «💾 احفظ».</p></div>
+  <div class="orggrid">${ds.map((d, i) => `<div class="orgf ${d.__hide ? "hid" : ""}" style="--c:${d.color || "#0f766e"}" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="event.preventDefault();this.classList.remove('ov');orgMove(event.dataTransfer.getData('text/plain'),'${d.k}')">
+      <div class="orgfh"><button class="orgic" onclick="orgEmoPick(e=>orgSetD('${d.k}',{ic:e}))" title="غيّر الأيقونة">${esc(d.ic || "📁")}</button><b class="notr" onclick="const a=prompt('اسم القسم (عربي):',${esc(JSON.stringify((d.t || {}).ar || ""))});if(a!==null){const e=prompt('بالإنجليزي:',${esc(JSON.stringify((d.t || {}).en || ""))});orgSetD('${d.k}',{ar:a.trim(),en:(e||'').trim()})}" title="غيّر الاسم">${esc(orgTitle(d.t || {}, d.k))}</b><small>${d.tools.length}</small>
+        <span class="orgfb"><button onclick="orgMoveD('${d.k}',-1)" title="قدّم">⬆️</button><button onclick="orgMoveD('${d.k}',1)" title="أخّر">⬇️</button><label title="اللون"><input type="color" value="${d.color || "#0f766e"}" onchange="orgSetD('${d.k}',{color:this.value})"></label><button onclick="orgSetD('${d.k}',{hide:${d.__hide ? "false" : "true"}})" title="${d.__hide ? "اظهر" : "اخفي"}">${d.__hide ? "👁️" : "🙈"}</button>${d.custom ? `<button onclick="if(confirm('تمسح القسم؟ (الأدوات اللي فيه هترجع لأقسامها الأصلية)')){const D=orgDraft();D.nd=D.nd.filter(n=>n.k!=='${d.k}');orgRe()}">🗑️</button>` : ""}</span></div>
+      <div class="orgitems">${d.tools.map(t => `<div class="orgit ${t.__hide ? "hid" : ""}" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',${esc(JSON.stringify(t.__id))})" ondrop="event.preventDefault();event.stopPropagation();this.parentNode.parentNode.classList.remove('ov');orgMove(event.dataTransfer.getData('text/plain'),'${d.k}',${esc(JSON.stringify(t.__id))})" ondragover="event.preventDefault()" onclick="orgItemMenu(${esc(JSON.stringify(t.__id))},'${d.k}')"><span>${esc(t[0])}</span><b class="notr">${esc(t[1])}</b><code>${esc(lk142Show(t[2]).slice(0, 26))}</code></div>`).join("")}
+        <button class="orgadd" onclick="orgNewItem('${d.k}')">➕ أداة/لينك جديد هنا</button></div></div>`).join("")}</div>`;
+}
+function renderOrg() {
+  if (realRole() !== "owner") return pageWrap("🗂️", "منظّم الموقع", "", `<div class="card">🔒 للأونر بس.</div>`);
+  return pageWrap("🗂️", "منظّم الموقع", "كل أقسام الموقع قدامك زي الفولدرات، وكل أداة زي الملف: اسحب وانقل وسمّي وغيّر الأيقونة واللون واخفي وضيف", `<div id="orgBody" class="notr">${orgBody()}</div>`);
+}
+PAGES16.push("org");
+const _render145 = render;
+render = function () { if (state.route === "org") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderOrg(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); } catch (e) {} return; } return _render145.apply(this, arguments); };
+/* زرار المنظّم جنب أدوات الأونر في المحاكي */
+const _lk142Btn145 = lk142Btn; lk142Btn = function () { _lk142Btn145(); const b = document.getElementById("lk142"); if (b && !b.querySelector(".org145")) b.insertAdjacentHTML("beforeend", `<button class="org145" onclick="go16('org')">🗂️ منظّم الأقسام</button>`); };
+try { const _sr145 = srIndex109; srIndex109 = function () { const a = _sr145(); try { if (realRole() === "owner") a.push(["🗂️ منظّم الموقع", "go16('org')", "تنظيم ترتيب أقسام فولدرات أيقونات منظم"]); } catch (e) {} return a; }; } catch (e) {}
+document.head.insertAdjacentHTML("beforeend", `<style>
+.orggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.8rem;margin-top:.8rem}
+.orgf{border:2px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:16px;background:color-mix(in srgb,var(--c) 6%,var(--card,#fff));padding:.6rem;transition:.15s}.orgf.ov{transform:scale(1.02);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 40%,transparent)}.orgf.hid{opacity:.45;filter:grayscale(1)}
+.orgfh{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}.orgfh b{cursor:pointer;flex:1}.orgfh small{background:var(--c);color:#fff;border-radius:999px;padding:0 .45rem;font-size:.7rem}.orgic{font-size:1.5rem;background:none;border:1px dashed transparent;border-radius:8px;cursor:pointer}.orgic:hover{border-color:var(--c)}
+.orgfb{display:flex;gap:.1rem;align-items:center}.orgfb button{background:none;border:0;cursor:pointer;font-size:.9rem;padding:.1rem}.orgfb input[type=color]{width:1.4rem;height:1.4rem;border:0;padding:0;background:none;cursor:pointer}
+.orgitems{display:flex;flex-direction:column;gap:.3rem;margin-top:.5rem;min-height:2.5rem}
+.orgit{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:.4rem;align-items:center;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:.35rem .5rem;cursor:grab;user-select:none}.orgit:active{cursor:grabbing}.orgit>span{grid-row:span 2;font-size:1.2rem}.orgit code{font-size:.65rem;opacity:.55;direction:ltr;text-align:start;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.orgit.hid{opacity:.4;text-decoration:line-through}
+.orgadd{border:1.5px dashed var(--c);background:none;border-radius:10px;padding:.35rem;color:var(--c);cursor:pointer;font-weight:700}
+#orgMenu,#orgEmo{position:fixed;z-index:1400;inset-inline:0;margin:auto;bottom:1rem;width:min(26rem,94vw);background:var(--card,#fff);border:2px solid #0f766e;border-radius:16px;padding:.8rem;box-shadow:0 20px 50px #0005}
+.orgmenu{display:flex;flex-direction:column;gap:.35rem;margin-top:.5rem}.orgmenu button,.orgmenu label{background:var(--bg,#f8fafc);border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:.5rem;text-align:start;cursor:pointer;font-weight:600}
+.orgemo{display:grid;grid-template-columns:repeat(auto-fill,minmax(2.2rem,1fr));gap:.2rem;max-height:14rem;overflow:auto;margin-top:.4rem}.orgemo button{font-size:1.3rem;background:none;border:1px solid transparent;border-radius:8px;cursor:pointer}.orgemo button:hover{border-color:#0f766e}
+/* الشريط الرئيسي في صف لوحده تحت اللوجو والأزرار — ظاهر دايمًا */
+.hdr>.wrap{flex-wrap:wrap}.hdr>.wrap>.nav{order:5;flex:0 0 100%;display:flex!important;gap:.25rem;justify-content:center;overflow-x:auto;scrollbar-width:none;padding:.35rem 0 .1rem;border-top:1px solid var(--line,#e5e7eb);margin-top:.35rem;white-space:nowrap}.hdr>.wrap>.nav::-webkit-scrollbar{display:none}.hdr>.wrap>.nav a{flex:0 0 auto;padding:.3rem .7rem;border-radius:999px;font-size:.88rem}
+@media(max-width:700px){.hdr>.wrap>.nav{justify-content:flex-start}}
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
