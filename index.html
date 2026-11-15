@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v154";
+const UI_VERSION = "2026-11-15-v155";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -22024,6 +22024,163 @@ if ("serviceWorker" in navigator && location.protocol === "https:") { window.add
     try { if (state.route === "dashboard" && role() === "student" && !document.getElementById("sp153")) { const app = document.getElementById("app"); const w = app && app.querySelector(".wrap"); if (w) { const b = document.createElement("button"); b.id = "sp153"; b.className = "btn btn-o"; b.style.margin = ".5rem 0"; b.textContent = "📤 " + (ar() ? "شارك تقدّمي مع أهلي" : "Share my progress with family"); b.onclick = shareProgress153; w.insertBefore(b, w.children[1] || null); } } } catch (e) {}
     return out;
   };
+})();
+
+
+/* ================= v155: مساحة الصوت بتتسجّل من تحت شريط الـ٣ أوكتافات + صوت الجهاز للأونر + تحليل دقيقة من كل شيخ وتحديد طبقته + همهمة خلفية للإنشاد + قصائد أكتر ================= */
+(function () {
+  const ar = () => state.lang === "ar";
+  const isOwner = () => realRole() === "owner" && !state.preview;
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.tnr155{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:1.4rem}
+.tnr155 .live{font-weight:800;direction:ltr}
+.tnr155 select{width:auto;max-width:14rem}
+.hum155{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.6rem;padding:.6rem;border-radius:12px;background:color-mix(in srgb,var(--accent,#0f766e) 7%,transparent)}
+.hum155 input[type=range]{width:8rem}
+</style>`);
+
+  /* ---------- 1) تسجيل أوطى وأعلى صوت (ديناميك) تحت شريط الـ٣ أوكتافات ---------- */
+  TNR.list = TNR.list || [];
+  const pct = (a, p) => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; };
+  const _upd = tnRangeUpd;
+  tnRangeUpd = function (f) {
+    if (f > 0 && f < 1100) { TNR.list.push(f); if (TNR.list.length > 6000) TNR.list.shift(); }
+    /* الأوطى والأعلى من غير النغمات الشاذة (٣٪ و٩٧٪) */
+    const r = _upd.call(this, f);
+    if (TNR.list.length > 20) { TNR.lo = pct(TNR.list, .03); TNR.hi = pct(TNR.list, .97); }
+    const lv = document.getElementById("tnr155v");
+    if (lv) lv.textContent = TNR.lo && TNR.hi ? `${hzNote(TNR.lo)} – ${hzNote(TNR.hi)}` : "—";
+    return r;
+  };
+  window.tnr155Reset = function () { TNR.lo = 0; TNR.hi = 0; TNR.list = []; tnRangeUpd(); };
+  window.tnr155Mic = async function () { tnr155Reset(); if (TN.on) tnStop(); state.__sys155 = false; await tnStart(); toast(ar() ? "🎙️ قول «آآآه» من أوطى نغمة لحد أعلى نغمة مريحة ليك" : "🎙️ Sing “aah” from your lowest to your highest comfortable note"); };
+  window.tnr155Save = async function () {
+    if (!(TNR.lo > 0 && TNR.hi > TNR.lo)) return toast(ar() ? "سجّل الأول" : "Record first", true);
+    const { error } = await sb.from("profiles").update({ voice_low: Math.round(TNR.lo * 10) / 10, voice_high: Math.round(TNR.hi * 10) / 10 }).eq("id", state.auth.user.id);
+    if (error) return toast(error.message, true);
+    state.auth.profile = Object.assign({}, state.auth.profile, { voice_low: TNR.lo, voice_high: TNR.hi }); state.__v152voice = false; if (TN.on) tnStop();
+    toast(`✅ ${ar() ? "اتحفظت مساحة صوتك" : "Your range was saved"}: ${hzNote(TNR.lo)} – ${hzNote(TNR.hi)}`); render();
+  };
+  /* صوت الجهاز الداخلي (للأونر بس): شغّل تلاوة شيخ في أي تابة وشارك صوتها */
+  window.tnr155Sys = async function () {
+    if (!isOwner()) return;
+    const md = navigator.mediaDevices; if (!md || !md.getDisplayMedia) return toast(ar() ? "المتصفح ده مش بيدعم مشاركة صوت الجهاز — استخدم Chrome على الكمبيوتر" : "Use Chrome on a computer to share system audio", true);
+    let s; try { s = await md.getDisplayMedia({ video: true, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, systemAudio: "include", preferCurrentTab: false }); } catch (e) { return; }
+    const at = s.getAudioTracks(); s.getVideoTracks().forEach(t => t.stop());
+    if (!at.length) return toast(ar() ? "ماوصلش صوت — وانت بتختار التابة علّم على «Share tab audio / مشاركة الصوت»" : "No audio — tick “Share tab audio” when choosing", true);
+    if (TN.on) tnStop(); tnr155Reset();
+    TN.stream = new MediaStream(at); TN.ac = new (window.AudioContext || window.webkitAudioContext)(); const src = TN.ac.createMediaStreamSource(TN.stream);
+    TN.an = TN.ac.createAnalyser(); TN.an.fftSize = 4096; src.connect(TN.an); TN.buf = new Float32Array(TN.an.fftSize); TN.on = true; TN.hist = []; state.__sys155 = true;
+    at[0].onended = () => { if (TN.on) tnStop(); };
+    const b = document.getElementById("tn_btn"); if (b) b.innerHTML = "⏹ " + L("tnStop");
+    const loop = () => { if (!TN.on) return; TN.an.getFloatTimeDomainData(TN.buf); tnShow(tnPitch(TN.buf, TN.ac.sampleRate)); TN.raf = requestAnimationFrame(loop); }; loop();
+    toast(ar() ? "🖥️ بنسمع صوت الجهاز — شغّل تلاوة الشيخ دقيقة" : "🖥️ Listening to system audio — play a minute of the reciter");
+  };
+  window.tnr155SaveSheikh = async function () {
+    const f = (document.getElementById("tnr155sh") || {}).value; if (!f) return toast(ar() ? "اختار الشيخ" : "Pick a reciter", true);
+    if (!(TNR.lo > 0 && TNR.hi > TNR.lo)) return toast(ar() ? "سجّل الأول" : "Record first", true);
+    await rr155Save(f, TNR.lo, TNR.hi);
+  };
+  async function rr155Save(f, lo, hi) {
+    const ov = Object.assign({}, setv("reciterRanges", {}) || {}); const o = Object.assign({}, ov[f] || {});
+    o.low = Math.round(lo * 10) / 10; o.high = Math.round(hi * 10) / 10; o.approved = true; delete o.hide; ov[f] = o;
+    await saveSetting16("reciterRanges", ov); const e = EA.find(x => x[0] === f);
+    toast(`✅ ${e ? (ar() ? e[1] : e[2]) : f}: ${hzNote(lo)} – ${hzNote(hi)}`); render();
+  }
+  const _bar = tnRangeBar;
+  tnRangeBar = function () {
+    const h = _bar.apply(this, arguments); const A = ar(); if (!state.auth.user) return h;
+    const own = isOwner();
+    const ctl = `<div class="tnr155"><button class="btn btn-p" onclick="tnr155Mic()">🎙️ ${A ? "سجّل أوطى وأعلى صوتك" : "Record your lowest & highest"}</button>
+      <span class="sm">${A ? "مساحتك دلوقتي:" : "Range now:"} <span class="live" id="tnr155v">${TNR.lo && TNR.hi ? `${hzNote(TNR.lo)} – ${hzNote(TNR.hi)}` : "—"}</span></span>
+      <button class="btn btn-o" onclick="tnr155Save()">💾 ${A ? "احفظها لصوتي" : "Save as my range"}</button><button class="btn btn-o" onclick="tnr155Reset()">↺</button>
+      ${own ? `<span style="flex-basis:100%"></span><button class="btn btn-o" onclick="tnr155Sys()">🖥️ ${A ? "من صوت الجهاز (للأونر)" : "From system audio (owner)"}</button><select class="in" id="tnr155sh"><option value="">${A ? "— احفظها لشيخ —" : "— save for a reciter —"}</option>${EA.filter(x => !String(x[0]).includes("/")).map(x => `<option value="${x[0]}">${esc(A ? x[1] : x[2])}</option>`).join("")}</select><button class="btn btn-o" onclick="tnr155SaveSheikh()">💾 ${A ? "احفظ طبقة الشيخ" : "Save reciter range"}</button>` : ""}</div>`;
+    return h.replace(/<\/div>\s*$/, ctl + "</div>");
+  };
+
+  /* ---------- 2) الأونر: اسمع دقيقة من أي شيخ والموقع يحدد طبقته من كام لكام ---------- */
+  let rrA = null;
+  window.rr155Listen = async function (f, btn) {
+    if (rrA) { rrA.stop(); return; }
+    const A = ar(); const ac = new (window.AudioContext || window.webkitAudioContext)(); const an = ac.createAnalyser(); an.fftSize = 4096; const buf = new Float32Array(an.fftSize);
+    const au = new Audio(); au.crossOrigin = "anonymous"; const src = ac.createMediaElementSource(au); src.connect(an); src.connect(ac.destination);
+    const list = []; let ay = 1, raf = 0, stopped = false; const t0 = Date.now(); const DUR = 60000;
+    const old = btn.textContent; btn.textContent = "⏹ 60"; btn.classList.add("btn-p");
+    const finish = async () => {
+      if (stopped) return; stopped = true; cancelAnimationFrame(raf); try { au.pause(); ac.close(); } catch (e) {} rrA = null; btn.textContent = old; btn.classList.remove("btn-p");
+      if (list.length < 30) return toast(A ? "ماقدرتش أسمع كفاية — جرّب تاني" : "Not enough audio — try again", true);
+      const lo = pct(list, .05), hi = pct(list, .95); const e = EA.find(x => x[0] === f);
+      if (confirm(`${e ? (A ? e[1] : e[2]) : f}\n${A ? "أوطى" : "Low"}: ${hzNote(lo)}   ${A ? "أعلى" : "High"}: ${hzNote(hi)}\n\n${A ? "أعتمدها للشيخ ده؟ (تقدر تعدّلها بإيدك بعدين)" : "Approve this range?"}`)) await rr155Save(f, lo, hi);
+    };
+    rrA = { stop: finish };
+    const next = () => { if (stopped) return; if (Date.now() - t0 > DUR || ay > 30) return finish(); au.src = eaUrl(f, "67:" + ay); ay++; au.play().catch(() => finish()); };
+    au.onended = next; au.onerror = () => { ay++; next(); };
+    const loop = () => { if (stopped) return; an.getFloatTimeDomainData(buf); const p = tnPitch(buf, ac.sampleRate); if (p > 60 && p < 1000) list.push(p); const left = Math.max(0, Math.ceil((DUR - (Date.now() - t0)) / 1000)); btn.textContent = "⏹ " + left; if (Date.now() - t0 > DUR) return finish(); raf = requestAnimationFrame(loop); };
+    try { await ac.resume(); } catch (e) {} next(); loop();
+  };
+  function rrRows155() {
+    if (!isOwner()) return;
+    document.querySelectorAll(".rr120t tr").forEach(tr => {
+      if (tr.querySelector(".rr155b")) return; const inp = tr.querySelector("input[onchange*=rrSet]"); if (!inp) return;
+      const m = (inp.getAttribute("onchange") || "").match(/rrSet\('([^']+)'/); if (!m) return;
+      const td = document.createElement("td"); td.innerHTML = `<button class="btn btn-o rr155b" style="white-space:nowrap" title="${ar() ? "اسمع دقيقة من سورة الملك وحدّد طبقته" : "Listen 1 min of al-Mulk and detect the range"}">▶ ${ar() ? "دقيقة وحلّل" : "1 min & detect"}</button>`;
+      td.firstChild.onclick = function () { rr155Listen(m[1], this); }; tr.appendChild(td);
+    });
+  }
+
+  /* ---------- 3) الإنشاد: همهمة خلفية خفيفة على لحن المقام (من غير موسيقى) وانت بتنشد ---------- */
+  const HUM = { on: false, nodes: [], vol: .35, timer: 0 };
+  window.hum155Stop = function () { HUM.on = false; clearTimeout(HUM.timer); HUM.nodes.forEach(n => { try { n.stop ? n.stop() : n.disconnect(); } catch (e) {} }); HUM.nodes = []; try { HUM.ac && HUM.ac.close(); } catch (e) {} HUM.ac = null; const b = document.getElementById("hum155b"); if (b) b.textContent = "🎵 " + (ar() ? "شغّل الهمهمة" : "Start humming"); };
+  window.hum155Vol = function (v) { HUM.vol = +v; if (HUM.master) HUM.master.gain.value = HUM.vol; };
+  window.hum155 = function (mid, pi) {
+    if (HUM.on) return hum155Stop();
+    const m = MQ.find(x => x.id === mid) || MQ[0]; const tonic = (typeof personalTonic === "function" ? personalTonic(m) : mqTonicHz(m)) || 130.81;
+    const ac = new (window.AudioContext || window.webkitAudioContext)(); HUM.ac = ac; HUM.on = true;
+    const master = ac.createGain(); master.gain.value = HUM.vol; HUM.master = master;
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 520; lp.Q.value = .7;
+    const verb = ac.createConvolver(); const len = ac.sampleRate * 2.2, ir = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } verb.buffer = ir;
+    const wet = ac.createGain(); wet.gain.value = .35; lp.connect(master); lp.connect(verb); verb.connect(wet); wet.connect(master); master.connect(ac.destination);
+    /* درون هادي على القرار والخامسة (زي الهمهمة اللي ورا المنشد) */
+    [[1, .07], [1.5, .035], [.5, .05]].forEach(([r, g]) => { const o = ac.createOscillator(); o.type = "triangle"; o.frequency.value = tonic * r; const gg = ac.createGain(); gg.gain.value = 0; gg.gain.linearRampToValueAtTime(g, ac.currentTime + 2); o.connect(gg); gg.connect(lp); o.start(); HUM.nodes.push(o); });
+    /* لحن الهمهمة: جملة المقام بتتكرر بهدوء — «مممم» */
+    const phrase = mqGenerate(m, 900 + (pi || 0) * 31, 1).slice(0, 10); phrase.push([mqDeg(m, m.close || 0), 1.8]);
+    const playPhrase = () => {
+      if (!HUM.on) return; let t = ac.currentTime + .1;
+      phrase.forEach(([c, d]) => {
+        const f = tonic * Math.pow(2, c / 1200); const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = f;
+        const o2 = ac.createOscillator(); o2.type = "triangle"; o2.frequency.value = f; const vib = ac.createOscillator(); vib.frequency.value = 5; const vg = ac.createGain(); vg.gain.value = f * .004; vib.connect(vg); vg.connect(o.frequency); vg.connect(o2.frequency);
+        const g = ac.createGain(); const dur = Math.max(.35, d * 1.15); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16, t + .12); g.gain.setValueAtTime(.16, t + dur - .15); g.gain.linearRampToValueAtTime(0, t + dur);
+        const g2 = ac.createGain(); g2.gain.value = .35; o.connect(g); o2.connect(g2); g2.connect(g); g.connect(lp);
+        [o, o2, vib].forEach(x => { x.start(t); x.stop(t + dur + .05); }); t += d * 1.15;
+      });
+      HUM.timer = setTimeout(playPhrase, Math.max(1000, (t - ac.currentTime + .6) * 1000));
+    };
+    playPhrase();
+    const b = document.getElementById("hum155b"); if (b) b.textContent = "⏹ " + (ar() ? "وقّف الهمهمة" : "Stop humming");
+  };
+  const _kh = karaokeHub;
+  karaokeHub = function () {
+    const h = _kh.apply(this, arguments); const k = state.kh || {}; const m = MQ.find(x => x.id === k.m) || MQ[5]; const A = ar();
+    const box = `<div class="hum155"><button class="btn btn-p" id="hum155b" onclick="hum155('${m.id}',${+k.p || 0})">${HUM.on ? "⏹ " + (A ? "وقّف الهمهمة" : "Stop humming") : "🎵 " + (A ? "شغّل الهمهمة" : "Start humming")}</button><span class="sm">${A ? "همهمة صوتية خفيفة على لحن المقام في الخلفية — من غير أي موسيقى — وانت بتنشد." : "A soft vocal hum on the maqam's melody in the background — no instruments — while you sing."}</span><label class="sm">🔉 <input type="range" min="0" max="1" step=".05" value="${HUM.vol}" oninput="hum155Vol(this.value)"></label></div>`;
+    return h.replace(/(<button class="btn btn-o" style="color:var\(--danger\)" onclick="aahStop\(\)">⏹<\/button><\/div>)/, `$1${box}`);
+  };
+
+  /* ---------- 4) قصائد أكتر (من التراث) ---------- */
+  [
+    { t: "الهمزية النبوية — أحمد شوقي", v: ["وُلِدَ الهُدى فَالكائِناتُ ضِياءُ ... وَفَمُ الزَمانِ تَبَسُّمٌ وَثَناءُ", "الرّوحُ وَالمَلَأُ المَلائِكُ حَولَهُ ... لِلدّينِ وَالدُنيا بِهِ بُشَراءُ"] },
+    { t: "حسان بن ثابت — في مدح النبي ﷺ", v: ["وَأَحسَنُ مِنكَ لَم تَرَ قَطُّ عَيني ... وَأَجمَلُ مِنكَ لَم تَلِدِ النِساءُ", "خُلِقتَ مُبَرَّءًا مِن كُلِّ عَيبٍ ... كَأَنَّكَ قَد خُلِقتَ كَما تَشاءُ"] },
+    { t: "بانت سعاد — كعب بن زهير", v: ["نُبِّئتُ أَنَّ رَسولَ اللَهِ أَوعَدَني ... وَالعَفوُ عِندَ رَسولِ اللَهِ مَأمولُ", "إِنَّ الرَسولَ لَنورٌ يُستَضاءُ بِهِ ... مُهَنَّدٌ مِن سُيوفِ اللَهِ مَسلولُ"] },
+    { t: "يا رب إن عظمت ذنوبي — أبو نواس", v: ["يا رَبِّ إِن عَظُمَت ذُنوبي كَثرَةً ... فَلَقَد عَلِمتُ بِأَنَّ عَفوَكَ أَعظَمُ", "إِن كانَ لا يَرجوكَ إِلّا مُحسِنٌ ... فَبِمَن يَلوذُ وَيَستَجيرُ المُجرِمُ"] },
+    { t: "الإمام الشافعي — الفرج بعد الشدة", v: ["وَلَرُبَّ نازِلَةٍ يَضيقُ لَها الفَتى ... ذَرعًا وَعِندَ اللَهِ مِنها المَخرَجُ", "ضاقَت فَلَمّا اِستَحكَمَت حَلَقاتُها ... فُرِجَت وَكانَ يَظُنُّها لا تُفرَجُ"] },
+    { t: "الإمام الشافعي — المحبة والطاعة", v: ["تَعصي الإِلَهَ وَأَنتَ تُظهِرُ حُبَّهُ ... هَذا لَعَمري في القِياسِ بَديعُ", "لَو كانَ حُبُّكَ صادِقًا لَأَطَعتَهُ ... إِنَّ المُحِبَّ لِمَن يُحِبُّ مُطيعُ"] },
+    { t: "نونية أبي الفتح البستي", v: ["زِيادَةُ المَرءِ في دُنياهُ نُقصانُ ... وَرِبحُهُ غَيرَ مَحضِ الخَيرِ خُسرانُ", "أَحسِن إِلى الناسِ تَستَعبِد قُلوبَهُمُ ... فَطالَما اِستَعبَدَ الإِنسانَ إِحسانُ"] },
+    { t: "لامية ابن الوردي", v: ["اِعتَزِل ذِكرَ الأَغاني وَالغَزَل ... وَقُلِ الفَصلَ وَجانِب مَن هَزَل", "وَاِتَّقِ اللَهَ فَتَقوى اللَهِ ما ... جاوَرَت قَلبَ اِمرِئٍ إِلّا وَصَل"] },
+    { t: "يا من يرى ما في الضمير — السهيلي", v: ["يا مَن يَرى ما في الضَميرِ وَيَسمَعُ ... أَنتَ المُعَدُّ لِكُلِّ ما يُتَوَقَّعُ", "يا مَن يُرَجّى لِلشَدائِدِ كُلِّها ... يا مَن إِلَيهِ المُشتَكى وَالمَفزَعُ"] },
+    { t: "أبو العتاهية — في الزهد", v: ["لِدوا لِلمَوتِ وَاِبنوا لِلخَرابِ ... فَكُلُّكُمُ يَصيرُ إِلى تَبابِ"] }
+  ].forEach(p => { if (!POEMS.some(x => x.t === p.t)) POEMS.push(p); });
+
+  const _r = render;
+  render = function () { const out = _r.apply(this, arguments); try { rrRows155(); } catch (e) {} return out; };
 })();
 
 // بدء التشغيل
