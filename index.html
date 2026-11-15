@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-15-v161";
+const UI_VERSION = "2026-11-15-v162";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23343,6 +23343,52 @@ html,body{max-width:100%;overflow-x:hidden}
     return out;
   };
   if (/^#\/(rec161|office161)/.test(location.hash)) state.route = location.hash.slice(2).split("/")[0];
+})();
+
+
+/* ================= v162: «=» معناها «سيبها عربي» (كانت بتظهر علامة = غلط) + ترجمات الإنجليزي من جدول tr_en بتشتغل للكل + زرار «كمّل ترجمة الإنجليزي» للأونر (Gemini) ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e);
+  const fixEq = o => { const r = {}; Object.entries(o || {}).forEach(([k, v]) => { r[k] = (String(v).trim() === "=" ? k : v); }); return r; };
+  let TR = null, trLoading = false;
+  async function trLoad() {
+    if (TR || trLoading) return; trLoading = true; TR = {};
+    try { for (let p = 0; p < 20; p++) { const { data } = await sb.from("tr_en").select("src,en").range(p * 1000, p * 1000 + 999); if (!data || !data.length) break; data.forEach(x => TR[x.src] = x.en); if (data.length < 1000) break; } } catch (e) {}
+    trLoading = false; if (state.lang === "en") { en146Merge(); try { dtRun(); en146Fix(); } catch (e) {} }
+  }
+  en146Merge = function () { if (typeof DT === "undefined" || DT.lang !== "en") return; if (TR) Object.assign(DT.mem, fixEq(TR)); if (EN146.nat) Object.assign(DT.mem, fixEq(EN146.nat)); };
+  if (state.lang === "en") { trLoad(); try { en146Merge(); } catch (e) {} }
+  const _dl = dtLoad; dtLoad = function (lang) { const r = _dl.apply(this, arguments); if (lang === "en") trLoad(); return r; };
+
+  /* زرار التكملة */
+  const SYS = `You are a native English copywriter localising an Islamic learning website (Quran, tajweed, maqamat, Arabic language, Islamic sciences). Input: a JSON array of Arabic (often Egyptian colloquial) UI strings. Output ONLY a JSON array of the same length and order. Rules: 1) Natural, original-sounding English as a native writer would write it, never literal; short strings stay short. 2) Keep as Arabic any Quran text, anything inside «» or ﴿﴾, and Arabic words/letters being taught. 3) If the string is ONLY a Quran word/phrase, an Arabic vocabulary item, a single letter, a sūrah name alone, code, or anything that must stay Arabic, output "=". 4) Keep placeholders like {name} and emoji. Use ﷺ after the Prophet. Proper transliteration (tajweed, madd, ghunnah, ḥadīth).`;
+  window.TR162 = window.TR162 || { running: false, done: 0, total: 0, err: "" };
+  window.tr162Run = async function () {
+    if (TR162.running) { TR162.running = false; render(); return; }
+    TR162.running = true; TR162.err = ""; render();
+    const q = await fetch("docs/tr_queue.json?v=" + UI_VERSION).then(r => r.json()).catch(() => []);
+    const have = new Set(); for (let p = 0; p < 20; p++) { const { data } = await sb.from("tr_en").select("src").range(p * 1000, p * 1000 + 999); if (!data || !data.length) break; data.forEach(x => have.add(x.src)); if (data.length < 1000) break; }
+    const todo = q.filter(s => !have.has(s) && !(EN146.nat || {})[s]); TR162.total = todo.length; TR162.done = 0; render();
+    for (let i = 0; i < todo.length && TR162.running; i += 120) {
+      const chunk = todo.slice(i, i + 120); let ok = false;
+      for (let a = 0; a < 3 && !ok && TR162.running; a++) {
+        try {
+          const r = await ai156({ task: "text", system: SYS, prompt: JSON.stringify(chunk) }); const t = String(r.text || "");
+          const arr = JSON.parse(t.slice(t.indexOf("["), t.lastIndexOf("]") + 1)); if (!Array.isArray(arr) || arr.length !== chunk.length) throw new Error("length");
+          const rows = chunk.map((s, k) => ({ src: s, en: String(arr[k] ?? "").trim() })).filter(x => x.en); const { error } = await sb.from("tr_en").upsert(rows); if (error) throw error;
+          rows.forEach(x => { if (TR) TR[x.src] = x.en; }); TR162.done += rows.length; TR162.prov = r.provider; ok = true;
+        } catch (e) { TR162.err = String(e.message || e).slice(0, 180); await new Promise(r => setTimeout(r, /quota|limit|429/i.test(TR162.err) ? 60000 : 4000)); }
+        const b = document.getElementById("tr162p"); if (b) b.textContent = `${TR162.done} / ${TR162.total}${TR162.err ? " — " + TR162.err : ""}`;
+      }
+    }
+    TR162.running = false; toast("✅ " + TR162.done); render();
+  };
+  function card() {
+    return `<div class="card" style="margin-top:1rem"><h3>🌐 ${T("كمّل ترجمة الإنجليزي", "Finish the English translation")}</h3>
+      <p class="sm">${T("بيترجم كل الجمل اللي لسه مالهاش إنجليزي طبيعي بالذكاء الاصطناعي (Gemini بمفتاحك — الأسرع والأدق)، وبيتطبّق على الموقع أول بأول. أي جملة مش عاجباك صحّحها من «✏️ صحّح أي كلام». سيب الصفحة مفتوحة لحد ما يخلص.", "Translates every line that still has no natural English with AI (Gemini with your key — fastest and best) and applies it live. Fix any line with “✏️ Fix wording”. Keep the page open until it finishes.")}</p>
+      <button class="btn ${TR162.running ? "btn-o" : "btn-p"}" onclick="tr162Run()">${TR162.running ? "⏸ " + T("وقّف", "Pause") : "▶ " + T("ابدأ", "Start")}</button> <span class="sm" id="tr162p">${TR162.total ? `${TR162.done} / ${TR162.total}` : ""}${TR162.err ? " — " + esc(TR162.err) : ""}</span></div>`;
+  }
+  const _os = ownerSettings; ownerSettings = function () { return _os.apply(this, arguments) + card(); };
 })();
 
 // بدء التشغيل
