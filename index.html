@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v136";
+const UI_VERSION = "2026-11-14-v137";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20792,6 +20792,40 @@ renderTjb = function () {
   else body = `<div class="tjbgrid notr" lang="en" dir="ltr">${B.chs.map(c => `<button class="tjbcard" onclick="state.tjb.c=${c.n};render();window.scrollTo({top:0})"><span class="n">${c.n}</span><b>${esc(c.t)}</b><small>${c.items.filter(x => !x.h).length} points</small></button>`).join("")}</div>`;
   return pageWrap("📘", ar ? "التجويد المفصّل" : "Detailed Tajweed", ar ? "كتب التجويد الإنجليزية بنصها — للطلاب الإنجليز بدل الترجمة الآلية" : "The English Tajweed books in their own words — no machine translation", tabs + `<p class="xs muted">📖 Source: ${esc(B.src)}</p>` + body);
 };
+
+/* ================= v137: القراءات العشر كاملة — الـ٢٠ راوي كلهم بالمقارنة مع حفص (فروق كل آية من «الموسوعة القرآنية» quranpedia.net) + صوت كل آية بكل رواية ================= */
+const QP137 = { st: 0, by: null, err: 0 };
+const QP_RID = { qaloon: 1, warsh: 2, bazzi: 3, qumbul: 4, doori: 5, soosi: 6, hisham: 7, ibndhakwan: 8, shouba: 9, khalaf: 11, khallad: 12, abulharith: 13, doorikisai: 14, ibnwardan: 15, ibnjammaz: 16, ruways: 17, rawh: 18, ishaq: 19, idris: 20 };
+const QP_REC = { 1: 257, 2: 261, 3: 268, 4: 269, 5: 270, 6: 272, 7: 273, 8: 274, 9: 275, 11: 277, 12: 278, 13: 279, 14: 280, 15: 282, 16: 283, 17: 284, 18: 286, 19: 287, 20: 288 };
+async function qpLoad137() {
+  if (QP137.st) return; QP137.st = 1;
+  try { const r = await fetch("https://quranpedia.net/dumps/qiraat.json.gz"); const ab = await r.arrayBuffer(); let txt; try { txt = await new Response(new Blob([ab]).stream().pipeThrough(new DecompressionStream("gzip"))).text(); } catch (e) { txt = new TextDecoder().decode(ab); }
+    const j = JSON.parse(txt); const by = {}; (j.data || []).forEach(x => { const L = (by[x.surah] = by[x.surah] || {}); L[x.ayah] = (x.qiraat || []).map(w => ({ w: w.ayah_word, g: (w.qiraat || []).map(q => ({ t: q.qiraa_text, ids: (q.rewayat || []).map(r => r.rawi && r.rawi.id) })) })); });
+    QP137.by = by; QP137.st = 2; Object.keys(QP_RID).forEach(k => { const R = QRR.find(r => r[0] === k); if (R && !R[4]) R[4] = 2; }); Object.keys(state.data || {}).forEach(k => { if (k.startsWith("qrd:")) delete state.data[k]; }); render();
+  } catch (e) { console.error(e); QP137.st = 0; QP137.err++; }
+}
+function qpDiff137(key, s) {
+  const rid = QP_RID[key]; if (!rid || !QP137.by) return null; const tj = qrTj105(s); if (!Array.isArray(tj)) return null; const S = QP137.by[s] || {}; const D = {};
+  Object.keys(S).forEach(a => { const words = tjWords(tj[+a - 1] || "").map(qrBare105); const used = new Set();
+    S[a].forEach(x => { const g = x.g.find(q => q.ids.includes(rid)); if (!g || g.ids.includes(10)) return; const hg = x.g.find(q => q.ids.includes(10)); const fw = qrBare105(String(x.w).split(" ")[0]); let i = words.findIndex((w, k) => !used.has(k) && (w === fw || w.replace(/^[وفبلك]/, "") === fw.replace(/^[وفبلك]/, ""))); if (i < 0) i = 0; used.add(i); (D[a] = D[a] || []).push([i, x.w + (hg ? " — حفص: " + hg.t : ""), g.t]); }); });
+  return [D];
+}
+const _qrDiff137 = qrDiff105;
+qrDiff105 = function (k, s) { const R = QRR.find(r => r[0] === k); if (R && R[4] === 2) return qpDiff137(k, s); return _qrDiff137(k, s); };
+function qpPlay137(key, s, a, btn) { const rec = QP_REC[QP_RID[key]]; if (!rec) return; const u = `https://files.quranpedia.net/recitations/${rec}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`; wbwStop(); __wbwQ = [u]; if (!__wbwAu) __wbwAu = new Audio(); __wbwAu.src = u; __wbwAu.onended = null; __wbwAu.play().catch(() => {}); }
+let __qpQ = null;
+function qpSurah137(key, s, from) { const rec = QP_REC[QP_RID[key]]; if (!rec) return; const n = (typeof SURAH_AYAT !== "undefined" && SURAH_AYAT[s - 1]) || (qrTj105(s) || []).length || 7; if (!__wbwAu) __wbwAu = new Audio(); let a = from || 1; const go = () => { if (a > n) return; const u = `https://files.quranpedia.net/recitations/${rec}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`; __wbwAu.src = u; __wbwAu.onended = () => { a++; go(); }; __wbwAu.play().catch(() => {}); document.querySelectorAll(".qrcmp .end.on").forEach(e => e.classList.remove("on")); const e = document.querySelectorAll(".qrcmp .end")[a - 1]; if (e) { e.classList.add("on"); e.scrollIntoView({ block: "center", behavior: "smooth" }); } }; go(); }
+const _qrCompare137 = qrCompare105;
+qrCompare105 = function () {
+  const ar = state.lang === "ar"; const R = qrR105(); const rid = QP_RID[R[0]]; if (rid && !QP137.st) qpLoad137(); let h = _qrCompare137();
+  if (!rid) return h; const s = +(state.qrS || 1);
+  const btn = `<div class="card"><b>🎧 ${ar ? "اسمع السورة برواية" : "Listen in"} ${esc(ar ? R[2] : R[3])} — ${ar ? "آية آية" : "ayah by ayah"}</b><div class="row" style="gap:.4rem;margin-top:.4rem;flex-wrap:wrap"><button class="btn btn-p" onclick="qpSurah137('${R[0]}',${s},1)">▶ ${ar ? "من الأول" : "From start"}</button><button class="btn btn-o" onclick="if(__wbwAu)__wbwAu.pause()">⏸</button></div><p class="xs muted" style="margin:.4rem 0 0">${ar ? "التلاوات والفروق: الموسوعة القرآنية quranpedia.net" : "Recitations & differences: quranpedia.net"}</p></div>`;
+  h = h.replace('<div class="qrside">', '<div class="qrside">' + btn);
+  if (QP137.st === 1) h = h.replace('<div class="qrside">', `<div class="qrside"><div class="card xs muted">⏳ ${ar ? "بنحمّل فروق القراءات العشر…" : "Loading the ten qira'at…"}</div>`);
+  return h.replace(/<li data-a="(\d+)" data-i="(\d+)" onclick="qrPick105\((\d+),(\d+)\)">/g, (m, a) => m.replace(">", `><button class="qpb" onclick="event.stopPropagation();qpPlay137('${R[0]}',${s},${a},this)" title="${ar ? "اسمع الآية بالرواية" : "Listen"}">🔊</button>`));
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.qpb{border:0;background:transparent;cursor:pointer;font-size:1rem;padding:0 .2rem}.qrcmp .end.on{background:#fde68a;border-radius:6px}</style>`);
+setTimeout(() => { try { if (state.route === "qiraat") qpLoad137(); } catch (e) {} }, 3000);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
