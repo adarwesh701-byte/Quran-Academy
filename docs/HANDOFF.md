@@ -1,36 +1,47 @@
-# Itqan Academy — handoff for a new session
+# أكاديمية إتقان — دليل تسليم المشروع (لمهندس أو لأي ذكاء اصطناعي)
 
-Anyone (a new chat, another account) can continue from here.
+الملف ده بيشرح إزاي أي حد (مهندس، أو Claude من حساب تاني، أو أي AI) يكمّل المشروع من نفس النقطة.
 
-- Site: https://quran-academy-nine-dusky.vercel.app (Vercel auto-deploys `main`)
-- Repo: adarwesh701-byte/Quran-Academy — the whole app is `index.html` (single-file SPA)
-- Database: Supabase project `ymycfxmigvvermsdnagm`
-- Edge functions: `ai` (Gemini → Pollinations, owner only), `art-gen`, `tts`, `vclone`, `book-import`
+## 1) المشروع متكوّن من إيه
+| الجزء | فين | مين يقدر يدخله |
+|---|---|---|
+| الكود كله | GitHub: `adarwesh701-byte/Quran-Academy` (ملف واحد `index.html` + `sw.js` + `en_natural.json` + `docs/`) | انت (المالك) + أي حد تضيفه Collaborator |
+| الاستضافة | Vercel — بيتنشر لوحده من فرع `main` | حساب Vercel بتاعك |
+| الداتابيز والتخزين والدوال | Supabase project `ymycfxmigvvermsdnagm` | حساب Supabase بتاعك |
+| الاستنساخ | `docs/itqan_voice_colab.ipynb` + `docs/vgen.py` + `docs/vupload.py` على Google Colab | أي حساب جوجل |
 
-## How releases are made
-1. Write a block `/* ===== vNNN ... */ (function(){ ... })();` and insert it right before the line `// بدء التشغيل` in `index.html`.
-2. Bump `const UI_VERSION = "YYYY-MM-DD-vNNN"` and the cache name `itqan-vNNN` in `sw.js`.
-3. Extract the main `<script>` (the one after the supabase-js tag) and run `node --check` on it.
-4. Commit and push to `main`.
+## 2) تدّي حد صلاحية (من غير ما تديله كلمة سرك أبدًا)
+1. **GitHub:** الريبو ← Settings ← Collaborators ← Add people ← إيميله/اسمه ← Write.
+2. **Supabase:** Organization ← Team ← Invite ← إيميله ← Developer (مش Owner).
+3. **Vercel:** Team Settings ← Members ← Invite (لو محتاج يشوف النشر بس).
+4. **لما يخلص:** شيل صلاحياته من نفس الأماكن.
+> متديش أبدًا: كلمة سر حسابك، مفتاح `service_role` بتاع Supabase في رسالة، أو مفاتيح الدفع.
 
-Globals worth knowing: `state`, `render`, `navigate`, `go16(route,arg)`, `useData(key,fn)`, `sb` (Supabase client), `setv(key,default)` / `saveSetting16(key,value)` (site-wide settings), `ownerSettings()` (owner settings page, wrapped by each version), `realRole()`, `toast`, `esc`, `L()`.
+## 3) تدّيه لـ AI تاني يكمّل
+- **Claude (اشتراك تاني أو Claude Code):** افتح محادثة جديدة ← اربط GitHub ← قوله:
+  «اقرا `docs/HANDOFF.md` في الريبو `adarwesh701-byte/Quran-Academy` وكمّل من (اكتب الطلب). اتبع طريقة الإصدارات المكتوبة فيه، واتكلم معايا مصري.»
+  ولو عايزه يعدّل الداتابيز: اربط Supabase من الـ Connectors.
+- **AI مجاني (زي Gemini أو ChatGPT):** ابعتله الملف ده + الجزء اللي عايز تعدّله من `index.html` (مش الملف كله — كبير). خليه يكتب «بلوك نسخة جديدة» زي اللي تحت، والصقه انت قبل سطر `// بدء التشغيل`، وارفع على GitHub (من الموقع نفسه: Add file ← Upload).
 
-## Rules the owner set
-- Egyptian Arabic in chat, questions numbered.
-- English content must read as original English. Quran, text in «» or ﴿﴾, and Arabic lesson words stay Arabic.
-- Nothing AI-generated reaches students before the owner approves it (`art_assets` status `review` → owner approves).
-- The Quran is never AI-generated. Modern copyrighted books are never published in full.
+## 4) طريقة الإصدارات (الأمان: كل تعديل في بلوك لوحده، والقديم مايتمسحش)
+1. اكتب بلوك جديد: `/* ===== vNNN: وصف ===== */ (function(){ ... })();`
+2. حطه قبل السطر `// بدء التشغيل` في `index.html`.
+3. غيّر `const UI_VERSION = "YYYY-MM-DD-vNNN"`، وغيّر `itqan-vNNN` في `sw.js`.
+4. اختبر: انسخ السكربت الرئيسي (اللي بعد سطر supabase-js) لملف وشغّل `node --check`.
+5. اعمل Commit وPush على `main`، وVercel بينشر في دقيقة.
+6. **لو حاجة باظت:** في Vercel ← Deployments ← اختار النسخة اللي قبلها ← Promote to Production. ده بيرجّع الموقع في ثانية.
 
-## Latest work (v157–v159)
-- Layout editor: classic / side rail / mixed / bottom dock, full width, numbered-grid dragging, per-page layouts, saved and preset designs (`shell158`, `snaps158` settings).
-- Background image (`bgimg158`), custom icons and pages (`cust158`, route `cp158`).
-- Wording requests table `text_requests` with owner approval.
-- Word-by-word recitation audio from quran.com in the mushaf, plus richer mistake marking.
+## 5) أهم الدوال اللي جوه الكود
+`state`، `render`، `navigate(route)`، `go16(route,arg)`، `useData(key,fn)`، `sb` (Supabase)، `setv/saveSetting16` (إعدادات الموقع)، `ownerSettings()` (صفحة الإعدادات — كل نسخة بتضيف كارت)، `realRole()`، `toast`، `esc`، `L()`، `ART` (الصور)، `vlHash` (هاش الأصوات)، `DT` و`EN146` (الترجمة).
 
-## Still open
-- About 7,700 English UI strings in `en_natural.json`: continue from `mid.json` index 1650.
-- Private per-student voice notes that auto-delete after 3 days.
-- Classroom annotation overlay.
-- Publishing centre (PPT/PDF/Drive).
-- Payment gateway (Paymob suggested).
-- Voice clone: Colab notebook `docs/itqan_voice_colab.ipynb`. The owner uploads the generated zips from Dashboard → Simulator → «🎙️ صوتك».
+## 6) جداول مهمة في Supabase
+`profiles`، `content_sections`، `contents`، `books`/`book_rows`، `art_assets` (الصور: pending ← review ← done)، `voice_lines` و`vclone_jobs` (الأصوات)، `tr_en` (الترجمة الإنجليزي)، `text_requests` (طلبات تصحيح الكلام)، `student_tasks` و`notifications`، `private_settings` (المفاتيح السرية).
+
+## 7) قواعد المالك
+- الكلام مع المالك بالمصري، والأسئلة مرقّمة.
+- الإنجليزي لازم يبان أصلي مش مترجم. القرآن، وأي حاجة بين «» أو ﴿﴾، والكلمات العربية اللي بتتعلّم، تفضل عربي.
+- أي صورة بالذكاء الاصطناعي مش بتظهر للطلاب غير بعد موافقة المالك. الأصوات المستنسخة بتتنشر على طول.
+- القرآن عمره ما يتعمل بالذكاء الاصطناعي، والكتب الحديثة اللي ليها حقوق ماتتنشرش كاملة.
+
+## 8) اللي لسه مفتوح
+راجع آخر رسالة في المحادثة مع Claude (قايمة «اللي ما خلصش»).
