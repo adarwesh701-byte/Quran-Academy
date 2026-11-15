@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v142";
+const UI_VERSION = "2026-11-14-v143";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21314,6 +21314,43 @@ document.head.insertAdjacentHTML("beforeend", `<style>#lk142{position:fixed;top:
 .lk142ed{outline:2px dashed #dc2626;outline-offset:2px}.lk142row{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;margin:.6rem auto;max-width:1100px;padding:0 .8rem}.lk142add{margin:.25rem}
 #lk142pop{position:fixed;inset-inline-end:12px;top:200px;z-index:1300;width:min(30rem,94vw);max-height:65vh;overflow:auto;background:var(--card,#fff);border:2px solid #0f766e;border-radius:14px;padding:.8rem;box-shadow:0 18px 40px #0004}
 .lk142r{display:grid;grid-template-columns:1fr 1.2fr auto auto;gap:.3rem;align-items:center;padding:.3rem 0;border-top:1px dashed var(--line,#ddd);font-size:.8rem}.lk142r code{direction:ltr;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lk142r.ed code{color:#dc2626;font-weight:700}.lk142flash{outline:4px solid #f59e0b!important;outline-offset:3px}</style>`);
+
+/* ---------- v143: «مكتبة الكتب المشروحة» — قارئ عام لأي كتاب منظّم (أولها: فقه السنة) — أبواب، بحث، تقدّم، والآيات من نص المصحف ---------- */
+const BKS143 = [
+  { id: "fqs", file: "fqs.json", ic: "⚖️", t: "فقه السنة — السيد سابق", en: "Fiqh as-Sunnah — Sayyid Sabiq", dom: "sciences", kw: "فقه طهارة وضوء غسل تيمم صلاة زكاة صيام حج أذكار" }
+];
+function bk143Data(id) { const B = BKS143.find(b => b.id === id); return useData("bk143:" + id, async () => { const r = await fetch(B.file + "?v=" + UI_VERSION); if (!r.ok) throw new Error(B.file); return await r.json(); }); }
+function bk143Item(it, i) { if (it.h) return `<h4 class="tjbh">${esc(it.h)}</h4>`; let t = esc(it.t).replace(/﴿([^﴾]+)﴾/g, '<span class="bkay notr" lang="ar">﴿$1﴾</span>').replace(/^([^:،(﴿]{2,42}):/, "<b>$1:</b>"); return `<div class="tjbi ${it.ind ? "ind" : ""}">${t}</div>`; }
+function renderBk143() {
+  const ar = state.lang === "ar"; const st = state.bk143 || (state.bk143 = { id: (state.pageArg || BKS143[0].id), c: null, q: "" }); if (state.pageArg && state.pageArg !== st.id) { st.id = state.pageArg; st.c = null; }
+  const B = BKS143.find(b => b.id === st.id) || BKS143[0]; const D = bk143Data(B.id);
+  const tabs = BKS143.length > 1 ? `<div class="motabs" style="margin-bottom:.6rem">${BKS143.map(b => `<button class="${b.id === B.id ? "on" : ""}" onclick="state.bk143={id:'${b.id}',c:null,q:''};render()">${b.ic} ${esc(ar ? b.t : b.en)}</button>`).join("")}</div>` : "";
+  if (!D || !D.chs) return pageWrap(B.ic, ar ? B.t : B.en, "", tabs + loadingBox());
+  let done = {}; try { done = JSON.parse(localStorage.getItem("itqan_bk_" + B.id) || "{}"); } catch (e) {}
+  let body;
+  if (st.q && st.q.trim().length > 1) {
+    const q = st.q.trim(); const nq = (s) => String(s).replace(/[ً-ْٰ]/g, "").replace(/[إأآ]/g, "ا"); const Q = nq(q); const hits = [];
+    D.chs.forEach(c => c.items.forEach((it, i) => { if (nq(it.t || it.h || "").includes(Q)) hits.push([c, it, i]); }));
+    body = `<div class="card"><h3>🔍 ${hits.length} ${ar ? "نتيجة" : "results"}</h3>${hits.slice(0, 80).map(([c, it, i]) => `<div class="tjbhit"><button class="badge" onclick="state.bk143.c=${c.n};state.bk143.q='';render();window.scrollTo({top:0})">${esc(c.t)}</button>${bk143Item(it, i)}</div>`).join("") || `<p class="muted">—</p>`}</div>`;
+  } else if (st.c) {
+    const c = D.chs.find(x => x.n === st.c) || D.chs[0]; const ix = D.chs.indexOf(c); const pv = D.chs[ix - 1], nx = D.chs[ix + 1];
+    body = `<div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem"><button class="btn btn-o" onclick="state.bk143.c=null;render()">← ${ar ? "الفهرس" : "Contents"}</button><label class="row xs" style="gap:.3rem;margin-inline-start:auto"><input type="checkbox" ${done[c.n] ? "checked" : ""} onchange="bk143Done('${B.id}',${c.n},this.checked)"> ${ar ? "خلصت الباب ده" : "Done"}</label></div>
+      <div class="tjbch"><h3>${c.n}. ${esc(c.t)} ${c.pg ? `<small class="xs muted">(${esc(c.pg)})</small>` : ""}</h3>${c.items.map(bk143Item).join("")}</div>
+      <div class="row" style="gap:.4rem;justify-content:space-between;margin-top:1rem">${pv ? `<button class="btn btn-o" onclick="state.bk143.c=${pv.n};render();window.scrollTo({top:0})">→ ${esc(pv.t)}</button>` : "<span></span>"}${nx ? `<button class="btn btn-p" onclick="state.bk143.c=${nx.n};render();window.scrollTo({top:0})">${esc(nx.t)} ←</button>` : ""}</div></div>`;
+  } else {
+    const nd = D.chs.filter(c => done[c.n]).length;
+    body = `<div class="card"><div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap"><b>📊 ${ar ? "تقدمك" : "Progress"}: ${nd}/${D.chs.length}</b><div class="tjbbar"><i style="width:${Math.round(nd * 100 / D.chs.length)}%"></i></div></div></div>
+      <div class="tjbgrid">${D.chs.map(c => `<button class="tjbcard ${done[c.n] ? "ok" : ""}" onclick="state.bk143.c=${c.n};render();window.scrollTo({top:0})"><span class="n">${c.n}</span><b>${esc(c.t)}</b><small>${c.items.filter(x => !x.h).length} ${ar ? "مسألة" : "points"}${c.pg ? " · " + esc(c.pg) : ""}</small>${done[c.n] ? "<em>✅</em>" : ""}</button>`).join("")}</div>`;
+  }
+  return pageWrap(B.ic, ar ? B.t : B.en, "", tabs + `<div class="card" style="margin-bottom:.8rem"><input class="input" placeholder="${ar ? "🔍 دوّر في الكتاب كله (مثلًا: التيمم، المذي، سجود السهو)" : "🔍 Search the book"}" value="${esc(st.q || "")}" oninput="state.bk143.q=this.value;clearTimeout(window.__bkT);window.__bkT=setTimeout(()=>{render();const i=document.querySelector('#app .input');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},350)"><p class="xs muted" style="margin:.4rem 0 0">📖 ${esc(D.src || "")}. ${ar ? "الآيات بنص مصحف المدينة (حفص)." : "Verses from the Madinah Mushaf (Hafs)."}</p></div>${body}`);
+}
+function bk143Done(id, n, v) { let d = {}; try { d = JSON.parse(localStorage.getItem("itqan_bk_" + id) || "{}"); } catch (e) {} if (v) d[n] = 1; else delete d[n]; try { localStorage.setItem("itqan_bk_" + id, JSON.stringify(d)); } catch (e) {} render(); }
+PAGES16.push("bk");
+const _render143 = render;
+render = function () { if (state.route === "bk") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderBk143(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render143.apply(this, arguments); };
+const _DOMAINS143 = DOMAINS; DOMAINS = function () { const ds = _DOMAINS143(); BKS143.forEach(B => { const d = ds.find(x => x.k === B.dom) || ds.find(x => x.k === "sciences"); if (d && d.tools && !d.tools.some(t => String(t[2]).includes("'bk','" + B.id + "'"))) d.tools.unshift([B.ic, state.lang === "ar" ? B.t + " (مشروح منظّم)" : B.en, `go16('bk','${B.id}')`, ""]); }); return ds; };
+try { const _sr143 = srIndex109; srIndex109 = function () { const a = _sr143(); try { BKS143.forEach(B => a.push([B.ic + " " + B.t, `go16('bk','${B.id}')`, B.kw])); } catch (e) {} return a; }; } catch (e) {}
+document.head.insertAdjacentHTML("beforeend", `<style>.bkay{font-family:'Amiri Quran','Amiri',serif;color:#0f766e;font-size:1.08em;line-height:2.1}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
