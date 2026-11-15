@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v146";
+const UI_VERSION = "2026-11-14-v147";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21102,7 +21102,6 @@ async function abybUpload(files) {
   const idx = ((abybIndex() || [[]])[0] || []).slice();
   for (const f of files) {
     const path = f.webkitRelativePath || f.name; const lvM = path.match(/(الأول|الثاني|الثالث|الرابع)/); const lv = lvM ? { "الأول": 1, "الثاني": 2, "الثالث": 3, "الرابع": 4 }[lvM[1]] : ABYB.lv; const unit = +f.name.match(/U(\d+)/i)[1];
-    if (lv === 4) { say_(`⏭️ الكتاب الرابع — U${unit} (هنضيفه بعد ما نخلص الأول والتاني والتالت)`); continue; }
     if (!unit) continue; say_(`📂 ${ABY_N[lv]} — الوحدة ${unit}: بقرأ الملف…`);
     let P; try { P = await abybParse(f); } catch (e) { say_("❌ " + f.name + ": " + e.message); continue; }
     const base = abybKey(lv, unit); let k = 0;
@@ -21166,9 +21165,9 @@ function abybRe() { const b = document.getElementById("abybBody"); if (b) b.inne
 function abybTestNew(U) { const pool = []; U.slides.forEach((S, si) => S.boxes.forEach((b, bi) => { if (b.k === "t" && abybNorm(b.t).length >= 2 && abybNorm(b.t).length <= 40) pool.push([si, bi]); })); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; } ABYB.test = { q: pool.slice(0, 12), i: 0, ok: 0, ans: null }; }
 function abybBody() {
   const ix = abybIndex(); const all = Array.isArray(ix) ? (ix[0] || []) : null; const own = realRole() === "owner" && !state.preview;
-  const up = own ? `<div class="card" style="margin-bottom:.8rem;border:2px dashed var(--accent)"><b>📤 للمالك: ارفع وحدات الكتاب (المستويات ١–٣)</b><p class="xs muted" style="margin:.3rem 0 .5rem">اختار فولدر «Arabya pptx» كله أو فولدر مستوى. الموقع بيقرأ كل شريحة على جهازك: صفحة الكتاب، ومربعات الإجابات في مكانها بالظبط، وصح/غلط، والأصوات — ويرفعهم ويرتبهم بالوحدة والدرس. الكتاب الرابع بيتخطّى دلوقتي. سيب الصفحة مفتوحة لحد ما يخلص.</p>
+  const up = own ? `<div class="card" style="margin-bottom:.8rem;border:2px dashed var(--accent)"><b>📤 للمالك: ارفع وحدات الكتاب (المستويات ١–٤)</b><p class="xs muted" style="margin:.3rem 0 .5rem">اختار فولدر «Arabya pptx» كله أو فولدر مستوى. الموقع بيقرأ كل شريحة على جهازك: صفحة الكتاب، ومربعات الإجابات في مكانها بالظبط، وصح/غلط، والأصوات — ويرفعهم ويرتبهم بالوحدة والدرس. سيب الصفحة مفتوحة لحد ما يخلص.</p>
     <div class="row" style="gap:.4rem;flex-wrap:wrap"><label class="btn btn-p">📁 اختار الفولدر<input type="file" hidden webkitdirectory multiple onchange="abybUpload(this.files)"></label><label class="btn btn-o">📄 اختار ملفات<input type="file" hidden multiple accept=".pptx" onchange="abybUpload(this.files)"></label></div><div id="abybLog" class="xs" style="max-height:12rem;overflow:auto;margin-top:.4rem"></div></div>` : "";
-  const tabs = `<div class="motabs">${[1, 2, 3].map(n => `<button class="${n === ABYB.lv ? "on" : ""}" onclick="ABYB.lv=${n};ABYB.u=null;abybRe()">📗 ${ABY_N[n]}${all ? ` <small>(${all.filter(o => o.lv === n).length})</small>` : ""}</button>`).join("")}</div>`;
+  const tabs = `<div class="motabs">${[1, 2, 3, 4].map(n => `<button class="${n === ABYB.lv ? "on" : ""}" onclick="ABYB.lv=${n};ABYB.u=null;abybRe()">📗 ${ABY_N[n]}${all ? ` <small>(${all.filter(o => o.lv === n).length})</small>` : ""}</button>`).join("")}</div>`;
   if (!all) return up + tabs + loadingBox();
   if (ABYB.u == null) {
     const L = all.filter(o => o.lv === ABYB.lv).sort((a, b) => a.unit - b.unit); let prog = {}; try { prog = JSON.parse(localStorage.getItem("itqan_abyb") || "{}"); } catch (e) {}
@@ -21196,7 +21195,7 @@ function abybBody() {
   return up + head + `<div class="card">${audH}${ctl}${abybStage(U, S, si)}${nav}</div>`;
 }
 function abybTestAns() { const T = ABYB.test; const U = abybUnit(ABYB.lv, ABYB.u); const [si, bi] = T.q[T.i]; const el = document.querySelector(".abybb.inp"); const v = el ? el.value : ""; const t = U.slides[si].boxes[bi].t; T.ans = !!v && abybNorm(v) === abybNorm(t); if (T.ans) T.ok++; abybRe(); }
-function renderAbyb() { return pageWrap("📗", "العربية الفصحى — الكتاب التفاعلي", "صفحات الكتاب نفسها، والإجابات من ملفات الشرح في مكانها، والتسجيلات جملة جملة — للمستويات الأول والتاني والتالت", `<div id="abybBody">${abybBody()}</div>`); }
+function renderAbyb() { return pageWrap("📗", "العربية الفصحى — الكتاب التفاعلي", "صفحات الكتاب نفسها، والإجابات من ملفات الشرح في مكانها، والتسجيلات جملة جملة — للمستويات الأربعة", `<div id="abybBody">${abybBody()}</div>`); }
 PAGES16.push("abyb");
 const _render140 = render;
 render = function () { if (state.route === "abyb") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderAbyb(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } const r_ = _render140.apply(this, arguments); try { if (state.route === "arabiya") { const pw = document.querySelector("#app .card"); if (pw && !document.getElementById("abybLink")) pw.insertAdjacentHTML("beforebegin", `<div id="abybLink" class="card" style="margin-bottom:.8rem;background:linear-gradient(135deg,#ecfdf5,#fff)"><b>📗 جديد: الكتاب التفاعلي</b><p class="xs muted" style="margin:.3rem 0 .5rem">صفحات الكتاب نفسها، والتمارين بحلولها، واختبار لكل وحدة، والتسجيلات جملة جملة.</p><button class="btn btn-p" onclick="go16('abyb')">افتح الكتاب التفاعلي ←</button></div>`); } } catch (e) {} return r_; };
@@ -21472,6 +21471,86 @@ document.addEventListener("click", async (e) => {
 }, true);
 setTimeout(() => { if (state.lang === "en") en146Load(); }, 300);
 document.head.insertAdjacentHTML("beforeend", `<style>#en146{position:fixed;bottom:5.5rem;inset-inline-start:12px;z-index:1250;background:#1d4ed8;color:#fff;border:0;border-radius:999px;padding:.5rem .9rem;font-weight:700;box-shadow:0 6px 18px #1d4ed855;cursor:pointer}.en146on #app *:hover{outline:2px dashed #1d4ed8;outline-offset:2px;cursor:text}</style>`);
+
+/* ---------- v147: تنظيم الموقع بـ«أبواب» + مكتبة الكتب المشروحة + تصحيح أي نص في أي لغة + كلمات ممنوع ترجمتها + فتح الكتاب الرابع ---------- */
+const DOORS147 = [
+  { id: "quran", ic: "🕌", ar: "القرآن", en: "Quran", sar: "حفظ ومراجعة، تجويد، قراءات، تفسير وعلوم", sen: "Memorization, tajweed, qiraat, tafsir & sciences", c: "#0f766e", doms: ["hifz", "tajweed", "sciences"] },
+  { id: "voice", ic: "🎼", ar: "الصوت والمقامات", en: "Voice & maqamat", sar: "السلالم، الآهات، الموالف، المسابقات", sen: "Scales, aahs, tuner, competitions", c: "#7c3aed", doms: ["maqamat", "competitions"] },
+  { id: "arabic", ic: "✍️", ar: "العربي", en: "Arabic", sar: "فصحى، مصري، خليجي، الكتاب التفاعلي", sen: "Fusha, Egyptian, Gulf, interactive book", c: "#db2777", doms: ["arabic"] },
+  { id: "more", ic: "🧰", ar: "الفصل والمزيد", en: "Classroom & more", sar: "الحصص، المكتبة، كل الأدوات", sen: "Lessons, library, all tools", c: "#475569", doms: [] }
+];
+function door147Of(d) { const O = orgGet(); const x = (O.d || {})[d.k] || {}; if (x.door) return x.door; const f = DOORS147.find(o => o.doms.includes(d.k)); return f ? f.id : "more"; }
+function doors147Html() {
+  const ar = state.lang === "ar"; const ds = DOMAINS();
+  return `<section class="sec" style="padding:.8rem 0"><div class="wrap"><h2 class="dr147h">${ar ? "عايز تتعلم إيه؟" : "What would you like to learn?"}</h2><div class="dr147">${DOORS147.map(o => { const n = ds.filter(d => door147Of(d) === o.id).reduce((s, d) => s + (d.tools || []).length, 0); return `<button class="dr147d" style="--c:${o.c}" onclick="go16('world','${o.id}')"><span class="i">${o.ic}</span><b>${ar ? o.ar : o.en}</b><small>${ar ? o.sar : o.sen}</small><em>${n} ${ar ? "أداة" : "tools"} ←</em></button>`; }).join("")}</div></div></section>`;
+}
+const _renderHome147 = renderHome; renderHome = function () { const h = _renderHome147(); try { const b = doors147Html(); const k = h.indexOf("</section>"); return k > 0 ? h.slice(0, k + 10) + b + h.slice(k + 10) : b + h; } catch (e) { return h; } };
+function renderWorld147() {
+  const ar = state.lang === "ar"; const id = state.pageArg || "quran"; const o = DOORS147.find(x => x.id === id) || DOORS147[0]; const ds = DOMAINS().filter(d => door147Of(d) === o.id);
+  const tabs = `<div class="motabs" style="margin-bottom:.8rem">${DOORS147.map(x => `<button class="${x.id === o.id ? "on" : ""}" onclick="go16('world','${x.id}')">${x.ic} ${ar ? x.ar : x.en}</button>`).join("")}</div>`;
+  const body = ds.map(d => `<div class="card w147" style="--c:${d.color || o.c}"><div class="row" style="gap:.5rem;align-items:center"><span style="font-size:1.6rem">${esc(d.ic || "📁")}</span><div><h3 style="margin:0">${esc(orgTitle(d.t || {}, d.k))}</h3>${d.s ? `<p class="xs muted" style="margin:.1rem 0 0">${esc(orgTitle(d.s, ""))}</p>` : ""}</div></div><div class="w147g">${(d.tools || []).map(t => `<button class="w147t" onclick="${esc(t[2])}"><span>${esc(t[0])}</span><b>${esc(t[1])}</b></button>`).join("")}</div></div>`).join("") || `<div class="card muted">—</div>`;
+  const extra = o.id === "more" ? `<div class="card w147" style="--c:#475569"><h3>📚 ${ar ? "المكتبة المشروحة" : "Explained books"}</h3><div class="w147g">${books147().map(b => `<button class="w147t" onclick="${b[2]}"><span>${b[0]}</span><b>${esc(b[1])}</b></button>`).join("")}</div></div>` : "";
+  return pageWrap(o.ic, ar ? o.ar : o.en, ar ? o.sar : o.sen, tabs + body + extra);
+}
+function books147() { const ar = state.lang === "ar"; return [["📘", ar ? "التجويد المفصّل (التجويد المصور + د. سعاد)" : "Detailed Tajweed", "go16('tjb')"], ...BKS143.map(B => [B.ic, ar ? B.t : B.en, `go16('bk','${B.id}')`]), ["📗", ar ? "العربية الفصحى — الكتاب التفاعلي" : "Fusha — interactive book", "go16('abyb')"]]; }
+PAGES16.push("world");
+const _render147 = render;
+render = function () { if (state.route === "world") { const app = document.getElementById("app"); if (!app) return; let b; try { b = renderWorld147(); } catch (e) { console.error(e); b = `<div class="card muted">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} return; } return _render147.apply(this, arguments); };
+/* في المنظّم: كل قسم تختار هو تحت أنهي «باب» */
+const _orgBody147 = orgBody; orgBody = function () { let h = _orgBody147(); const ds = orgRaw(); ds.forEach(d => { const cur = door147Of(d); const sel = `<label class="xs" title="الباب"><select onchange="orgSetD('${d.k}',{door:this.value})">${DOORS147.map(o => `<option value="${o.id}" ${o.id === cur ? "selected" : ""}>${o.ic} ${o.ar}</option>`).join("")}</select></label>`; h = h.replace(`<span class="orgfb"><button onclick="orgMoveD('${d.k}',-1)"`, `<span class="orgfb">${sel}<button onclick="orgMoveD('${d.k}',-1)"`); }); return h; };
+
+/* ---- تصحيح أي نص في أي لغة (مش الإنجليزي بس) ---- */
+function tx147Map(lang) { const all = setv("txfix", null) || {}; const m = Object.assign({}, all[lang] || {}); if (lang === "en") Object.assign(m, setv("enfix", null) || {}); return m; }
+en146Map = function () { return tx147Map(state.lang); };
+en146Fix = function (root) {
+  const M = tx147Map(state.lang); if (!Object.keys(M).length) return; root = root || document.body; if (!root) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const k = n.data.trim(); if (k && M[k] != null && M[k] !== k) n.data = n.data.replace(k, M[k]); }
+};
+const _render147b = render; render = function () { const r = _render147b.apply(this, arguments); try { if (state.lang !== "en") en146Fix(); tx147Btn(); } catch (e) {} return r; };
+function tx147Btn() {
+  if (realRole() !== "owner" || state.preview) { const b = document.getElementById("en146"); if (b) b.remove(); return; }
+  let b = document.getElementById("en146"); if (!b) { b = document.createElement("button"); b.id = "en146"; document.body.appendChild(b); b.onclick = () => { EN146.on = !EN146.on; document.body.classList.toggle("en146on", EN146.on); tx147Btn(); toast(EN146.on ? (state.lang === "ar" ? "دوس على أي نص وعدّله — بيتحفظ للكل" : "Tap any text to rewrite it — saved for everyone.") : "OK"); }; }
+  b.textContent = EN146.on ? (state.lang === "ar" ? "✅ خلصت تعديل" : "✅ Done") : (state.lang === "ar" ? "✏️ صحّح أي كلام" : "✏️ Fix wording");
+  if (!document.getElementById("nt147")) { const c = document.createElement("button"); c.id = "nt147"; c.textContent = "🚫🌐"; c.title = "كلمات ممنوع ترجمتها"; c.onclick = nt147Edit; document.body.appendChild(c); }
+}
+en146Btn = tx147Btn;
+/* التعديل: نفس منطق v146 بس بيحفظ للغة الحالية — وفي العربي بيحفظ للعربي */
+document.addEventListener("click", async (e) => {
+  if (!EN146.on || state.lang === "en") return; if (e.target.closest("#en146,#nt147")) return; const el = e.target; if (!el || el.closest("#toast")) return;
+  const tn = [...el.childNodes].filter(x => x.nodeType === 3 && x.data.trim()); const cur = (tn.length ? tn.map(x => x.data).join(" ") : el.textContent || "").replace(/\s+/g, " ").trim(); if (!cur) return;
+  e.preventDefault(); e.stopPropagation();
+  const v = prompt(state.lang === "ar" ? "اكتب النص الصح (هيتغير للكل في العربي):" : "Rewrite this text (saved for everyone in this language):", cur); if (v == null || !v.trim() || v.trim() === cur) return;
+  const all = Object.assign({}, setv("txfix", null) || {}); all[state.lang] = Object.assign({}, all[state.lang] || {}, { [cur]: v.trim() });
+  try { Object.keys(DT.mem).forEach(k => { if (String(DT.mem[k]).trim() === cur) DT.mem[k] = v.trim(); }); dtSave(); } catch (e2) {}
+  try { await saveSetting16("txfix", all); } catch (e3) { return toast(e3.message || "error", true); }
+  tn.forEach(x => { x.data = x.data.replace(x.data.trim(), v.trim()); }); if (!tn.length) el.textContent = v.trim(); toast("✅");
+}, true);
+/* ---- كلمات ممنوع ترجمتها لأي لغة ---- */
+function nt147List() { const l = setv("notrWords", null); return Array.isArray(l) ? l.filter(Boolean) : []; }
+async function nt147Edit() {
+  const cur = nt147List().join("\n"); const v = prompt("الكلمات أو الجمل اللي مش عايزها تتترجم لأي لغة — كل واحدة في سطر (أو افصل بـ ، ):\nمثال: إتقان، مقام، تجويد، بياتي", cur.replace(/\n/g, "، "));
+  if (v == null) return; const list = [...new Set(v.split(/[\n،,]/).map(s => s.trim()).filter(Boolean))]; await saveSetting16("notrWords", list);
+  try { DT.mem = {}; ["en", "fr", "de", "es", "it", "tr", "ru", "ur", "fa", "id", "ms", "zh", "bn", "hi", "ps"].forEach(l => localStorage.removeItem("dt:" + l)); DT.lang = null; } catch (e) {}
+  toast(`✅ ${list.length} كلمة مش هتتترجم — الصفحات هتتترجم من جديد`); render();
+}
+const _tt147 = translateTexts;
+translateTexts = async function (texts, sl, tl) {
+  const W = nt147List().sort((a, b) => b.length - a.length); if (!W.length || sl === tl) return _tt147.apply(this, arguments);
+  const src = {}, maps = {};
+  Object.keys(texts).forEach(k => { let s = String(texts[k] || ""); const m = []; W.forEach(w => { if (s.includes(w)) { s = s.split(w).join(`{nt${m.length}}`); m.push(w); } }); src[k] = s; maps[k] = m; });
+  const out = await _tt147.call(this, src, sl, tl);
+  Object.keys(out).forEach(k => { out[k] = String(out[k]).replace(/\{nt(\d+)\}/g, (x, i) => maps[k][+i] != null ? maps[k][+i] : x); });
+  return out;
+};
+const _dtRun147 = dtRun; dtRun = function (root) { const W = nt147List(); if (W.length && dtActive()) { try { const w = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const k = n.data.trim(); if (k && W.includes(k) && n.parentElement && !n.parentElement.closest(".notr")) n.parentElement.classList.add("notr"); } } catch (e) {} } return _dtRun147.apply(this, arguments); };
+/* ---- فتح الكتاب الرابع من العربية الفصحى ---- */
+document.head.insertAdjacentHTML("beforeend", `<style>
+.dr147h{text-align:center;margin:.2rem 0 .8rem}.dr147{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem}
+.dr147d{position:relative;text-align:start;border:0;border-radius:20px;padding:1.1rem 1rem;color:#fff;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 55%,#000));box-shadow:0 10px 26px color-mix(in srgb,var(--c) 35%,transparent);cursor:pointer;display:flex;flex-direction:column;gap:.3rem;transition:transform .15s}.dr147d:hover{transform:translateY(-3px)}.dr147d .i{font-size:2.2rem}.dr147d b{font-size:1.2rem}.dr147d small{opacity:.9}.dr147d em{font-style:normal;font-size:.8rem;opacity:.85;margin-top:.3rem}
+.w147{border-inline-start:5px solid var(--c);margin-bottom:.8rem}.w147g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem;margin-top:.7rem}.w147t{display:flex;flex-direction:column;align-items:center;gap:.25rem;border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);border-radius:14px;padding:.8rem .4rem;cursor:pointer;text-align:center}.w147t:hover{border-color:var(--c);box-shadow:0 4px 14px color-mix(in srgb,var(--c) 25%,transparent)}.w147t span{font-size:1.6rem}
+#nt147{position:fixed;bottom:8.4rem;inset-inline-start:12px;z-index:1250;background:#b91c1c;color:#fff;border:0;border-radius:999px;padding:.5rem .7rem;font-weight:700;cursor:pointer}.en146on #app *:hover{outline:2px dashed #1d4ed8;outline-offset:2px;cursor:text}
+
+</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
