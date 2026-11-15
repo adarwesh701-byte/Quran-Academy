@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-14-v137";
+const UI_VERSION = "2026-11-14-v138";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -20826,6 +20826,37 @@ qrCompare105 = function () {
 };
 document.head.insertAdjacentHTML("beforeend", `<style>.qpb{border:0;background:transparent;cursor:pointer;font-size:1rem;padding:0 .2rem}.qrcmp .end.on{background:#fde68a;border-radius:6px}</style>`);
 setTimeout(() => { try { if (state.route === "qiraat") qpLoad137(); } catch (e) {} }, 3000);
+
+/* ================= v138: «سمّعني» — جنب أي كلمة فيها 🔊 في التجويد: الطالب يسجّل نفس الكلمة والموقع يقارن صوته بصوت القارئ (النغمة والإيقاع والطول) ويطلّع نسبة ونصيحة ================= */
+async function smDecode(blobOrUrl) { const ac = aahCtx(); const ab = typeof blobOrUrl === "string" ? await (await fetch(blobOrUrl)).arrayBuffer() : await blobOrUrl.arrayBuffer(); return await ac.decodeAudioData(ab); }
+function smFeat(buf) { const d = buf.getChannelData(0), sr = buf.sampleRate, hop = Math.round(sr * .02), win = 1024; const E = [], F = [], Z = []; for (let i = 0; i + win < d.length; i += hop) { let e = 0, z = 0; for (let k = 0; k < win; k++) { e += d[i + k] * d[i + k]; if (k && (d[i + k] > 0) !== (d[i + k - 1] > 0)) z++; } E.push(Math.sqrt(e / win)); Z.push(z / win); const f = e / win > 1e-4 ? tnPitch(d.subarray(i, i + win * 2 > d.length ? d.length : i + win * 2), sr) : 0; F.push(f > 60 && f < 800 ? 12 * Math.log2(f / 110) : null); }
+  const mx = Math.max(...E, 1e-6); let a = E.findIndex(x => x > mx * .12), b = E.length - 1 - [...E].reverse().findIndex(x => x > mx * .12); if (a < 0) { a = 0; b = E.length - 1; }
+  const voiced = F.slice(a, b + 1).filter(x => x != null); const med = voiced.length ? voiced.sort((x, y) => x - y)[voiced.length >> 1] : 0;
+  return { e: E.slice(a, b + 1).map(x => x / mx), z: Z.slice(a, b + 1), f: F.slice(a, b + 1).map(x => x == null ? null : x - med), dur: (b - a + 1) * .02 }; }
+function smDTW(A, B, dist) { const n = A.length, m = B.length; if (!n || !m) return 1; const D = new Float32Array((n + 1) * (m + 1)).fill(1e9); D[0] = 0; const w = Math.max(8, Math.abs(n - m) + 10);
+  for (let i = 1; i <= n; i++) for (let j = Math.max(1, i - w); j <= Math.min(m, i + w); j++) { const c = dist(A[i - 1], B[j - 1]); D[i * (m + 1) + j] = c + Math.min(D[(i - 1) * (m + 1) + j], D[i * (m + 1) + j - 1], D[(i - 1) * (m + 1) + j - 1]); } return D[n * (m + 1) + m] / (n + m); }
+function smScore(R, S) {
+  const pa = R.e.map((e, i) => [e, R.z[i] * 8, R.f[i]]), pb = S.e.map((e, i) => [e, S.z[i] * 8, S.f[i]]);
+  const d = smDTW(pa, pb, (x, y) => Math.abs(x[0] - y[0]) + Math.abs(x[1] - y[1]) * .5 + (x[2] != null && y[2] != null ? Math.min(1, Math.abs(x[2] - y[2]) / 6) * .6 : (x[2] == null) !== (y[2] == null) ? .3 : 0));
+  const shape = Math.max(0, Math.min(1, 1 - d * 1.6)); const dr = S.dur / Math.max(.05, R.dur); const len = Math.max(0, 1 - Math.abs(Math.log2(dr)) * 1.2);
+  return { pct: Math.round((shape * .75 + len * .25) * 100), dr }; }
+async function smRecord(s, a, w, n, btn) {
+  const ar = state.lang === "ar"; const refU = []; for (let i = 0; i < Math.min(n || 1, 4); i++) refU.push(wbwUrl(s, a, w + i));
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return toast(ar ? "اسمح بالمايك" : "Allow the mic", true); }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; r.ondataavailable = e => e.data.size && ch.push(e.data);
+  r.onstop = async () => { st.getTracks().forEach(t => t.stop()); try { const sb_ = await smDecode(new Blob(ch, { type: r.mimeType })); const refs = []; for (const u of refU) refs.push(await smDecode(u)); const ac = aahCtx(); const total = refs.reduce((x, b) => x + b.length, 0); const sr = refs[0].sampleRate; const cat = ac.createBuffer(1, total, sr); let o = 0; refs.forEach(b => { cat.getChannelData(0).set(b.getChannelData(0), o); o += b.length; });
+      const R = smFeat(cat), S = smFeat(sb_); const sc = smScore(R, S); const tip = sc.dr > 1.35 ? (ar ? "طوّلت عن القارئ — خلّي المد والغنة بمقدارهم بالظبط." : "Too long — keep madd/ghunnah exact.") : sc.dr < .7 ? (ar ? "استعجلت — اديك الحروف حقها والمد مقداره." : "Too fast — give each letter its time.") : sc.pct >= 85 ? (ar ? "ممتاز! قريب جدًا من القارئ 👏" : "Excellent — very close!") : sc.pct >= 65 ? (ar ? "كويس — اسمع تاني وركّز على مكان الحكم." : "Good — listen again and focus on the rule.") : (ar ? "اسمع القارئ مرتين وبعدين جرّب تاني." : "Listen twice, then try again.");
+      const box = document.createElement("div"); box.className = "smres"; box.innerHTML = `<b>${sc.pct}%</b> <span>${tip}</span> <button class="tjw" onclick="new Audio(URL.createObjectURL(new Blob(window.__smLast||[])))">▶ ${ar ? "صوتي" : "Mine"}</button>`; window.__smLast = ch.slice(); const old = btn.parentElement.querySelector(".smres"); if (old) old.remove(); btn.after(box); try { const k = "itqan_sm"; const L = JSON.parse(localStorage.getItem(k) || "[]"); L.push([Date.now(), s, a, w, sc.pct]); localStorage.setItem(k, JSON.stringify(L.slice(-300))); } catch (e) {} sfxSafe(sc.pct >= 75 ? "correct" : "wrong");
+    } catch (e) { console.error(e); toast(ar ? "ماقدرتش أقارن — جرّب تاني" : "Couldn't compare — try again", true); } };
+  const secs = Math.min(8, 1.5 + (n || 1) * 1.2); r.start(); setTimeout(() => { if (r.state !== "inactive") r.stop(); }, secs * 1000);
+  toast(ar ? `🎙️ قول الكلمة دلوقتي (${Math.round(secs)} ثواني)` : `🎙️ Say it now (${Math.round(secs)}s)`);
+}
+/* زرار 🎙️ جنب كل 🔊 كلمة في التجويد */
+const _wbwPlay138 = wbwPlay;
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".tjwm"); if (!b) return; e.preventDefault(); e.stopPropagation(); smRecord(+b.dataset.s, +b.dataset.a, +b.dataset.w, +b.dataset.n, b); }, true);
+const _render138 = render;
+render = function () { const r = _render138.apply(this, arguments); try { document.querySelectorAll("#app button.tjw[onclick^='wbwPlay(']").forEach(b => { if (b.nextElementSibling && b.nextElementSibling.classList.contains("tjwm")) return; const m = b.getAttribute("onclick").match(/wbwPlay\((\d+),(\d+),(\d+),(\d+)/); if (!m) return; const x = document.createElement("button"); x.className = "tjwm"; x.title = state.lang === "ar" ? "سمّعني: سجّل الكلمة وقارن صوتك بالقارئ" : "Record & compare with the reciter"; x.textContent = "🎙️"; Object.assign(x.dataset, { s: m[1], a: m[2], w: m[3], n: m[4] }); b.after(x); }); } catch (e) {} return r; };
+document.head.insertAdjacentHTML("beforeend", `<style>.tjwm{border:1px dashed var(--line);background:transparent;border-radius:999px;cursor:pointer;padding:0 .35rem;margin-inline-start:-.1rem;vertical-align:middle}.smres{display:inline-flex;gap:.35rem;align-items:center;background:color-mix(in srgb,#16a34a 10%,var(--card));border:1px solid #16a34a55;border-radius:12px;padding:.1rem .5rem;margin:.15rem;font-size:.85rem}.smres b{color:#16a34a;font-size:1rem}</style>`);
 
 /* ---------- التوجيه عبر الرابط (#/dashboard ...) ---------- */
 const HASH_ROUTES = ["home", "tracks", "track-detail", "library", "pricing", "about", "contact", "booking", "login", "signup", "dashboard", "pay", "cert", "verify", "policy", "profile", "teach"];
