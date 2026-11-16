@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v211";
+const UI_VERSION = "2026-11-17-v212";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29566,6 +29566,80 @@ Between lessons, the platform keeps you going:
   const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); return !realOwner() ? h : h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#0f766e" onclick="go16('all211')"><span>🧭</span><b>${T("كل المحتوى وأماكنه", "All content & places")}</b></button><button class="mstile" style="--c:#7c3aed" onclick="go16('bars211')"><span>🎚️</span><b>${T("الشرايط وشكلها", "Bars")}</b></button>`); };
   if (/^#\/bars211/.test(location.hash)) state.route = "bars211"; if (/^#\/all211/.test(location.hash)) state.route = "all211";
   setTimeout(apply, 400);
+})();
+
+/* ================= v212: «وضع المعاينة» — أي تعديل يعمله المالك (الإعدادات، الشكل، الترتيب، الشرايط، الإخفاء من الأماكن، النصوص…) يتحفظ عنده بس، والطلاب مايشوفوش حاجة لحد ما يدوس «🚀 انشر للطلاب» (الكل أو تعديل تعديل) أو «تجاهل» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { toast(T("المساحة المحلية ممتلئة — انشر بعض التعديلات أولًا", "Local storage full — publish some changes first"), true); } };
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("dr212")) PAGES16.push("dr212");
+  const ON = () => LS("dr212", 1) === 1;                       /* الأساسي: شغّال */
+  const DR = () => LS("dr212d", {}) || {};
+  const notStudent = () => !(state.auth && state.auth.user) || realOwner();
+  const active = () => ON() && notStudent();
+  const J = x => JSON.stringify(x === undefined ? null : x);
+  let LIVE = null;                                               /* آخر نسخة حقيقية من قاعدة البيانات */
+  const merge = d => { const D = DR(); if (!active() || !Object.keys(D).length) return d; const o = Object.assign({}, d || {}); Object.entries(D).forEach(([k, v]) => { if (v && v.__del212) delete o[k]; else o[k] = v; }); return o; };
+
+  /* 1) كل ما يتعرض على الشاشة = الحقيقي + تعديلاتك */
+  const _ap = applySettings; applySettings = function (s) { return _ap.call(this, state.__peek212 ? s : merge(s)); };
+
+  /* 2) أي حفظ في إعدادات الموقع وانت في وضع المعاينة يروح لتعديلاتك بس */
+  const rawFrom = sb.from.bind(sb);
+  const fetchLive = async () => { const r = await rawFrom("site_settings").select("data").eq("id", 1).maybeSingle(); LIVE = (r.data && r.data.data) || {}; return LIVE; };
+  function wrap(b) { return new Proxy(b, { get(t, p) {
+      if (p === "then") return (res, rej) => t.then(r => { try { if (active() && r && r.data) { if (Array.isArray(r.data)) r.data.forEach(x => { if (x && x.data) { LIVE = x.data; x.data = merge(x.data); } }); else if (r.data.data) { LIVE = r.data.data; r.data.data = merge(r.data.data); } } } catch (e) {} return r; }).then(res, rej);
+      const v = t[p]; if (typeof v !== "function") return v;
+      if ((p === "upsert" || p === "update") && active()) return (...args) => { const obj = args[0]; const row = Array.isArray(obj) ? obj[0] : obj; if (!row || !row.data) return v.apply(t, args);
+        return (async () => { const live = await fetchLive(); const D = DR(); const keys = new Set([...Object.keys(row.data), ...Object.keys(live)]);
+          keys.forEach(k => { const nv = row.data[k]; if (!(k in row.data)) { if (k in live) D[k] = { __del212: 1 }; return; } if (J(nv) === J(live[k])) delete D[k]; else D[k] = nv; });
+          LSset("dr212d", D); setTimeout(badge, 30); return { data: null, error: null, status: 200 }; })(); };
+      return (...a) => { const r = v.apply(t, a); return r && typeof r === "object" && (typeof r.then === "function" || typeof r.eq === "function") ? wrap(r) : r; };
+    } }); }
+  sb.from = function (tb) { const b = rawFrom(tb); return tb === "site_settings" ? wrap(b) : b; };
+
+  /* 3) النشر والتجاهل */
+  const NAMES = { bars211: "الشرايط وشكلها", hide211: "الإخفاء من الأماكن", hide196: "إخفاء روابط", arr206: "ترتيب العناصر", ed189: "تعديلات النصوص والعناصر", pop205: "حركة الشرايط", bar201: "الشرايط الجانبية", rv190: "الشريط العلوي", dia208: "لغة الواجهة", one206: "توحيد الأقسام والأدوات", trash200: "سلة المحذوفات", dock196g: "شريط تطبيقاتي", plans: "الباقات والأسعار", payments: "طرق الدفع", currency: "العملة", trial: "الحصة التجريبية", guarantee: "ضمان الاسترجاع", design: "التصميم", theme: "الألوان" };
+  const nm = k => NAMES[k] ? T(NAMES[k], k) : k;
+  async function pub(keys) { const live = await fetchLive(); const D = DR(); const d = Object.assign({}, live); (keys || Object.keys(D)).forEach(k => { if (!(k in D)) return; if (D[k] && D[k].__del212) delete d[k]; else d[k] = D[k]; delete D[k]; });
+    const r = await rawFrom("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() }); if (r.error) return toast(r.error.message, true); LSset("dr212d", D); LIVE = d; applySettings(d); badge(); toast("🚀 " + T("نُشر للطلاب", "Published to students")); render(); }
+  async function drop(keys) { const D = DR(); (keys || Object.keys(D)).forEach(k => delete D[k]); LSset("dr212d", D); const live = await fetchLive(); applySettings(live); badge(); toast("↩️ " + T("رجع كما يراه الطلاب", "Back to what students see")); render(); }
+  window.dr212 = {
+    pub: () => { const n = Object.keys(DR()).length; if (!n) return toast(T("لا توجد تعديلات", "Nothing to publish")); if (confirm(T(`نشر ${n} تعديل للطلاب الآن؟`, `Publish ${n} changes?`))) pub(); },
+    drop: () => { const n = Object.keys(DR()).length; if (n && confirm(T(`تجاهل ${n} تعديل والرجوع لما يراه الطلاب؟`, `Discard ${n} changes?`))) drop(); },
+    pubK: k => pub([k]), dropK: k => drop([k]),
+    async set(on) { if (!on && Object.keys(DR()).length) { const p = confirm(T("عندك تعديلات لم تُنشر. اضغط «موافق» لنشرها للطلاب قبل الإيقاف، أو «إلغاء» لتجاهلها.", "Unpublished changes: OK = publish, Cancel = discard")); if (p) await pub(); else await drop(); } LSset("dr212", on ? 1 : 0); badge(); render(); toast(on ? "👁️ " + T("وضع المعاينة: أي تعديل يظهر لك وحدك", "Preview mode on") : "⚡ " + T("التعديلات تُحفظ للجميع مباشرة", "Changes go live directly")); },
+    async peek(on) { state.__peek212 = !!on; const live = on ? await fetchLive() : null; if (on) _ap(live); else applySettings(LIVE || await fetchLive()); render(); badge(); }
+  };
+
+  /* 4) الشريط الصغير اللي تحت */
+  css(`#dr212b{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9998;display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;justify-content:center;max-width:94vw;background:var(--card);border:2px solid #f59e0b;border-radius:999px;padding:.3rem .5rem .3rem .8rem;box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:.8rem;font-weight:700}
+  #dr212b .n{background:#f59e0b;color:#fff;border-radius:999px;padding:0 .45rem;min-width:1.2rem;text-align:center}#dr212b button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:.15rem .6rem;cursor:pointer;font:inherit;font-size:.75rem}#dr212b button.p{background:#16a34a;color:#fff;border-color:#16a34a}
+  #dr212b.pk{border-color:#2563eb}#dr212b.min{padding:.25rem .55rem}#dr212b.min .x{display:none}
+  .dr212r{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--line)}`);
+  function badge() { let b = document.getElementById("dr212b"); if (!realOwner() || !ON()) { b && b.remove(); return; } const n = Object.keys(DR()).length; const min = LS("dr212m", 0);
+    if (!b) { b = document.createElement("div"); b.id = "dr212b"; document.body.appendChild(b); }
+    b.className = (state.__peek212 ? "pk " : "") + (min ? "min" : "");
+    b.innerHTML = state.__peek212 ? `👀 ${T("تشاهد الموقع كما يراه الطلاب", "Viewing as students see it")} <button onclick="dr212.peek(0)">↩️ ${T("ارجع لتعديلاتي", "Back to my edits")}</button>`
+      : `<span title="${T("وضع المعاينة: تعديلاتك تظهر لك وحدك", "Preview mode")}">👁️</span><span class="x">${T("تعديلات لك وحدك", "Only you see")}</span><span class="n">${n}</span>${n ? `<button class="p x" onclick="dr212.pub()">🚀 ${T("انشر للطلاب", "Publish")}</button><button class="x" onclick="go16('dr212')">📋 ${T("راجع", "Review")}</button><button class="x" onclick="dr212.peek(1)">👀 ${T("كما يراه الطالب", "Student view")}</button>` : ""}<button onclick="LSset212()">${min ? "◂" : "▸"}</button>`; }
+  window.LSset212 = () => { LSset("dr212m", LS("dr212m", 0) ? 0 : 1); badge(); };
+
+  /* 5) صفحة المراجعة */
+  function drPage() { if (!realOwner()) return pageWrap("🔒", "—", "", ""); const D = DR(); const ks = Object.keys(D);
+    return pageWrap("👁️", T("وضع المعاينة", "Preview mode"), T("كل تعديل تعمله يظهر لك وحدك أولًا، ولا يراه الطلاب حتى تنشره", "Every change shows only to you until you publish it"),
+      `<div class="card"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${ON() ? "checked" : ""} onchange="dr212.set(this.checked)"> 👁️ ${T("شغّل وضع المعاينة (أي تعديل يظهر لي وحدي حتى أنشره)", "Preview mode on")}</label>
+        <p class="xs muted">${T("يشمل: الإعدادات، الشكل والألوان، الشرايط، الترتيب، تعديل النصوص والعناصر، الإخفاء من الأماكن، الباقات، وأي شيء يُحفظ في إعدادات الموقع. أما إضافة الدروس والكتب ورفع الملفات وإخفاء قسم من «منظّم المحتوى» فتُحفظ مباشرة كما هي.", "Covers every site setting, design, bars, arrangement, text edits and hiding. Adding lessons/books/files and hiding sections from the organiser still go live directly.")}</p></div>
+      <div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3 style="margin:0">📋 ${T("تعديلات لم تُنشر", "Unpublished changes")} (${ks.length})</h3>${ks.length ? `<span class="row" style="gap:.4rem"><button class="btn btn-p" onclick="dr212.pub()">🚀 ${T("انشر الكل للطلاب", "Publish all")}</button><button class="btn btn-o" onclick="dr212.peek(1)">👀 ${T("شاهد كما يراه الطالب", "Student view")}</button><button class="btn btn-o" onclick="dr212.drop()">🗑️ ${T("تجاهل الكل", "Discard all")}</button></span>` : ""}</div>
+      ${ks.map(k => `<div class="dr212r"><span><b>${esc(nm(k))}</b> <span class="xs muted" dir="ltr">${esc(k)}</span>${D[k] && D[k].__del212 ? ` · ${T("حذف", "removal")}` : ""}</span><span class="row" style="gap:.3rem"><button class="btn btn-p xs" onclick='dr212.pubK(${esc(J(k))})'>🚀 ${T("انشر هذا", "Publish")}</button><button class="btn btn-o xs" onclick='dr212.dropK(${esc(J(k))})'>↩️ ${T("تجاهل", "Discard")}</button></span></div>`).join("") || `<p class="muted">✅ ${T("كل ما تراه يراه الطلاب", "Students see what you see")}</p>`}</div>`, 800); }
+
+  const _r = render; render = function () { if (state.route === "dr212") { let b; try { b = drPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); badge(); return; } _r.apply(this, arguments); setTimeout(badge, 0); };
+  const _os = ownerSettings; ownerSettings = function () { const n = Object.keys(DR()).length; return `<div class="card" style="border:2px solid #f59e0b;margin-bottom:1rem"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${ON() ? "checked" : ""} onchange="dr212.set(this.checked)"> 👁️ ${T("وضع المعاينة: أي تعديل يظهر لي وحدي حتى أنشره للطلاب", "Preview mode: changes show only to me until I publish")}</label><span class="row" style="gap:.4rem">${n ? `<button class="btn btn-p" onclick="dr212.pub()">🚀 ${T("انشر", "Publish")} (${n})</button>` : ""}<button class="btn btn-o" onclick="go16('dr212')">📋 ${T("راجع التعديلات", "Review")}</button></span></div></div>` + _os.apply(this, arguments); };
+  if (/^#\/dr212/.test(location.hash)) state.route = "dr212";
+  setInterval(badge, 3000); setTimeout(badge, 1500);
 })();
 
 // بدء التشغيل
