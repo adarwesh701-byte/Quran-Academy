@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v191";
+const UI_VERSION = "2026-11-16-v192";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27402,6 +27402,213 @@ Between lessons, the platform keeps you going:
 
   const _r = render; render = function () { _r.apply(this, arguments); try { payFilter(); closeScrub(); } catch (e) {} };
   try { new MutationObserver(() => { clearTimeout(window.__p191); window.__p191 = setTimeout(() => { try { payFilter(); closeScrub(); } catch (e) {} }, 300); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
+})();
+
+/* ================= v192: «📚 استوديو الكتب التفاعلية» — ارفع أي كتاب (PDF/Word/نص) والموقع يحوّله لفصول + ملخص + ألعاب + اختبارات + صوت، بطرق عرض كتير، وماينشرش إلا بموافقتك، وتتحكم يظهر لمين ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const canEdit = () => realOwner() || (window.can188 && can188("content"));
+  const uid = () => state.auth && state.auth.user ? state.auth.user.id : null;
+  ["books192", "book192", "bookedit192"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const B = { list: null, cur: null, busy: "" };
+  const DEF = { modes: { interactive: true, chapters: true, summary: true, plain: true, games: true, quiz: true }, audio: "browser", voice: "m", quizAfter: "chapter", showPages: false, font: 1, defMode: "interactive" };
+  const O = b => { const o = Object.assign({}, DEF, (b && b.opts) || {}); o.modes = Object.assign({}, DEF.modes, ((b && b.opts) || {}).modes || {}); return o; };
+
+  /* ======================= 1) استخراج النص من أي ملف ======================= */
+  const loadJs = src => new Promise((ok, no) => { if (document.querySelector(`script[src="${src}"]`)) return setTimeout(ok, 50); const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+  async function pdfLib() { if (!window.pdfjsLib) await loadJs("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"); window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; return window.pdfjsLib; }
+  async function extract(file, onp) {
+    const n = (file.name || "").toLowerCase();
+    if (n.endsWith(".pdf")) { const lib = await pdfLib(); const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise; const pages = []; let empty = 0;
+      for (let i = 1; i <= pdf.numPages; i++) { onp && onp(T(`📄 بقرا صفحة ${i} من ${pdf.numPages}`, `Reading page ${i}/${pdf.numPages}`)); const pg = await pdf.getPage(i); const tc = await pg.getTextContent(); let last = null, line = "", lines = [];
+        tc.items.forEach(it => { const y = Math.round(it.transform[5]); if (last !== null && Math.abs(y - last) > 3) { lines.push(line.trim()); line = ""; } line += it.str + (it.hasEOL ? "" : " "); last = y; }); lines.push(line.trim());
+        const t = lines.filter(Boolean).join("\n"); if (t.replace(/\s/g, "").length < 20) empty++; pages.push(t); }
+      return { pages, scanned: empty > pdf.numPages * .6, pdf }; }
+    if (n.endsWith(".docx")) { await loadJs("https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"); const r = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() }); return { pages: [r.value] }; }
+    if (/\.(html?|xhtml)$/.test(n)) { const d = new DOMParser().parseFromString(await file.text(), "text/html"); return { pages: [d.body.innerText] }; }
+    return { pages: [await file.text()] };
+  }
+  /* كتاب صور (مسكانر): نقراه بـ OCR مجاني على جهازك */
+  async function ocr(pdf, onp, max) {
+    await loadJs("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"); const w = await Tesseract.createWorker("ara+eng"); const out = []; const N = Math.min(pdf.numPages, max || 400);
+    for (let i = 1; i <= N; i++) { onp && onp(T(`🔎 بقرا صفحة مصوّرة ${i} من ${N} (ده بياخد وقت)`, `OCR page ${i}/${N}`)); const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: 2 }); const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise; const { data } = await w.recognize(c); out.push(data.text || ""); }
+    await w.terminate(); return out;
+  }
+  /* ======================= 2) تقسيم لفصول ======================= */
+  const HEAD = /^\s*(?:(?:الباب|الفصل|المبحث|المطلب|الدرس|الوحدة|القسم|الجزء|الكتاب|باب|فصل|درس|كتاب)\s+[^\n]{0,60}|(?:chapter|lesson|unit|part|section)\s+[\w\d]+[^\n]{0,60}|[0-9٠-٩]{1,3}\s*[-–.)]\s+\S[^\n]{2,60})\s*$/i;
+  function split(pages, how, per) {
+    const paraOf = t => t.split(/\n\s*\n|\n(?=\s{2,})/).map(x => x.replace(/\s*\n\s*/g, " ").trim()).filter(x => x.length > 1);
+    if (how === "pages") { const ch = []; for (let i = 0; i < pages.length; i += per) ch.push({ title: T(`صفحات ${i + 1}–${Math.min(i + per, pages.length)}`, `Pages ${i + 1}–${Math.min(i + per, pages.length)}`), p: [i + 1, Math.min(i + per, pages.length)], paras: paraOf(pages.slice(i, i + per).join("\n\n")) }); return ch; }
+    const ch = []; let cur = { title: T("المقدمة", "Introduction"), paras: [], buf: [] }; pages.forEach((pg, pi) => pg.split("\n").forEach(line => { if (HEAD.test(line) && line.trim().length < 70) { if (cur.buf.join("").trim().length > 40 || ch.length === 0 && cur.buf.length) { cur.paras = paraOf(cur.buf.join("\n")); ch.push(cur); } cur = { title: line.trim(), paras: [], buf: [], p: [pi + 1] }; } else cur.buf.push(line); }));
+    cur.paras = paraOf(cur.buf.join("\n")); ch.push(cur); ch.forEach(c => delete c.buf);
+    const good = ch.filter(c => c.paras.join(" ").length > 60); if (good.length < 2) return split(pages, "pages", per || 10); return good;
+  }
+  /* ======================= 3) ألعاب واختبارات من النص نفسه (من غير ذكاء اصطناعي) ======================= */
+  const sents = ch => ch.paras.join(" ").split(/(?<=[.!؟?۔])\s+/).map(s => s.trim()).filter(s => s.split(/\s+/).length >= 6 && s.length < 260);
+  const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+  function localQuiz(ch) {
+    const S = shuffle(sents(ch)).slice(0, 8); const words = [...new Set(ch.paras.join(" ").split(/[\s،,.؛:!؟?()«»"]+/).filter(w => w.length >= 5))];
+    return S.map(s => { const ws = s.split(/\s+/); const cand = ws.filter(w => w.replace(/[^\p{L}]/gu, "").length >= 5); if (!cand.length) return null; const ans = cand[Math.floor(Math.random() * cand.length)]; const clean = ans.replace(/[^\p{L}\p{N}]/gu, "");
+      const opts = shuffle([clean].concat(shuffle(words.filter(w => w !== clean)).slice(0, 3))); return { t: "blank", q: s.replace(ans, " ____ "), a: clean, o: opts }; }).filter(Boolean);
+  }
+  function games(ch) {
+    const S = sents(ch); const g = [];
+    const longP = ch.paras.find(p => sents({ paras: [p] }).length >= 3); if (longP) { const ss = sents({ paras: [longP] }).slice(0, 5); g.push({ t: "order", title: T("رتّب الجمل زي الكتاب", "Put sentences in order"), items: ss }); }
+    const terms = (ch.terms || []).slice(0, 6); if (terms.length >= 3) g.push({ t: "match", title: T("وصّل الكلمة بمعناها", "Match term to meaning"), items: terms });
+    if (S.length >= 4) g.push({ t: "tf", title: T("صح ولا غلط؟", "True or false?"), items: shuffle(S).slice(0, 5).map((s, i) => i % 2 ? { s, ok: true } : (() => { const ws = s.split(/\s+/); const k = ws.findIndex(w => /^(لا|لم|ليس|not|no)$/i.test(w)); if (k >= 0) { ws.splice(k, 1); return { s: ws.join(" "), ok: false }; } const j = Math.floor(ws.length / 2); const other = shuffle(S).find(x => x !== s); const ow = other ? other.split(/\s+/)[Math.floor(other.split(/\s+/).length / 2)] : ws[j]; ws[j] = ow; return { s: ws.join(" "), ok: ow === s.split(/\s+/)[j] }; })()) });
+    const W = [...new Set(ch.paras.join(" ").split(/[\s،,.؛:!؟?()«»"]+/).filter(w => w.length >= 6))].slice(0, 6); if (W.length >= 3) g.push({ t: "scramble", title: T("رتّب حروف الكلمة", "Unscramble"), items: W });
+    if (terms.length) g.push({ t: "cards", title: T("بطاقات مراجعة", "Flashcards"), items: terms });
+    return g;
+  }
+  /* ======================= 4) ذكاء اصطناعي (Gemini أو بديل مجاني) ======================= */
+  async function aiChapter(ch, b) {
+    if (!window.ai156) throw new Error("AI"); const txt = ch.paras.join("\n").slice(0, 14000);
+    const p = `${T("من النص ده من كتاب", "From this text of the book")} «${b.title}» ${T("طلّع JSON بس من غير أي كلام تاني بالشكل ده", "return ONLY JSON like")}:\n{"summary":["...5 نقط قصيرة"],"terms":[{"w":"كلمة","d":"معناها"}],"quiz":[{"t":"mcq","q":"سؤال","o":["أ","ب","ج","د"],"a":0},{"t":"tf","q":"جملة","a":true},{"t":"short","q":"سؤال","a":"إجابة قصيرة"}]}\n${T("8 أسئلة متنوعة، كلها من النص بس، وبلغة النص. ممنوع تأليف معلومات مش في النص. ممنوع أسئلة صوتية.", "8 varied questions strictly from the text, same language. No invented facts. No audio questions.")}\n---\n${txt}`;
+    const r = await ai156({ task: "text", prompt: p, system: "You are a careful teacher. Output strict JSON only." }); const m = String(r.text || "").match(/\{[\s\S]*\}/); if (!m) throw new Error("bad AI output"); const j = JSON.parse(m[0]);
+    ch.summary = (j.summary || []).slice(0, 8); ch.terms = (j.terms || []).filter(x => x && x.w).slice(0, 12); ch.quiz = (j.quiz || []).filter(q => q && q.q && q.t !== "audio" && q.t !== "listen").slice(0, 12); ch.ai = Date.now(); return ch;
+  }
+  /* ======================= 5) الصوت ======================= */
+  let SPK = { on: false, i: 0, list: [], rate: 1 };
+  function voiceFor(lang) { try { const V = speechSynthesis.getVoices(); return V.find(v => v.lang && v.lang.toLowerCase().startsWith(lang)) || null; } catch (e) { return null; } }
+  async function speak(text, b) {
+    const o = O(b); if (o.audio === "none") return;
+    if (o.audio === "ai" && typeof vlFind === "function") { try { const u = await vlFind(text, o.voice || "m"); if (u) return new Promise(res => { const a = new Audio(u); a.playbackRate = SPK.rate; a.onended = res; a.onerror = res; a.play().catch(res); SPK.audio = a; }); } catch (e) {} }
+    if (!window.speechSynthesis) return; return new Promise(res => { const u = new SpeechSynthesisUtterance(text); const v = voiceFor(b.lang === "en" ? "en" : "ar"); if (v) u.voice = v; u.lang = b.lang === "en" ? "en-US" : "ar-EG"; u.rate = SPK.rate; u.onend = res; u.onerror = res; speechSynthesis.speak(u); });
+  }
+  const hasAudio = b => O(b).audio !== "none" && (O(b).audio === "ai" || !!window.speechSynthesis);
+  window.bk192say = async (ci, pi) => { const b = B.cur; if (!b) return; stopSpk(); const ch = b.chapters[ci]; document.querySelectorAll(".bk192p.on").forEach(x => x.classList.remove("on")); const el = document.getElementById(`p192-${ci}-${pi}`); el && el.classList.add("on"); await speak(ch.paras[pi], b); el && el.classList.remove("on"); };
+  window.bk192play = async ci => { const b = B.cur; if (!b) return; if (SPK.on) return stopSpk(); SPK.on = true; renderBtn(); const ch = b.chapters[ci]; for (let i = SPK.i || 0; i < ch.paras.length && SPK.on; i++) { SPK.i = i; document.querySelectorAll(".bk192p.on").forEach(x => x.classList.remove("on")); const el = document.getElementById(`p192-${ci}-${i}`); if (el) { el.classList.add("on"); el.scrollIntoView({ behavior: "smooth", block: "center" }); } await speak(ch.paras[i], b); } if (SPK.on) { SPK.i = 0; save({ done: ci }); } SPK.on = false; renderBtn(); };
+  function stopSpk() { SPK.on = false; try { speechSynthesis.cancel(); } catch (e) {} if (SPK.audio) { try { SPK.audio.pause(); } catch (e) {} } renderBtn(); }
+  function renderBtn() { const b = document.getElementById("pl192"); if (b) b.textContent = SPK.on ? "⏸ " + T("وقّف", "Pause") : "▶ " + T("اقرالي الفصل", "Read the chapter to me"); }
+  window.bk192rate = v => { SPK.rate = +v; };
+  /* جهّز صوت Gemini لكل فقرات الكتاب (ليك انت بس) */
+  window.bk192gen = async () => { const b = B.cur; if (!b || !realOwner()) return; const all = []; b.chapters.forEach(c => c.paras.forEach(p => { if (p.length <= 600) all.push(p); })); if (!confirm(T(`هيتعمل صوت لـ ${all.length} فقرة بـ Gemini (ببلاش لحد ما الحد اليومي يخلص، والباقي بيكمل لوحده). نبدأ؟`, `Generate ${all.length} paragraphs?`))) return; let ok = 0;
+    for (const t of all.slice(0, 40)) { try { const r = await sb.functions.invoke("azure-tts", { body: { text: t, kind: O(b).voice || "m" } }); if (r.data && r.data.url) ok++; } catch (e) {} toast(`🎙️ ${ok}/${Math.min(40, all.length)}`); }
+    toast(T("✅ اتعمل أول 40 فقرة — والصوت ده بيظهر للطلاب بس بعد ما تدوس «اعرض للناس» في لوحة الأصوات", "✅ First 40 done")); };
+
+  /* ======================= 6) حفظ وقراءة ======================= */
+  async function loadList() { const { data } = await sb.from("books192").select("id,title,author,cover,status,opts,vis,pages,updated_at").order("updated_at", { ascending: false }); B.list = data || []; render(); }
+  async function loadBook(id) { if (B.cur && B.cur.id === id) return B.cur; const { data } = await sb.from("books192").select("*").eq("id", id).maybeSingle(); B.cur = data || { missing: true, id }; if (uid() && data) { const { data: p } = await sb.from("book192_progress").select("data").eq("book_id", id).maybeSingle(); B.prog = (p && p.data) || {}; } render(); return B.cur; }
+  async function saveBook(patch) { const b = B.cur; Object.assign(b, patch || {}); const { error } = await sb.from("books192").update({ title: b.title, author: b.author, cover: b.cover, lang: b.lang, status: b.status, vis: b.vis, opts: b.opts, chapters: b.chapters }).eq("id", b.id); if (error) return toast(error.message, true); toast("✅"); B.list = null; render(); }
+  async function save(d) { if (!uid() || !B.cur) return; B.prog = Object.assign({}, B.prog || {}, d.done != null ? { done: [...new Set(((B.prog || {}).done || []).concat(d.done))] } : {}, d.score ? { score: Object.assign({}, (B.prog || {}).score || {}, d.score) } : {}, d.at != null ? { at: d.at } : {}); await sb.from("book192_progress").upsert({ book_id: B.cur.id, data: B.prog, updated_at: new Date().toISOString() }); }
+
+  window.bk192 = {
+    up: async inp => {
+      const f = inp.files && inp.files[0]; if (!f) return; const how = (document.getElementById("bk192how") || {}).value || "auto"; const per = +((document.getElementById("bk192per") || {}).value || 10);
+      const st = t => { B.busy = t; const e = document.getElementById("bk192st"); if (e) e.textContent = t; };
+      try { st("⏳"); let r = await extract(f, st); if (r.scanned && r.pdf) { if (confirm(T("الكتاب ده صور (مسكانر). أقراه بـ OCR مجاني على جهازك؟ ده ممكن ياخد دقايق.", "Scanned book. Run free OCR on this device? (takes minutes)"))) r.pages = await ocr(r.pdf, st); }
+        st(T("✂️ بقسّمه لفصول…", "Splitting into chapters…")); const chapters = split(r.pages, how === "pages" ? "pages" : "auto", per); chapters.forEach(c => { c.quiz = localQuiz(c); });
+        const lang = /[؀-ۿ]/.test(r.pages.join(" ").slice(0, 3000)) ? "ar" : "en";
+        const { data, error } = await sb.from("books192").insert({ title: f.name.replace(/\.[^.]+$/, ""), lang, chapters, pages: r.pages.length, src: f.name, status: "draft", opts: DEF }).select("id").single(); if (error) throw error;
+        st(""); toast(T(`✅ اتعمل ${chapters.length} فصل — راجعه وبعدين انشره`, `✅ ${chapters.length} chapters — review then publish`)); B.list = null; B.cur = null; go16("bookedit192", data.id);
+      } catch (e) { st(""); toast(String(e.message || e), true); }
+    },
+    paste: async () => { const t = prompt(T("الصق نص الكتاب هنا", "Paste the book text")); if (!t) return; const chapters = split([t], "auto", 10); chapters.forEach(c => c.quiz = localQuiz(c)); const { data, error } = await sb.from("books192").insert({ title: T("كتاب جديد", "New book"), chapters, lang: /[؀-ۿ]/.test(t) ? "ar" : "en", status: "draft", opts: DEF }).select("id").single(); if (error) return toast(error.message, true); B.cur = null; go16("bookedit192", data.id); },
+    set: (k, v) => { const b = B.cur; if (k.startsWith("o.")) { b.opts = Object.assign({}, O(b)); const kk = k.slice(2); if (kk.startsWith("m.")) b.opts.modes = Object.assign({}, b.opts.modes, { [kk.slice(2)]: v }); else b.opts[kk] = v; } else if (k.startsWith("v.")) { b.vis = Object.assign({}, b.vis || {}); b.vis[k.slice(2)] = v; } else b[k] = v; },
+    save: () => saveBook(),
+    pub: async s => { if (s === "published" && !realOwner()) s = "review"; await saveBook({ status: s }); },
+    chTitle: (i, v) => { B.cur.chapters[i].title = v; },
+    chText: (i, v) => { B.cur.chapters[i].paras = v.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean); },
+    chMerge: i => { const C = B.cur.chapters; if (!C[i + 1]) return; C[i].paras = C[i].paras.concat(C[i + 1].paras); C.splice(i + 1, 1); render(); },
+    chSplit: i => { const C = B.cur.chapters; const c = C[i]; const k = Math.ceil(c.paras.length / 2); C.splice(i + 1, 0, { title: c.title + " (2)", paras: c.paras.slice(k), quiz: [] }); c.paras = c.paras.slice(0, k); render(); },
+    chDel: i => { if (!confirm(T("تشيل الفصل ده من العرض؟ (تقدر ترجّعه من النسخ)", "Remove this chapter?"))) return; const c = B.cur.chapters[i]; c.hidden = !c.hidden; render(); },
+    qDel: (i, k) => { B.cur.chapters[i].quiz.splice(k, 1); render(); },
+    ai: async i => { const b = B.cur; const idx = i == null ? b.chapters.map((_, k) => k) : [i]; let n = 0; for (const k of idx) { if (b.chapters[k].hidden) continue; toast(`✨ ${++n}/${idx.length}`); try { await aiChapter(b.chapters[k], b); b.chapters[k].games = null; } catch (e) { toast(T("الذكاء الاصطناعي مش متاح دلوقتي — الأسئلة المعمولة من النص نفسه موجودة", "AI unavailable — local questions kept") + " (" + e.message + ")", true); break; } } await saveBook(); },
+    local: i => { const c = B.cur.chapters[i]; c.quiz = localQuiz(c).concat((c.quiz || []).filter(q => q.t !== "blank")); render(); },
+    cover: async inp => { const f = inp.files[0]; if (!f) return; const path = `books192/${Date.now()}.${f.name.split(".").pop()}`; const { error } = await sb.storage.from("academy_public").upload(path, f); if (error) return toast(error.message, true); B.cur.cover = sb.storage.from("academy_public").getPublicUrl(path).data.publicUrl; render(); },
+    mode: m => { state.bk192m = m; render(); },
+    ch: i => { state.bk192c = i; stopSpk(); SPK.i = 0; save({ at: i }); render(); scrollTo({ top: 0, behavior: "smooth" }); },
+    ans: (ci, k, v) => { const q = B.cur.chapters[ci].quiz[k]; const ok = q.t === "mcq" ? +v === +q.a : q.t === "tf" ? String(v) === String(q.a) : q.t === "blank" ? v === q.a : String(v).trim().length > 0; state.bk192a = Object.assign({}, state.bk192a || {}, { [ci + ":" + k]: { v, ok } }); const all = B.cur.chapters[ci].quiz.length; const done = Object.keys(state.bk192a).filter(x => x.startsWith(ci + ":")).length; if (done === all) { const sc = Object.entries(state.bk192a).filter(([x, y]) => x.startsWith(ci + ":") && y.ok).length; save({ score: { [ci]: Math.round(sc / all * 100) } }); } render(); },
+    gm: (ci, gi, act, x) => { const G = state.bk192g = state.bk192g || {}; const key = ci + ":" + gi; G[key] = G[key] || {}; const s = G[key]; if (act === "pick") { s.pick = (s.pick || []).concat(x); } else if (act === "reset") G[key] = {}; else if (act === "flip") s.f = Object.assign({}, s.f || {}, { [x]: !(s.f || {})[x] }); else if (act === "tf") s.a = Object.assign({}, s.a || {}, { [x[0]]: x[1] }); else if (act === "m1") s.m1 = x; else if (act === "m2") { if (s.m1 != null) { s.ok = Object.assign({}, s.ok || {}, { [s.m1]: s.m1 === x }); s.m1 = null; } } else if (act === "sc") s.g = Object.assign({}, s.g || {}, { [x[0]]: x[1] }); render(); }
+  };
+
+  /* ======================= 7) الصفحات ======================= */
+  const stBadge = s => ({ draft: "📝 " + T("مسودة (ليك بس)", "Draft"), review: "⏳ " + T("مستني موافقتك", "Awaiting approval"), published: "🌍 " + T("منشور", "Published"), hidden: "🙈 " + T("مخفي", "Hidden") }[s] || s);
+  function listPage() {
+    if (!B.list) { loadList(); return pageWrap("📚", T("الكتب التفاعلية", "Interactive books"), "", `<div class="card">⏳</div>`); }
+    const L = B.list.filter(b => b.status === "published" || canEdit());
+    return pageWrap("📚", T("الكتب التفاعلية", "Interactive books"), T("كل كتاب مقسّم فصول، بملخص وأسئلة وألعاب، وتقدر تسمعه بالصوت.", "Every book split into chapters with summaries, quizzes, games and audio."),
+      `${canEdit() ? `<div class="card" style="border:2px dashed var(--accent)"><h3>➕ ${T("ارفع كتاب", "Upload a book")}</h3><p class="sm">${T("PDF (حتى لو مسكانر)، Word، أو نص. الموقع بيطلّع الكلام ويقسّمه فصول ويعمل أسئلة وألعاب من النص نفسه. وبزرار واحد يعمل ملخص وأسئلة أذكى بـ Gemini. مفيش حاجة بتتنشر غير لما توافق.", "PDF (even scanned), Word or text. Nothing is published until you approve.")}</p>
+        <div class="row" style="gap:.5rem;flex-wrap:wrap;align-items:center"><label class="sm">${T("التقسيم", "Split")} <select id="bk192how" class="in" style="width:auto"><option value="auto">${T("أوتوماتيك بالأبواب والفصول", "Auto by headings")}</option><option value="pages">${T("كل كام صفحة", "Every N pages")}</option></select></label><label class="sm">${T("عدد الصفحات", "Pages")} <input id="bk192per" class="in" type="number" value="10" min="1" style="width:5rem"></label>
+        <label class="btn btn-p">📤 ${T("اختار الملف", "Choose file")}<input type="file" hidden accept=".pdf,.docx,.txt,.md,.html,.htm" onchange="bk192.up(this)"></label><button class="btn btn-o" onclick="bk192.paste()">📋 ${T("الصق نص", "Paste text")}</button><span id="bk192st" class="sm">${esc(B.busy || "")}</span></div></div>` : ""}
+      <div class="bk192g">${L.map(b => `<div class="card bk192c" onclick="go16('book192','${b.id}')">${b.cover ? `<img src="${esc(b.cover)}" alt="">` : `<div class="bk192cv">📖</div>`}<b>${esc(b.title)}</b>${b.author ? `<span class="xs muted">${esc(b.author)}</span>` : ""}${canEdit() ? `<span class="xs">${stBadge(b.status)}</span><button class="btn btn-o" style="padding:.1rem .5rem" onclick="event.stopPropagation();go16('bookedit192','${b.id}')">✏️ ${T("تعديل", "Edit")}</button>` : ""}</div>`).join("") || `<div class="card muted">${T("لسه مفيش كتب.", "No books yet.")}</div>`}</div>`, 1200);
+  }
+  function editPage(id) {
+    if (!canEdit()) return pageWrap("📚", "—", "", `<div class="card muted">${T("للمالك بس", "Owner only")}</div>`);
+    const b = B.cur && B.cur.id === id ? B.cur : null; if (!b) { loadBook(id); return pageWrap("📚", "…", "", `<div class="card">⏳</div>`); } if (b.missing) return pageWrap("📚", "—", "", `<div class="card">${T("مش موجود", "Not found")}</div>`);
+    const o = O(b); const v = b.vis || {}; const chk = (k, val, lab) => `<label class="sm"><input type="checkbox" ${val ? "checked" : ""} onchange="bk192.set('${k}',this.checked)"> ${lab}</label>`;
+    const sel = (k, cur, opts) => `<select class="in" style="width:auto" onchange="bk192.set('${k}',this.value)">${opts.map(([x, l]) => `<option value="${x}" ${cur === x ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+    const roles = ["guest", "student", "teacher", "parent"]; const rl = { guest: T("زوار", "Visitors"), student: T("طلاب", "Students"), teacher: T("معلمين", "Teachers"), parent: T("أولياء أمور", "Parents") };
+    return pageWrap("✏️", esc(b.title), stBadge(b.status), `
+      <div class="card"><div class="row" style="gap:.5rem;flex-wrap:wrap"><label class="sm">${T("الاسم", "Title")} <input class="in" value="${esc(b.title)}" onchange="bk192.set('title',this.value)"></label><label class="sm">${T("المؤلف", "Author")} <input class="in" value="${esc(b.author || "")}" onchange="bk192.set('author',this.value)"></label><label class="sm">${T("الغلاف", "Cover")} <input type="file" accept="image/*" onchange="bk192.cover(this)"></label><label class="sm">${T("اللغة", "Language")} ${sel("lang", b.lang || "ar", [["ar", "عربي"], ["en", "English"]])}</label></div></div>
+      <div class="card"><h3>🎛️ ${T("طرق العرض للطالب", "How students see it")}</h3><div class="row" style="gap:.8rem;flex-wrap:wrap">${chk("o.m.interactive", o.modes.interactive, "📖 " + T("تفاعلي (فقرات + صوت)", "Interactive"))}${chk("o.m.chapters", o.modes.chapters, "📑 " + T("فصول", "Chapters"))}${chk("o.m.summary", o.modes.summary, "✂️ " + T("ملخص", "Summary"))}${chk("o.m.plain", o.modes.plain, "📄 " + T("النص بس", "Text only"))}${chk("o.m.games", o.modes.games, "🎮 " + T("ألعاب", "Games"))}${chk("o.m.quiz", o.modes.quiz, "📝 " + T("اختبار", "Quiz"))}</div>
+        <div class="row" style="gap:.8rem;flex-wrap:wrap;margin-top:.5rem"><label class="sm">${T("يفتح على", "Opens on")} ${sel("o.defMode", o.defMode, [["interactive", "📖"], ["chapters", "📑"], ["summary", "✂️"], ["plain", "📄"]])}</label><label class="sm">🔊 ${T("الصوت", "Audio")} ${sel("o.audio", o.audio, [["browser", T("قراية لايف ببلاش من جهاز الطالب", "Free live device voice")], ["ai", T("صوت Gemini المحفوظ (بموافقتك)", "Saved Gemini voice (approved)")], ["none", T("من غير صوت", "No audio")]])}</label><label class="sm">${T("الصوت", "Voice")} ${sel("o.voice", o.voice, [["m", T("رجالي", "Male")], ["f", T("حريمي", "Female")]])}</label><label class="sm">${T("الاختبار", "Quiz")} ${sel("o.quizAfter", o.quizAfter, [["chapter", T("بعد كل فصل", "After each chapter")], ["end", T("في الآخر بس", "At the end")], ["none", T("من غير", "None")]])}</label></div>
+        <p class="xs muted">${T("أي حاجة مفيش ليها محتوى بتختفي لوحدها: مفيش صوت = مفيش زرار سماع ولا أسئلة سماع. مفيش أسئلة = مفيش تبويب اختبار. مفيش ملخص = مفيش تبويب ملخص.", "Anything without content is hidden automatically.")}</p></div>
+      <div class="card"><h3>👥 ${T("يظهر لمين", "Who can see it")}</h3><div class="row" style="gap:.8rem;flex-wrap:wrap">${roles.map(r => `<label class="sm"><input type="checkbox" ${!(v.roles || []).length || (v.roles || []).includes(r) ? "checked" : ""} onchange="(()=>{const L=[...document.querySelectorAll('[data-r192]')].filter(i=>i.checked).map(i=>i.dataset.r192);bk192.set('v.roles',L.length===${roles.length}?[]:L)})()" data-r192="${r}"> ${rl[r]}</label>`).join("")}</div><label class="sm">${T("أو ناس بعينهم بس (IDs مفصولة بفاصلة — من «👥 فريقي»)", "Or specific user IDs only")} <input class="in" value="${esc((v.users || []).join(", "))}" onchange="bk192.set('v.users',this.value.split(/[ ,]+/).filter(Boolean))"></label></div>
+      <div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-o" onclick="bk192.save()">💾 ${T("احفظ (مسودة)", "Save draft")}</button><button class="btn btn-o" onclick="bk192.ai()">✨ ${T("ملخص وأسئلة ذكية لكل الفصول (Gemini)", "AI summary & quiz for all")}</button>${realOwner() ? `<button class="btn btn-o" onclick="bk192gen()">🎙️ ${T("جهّز صوت Gemini", "Prepare Gemini audio")}</button>` : ""}<button class="btn btn-o" onclick="go16('book192','${b.id}')">👁 ${T("معاينة زي الطالب", "Preview")}</button>${realOwner() ? `<button class="btn btn-p" onclick="bk192.pub('published')">🌍 ${T("وافق وانشره", "Approve & publish")}</button>${b.status === "published" ? `<button class="btn btn-o" onclick="bk192.pub('hidden')">🙈 ${T("اخفيه", "Hide")}</button>` : ""}` : `<button class="btn btn-p" onclick="bk192.pub('review')">📨 ${T("ابعته للمالك يوافق", "Send for approval")}</button>`}</div></div>
+      ${b.chapters.map((c, i) => `<details class="card" ${i === 0 ? "open" : ""} style="${c.hidden ? "opacity:.45" : ""}"><summary><b>${i + 1}. ${esc(c.title)}</b> <span class="xs muted">${c.paras.length} ${T("فقرة", "paras")} · ${(c.quiz || []).length} ${T("سؤال", "Q")}${c.summary ? " · ✂️" : ""}${c.hidden ? " · 🙈" : ""}</span></summary>
+        <input class="in" value="${esc(c.title)}" onchange="bk192.chTitle(${i},this.value)"><textarea class="in" rows="7" onchange="bk192.chText(${i},this.value)">${esc(c.paras.join("\n\n"))}</textarea>
+        <div class="row" style="gap:.3rem;flex-wrap:wrap;margin:.4rem 0"><button class="btn btn-o" onclick="bk192.ai(${i})">✨ ${T("ملخص وأسئلة ذكية", "AI")}</button><button class="btn btn-o" onclick="bk192.local(${i})">🔁 ${T("أسئلة من النص", "Local questions")}</button><button class="btn btn-o" onclick="bk192.chSplit(${i})">✂️ ${T("قسّمه نصين", "Split")}</button>${b.chapters[i + 1] ? `<button class="btn btn-o" onclick="bk192.chMerge(${i})">🔗 ${T("ادمجه مع اللي بعده", "Merge next")}</button>` : ""}<button class="btn btn-o" onclick="bk192.chDel(${i})">${c.hidden ? "↩ " + T("رجّعه", "Restore") : "🙈 " + T("اخفيه", "Hide")}</button></div>
+        ${c.summary ? `<div class="sm"><b>✂️</b><ul>${c.summary.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>` : ""}
+        ${(c.quiz || []).map((q, k) => `<div class="xs row" style="justify-content:space-between;border-top:1px dashed var(--line);padding:.25rem 0"><span>${{ mcq: "🔘", tf: "✔️", blank: "✍️", short: "💬" }[q.t] || "❓"} ${esc(q.q).slice(0, 140)}</span><button class="btn btn-o" style="padding:0 .35rem" onclick="bk192.qDel(${i},${k})">🗑️</button></div>`).join("")}</details>`).join("")}
+      <div class="card"><button class="btn btn-p" onclick="bk192.save()">💾 ${T("احفظ كل التعديلات", "Save all")}</button></div>`, 1100);
+  }
+  function readPage(id) {
+    const b = B.cur && B.cur.id === id ? B.cur : null; if (!b) { loadBook(id); return pageWrap("📖", "…", "", `<div class="card">⏳</div>`); } if (b.missing) return pageWrap("📖", "—", "", `<div class="card">${T("الكتاب ده مش متاح", "Not available")}</div>`);
+    const o = O(b); const C = b.chapters.map((c, i) => Object.assign({ i }, c)).filter(c => !c.hidden); if (!C.length) return pageWrap("📖", esc(b.title), "", `<div class="card">—</div>`);
+    const ci = Math.min(state.bk192c != null ? state.bk192c : ((B.prog || {}).at || 0), b.chapters.length - 1); const ch = b.chapters[ci] && !b.chapters[ci].hidden ? b.chapters[ci] : C[0]; const cix = b.chapters.indexOf(ch);
+    if (!ch.games) ch.games = games(ch);
+    const avail = { interactive: o.modes.interactive, chapters: o.modes.chapters, summary: o.modes.summary && b.chapters.some(c => c.summary && c.summary.length), plain: o.modes.plain, games: o.modes.games && (ch.games || []).length > 0, quiz: o.modes.quiz && o.quizAfter !== "none" && (o.quizAfter !== "end" || cix === C[C.length - 1].i) && (ch.quiz || []).length > 0 };
+    let m = state.bk192m || o.defMode; if (!avail[m]) m = Object.keys(avail).find(k => avail[k]) || "plain";
+    const tabs = [["interactive", "📖", T("تفاعلي", "Interactive")], ["chapters", "📑", T("الفصول", "Chapters")], ["summary", "✂️", T("الملخص", "Summary")], ["plain", "📄", T("النص", "Text")], ["games", "🎮", T("ألعاب", "Games")], ["quiz", "📝", T("اختبار", "Quiz")]].filter(t => avail[t[0]]);
+    const done = (B.prog || {}).done || []; const sc = (B.prog || {}).score || {}; const audio = hasAudio(b);
+    const nav = `<div class="row" style="justify-content:space-between;gap:.4rem;margin-top:1rem">${C.findIndex(c => c.i === cix) > 0 ? `<button class="btn btn-o" onclick="bk192.ch(${C[C.findIndex(c => c.i === cix) - 1].i})">→ ${T("اللي قبله", "Previous")}</button>` : "<span></span>"}${C.findIndex(c => c.i === cix) < C.length - 1 ? `<button class="btn btn-p" onclick="bk192.ch(${C[C.findIndex(c => c.i === cix) + 1].i})">${T("اللي بعده", "Next")} ←</button>` : ""}</div>`;
+    let body = "";
+    if (m === "chapters") body = `<div class="bk192toc">${C.map((c, k) => `<button class="${c.i === cix ? "on" : ""}" onclick="bk192.ch(${c.i});bk192.mode('${o.modes.interactive ? "interactive" : "plain"}')"><span>${done.includes(c.i) ? "✅" : k + 1}</span><b>${esc(c.title)}</b><em class="xs muted">${c.paras.length} ${T("فقرة", "paras")}${sc[c.i] != null ? " · 📝 " + sc[c.i] + "%" : ""}</em></button>`).join("")}</div>`;
+    else if (m === "summary") body = C.filter(c => c.summary && c.summary.length).map(c => `<div class="card"><h3>${esc(c.title)}</h3><ul>${c.summary.map(s => `<li>${esc(s)}${audio ? ` <button class="bk192s" onclick="(async()=>{await (window.bk192sayT||(()=>{}))(${JSON.stringify(s).replace(/"/g, "&quot;")})})()">🔊</button>` : ""}</li>`).join("")}</ul>${(c.terms || []).length ? `<p class="sm">${c.terms.map(t => `<b>${esc(t.w)}</b>: ${esc(t.d)}`).join(" · ")}</p>` : ""}</div>`).join("");
+    else if (m === "plain") body = `<div class="card bk192plain" dir="auto"><h2>${esc(ch.title)}</h2>${ch.paras.map(p => `<p>${esc(p)}</p>`).join("")}</div>${nav}`;
+    else if (m === "interactive") body = `<div class="card"><div class="row" style="justify-content:space-between;gap:.5rem;flex-wrap:wrap"><h2 style="margin:0">${esc(ch.title)}</h2>${audio ? `<div class="row" style="gap:.4rem;align-items:center"><button id="pl192" class="btn btn-p" onclick="bk192play(${cix})">▶ ${T("اقرالي الفصل", "Read the chapter to me")}</button><label class="xs">⏩ <select onchange="bk192rate(this.value)"><option value="0.8">0.8×</option><option value="1" selected>1×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option></select></label></div>` : ""}</div>
+      ${ch.summary && ch.summary.length ? `<details class="sm" style="margin:.5rem 0"><summary>✂️ ${T("الخلاصة قبل ما تقرا", "Key points first")}</summary><ul>${ch.summary.map(s => `<li>${esc(s)}</li>`).join("")}</ul></details>` : ""}
+      <div dir="auto">${ch.paras.map((p, k) => `<p class="bk192p" id="p192-${cix}-${k}">${audio ? `<button class="bk192s" title="🔊" onclick="bk192say(${cix},${k})">🔊</button>` : ""}${esc(p)}</p>`).join("")}</div>
+      ${(ch.terms || []).length ? `<div class="sm" style="margin-top:.6rem">📌 ${ch.terms.map(t => `<span class="badge" title="${esc(t.d)}">${esc(t.w)}</span>`).join(" ")}</div>` : ""}</div>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap">${avail.games ? `<button class="btn btn-o" onclick="bk192.mode('games')">🎮 ${T("العب على الفصل ده", "Play this chapter")}</button>` : ""}${avail.quiz ? `<button class="btn btn-p" onclick="bk192.mode('quiz')">📝 ${T("اختبر نفسك", "Test yourself")}</button>` : ""}</div>${nav}`;
+    else if (m === "quiz") { const A = state.bk192a || {}; body = `<div class="card"><h3>📝 ${esc(ch.title)}</h3>${ch.quiz.map((q, k) => { const a = A[cix + ":" + k]; const opts = q.t === "mcq" ? q.o.map((x, j) => [j, x]) : q.t === "tf" ? [[true, T("صح", "True")], [false, T("غلط", "False")]] : q.t === "blank" ? (q.o || []).map(x => [x, x]) : null;
+        return `<div class="bk192q ${a ? (a.ok ? "ok" : "no") : ""}"><p><b>${k + 1}.</b> ${esc(q.q)}</p>${opts ? `<div class="row" style="gap:.3rem;flex-wrap:wrap">${opts.map(([val, lab]) => `<button class="btn ${a && String(a.v) === String(val) ? (a.ok ? "btn-p" : "btn-o") : "btn-o"}" ${a ? "disabled" : ""} onclick="bk192.ans(${cix},${k},${typeof val === "string" ? JSON.stringify(val).replace(/"/g, "&quot;") : val})">${esc(String(lab))}</button>`).join("")}</div>` : `<input class="in" placeholder="${T("اكتب إجابتك", "Your answer")}" ${a ? "disabled" : ""} onchange="bk192.ans(${cix},${k},this.value)">`}${a ? `<p class="xs">${a.ok ? "✅ " + T("صح", "Correct") : "❌ " + T("الإجابة", "Answer") + ": " + esc(String(q.t === "mcq" ? q.o[q.a] : q.t === "tf" ? (q.a ? T("صح", "True") : T("غلط", "False")) : q.a))}</p>` : ""}</div>`; }).join("")}
+        ${sc[cix] != null ? `<p><b>${T("نتيجتك", "Your score")}: ${sc[cix]}%</b></p>` : ""}<button class="btn btn-o" onclick="Object.keys(state.bk192a||{}).filter(x=>x.startsWith('${cix}:')).forEach(x=>delete state.bk192a[x]);render()">🔁 ${T("عيد", "Retry")}</button></div>${nav}`; }
+    else if (m === "games") { const G = state.bk192g || {}; body = (ch.games || []).map((g, gi) => { const s = G[cix + ":" + gi] || {}; let h = "";
+        if (g.t === "order") { const order = s.pick || []; const left = g.items.map((x, j) => j).filter(j => !order.includes(j)); const sh = s.sh || (s.sh = shuffle(g.items.map((_, j) => j))); h = `<div class="bk192pool">${sh.filter(j => left.includes(j)).map(j => `<button onclick="bk192.gm(${cix},${gi},'pick',${j})">${esc(g.items[j])}</button>`).join("")}</div><ol>${order.map((j, p) => `<li class="${j === p ? "ok" : "no"}">${esc(g.items[j])}</li>`).join("")}</ol>${order.length === g.items.length ? `<b>${order.every((j, p) => j === p) ? "🎉 " + T("ممتاز!", "Perfect!") : "🔁 " + T("حاول تاني", "Try again")}</b>` : ""}`; }
+        else if (g.t === "tf") h = g.items.map((it, j) => { const a = (s.a || {})[j]; return `<div class="bk192q ${a == null ? "" : a === it.ok ? "ok" : "no"}"><p>${esc(it.s)}</p><button class="btn btn-o" onclick="bk192.gm(${cix},${gi},'tf',[${j},true])">✔️</button> <button class="btn btn-o" onclick="bk192.gm(${cix},${gi},'tf',[${j},false])">✖️</button></div>`; }).join("");
+        else if (g.t === "match") { const R = s.r || (s.r = shuffle(g.items.map((_, j) => j))); h = `<div class="bk192m"><div>${g.items.map((it, j) => `<button class="${s.m1 === j ? "sel" : ""} ${(s.ok || {})[j] ? "ok" : ""}" onclick="bk192.gm(${cix},${gi},'m1',${j})">${esc(it.w)}</button>`).join("")}</div><div>${R.map(j => `<button class="${(s.ok || {})[j] ? "ok" : ""}" onclick="bk192.gm(${cix},${gi},'m2',${j})">${esc(g.items[j].d)}</button>`).join("")}</div></div>`; }
+        else if (g.t === "scramble") h = g.items.map((w, j) => { const sh = shuffle([...w]).join(""); const v = (s.g || {})[j]; return `<div class="row" style="gap:.4rem;align-items:center;margin:.25rem 0"><code style="font-size:1.1rem">${esc(sh)}</code><input class="in" style="width:auto" value="${esc(v || "")}" onchange="bk192.gm(${cix},${gi},'sc',[${j},this.value])">${v ? (v.trim() === w ? "✅" : "❌") : ""}</div>`; }).join("");
+        else if (g.t === "cards") h = `<div class="bk192cards">${g.items.map((it, j) => `<button class="${(s.f || {})[j] ? "f" : ""}" onclick="bk192.gm(${cix},${gi},'flip',${j})">${esc((s.f || {})[j] ? it.d : it.w)}</button>`).join("")}</div>`;
+        return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">${esc(g.title)}</h3><button class="btn btn-o" style="padding:.1rem .5rem" onclick="bk192.gm(${cix},${gi},'reset')">🔁</button></div>${h}</div>`; }).join("") + nav; }
+    return pageWrap("📖", esc(b.title), (b.author ? esc(b.author) + " · " : "") + `${C.findIndex(c => c.i === cix) + 1}/${C.length}` + (canEdit() ? ` · ${stBadge(b.status)}` : ""),
+      `${canEdit() ? `<div class="card sm row" style="justify-content:space-between"><span>👁 ${T("دي معاينة زي ما الطالب هيشوفها", "Student preview")}</span><button class="btn btn-o" onclick="go16('bookedit192','${b.id}')">✏️ ${T("رجوع للتعديل", "Back to editor")}</button></div>` : ""}
+      <div class="bk192tabs">${tabs.map(([k, ic, l]) => `<button class="${m === k ? "on" : ""}" onclick="bk192.mode('${k}')">${ic} ${l}</button>`).join("")}</div>
+      <div class="bk192prog"><i style="width:${Math.round(done.length / C.length * 100)}%"></i></div>${body}`, 980);
+  }
+  window.bk192sayT = t => speak(t, B.cur || {});
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () {
+    const rt = state.route; const arg = String(state.pageArg || "");
+    if (rt === "books192" || rt === "book192" || rt === "bookedit192") { let b; try { b = rt === "books192" ? listPage() : rt === "book192" ? readPage(arg) : editPage(arg); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); return; }
+    if (SPK.on) stopSpk(); _r.apply(this, arguments);
+  };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#b45309" onclick="go16('books192')"><span>📚</span><b>${T("الكتب التفاعلية", "Interactive books")}</b></button>`); };
+  const m = location.hash.match(/^#\/(books192|book192|bookedit192)(?:\/([^/?#]+))?/); if (m) { state.route = m[1]; state.pageArg = m[2] || null; }
+  css(`.bk192g{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.7rem;margin-top:.8rem}.bk192c{cursor:pointer;display:flex;flex-direction:column;gap:.3rem;align-items:flex-start}.bk192c img,.bk192cv{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.6rem;background:color-mix(in srgb,var(--accent) 10%,var(--bg));display:grid;place-items:center;font-size:3rem}
+  .bk192tabs{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.5rem}.bk192tabs button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.35rem .9rem;cursor:pointer}.bk192tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .bk192prog{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:.8rem}.bk192prog i{display:block;height:100%;background:var(--accent);transition:width .5s}
+  .bk192p{line-height:2;font-size:1.08em;padding:.35rem .5rem;border-radius:.6rem;transition:background .3s}.bk192p.on{background:color-mix(in srgb,#f59e0b 22%,transparent)}.bk192s{border:0;background:none;cursor:pointer;opacity:.55;font-size:.95em;margin-inline-end:.3rem}.bk192s:hover{opacity:1}
+  .bk192plain p{line-height:2.1;font-size:1.1em}.bk192toc{display:grid;gap:.4rem}.bk192toc button{display:grid;grid-template-columns:2.2rem 1fr;gap:.1rem .5rem;text-align:start;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:.8rem;padding:.6rem;cursor:pointer}.bk192toc button.on{border-color:var(--accent);outline:2px solid var(--accent)}.bk192toc span{grid-row:span 2;font-size:1.2rem;display:grid;place-items:center}
+  .bk192q{border:1px solid var(--line);border-radius:.7rem;padding:.6rem;margin:.4rem 0}.bk192q.ok{border-color:#16a34a;background:color-mix(in srgb,#16a34a 8%,transparent)}.bk192q.no{border-color:#dc2626;background:color-mix(in srgb,#dc2626 7%,transparent)}
+  .bk192pool{display:flex;flex-direction:column;gap:.3rem}.bk192pool button,.bk192m button,.bk192cards button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:.6rem;padding:.45rem .6rem;cursor:pointer;text-align:start}li.ok{color:#16a34a}li.no{color:#dc2626}
+  .bk192m{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.bk192m>div{display:flex;flex-direction:column;gap:.3rem}.bk192m .sel{outline:2px solid var(--accent)}.bk192m .ok{background:color-mix(in srgb,#16a34a 15%,var(--bg))}
+  .bk192cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem}.bk192cards button{min-height:90px;text-align:center;transition:transform .4s}.bk192cards button.f{transform:rotateY(180deg) scaleX(-1);background:color-mix(in srgb,var(--accent) 12%,var(--bg))}`);
 })();
 
 // بدء التشغيل
