@@ -27224,12 +27224,12 @@ Between lessons, the platform keeps you going:
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
   const hoverDev = () => matchMedia("(hover:hover) and (pointer:fine)").matches;
-  const RV = () => Object.assign({ sdim: "none", pin: "", on: "on", trig: "edge", style: "overlay", cover: "no", anim: "slide", delay: 700, zone: 70, strig: "edge", sstyle: "overlay", sanim: "slide", tdev: "arrow" }, setv("rv190", {}) || {});
+  const RV = () => Object.assign({ zpos: "full", zw: 100, szpos: "full", tsel: "", ssel: "", showz: "", sdim: "none", pin: "", on: "on", trig: "edge", style: "overlay", cover: "no", anim: "slide", delay: 700, zone: 70, strig: "edge", sstyle: "overlay", sanim: "slide", tdev: "arrow" }, setv("rv190", {}) || {});
   const PIN = () => { try { return realOwner() && localStorage.getItem("itqan_pin190") === "1"; } catch (e) { return false; } };
   window.pin190 = () => { try { localStorage.setItem("itqan_pin190", PIN() ? "0" : "1"); } catch (e) {} layout(); render(); };
   let OPEN = false, SOPEN = false, tClose = 0, sClose = 0, lastY = 0;
 
-  function bars() { return [...document.querySelectorAll("#app .bar185, #app .dombar")].filter((x, i, A) => !A.some(y => y !== x && y.contains(x))); }
+  function bars() { return [...document.querySelectorAll("#app .bar185, #app .dombar, #app .hdr .nav")].filter((x, i, A) => !A.some(y => y !== x && y.contains(x))); }
   function hdr() { return document.querySelector("#app .hdr, #app > header"); }
   function sides() { return [...document.querySelectorAll(".side185, #nv180.nv180-side, #nv180.nv180-rail")]; }
   function layout() {
@@ -27250,13 +27250,14 @@ Between lessons, the platform keeps you going:
     if (!document.body.classList.contains("rv190") || !hoverDev()) return; const c = RV(); const x = e.clientX, y = e.clientY; const h = hdr();
     /* فوق: يفتح بالطريقة اللي اخترتها، ويفضل مفتوح طول ما الماوس عليه + مهلة قبل ما يقفل (عشان مايرعشش) */
     if (c.trig !== "always" && c.trig !== "arrow" && c.trig !== "click" && c.trig !== "scroll") {
-      const want = c.trig === "edge" ? y < c.zone : c.trig === "logo" ? inRect(h && h.querySelector("a,.logo,.brand"), x, y, 6) : c.trig === "header" ? inRect(h, x, y, 0) : false;
+      const zx = () => { const w = innerWidth * (+c.zw || 100) / 100; const L = c.zpos === "center" ? (innerWidth - w) / 2 : c.zpos === "left" ? 0 : c.zpos === "right" ? innerWidth - w : 0; return x >= L && x <= L + (c.zpos === "full" ? innerWidth : w); };
+      const want = c.trig === "edge" ? (y < c.zone && zx()) : c.trig === "el" ? !!(c.tsel && [...document.querySelectorAll(c.tsel)].some(el => inRect(el, x, y, 4))) : c.trig === "logo" ? inRect(h && h.querySelector("a,.logo,.brand"), x, y, 6) : c.trig === "header" ? inRect(h, x, y, 0) : false;
       const keep = OPEN && (bars().some(b => inRect(b, x, y, 24)) || inRect(h, x, y, 0) || y < c.zone);
       if (want || keep) { clearTimeout(tClose); tClose = 0; if (!OPEN) { OPEN = true; layout(); } }
       else if (OPEN && !tClose) tClose = setTimeout(() => { OPEN = false; tClose = 0; layout(); }, +c.delay || 700);
     }
     /* الجنب: نفس الفكرة */
-    if (c.strig === "edge") { const rtl = document.dir === "rtl"; const edge = rtl ? x > innerWidth - c.zone : x < c.zone; const keep = SOPEN && sides().some(s => inRect(s, x, y, 30));
+    if (c.strig === "edge" || c.strig === "el") { const rtl = document.dir === "rtl"; const sh = innerHeight * (+c.szh || 100) / 100; const st = c.szpos === "middle" ? (innerHeight - sh) / 2 : c.szpos === "bottom" ? innerHeight - sh : 0; const inY = c.szpos === "full" || (y >= st && y <= st + sh); const side = sides()[0]; const onLeft = side ? side.getBoundingClientRect().left + (side.offsetWidth || 0) / 2 < innerWidth / 2 : !rtl; const edge = c.strig === "el" ? !!(c.ssel && [...document.querySelectorAll(c.ssel)].some(el => inRect(el, x, y, 4))) : (onLeft ? x < (+c.szone || c.zone) : x > innerWidth - (+c.szone || c.zone)) && inY; const keep = SOPEN && sides().some(s => inRect(s, x, y, 30));
       if (edge || keep) { clearTimeout(sClose); sClose = 0; if (!SOPEN) { SOPEN = true; layout(); } } else if (SOPEN && !sClose) sClose = setTimeout(() => { SOPEN = false; sClose = 0; layout(); }, +c.delay || 700); }
   }, { passive: true });
   addEventListener("scroll", () => { const c = RV(); if (c.trig !== "scroll" || !document.body.classList.contains("rv190")) return; const y = scrollY; const o = y < 80 || y < lastY - 4; lastY = y; if (o !== OPEN) { OPEN = o; layout(); } }, { passive: true });
@@ -27264,6 +27265,13 @@ Between lessons, the platform keeps you going:
   document.addEventListener("click", e => { const c = RV(); if (c.trig === "logo-click" && e.target.closest(".hdr .logo, .hdr a:first-child")) { if (!OPEN) { e.preventDefault(); OPEN = true; layout(); } } if (OPEN && (c.trig === "arrow" || c.trig === "click" || c.trig === "logo-click") && !e.target.closest(".bar185,.hdr,#ar190")) { OPEN = false; layout(); } }, true);
   addEventListener("resize", () => { clearTimeout(window.__rv190); window.__rv190 = setTimeout(layout, 150); });
 
+  /* ---------- 🎯 اختار أي حاجة تبقى «المُطلِّع» + وريني المساحات ---------- */
+  const qs = el => { const P = []; let n = el; while (n && n.nodeType === 1 && n !== document.body && P.length < 6) { if (n.id) { P.unshift("#" + CSS.escape(n.id)); break; } let p = n.tagName.toLowerCase(); const cl = [...n.classList].filter(c => !/^(on|hov|ed189on|ep188on|an189)/.test(c)).slice(0, 2); if (cl.length) p += "." + cl.map(c => CSS.escape(c)).join("."); const par = n.parentElement; if (par) { const sib = [...par.children].filter(x => x.tagName === n.tagName); if (sib.length > 1) p += `:nth-of-type(${sib.indexOf(n) + 1})`; } P.unshift(p); n = n.parentElement; } return P.join(">"); };
+  window.pick190 = k => { toast("🎯 " + T("دوس على الحاجة اللي عايزها تطلّع الشريط", "Click the element that should reveal the bar")); const h = e => { e.preventDefault(); e.stopPropagation(); document.removeEventListener("click", h, true); rv190(k, qs(e.target)).then(() => rv190(k === "tsel" ? "trig" : "strig", "el")); }; setTimeout(() => document.addEventListener("click", h, true), 50); };
+  function zones() { document.querySelectorAll(".z190").forEach(z => z.remove()); const c = RV(); if (!c.showz || !realOwner()) return; const add = (st, t) => { const d = document.createElement("div"); d.className = "z190"; d.style.cssText = st; d.textContent = t; document.body.appendChild(d); };
+    if (c.trig === "edge") { const w = c.zpos === "full" ? 100 : +c.zw || 100; const L = c.zpos === "center" ? (100 - w) / 2 : c.zpos === "right" ? 100 - w : 0; add(`top:0;height:${c.zone}px;left:${L}vw;width:${w}vw`, "⬇️ " + T("هنا تطلع الشرايط", "Top zone")); }
+    if (c.strig === "edge") { const s = sides()[0]; const onLeft = s ? s.getBoundingClientRect().left + (s.offsetWidth || 0) / 2 < innerWidth / 2 : document.dir !== "rtl"; const h = c.szpos === "full" ? 100 : +c.szh || 100; const t = c.szpos === "middle" ? (100 - h) / 2 : c.szpos === "bottom" ? 100 - h : 0; add(`top:${t}vh;height:${h}vh;${onLeft ? "left" : "right"}:0;width:${+c.szone || c.zone}px;writing-mode:vertical-rl`, T("هنا يطلع الجنب", "Side zone")); }
+    [["tsel", c.trig === "el"], ["ssel", c.strig === "el"]].forEach(([k, on]) => { if (!on || !c[k]) return; document.querySelectorAll(c[k]).forEach(el => el.classList.add("zt190")); }); }
   /* ---------- لوحة الخيارات ---------- */
   window.rv190 = async (k, v) => { const c = Object.assign({}, setv("rv190", {}) || {}, { [k]: v }); await saveSetting16("rv190", c); OPEN = false; layout(); };
   function card() {
@@ -27272,7 +27280,10 @@ Between lessons, the platform keeps you going:
     return `<div class="card" id="rv190c" style="border:2px solid #0ea5e9"><h3>🎚️ ${T("الشرايط: إزاي تظهر وتختفي (من غير رعشة)", "Bars: how they show and hide (no flicker)")}</h3>
       ${row("🔛 " + T("النظام الجديد", "New system"), sel("on", [["on", "شغّال", "On"], ["off", "القديم", "Old"]]))}
       <h4>⬇️ ${T("الشرايط اللي فوق", "Top bars")}</h4>
-      ${row(T("تظهر إمتى؟ (لاب)", "Show when? (laptop)"), sel("trig", [["edge", "الماوس يقرّب من فوق", "Mouse near the top"], ["header", "الماوس على الهيدر", "Mouse on header"], ["logo", "الماوس على اللوجو", "Mouse on logo"], ["logo-click", "دوسة على اللوجو", "Click the logo"], ["arrow", "سهم ▾ صغير", "Small ▾ arrow"], ["scroll", "لما تطلع لفوق بالسكرول", "Scrolling up"], ["always", "ظاهرة دايمًا", "Always shown"]]))}
+      ${row(T("تظهر إمتى؟ (لاب)", "Show when? (laptop)"), sel("trig", [["edge", "الماوس يقرّب من فوق", "Mouse near the top"], ["el", "الماوس على حاجة معيّنة اخترتها", "Mouse on a chosen element"], ["header", "الماوس على الهيدر", "Mouse on header"], ["logo", "الماوس على اللوجو", "Mouse on logo"], ["logo-click", "دوسة على اللوجو", "Click the logo"], ["arrow", "سهم ▾ صغير", "Small ▾ arrow"], ["scroll", "لما تطلع لفوق بالسكرول", "Scrolling up"], ["always", "ظاهرة دايمًا", "Always shown"]]))}
+      ${row(T("مساحة الماوس فوق: الارتفاع", "Top zone height"), `<input class="in" type="number" min="4" max="400" style="width:6rem" value="${c.zone}" onchange="rv190('zone',+this.value)"> px`)}
+      ${row(T("مساحة الماوس فوق: مكانها", "Top zone position"), sel("zpos", [["full", "بعرض الشاشة كلها", "Full width"], ["center", "في النص بس", "Centre only"], ["right", "اليمين بس", "Right only"], ["left", "الشمال بس", "Left only"]]) + ` <input class="in" type="number" min="5" max="100" style="width:5rem" value="${c.zw}" onchange="rv190('zw',+this.value)"> %`)}
+      ${row(T("أو: حاجة معيّنة في الصفحة هي اللي تطلّعها", "Or: a specific element triggers it"), `<button class="btn btn-o" onclick="pick190('tsel')">🎯 ${T("دوس عليها في الصفحة", "Pick it on the page")}</button> <code class="xs">${esc(c.tsel || "—")}</code>`)}
       ${row(T("الموبايل والتابلت", "Phone & tablet"), sel("tdev", [["arrow", "سهم ▾", "▾ arrow"], ["scroll", "لما يطلع لفوق", "Scrolling up"], ["always", "ظاهرة دايمًا", "Always"]]))}
       ${row(T("بتظهر إزاي؟", "How?"), sel("style", [["overlay", "تنزل فوق المحتوى (الصفحة ماتتحركش)", "Drop over content (page stays still)"], ["push", "تزق المحتوى لتحت", "Push content down"]]))}
       ${row(T("تغطي اللوجو؟", "Cover the logo?"), sel("cover", [["no", "لأ — تنزل تحت اللوجو", "No — below the logo"], ["yes", "أيوه — تنزل من أول الشاشة فوقه", "Yes — from the very top"]]))}
@@ -27280,7 +27291,11 @@ Between lessons, the platform keeps you going:
       ${row(T("تستنى قد إيه قبل ما تختفي", "Wait before hiding"), sel("delay", [[300, "سريع", "Fast"], [700, "عادي", "Normal"], [1500, "بطيء", "Slow"], [3000, "بطيء جدًا", "Very slow"]]))}
       ${row(T("مساحة الإحساس من الحافة", "Edge sensitivity"), sel("zone", [[30, "صغيرة", "Small"], [70, "متوسطة", "Medium"], [120, "كبيرة", "Large"]]))}
       <h4>↔️ ${T("الشرايط اللي في الجنب", "Side bars")}</h4>
-      ${row(T("تظهر إمتى؟", "Show when?"), sel("strig", [["edge", "الماوس يقرّب من الجنب", "Mouse near the side"], ["arrow", "سهم ‹ على الحافة", "Edge arrow ‹"], ["always", "ظاهرة دايمًا", "Always"]]))}
+      ${row(T("تظهر إمتى؟", "Show when?"), sel("strig", [["edge", "الماوس يقرّب من الجنب", "Mouse near the side"], ["el", "الماوس على حاجة معيّنة", "Mouse on a chosen element"], ["arrow", "سهم ‹ على الحافة", "Edge arrow ‹"], ["always", "ظاهرة دايمًا", "Always"]]))}
+      ${row(T("مساحة الماوس في الجنب: العرض", "Side zone width"), `<input class="in" type="number" min="4" max="400" style="width:6rem" value="${c.szone || c.zone}" onchange="rv190('szone',+this.value)"> px`)}
+      ${row(T("مكانها على الطول", "Vertical position"), sel("szpos", [["full", "الطول كله", "Full height"], ["top", "فوق", "Top"], ["middle", "في النص", "Middle"], ["bottom", "تحت", "Bottom"]]) + ` <input class="in" type="number" min="5" max="100" style="width:5rem" value="${c.szh || 100}" onchange="rv190('szh',+this.value)"> %`)}
+      ${row(T("أو: حاجة معيّنة (أيقونة مثلًا) تطلّعها", "Or: a specific element (e.g. an icon)"), `<button class="btn btn-o" onclick="pick190('ssel')">🎯 ${T("دوس عليها في الصفحة", "Pick it")}</button> <code class="xs">${esc(c.ssel || "—")}</code>`)}
+      ${row("👁 " + T("وريني المساحات دي على الشاشة", "Show the zones on screen"), sel("showz", [["", "لأ", "No"], ["1", "أيوه (ليك انت بس)", "Yes (only you)"]]))}
       ${row(T("بتظهر إزاي؟", "How?"), sel("sstyle", [["overlay", "فوق المحتوى", "Over content"], ["push", "تزق المحتوى للجنب", "Push content aside"]]))}
       ${row(T("لو بتزق: تزق إيه؟", "If pushing: push what?"), sel("ptarget", [["page", "الصفحة كلها (من الجنب اللي الشريط فيه)", "Whole page (from the bar's own side)"], ["content", "المحتوى بس (الهيدر ثابت)", "Content only"]]))}
       ${row(T("وراه", "Behind it"), sel("sdim", [["none", "عادي", "Nothing"], ["dim", "الصفحة تغمق شوية", "Dim the page"], ["blur", "الصفحة تتغبّش", "Blur the page"]]))}
@@ -27306,7 +27321,7 @@ Between lessons, the platform keeps you going:
     const l = document.createElement("label"); l.className = "xs"; l.innerHTML = `🖼️ ${T("خلفية القسم ده", "This section's background")} <select>${Object.entries(BG).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${T(v[0], v[1])}</option>`).join("")}</select>`; l.querySelector("select").onchange = e => { ed189.set("bg", e.target.value); setTimeout(applyBg, 50); }; anchor ? anchor.before(l) : p.appendChild(l); }).observe(document.body, { childList: true });
 
   /* ---------- ربط ---------- */
-  const _r = render; render = function () { _r.apply(this, arguments); try { layout(); applyBg();
+  const _r = render; render = function () { _r.apply(this, arguments); try { layout(); applyBg(); zones();
     if (realOwner() && (state.route === "control183" || state.route === "layouts180")) { const m = document.querySelector("#app main .card, #app .wrap .card, #app .card"); if (m && !document.getElementById("rv190c") && state.route === "control183") m.insertAdjacentHTML("beforebegin", card()); const mix = document.getElementById("lv188") || document.querySelector(".ly180mix"); if (mix && !document.getElementById("bg190c") && state.route === "layouts180") mix.insertAdjacentHTML("afterend", bgCard() + (document.getElementById("rv190c") ? "" : card())); }
   } catch (e) { console.warn(e); } };
   try { new MutationObserver(() => { clearTimeout(window.__bg190); window.__bg190 = setTimeout(() => { try { applyBg(); layout(); } catch (e) {} }, 300); }).observe(document.getElementById("app") || document.body, { childList: true }); } catch (e) {}
@@ -27326,22 +27341,22 @@ Between lessons, the platform keeps you going:
   .bg190-frame{outline:3px double color-mix(in srgb,#b45309 40%,transparent);outline-offset:-10px;background:${star}!important}body.bgs190-night,.bg190-night{color:#e5e7eb}
   .bg190g{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.45rem}.bg190s{height:74px;border:1px solid var(--line);border-radius:.7rem;cursor:pointer;display:flex;align-items:flex-end;padding:.3rem;background:var(--bg);color:var(--fg);overflow:hidden}.bg190s b{font-size:.72rem;background:color-mix(in srgb,var(--card) 80%,transparent);border-radius:.4rem;padding:0 .3rem}.bg190s.on{outline:3px solid var(--accent)}
   /* ===== الشرايط ===== */
-  body.rv190 :is(.bar185,.dombar),body.rv190 .hdr .nav{max-height:none!important;transform:none;opacity:1;pointer-events:auto}
-  body.rv190.rv190-overlay :is(.bar185,.dombar){position:fixed!important;top:var(--t190,64px);left:0;right:0;z-index:900;background:var(--card);box-shadow:0 14px 30px -18px rgba(0,0,0,.35);transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s,visibility 0s .32s;transform:translateY(-14px);opacity:0!important;visibility:hidden;pointer-events:none!important}
-  body.rv190.rv190-overlay.rv190-open :is(.bar185,.dombar){transform:none;opacity:1!important;visibility:visible;pointer-events:auto!important;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s,visibility 0s}
-  body.rv190.rv190-push :is(.bar185,.dombar){overflow:hidden;transition:max-height .35s ease,opacity .25s;max-height:0!important;opacity:0}body.rv190.rv190-push.rv190-open :is(.bar185,.dombar){max-height:24rem!important;opacity:1}
+  body.rv190 :is(.bar185,.dombar,.hdr .nav),body.rv190 .hdr .nav{max-height:none!important;transform:none;opacity:1;pointer-events:auto}
+  body.rv190.rv190-overlay :is(.bar185,.dombar,.hdr .nav){position:fixed!important;top:var(--t190,64px);left:0;right:0;z-index:900;background:var(--card);box-shadow:0 14px 30px -18px rgba(0,0,0,.35);transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s,visibility 0s .32s;transform:translateY(-14px);opacity:0!important;visibility:hidden;pointer-events:none!important}
+  body.rv190.rv190-overlay.rv190-open :is(.bar185,.dombar,.hdr .nav){transform:none;opacity:1!important;visibility:visible;pointer-events:auto!important;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s,visibility 0s}
+  body.rv190.rv190-push :is(.bar185,.dombar,.hdr .nav){overflow:hidden;transition:max-height .35s ease,opacity .25s;max-height:0!important;opacity:0}body.rv190.rv190-push.rv190-open :is(.bar185,.dombar,.hdr .nav){max-height:24rem!important;opacity:1}
   body.rv190:not(.rv190-always):not(.rv190-open) .hdr .nav{visibility:hidden;opacity:0!important;transition:opacity .2s,visibility 0s .2s}body.rv190.rv190-open .hdr .nav{visibility:visible;opacity:1!important;transition:opacity .25s}
-  body.rv190.rv190-a-fade :is(.bar185,.dombar){transform:none!important}body.rv190.rv190-a-drop.rv190-open :is(.bar185,.dombar){animation:drop190 .5s cubic-bezier(.3,1.6,.5,1)}@keyframes drop190{from{transform:translateY(-30px)}}
-  body.rv190.rv190-a-unfold :is(.bar185,.dombar){transform-origin:top;transform:scaleY(.2)}body.rv190.rv190-a-unfold.rv190-open :is(.bar185,.dombar){transform:none}body.rv190.rv190-a-none :is(.bar185,.dombar){transition:none!important}
+  body.rv190.rv190-a-fade :is(.bar185,.dombar,.hdr .nav){transform:none!important}body.rv190.rv190-a-drop.rv190-open :is(.bar185,.dombar,.hdr .nav){animation:drop190 .5s cubic-bezier(.3,1.6,.5,1)}@keyframes drop190{from{transform:translateY(-30px)}}
+  body.rv190.rv190-a-unfold :is(.bar185,.dombar,.hdr .nav){transform-origin:top;transform:scaleY(.2)}body.rv190.rv190-a-unfold.rv190-open :is(.bar185,.dombar,.hdr .nav){transform:none}body.rv190.rv190-a-none :is(.bar185,.dombar,.hdr .nav){transition:none!important}
   #ar190{position:fixed;z-index:960;left:50%;transform:translateX(-50%);width:2.6rem;height:1.6rem;border-radius:0 0 .8rem .8rem;border:1px solid var(--line);border-top:0;background:var(--card);cursor:pointer;font-size:1rem;box-shadow:0 6px 14px -8px rgba(0,0,0,.3)}
   body.rv190.rv190-shide .side185,body.rv190.rv190-shide #nv180.nv180-side,body.rv190.rv190-shide #nv180.nv180-rail{transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .3s;transform:translateX(calc(var(--sd190,1) * 100%))!important;opacity:0!important;pointer-events:none!important}
   html[dir=rtl] body.rv190{--sd190:1}html[dir=ltr] body.rv190,html:not([dir=rtl]) body.rv190{--sd190:-1}
   body.rv190.rv190-sopen .side185,body.rv190.rv190-sopen #nv180.nv180-side,body.rv190.rv190-sopen #nv180.nv180-rail{transform:none!important;opacity:1!important;pointer-events:auto!important}
   body.rv190.rv190-sa-fade .side185{transform:none!important}body.rv190{transition:padding .45s cubic-bezier(.22,1,.36,1)}body.rv190 #app{transition:filter .35s}body.rv190-dim #app{filter:brightness(.82)}body.rv190-blur #app{filter:blur(3px)}
-  body.rv190 .near-x{}body.rv190.near-top185 :is(.bar185,.dombar){}
+  body.rv190 .near-x{}body.rv190.near-top185 :is(.bar185,.dombar,.hdr .nav){}
   #sar190{position:fixed;z-index:960;top:45%;inset-inline-start:0;width:1.4rem;height:3rem;border-radius:0 .8rem .8rem 0;border:1px solid var(--line);background:var(--card);cursor:pointer}html[dir=rtl] #sar190{border-radius:.8rem 0 0 .8rem}
-  body.rv190 #hh186{display:none!important}
-  @media (prefers-reduced-motion:reduce){body.rv190 :is(.bar185,.dombar),body.rv190 .side185{transition:none!important}}`);
+  body.rv190 #hh186{display:none!important}.z190{position:fixed;z-index:899;background:repeating-linear-gradient(45deg,#0ea5e922 0 8px,#0ea5e911 8px 16px);outline:2px dashed #0ea5e9;color:#0369a1;font-size:.7rem;display:grid;place-items:center;pointer-events:none}.zt190{outline:3px dashed #0ea5e9!important;outline-offset:3px}
+  @media (prefers-reduced-motion:reduce){body.rv190 :is(.bar185,.dombar,.hdr .nav),body.rv190 .side185{transition:none!important}}`);
 })();
 
 // بدء التشغيل
