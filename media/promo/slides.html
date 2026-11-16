@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=540"><meta name="robots" content="noindex">
+<title>Itqan promo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@600;700&family=Tajawal:wght@400;500;700;800&family=Playfair+Display:wght@700&family=Inter:wght@400;600;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0}html,body{width:540px;height:960px;overflow:hidden;background:#06201c}
+body{font-family:Tajawal,Inter,system-ui,sans-serif;color:#fff}
+.bg{position:fixed;inset:0;background:radial-gradient(120% 80% at 80% 0%,#1d6b5c 0%,#0b3a33 45%,#06201c 100%)}
+.bg:before{content:"";position:absolute;inset:0;opacity:.09;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='%23fcd34d' stroke-width='1.2'%3E%3Cpath d='M40 4l10 26 26 10-26 10-10 26-10-26L4 40l26-10z'/%3E%3C/g%3E%3C/svg%3E")}
+.glow{position:fixed;width:420px;height:420px;border-radius:50%;background:radial-gradient(#fcd34d55,transparent 65%);top:-140px;left:-120px}
+.s{position:fixed;inset:0;padding:38px 34px;display:flex;flex-direction:column;align-items:center;opacity:0;transition:opacity .6s}.s.on{opacity:1}
+.brand{display:flex;align-items:center;gap:10px;font:700 22px 'El Messiri',Tajawal;letter-spacing:.3px}.brand i{font-style:normal;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#fcd34d,#d97706);color:#06201c;display:grid;place-items:center;font:800 15px 'El Messiri'}
+h1{font:700 40px/1.25 'El Messiri',Tajawal;text-align:center;margin:18px 0 8px;text-shadow:0 4px 20px #0006}[lang=en] h1{font-family:'Playfair Display',Inter;font-size:38px}
+h1 em{font-style:normal;color:#fcd34d}
+p.sub{font-size:19px;line-height:1.6;text-align:center;color:#d1fae5;max-width:470px}
+.phone{margin-top:18px;width:324px;height:612px;border-radius:38px;background:#0b1220;padding:12px;box-shadow:0 30px 60px #0009,0 0 0 2px #fcd34d55;position:relative;overflow:hidden;flex:0 0 auto}
+.phone .scr{width:400px;height:735px;transform:scale(.75);transform-origin:top left;border-radius:30px;overflow:hidden;background:#fff}
+.phone iframe{width:400px;height:735px;border:0;background:#fff}
+.cta{margin-top:auto;background:linear-gradient(135deg,#fcd34d,#f59e0b);color:#06201c;font:800 21px Tajawal,Inter;padding:14px 26px;border-radius:999px;box-shadow:0 12px 30px #f59e0b55}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;width:100%}
+.f{background:#ffffff12;border:1px solid #ffffff22;border-radius:22px;padding:18px 14px;text-align:center;backdrop-filter:blur(6px)}.f b{display:block;font-size:42px;margin-bottom:6px}.f span{font:700 18px/1.4 Tajawal,Inter}
+.big{font:800 64px 'El Messiri',Tajawal;color:#fcd34d;margin-top:60px}.url{margin-top:14px;font:600 20px Inter;color:#a7f3d0;direction:ltr}
+.tag{background:#fcd34d22;border:1px solid #fcd34d66;color:#fde68a;border-radius:999px;padding:6px 16px;font-weight:700;font-size:15px;margin-top:14px}
+.tap{position:absolute;width:46px;height:46px;border-radius:50%;background:#f59e0b66;border:3px solid #fcd34d;pointer-events:none;transform:translate(-50%,-50%) scale(.2);opacity:0;transition:all .35s;z-index:9}.tap.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+</style></head><body>
+<div class="bg"></div><div class="glow"></div>
+<div id="root"></div>
+<script>
+const Q = new URLSearchParams(location.search); const LANG = Q.get("lang") || "ar"; const MODE = Q.get("mode") || "promo"; const DUR = +(Q.get("dur") || 10000); const ONLY = Q.get("s");
+document.documentElement.lang = LANG; document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+const T = (a, e) => LANG === "ar" ? a : e;
+const brand = `<div class="brand"><i>إتقان</i>${T("أكاديمية إتقان", "Itqan Academy")}</div>`;
+const phone = id => `<div class="phone"><div class="scr"><iframe id="${id}" src="/?embed=1#/home"></iframe></div><div class="tap" id="tap_${id}"></div></div>`;
+const PROMO = [
+  { html: `${brand}<h1>${T("القرآن بصوتك… <em>بإتقان</em>", "Recite the Quran <em>beautifully</em>")}</h1><p class="sub">${T("معلمين مجازين لايف ١:١ بتوقيت بلدك + منصة بتتابعك كل يوم", "Certified teachers, live 1-on-1 in your time zone + a platform that keeps you going every day")}</p>${phone("f1")}`, go: "home" },
+  { html: `${brand}<h1>${T("صلاتك وقيامك ووردك <em>يوم بيوم</em>", "Prayers, night prayer & wird — <em>day by day</em>")}</h1><p class="sub">${T("مع تذكير قبل كل صلاة بنص ساعة — ببلاش ومن غير تسجيل", "With a reminder 30 minutes before each prayer — free, no sign-up")}</p>${phone("f2")}`, go: "habits168", act: w => { const b = w.document.querySelectorAll(".hb168p button, [onclick*='hb168.pr']"); [0, 1].forEach(i => b[i] && b[i].click()); } },
+  { html: `${brand}<h1>${T("كل اللي محتاجه <em>في مكان واحد</em>", "Everything you need, <em>in one place</em>")}</h1><div class="grid">${[["🎙️", T("سمّع وردك واعرف غلطك فورًا", "Recite & see mistakes instantly")], ["📖", T("مصحف ملوّن بأحكام التجويد", "Colour-coded tajweed mushaf")], ["🎼", T("مقامات وآهات بصوت بشري", "Maqamat & human-voice aahs")], ["🎚️", T("مُوالف لايف لطبقة صوتك", "A live tuner for your voice")], ["🎮", T("ألعاب تعلّم للأطفال", "Learning games for kids")], ["👨‍👩‍👧", T("تقرير أسبوعي للأهل", "Weekly report for parents")]].map(([i, t]) => `<div class="f"><b>${i}</b><span>${t}</span></div>`).join("")}</div><div class="tag">${T("+ أكتر من ٧٠ أداة", "+ more than 70 tools")}</div>` },
+  { html: `${brand}<h1>${T("وفّر <em>٣٠٪</em> بالاشتراك السنوي", "Save <em>30%</em> with a yearly plan")}</h1><p class="sub">${T("أو ابدأ شهري — وأول حصة تجريبية مجانًا", "Or go monthly — your first trial lesson is free")}</p>${phone("f4")}`, go: "pricing", act: w => { try { w.state.yr179 = true; w.render(); w.scrollTo(0, 260); } catch (e) {} } },
+  { html: `${brand}<div class="big">${T("ابدأ النهارده", "Start today")}</div><p class="sub" style="margin-top:14px">${T("احجز حصتك التجريبية المجانية واتعلّم مع معلم يصحّحلك كل حرف", "Book your free trial lesson and learn with a teacher who corrects every letter")}</p><div class="url">quran-academy-nine-dusky.vercel.app</div><div class="cta" style="margin-top:40px">${T("✨ احجز حصتك المجانية", "✨ Book your free lesson")}</div>` }
+];
+const DEMO = [
+  { cap: T("افتح «متابعتي اليومية»", "Open “My daily tracker”"), act: w => w.go16 && w.go16("habits168") },
+  { cap: T("دوس على الفجر: صليته جماعة ✅", "Tap Fajr: prayed in congregation ✅"), tap: [0] },
+  { cap: T("والظهر كمان 🕌", "Dhuhr too 🕌"), tap: [1] },
+  { cap: T("علّم على قيام الليلة 🌙", "Mark tonight's qiyām 🌙"), act: w => { const b = [...w.document.querySelectorAll("button")].find(x => x.textContent.trim() === "1"); if (b) { b.scrollIntoView({ block: "center" }); b.click(); } } },
+  { cap: T("وسجّل وردك 📖", "And log your wird 📖"), act: w => { const i = w.document.querySelectorAll("input[type=number]")[1]; if (i) { i.scrollIntoView({ block: "center" }); i.value = 2; i.dispatchEvent(new Event("change", { bubbles: true })); i.dispatchEvent(new Event("input", { bubbles: true })); } } },
+  { cap: T("وكل يوم تشوف تقدّمك 💚", "See your progress every day 💚"), act: w => w.scrollTo(0, 0) }
+];
+const root = document.getElementById("root");
+function prep(f, cb) { f.addEventListener("load", () => { const w = f.contentWindow; const go = () => { try { if (w.setLang && w.state.lang !== LANG) w.setLang(LANG); } catch (e) {} cb && cb(w); }; setTimeout(go, 1800); }, { once: true }); }
+if (MODE === "promo") {
+  root.innerHTML = PROMO.map((s, i) => `<section class="s" id="s${i}">${s.html}<div class="cta" style="${i === 4 ? "display:none" : ""}">${T("✨ أول حصة تجريبية مجانًا", "✨ First trial lesson free")}</div></section>`).join("");
+  PROMO.forEach((s, i) => { const f = document.getElementById("f" + (i + 1)); if (f) prep(f, w => { if (s.go && s.go !== "home") { try { w.go16 ? (w.PAGES16.includes(s.go) ? w.go16(s.go) : w.navigate(s.go)) : 0; } catch (e) {} } setTimeout(() => { try { s.act && s.act(w); } catch (e) {} }, 1500); }); });
+  let i = ONLY != null ? +ONLY : 0; const show = () => { document.querySelectorAll(".s").forEach((e, k) => e.classList.toggle("on", k === i)); }; show(); if (ONLY == null) setInterval(() => { i = (i + 1) % PROMO.length; show(); }, DUR);
+} else {
+  root.innerHTML = `<section class="s on">${brand}<h1 id="cap" style="font-size:32px;min-height:84px"></h1>${phone("fd")}<div class="cta">${T("✨ جرّبها ببلاش", "✨ Try it free")}</div></section>`;
+  const f = document.getElementById("fd"); prep(f, w => { let k = 0; const step = () => { const d = DEMO[k]; document.getElementById("cap").textContent = d.cap; try { if (d.act) d.act(w); if (d.tap) { const b = w.document.querySelectorAll(".hb168p button, [onclick*='hb168.pr']"); d.tap.forEach(t => { const el = b[t]; if (!el) return; el.scrollIntoView({ block: "center" }); const r = el.getBoundingClientRect(); const tp = document.getElementById("tap_fd"); tp.style.left = (12 + (r.left + r.width / 2) * .75) + "px"; tp.style.top = (12 + (r.top + r.height / 2) * .75) + "px"; tp.classList.add("on"); setTimeout(() => { el.click(); tp.classList.remove("on"); }, 700); }); } } catch (e) {} k++; if (k < DEMO.length) setTimeout(step, DUR); }; step(); });
+}
+</script></body></html>
