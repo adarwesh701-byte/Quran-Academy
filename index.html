@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v188";
+const UI_VERSION = "2026-11-16-v189";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27008,6 +27008,213 @@ Between lessons, the platform keeps you going:
   #va188{position:fixed;z-index:950;bottom:calc(1rem + env(safe-area-inset-bottom));inset-inline-start:1rem;border-radius:999px;border:1px solid var(--line);background:var(--card);padding:.4rem .8rem;font-size:.8rem;box-shadow:0 6px 18px rgba(0,0,0,.15);cursor:pointer}
   body.lock187 #lv188 button,body.lock187 #ep188p{display:none!important}`);
   setTimeout(() => { try { paint(); } catch (e) {} }, 200);
+})();
+
+/* ================= v189: «🤫 قريب» (مايشوفش أي فلوس ولا أسعار + المحتوى مفتوحله) + إخفاء المصادر عن الكل + «🎭 شوف الموقع كـ» (قريب/طالب/زائر/معلم/موظف/معلم استثنائي/مالك) + الفم بيتفتح ويبان اللسان + أي دياجرام بيتحرك + «✏️ عدّل أي حاجة» (كلام/صورة/زرار/قبل وبعد/حركة/إخفاء) + مالك تاني + حسابات تجربة + 📦 نسخة احتياطية ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const uid = () => state.auth && state.auth.user ? state.auth.user.id : null;
+  const AS = () => { try { return JSON.parse(sessionStorage.getItem("itqan_as188") || "null"); } catch (e) { return null; } };
+  const ownerView = () => realOwner() && !AS() && !state.preview;
+
+  /* ---------- صفي أنا (قريب؟) ---------- */
+  let MY = null, MYu = undefined;
+  async function loadMy() { const u = uid(); if (MYu === u) return; MYu = u; if (!u) { MY = null; return; } try { const { data } = await sb.from("staff187").select("perms,active").eq("user_id", u).maybeSingle(); MY = data; } catch (e) {} render(); }
+  const perms = () => { const a = realOwner() && AS(); const r = a ? a.row : MY; return (r && r.active !== false && r.perms) || {}; };
+  const isClose = () => !!perms().close && !ownerView();
+
+  /* ---------- 1) 🤫 «قريب»: كل حاجة فيها فلوس أو أسعار تتشال ---------- */
+  const MONEY_RT = ["pricing", "pay", "sponsor", "invite", "checkout", "wallet", "orders", "payments"];
+  const CURR = "(?:\\$|US\\$|USD|EGP|E£|ج\\.?\\s?م|جنيه|جنيهًا|دولار|€|£|SAR|AED|KWD|ريال|درهم|دينار)";
+  const PRICE = new RegExp(`${CURR}\\s?\\d|\\d[\\d.,٫]*\\s?${CURR}|[٠-٩]+\\s?(?:جنيه|دولار|ريال)`, "i");
+  const MONEY_W = /(اشترك|الاشتراك|الأسعار|أسعار|باقات|الباقات|سعر|ادفع|الدفع|اشتراك مجاني|رصيد|محفظة|Pricing|Subscribe|Plans|Pay\b|Checkout|Wallet|💳|💰|💵)/i;
+  /* ---------- 2) المصادر مابتظهرش لحد غيرك ---------- */
+  const SRC_W = /(المصدر|مصدر|المصادر|مستوحى|مستوحاة|Source|Sources|Inspired by|Credits?|Powered by|بيانات من|منقول من|من موقع|quran\.com|qurancdn|tanzil|everyayah|mp3quran|alquran\.cloud|islamhouse|sunnah\.com|hadithapi|dorar|islamweb|quranenc|api\.|\.com\b|\.org\b|\.net\b|Duolingo|Netflix|Spotify|Pinterest|YouTube|Coursera|Udemy|Khan Academy)/i;
+  const OK_HOST = /(vercel\.app|itqan|wa\.me|whatsapp|paypal|supabase\.co|githubusercontent|zoom\.us|meet\.google|jit\.si|youtube\.com\/embed)/i;
+  function scrub(root) {
+    if (ownerView()) return; const close = isClose(); const body = document.body; body.classList.toggle("close189", close);
+    const hideUp = (el, lim) => { const box = el.closest(".card, li, button, a, tr, .badge, .chip, label, .mstile, .w147t, .pricecard, section > div") || el; ((box.textContent || "").length < (lim || 260) ? box : el).style.display = "none"; };
+    root.querySelectorAll("#app *:not(script):not(style), header *").forEach(el => {
+      if (el.__s189 || el.children.length > 3) return; const t = (el.textContent || "").trim(); if (!t || t.length > 220) return;
+      if (close && (PRICE.test(t) || ((el.matches("button,a,.badge,.chip,li,h3,h4,small") || el.closest("nav,header")) && MONEY_W.test(t) && t.length < 60))) { el.__s189 = 1; hideUp(el); return; }
+      if (SRC_W.test(t) && t.length < 160 && !el.closest("input,textarea,.notr")) { if (el.matches("small,em,cite,.xs,.sm,.muted,p,span,a,footer *,figcaption") || /^(المصدر|مصدر|Source|Credit|مستوحى|Inspired|بيانات من)/i.test(t)) { el.__s189 = 1; el.style.display = "none"; } }
+    });
+    root.querySelectorAll("#app a[href^='http']").forEach(a => { if (a.__s189) return; a.__s189 = 1; if (!OK_HOST.test(a.href) && (a.textContent || "").trim().length < 80) a.style.display = "none"; });
+    if (close) root.querySelectorAll("#app [onclick], header [onclick]").forEach(el => { const s = el.getAttribute("onclick") || ""; if (MONEY_RT.some(r => s.includes(`'${r}'`))) el.style.display = "none"; });
+  }
+
+  /* ---------- 3) 🎭 شوف الموقع كـ… (ليك انت بس) ---------- */
+  const SIMS = [["close", "🤫", "قريب مني", "Close circle", "student", { perms: { close: true, freeall: true }, active: true }], ["student", "🎓", "طالب عادي", "Regular student", "student", null], ["guest", "🚶", "زائر", "Visitor", "guest", null], ["teacher", "🧑‍🏫", "معلم", "Teacher", "teacher", null], ["staff", "🧑‍💼", "موظف (دعم)", "Staff (support)", "teacher", { perms: { messages: true, support: true, students: true }, active: true }], ["special", "⭐", "معلم استثنائي (زيك من غير تعديل)", "Exceptional teacher", "owner", { perms: { viewall: true }, active: true }], ["owner", "👑", "انت (المالك)", "You (owner)", null, null]];
+  window.sim189 = k => {
+    const s = SIMS.find(x => x[0] === k); if (!s) return; const box = document.getElementById("sim189m"); box && box.remove();
+    if (k === "owner") { try { sessionStorage.removeItem("itqan_as188"); } catch (e) {} state.preview = null; document.body.classList.remove("lock187"); render(); return toast("👑"); }
+    try { sessionStorage.setItem("itqan_as188", JSON.stringify({ id: "sim-" + k, name: s[1] + " " + T(s[2], s[3]), role: s[4], row: s[5] || { perms: {}, active: true } })); } catch (e) {}
+    state.preview = s[4] === "owner" ? null : s[4]; if (k === "special") { try { localStorage.setItem("itqan_lock187", "1"); } catch (e) {} }
+    navigate("home"); toast(s[1] + " " + T("بتشوف الموقع كـ «" + s[2] + "»", "Viewing as " + s[3]));
+  };
+  function simBtn() {
+    let b = document.getElementById("sim189"); if (!realOwner()) { b && b.remove(); return; }
+    if (!b) { b = document.createElement("button"); b.id = "sim189"; b.type = "button"; b.textContent = "🎭"; b.title = T("شوف الموقع كـ…", "View the site as…"); document.body.appendChild(b);
+      b.onclick = () => { const o = document.getElementById("sim189m"); if (o) return o.remove(); const m = document.createElement("div"); m.id = "sim189m"; const cur = (AS() || {}).id || (state.preview ? "sim-" + state.preview : "sim-owner"); m.innerHTML = `<b class="sm">🎭 ${T("شوف الموقع كـ:", "View as:")}</b>` + SIMS.map(s => `<button class="${cur === "sim-" + s[0] ? "on" : ""}" onclick="sim189('${s[0]}')">${s[1]} ${T(s[2], s[3])}</button>`).join("") + `<p class="xs muted">${T("ده محاكي ليك انت بس — وانت جوّاه تقدر تعدّل وترجع.", "Simulator — only you.")}</p>`; document.body.appendChild(m); }; }
+  }
+
+  /* ---------- 4) 👄 الفم بيتفتح لفوق ويبان اللسان — متحرك ---------- */
+  const VP = [{ ry: 15, rx: 26, lip: 0, f: 74, m: 76, b: 72 }, { ry: 6, rx: 30, lip: 0, f: 52, m: 40, b: 64 }, { ry: 8, rx: 9, lip: 1, f: 74, m: 62, b: 40 }, { ry: 2, rx: 22, lip: 0, f: 60, m: 58, b: 60 }];
+  const A = (attr, a, b) => `<animate attributeName="${attr}" values="${a};${b};${b};${a}" keyTimes="0;.35;.7;1" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;0 0 1 1;.4 0 .2 1"/>`;
+  const AT = (a, b) => `<animateTransform attributeName="transform" type="translate" values="${a};${b};${b};${a}" keyTimes="0;.35;.7;1" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;0 0 1 1;.4 0 .2 1"/>`;
+  function front(o, k) {
+    const W = o.rx, d = Math.max(3, o.ry * 1.7 + 3), up = d * .35, cy = 58; const ell = (open) => open;
+    return `<svg viewBox="0 0 120 110" class="m189"><defs><clipPath id="mc${k}"><ellipse cx="60" cy="${cy}" rx="${W}" ry="1">${A("ry", 1, d)}${A("cy", cy, cy + d / 2 - up)}</ellipse></clipPath></defs>
+      <ellipse cx="60" cy="55" rx="56" ry="52" fill="#f6d2ad"/><ellipse cx="38" cy="30" rx="7" ry="3" fill="#8a5a3b" opacity=".5"/><ellipse cx="82" cy="30" rx="7" ry="3" fill="#8a5a3b" opacity=".5"/>
+      <ellipse cx="60" cy="${cy}" rx="${W}" ry="1" fill="#3b0d0d">${A("ry", 1, d)}${A("cy", cy, cy + d / 2 - up)}</ellipse>
+      <g clip-path="url(#mc${k})"><rect x="${60 - W}" y="${cy - up - 1}" width="${W * 2}" height="5" fill="#fff"><animate attributeName="y" values="${cy - 1};${cy - up - 1};${cy - up - 1};${cy - 1}" keyTimes="0;.35;.7;1" dur="2.2s" repeatCount="indefinite"/></rect>
+      <g>${AT("0 0", `0 ${d - up}`)}<ellipse cx="60" cy="${cy + 1}" rx="${Math.max(W - 5, 5)}" ry="${Math.max(4, d * .32)}" fill="#f472b6" stroke="#db2777" stroke-width="1"/><line x1="60" y1="${cy - 2}" x2="60" y2="${cy + 4}" stroke="#db2777" stroke-width="1"/></g></g>
+      <g>${AT("0 0", `0 ${-up}`)}<path d="M${60 - W - 4} ${cy} Q60 ${cy - 9 - o.lip * 3} ${60 + W + 4} ${cy}" stroke="#c2410c" stroke-width="${o.lip ? 7 : 5}" fill="none" stroke-linecap="round"/></g>
+      <g>${AT("0 0", `0 ${d - up}`)}<path d="M${60 - W - 4} ${cy} Q60 ${cy + 9 + o.lip * 3} ${60 + W + 4} ${cy}" stroke="#b91c1c" stroke-width="${o.lip ? 7 : 6}" fill="none" stroke-linecap="round"/></g>
+      <text x="60" y="106" text-anchor="middle" font-size="8" fill="currentColor">👄 ${T("الفتحة من قدّام", "Opening, front")}</text></svg>`;
+  }
+  function side(o) {
+    const tg = (f, m, b) => `M18 96 Q18 ${f} 38 ${f} C58 ${m - 8} 88 ${m - 8} 104 ${b} Q122 ${b} 124 96 Z`; const rest = tg(78, 80, 78), go = tg(o.f, o.m, o.b); const d = Math.max(2, o.ry * 1.2);
+    return `<svg viewBox="0 0 140 110" class="m189"><path d="M22 30 Q70 8 122 30 L126 52" fill="none" stroke="#94a3b8" stroke-width="3"/><text x="62" y="14" font-size="8" fill="currentColor">${T("سقف الحلق", "Palate")}</text>
+      <g>${AT("0 0", `0 ${-d * .3}`)}<rect x="17" y="34" width="5" height="10" rx="1" fill="#fff" stroke="#cbd5e1"/><path d="M4 42 Q14 ${38 - o.lip * 2} 20 40" stroke="#c2410c" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <g>${AT("0 0", `${o.lip ? -3 : 0} ${d}`)}<path d="M14 98 L128 98" stroke="#94a3b8" stroke-width="3"/><rect x="17" y="${o.lip ? 56 : 54}" width="5" height="9" rx="1" fill="#fff" stroke="#cbd5e1"/><path d="M4 ${o.lip ? 60 : 64} Q14 ${o.lip ? 66 : 70} 20 66" stroke="#b91c1c" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="${rest}" fill="#f472b6" stroke="#db2777" stroke-width="2"><animate attributeName="d" values="${rest};${go};${go};${rest}" keyTimes="0;.35;.7;1" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;0 0 1 1;.4 0 .2 1"/></path></g>
+      <text x="70" y="108" text-anchor="middle" font-size="8" fill="currentColor">👅 ${T("اللسان من الجنب", "Tongue, side")}</text></svg>`;
+  }
+  function mouths() {
+    if (state.route !== "vow172") return; document.querySelectorAll(".vw173c .vw173p").forEach((p, k) => { if (p.__m189) return; const o = VP[k % 4]; p.__m189 = 1; p.innerHTML = front(o, k) + side(o); });
+    if (document.body.classList.contains("u185-mouth-off")) document.querySelectorAll("svg.m189").forEach(s => { try { s.pauseAnimations(); s.setCurrentTime(0.8); } catch (e) {} });
+  }
+
+  /* ---------- 5) أي دياجرام بيتحرك لما يظهر ---------- */
+  const anOn = () => setv("anim189", "on") !== "off";
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; const s = e.target; io.unobserve(s); s.classList.add("an189go"); }), { threshold: .15 }) : null;
+  function diagrams() {
+    if (!anOn() || !io) return; document.querySelectorAll("#app svg:not(.m189):not(.an189)").forEach(s => { const r = s.getBoundingClientRect(); if (r.width < 110 || s.closest("button,header,.mn180,.ico,.icon") || s.querySelector("animate")) return; s.classList.add("an189");
+      let i = 0; s.querySelectorAll("path,line,polyline,circle,ellipse,rect,text,g>image,polygon").forEach(c => { if (i > 60) return; c.style.setProperty("--i", i++); if (/^(path|line|polyline)$/.test(c.tagName) && (c.getAttribute("stroke") || getComputedStyle(c).stroke !== "none") && (c.getAttribute("fill") === "none")) { c.setAttribute("pathLength", "1"); c.classList.add("dr189"); } }); io.observe(s); });
+  }
+
+  /* ---------- 6) ✏️ عدّل أي حاجة في الموقع: الكلام، ضيف (كلام/صورة/زرار/قبل وبعد)، حرّك، اخفي ---------- */
+  const EK = "itqan_ed189";
+  const rules = () => { let loc = null; try { if (realOwner()) loc = JSON.parse(localStorage.getItem(EK) || "null"); } catch (e) {} return loc || setv("ed189", {}) || {}; };
+  const isLocal = () => { try { return realOwner() && !!localStorage.getItem(EK); } catch (e) { return false; } };
+  const putR = R => { try { localStorage.setItem(EK, JSON.stringify(R)); } catch (e) {} applyRules(true); };
+  function sel(el) { const parts = []; let n = el; let d = 0; while (n && n.nodeType === 1 && n.id !== "app" && d < 7) { if (n.id && !/^\d/.test(n.id) && !/189/.test(n.id)) { parts.unshift("#" + CSS.escape(n.id)); break; } let p = n.tagName.toLowerCase(); const cl = [...n.classList].filter(c => !/^(on|go|hov|am180|an189|e189|ep188on|ed189on|lb183|__)/.test(c)).slice(0, 2); if (cl.length) p += "." + cl.map(c => CSS.escape(c)).join("."); const par = n.parentElement; if (par) { const sib = [...par.children].filter(x => x.tagName === n.tagName && !x.hasAttribute("data-e189")); if (sib.length > 1) p += `:nth-of-type(${sib.indexOf(n) + 1})`; } parts.unshift(p); n = n.parentElement; d++; } return (parts[0] && parts[0][0] === "#" ? "" : "#app ") + parts.join(">"); }
+  const ANIMS = { "": ["من غير", "None"], float: ["تطفو", "Float"], zoom: ["زووم هادي", "Slow zoom"], pulse: ["نبض", "Pulse"], sway: ["تتمايل", "Sway"], spin: ["تلف ببطء", "Slow spin"], shine: ["لمعة", "Shine"], bounce: ["نطّة", "Bounce"], appear: ["تظهر بنعومة", "Fade in"], kenburns: ["حركة سينما", "Ken Burns"], glow: ["توهج", "Glow"] };
+  const blockHtml = (b, key, i) => { const h = b.t === "text" ? `<div class="e189t">${esc(b.a || "")}</div>` : b.t === "img" ? `<img class="e189i ${b.s ? "an-" + b.s : ""}" src="${esc(b.a || "")}" alt="">` : b.t === "btn" ? `<a class="btn btn-p" href="${esc(b.l || "#")}" ${/^https?:/.test(b.l || "") ? 'target="_blank" rel="noopener"' : ""}>${esc(b.a || "")}</a>` : b.t === "ba" ? `<div class="ba189 auto"><img src="${esc(b.b || "")}" alt=""><div class="ba189a"><img src="${esc(b.a || "")}" alt=""></div><span class="ba189l">${T("قبل", "Before")}</span><span class="ba189r">${T("بعد", "After")}</span><input type="range" min="0" max="100" value="50" aria-label="before/after" oninput="const w=this.closest('.ba189');w.classList.remove('auto');w.style.setProperty('--p',this.value+'%')"></div>` : ""; return `<div data-e189="${esc(key)}" data-i="${i}" class="e189b">${h}</div>`; };
+  let APPLIED = "";
+  function applyRules(force) {
+    const R = rules(); const sig = JSON.stringify(R) + state.route + (document.getElementById("app") || {}).childElementCount; if (!force && sig === APPLIED && document.querySelector("[data-e189]")) return; APPLIED = sig;
+    document.querySelectorAll("[data-e189]").forEach(x => x.remove());
+    Object.entries(R).forEach(([key, r]) => { const [s, w] = key.split("§"); if (w !== "*" && w !== state.route) return; let el; try { el = document.querySelector(s); } catch (e) { return; } if (!el) return;
+      if (r.txt != null && r.txt !== "") { if (el.__o189 == null) el.__o189 = el.innerHTML; if (!el.children.length) el.textContent = r.txt; else { const tn = [...el.childNodes].find(n => n.nodeType === 3 && n.textContent.trim()); if (tn) tn.textContent = " " + r.txt + " "; } }
+      [...el.classList].filter(c => c.startsWith("an-")).forEach(c => el.classList.remove(c)); if (r.anim) el.classList.add("an-" + r.anim);
+      el.style.display = r.hide && ownerView() && edOn ? "" : (r.hide ? "none" : el.style.display); if (r.hide && ownerView()) el.classList.add("e189hid");
+      (r.add || []).slice().reverse().forEach((b, i) => el.insertAdjacentHTML("afterend", blockHtml(b, key, (r.add.length - 1 - i)))); });
+  }
+  let edOn = false, CUR = null;
+  window.ed189 = {
+    toggle: () => { edOn = !edOn; document.body.classList.toggle("ed189", edOn); const p = document.getElementById("ed189p"); p && p.remove(); toast(edOn ? "✏️ " + T("دوس على أي حاجة في الموقع — كلام، صورة، زرار، أي حتة. Esc للخروج", "Click anything to edit — Esc to exit") : "✅"); applyRules(true); bar(); },
+    set: (k, v) => { const R = Object.assign({}, rules()); R[CUR] = Object.assign({}, R[CUR] || {}, { [k]: v }); if (v === "" || v === false || v == null) delete R[CUR][k]; if (!Object.keys(R[CUR]).length) delete R[CUR]; putR(R); },
+    add: async () => { const p = document.getElementById("ed189p"); const g = n => p.querySelector(`[name="${n}"]`); const t = g("bt").value; let a = g("ba").value.trim(), b = g("bb").value.trim(); const l = g("bl").value.trim();
+      const up = async f => { if (!f) return ""; toast("⏳"); const path = `site189/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${(f.name.split(".").pop() || "png").toLowerCase()}`; const { error } = await sb.storage.from("academy_public").upload(path, f, { upsert: false, contentType: f.type }); if (error) { toast(error.message, true); return ""; } return sb.storage.from("academy_public").getPublicUrl(path).data.publicUrl; };
+      if (g("fa").files[0]) a = await up(g("fa").files[0]); if (g("fb").files[0]) b = await up(g("fb").files[0]);
+      if (!a) return toast(T("اكتب الكلام أو اختار صورة", "Add text or an image"), true); if (t === "ba" && !b) return toast(T("محتاج صورة «قبل» كمان", "Need the 'before' image too"), true);
+      const R = Object.assign({}, rules()); const r = Object.assign({}, R[CUR] || {}); r.add = (r.add || []).concat([{ t, a, b, l, s: g("bs").value }]); R[CUR] = r; putR(R); panel(); },
+    delAdd: i => { const R = Object.assign({}, rules()); const r = Object.assign({}, R[CUR] || {}); r.add = (r.add || []).filter((_, j) => j !== i); if (!r.add.length) delete r.add; R[CUR] = r; if (!Object.keys(r).length) delete R[CUR]; putR(R); panel(); },
+    reset: () => { const R = Object.assign({}, rules()); delete R[CUR]; putR(R); const p = document.getElementById("ed189p"); p && p.remove(); render(); },
+    where: w => { const R = Object.assign({}, rules()); const old = R[CUR]; const nk = CUR.split("§")[0] + "§" + w; if (old) { delete R[CUR]; R[nk] = old; } CUR = nk; putR(R); panel(); },
+    pub: async () => { const { data } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle(); await saveSetting16("ed189", rules()); try { localStorage.removeItem(EK); } catch (e) {} toast("✅ " + T("اتطبّق للكل", "Published")); applyRules(true); bar(); },
+    drop: () => { try { localStorage.removeItem(EK); } catch (e) {} render(); bar(); }
+  };
+  function panel(x, y) {
+    const old = document.getElementById("ed189p"); const pos = old ? { top: old.style.top, left: old.style.left } : null; old && old.remove();
+    const r = rules()[CUR] || {}; let el = null; try { el = document.querySelector(CUR.split("§")[0]); } catch (e) {} const txt = el ? (el.__o189 != null ? (r.txt || "") : (el.textContent || "").trim()) : "";
+    const p = document.createElement("div"); p.id = "ed189p"; p.style.top = pos ? pos.top : Math.min((y || 80) + 12, innerHeight - 470) + "px"; p.style.left = pos ? pos.left : Math.min(Math.max(8, (x || 200) - 160), innerWidth - 340) + "px";
+    p.innerHTML = `<div class="row" style="justify-content:space-between"><b class="sm">✏️ ${esc((txt || (el && el.tagName) || "").slice(0, 30))}</b><button class="btn btn-o" style="padding:0 .45rem" onclick="document.getElementById('ed189p').remove()">✖</button></div>
+      <label class="xs">${T("فين؟", "Where?")} <select onchange="ed189.where(this.value)"><option value="${esc(state.route)}">${T("الصفحة دي بس", "This page")}</option><option value="*" ${CUR.endsWith("§*") ? "selected" : ""}>${T("كل الصفحات", "All pages")}</option></select></label>
+      ${el && el.tagName !== "IMG" && el.tagName !== "svg" ? `<label class="xs">✏️ ${T("الكلام", "Text")}<textarea rows="2" class="in" onchange="ed189.set('txt',this.value)">${esc(r.txt != null ? r.txt : txt)}</textarea></label>` : ""}
+      <label class="xs">✨ ${T("حرّكها", "Animate")} <select onchange="ed189.set('anim',this.value)">${Object.entries(ANIMS).map(([k, v]) => `<option value="${k}" ${r.anim === k ? "selected" : ""}>${T(v[0], v[1])}</option>`).join("")}</select></label>
+      <label class="xs"><input type="checkbox" ${r.hide ? "checked" : ""} onchange="ed189.set('hide',this.checked)"> 🙈 ${T("اخفيها عن الكل", "Hide for everyone")}</label>
+      <details ${r.add ? "open" : ""}><summary class="sm">➕ ${T("ضيف بعدها", "Add after it")}</summary>
+        ${(r.add || []).map((b, i) => `<div class="xs row" style="justify-content:space-between">${{ text: "📝", img: "🖼️", btn: "🔘", ba: "↔️" }[b.t]} ${esc(String(b.t === "img" || b.t === "ba" ? T("صورة", "image") : b.a).slice(0, 28))}<button class="btn btn-o" style="padding:0 .35rem" onclick="ed189.delAdd(${i})">🗑️</button></div>`).join("")}
+        <select name="bt" class="in"><option value="text">📝 ${T("كلام", "Text")}</option><option value="img">🖼️ ${T("صورة", "Image")}</option><option value="btn">🔘 ${T("زرار / لينك", "Button / link")}</option><option value="ba">↔️ ${T("قبل وبعد (متحركة)", "Before / after (animated)")}</option></select>
+        <input name="ba" class="in" placeholder="${T("الكلام، أو لينك الصورة (أو «بعد»)", "Text, or image link (or 'after')")}"><input type="file" name="fa" accept="image/*" class="xs">
+        <input name="bb" class="in" placeholder="${T("صورة «قبل» (لقبل وبعد)", "'Before' image (for before/after)")}"><input type="file" name="fb" accept="image/*" class="xs">
+        <input name="bl" class="in" placeholder="${T("لينك الزرار (اختياري)", "Button link (optional)")}"><label class="xs">✨ <select name="bs">${Object.entries(ANIMS).map(([k, v]) => `<option value="${k}">${T(v[0], v[1])}</option>`).join("")}</select></label>
+        <button class="btn btn-p" style="padding:.15rem .6rem" onclick="ed189.add()">➕ ${T("ضيف", "Add")}</button></details>
+      <div class="row" style="gap:.3rem;margin-top:.45rem;flex-wrap:wrap"><button class="btn btn-o" style="padding:.1rem .5rem" onclick="ed189.reset()">↩ ${T("رجّعها زي ما كانت", "Reset")}</button><button class="btn btn-p" style="padding:.1rem .5rem" onclick="ed189.pub()">🚀 ${T("طبّق للكل", "Publish")}</button></div>
+      <p class="xs muted" style="margin:.3rem 0 0">${T("بيظهرلك انت بس لحد «طبّق للكل».", "Only you see it until you publish.")}</p>`;
+    document.body.appendChild(p);
+  }
+  document.addEventListener("click", e => { if (!edOn || !realOwner()) return; if (e.target.closest("#ed189p,#ed189b,#lk187,#sim189,#sim189m,#bk189")) return; const el = e.target.closest("#app *"); if (!el) return; e.preventDefault(); e.stopPropagation(); document.querySelectorAll(".ed189on").forEach(x => x.classList.remove("ed189on")); const tgt = el.closest("[data-e189]") ? el.closest("[data-e189]").previousElementSibling || el : el; tgt.classList.add("ed189on"); CUR = sel(tgt) + "§" + state.route; const R = rules(); const any = Object.keys(R).find(k => k.split("§")[0] === CUR.split("§")[0] && k.endsWith("§*")); if (any) CUR = any; panel(e.clientX, e.clientY); }, true);
+  document.addEventListener("keydown", e => { if (edOn && e.key === "Escape") ed189.toggle(); });
+  function bar() {
+    let b = document.getElementById("ed189b"); if (!realOwner() || AS() || state.preview) { b && b.remove(); return; }
+    if (!b) { b = document.createElement("button"); b.id = "ed189b"; b.type = "button"; document.body.appendChild(b); b.onclick = () => ed189.toggle(); }
+    b.textContent = edOn ? "✅" : "✏️"; b.title = T("عدّل أي حاجة في الموقع", "Edit anything on the site"); b.classList.toggle("loc", isLocal());
+  }
+
+  /* ---------- 7) الفريق: قريب، فتح المحتوى، الدور، مالك تاني، حساب تجربة ---------- */
+  const TM = { st: null, pp: null, t: 0 };
+  async function tmLoad() { const [a, b] = await Promise.all([sb.from("staff187").select("*"), sb.from("profiles").select("id,role")]); TM.st = new Map((a.data || []).map(r => [r.user_id, r])); TM.pp = new Map((b.data || []).map(r => [r.id, r.role])); TM.t = Date.now(); decorateTeam(true); }
+  window.tm189 = {
+    flag: async (id, k) => { const r = (TM.st && TM.st.get(id)) || { user_id: id, perms: {}, active: true, preset: "custom", allow: [], deny: [] }; const P = Object.assign({}, r.perms || {}); if (k === "close") { const on = !P.close; P.close = on; P.freeall = on; if (!on) delete P.close, delete P.freeall; } else { P[k] = !P[k]; if (!P[k]) delete P[k]; }
+      const { error } = await sb.from("staff187").upsert({ user_id: id, perms: P, active: r.active !== false, preset: r.preset || "custom", title: r.title || null, allow: r.allow || [], deny: r.deny || [], updated_at: new Date().toISOString() }); if (error) return toast(error.message, true); toast("✅"); window.log188 && log188("flag_" + k, id); await tmLoad(); window.loadTeam188 && loadTeam188(); },
+    role: async (id, r) => { if (r === "owner" && !confirm(T("متأكد؟ الحساب ده هيبقى مالك تاني بكل الصلاحيات زيك بالظبط (تقدر ترجّعه بعدين).", "Make this account a second owner with full access?"))) return decorateTeam(true); const { error } = await sb.from("profiles").update({ role: r }).eq("id", id); if (error) return toast(error.message, true); toast("✅ " + r); window.log188 && log188("role_" + r, id); await tmLoad(); window.loadTeam188 && loadTeam188(); }
+  };
+  function decorateTeam(force) {
+    if (state.route !== "team188" || !realOwner()) return; if (!TM.st || Date.now() - TM.t > 60000) { if (!TM.busy) { TM.busy = 1; tmLoad().finally(() => TM.busy = 0); } if (!TM.st) return; }
+    document.querySelectorAll(".tm188c").forEach(c => { const b = c.querySelector("[onclick*='tm188.edit(']"); if (!b) return; const id = (b.getAttribute("onclick").match(/'([0-9a-f-]{36})'/) || [])[1]; if (!id) return; if (c.__t189 && !force) return; c.__t189 = 1; const old = c.querySelector(".tm189"); old && old.remove();
+      const P = ((TM.st.get(id) || {}).perms) || {}; const rl = TM.pp.get(id) || "student";
+      c.insertAdjacentHTML("beforeend", `<div class="tm189"><button class="btn ${P.close ? "btn-p" : "btn-o"}" title="${T("قريب مني: مايشوفش أي فلوس ولا أسعار، والمحتوى كله مفتوحله", "Close circle: no prices, all content open")}" onclick="tm189.flag('${id}','close')">🤫 ${T("قريب", "Close")}${P.close ? " ✓" : ""}</button><button class="btn ${P.test ? "btn-p" : "btn-o"}" title="${T("حساب تجربة: مابيتحسبش في الإحصائيات", "Test account")}" onclick="tm189.flag('${id}','test')">🧪${P.test ? " ✓" : ""}</button><select class="in" style="width:auto;padding:.1rem .3rem" onchange="tm189.role('${id}',this.value)">${[["student", "🎓 طالب", "Student"], ["teacher", "🧑‍🏫 معلم", "Teacher"], ["parent", "👪 ولي أمر", "Parent"], ["owner", "👑 مالك تاني", "Second owner"]].map(([k, a, e]) => `<option value="${k}" ${rl === k ? "selected" : ""}>${T(a, e)}</option>`).join("")}</select></div>`); });
+    const top = document.querySelector("#app .tabs"); if (top && !document.getElementById("tm189h")) top.insertAdjacentHTML("afterend", `<div id="tm189h" class="card sm" style="background:color-mix(in srgb,#16a34a 8%,var(--card))">🤫 <b>${T("قريب", "Close")}</b>: ${T("مايشوفش أي فلوس ولا أسعار ولا باقات، والمحتوى كله مفتوحله ببلاش.", "sees no money/prices, all content free.")} · 👑 <b>${T("مالك تاني", "Second owner")}</b>: ${T("ايميلك الاحتياطي، سجّل بيه مرة واحدة واختاره هنا.", "your backup email — sign up once, then pick it here.")} · 🧪 <b>${T("حساب تجربة", "Test")}</b>: ${T("سجّل بـ «ايميلك+teacher@gmail.com» (بيوصل لنفس الإيميل) واختار دوره من هنا.", "sign up with youremail+teacher@gmail.com and set its role here.")} · 🎭 ${T("أو جرّب أي دور فورًا من زرار 🎭 في الركن.", "or try any role instantly with 🎭.")}</div>`);
+  }
+
+  /* ---------- 8) 📦 نسخة احتياطية كاملة (ليك انت بس) ---------- */
+  const TABLES = ["site_settings", "private_settings", "profiles", "staff187", "content_sections", "contents", "content_access", "books", "library_items", "voice_lines", "art_assets", "teacher_availability", "teacher_exceptions", "teachers_meta", "teacher_profiles", "teacher_applications", "teacher_invites", "student_teacher_assignments", "lessons", "lesson_grades", "lesson_changes", "lesson_requests", "bookings", "orders", "credit_ledger", "wallet_ledger", "teacher_ledger", "teacher_payouts", "payout_requests", "refund_requests", "student_tasks", "student_board", "student_progress", "study_plans", "hifz_progress", "hifz_days", "hifz_srs", "hifz_sessions", "mushaf_marks", "tj_progress", "student_tj_rules", "tasmee_results", "maqam_answers", "maqam_scores", "ayah_maqam", "messages", "contact_messages", "notifications", "khatmas", "khatma_parts", "habits", "certificates", "competitions", "competition_entries", "competition_rounds", "competition_judges", "competition_scores", "competition_submissions", "group_sessions", "group_enrollments", "group_links", "recurring_slots", "showcase_posts", "sponsorships", "sponsor_requests", "referral_gifts", "referral_rewards", "free_passes", "parent_links", "orgs", "org_members", "owner_meetings", "room_transcripts", "room_attendance", "room_invites", "placement_tests", "fix_requests", "text_requests", "lesson_issues", "academy_reviews", "sanad_chains", "my_recitations", "tr_en", "ui_i18n", "activity187", "staff_req187", "vclone_cfg", "art_cfg"];
+  window.bk189 = async () => {
+    if (!realOwner()) return; const out = { app: "itqan-academy", at: new Date().toISOString(), note: "Full data backup. Contains secret keys (private_settings) — keep it private. book_rows is rebuilt from the library branch.", tables: {} };
+    let n = 0; for (const t of TABLES) { toast(`📦 ${++n}/${TABLES.length} · ${t}`); const rows = []; for (let f = 0; f < 60000; f += 1000) { const { data, error } = await sb.from(t).select("*").range(f, f + 999); if (error) { out.tables[t] = { error: error.message }; break; } rows.push(...(data || [])); if (!data || data.length < 1000) break; } if (!out.tables[t]) out.tables[t] = rows; }
+    try { const L = {}; for (const bk of ["academy_public", "voice", "academy_materials", "tts", "boards", "payproofs"]) { const { data } = await sb.storage.from(bk).list("", { limit: 1000 }); L[bk] = (data || []).map(x => x.name); } out.storage_top_folders = L; } catch (e) {}
+    const blob = new Blob([JSON.stringify(out)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `itqan-backup-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+    try { localStorage.setItem("itqan_bk189", String(Date.now())); } catch (e) {} toast("✅ " + T("النسخة نزلت — احفظها في مكانين (فلاشة + درايف تاني)", "Backup downloaded — keep two copies")); render();
+  };
+  function backupStrip() {
+    const f = document.querySelector("#app footer, #app .ft, #app [role=contentinfo]"); if (!f || !realOwner() || AS() || state.preview || document.getElementById("bk189")) return;
+    let last = 0; try { last = +localStorage.getItem("itqan_bk189") || 0; } catch (e) {} const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+    f.insertAdjacentHTML("beforeend", `<div id="bk189">📦 <b>${T("تذكير ليك انت بس:", "Owner reminder:")}</b> ${T("خد نسخة كاملة من الموقع عشان لو النت أو الجيميل أو أي حاجة باظت ترجّع كل حاجة في لحظات.", "Keep a full copy so you can restore everything in moments.")} ${days == null ? T("لسه ماخدتش ولا نسخة.", "No backup yet.") : T(`آخر نسخة من ${days} يوم.`, `Last backup ${days} days ago.`)} <button class="btn btn-p" style="padding:.15rem .7rem" onclick="bk189()">⬇️ ${T("نزّل نسخة البيانات دلوقتي", "Download data backup now")}</button> <span class="xs">${T("+ اطلب من Claude ملف الكود والقاعدة كامل.", "+ ask Claude for the full code & schema bundle.")}</span></div>`);
+  }
+
+  /* ---------- ربط ---------- */
+  const _r = render; render = function () {
+    loadMy(); const t = state.route;
+    if (isClose() && MONEY_RT.includes(t)) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} }
+    _r.apply(this, arguments);
+    try { simBtn(); bar(); mouths(); applyRules(); scrub(document); decorateTeam(); backupStrip(); setTimeout(diagrams, 60); } catch (e) { console.warn(e); }
+  };
+  let mt = 0; try { new MutationObserver(() => { clearTimeout(mt); mt = setTimeout(() => { try { mouths(); applyRules(); scrub(document); decorateTeam(); diagrams(); backupStrip(); } catch (e) {} }, 250); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
+
+  css(`body.close189 .price,body.close189 [class*=price],body.close189 [class*=Price],body.close189 .plan,body.close189 [class*=pricing]{display:none!important}
+  #sim189,#ed189b{position:fixed;z-index:950;inset-inline-end:1rem;width:2.6rem;height:2.6rem;border-radius:50%;border:1px solid var(--line);background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:1.15rem;cursor:pointer}#sim189{bottom:calc(4.2rem + env(safe-area-inset-bottom))}#ed189b{bottom:calc(7.4rem + env(safe-area-inset-bottom))}#ed189b.loc{outline:3px solid #f59e0b}
+  body.lock187 #ed189b,body.lock187 #sim189{opacity:.25}body.lock187 #ed189b{display:none}
+  #sim189m{position:fixed;z-index:1600;bottom:calc(7.6rem + env(safe-area-inset-bottom));inset-inline-end:1rem;background:var(--card);border:1px solid var(--line);border-radius:1rem;box-shadow:0 18px 40px rgba(0,0,0,.25);padding:.7rem;display:flex;flex-direction:column;gap:.3rem;min-width:240px}#sim189m button{text-align:start;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:.6rem;padding:.4rem .6rem;cursor:pointer}#sim189m button.on{background:var(--accent);color:#fff}
+  body.ed189 #app *:hover{outline:2px dashed #2563eb!important;cursor:pointer!important}.ed189on{outline:3px solid #2563eb!important}.e189hid{opacity:.35!important;outline:2px dashed #ef4444}
+  #ed189p{position:fixed;z-index:2000;width:320px;max-height:80vh;overflow:auto;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:.9rem;box-shadow:0 18px 40px rgba(0,0,0,.25);padding:.7rem;display:flex;flex-direction:column;gap:.35rem}#ed189p .in{width:100%}
+  .e189b{margin:.5rem 0}.e189i{max-width:100%;border-radius:12px;display:block}.e189t{white-space:pre-wrap}
+  @property --p{syntax:'<percentage>';inherits:true;initial-value:50%}
+  .ba189{position:relative;max-width:720px;border-radius:14px;overflow:hidden;--p:50%;user-select:none}.ba189 img{display:block;width:100%}.ba189a{position:absolute;inset:0;clip-path:inset(0 0 0 var(--p))}.ba189a img{height:100%;object-fit:cover}.ba189::after{content:"";position:absolute;top:0;bottom:0;left:var(--p);width:3px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,.4);pointer-events:none}
+  .ba189 input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize}.ba189l,.ba189r{position:absolute;top:.5rem;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:.1rem .6rem;font-size:.75rem;pointer-events:none}.ba189l{left:.5rem}.ba189r{right:.5rem}.ba189.auto{animation:ba189 5s ease-in-out infinite alternate}@keyframes ba189{0%{--p:15%}100%{--p:85%}}
+  .an-float{animation:f189 3s ease-in-out infinite}@keyframes f189{50%{transform:translateY(-8px)}}.an-zoom{animation:z189 6s ease-in-out infinite alternate}@keyframes z189{to{transform:scale(1.06)}}.an-pulse{animation:p189 1.8s ease-in-out infinite}@keyframes p189{50%{transform:scale(1.05)}}
+  .an-sway{animation:s189 3s ease-in-out infinite;transform-origin:50% 0}@keyframes s189{25%{transform:rotate(2deg)}75%{transform:rotate(-2deg)}}.an-spin{animation:r189 14s linear infinite}@keyframes r189{to{transform:rotate(360deg)}}.an-bounce{animation:b189 1.6s ease-in-out infinite}@keyframes b189{30%{transform:translateY(-10px)}50%{transform:translateY(0)}60%{transform:translateY(-4px)}}
+  .an-appear{animation:a189 1s ease both}@keyframes a189{from{opacity:0;transform:translateY(12px)}}.an-kenburns{animation:k189 12s ease-in-out infinite alternate}@keyframes k189{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-2%,-2%)}}
+  .an-glow{animation:g189 2.4s ease-in-out infinite}@keyframes g189{50%{filter:drop-shadow(0 0 10px var(--accent))}}.an-shine{position:relative;overflow:hidden}.an-shine::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-100%);animation:sh189 2.8s ease-in-out infinite}@keyframes sh189{60%,100%{transform:translateX(100%)}}
+  svg.an189 :is(path,line,polyline,circle,ellipse,rect,text,polygon,image){opacity:0}svg.an189go :is(path,line,polyline,circle,ellipse,rect,text,polygon,image){animation:in189 .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*45ms);transform-box:fill-box;transform-origin:center}
+  @keyframes in189{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}svg.an189go .dr189{stroke-dasharray:1;animation:dr189 1.1s ease both,in189 .3s both;animation-delay:calc(var(--i,0)*45ms)}@keyframes dr189{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @media (prefers-reduced-motion:reduce){svg.an189 *,svg.an189go *{opacity:1!important;animation:none!important}[class*=an-]{animation:none!important}}
+  #bk189{margin-top:.8rem;padding:.6rem .8rem;border-radius:.8rem;background:color-mix(in srgb,#f59e0b 14%,var(--card));border:1px dashed #f59e0b;font-size:.85rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}`);
 })();
 
 // بدء التشغيل
