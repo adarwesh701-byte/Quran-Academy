@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v206";
+const UI_VERSION = "2026-11-17-v208";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29231,6 +29231,97 @@ Between lessons, the platform keeps you going:
   #bar206{position:fixed;bottom:4.5rem;inset-inline-start:50%;transform:translateX(50%);z-index:2900;background:var(--card);border:2px solid #7c3aed;border-radius:999px;padding:.35rem .5rem .35rem .8rem;display:flex;gap:.4rem;align-items:center;box-shadow:0 10px 26px rgba(0,0,0,.2)}
   [dir=ltr] #bar206{transform:translateX(-50%)}
   body .hid206{outline:2px dashed #ef4444!important;opacity:.45}`);
+})();
+
+/* ================= v207: الشريطين الجانبيين: خط طولي رفيع على الحافة (زي الأول) يطلّع الشريط فوق الصفحة — عمره ما يزق المحتوى — والخط مايختفيش أبدًا بعد ما تقفل · شريط الأدوات مخفي عند المالك وبيتفتح من زرار 🧰 جوه شريط الصفحات ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const hideTools = () => realOwner() && LS("ht207", true);
+  const BAR = k => document.querySelector(k === "tools" ? ".side185" : "#nv180.nv180-side, #nv180.nv180-rail");
+  const isOpen = el => el && el.classList.contains("open201");
+  let TOOLS_ON = false;
+  window.h207 = {
+    tog(k) { const el = BAR(k); if (!el) return; if (k === "tools" && hideTools()) { TOOLS_ON = !isOpen(el); el.classList.add("show207"); }
+      if (window.bar201) bar201.tog(k); else el.classList.toggle("open201"); setTimeout(sync, 30); },
+    tools() { const n = BAR("nav"); if (n && isOpen(n) && window.bar201) bar201.tog("nav"); h207.tog("tools"); },
+    hideTools(v) { LSset("ht207", !!v); TOOLS_ON = false; sync(); render(); }
+  };
+  function handle(k, el) { let h = document.getElementById("h207-" + k); if (!el || (k === "tools" && hideTools())) { h && h.remove(); return; }
+    if (!h) { h = document.createElement("button"); h.id = "h207-" + k; h.className = "h207"; h.type = "button"; h.onclick = e => { e.stopPropagation(); h207.tog(k); };
+      h.addEventListener("mouseenter", () => { const still = (() => { try { const o = setv("pop205", {}) || {}; const u = LS("pop205u", {}); return +(u.still != null ? u.still : o.still != null ? o.still : 1) === 1; } catch (e) { return true; } })(); if (!still && !isOpen(BAR(k))) h207.tog(k); });
+      document.body.appendChild(h); }
+    const s = el.dataset.s201 || (el.getBoundingClientRect().left + el.offsetWidth / 2 < innerWidth / 2 ? "l" : "r"); h.dataset.s = s; h.title = k === "tools" ? T("الأدوات — دوس تفتح", "Tools — click to open") : T("الصفحات — دوس تفتح", "Pages — click to open");
+    const y = (LS("tpos205", {})[k] || {}).y; h.style.top = (y != null ? y : (k === "nav" ? 44 : 56)) + "%"; h.classList.toggle("off207", isOpen(el)); }
+  function sync() {
+    const t = BAR("tools"), n = BAR("nav");
+    if (t) { if (hideTools() && !TOOLS_ON) { t.classList.remove("open201"); t.classList.remove("show207"); } t.classList.toggle("gone207", hideTools() && !TOOLS_ON); if (TOOLS_ON && !isOpen(t)) TOOLS_ON = false; }
+    handle("tools", t); handle("nav", n);
+    if (n && realOwner() && hideTools() && !n.querySelector(".tl207")) { const b = document.createElement("button"); b.className = "tl207"; b.title = T("الأدوات", "Tools"); b.innerHTML = `<span>🧰</span><b>${T("الأدوات", "Tools")}</b>`; b.onclick = e => { e.stopPropagation(); h207.tools(); }; n.appendChild(b); }
+    document.body.classList.remove(...[...document.body.classList].filter(c => /^push201-/.test(c)));
+  }
+  new MutationObserver(() => { clearTimeout(window.__h207); window.__h207 = setTimeout(sync, 50); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  setInterval(sync, 2000);
+  /* اقفل الأدوات لما تدوس برا */
+  document.addEventListener("click", e => { if (!TOOLS_ON) return; if (e.target.closest(".side185,.h207,.tl207,#toast")) return; const t = BAR("tools"); if (t && isOpen(t) && window.bar201) bar201.tog("tools"); TOOLS_ON = false; setTimeout(sync, 30); });
+  /* صفحة «كل حاجة بتطلع»: اختيار إخفاء شريط الأدوات */
+  const _r = render; render = function () { _r.apply(this, arguments); if (state.route === "pop205" && realOwner()) { const app = document.getElementById("app"); const c = app && app.querySelector(".card"); if (c && !app.querySelector("#ht207c")) c.insertAdjacentHTML("afterend", `<div class="card" id="ht207c"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${hideTools() ? "checked" : ""} onchange="h207.hideTools(this.checked)"> 🧰 ${T("اخفي شريط الأدوات عندي خالص (يتفتح من زرار 🧰 جوه شريط الصفحات)", "Hide the tools bar for me (open it from 🧰 in the pages bar)")}</label><p class="xs muted">${T("الشريطين بيطلعوا فوق الصفحة ومش بيزقوها أبدًا.", "Both bars open over the page and never push it.")}</p></div>`); } };
+  css(`
+  .tab201{display:none!important}
+  html:root body.b201.b201[class] #app,html:root body.b201[class*=push201][class*=push201] #app,html body #app,html body.rv190 #app{padding-inline-start:0!important;padding-inline-end:0!important}
+  html body{padding-inline-start:0!important;padding-inline-end:0!important}
+  html body .side185.gone207{display:none!important}
+  html body.b201 .bar201{z-index:95!important}
+  .h207{position:fixed;z-index:94;width:7px;height:72px;border:0;padding:0;cursor:pointer;background:var(--accent);opacity:.55;transform:translateY(-50%);transition:opacity .2s,width .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .h207[data-s=l]{left:0;border-radius:0 8px 8px 0}.h207[data-s=r]{right:0;border-radius:8px 0 0 8px}
+  .h207:hover{opacity:1;width:11px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .h207.off207{opacity:0;pointer-events:none}
+  #h207-tools{background:#7c3aed}
+  .tl207{margin-top:.3rem;border-top:1px dashed var(--line)!important}
+  @media (hover:none){.h207{width:10px;opacity:.7}}
+  `);
+})();
+
+/* ================= v208: واجهة الموقع بالعربية الفصحى لكل العرب (الأزرار والعناوين والشرح القصير) — المحتوى والكتب والقرآن مايتلمسوش — والمالك يقدر يرجّعها مصري من الإعدادات ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const ON = () => AR() && (setv("dia208", "fusha") || "fusha") === "fusha";
+  const D = {"اللي":"الذي","ده":"هذا","دا":"هذا","دي":"هذه","دول":"هؤلاء","مفيش":"لا يوجد","مافيش":"لا يوجد","إزاي":"كيف","ازاي":"كيف","إزاى":"كيف","ازاى":"كيف","فين":"أين","إيه":"ماذا","ايه":"ماذا","ليه":"لماذا","إمتى":"متى","امتى":"متى","مين":"من","عشان":"لكي","علشان":"لكي","دلوقتي":"الآن","دلوقت":"الآن","لسه":"ما زال","بس":"فقط","خالص":"تمامًا","زي":"مثل","كمان":"أيضًا","برضه":"أيضًا","برضو":"أيضًا","حاجة":"شيء","حاجه":"شيء","الحاجة":"الشيء","حاجات":"أشياء","الحاجات":"الأشياء","أي حاجة":"أي شيء","تاني":"آخر","تانية":"أخرى","تانيه":"أخرى","التاني":"الآخر","التانية":"الأخرى","جوه":"داخل","جوا":"داخل","برا":"خارج","بره":"خارج","لحد":"حتى","لغاية":"حتى","زرار":"زر","الزرار":"الزر","زراير":"أزرار","الزراير":"الأزرار","لينك":"رابط","اللينك":"الرابط","لينكات":"روابط","اللينكات":"الروابط","انت":"أنت","إنت":"أنت","انتي":"أنتِ","ليك":"لك","ليكي":"لكِ","عندك":"لديك","عندكم":"لديكم","وبعدين":"ثم","بعدين":"بعد ذلك","دوس":"اضغط","دوسي":"اضغطي","دوسة":"ضغطة","بدوسة":"بضغطة","تدوس":"تضغط","هتدوس":"ستضغط","بتدوس":"تضغط","داس":"ضغط","عايز":"تريد","عاوز":"تريد","عايزة":"تريدين","عايزه":"تريده","عايزها":"تريدها","عايزين":"تريدون","اختار":"اختر","ابعت":"أرسل","ابعتلي":"أرسل لي","شوف":"شاهد","شوفي":"شاهدي","اقفل":"أغلق","اقفله":"أغلقه","شيل":"أزِل","شيله":"أزِله","شيلها":"أزِلها","حط":"ضع","حطه":"ضعه","حطها":"ضعها","ضيف":"أضف","ضيفه":"أضفه","امسح":"احذف","امسحه":"احذفه","امسحها":"احذفها","وريني":"أرني","هات":"أحضر","رجّع":"أرجِع","رجع":"أرجِع","رجّعها":"أرجِعها","رجّعه":"أرجِعه","خلّي":"اجعل","خلي":"اجعل","خليه":"اجعله","خليها":"اجعلها","تقدر":"يمكنك","يقدر":"يمكنه","تقدري":"يمكنكِ","تقدروا":"يمكنكم","نقدر":"يمكننا","هتلاقي":"ستجد","هتلاقيها":"ستجدها","هتلاقيه":"ستجده","لقيت":"وجدت","كده":"هكذا","كدا":"هكذا","أوي":"جدًا","اوي":"جدًا","شوية":"قليلًا","حبة":"قليلًا","بتاعك":"الخاص بك","بتاعتك":"الخاصة بك","بتاعي":"الخاص بي","بتاعتي":"الخاصة بي","بتاعه":"الخاص به","بتاعها":"الخاص بها","بتاع":"الخاص بـ","بتاعة":"الخاصة بـ","بتوع":"الخاصة بـ","فاضي":"فارغ","فاضية":"فارغة","كويس":"جيد","كويسة":"جيدة","يلا":"هيا","يلّا":"هيا","ماشي":"حسنًا","أيوه":"نعم","ايوه":"نعم","لأ":"لا","اتفضل":"تفضّل","اتفضّل":"تفضّل","ينفع":"يمكن","مينفعش":"لا يمكن","ماينفعش":"لا يمكن","معاك":"معك","معاكي":"معكِ","بيك":"بك","إحنا":"نحن","احنا":"نحن","هما":"هم","هو":"هو","بقى":"أصبح","بقت":"أصبحت","بقوا":"أصبحوا","هيبقى":"سيصبح","هتبقى":"ستصبح","بيبقى":"يصبح","بتبقى":"تصبح","يبقى":"يصبح","تبقى":"تصبح","كام":"كم","بكام":"بكم","قد إيه":"كم","لوحده":"وحده","لوحدها":"وحدها","لوحدك":"وحدك","اتحفظ":"حُفظ","اتحفظت":"حُفظت","اتبعت":"أُرسل","اتبعتت":"أُرسلت","اتشال":"أُزيل","اتضاف":"أُضيف","اتضافت":"أُضيفت","اتنشر":"نُشر","اتنشرت":"نُشرت","اتطبّق":"طُبِّق","اتطبق":"طُبِّق","اتطبّقت":"طُبِّقت","اتسجل":"سُجِّل","اتسجّل":"سُجِّل","اتسجّلت":"سُجِّلت","اتسجلت":"سُجِّلت","اتمسح":"حُذف","اتغير":"تغيّر","اتغيّر":"تغيّر","اتقفل":"أُغلق","اتقفلت":"أُغلقت","اتفتح":"فُتح","اتفتحت":"فُتحت","اتعمل":"تمّ","اتعملت":"تمّت","اتنسخ":"نُسخ","اتلغت":"أُلغيت","اتلغى":"أُلغي","اترفض":"رُفض","اتحجز":"حُجز","اتصحح":"صُحِّح","اتصححت":"صُحِّحت","اتخفى":"أُخفي","اتحول":"تحوّل","اتحوّل":"تحوّل","اترفع":"رُفع","اتثبت":"ثُبّت","اتفعّل":"فُعِّل","اتوافق":"تمت الموافقة","اتكلم":"تكلّم","اتأكد":"تأكد","اتعلم":"تعلّم","اتعلّم":"تعلّم","اتمرّن":"تمرّن","اتدرّب":"تدرّب","اتأخرت":"تأخرت","اتنقل":"نُقل","اتنقّل":"تنقّل","وانت":"وأنت","لما":"عندما","لو":"إذا","ولو":"وإذا","إنك":"أنك","انك":"أنك","إنه":"أنه","انه":"أنه","إنها":"أنها","عاملين":"نعمل","ومش":"ولا","ومفيش":"ولا يوجد","مش":"لا","قدامك":"أمامك","قدّامك":"أمامك","قدام":"أمام","قدّام":"أمام","يبان":"يظهر","تبان":"تظهر","بيبان":"يظهر","بتبان":"تظهر","هيبان":"سيظهر","هتبان":"ستظهر","ورا":"خلف","وراه":"خلفه","تحت":"تحت"};
+  const X = new Set("بيان بيانات بياناتك بياناته بياتي بيمول بيها بيتك بيتي بيوم بينهم بيده بيئة بينهما بينه بيعة بيانو بيزنس بيته بيتنا بيضة بيتها بينها بيمينه بيّن بيت بينما بين بتاع بتاعي بتاعتي بتاعك بتاعة بتاعه بتوع بتوعي بتاعتك بتوقيت بتوقيتك بتايمر بتصحيح بتقويم بترجمة بتاء بتقليل بتنسيق بترتيبك بتول بنفس بنفسك بنفسه بنعومة بناء بنية بنتي بنكي بنفسجي بنجاح بنات بنهايات بنقل بنذر بنعم بنبي بنهاوند بنيّ بنظام بنسبة بنابلس بنجاسة بنائه بنيان بنوعيه بنبرة بنداء بنزن بنبرتك بنكيران بنصر بنبيه بنعمة بنون بنصها بنود بنجومها بنشاط بنطّة بنت بنتك بنام بتمام بتمامه بتفصيل بتفاصيل بتسجيل بتعليق بتكرار بتحميل بتعديل بتغيير بتقديم بتوصية بتنزيل بتشغيل بتحويل بتطبيق بتحديد بتصميم بتلاوة بتجويد بترتيب بتعلم بتعليم بنطق بنقطة بنسخة بيسر بيده بينكم بيوت بيوتكم".split(" "));
+  const XH = new Set("هيئة هيكل هيبة هناك هندسية هندسي هنا هتاف هيام هيمنة هيكلة هيئات".split(" "));
+  const strip = w => w.replace(/[ً-ْٰ]/g, "");
+  function conv(s) { if (!/[ء-ي]/.test(s)) return s;
+    let t = s.replace(/عايز تعمل إيه؟?/g, "ماذا تريد أن تفعل؟").replace(/عايز تتعلم إيه؟?/g, "ماذا تريد أن تتعلم؟").replace(/لسه مفيش/g, "لا يوجد بعد").replace(/مرة كمان/g, "مرة أخرى").replace(/تاني مرة/g, "مرة أخرى").replace(/قد إيه/g, "كم").replace(/لحد ما/g, "حتى").replace(/لغاية ما/g, "حتى").replace(/إيه اللي/g, "ما الذي").replace(/أي حاجة/g, "أي شيء").replace(/كل حاجة/g, "كل شيء");
+    const parts = t.split(/([ء-يـً-ْٰ]+)/); const words = []; parts.forEach((p, i) => { if (i % 2) words.push(i); });
+    words.forEach((idx, j) => { const w = parts[idx]; const k = strip(w); let r = null;
+      const nextW = j + 1 < words.length ? strip(parts[words[j + 1]]) : "";
+      if (k === "مش" || k === "ومش") { const fut = /^ه[يتن].{3,}$/.test(nextW) && !XH.has(nextW); r = (k[0] === "و" ? "و" : "") + (fut ? "لن" : /^(م|ال|مت|مو)/.test(nextW) ? "غير" : "لا"); if (fut) parts[words[j + 1]] = "\u200b" + nextW.slice(1).replace(/(لك|لي|له|لها|لكم|لهم|لنا)$/, " $1"); }
+      else if (parts[idx][0] === "\u200b") r = parts[idx].slice(1);
+      else if (k === "اللي") { const pw = j ? strip(parts[words[j - 1]]) : ""; r = /(ة|ات|ها)$/.test(pw) ? "التي" : "الذي"; }
+      else if (D[k]) r = D[k];
+      else if (/^[وف]/.test(k) && D[k.slice(1)] && k.length > 3) r = k[0] + D[k.slice(1)];
+      else if (/^ب[يتن].{3,}$/.test(k) && !X.has(k) && !X.has(k.replace(/^ب/, "ب")) && !/^بت(ا|و)/.test(k)) r = k.slice(1).replace(/(.{3,})(لك|لي|له|لها|لكم|لهم|لنا)$/, "$1 $2");
+      else if (/^ه[يتن].{3,}$/.test(k) && !XH.has(k)) r = "س" + k.slice(1).replace(/(.{3,})(لك|لي|له|لها|لكم|لهم|لنا)$/, "$1 $2");
+      if (r != null) parts[idx] = r; });
+    /* «الصفحة دي» ← «هذه الصفحة» */
+    t = parts.join(""); t = t.replace(/(ال[ء-يـً-ْ]+) (هذا|هذه|هؤلاء)(?=[\s.,،؟!:)»\-–—]|$)/g, "$2 $1"); return t; }
+  window.fusha208 = conv;
+  const SKIP = ".notr,[lang]:not(html):not(body):not(#app),blockquote,article,textarea,[contenteditable],.tjtext,.tj2,.chatbox,.cmsg,script,style,code,pre,.e189t,.kv .sm.muted.ar-src,.bkr,.bkread,.fqbody,#ed189p textarea";
+  const SKIPR = /^(bk|kutub199|book192|pdf181|tjb|bayan20\d|chat|messages)$/;
+  const done = new WeakMap();
+  function walk(root) { if (!ON() || SKIPR.test(state.route || "")) return; const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => { const v = n.nodeValue; if (!v || v.length > 600 || !/[ء-ي]/.test(v)) return 2; const p = n.parentElement; if (!p || p.closest(SKIP)) return 2; if (done.get(n) === v) return 2; return 1; } });
+    const L = []; let n; while ((n = tw.nextNode())) L.push(n); L.forEach(n => { const v = conv(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; done.set(n, n.nodeValue); });
+    root.querySelectorAll && root.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el => { if (el.closest(".notr,[lang]:not(html):not(body):not(#app)")) return; ["placeholder", "title", "aria-label"].forEach(a => { const v = el.getAttribute(a); if (v && /[ء-ي]/.test(v) && el.dataset["f208" + a.replace("-", "")] !== v) { const c = conv(v); el.setAttribute(a, c); el.dataset["f208" + a.replace("-", "")] = c; } }); }); }
+  let q = 0; new MutationObserver(() => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; try { walk(document.body); } catch (e) {} }); }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  const _t = window.toast; if (typeof _t === "function") window.toast = toast = function (m, e) { return _t.call(this, ON() && typeof m === "string" ? conv(m) : m, e); };
+  const _c = window.confirm; window.confirm = m => _c(ON() && typeof m === "string" ? conv(m) : m);
+  const _p = window.prompt; window.prompt = (m, d) => _p(ON() && typeof m === "string" ? conv(m) : m, d);
+  window.dia208 = async v => { await saveSetting16("dia208", v); location.reload(); };
+  const _os = ownerSettings; ownerSettings = function () { const cur = setv("dia208", "fusha") || "fusha"; return `<div class="card notr" style="border:2px solid #0891b2;margin-bottom:1rem"><h3>🗣️ ${T("لغة واجهة الموقع بالعربي", "Arabic interface wording")}</h3><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn ${cur === "fusha" ? "btn-p" : "btn-o"}" onclick="dia208('fusha')">📖 ${T("الفصحى (لكل العرب)", "Standard Arabic")}</button><button class="btn ${cur === "eg" ? "btn-p" : "btn-o"}" onclick="dia208('eg')">🇪🇬 ${T("المصري", "Egyptian")}</button></div><p class="xs muted">${T("بيغيّر كلام الأزرار والعناوين والشرح بس — القرآن والكتب والمحتوى زي ما هم.", "Changes buttons, headings and hints only.")}</p></div>` + _os.apply(this, arguments); };
 })();
 
 // بدء التشغيل
