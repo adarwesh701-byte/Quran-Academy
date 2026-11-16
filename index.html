@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v212";
+const UI_VERSION = "2026-11-17-v213";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29640,6 +29640,64 @@ Between lessons, the platform keeps you going:
   const _os = ownerSettings; ownerSettings = function () { const n = Object.keys(DR()).length; return `<div class="card" style="border:2px solid #f59e0b;margin-bottom:1rem"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${ON() ? "checked" : ""} onchange="dr212.set(this.checked)"> 👁️ ${T("وضع المعاينة: أي تعديل يظهر لي وحدي حتى أنشره للطلاب", "Preview mode: changes show only to me until I publish")}</label><span class="row" style="gap:.4rem">${n ? `<button class="btn btn-p" onclick="dr212.pub()">🚀 ${T("انشر", "Publish")} (${n})</button>` : ""}<button class="btn btn-o" onclick="go16('dr212')">📋 ${T("راجع التعديلات", "Review")}</button></span></div></div>` + _os.apply(this, arguments); };
   if (/^#\/dr212/.test(location.hash)) state.route = "dr212";
   setInterval(badge, 3000); setTimeout(badge, 1500);
+})();
+
+/* ================= v213: «مفيش حاجة بتتحفظ لوحدها» — بعد أي تعديل يطلع للمالك صندوق صغير: 💾 احفظ · ↶ ارجع خطوة · ↩️ ارجع الكل · ✏️ كمّل تعديل — تعديلات الشكل والإعدادات بتبان قدامه فورًا وماتتثبتش غير لما يحفظ، وتعديلات المحتوى (دروس/أقسام/كتب/أصوات…) ماتتنفذش أصلًا غير لما يدوس احفظ ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const CF = () => realOwner() && LS("cf213", 1) === 1;
+  const prevOn = () => LS("dr212", 1) === 1;
+  const STEPS = [];      /* تعديلات شكل/إعدادات اتعملت ولسه ماتحفظتش: {prev, keys} */
+  const HELD = [];       /* عمليات محتوى مستنية قرارك: {label, run, res} */
+  let RESTORE = 0, GRACE = null;
+  const TB = { contents: "محتوى", content_sections: "قسم", lessons: "درس", books192: "كتاب", voice_lines: "تسجيل صوتي", art_assets: "صورة", ayah_maqam: "مقام آية", ui_i18n: "نص في الواجهة", tr_en: "ترجمة", competitions: "مسابقة", private_settings: "إعداد خاص", academy_reviews: "تقييم", showcase_posts: "منشور عرض", group_links: "رابط مجموعة", teachers_meta: "بيانات معلم", site_settings: "إعدادات الموقع" };
+  const OP = { update: "تعديل", insert: "إضافة", delete: "حذف", upsert: "حفظ" };
+
+  /* 1) التقاط تعديلات المعاينة (بتبان فورًا) */
+  const _set = Storage.prototype.setItem;
+  Storage.prototype.setItem = function (k, v) { if (this === localStorage && k === "dr212d" && !RESTORE && CF()) { const old = localStorage.getItem(k); if (old !== v) { let keys = []; try { const a = JSON.parse(old || "{}"), b = JSON.parse(v || "{}"); keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(x => JSON.stringify(a[x]) !== JSON.stringify(b[x])); } catch (e) {} STEPS.push({ prev: old, keys }); setTimeout(box, 30); } } return _set.apply(this, arguments); };
+
+  /* 2) عمليات المحتوى: ماتتنفذش غير بعد «احفظ» */
+  const fromNow = sb.from.bind(sb);
+  function lazy(tb, calls) { const run = () => { let b = fromNow(tb); for (const [m, a] of calls) b = b[m](...a); return b; };
+    const L = new Proxy({}, { get(_, p) { if (p === "then") return (res, rej) => hold(tb, calls, run).then(res, rej); return (...a) => lazy(tb, calls.concat([[p, a]])); } }); return L; }
+  function hold(tb, calls, run) { const m = (calls.find(c => OP[c[0]]) || ["update"])[0];
+    if (GRACE && Date.now() - GRACE.at < 2500) { GRACE.at = Date.now(); return GRACE.ok ? Promise.resolve(run()) : Promise.resolve({ data: null, error: { message: "↩️ " + T("أُلغي التعديل", "Change cancelled") } }); }
+    return new Promise(res => { HELD.push({ label: T(OP[m] + " " + (TB[tb] || tb), m + " " + tb), run, res }); box(); }); }
+  sb.from = function (tb) { const b = fromNow(tb); if (!CF() || !TB[tb] || (tb === "site_settings" && prevOn())) return b;
+    return new Proxy(b, { get(t, p) { const v = t[p]; if (OP[p]) return (...a) => lazy(tb, [[p, a]]); return typeof v === "function" ? v.bind(t) : v; } }); };
+
+  /* 3) القرارات */
+  async function refresh() { try { const r = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle(); if (r.data && r.data.data) applySettings(r.data.data); } catch (e) {} render(); }
+  window.cf213 = {
+    async save() { const h = HELD.splice(0); STEPS.length = 0; GRACE = { ok: 1, at: Date.now() }; box(); for (const x of h) { try { x.res(await x.run()); } catch (e) { x.res({ data: null, error: { message: e.message } }); } } toast("💾 " + T("اتحفظ", "Saved") + (prevOn() ? " — " + T("ولسه ظاهر ليك بس لحد ما تنشره", "still visible only to you until you publish") : "")); },
+    async back() { if (HELD.length) { const x = HELD.pop(); x.res({ data: null, error: { message: "↩️ " + T("رجعت خطوة", "Step undone") } }); box(); return; } const s = STEPS.pop(); if (!s) return; RESTORE = 1; try { s.prev == null ? localStorage.removeItem("dr212d") : localStorage.setItem("dr212d", s.prev); } finally { RESTORE = 0; } box(); await refresh(); toast("↶"); },
+    async all() { const h = HELD.splice(0); GRACE = { ok: 0, at: Date.now() }; h.forEach(x => x.res({ data: null, error: { message: "↩️ " + T("أُلغي التعديل", "Change cancelled") } })); if (STEPS.length) { const s = STEPS[0]; STEPS.length = 0; RESTORE = 1; try { s.prev == null ? localStorage.removeItem("dr212d") : localStorage.setItem("dr212d", s.prev); } finally { RESTORE = 0; } await refresh(); } box(); toast("↩️ " + T("رجع كل شيء كما كان", "Everything reverted")); },
+    later() { LSset("cf213m", 1); box(); },
+    open() { LSset("cf213m", 0); box(); },
+    set(on) { LSset("cf213", on ? 1 : 0); toast(on ? T("💡 أي تعديل هيستنى «احفظ»", "Every change waits for Save") : T("⚡ التعديلات بتتحفظ على طول", "Changes save immediately")); render(); }
+  };
+  /* النشر/التجاهل من وضع المعاينة مش «تعديل» جديد */
+  if (window.dr212) ["pub", "drop", "pubK", "dropK", "set"].forEach(f => { const o = dr212[f]; dr212[f] = async function () { RESTORE++; try { return await o.apply(this, arguments); } finally { RESTORE--; STEPS.length = 0; box(); } }; });
+  addEventListener("beforeunload", e => { if (HELD.length || STEPS.length) { e.preventDefault(); e.returnValue = ""; } });
+
+  /* 4) الصندوق */
+  css(`#cf213{position:fixed;bottom:64px;inset-inline-end:14px;z-index:9999;width:min(320px,92vw);background:var(--card);border:2px solid var(--accent);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:.7rem .8rem;font-size:.85rem;animation:in213 .25s ease}
+  @keyframes in213{from{opacity:0;transform:translateY(10px)}}#cf213 ul{margin:.3rem 0 .5rem;padding-inline-start:1.1rem;max-height:7rem;overflow:auto;font-size:.78rem;color:var(--muted)}
+  #cf213 .g{display:grid;grid-template-columns:1fr 1fr;gap:.35rem}#cf213 button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:.4rem .3rem;cursor:pointer;font:inherit;font-size:.8rem;font-weight:700}#cf213 button.s{background:#16a34a;border-color:#16a34a;color:#fff;grid-column:1/-1}
+  #cf213.min{width:auto;padding:.35rem .7rem;border-radius:999px;cursor:pointer}#cf213.min>*:not(.h){display:none}#cf213 .h{font-weight:800}`);
+  const NM = k => { try { return ({ bars211: "الشرايط وشكلها", hide211: "الإخفاء من الأماكن", arr206: "ترتيب العناصر", ed189: "تعديل النصوص والعناصر", pop205: "حركة الشرايط", bar201: "الشرايط الجانبية", rv190: "الشريط العلوي", plans: "الباقات" })[k] || k; } catch (e) { return k; } };
+  function box() { let b = document.getElementById("cf213"); const n = HELD.length + STEPS.length; if (!n || !realOwner()) { b && b.remove(); return; }
+    if (!b) { b = document.createElement("div"); b.id = "cf213"; document.body.appendChild(b); } const min = LS("cf213m", 0); b.className = min ? "min" : ""; b.onclick = min ? () => cf213.open() : null;
+    const items = STEPS.map(s => "🎨 " + (s.keys.map(NM).join("، ") || T("تعديل في الشكل", "Design change"))).concat(HELD.map(h => "📝 " + h.label + " — " + T("لم يُنفَّذ بعد", "not applied yet")));
+    b.innerHTML = `<div class="h">✏️ ${n} ${T("تعديل لم يُحفظ", "unsaved change(s)")}</div><ul>${items.slice(-8).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="g"><button class="s" onclick="cf213.save()">💾 ${T("احفظ", "Save")}</button><button onclick="cf213.back()">↶ ${T("ارجع خطوة", "Undo step")}</button><button onclick="cf213.all()">↩️ ${T("ارجع الكل", "Revert all")}</button><button style="grid-column:1/-1" onclick="event.stopPropagation();cf213.later()">✏️ ${T("كمّل تعديل (احفظ بعدين)", "Keep editing (save later)")}</button></div>`; }
+
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="border:2px solid var(--accent);margin-bottom:1rem"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${LS("cf213", 1) === 1 ? "checked" : ""} onchange="cf213.set(this.checked)"> 💾 ${T("لا شيء يُحفظ تلقائيًا: بعد أي تعديل اسألني «احفظ / ارجع / كمّل تعديل»", "Nothing saves by itself: after any change ask me Save / Revert / Keep editing")}</label></div>` + _os.apply(this, arguments); };
 })();
 
 // بدء التشغيل
