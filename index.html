@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v186";
+const UI_VERSION = "2026-11-16-v187";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -26727,6 +26727,30 @@ Between lessons, the platform keeps you going:
   };
   const m = location.hash.match(/^#\/(todo186|rr186|notes186)/); if (m) state.route = m[1];
   setTimeout(applyHdr, 80);
+})();
+
+/* ================= v187: وضعين للمالك — «🛠️ وضع التحكم» و«🔒 وضع الحصة» (كل حاجة موجودة بس من غير أي أزرار تعديل بتطلع) ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const isOwner = () => realRole() === "owner";
+  const locked = () => { try { return localStorage.getItem("itqan_lock187") === "1"; } catch (e) { return false; } };
+  window.lock187 = v => { try { localStorage.setItem("itqan_lock187", v ? "1" : "0"); } catch (e) {} apply(); toast(v ? T("🔒 وضع الحصة — مفيش أزرار تعديل هتطلع", "🔒 Lesson mode — no editing buttons will pop up") : T("🛠️ وضع التحكم", "🛠️ Control mode")); render(); };
+  function apply() {
+    const b = document.body; if (!b) return; const on = isOwner() && locked(); b.classList.toggle("lock187", on);
+    let t = document.getElementById("lk187"); if (!isOwner()) { t && t.remove(); return; }
+    if (!t) { t = document.createElement("button"); t.id = "lk187"; t.type = "button"; document.body.appendChild(t); t.onclick = () => lock187(!locked()); }
+    t.textContent = on ? "🔒" : "🛠️"; t.title = on ? T("وضع الحصة — دوس للتحكم", "Lesson mode — tap for control") : T("وضع التحكم — دوس لوضع الحصة", "Control mode — tap for lesson mode");
+  }
+  /* في وضع الحصة: شريط «سجّل بصوتك» مايطلعش */
+  document.addEventListener("keydown", e => { if (isOwner() && e.altKey && (e.key === "l" || e.key === "L")) lock187(!locked()); });
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  css(`body.lock187 #ao185,body.lock187 .ao185b,body.lock187 #pb178,body.lock187 #edBar,body.lock187 #uilBar,body.lock187 .av182o,body.lock187 .rec186,body.lock187 .lb183o,body.lock187 .lb183s,body.lock187 .e185,body.lock187 #dm179,body.lock187 .ly180h .btn,body.lock187 #cm183,body.lock187 .uiltb,body.lock187 .uilmv,body.lock187 #simBar,body.lock187 .edpen,body.lock187 [data-ed],body.lock187 .sb184k,body.lock187 .nt186c button{display:none!important}
+  body.lock187 .hid183{opacity:1!important;outline:none!important}
+  #lk187{position:fixed;z-index:950;bottom:calc(1rem + env(safe-area-inset-bottom));inset-inline-end:1rem;width:2.6rem;height:2.6rem;border-radius:50%;border:1px solid var(--line);background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:1.15rem;cursor:pointer}body.lock187 #lk187{background:#0f172a;color:#fff;opacity:.5}body.lock187 #lk187:hover{opacity:1}`);
+  const _r = render; render = function () { const r = _r.apply(this, arguments); try { apply(); } catch (e) {} return r; };
+  /* شريط التسجيل الصوتي ميظهرش في وضع الحصة */
+  new MutationObserver(() => { if (document.body.classList.contains("lock187")) { const c = document.getElementById("ao185"); c && c.remove(); } }).observe(document.body, { childList: true });
+  setTimeout(apply, 100);
 })();
 
 // بدء التشغيل
