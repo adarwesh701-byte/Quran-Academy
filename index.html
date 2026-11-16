@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v194";
+const UI_VERSION = "2026-11-16-v195";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27415,7 +27415,7 @@ Between lessons, the platform keeps you going:
   ["books192", "book192", "bookedit192"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
   function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
   const B = { list: null, cur: null, busy: "" };
-  const DEF = { modes: { interactive: true, chapters: true, summary: true, plain: true, games: true, quiz: true }, audio: "browser", voice: "m", quizAfter: "chapter", showPages: false, font: 1, defMode: "interactive" };
+  const DEF = { modes: { interactive: true, chapters: true, summary: true, plain: true, games: true, quiz: true }, audio: "ai", voice: "m", quizAfter: "chapter", showPages: false, font: 1, defMode: "interactive" };
   const O = b => { const o = Object.assign({}, DEF, (b && b.opts) || {}); o.modes = Object.assign({}, DEF.modes, ((b && b.opts) || {}).modes || {}); return o; };
 
   /* ======================= 1) استخراج النص من أي ملف ======================= */
@@ -27761,6 +27761,100 @@ Between lessons, the platform keeps you going:
   css(`.land194{outline:3px solid #f59e0b;outline-offset:4px;border-radius:12px;transition:outline-color 1.5s}
   #tm194{display:flex;gap:.9rem;align-items:center;border-color:var(--accent)}#tm194.warn{border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 8%,var(--card))}.tm194r{position:relative;width:64px;height:64px;flex:none}.tm194r svg{width:100%;height:100%}.tm194r b{position:absolute;inset:0;display:grid;place-items:center;font-size:1.25rem;margin-top:-.4rem}.tm194r small{position:absolute;bottom:.7rem;left:0;right:0;text-align:center;font-size:.6rem}.tm194c{font:600 1.15rem ui-monospace,monospace;letter-spacing:.04em}
   .v194r{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.3rem 0}.v194r.done{opacity:.7;border-color:#16a34a}`);
+})();
+
+/* ================= v195: الشرايط الجانبية كل واحد لوحده (ظل صغير طالع من الجنب، الماوس يقرّب يطلع هو بس) + طرق إظهار كتير للمطوي + المصحف الملوّن (الأحكام فوق المصحف مباشرة، كل الأحكام، الشمرلي/المدينة، الخطأ مكتوب بالأحمر على الكلمة، لوحة تصحيح بتنزل وفيها حفظ، ماركر بإيدك) + نسائي/طفل + المنشاوي المعلّم ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const hoverDev = () => matchMedia("(hover:hover) and (pointer:fine)").matches;
+
+  /* ======================= 1) كل شريط جانبي لوحده ======================= */
+  const P = () => Object.assign({ on: "on", peek: "sliver", zone: 40, delay: 600, pw: 12 }, setv("ps195", {}) || {});
+  const SIDES = () => [...document.querySelectorAll(".side185, #nv180.nv180-side, #nv180.nv180-rail")];
+  const OPEN = new Set(); const TM = new Map();
+  const edgeOf = el => { const r = el.getBoundingClientRect(); return r.left + r.width / 2 < innerWidth / 2 ? "l" : "r"; };
+  function mark() { const c = P(); document.body.classList.toggle("ps195", c.on === "on" && hoverDev()); document.body.classList.remove("ps195-sliver", "ps195-tab", "ps195-none"); document.body.classList.add("ps195-" + c.peek); document.body.style.setProperty("--pw195", (c.peek === "none" ? 0 : c.peek === "tab" ? 30 : +c.pw || 12) + "px");
+    SIDES().forEach(el => { if (!el.dataset.e195) el.dataset.e195 = edgeOf(el); el.classList.toggle("so195", OPEN.has(el)); }); }
+  addEventListener("mousemove", e => {
+    if (!document.body.classList.contains("ps195")) return; const c = P(); const x = e.clientX, y = e.clientY;
+    SIDES().forEach(el => { const ed = el.dataset.e195 || edgeOf(el); const r = el.getBoundingClientRect(); const near = ed === "l" ? x <= Math.max(+c.zone, 2) : x >= innerWidth - Math.max(+c.zone, 2); const inside = OPEN.has(el) && x >= r.left - 20 && x <= r.right + 20 && y >= r.top - 20 && y <= r.bottom + 20; const onPeek = !OPEN.has(el) && x >= r.left - 6 && x <= r.right + 6 && y >= r.top && y <= r.bottom;
+      if (near || inside || onPeek) { clearTimeout(TM.get(el)); TM.delete(el); if (!OPEN.has(el)) { /* واحد بس: اقفل اللي في الناحية التانية */ OPEN.forEach(o => { if (o !== el && (o.dataset.e195 !== ed)) { OPEN.delete(o); o.classList.remove("so195"); } }); OPEN.add(el); el.classList.add("so195"); } }
+      else if (OPEN.has(el) && !TM.has(el)) TM.set(el, setTimeout(() => { OPEN.delete(el); el.classList.remove("so195"); TM.delete(el); }, +c.delay || 600)); });
+  }, { passive: true });
+  window.ps195 = async (k, v) => { await saveSetting16("ps195", Object.assign({}, setv("ps195", {}) || {}, { [k]: v })); mark(); };
+
+  /* ======================= 2) طرق إظهار المحتوى المطوي (اختار أكتر من طريقة) ======================= */
+  const RM = () => Object.assign({ m: ["click"] }, setv("rev195", {}) || {});
+  const has = k => (RM().m || []).includes(k);
+  const isOpen = g => g.classList.contains("open193") || (g.tagName === "DETAILS" && g.open);
+  const openIt = g => { if (isOpen(g)) return; const h = g.querySelector(".hd193"); if (h) { h.__r195 = 1; h.click(); h.__r195 = 0; } };
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && has("scroll")) openIt(e.target); }), { rootMargin: "-45% 0px -45% 0px" }) : null;
+  function wire() { document.querySelectorAll(".g193").forEach(g => { if (g.__w195) return; g.__w195 = 1; const h = g.querySelector(".hd193"); if (!h) return; let lp = 0, ht = 0;
+    h.addEventListener("click", e => { if (h.__r195 || has("click")) return; e.stopImmediatePropagation(); e.preventDefault(); }, true);
+    h.addEventListener("dblclick", () => { if (has("dbl")) { h.__r195 = 1; h.click(); h.__r195 = 0; } });
+    h.addEventListener("mouseenter", () => { if (has("hover")) ht = setTimeout(() => openIt(g), 350); }); h.addEventListener("mouseleave", () => clearTimeout(ht));
+    h.addEventListener("pointerdown", () => { if (has("long")) lp = setTimeout(() => { h.__r195 = 1; h.click(); h.__r195 = 0; }, 550); }); ["pointerup", "pointerleave"].forEach(ev => h.addEventListener(ev, () => clearTimeout(lp)));
+    io && io.observe(g); }); }
+  window.rev195 = async (k, on) => { const L = new Set(RM().m || []); on ? L.add(k) : L.delete(k); if (!L.size) L.add("click"); await saveSetting16("rev195", { m: [...L] }); };
+  function revCard() { const M = [["click", "👆 دوسة", "Tap"], ["hover", "🖱️ الماوس يقف عليه", "Hover"], ["scroll", "📜 لما يوصل نص الشاشة وانت نازل", "When scrolled to centre"], ["dbl", "✌️ دوستين", "Double tap"], ["long", "✋ ضغطة طويلة", "Long press"]];
+    const c = P(); const s = (k, O) => `<select class="in" style="width:auto" onchange="ps195('${k}',this.value)">${O.map(([v, a, e]) => `<option value="${v}" ${String(c[k]) === String(v) ? "selected" : ""}>${T(a, e)}</option>`).join("")}</select>`;
+    return `<div class="card" id="rev195c"><h3>🪄 ${T("إزاي المحتوى المطوي يتفتح (اختار أكتر من طريقة)", "How collapsed content opens (pick several)")}</h3><div class="row" style="gap:.8rem;flex-wrap:wrap">${M.map(([k, a, e]) => `<label class="sm"><input type="checkbox" ${has(k) ? "checked" : ""} onchange="rev195('${k}',this.checked)"> ${T(a, e)}</label>`).join("")}</div>
+      <h4>↔️ ${T("الشرايط اللي في الجنب", "Side bars")}</h4><div class="row" style="gap:.8rem;flex-wrap:wrap"><label class="sm">${T("كل شريط لوحده", "Each bar on its own")} ${s("on", [["on", "أيوه", "Yes"], ["off", "لأ", "No"]])}</label><label class="sm">${T("وهو مقفول يبان إزاي", "When closed it shows as")} ${s("peek", [["sliver", "ظل صغير من الجنب", "A small sliver"], ["tab", "لسان صغير", "A small tab"], ["none", "مايبانش خالص", "Nothing"]])}</label><label class="sm">${T("عرض الظل", "Sliver width")} <input class="in" type="number" min="2" max="60" style="width:5rem" value="${c.pw}" onchange="ps195('pw',+this.value)"> px</label><label class="sm">${T("مساحة الماوس", "Mouse zone")} <input class="in" type="number" min="2" max="200" style="width:5rem" value="${c.zone}" onchange="ps195('zone',+this.value)"> px</label><label class="sm">${T("يستنى قبل ما يرجع", "Delay before closing")} ${s("delay", [[300, "سريع", "Fast"], [600, "عادي", "Normal"], [1200, "بطيء", "Slow"]])}</label></div>
+      <p class="xs muted">${T("الماوس يقرّب من الشمال يطلع اللي على الشمال بس، ومن اليمين اللي على اليمين بس. ولما الماوس يمشي، الشريط يرجع مكانه.", "Each side opens only its own bar and goes back when the mouse leaves.")}</p></div>`; }
+
+  /* ======================= 3) المصحف الملوّن ======================= */
+  try { if (typeof EA !== "undefined" && !EA.some(x => x[0] === "Minshawy_Teacher_128kbps")) EA.splice(2, 0, ["Minshawy_Teacher_128kbps", "المنشاوي — المصحف المعلّم (مع الأطفال)", "Al-Minshawi — teaching (with children)"]); } catch (e) {}
+  function mushaf() {
+    const tj = document.querySelector("#app .tj2"); if (!tj) return;
+    /* الأحكام فوق المصحف مباشرة + كل الأحكام */
+    const bar = document.querySelector("#app .tjf157"); if (bar && !bar.__m195) { bar.__m195 = 1; const host = tj.closest(".card") || tj; host.parentNode.insertBefore(bar, host); bar.classList.add("sticky195");
+      try { ["slnt", "ham_wasl", "laam_shamsiyah"].forEach(k => { if (!TJ[k] || bar.querySelector(`[data-k195="${k}"]`)) return; const on = new Set(state.tjf157 || []); const s = document.createElement("span"); s.className = "chip" + (on.has(k) ? " on" : ""); s.dataset.k195 = k; s.style.color = TJ[k][0]; s.textContent = AR() ? TJ[k][1] : TJ[k][2]; s.onclick = () => tjf157(k); bar.appendChild(s); }); } catch (e) {}
+      bar.insertAdjacentHTML("beforeend", `<span class="sm" style="margin-inline-start:.6rem">📖 ${T("العرض:", "View:")}</span><button class="btn btn-o" style="padding:.1rem .5rem" onclick="go16('pdf181','shamarly')">${T("مصحف الشمرلي", "Shamarly mushaf")}</button><button class="btn btn-o" style="padding:.1rem .5rem" onclick="document.body.classList.toggle('mad195')">${T("تنسيق مصحف المدينة", "Madinah layout")}</button>`); }
+    /* الخطأ مكتوب بالأحمر فوق الكلمة */
+    try { const v0 = tj.querySelector(".w[data-v]"); if (!v0) return; const s = +v0.dataset.v.split(":")[0]; const M = mmMarks(s) || []; tj.querySelectorAll(".w[data-mm195]").forEach(w => w.removeAttribute("data-mm195"));
+      M.filter(m => !m.resolved).forEach(m => { const w = tj.querySelector(`.w[data-v="${m.vkey}"][data-i="${m.w}"]`); if (!w) return; const lab = (mmKind(m.kind) || "") + (m.note ? " · " + String(m.note).replace(/^\[[^\]]*\]\s*/, "") : ""); const prev = w.getAttribute("data-mm195"); w.setAttribute("data-mm195", prev ? prev + " | " + lab : lab); }); } catch (e) {}
+    if (!document.getElementById("pen195")) { const b = document.createElement("button"); b.id = "pen195"; b.type = "button"; b.title = T("ماركر — ارسم بإيدك على المصحف", "Marker — draw on the mushaf"); b.textContent = "🖊️"; b.onclick = () => pen.toggle(); document.body.appendChild(b); }
+  }
+  /* لوحة التصحيح: بتنزل لآخرها، الحفظ دايمًا ظاهر، أسهم لأول ولآخر، ومن غير الشريط المختصر القديم */
+  new MutationObserver(() => { const box = document.getElementById("mmModal"); if (!box || box.__s195) return; box.__s195 = 1; const eb = box.querySelector(".edbox"); if (!eb) return;
+    const nav = document.createElement("div"); nav.className = "nav195"; nav.innerHTML = `<button type="button" title="${T("لأول", "Top")}">⬆️</button><button type="button" title="${T("لآخر", "Bottom")}">⬇️</button>`; nav.children[0].onclick = () => eb.scrollTo({ top: 0, behavior: "smooth" }); nav.children[1].onclick = () => eb.scrollTo({ top: eb.scrollHeight, behavior: "smooth" }); eb.appendChild(nav);
+    const ta = eb.querySelector("#mmNote"); if (ta) { ta.placeholder = T("اكتب أي حاجة زيادة — هتظهر للطالب بالأحمر على الكلمة", "Anything extra — shown to the student in red on the word"); ta.classList.add("red195"); } }).observe(document.body, { childList: true });
+  /* ماركر بإيدك */
+  const pen = { on: false, c: null, col: "#ef4444", toggle() { this.on ? this.off() : this.start(); },
+    start() { this.on = true; const cv = document.createElement("canvas"); cv.id = "cv195"; const H = document.documentElement.scrollHeight; cv.width = innerWidth; cv.height = H; cv.style.height = H + "px"; document.body.appendChild(cv); const x = cv.getContext("2d"); x.lineCap = "round"; x.lineJoin = "round"; let d = false;
+      const P2 = e => [e.pageX, e.pageY]; cv.onpointerdown = e => { d = true; x.strokeStyle = this.col; x.lineWidth = this.col === "#fde04788" ? 22 : 4; x.beginPath(); x.moveTo(...P2(e)); }; cv.onpointermove = e => { if (!d) return; x.lineTo(...P2(e)); x.stroke(); }; cv.onpointerup = () => d = false;
+      const tb = document.createElement("div"); tb.id = "tb195"; tb.innerHTML = ["#ef4444", "#2563eb", "#16a34a", "#fde04788"].map(c => `<button style="background:${c}" data-c="${c}"></button>`).join("") + `<button data-x="1">🧽</button><button data-q="1">✖</button>`; tb.onclick = e => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.c) this.col = b.dataset.c; if (b.dataset.x) x.clearRect(0, 0, cv.width, cv.height); if (b.dataset.q) this.off(); }; document.body.appendChild(tb); this.c = cv; document.getElementById("pen195").classList.add("on"); },
+    off() { this.on = false; ["cv195", "tb195"].forEach(id => { const e = document.getElementById(id); e && e.remove(); }); const b = document.getElementById("pen195"); b && b.classList.remove("on"); } };
+
+  /* ======================= 4) حريمي ← نسائي + صوت طفل ======================= */
+  function voices() {
+    document.querySelectorAll("#app button, #app option, #app label, #app span").forEach(el => { if (el.children.length > 1) return; if (/حريمي/.test(el.textContent || "")) el.textContent = el.textContent.replace(/حريمي/g, "نسائي"); });
+    document.querySelectorAll("#app button[onclick*=\"voice='f'\"], #app button[onclick*='voice=\\'f\\''], #app button[onclick*='voice=\"f\"']").forEach(b => { if (b.__c195 || b.nextElementSibling && b.nextElementSibling.__kid) return; b.__c195 = 1; const k = b.cloneNode(true); k.__kid = 1; k.textContent = "🧒 " + T("طفل", "Child"); k.setAttribute("onclick", (b.getAttribute("onclick") || "").replace(/voice\s*=\s*(['"])f\1/g, "voice=$1c$1")); b.after(k); });
+  }
+  try { const _as = aahSing; aahSing = function (notes, hz, voice, onStep) { if (voice === "c") return _as.call(this, notes, hz * 1.335, "f", onStep); return _as.apply(this, arguments); }; } catch (e) {}
+  try { const _mr = mqcRastHz; mqcRastHz = function () { if (typeof MQC !== "undefined" && MQC.voice === "c") return 349.23 * Math.pow(2, (MQC.tr || 0) / 12); return _mr.apply(this, arguments); }; } catch (e) {}
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () { _r.apply(this, arguments); try { mark(); wire(); mushaf(); voices(); if (!document.querySelector("#app .tj2") && pen.on) pen.off(); const pb = document.getElementById("pen195"); if (pb && !document.querySelector("#app .tj2")) pb.remove();
+    if (realOwner() && (state.route === "control183" || state.route === "layouts180") && !document.getElementById("rev195c")) { const a = document.getElementById("rv190c") || document.getElementById("acc193c") || document.querySelector("#app .card"); a && a.insertAdjacentHTML("afterend", revCard()); } } catch (e) { console.warn(e); } };
+  try { new MutationObserver(() => { clearTimeout(window.__r195); window.__r195 = setTimeout(() => { try { mark(); wire(); mushaf(); voices(); } catch (e) {} }, 250); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
+
+  css(`body.ps195 :is(.side185,#nv180.nv180-side,#nv180.nv180-rail){transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .3s,opacity .3s!important;opacity:1!important;pointer-events:auto!important}
+  body.ps195 :is(.side185,#nv180.nv180-side,#nv180.nv180-rail)[data-e195=l]:not(.so195){transform:translateX(calc(-100% + var(--pw195,12px)))!important;box-shadow:6px 0 18px -6px rgba(0,0,0,.35)}
+  body.ps195 :is(.side185,#nv180.nv180-side,#nv180.nv180-rail)[data-e195=r]:not(.so195){transform:translateX(calc(100% - var(--pw195,12px)))!important;box-shadow:-6px 0 18px -6px rgba(0,0,0,.35)}
+  body.ps195 :is(.side185,#nv180.nv180-side,#nv180.nv180-rail).so195{transform:none!important;box-shadow:0 18px 40px rgba(0,0,0,.25)}
+  body.ps195.ps195-none :is(.side185,#nv180.nv180-side,#nv180.nv180-rail):not(.so195){opacity:0!important}
+  body.ps195 :is(.side185,#nv180)::after{content:"";position:absolute;top:50%;width:4px;height:44px;border-radius:4px;background:var(--accent);opacity:.55;transform:translateY(-50%)}body.ps195 [data-e195=l]::after{right:3px}body.ps195 [data-e195=r]::after{left:3px}body.ps195 .so195::after{display:none}
+  .sticky195{position:sticky;top:0;z-index:30;background:var(--card);border-radius:14px;padding:.5rem;box-shadow:0 8px 20px -14px rgba(0,0,0,.4);margin-bottom:.5rem}
+  .tj2 .w[data-mm195]{position:relative;text-decoration:underline wavy #dc2626;text-underline-offset:6px}.tj2 .w[data-mm195]::before{content:attr(data-mm195);position:absolute;bottom:100%;right:50%;transform:translateX(50%);white-space:nowrap;font:600 .62rem/1.2 system-ui,sans-serif;color:#dc2626;background:#fff5f5;border:1px solid #fecaca;border-radius:6px;padding:0 .3rem;pointer-events:none}
+  body.mad195 #app .tj2{font-family:"Amiri Quran","KFGQPC Uthmanic Script HAFS","Amiri",serif!important;text-align:justify;text-align-last:center;line-height:2.6!important;max-width:620px;margin-inline:auto}
+  #mmModal .edbox{max-height:86vh;overflow:auto;position:relative}#mmModal .edbox>.row:last-of-type{position:sticky;bottom:0;background:var(--card);padding:.5rem 0;z-index:2}#mmModal .sug158{display:none!important}.red195{color:#dc2626;border-color:#fca5a5}
+  .nav195{position:sticky;bottom:3.6rem;float:inline-end;display:flex;flex-direction:column;gap:.3rem;z-index:3}.nav195 button{width:2.2rem;height:2.2rem;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  #pen195{position:fixed;z-index:960;bottom:calc(10.6rem + env(safe-area-inset-bottom));inset-inline-end:1rem;width:2.6rem;height:2.6rem;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:1.15rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.15)}#pen195.on{background:#fef3c7;outline:3px solid #f59e0b}
+  #cv195{position:absolute;left:0;top:0;width:100%;z-index:940;cursor:crosshair;touch-action:none}#tb195{position:fixed;z-index:961;bottom:calc(14rem + env(safe-area-inset-bottom));inset-inline-end:1rem;display:flex;flex-direction:column;gap:.3rem;background:var(--card);padding:.35rem;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.2)}#tb195 button{width:1.9rem;height:1.9rem;border-radius:50%;border:1px solid var(--line);cursor:pointer;background:var(--bg)}`);
+  setTimeout(mark, 400);
 })();
 
 // بدء التشغيل
