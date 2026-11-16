@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v195";
+const UI_VERSION = "2026-11-16-v196";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27433,9 +27433,15 @@ Between lessons, the platform keeps you going:
     return { pages: [await file.text()] };
   }
   /* كتاب صور (مسكانر): نقراه بـ OCR مجاني على جهازك */
+  /* v196: اللي اتقرا بيتحفظ على الجهاز — لو الصفحة رفرشت أو النت فصل يكمّل من مكانه */
+  const IDB = { db: null, open() { return this.db || (this.db = new Promise((ok, no) => { const r = indexedDB.open("itqan196", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); })); },
+    async get(k) { try { const db = await this.open(); return await new Promise(ok => { const r = db.transaction("kv").objectStore("kv").get(k); r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); }); } catch (e) { return null; } },
+    async set(k, v) { try { const db = await this.open(); await new Promise(ok => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} } };
+  let SIG = "";
   async function ocr(pdf, onp, max) {
     await loadJs("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"); const w = await Tesseract.createWorker("ara+eng"); const out = []; const N = Math.min(pdf.numPages, max || 400);
-    for (let i = 1; i <= N; i++) { onp && onp(T(`🔎 بقرا صفحة مصوّرة ${i} من ${N} (ده بياخد وقت)`, `OCR page ${i}/${N}`)); const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: 2 }); const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise; const { data } = await w.recognize(c); out.push(data.text || ""); }
+    for (let i = 1; i <= N; i++) { const ck = SIG ? `ocr:${SIG}:${i}` : ""; const hit = ck ? await IDB.get(ck) : null; if (hit != null) { out.push(hit); onp && onp(T(`♻️ صفحة ${i} من ${N} اتقرت قبل كده`, `Page ${i}/${N} already read`)); continue; }
+      onp && onp(T(`🔎 بقرا صفحة مصوّرة ${i} من ${N} (ده بياخد وقت)`, `OCR page ${i}/${N}`)); const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: 2 }); const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise; const { data } = await w.recognize(c); out.push(data.text || ""); if (ck) await IDB.set(ck, data.text || ""); }
     await w.terminate(); return out;
   }
   /* ======================= 2) تقسيم لفصول ======================= */
@@ -27500,7 +27506,9 @@ Between lessons, the platform keeps you going:
     up: async inp => {
       const f = inp.files && inp.files[0]; if (!f) return; const how = (document.getElementById("bk192how") || {}).value || "auto"; const per = +((document.getElementById("bk192per") || {}).value || 10);
       const st = t => { B.busy = t; const e = document.getElementById("bk192st"); if (e) e.textContent = t; };
-      try { st("⏳"); let r = await extract(f, st); if (r.scanned && r.pdf) { if (confirm(T("الكتاب ده صور (مسكانر). أقراه بـ OCR مجاني على جهازك؟ ده ممكن ياخد دقايق.", "Scanned book. Run free OCR on this device? (takes minutes)"))) r.pages = await ocr(r.pdf, st); }
+      try { st("⏳"); SIG = `${f.name}:${f.size}:${f.lastModified}`; const done = await IDB.get("pages:" + SIG); let r;
+        if (done && done.length && confirm(T("الكتاب ده اتقرا قبل كده على الجهاز ده — أكمّل من اللي اتحفظ؟ (أسرع)", "This book was read before on this device — reuse it?"))) { st(T("📦 بكمّل من اللي اتحفظ", "📦 Using saved pages")); r = { pages: done }; }
+        else { r = await extract(f, st); if (r.scanned && r.pdf) { if (confirm(T("الكتاب ده صور (مسكانر). أقراه بـ OCR مجاني على جهازك؟ ده ممكن ياخد دقايق — ولو الصفحة رفرشت أو النت فصل هيكمّل من نفس الصفحة.", "Scanned book. Run free OCR on this device? (resumes if interrupted)"))) r.pages = await ocr(r.pdf, st); } await IDB.set("pages:" + SIG, r.pages); }
         st(T("✂️ بقسّمه لفصول…", "Splitting into chapters…")); const chapters = split(r.pages, how === "pages" ? "pages" : "auto", per); chapters.forEach(c => { c.quiz = localQuiz(c); });
         const lang = /[؀-ۿ]/.test(r.pages.join(" ").slice(0, 3000)) ? "ar" : "en";
         const { data, error } = await sb.from("books192").insert({ title: f.name.replace(/\.[^.]+$/, ""), lang, chapters, pages: r.pages.length, src: f.name, status: "draft", opts: DEF }).select("id").single(); if (error) throw error;
