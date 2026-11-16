@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v167";
+const UI_VERSION = "2026-11-16-v168";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -21630,7 +21630,7 @@ function installBtn(full) {
   if (IS_STANDALONE || (!deferredInstall && !IS_IOS)) return "";
   return `<button class="btn btn-o ${full ? "btn-full" : ""}" style="${full ? "margin-top:.5rem" : ""}" onclick="installApp()"><i class="fa-solid fa-mobile-screen-button"></i> ${L("installApp")}</button>`;
 }
-if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(r => { try { r.update(); } catch (e) {} }).catch(() => {})); let __swr = false; const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !__swr) { __swr = true; location.reload(); } }); }
+if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(r => { try { r.update(); } catch (e) {} }).catch(() => {})); let __swr = false; const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !__swr) { __swr = true; const rl = () => { try { sessionStorage.setItem("itqan_pos168r", "1"); } catch (e) {} location.reload(); }; if (document.visibilityState === "hidden") rl(); else document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") rl(); }, { once: true }); } }); }
 
 
 /* ================= v152: درج جانبي لأدوات الأونر + زرار «؟» + اللغة أوضح + التسجيل أولًا + أسماء الدرجات Do Re Mi + «صوتي» افتراضي + المصحف الملوّن (طالب + آية) + آية اليوم (كل القرّاء + فيديو) + مزايا الطلاب والباقات ================= */
@@ -23710,6 +23710,132 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="btn btn-o" onclick="lq166('ل','a').then(()=>setTimeout(()=>lq166('ل','u'),700)).then(()=>setTimeout(()=>lq166('ل','i'),1400)).then(()=>setTimeout(()=>lq166('ل','s'),2100))">▶ ${T("جرّب: لَ لُ لِ أَلْ", "Try: la lu li al")}</button></div></div>`;
   }
   const _os = ownerSettings; ownerSettings = function () { return _os.apply(this, arguments) + card(); };
+})();
+
+
+/* ================= v168: شريط «صوت المقام» مايطلعش غير للصوت الطويل + الشريط الجانبي حتة صغيرة وتطلع وقت ما تحب + كل صفحة ترجع لنفس المكان اللي سبتها فيه (حتى بعد التحديث) + «متابعتي اليومية»: قيام 30 يوم، الصلوات في جماعة بمواقيتك وتذكير، الورد، الأذكار، الصيام ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e);
+
+  /* ---------- 1) شريط التشغيل: بس للتسجيلات الطويلة ---------- */
+  let synStart = 0, lastUntil = 0;
+  if (typeof gpSync === "function") {
+    const _gs = gpSync;
+    gpSync = function () {
+      const now = performance.now(); if (GP.synthUntil > lastUntil && lastUntil < now) synStart = now; lastUntil = GP.synthUntil;
+      const el = GP.el; const media = el && (!el.paused || el.currentTime > 0) && !el.ended; const mode = setv("gpbar168", "long");
+      const shortMedia = media && (!isFinite(el.duration) || el.duration < 15); const shortSyn = !media && (GP.synthUntil - synStart) < 8000;
+      if (mode === "off" || (mode === "long" && (shortMedia || (!media && shortSyn)))) { const b = document.getElementById("gpbar"); if (b) b.classList.remove("on"); if (!media && gpSynth()) { clearTimeout(GP.st); GP.st = setTimeout(gpSync, 600); } return; }
+      return _gs.apply(this, arguments);
+    };
+  }
+
+  /* ---------- 2) الشريط الجانبي: لسان صغير في النص، والشريط كله يطلع لما تقرّب أو تدوس ---------- */
+  document.head.insertAdjacentHTML("beforeend", `<style>
+#rail158:not(.dock){top:50%!important;bottom:auto!important;height:auto!important;max-height:11rem;transform:translateY(-50%)!important;border-radius:0 14px 14px 0!important;max-width:1.7rem;transition:max-width .22s ease,max-height .22s ease,top .22s ease,transform .22s ease;opacity:.85}
+#rail158.R:not(.dock){border-radius:14px 0 0 14px!important}
+#rail158:not(.dock) .rh{width:1.7rem;flex:0 0 1.7rem;min-height:11rem}
+#rail158:not(.dock) .ri{display:none}
+#rail158:not(.dock):hover,#rail158:not(.dock).open{top:0!important;transform:none!important;height:100vh!important;max-height:100vh;max-width:20rem;opacity:1;border-radius:0!important}
+#rail158:not(.dock):hover .ri,#rail158:not(.dock).open .ri{display:flex}
+#rail158:not(.dock):hover .rh,#rail158:not(.dock).open .rh{min-height:0}
+body.rail168hide #rail158:not(:hover):not(.open){max-width:.45rem;opacity:.35}
+body.rail168hide #rail158:not(:hover):not(.open) .rh{font-size:0}
+</style>`);
+  document.addEventListener("click", e => { const r = document.getElementById("rail158"); if (r && r.classList.contains("open") && !e.target.closest("#rail158")) r.classList.remove("open"); }, true);
+
+  /* ---------- 3) كل صفحة ترجع لنفس المكان ---------- */
+  const pk = () => state.route + "|" + (state.pageArg || "") + "|" + (state.libSec || "") + "|" + (state.mqTab || "") + "|" + ((state.dash || {}).tab || "");
+  let POS = {}; try { POS = JSON.parse(sessionStorage.getItem("itqan_pos168") || "{}"); } catch (e) {}
+  let tS = 0; window.addEventListener("scroll", () => { clearTimeout(tS); tS = setTimeout(() => { POS[pk()] = Math.round(window.scrollY); try { sessionStorage.setItem("itqan_pos168", JSON.stringify(POS)); } catch (e) {} }, 150); }, { passive: true });
+  window.addEventListener("pagehide", () => { try { POS[pk()] = Math.round(window.scrollY); sessionStorage.setItem("itqan_pos168", JSON.stringify(POS)); sessionStorage.setItem("itqan_last168", pk()); } catch (e) {} });
+  let lastK = null, restoring = false;
+  function restore(k) { const y = POS[k]; if (!y || restoring) return; restoring = true; let n = 0; const go = () => { n++; if (document.documentElement.scrollHeight - innerHeight >= y - 4 || n > 25) { window.scrollTo(0, y); restoring = false; return; } setTimeout(go, 120); }; setTimeout(go, 60); }
+  try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (e) {}
+
+  /* ---------- 4) متابعتي اليومية ---------- */
+  const today = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const LS = "itqan_hb168";
+  const H = state.hb168 = state.hb168 || (() => { try { return JSON.parse(localStorage.getItem(LS) || "{}"); } catch (e) { return {}; } })();
+  H.days = H.days || {}; H.cfg = H.cfg || { qiyamStart: today(), wirdPages: 2, show: { qiyam: 1, prayers: 1, wird: 1, adhkar: 1, fast: 1, duha: 0, sadaqa: 0 }, remind: 0 };
+  const day = d => (H.days[d] = H.days[d] || {});
+  let saveT = 0;
+  function save(d) { try { localStorage.setItem(LS, JSON.stringify(H)); } catch (e) {} clearTimeout(saveT); saveT = setTimeout(async () => { if (!state.auth || !state.auth.user) return; try { await sb.from("habits").upsert({ user_id: state.auth.user.id, day: d || today(), data: Object.assign({ cfg: H.cfg }, H.days[d || today()] || {}), updated_at: new Date().toISOString() }); } catch (e) {} }, 800); }
+  async function pull() { if (H.__pulled || !state.auth || !state.auth.user) return; H.__pulled = 1; try { const { data } = await sb.from("habits").select("day,data").order("day", { ascending: false }).limit(60); (data || []).forEach(r => { const x = Object.assign({}, r.data); if (x.cfg) { H.cfg = Object.assign(H.cfg, x.cfg); delete x.cfg; } H.days[r.day] = Object.assign({}, x, H.days[r.day] || {}); }); render(); } catch (e) {} }
+  const PR = [["Fajr", "الفجر", "Fajr"], ["Dhuhr", "الظهر", "Dhuhr"], ["Asr", "العصر", "ʿAsr"], ["Maghrib", "المغرب", "Maghrib"], ["Isha", "العشاء", "ʿIshāʾ"]];
+  async function times() {
+    const d = today(); if (H.times && H.times.d === d) return H.times;
+    let lat = H.cfg.lat, lng = H.cfg.lng;
+    if (lat == null) { try { const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })); lat = H.cfg.lat = +p.coords.latitude.toFixed(3); lng = H.cfg.lng = +p.coords.longitude.toFixed(3); } catch (e) { return null; } }
+    try { const j = await fetch(`https://api.aladhan.com/v1/timings/${d.split("-").reverse().join("-")}?latitude=${lat}&longitude=${lng}&method=${H.cfg.method || 5}`).then(r => r.json()); H.times = { d, t: j.data.timings }; save(); return H.times; } catch (e) { return null; }
+  }
+  let remT = [];
+  async function schedule() {
+    remT.forEach(clearTimeout); remT = []; if (!H.cfg.remind || !("Notification" in window) || Notification.permission !== "granted") return; const tt = await times(); if (!tt) return;
+    const now = new Date();
+    PR.forEach(([k, a, e], i) => {
+      if (i === 0) return; const [h, m] = String(tt.t[k]).split(":").map(Number); const at = new Date(); at.setHours(h, m, 0, 0); const when = at - now - 30 * 60000; if (when <= 0) return;
+      const prev = PR[i - 1]; remT.push(setTimeout(() => { const d = day(today()); if (d["p_" + prev[0]]) return; try { new Notification("🕌 " + T("متابعتي اليومية", "My daily tracker"), { body: T(`فاضل نص ساعة على ${a}. صلّيت ${prev[1]} في جماعة؟ علّم عليها.`, `Half an hour to ${e}. Did you pray ${prev[2]} in congregation? Mark it.`), icon: "/icons/icon-192.png" }); } catch (er) {} }, when));
+    });
+    const [ih, im] = String(tt.t.Isha).split(":").map(Number); const late = new Date(); late.setHours(ih + 1, im, 0, 0); if (late > now) remT.push(setTimeout(() => { const d = day(today()); if (d.p_Isha && d.wird) return; try { new Notification("📖 " + T("وردك اليومي", "Your daily wird"), { body: T("لسه الورد أو العشاء ماتعلّمش النهارده.", "Today's wird or ʿIshāʾ isn't marked yet.") }); } catch (er) {} }, late - now));
+  }
+  window.hb168 = {
+    set(k, v) { const d = day(today()); d[k] = v; save(); render(); },
+    pr(k) { const d = day(today()); const c = d["p_" + k] || 0; d["p_" + k] = (c + 1) % 4; save(); render(); },
+    qiyam(dt) { const d = day(dt); d.qiyam = !d.qiyam; save(dt); render(); },
+    cfg(k, v) { H.cfg[k] = v; if (k === "lat" || k === "method") H.times = null; save(); render(); },
+    show(k) { H.cfg.show[k] = H.cfg.show[k] ? 0 : 1; save(); render(); },
+    newCycle() { H.cfg.qiyamStart = today(); save(); render(); },
+    async remind() { if (!("Notification" in window)) return toast(T("جهازك مش بيدعم الإشعارات", "Notifications aren't supported on this device"), true); const p = await Notification.requestPermission(); H.cfg.remind = p === "granted" ? 1 : 0; save(); schedule(); toast(H.cfg.remind ? "🔔 " + T("التذكير اتفعّل (طول ما الموقع أو التطبيق مفتوح)", "Reminders on (while the site or app is open)") : T("الإشعارات مرفوضة من المتصفح", "Notifications were blocked"), !H.cfg.remind); render(); },
+    async loc() { H.cfg.lat = null; H.times = null; const t = await times(); toast(t ? "✅" : T("اسمح بالموقع (Location) عشان المواقيت", "Allow location for prayer times"), !t); render(); },
+    share() { const s = streak("qiyam"); const txt = T(`🌙 مكمّل ${s} يوم قيام ليل مع أكاديمية إتقان — انضم للتحدي: `, `🌙 ${s} nights of qiyām in a row with Itqan Academy — join the challenge: `) + location.origin + "/#/habits168"; if (navigator.share) navigator.share({ text: txt }).catch(() => {}); else navigator.clipboard.writeText(txt).then(() => toast("📋")); }
+  };
+  function streak(k) { let n = 0; const d = new Date(); if (!(day(today())[k])) d.setDate(d.getDate() - 1); for (let i = 0; i < 400; i++) { const x = H.days[today(d)]; if (x && x[k]) n++; else break; d.setDate(d.getDate() - 1); } return n; }
+  function page() {
+    if (!state.auth || !state.auth.user) return pageWrap("🕌", T("متابعتي اليومية", "My daily tracker"), "", `<div class="card" style="text-align:center"><p>${T("سجّل مجانًا وابدأ متابعة صلاتك وقيامك وورْدك يوم بيوم، مع تذكير.", "Sign up free to track your prayers, qiyām and wird day by day, with reminders.")}</p><button class="btn btn-p" onclick="navigate('signup')">✨ ${T("سجّل مجانًا", "Sign up free")}</button></div>`);
+    pull(); const d = day(today()); const S = H.cfg.show; const tt = H.times && H.times.d === today() ? H.times.t : null; if (!tt && !H.__tq) { H.__tq = 1; times().then(t => { H.__tq = 0; if (t) { render(); schedule(); } }); }
+    const st = (c) => [["⬜", T("لسه", "Not yet")], ["🕌", T("جماعة", "In congregation")], ["✅", T("لوحدي", "Alone")], ["❌", T("فاتت", "Missed")]][c || 0];
+    const q0 = new Date(H.cfg.qiyamStart + "T00:00:00"); const qdays = Array.from({ length: 30 }, (_, i) => { const x = new Date(q0); x.setDate(x.getDate() + i); return today(x); }); const qdone = qdays.filter(x => (H.days[x] || {}).qiyam).length; const over = new Date() > new Date(qdays[29] + "T23:59:59");
+    const cards = [];
+    if (S.prayers) cards.push(`<div class="card"><h3>🕌 ${T("الصلوات الخمس", "The five prayers")}</h3><p class="xs muted">${T("دوس على الصلاة يتغيّر: لسه ← جماعة ← لوحدي ← فاتت", "Tap to cycle: not yet → congregation → alone → missed")}</p>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap">${PR.map(([k, a, e]) => { const s = st(d["p_" + k]); return `<button class="btn btn-o" style="flex:1;min-width:6.5rem;display:flex;flex-direction:column;align-items:center;padding:.5rem" onclick="hb168.pr('${k}')"><span style="font-size:1.4rem">${s[0]}</span><b>${T(a, e)}</b><small class="muted">${tt ? esc(String(tt[k]).slice(0, 5)) : ""}</small><small>${s[1]}</small></button>`; }).join("")}</div>
+      <div class="row" style="gap:.4rem;margin-top:.5rem;flex-wrap:wrap"><button class="btn ${H.cfg.remind ? "btn-o" : "btn-p"}" onclick="hb168.remind()">🔔 ${H.cfg.remind ? T("التذكير شغال", "Reminders on") : T("فعّل التذكير قبل كل صلاة بنص ساعة", "Remind me 30 min before each prayer")}</button><button class="btn btn-o" onclick="hb168.loc()">📍 ${tt ? T("حدّث مكاني", "Update my location") : T("هات مواقيت مدينتي", "Get my prayer times")}</button>
+      <select class="in" style="width:auto" onchange="hb168.cfg('method',+this.value)">${[[5, T("الهيئة المصرية", "Egyptian authority")], [4, T("أم القرى", "Umm al-Qura")], [3, T("رابطة العالم الإسلامي", "Muslim World League")], [2, "ISNA"], [12, T("فرنسا", "France (UOIF)")], [15, T("مون سايتينج", "Moonsighting")]].map(o => `<option value="${o[0]}" ${(H.cfg.method || 5) === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
+      <p class="xs muted" style="margin:.4rem 0 0">${T("جماعة النهارده", "In congregation today")}: <b>${PR.filter(p => d["p_" + p[0]] === 1).length}/5</b> · ${T("أيام متتالية كلها جماعة", "Days in a row, all in congregation")}: <b>${(() => { let n = 0; const x = new Date(); x.setDate(x.getDate() - 1); for (let i = 0; i < 400; i++) { const dd = H.days[today(x)]; if (dd && PR.every(p => dd["p_" + p[0]] === 1)) n++; else break; x.setDate(x.getDate() - 1); } return n; })()}</b></p></div>`);
+    if (S.qiyam) cards.push(`<div class="card"><h3>🌙 ${T("تحدّي قيام الليل — 30 يوم", "Night prayer challenge — 30 days")}</h3><p class="sm">${T("خلّصت", "Done")}: <b>${qdone}/30</b> · ${T("متتالي", "Streak")}: <b>${streak("qiyam")}</b></p>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:.25rem">${qdays.map((x, i) => { const on = (H.days[x] || {}).qiyam; const fut = x > today(); return `<button ${fut ? "disabled" : ""} title="${x}" onclick="hb168.qiyam('${x}')" style="aspect-ratio:1;border-radius:8px;border:1px solid var(--line,#e5e7eb);background:${on ? "var(--accent,#0f766e)" : x === today() ? "color-mix(in srgb,var(--accent,#0f766e) 15%,transparent)" : "var(--card,#fff)"};color:${on ? "#fff" : "inherit"};font-weight:800;cursor:${fut ? "default" : "pointer"};opacity:${fut ? .45 : 1}">${on ? "✓" : i + 1}</button>`; }).join("")}</div>
+      <div class="row" style="gap:.4rem;margin-top:.5rem;flex-wrap:wrap">${over ? `<button class="btn btn-p" onclick="hb168.newCycle()">🔄 ${T("ابدأ 30 يوم جديدة", "Start a new 30 days")}</button>` : ""}<button class="btn btn-o" onclick="hb168.share()">📣 ${T("شارك التحدّي", "Share the challenge")}</button></div></div>`);
+    if (S.wird) cards.push(`<div class="card"><h3>📖 ${T("الورد اليومي", "Daily wird")}</h3><div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap"><label class="sm">${T("هدفي", "My goal")}: <input class="in" type="number" min="1" max="60" value="${H.cfg.wirdPages || 2}" style="width:4.5rem" onchange="hb168.cfg('wirdPages',+this.value)"> ${T("صفحة", "pages")}</label><label class="sm">${T("قريت النهارده", "Read today")}: <input class="in" type="number" min="0" max="604" value="${d.wirdP || 0}" style="width:4.5rem" onchange="hb168.set('wirdP',+this.value);hb168.set('wird',+this.value>=${H.cfg.wirdPages || 2})"></label><span class="badge">${d.wird ? "✅" : "⏳"}</span><button class="btn btn-o" onclick="go16('tasmee')">🎙️ ${T("سمّع وردك", "Recite your wird")}</button></div><p class="xs muted" style="margin:.3rem 0 0">${T("متتالي", "Streak")}: <b>${streak("wird")}</b></p></div>`);
+    const small = [["adhkar", "📿", T("أذكار الصباح والمساء", "Morning & evening adhkār"), [["am", T("الصباح", "Morning")], ["pm", T("المساء", "Evening")]]], ["fast", "🌤️", T("صيام النافلة (الإتنين والخميس والأيام البيض)", "Voluntary fasting (Mon/Thu, white days)"), [["fast", T("صايم النهارده", "Fasting today")]]], ["duha", "☀️", T("صلاة الضحى", "Ḍuḥā prayer"), [["duha", T("صلّيت", "Prayed")]]], ["sadaqa", "🤲", T("صدقة اليوم", "Today's charity"), [["sadaqa", T("اتصدّقت", "Gave")]]]];
+    small.forEach(([k, ic, t, items]) => { if (S[k]) cards.push(`<div class="card"><h3>${ic} ${t}</h3><div class="row" style="gap:.4rem;flex-wrap:wrap">${items.map(([kk, l]) => `<button class="btn ${d[kk] ? "btn-p" : "btn-o"}" onclick="hb168.set('${kk}',${!d[kk]})">${d[kk] ? "✅" : "⬜"} ${l}</button>`).join("")}</div>${k === "adhkar" ? `<button class="btn btn-o" style="margin-top:.4rem" onclick="go16('adhkar')">📿 ${T("افتح الأذكار", "Open the adhkār")}</button>` : ""}</div>`); });
+    const opts = `<details class="card" style="margin-top:.8rem"><summary class="b sm">⚙️ ${T("اختار اللي تتابعه", "Choose what to track")}</summary><div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem">${[["prayers", "🕌", T("الصلوات", "Prayers")], ["qiyam", "🌙", T("القيام", "Qiyām")], ["wird", "📖", T("الورد", "Wird")], ["adhkar", "📿", T("الأذكار", "Adhkār")], ["fast", "🌤️", T("الصيام", "Fasting")], ["duha", "☀️", T("الضحى", "Ḍuḥā")], ["sadaqa", "🤲", T("الصدقة", "Charity")]].map(([k, ic, l]) => `<button class="btn ${S[k] ? "btn-p" : "btn-o"}" onclick="hb168.show('${k}')">${ic} ${l}</button>`).join("")}</div><p class="xs muted">${T("التذكير بيشتغل طول ما الموقع أو التطبيق مفتوح على جهازك.", "Reminders work while the site or app is open on your device.")}</p></details>`;
+    return pageWrap("🕌", T("متابعتي اليومية", "My daily tracker"), T("صلاتك وقيامك ووردك يوم بيوم — وتذكير قبل كل صلاة", "Your prayers, qiyām and wird day by day — with a reminder before each prayer"), `<div class="cu158" style="grid-template-columns:repeat(auto-fill,minmax(min(22rem,100%),1fr))">${cards.join("")}</div>${opts}`);
+  }
+  if (!PAGES16.includes("habits168")) PAGES16.push("habits168");
+  setTimeout(() => { try { schedule(); } catch (e) {} }, 4000);
+
+  /* أيقونة في الهيدر + كارت في الرئيسية */
+  function entry() {
+    const t = document.querySelector(".hdr .tools"); if (t && !document.getElementById("hbi168")) { const b = document.createElement("button"); b.id = "hbi168"; b.className = "ibtn"; b.title = T("متابعتي اليومية", "My daily tracker"); b.textContent = "🕌"; b.onclick = () => go16("habits168"); t.insertBefore(b, t.firstChild); }
+    if (state.route === "home" && !document.getElementById("hbh168")) { const w = document.querySelector("#app .hdr ~ section .wrap"); if (w) { const c = document.createElement("div"); c.id = "hbh168"; c.className = "card"; c.style.cssText = "margin:.6rem 0;display:flex;gap:.8rem;align-items:center;cursor:pointer;background:linear-gradient(135deg,#0b3d36,#0f766e);color:#fff;border:0"; c.onclick = () => go16("habits168"); c.innerHTML = `<div style="font-size:2rem">🌙</div><div style="flex:1"><b>${T("تحدّي 30 يوم قيام + الصلوات في جماعة + وردك", "30-day qiyām challenge + prayers in congregation + your wird")}</b><div class="xs" style="opacity:.9">${T("تابع نفسك يوم بيوم مع تذكير قبل كل صلاة", "Track yourself day by day with a reminder before each prayer")}</div></div><span class="btn" style="background:#fde68a;color:#111;font-weight:800">${T("ابدأ", "Start")}</span>`; const after = w.querySelector(".hm165, #hmb165"); (after && after.nextSibling) ? w.insertBefore(c, after.nextSibling) : w.prepend(c); } }
+  }
+
+  const _r = render;
+  render = function () {
+    const real = state.route;
+    if (real === "habits168") {
+      const arg = state.pageArg; let out; state.route = "cp158"; state.pageArg = "x168";
+      try { out = _r.apply(this, arguments); } finally { state.route = real; state.pageArg = arg; }
+      try { const app = document.getElementById("app"); const hdr = app && app.querySelector(".hdr"); let n = hdr && hdr.nextElementSibling; while (n && n.classList.contains("md158")) n = n.nextElementSibling; const tmp = document.createElement("div"); tmp.innerHTML = page(); if (n) n.replaceWith(...tmp.childNodes); } catch (e) { console.error(e); }
+      try { entry(); } catch (e) {}
+      const k = pk(); if (k !== lastK) restore(k); lastK = k; return out;
+    }
+    const out = _r.apply(this, arguments);
+    try { entry(); } catch (e) {}
+    const k = pk(); if (k !== lastK) { if (lastK === null) { let lk = null; try { lk = sessionStorage.getItem("itqan_last168"); } catch (e) {} if (lk === k) restore(k); } else restore(k); } lastK = k;
+    return out;
+  };
+  if (/^#\/habits168/.test(location.hash)) state.route = "habits168";
 })();
 
 // بدء التشغيل
