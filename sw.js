@@ -1,5 +1,5 @@
 /* Itqan Academy service worker — app shell cache (network-first for the page, cache-first for static assets) */
-const CACHE = "itqan-v177";
+const CACHE = "itqan-v178";
 const SHELL = ["/", "/index.html", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
@@ -19,11 +19,18 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(req).then((r) => { if (r.ok) { const cp = r.clone(); caches.open("itqan-data").then((c) => c.put(req.url, cp)); } return r; }).catch(() => caches.open("itqan-data").then((c) => c.match(req.url)).then((h) => h || Response.error())));
     return;
   }
+  // حماية من الزحمة: أي طلب قراءة من قاعدة البيانات لو رجع «مشغول» (429/503/502/504) بنعيده تلقائي بعد شوية بدل ما المستخدم يشوف خطأ
+  if (url.hostname.endsWith("supabase.co") && /\/rest\/v1\//.test(url.pathname)) {
+    e.respondWith((async () => { let last; for (let i = 0; i < 4; i++) { try { const r = await fetch(req.clone()); if (![429, 502, 503, 504].includes(r.status)) return r; last = r; } catch (er) { last = null; } await new Promise((ok) => setTimeout(ok, 400 * (i + 1) + Math.random() * 600)); } return last || fetch(req); })());
+    return;
+  }
   // never cache API / auth / realtime calls
   if (url.hostname.endsWith("supabase.co") || url.hostname.includes("translate") || url.hostname.includes("mymemory")) return;
   if (req.mode === "navigate" || (url.origin === location.origin && (url.pathname === "/" || url.pathname.endsWith(".html")))) {
     // الشبكة أولًا (أحدث نسخة دايمًا)، ولو مفيش نت أو اتأخر أكتر من ٤ ثواني نفتح المحفوظة
-    const net = fetch(req, { cache: "no-store" }).then((r) => { if (r.ok) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("/index.html", cp)); } return r; });
+    const isMain = url.pathname === "/" || url.pathname === "/index.html";
+    if (url.pathname.startsWith("/archive/")) { e.respondWith(fetch(req).catch(() => caches.match("/index.html"))); return; }
+    const net = fetch(req, { cache: "no-store" }).then((r) => { if (r.ok && isMain) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("/index.html", cp)); } return r; });
     const slow = new Promise((res) => setTimeout(() => caches.match("/index.html").then((h) => h && res(h)), 4000));
     e.respondWith(Promise.race([net, slow]).catch(() => caches.match("/index.html")));
     return;

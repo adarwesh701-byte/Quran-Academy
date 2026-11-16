@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v177";
+const UI_VERSION = "2026-11-16-v178";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -24907,19 +24907,19 @@ body.ed158 .hv169{opacity:.4!important}
     const _td = roomTeardown; roomTeardown = function () { try { lrStop(); } catch (e) {} return _td.apply(this, arguments); };
     setInterval(() => { try { if (RM && RM.joined && !RM.lrec) lrStart(); } catch (e) {} }, 15000);
     /* إشعار واضح للكل إن الحصة بتتسجّل */
-    const _tu = rmTopUpdate; rmTopUpdate = function () { _tu.apply(this, arguments); try { const el = rmEl("rmTop"); if (el && RM.kind === "lesson" && setv("lrec177", { on: true }).on !== false && !el.querySelector(".lr177")) el.querySelector(".t") && el.querySelector(".t").insertAdjacentHTML("afterend", `<span class="rm-chip lr177" title="${T("صوت الحصة بيتسجّل عشان جودة التعليم ومتابعة الإدارة، وبيتمسح تلقائي بعد 10 أيام", "Lesson audio is recorded for quality and admin review, and deleted automatically after 10 days")}">🔴 ${T("الحصة بتتسجّل", "Recorded")}</span>`); } catch (e) {} };
+    const _tu = rmTopUpdate; rmTopUpdate = function () { _tu.apply(this, arguments); try { const el = rmEl("rmTop"); if (el && RM.kind === "lesson" && setv("lrec177", { on: true }).on !== false && !el.querySelector(".lr177")) el.querySelector(".t") && el.querySelector(".t").insertAdjacentHTML("afterend", `<span class="rm-chip lr177" title="${T("ربما يتم تسجيل الحصة لضمان جودة التعليم والحرص على تحسين جودة معلمينا", "This lesson may be recorded to ensure teaching quality and help us keep improving our teachers")}">🔴 ${T("ربما يتم تسجيل الحصة", "May be recorded")}</span>`); } catch (e) {} };
   }
   css(`.lr177{background:#7f1d1d!important;color:#fff!important}`);
 
   /* ---------- 2) المالك: تسجيل كل حصة + التفريغ عربي وإنجليزي + التنبيهات ---------- */
   async function signed(p) { const { data } = await sb.storage.from("lessonrec").createSignedUrl(p, 3600); return data && data.signedUrl; }
   function lrBlock(rows) {
-    const ar = AR(); if (!rows.length) return `<p class="sm muted">${T("مفيش تسجيل للحصة دي (أو اتمسح بعد 10 أيام).", "No recording for this lesson (or it was deleted after 10 days).")}</p>`;
+    const ar = AR(); if (!rows.length) return `<p class="sm muted">${T("مفيش تسجيل للحصة دي.", "No recording for this lesson.")}</p>`;
     const fl = rows.flatMap(r => r.flags || []);
     return `${fl.length ? `<div class="lr177f"><b>🚩 ${T("تنبيهات", "Alerts")}</b>${fl.map(f => `<div class="sm">• ${esc(f)}</div>`).join("")}</div>` : `<p class="xs" style="color:#16a34a">✅ ${T("مفيش تنبيهات في الحصة دي", "No alerts in this lesson")}</p>`}
       <div class="row" style="gap:.3rem;margin:.4rem 0"><button class="btn btn-o" style="padding:.2rem .7rem" onclick="state.lrL='ar';document.querySelectorAll('.lr177t').forEach(e=>e.dataset.l='ar')">العربي</button><button class="btn btn-o" style="padding:.2rem .7rem" onclick="document.querySelectorAll('.lr177t').forEach(e=>e.dataset.l='en')">English</button></div>
       ${rows.map((r, i) => `<div class="lr177p"><div class="row" style="justify-content:space-between;align-items:center;gap:.4rem;flex-wrap:wrap"><b class="sm">🎧 ${T("جزء", "Part")} ${i + 1} · ${esc(fmtDT(r.started_at || r.created_at))} · ${Math.round((r.secs || 0) / 60)} ${T("د", "min")}</b><span class="xs muted">${r.status === "done" ? "" : r.status === "error" ? "⚠️ " + esc(r.err || "") : "⏳ " + T("بيتفرّغ…", "Transcribing…")}</span></div>
-        <audio controls preload="none" data-p="${esc(r.path)}" style="width:100%;margin:.3rem 0" onplay="lr177Src(this)"></audio>
+        ${r.path ? `<audio controls preload="none" data-p="${esc(r.path)}" style="width:100%;margin:.3rem 0" onplay="lr177Src(this)"></audio>` : `<p class="xs muted">🔇 ${T("الصوت اتمسح بعد 3 أيام — الكلام المكتوب موجود تحت", "Audio deleted after 3 days — the text is below")}</p>`}
         ${r.transcript_ar || r.transcript_en ? `<div class="lr177t" data-l="ar"><div class="ar" dir="rtl" lang="ar">${esc(r.transcript_ar || "—")}</div><div class="en" dir="ltr">${esc(r.transcript_en || "—")}</div></div>` : ""}</div>`).join("")}`;
   }
   window.lr177Src = async function (a) { if (a.src) return; const u = await signed(a.dataset.p); if (u) { a.src = u; a.play().catch(() => {}); } };
@@ -24928,7 +24928,7 @@ body.ed158 .hv169{opacity:.4!important}
       const r = await _ol.apply(this, arguments); if (realRole() !== "owner") return r;
       try { const m = document.getElementById("lrModal"); const card = m && m.querySelector(".card"); if (!card) return r;
         const { data } = await sb.from("lesson_recordings").select("*").eq("room_id", String(id)).order("created_at");
-        card.insertAdjacentHTML("beforeend", `<div style="margin-top:1.2rem"><h4>🎙️ ${T("تسجيل الحصة (بيتمسح بعد 10 أيام)", "Lesson recording (deleted after 10 days)")}</h4>${lrBlock(data || [])}</div>`);
+        card.insertAdjacentHTML("beforeend", `<div style="margin-top:1.2rem"><h4>🎙️ ${T("تسجيل الحصة (الصوت بيتمسح بعد 3 أيام — الكلام المكتوب بيفضل)", "Lesson recording (audio deleted after 3 days — the text stays)")}</h4>${lrBlock(data || [])}</div>`);
       } catch (e) {}
       return r;
     };
@@ -24940,9 +24940,9 @@ body.ed158 .hv169{opacity:.4!important}
     const d = useData("lrec177", async () => { const { data } = await sb.from("lesson_recordings").select("room_id,created_at,secs,flags,status").order("created_at", { ascending: false }).limit(1000); const by = {}; (data || []).forEach(r => { const x = by[r.room_id] || (by[r.room_id] = { id: r.room_id, at: r.created_at, secs: 0, flags: 0, parts: 0, pend: 0 }); x.secs += r.secs || 0; x.flags += (r.flags || []).length; x.parts++; if (r.status !== "done") x.pend++; });
       const ids = Object.keys(by); const ls = ids.length ? ((await sb.from("lessons").select("id,start_time,track,student_id,teacher_id").in("id", ids.filter(x => /^[0-9a-f-]{36}$/.test(x)))).data || []) : []; ls.forEach(l => Object.assign(by[l.id], { l })); return [Object.values(by).sort((a, b) => (b.flags - a.flags) || b.at.localeCompare(a.at))]; });
     const P = peopleMap(); const set = setv("lrec177", { on: true });
-    const head = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><span class="sm">${T("كل حصة بتتسجّل صوت من جهاز الطالب (المعلم مايقدرش يوقفه)، وبتتفرّغ عربي وإنجليزي، وأي محاولة لأخد الطالب برّه الأكاديمية بتطلعلك 🚩. التسجيلات بتتمسح تلقائي بعد 10 أيام. الطالب والمعلم بيشوفوا علامة «🔴 الحصة بتتسجّل».", "Every lesson is recorded (audio) from the student's device so the teacher can't stop it, transcribed in Arabic and English, and anything that looks like taking the student outside the academy is flagged 🚩. Recordings are deleted automatically after 10 days. Both sides see “🔴 Recorded”.")}</span><button class="btn ${set.on !== false ? "btn-p" : "btn-o"}" onclick="saveSetting16('lrec177',{on:${set.on === false}}).then(()=>render())">${set.on !== false ? "✅ " + T("التسجيل شغّال", "Recording on") : T("شغّل التسجيل", "Turn recording on")}</button></div></div>`;
+    const head = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><span class="sm">${T("كل حصة بتتسجّل صوت من جهاز الطالب (المعلم مايقدرش يوقفه)، وبتتفرّغ عربي وإنجليزي، وأي محاولة لأخد الطالب برّه الأكاديمية بتطلعلك 🚩. الصوت بيتمسح تلقائي بعد 3 أيام، والكلام المكتوب بيفضل. الطالب والمعلم بيشوفوا «🔴 ربما يتم تسجيل الحصة لضمان جودة التعليم».", "Every lesson is recorded (audio) from the student's device so the teacher can't stop it, transcribed in Arabic and English, and anything that looks like taking the student outside the academy is flagged 🚩. Audio is deleted automatically after 3 days; the text stays. Both sides see “🔴 This lesson may be recorded”.")}</span><button class="btn ${set.on !== false ? "btn-p" : "btn-o"}" onclick="saveSetting16('lrec177',{on:${set.on === false}}).then(()=>render())">${set.on !== false ? "✅ " + T("التسجيل شغّال", "Recording on") : T("شغّل التسجيل", "Turn recording on")}</button></div></div>`;
     if (!Array.isArray(d)) return pageWrap("🎙️", T("تسجيلات الحصص", "Lesson recordings"), "", head + loadingBox());
-    return pageWrap("🎙️", T("تسجيلات الحصص", "Lesson recordings"), T("آخر 10 أيام", "Last 10 days"), head + (d[0].length ? d[0].map(x => `<a href="#" class="card lr177r ${x.flags ? "bad" : ""}" onclick="openLessonReport('${x.id}');return false;"><b>${x.flags ? "🚩 " + x.flags + " · " : ""}${esc(fmtDT((x.l || {}).start_time || x.at))}</b><span class="sm">${x.l ? `🎓 ${esc(personName(x.l.teacher_id, P.map))} ↔ 👤 ${esc(personName(x.l.student_id, P.map))}` : ""}</span><span class="xs muted">${x.parts} ${T("جزء", "parts")} · ${Math.round(x.secs / 60)} ${T("دقيقة", "min")}${x.pend ? " · ⏳ " + x.pend : ""}</span></a>`).join("") : `<p class="muted">${T("لسه مفيش تسجيلات.", "No recordings yet.")}</p>`), 1000);
+    return pageWrap("🎙️", T("تسجيلات الحصص", "Lesson recordings"), T("الصوت آخر 3 أيام — الكلام كله", "Audio: last 3 days — text: all"), head + (d[0].length ? d[0].map(x => `<a href="#" class="card lr177r ${x.flags ? "bad" : ""}" onclick="openLessonReport('${x.id}');return false;"><b>${x.flags ? "🚩 " + x.flags + " · " : ""}${esc(fmtDT((x.l || {}).start_time || x.at))}</b><span class="sm">${x.l ? `🎓 ${esc(personName(x.l.teacher_id, P.map))} ↔ 👤 ${esc(personName(x.l.student_id, P.map))}` : ""}</span><span class="xs muted">${x.parts} ${T("جزء", "parts")} · ${Math.round(x.secs / 60)} ${T("دقيقة", "min")}${x.pend ? " · ⏳ " + x.pend : ""}</span></a>`).join("") : `<p class="muted">${T("لسه مفيش تسجيلات.", "No recordings yet.")}</p>`), 1000);
   }
   css(`.lr177f{border:2px solid #dc2626;border-radius:12px;padding:.5rem .7rem;background:color-mix(in srgb,#dc2626 8%,var(--card));margin:.4rem 0}.lr177p{border-top:1px solid var(--line);padding:.5rem 0}
   .lr177t{max-height:16rem;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:.5rem .7rem;white-space:pre-wrap;font-size:.9rem;line-height:1.8}.lr177t[data-l=ar] .en,.lr177t[data-l=en] .ar{display:none}
@@ -24996,6 +24996,276 @@ body.ed158 .hv169{opacity:.4!important}
       <div class="row" style="margin-top:.6rem"><button class="btn btn-o" onclick="go16('lrec177')">🎙️ ${T("تسجيلات الحصص والتنبيهات", "Lesson recordings & alerts")}</button></div></div>` + _os.apply(this, arguments);
   };
   const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (realRole() !== "owner") return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#dc2626" onclick="go16('lrec177')"><span>🎙️</span><b>${T("تسجيلات الحصص", "Lesson recordings")}</b></button>`); };
+})();
+
+/* ================= v178: نسخ الموقع (رجوع لأي نسخة بدوسة) + حماية من الزحمة + مكتبة كل حاجة (تصميمات، خطوط، انتقالات، ألوان، خيارات، نسخ) + «ورقة وقلم»: ارسم وحرّك وكبّر وضيف أي حاجة في أي صفحة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner" && !state.preview;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  ["ver178", "lib178"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+
+  /* ================= 1) نسخ الموقع ================= */
+  try { if (/[?&]latest=1/.test(location.search)) sessionStorage.setItem("itqan_nopin", "1"); } catch (e) {}
+  let pinChecked = false;
+  function pinCheck() {
+    if (pinChecked || !state.settings || !Object.keys(state.settings).length) return; pinChecked = true;
+    const p = setv("pin178", null); let skip = false; try { skip = !!sessionStorage.getItem("itqan_nopin"); } catch (e) {}
+    if (p && p.v && p.ui !== UI_VERSION && !location.pathname.startsWith("/archive/") && !skip) location.replace("/archive/" + p.v + ".html" + location.hash);
+  }
+  function verPage() {
+    if (!own()) return pageWrap("🕰️", "—", "", `<div class="card muted">—</div>`);
+    const L = useData("ver178", async () => [await fetch("/archive/list.json?t=" + Date.now()).then(r => r.json()).catch(() => [])]);
+    const pin = setv("pin178", null);
+    const head = `<div class="card"><p class="sm">${T("كل مرة بنزّل تحديث، النسخة بتتحفظ هنا (آخر 12 نسخة). تقدر تعاين أي نسخة في صفحة لوحدها، أو تثبّت الموقع كله عليها لكل الزوار بدوسة — ولو حبيت ترجع للأحدث دوس «رجّع آخر نسخة».", "Every release is saved here (last 12). Preview any version on its own page, or pin the whole site to it for everyone in one tap — “Back to latest” undoes it.")}</p>
+      ${pin ? `<div class="card" style="border:2px solid #f59e0b;margin-top:.5rem"><b>📌 ${T("الموقع متثبّت دلوقتي على", "The site is pinned to")} ${esc(pin.v)}</b> <button class="btn btn-p" onclick="ver178Pin(null)">↩ ${T("رجّع آخر نسخة للكل", "Back to latest for everyone")}</button></div>` : ""}
+      <p class="xs muted" style="margin-top:.4rem">${T("لو ثبّت نسخة قديمة وعايز تدخل الأحدث عشان تفك التثبيت: افتح الموقع بالشكل ده", "If you pinned an old version and need the latest to unpin, open")} <code dir="ltr">/?latest=1#/ver178</code></p>
+      <p class="xs muted">${T("التصميم والألوان والخطوط ليهم نسخ لوحدهم كمان في «استوديو التصميم» (نسخة احتياطية تلقائية قبل أي تغيير).", "Design, colours and fonts also have their own automatic backups in the design studio.")}</p></div>`;
+    if (!Array.isArray(L)) return pageWrap("🕰️", T("نسخ الموقع", "Site versions"), "", head + loadingBox());
+    return pageWrap("🕰️", T("نسخ الموقع", "Site versions"), T("ارجع لأي نسخة في ثانية", "Go back to any version in a second"), head + L[0].map((x, i) => `<div class="card ver178 ${x.ui === UI_VERSION ? "cur" : ""}"><div class="row" style="justify-content:space-between;gap:.4rem;flex-wrap:wrap;align-items:center"><b>${esc(x.v)} ${x.ui === UI_VERSION ? `<span class="badge badge-a">${T("الحالية", "Current")}</span>` : ""} ${pin && pin.v === x.v ? `<span class="badge">📌</span>` : ""}</b><span class="xs muted">${esc(fmtDT(x.at))}</span></div><p class="xs" style="margin:.3rem 0">${esc(x.msg)}</p><div class="row" style="gap:.3rem;flex-wrap:wrap"><a class="btn btn-o" style="padding:.2rem .7rem" target="_blank" href="/archive/${esc(x.v)}.html#/home">👁 ${T("عاين", "Preview")}</a>${x.ui !== UI_VERSION ? `<button class="btn btn-o" style="padding:.2rem .7rem" onclick="ver178Pin(${JSON.stringify({ v: x.v, ui: x.ui }).replace(/"/g, "&quot;")})">📌 ${T("ثبّت الموقع عليها للكل", "Pin the site to it")}</button>` : ""}</div></div>`).join(""), 900);
+  }
+  window.ver178Pin = async function (p) { if (p && !confirm(T(`الموقع كله هيرجع لنسخة ${p.v} لكل الزوار. متأكد؟`, `The whole site will switch to ${p.v} for everyone. Sure?`))) return; await saveSetting16("pin178", p); toast(p ? "📌 ✓" : "↩ ✓"); render(); };
+  css(`.ver178{margin-bottom:.5rem}.ver178.cur{border:2px solid var(--accent)}`);
+
+  /* ================= 2) حماية من الزحمة (1000 شخص في نفس الوقت) ================= */
+  /* الاتصال اللحظي (الإشعارات والرسايل) بيتقفل لو التاب مستخبي أكتر من دقيقة أو المستخدم ساكت 10 دقايق، وبيرجع أول ما يرجع — كده مكان المستخدمين الفعليين بس */
+  let hidT = 0, idleT = 0, rtOff = false; const rt = () => sb && sb.realtime;
+  function rtDown() { if (rtOff || (typeof RM !== "undefined" && RM && RM.joined)) return; try { rt().disconnect(); rtOff = true; } catch (e) {} }
+  function rtUp() { if (!rtOff) return; try { rt().connect(); rtOff = false; } catch (e) {} }
+  document.addEventListener("visibilitychange", () => { clearTimeout(hidT); if (document.visibilityState === "hidden") hidT = setTimeout(rtDown, 60000); else rtUp(); });
+  const poke = () => { clearTimeout(idleT); rtUp(); idleT = setTimeout(rtDown, 10 * 60000); };
+  ["pointerdown", "keydown", "scroll", "touchstart"].forEach(e => addEventListener(e, poke, { passive: true })); poke();
+  /* لو الشبكة أو السيرفر زحمة: رسالة لطيفة بدل الأخطاء، والموقع بيعيد لوحده */
+  let errN = 0; const _err = window.toast;
+  window.toast = function (m, bad) { if (bad && /fetch|network|timeout|503|502|429|Failed/i.test(String(m))) { errN++; if (errN > 1) { busy(); return; } } return _err.apply(this, arguments); };
+  function busy() { if (document.getElementById("busy178")) return; const b = document.createElement("div"); b.id = "busy178"; b.innerHTML = `⏳ ${T("فيه زحمة على الموقع دلوقتي — بنحاول تاني لوحدنا، استنى ثواني", "The site is busy right now — retrying automatically, please wait a moment")}`; document.body.appendChild(b); setTimeout(() => { b.remove(); errN = 0; }, 8000); }
+  css(`#busy178{position:fixed;z-index:9999;top:.6rem;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:.5rem 1rem;border-radius:999px;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}`);
+
+  /* ================= 3) مكتبة الخطوط ================= */
+  const FONTS = ["Tajawal", "Cairo", "Almarai", "IBM Plex Sans Arabic", "Noto Kufi Arabic", "Noto Naskh Arabic", "Noto Sans Arabic", "Readex Pro", "El Messiri", "Changa", "Alexandria", "Markazi Text", "Reem Kufi", "Reem Kufi Fun", "Baloo Bhaijaan 2", "Lateef", "Harmattan", "Mada", "Amiri", "Amiri Quran", "Scheherazade New", "Rubik", "Lalezar", "Marhey", "Vibes", "Rakkas", "Aref Ruqaa", "Aref Ruqaa Ink", "Katibeh", "Lemonada", "Mirza", "Jomhuria", "Kufam", "Blaka", "Gulzar", "Qahiri", "Zain", "Beiruti", "Playpen Sans Arabic", "Noto Nastaliq Urdu", "Inter", "Poppins", "Lora", "Merriweather", "Nunito"];
+  const SLOTS = [["body", "كلام الموقع", "Body text", "body,#app,.hdr,input,select,textarea"], ["head", "العناوين", "Headings", "#app h1,#app h2,#app h3,#app h4"], ["btn", "الأزرار والقوايم", "Buttons & menus", "#app .btn,.hdr nav a,.hdr .btn,.bnav a,.mstile b"], ["quran", "نص القرآن", "Quran text", ".tj2,.tjtext,.ayah,.mushaf,.rw173t,.qtext,.lvay,.srar,.tfay"], ["num", "الأرقام والعدّادات", "Numbers & counters", ".badge,.sfb172,#app .kpi,#app .stat b"]];
+  const FS = () => Object.assign({ scale: 100, lh: 0, ls: 0 }, setv("fonts178", {}) || {}, state.fonts178 || {});
+  const famUrl = fs => "https://fonts.googleapis.com/css2?" + fs.map(f => "family=" + encodeURIComponent(f).replace(/%20/g, "+") + ":wght@400;700").join("&") + "&display=swap";
+  let loaded = new Set();
+  function loadFonts(list) { const need = list.filter(f => f && !loaded.has(f)); if (!need.length) return; need.forEach(f => loaded.add(f)); for (let i = 0; i < need.length; i += 12) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = famUrl(need.slice(i, i + 12)); document.head.appendChild(l); } }
+  function fontsApply() {
+    const f = FS(); let c = ""; const used = [];
+    SLOTS.forEach(([k, , , sel]) => { if (f[k]) { used.push(f[k]); c += `${sel}{font-family:'${f[k]}',system-ui,sans-serif!important}`; } });
+    if (+f.scale && +f.scale !== 100) c += `html{font-size:${+f.scale}%}`;
+    if (+f.lh) c += `#app{line-height:${+f.lh}}`; if (+f.ls) c += `#app{letter-spacing:${+f.ls}px}`;
+    loadFonts(used); let st = document.getElementById("f178"); if (!st) { st = document.createElement("style"); st.id = "f178"; document.head.appendChild(st); } st.textContent = c;
+  }
+  window.f178Set = (k, v) => { state.fonts178 = Object.assign({}, FS(), { [k]: v }); fontsApply(); render(); };
+  window.f178Save = async () => { await saveSetting16("fonts178", FS()); state.fonts178 = null; toast("✅ " + T("الخطوط اتطبّقت على الكل", "Fonts applied for everyone")); render(); };
+  function fontsLib() {
+    loadFonts(FONTS); const f = FS(); const slot = state.fslot178 || "body";
+    return `<div class="card"><h3>🔤 ${T("مكتبة الخطوط", "Font library")} (${FONTS.length})</h3><p class="xs muted">${T("اختار الجزء، وبعدين دوس على أي خط تشوفه فورًا. كل جزء يقدر يبقى ليه خط مختلف.", "Pick a part, then tap any font to see it at once. Each part can have its own font.")}</p>
+      <div class="chips178">${SLOTS.map(([k, a, e]) => `<button class="${slot === k ? "on" : ""}" onclick="state.fslot178='${k}';render()">${T(a, e)}${f[k] ? ` · <small>${esc(f[k])}</small>` : ""}</button>`).join("")}</div>
+      <div class="fgrid178">${[""].concat(FONTS).map(n => `<button class="fcard178 ${(f[slot] || "") === n ? "on" : ""}" onclick="f178Set('${slot}','${n}')" style="${n ? `font-family:'${n}'` : ""}"><b>${n ? "بسم الله · إتقان" : T("الأصلي", "Original")}</b><span>${n || "—"} · Aa 123</span></button>`).join("")}</div>
+      <div class="row" style="gap:.8rem;flex-wrap:wrap;margin-top:.6rem;align-items:center"><label class="sm">🔍 ${T("حجم الخط", "Text size")} <input type="range" min="85" max="130" value="${f.scale}" oninput="f178Set('scale',this.value)"> ${f.scale}%</label><label class="sm">↕️ ${T("المسافة بين السطور", "Line height")} <input type="range" min="0" max="2.4" step=".1" value="${f.lh || 0}" oninput="f178Set('lh',this.value)"> ${f.lh || T("أصلي", "orig")}</label><label class="sm">↔️ ${T("المسافة بين الحروف", "Letter spacing")} <input type="range" min="0" max="3" step=".25" value="${f.ls || 0}" oninput="f178Set('ls',this.value)"></label></div>
+      <div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-p" onclick="f178Save()">💾 ${T("طبّق على الكل", "Apply to everyone")}</button>${state.fonts178 ? `<button class="btn btn-o" onclick="state.fonts178=null;fontsApply178();render()">↺ ${T("رجّع المحفوظ", "Revert")}</button>` : ""}</div></div>`;
+  }
+  window.fontsApply178 = fontsApply;
+  css(`.chips178{display:flex;gap:.3rem;flex-wrap:wrap;margin:.5rem 0}.chips178 button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:.3rem .8rem;cursor:pointer;font:inherit;font-size:.85rem}.chips178 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .fgrid178{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(11rem,100%),1fr));gap:.4rem;max-height:26rem;overflow:auto;padding:.2rem}.fcard178{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);padding:.5rem;cursor:pointer;display:flex;flex-direction:column;gap:.15rem;text-align:start}.fcard178 b{font-size:1.15rem}.fcard178 span{font-size:.75rem;color:var(--muted)}.fcard178.on{border:2px solid var(--accent)}`);
+
+  /* ================= 4) مكتبة الانتقالات ================= */
+  const ANIMS = { none: ["من غير حركة", "None", ""], fade: ["تلاشي ناعم", "Soft fade", "opacity:0"], slideL: ["انزلاق من الشمال", "Slide from left", "opacity:0;transform:translateX(-40px)"], slideR: ["انزلاق من اليمين", "Slide from right", "opacity:0;transform:translateX(40px)"], slideUp: ["طالع من تحت", "Rise up", "opacity:0;transform:translateY(30px)"], slideDown: ["نازل من فوق", "Drop down", "opacity:0;transform:translateY(-30px)"], zoomIn: ["تكبير", "Zoom in", "opacity:0;transform:scale(.94)"], zoomOut: ["تصغير", "Zoom out", "opacity:0;transform:scale(1.06)"], blur: ["ضبابي لواضح", "Blur to sharp", "opacity:0;filter:blur(10px)"], flipX: ["قلب أفقي", "Flip horizontal", "opacity:0;transform:perspective(900px) rotateY(18deg)"], flipY: ["قلب رأسي", "Flip vertical", "opacity:0;transform:perspective(900px) rotateX(-14deg)"], rotate: ["لفّة خفيفة", "Gentle turn", "opacity:0;transform:rotate(-2deg) scale(.97)"], skew: ["ميلان", "Skew", "opacity:0;transform:skewY(2deg) translateY(16px)"], curtain: ["ستارة", "Curtain", "clip-path:inset(0 0 100% 0)"], circle: ["دايرة بتكبر", "Circle reveal", "clip-path:circle(0% at 50% 30%)"], sheet: ["ورقة طالعة من الجنب (زي التطبيقات)", "Side sheet (app-like)", "transform:translateX(100%);box-shadow:-20px 0 40px rgba(0,0,0,.15)"], bottom: ["ورقة طالعة من تحت (موبايل)", "Bottom sheet (mobile)", "transform:translateY(60%);opacity:.3;border-radius:24px 24px 0 0"], stack: ["كروت فوق بعض", "Card stack", "opacity:0;transform:translateY(14px) scale(.98)"], bounce: ["نطّة", "Bounce", "opacity:0;transform:scale(.9)"] };
+  const TS = () => Object.assign({ page: "fade", inner: "slideUp", speed: 260 }, setv("trans178", {}) || {}, state.trans178 || {});
+  function animCss() { let c = ""; Object.entries(ANIMS).forEach(([k, v]) => { if (!v[2]) return; c += `@keyframes a178${k}{from{${v[2]}}}.a178-${k}{animation:a178${k} var(--t178,260ms) ${k === "bounce" ? "cubic-bezier(.34,1.56,.64,1)" : "cubic-bezier(.2,.8,.2,1)"} both}`; }); return c; }
+  css(animCss() + `html[dir=rtl] .a178-sheet{animation-name:a178sheetR}@keyframes a178sheetR{from{transform:translateX(-100%)}}`);
+  let lastKey178 = null;
+  const kNow = () => [state.route, typeof state.pageArg === "string" ? state.pageArg : "", state.libSec || "", state.dash && state.dash.tab || ""].join("|");
+  function animate(prevKey) {
+    const k = kNow(); if (prevKey === null || prevKey === k) return; const t = TS(); const routeChanged = prevKey.split("|")[0] !== k.split("|")[0];
+    const a = routeChanged ? t.page : t.inner; if (!a || a === "none" || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+    const els = [...document.querySelectorAll("#app > section, #app > .sec, #app > main")].filter(e => !e.classList.contains("hdr")); const tgt = els.length ? els : [];
+    tgt.forEach(e => { e.style.setProperty("--t178", (+t.speed || 260) + "ms"); e.classList.remove(...Object.keys(ANIMS).map(x => "a178-" + x)); void e.offsetWidth; e.classList.add("a178-" + a); setTimeout(() => e.classList.remove("a178-" + a), (+t.speed || 260) + 80); });
+  }
+  window.t178Set = (k, v) => { state.trans178 = Object.assign({}, TS(), { [k]: v }); render(); if (k === "page" || k === "inner") { const e = document.querySelector("#app > section"); if (e) { e.style.setProperty("--t178", (+TS().speed) + "ms"); e.classList.add("a178-" + v); setTimeout(() => e.classList.remove("a178-" + v), +TS().speed + 80); } } };
+  window.t178Save = async () => { await saveSetting16("trans178", TS()); state.trans178 = null; toast("✅"); render(); };
+  function transLib() {
+    const t = TS(); const n = Object.assign({ mode: "smart", back: true }, setv("nav177", {}) || {});
+    const grid = k => `<div class="agrid178">${Object.entries(ANIMS).map(([id, v]) => `<button class="${t[k] === id ? "on" : ""}" onclick="t178Set('${k}','${id}')"><i class="${id !== "none" ? "a178demo a178-" + id : ""}">▭</i>${esc(T(v[0], v[1]))}</button>`).join("")}</div>`;
+    return `<div class="card"><h3>🎞️ ${T("مكتبة الانتقالات", "Transition library")} (${Object.keys(ANIMS).length})</h3>
+      <h4 style="margin:.5rem 0 .2rem">📄 ${T("لما تروح لصفحة جديدة", "When going to a new page")}</h4>${grid("page")}
+      <h4 style="margin:.8rem 0 .2rem">📑 ${T("لما تفتح صفحة جوه صفحة (درس، قسم، كتاب)", "When opening a page inside a page (lesson, section, book)")}</h4>${grid("inner")}
+      <label class="sm" style="display:block;margin-top:.6rem">⏱️ ${T("السرعة", "Speed")} <input type="range" min="120" max="700" step="20" value="${t.speed}" oninput="t178Set('speed',this.value)"> ${t.speed}ms</label>
+      <h4 style="margin:.8rem 0 .2rem">🧭 ${T("الشاشة تروح فين بعد الانتقال", "Where the screen goes after moving")}</h4>
+      <div class="chips178">${[["smart", "ذكي: أول المحتوى الجديد", "Smart: start of new content"], ["stay", "خليك مكانك", "Stay put"], ["top", "أول الصفحة", "Very top"]].map(([v, a, e]) => `<button class="${n.mode === v ? "on" : ""}" onclick="saveSetting16('nav177',Object.assign({},setv('nav177',{})||{},{mode:'${v}'})).then(()=>render())">${T(a, e)}</button>`).join("")}<button class="${n.back ? "on" : ""}" onclick="saveSetting16('nav177',Object.assign({},setv('nav177',{})||{},{back:${!n.back}})).then(()=>render())">↩ ${T("زرار رجوع لمكانك", "Back-to-place chip")}</button></div>
+      <div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-p" onclick="t178Save()">💾 ${T("طبّق على الكل", "Apply to everyone")}</button></div></div>`;
+  }
+  css(`.agrid178{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(9.5rem,100%),1fr));gap:.35rem}.agrid178 button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:12px;padding:.45rem;cursor:pointer;font:inherit;font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:.2rem}.agrid178 button.on{border:2px solid var(--accent)}
+  .agrid178 i{font-style:normal;font-size:1.4rem;color:var(--accent)}.agrid178 button:hover .a178demo{animation-iteration-count:infinite;--t178:900ms}`);
+
+  /* ================= 5) تصميماتي + خلط عشوائي ================= */
+  const PRE = () => (setv("presets178", []) || []);
+  window.pre178Save = async () => { const n = prompt(T("اسم التصميم:", "Design name:"), T("تصميمي ", "My design ") + (PRE().length + 1)); if (!n) return; const item = { id: "p" + Date.now(), n, at: new Date().toISOString(), d: { skin171: Object.assign({}, setv("skin171", {}) || {}, state.sk171 || {}), design157: Object.assign({}, setv("design157", {}) || {}, state.dz157 || {}), fonts178: FS(), trans178: TS(), colors175: Object.assign({}, setv("colors175", {}) || {}, state.col175 || {}) } }; await saveSetting16("presets178", [item].concat(PRE()).slice(0, 60)); toast("✅"); render(); };
+  window.pre178Use = i => { const p = PRE()[i]; if (!p) return; state.sk171 = p.d.skin171; state.dz157 = p.d.design157; state.fonts178 = p.d.fonts178; state.trans178 = p.d.trans178; state.col175 = p.d.colors175; fontsApply(); render(); toast("👁 " + T("معاينة عندك بس", "Preview for you only")); };
+  window.pre178Apply = async i => { const p = PRE()[i]; if (!p || !confirm(T("تطبّق التصميم ده على الموقع كله؟", "Apply this design site-wide?"))) return; for (const k of Object.keys(p.d)) await saveSetting16(k, p.d[k]); state.sk171 = state.dz157 = state.fonts178 = state.trans178 = state.col175 = null; fontsApply(); toast("✅"); render(); };
+  window.pre178Del = async i => { if (!confirm(T("تمسحه؟", "Delete?"))) return; const L = PRE().slice(); L.splice(i, 1); await saveSetting16("presets178", L); render(); };
+  window.mix178 = () => { const S = window.SK171 || {}; const pick = o => { const k = Object.keys(o || {}).filter(x => x !== "original"); return k[Math.floor(Math.random() * k.length)]; }; const D = window.DESIGN157 || {}; state.sk171 = { pal: pick(S.PAL), font: pick(S.FONT), card: pick(S.CARD), dens: pick(S.DENS), mot: "soft", wid: pick(S.WID), hdr: ["glass", "solid", "minimal", "gradient", "gold", "original"][Math.floor(Math.random() * 6)], btn: ["pill", "square", "gradient", "shadow", "original"][Math.floor(Math.random() * 5)] }; if (D.BG && D.LOGO) state.dz157 = { bg: D.BG[Math.floor(Math.random() * D.BG.length)].id, logo: D.LOGO[Math.floor(Math.random() * D.LOGO.length)].id }; render(); toast("🎲 " + T("تصميم جديد عشوائي — عاجبك؟ احفظه", "A random new design — like it? Save it")); };
+  function presetsLib() {
+    const L = PRE();
+    return `<div class="card"><h3>⭐ ${T("تصميماتي المحفوظة", "My saved designs")} (${L.length})</h3><p class="xs muted">${T("احفظ أي شكل وصلت له (ألوان + خط + كروت + خلفية + لوجو + انتقالات + ألوان القطع) باسم، وارجعله وقت ما تحب.", "Save any look you reach (colours, fonts, cards, background, logo, transitions, piece colours) by name, and come back to it anytime.")}</p>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.4rem 0"><button class="btn btn-p" onclick="pre178Save()">💾 ${T("احفظ الشكل الحالي", "Save the current look")}</button><button class="btn btn-o" onclick="mix178()">🎲 ${T("اخلط تصميم عشوائي", "Random mix")}</button></div>
+      ${L.map((p, i) => `<div class="kv" style="align-items:center"><span class="sm"><b>${esc(p.n)}</b> <span class="xs muted">${esc(fmtDT(p.at))}</span></span><span class="row" style="gap:.25rem"><button class="btn btn-o" style="padding:.15rem .5rem" onclick="pre178Use(${i})">👁</button><button class="btn btn-o" style="padding:.15rem .5rem" onclick="pre178Apply(${i})">✅</button><button class="btn btn-o" style="padding:.15rem .5rem" onclick="pre178Del(${i})">🗑️</button></span></div>`).join("")}</div>`;
+  }
+
+  /* ================= 6) ورقة وقلم: محرر حر لكل صفحة ================= */
+  const ED = { on: false, tool: "select", sel: null, all: false, undo: [], redo: [], grid: true };
+  const rk = () => state.route + (typeof state.pageArg === "string" && state.pageArg ? "/" + state.pageArg : "") + (state.libSec ? "#" + state.libSec : "");
+  const FR = () => Object.assign({}, setv("free178", {}) || {}, state.free178 || {});
+  const scope = () => ED.all ? "*" : rk();
+  const page_ = (F, k) => (F[k] = Object.assign({ m: {}, a: [], ink: [] }, F[k] || {}));
+  function snap() { ED.undo.push(JSON.stringify(FR())); if (ED.undo.length > 60) ED.undo.shift(); ED.redo = []; }
+  function commit(F) { state.free178 = F; freeApply(); bar(); }
+  const SKIP = /^(rv171|in|on|sel|ov|hid|col175h|ed178s|a178-\w+|a-spin|a-pulse|lim172)$/;
+  function selOf(el) { if (el.id && !/^\d/.test(el.id) && !/^(app)$/.test(el.id)) return "#" + CSS.escape(el.id); const part = e => { const c = [...e.classList].filter(x => !SKIP.test(x)).slice(0, 2).map(x => "." + CSS.escape(x)).join(""); return (c || e.tagName.toLowerCase()) + (e.parentElement ? `:nth-child(${[...e.parentElement.children].indexOf(e) + 1})` : ""); }; const path = []; let e = el; for (let i = 0; i < 5 && e && e.id !== "app" && e !== document.body; i++, e = e.parentElement) { if (e.id && !/^\d/.test(e.id)) { path.unshift("#" + CSS.escape(e.id)); break; } path.unshift(part(e)); } return "#app " + path.join(" > "); }
+  function freeApply() {
+    const F = FR(); const keys = ["*", rk()]; let c = "";
+    keys.forEach(k => { const P = F[k]; if (!P) return; Object.entries(P.m || {}).forEach(([s, v]) => { const d = []; const tr = []; if (v.x || v.y) tr.push(`translate(${+v.x || 0}px,${+v.y || 0}px)`); if (v.rot) tr.push(`rotate(${+v.rot}deg)`); if (tr.length) d.push(`transform:${tr.join(" ")}`); if (v.w) d.push(`width:${v.w}px;max-width:none`); if (v.h) d.push(`height:${v.h}px;overflow:auto`); if (v.fs) d.push(`font-size:${v.fs}px`); if (v.fw) d.push(`font-weight:${v.fw}`); if (v.ta) d.push(`text-align:${v.ta}`); if (v.c) d.push(`color:${v.c}`); if (v.bg) d.push(`background:${v.bg}`); if (v.r != null && v.r !== "") d.push(`border-radius:${v.r}px`); if (v.sh) d.push(`box-shadow:0 10px 30px rgba(0,0,0,.18)`); if (v.p != null && v.p !== "") d.push(`padding:${v.p}px`); if (v.op != null && v.op !== "") d.push(`opacity:${v.op}`); if (v.z) d.push(`position:relative;z-index:${v.z}`); if (v.hide) d.push(`display:none`); if (d.length) c += `${s}{${d.map(x => x + "!important").join(";")}}`; }); });
+    let st = document.getElementById("fr178s"); if (!st) { st = document.createElement("style"); st.id = "fr178s"; document.head.appendChild(st); } st.textContent = c;
+    const app = document.getElementById("app"); if (!app) return; app.style.position = "relative";
+    let L = document.getElementById("fr178"); if (!L) { L = document.createElement("div"); L.id = "fr178"; } if (L.parentNode !== app) app.appendChild(L);
+    const H = Math.max(app.scrollHeight, 600); const items = [], inks = [];
+    keys.forEach(k => { const P = F[k]; if (!P) return; (P.a || []).forEach(a => items.push([k, a])); (P.ink || []).forEach(s => inks.push([k, s])); });
+    L.innerHTML = `<svg class="ink178" viewBox="0 0 1000 ${H}" preserveAspectRatio="none" style="height:${H}px">${inks.map(([k, s], i) => `<path data-k="${esc(k)}" data-i="${(F[k].ink || []).indexOf(s)}" d="${esc(s.d)}" stroke="${esc(s.c)}" stroke-width="${+s.w || 3}" fill="none" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`).join("")}</svg>` +
+      items.map(([k, a]) => { const st2 = `left:${+a.x}%;top:${+a.y}px;width:${+a.w || 20}%;${a.h ? `height:${+a.h}px;` : ""}${a.rot ? `transform:rotate(${+a.rot}deg);` : ""}color:${esc(a.c || "inherit")};background:${esc(a.bg || "transparent")};font-size:${+a.fs || 16}px;border-radius:${a.r != null ? +a.r : 12}px;${a.sh ? "box-shadow:0 10px 30px rgba(0,0,0,.18);" : ""}${a.ta ? `text-align:${esc(a.ta)};` : ""}`; const inner = a.t === "img" ? `<img src="${esc(a.src)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">` : a.t === "btn" ? `<span>${esc(a.text || "")}</span>` : a.t === "circle" ? "" : a.t === "box" ? "" : `<span style="white-space:pre-wrap">${esc(a.text || "")}</span>`; return `<div class="fi178 fi178-${esc(a.t)}" data-k="${esc(k)}" data-id="${esc(a.id)}" style="${st2}" ${a.href && !ED.on ? `onclick="fr178Go('${esc(a.href).replace(/'/g, "")}')"` : ""}>${inner}</div>`; }).join("");
+  }
+  window.fr178Go = h => { if (/^#\//.test(h)) { location.hash = h; } else window.open(h, "_blank", "noopener"); };
+  /* شريط الأدوات */
+  const TOOLS = [["select", "🖱️", "حرّك وكبّر", "Move & resize"], ["pen", "✍️", "قلم", "Pen"], ["text", "🔤", "نص", "Text"], ["box", "⬛", "مربع", "Box"], ["circle", "⚪", "دايرة", "Circle"], ["img", "🖼️", "صورة", "Image"], ["btn", "🔘", "زرار", "Button"], ["erase", "🧽", "ممحاة", "Eraser"]];
+  function bar() {
+    let b = document.getElementById("eb178"); if (!ED.on) { b && b.remove(); document.body.classList.remove("ed178"); panel(); return; }
+    document.body.classList.add("ed178"); if (!b) { b = document.createElement("div"); b.id = "eb178"; document.body.appendChild(b); }
+    b.innerHTML = `${TOOLS.map(([k, ic, a, e]) => `<button class="${ED.tool === k ? "on" : ""}" title="${T(a, e)}" onclick="ed178Tool('${k}')">${ic}<small>${T(a, e)}</small></button>`).join("")}<span class="sep"></span>
+      <label title="${T("لون القلم / الحاجة الجديدة", "Pen / new item colour")}"><input type="color" value="${ED.color || "#ef4444"}" oninput="ED178c(this.value)"></label><select onchange="ED178w(this.value)" title="${T("سُمك القلم", "Pen size")}">${[2, 3, 5, 8, 14].map(w => `<option ${(ED.w || 3) == w ? "selected" : ""}>${w}</option>`).join("")}</select>
+      <button onclick="ed178Scope()" class="${ED.all ? "on" : ""}" title="${T("التعديل للصفحة دي بس ولا لكل الصفحات", "This page only or all pages")}">${ED.all ? "🌐<small>" + T("كل الصفحات", "All pages") + "</small>" : "📄<small>" + T("الصفحة دي", "This page") + "</small>"}</button>
+      <button onclick="ed178Undo()" ${ED.undo.length ? "" : "disabled"}>↶<small>${T("رجوع", "Undo")}</small></button><button onclick="ed178Redo()" ${ED.redo.length ? "" : "disabled"}>↷<small>${T("تقديم", "Redo")}</small></button>
+      ${state.free178 ? `<button class="save" onclick="ed178Save()">💾<small>${T("طبّق على الكل", "Publish")}</small></button><button onclick="ed178Discard()">✖<small>${T("إلغاء", "Discard")}</small></button>` : ""}<button onclick="ed178(false)">🚪<small>${T("خروج", "Exit")}</small></button>`;
+    panel();
+  }
+  window.ED178c = v => { ED.color = v; }; window.ED178w = v => { ED.w = +v; };
+  window.ed178 = on => { ED.on = !!on; ED.sel = null; if (on) { ED.tool = "select"; toast(T("✏️ ورقة وقلم: دوس على أي حاجة تحركها أو تكبّرها، أو اختار أداة ترسم أو تضيف. محدش هيشوف التغيير غير لما تدوس «طبّق على الكل».", "✏️ Paper & pen: tap anything to move or resize it, or pick a tool to draw or add. Nobody sees it until you press “Publish”.")); } freeApply(); bar(); outline(); };
+  window.ed178Tool = t => { ED.tool = t; ED.sel = null; outline(); bar(); };
+  window.ed178Scope = () => { ED.all = !ED.all; bar(); };
+  window.ed178Undo = () => { const s = ED.undo.pop(); if (s == null) return; ED.redo.push(JSON.stringify(FR())); commit(JSON.parse(s)); outline(); };
+  window.ed178Redo = () => { const s = ED.redo.pop(); if (s == null) return; ED.undo.push(JSON.stringify(FR())); commit(JSON.parse(s)); outline(); };
+  window.ed178Save = async () => { if (window.sh158Save) { try { const L = (setv("snaps158", []) || []).slice(); L.unshift({ id: "a" + Date.now(), auto: 1, name: T("قبل تعديل ورقة وقلم", "Before a paper-and-pen edit"), at: new Date().toISOString(), data: { free178: setv("free178", {}) } }); await saveSetting16("snaps158", L.slice(0, 30)); } catch (e) {} } await saveSetting16("free178", FR()); state.free178 = null; toast("✅ " + T("اتنشر للكل", "Published")); bar(); };
+  window.ed178Discard = () => { state.free178 = null; ED.undo = []; ED.redo = []; freeApply(); bar(); outline(); };
+  /* لوحة خصائص الحاجة المختارة */
+  function cur() { if (!ED.sel) return null; const F = FR(); if (ED.sel.add) { const P = F[ED.sel.k]; return P && (P.a || []).find(a => a.id === ED.sel.id); } const P = F[ED.sel.k]; return (P && P.m && P.m[ED.sel.s]) || {}; }
+  function setProp(p, v) { snap(); const F = JSON.parse(JSON.stringify(FR())); if (ED.sel.add) { const P = page_(F, ED.sel.k); const a = P.a.find(x => x.id === ED.sel.id); if (a) { if (v === null) delete a[p]; else a[p] = v; } } else { const P = page_(F, ED.sel.k); const m = P.m[ED.sel.s] = Object.assign({}, P.m[ED.sel.s] || {}); if (v === null) delete m[p]; else m[p] = v; } commit(F); outline(); }
+  window.ed178P = (p, v) => setProp(p, v === "" ? null : v);
+  window.ed178Del = () => { if (!ED.sel) return; snap(); const F = JSON.parse(JSON.stringify(FR())); const P = page_(F, ED.sel.k); if (ED.sel.add) P.a = P.a.filter(x => x.id !== ED.sel.id); else delete P.m[ED.sel.s]; ED.sel = null; commit(F); outline(); };
+  window.ed178Txt = () => { const a = cur(); if (!a || !ED.sel.add) return; const t = prompt(T("الكلام:", "Text:"), a.text || ""); if (t != null) setProp("text", t); };
+  window.ed178Link = () => { const a = cur(); if (!a || !ED.sel.add) return; const t = prompt(T("الرابط (صفحة في الموقع زي #/pricing أو لينك كامل):", "Link (a page like #/pricing or a full URL):"), a.href || "#/pricing"); if (t != null) setProp("href", t.trim() || null); };
+  function panel() {
+    let p = document.getElementById("ep178"); if (!ED.on || !ED.sel) { p && p.remove(); return; }
+    if (!p) { p = document.createElement("div"); p.id = "ep178"; p.className = "card"; document.body.appendChild(p); }
+    const v = cur() || {}; const add = ED.sel.add; const num = (k, a, e, min, max, step, def) => `<label class="xs">${T(a, e)} <input type="range" min="${min}" max="${max}" step="${step}" value="${v[k] != null ? v[k] : def}" oninput="ed178P('${k}',this.value)"></label>`;
+    p.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center"><b class="sm">✏️ ${add ? T("الحاجة اللي ضفتها", "Your added item") : T("الحتة دي من الصفحة", "This part of the page")}</b><button class="btn btn-o" style="padding:.05rem .45rem" onclick="ED178x()">✕</button></div>
+      <div class="ep178g">${num("fs", "حجم الخط", "Font size", 10, 72, 1, 16)}${num("r", "تدوير الحواف", "Corner radius", 0, 60, 1, 12)}${num("p", "المسافة جوه", "Padding", 0, 60, 1, 0)}${num("op", "الشفافية", "Opacity", .1, 1, .05, 1)}${num("rot", "اللف", "Rotation", -45, 45, 1, 0)}
+      <label class="xs">${T("لون الكلام", "Text colour")} <input type="color" value="${v.c || "#111111"}" oninput="ed178P('c',this.value)"></label><label class="xs">${T("الخلفية", "Background")} <input type="color" value="${v.bg && v.bg[0] === "#" ? v.bg : "#ffffff"}" oninput="ed178P('bg',this.value)"></label></div>
+      <div class="row" style="gap:.25rem;flex-wrap:wrap;margin-top:.4rem"><button class="btn btn-o" onclick="ed178P('fw','${v.fw == 800 ? "" : 800}')"><b>B</b></button>${["right", "center", "left"].map(a => `<button class="btn btn-o" onclick="ed178P('ta','${a}')">${a === "right" ? "⇥" : a === "center" ? "≡" : "⇤"}</button>`).join("")}<button class="btn btn-o" onclick="ed178P('sh',${v.sh ? "''" : 1})">🌫️ ${T("ظل", "Shadow")}</button><button class="btn btn-o" onclick="ed178P('z',${(+v.z || 0) + 1})">⬆️ ${T("قدّام", "Forward")}</button>
+      ${add ? `<button class="btn btn-o" onclick="ed178Txt()">✏️ ${T("الكلام", "Text")}</button><button class="btn btn-o" onclick="ed178Link()">🔗 ${T("رابط", "Link")}</button>` : `<button class="btn btn-o" onclick="ed178P('hide',${v.hide ? "''" : 1})">🙈 ${T("خبّي", "Hide")}</button>`}
+      <button class="btn btn-o" onclick="ed178P('bg','')">↺ ${T("الخلفية الأصلية", "Reset bg")}</button><button class="btn btn-o" style="color:var(--danger)" onclick="ed178Del()">🗑️ ${add ? T("امسح", "Delete") : T("رجّعها زي الأول", "Reset all")}</button></div>`;
+  }
+  window.ED178x = () => { ED.sel = null; outline(); panel(); };
+  /* إطار الاختيار ومقابض التحريك والتكبير */
+  function selEl() { if (!ED.sel) return null; if (ED.sel.add) return document.querySelector(`.fi178[data-id="${ED.sel.id}"]`); try { return document.querySelector(ED.sel.s); } catch (e) { return null; } }
+  function outline() {
+    let o = document.getElementById("eo178"); const el = ED.on && selEl(); if (!el) { o && o.remove(); panel(); return; }
+    if (!o) { o = document.createElement("div"); o.id = "eo178"; o.innerHTML = `<i class="mv" title="move">✥</i><i class="rs" title="resize">⤡</i>`; document.body.appendChild(o); bindHandles(o); }
+    const r = el.getBoundingClientRect(); Object.assign(o.style, { top: r.top + scrollY + "px", left: r.left + scrollX + "px", width: r.width + "px", height: r.height + "px" }); panel();
+  }
+  addEventListener("scroll", () => { if (ED.on && ED.sel) outline(); }, { passive: true }); addEventListener("resize", () => { if (ED.on) { freeApply(); outline(); } });
+  function bindHandles(o) {
+    const drag = (mode) => ev => { ev.preventDefault(); ev.stopPropagation(); const p0 = ev.touches ? ev.touches[0] : ev; const el = selEl(); if (!el) return; const v = Object.assign({}, cur() || {}); const app = document.getElementById("app"); const aw = app.getBoundingClientRect().width; const r0 = el.getBoundingClientRect(); const st = { x: +v.x || 0, y: +v.y || 0 }; snap(); let moved = false;
+      const mv = e => { const p = e.touches ? e.touches[0] : e; let dx = p.clientX - p0.clientX, dy = p.clientY - p0.clientY; if (ED.grid) { dx = Math.round(dx / 8) * 8; dy = Math.round(dy / 8) * 8; } moved = true;
+        if (ED.sel.add) { const a = cur(); if (!a) return; if (mode === "mv") { el.style.left = (+a.x + dx / aw * 100) + "%"; el.style.top = (+a.y + dy) + "px"; } else { el.style.width = Math.max(4, (r0.width + dx) / aw * 100) + "%"; el.style.height = Math.max(20, r0.height + dy) + "px"; } }
+        else { if (mode === "mv") el.style.setProperty("transform", `translate(${st.x + dx}px,${st.y + dy}px)${v.rot ? ` rotate(${v.rot}deg)` : ""}`, "important"); else { el.style.setProperty("width", Math.max(30, r0.width + dx) + "px", "important"); el.style.setProperty("height", Math.max(20, r0.height + dy) + "px", "important"); el.style.setProperty("max-width", "none", "important"); } }
+        outline(); };
+      const up = e => { removeEventListener("mousemove", mv); removeEventListener("mouseup", up); removeEventListener("touchmove", mv); removeEventListener("touchend", up); if (!moved) { ED.undo.pop(); return; } const p = (e.changedTouches ? e.changedTouches[0] : e); let dx = p.clientX - p0.clientX, dy = p.clientY - p0.clientY; if (ED.grid) { dx = Math.round(dx / 8) * 8; dy = Math.round(dy / 8) * 8; }
+        const F = JSON.parse(JSON.stringify(FR())); const P = page_(F, ED.sel.k);
+        if (ED.sel.add) { const a = P.a.find(x => x.id === ED.sel.id); if (a) { if (mode === "mv") { a.x = +(+a.x + dx / aw * 100).toFixed(2); a.y = Math.round(+a.y + dy); } else { a.w = +Math.max(4, (r0.width + dx) / aw * 100).toFixed(2); a.h = Math.round(Math.max(20, r0.height + dy)); } } }
+        else { const m = P.m[ED.sel.s] = Object.assign({}, P.m[ED.sel.s] || {}); if (mode === "mv") { m.x = st.x + dx; m.y = st.y + dy; } else { m.w = Math.round(Math.max(30, r0.width + dx)); m.h = Math.round(Math.max(20, r0.height + dy)); } el.removeAttribute("style"); }
+        commit(F); outline(); };
+      addEventListener("mousemove", mv); addEventListener("mouseup", up); addEventListener("touchmove", mv, { passive: false }); addEventListener("touchend", up); };
+    o.querySelector(".mv").addEventListener("mousedown", drag("mv")); o.querySelector(".mv").addEventListener("touchstart", drag("mv"), { passive: false });
+    o.querySelector(".rs").addEventListener("mousedown", drag("rs")); o.querySelector(".rs").addEventListener("touchstart", drag("rs"), { passive: false });
+  }
+  /* الضغط على الصفحة في وضع التحرير */
+  function appPos(e) { const app = document.getElementById("app"); const r = app.getBoundingClientRect(); const p = e.touches ? e.touches[0] : e; return { x: (p.clientX - r.left) / r.width * 100, y: p.clientY - r.top, X: (p.clientX - r.left) / r.width * 1000 }; }
+  const inUI = t => t.closest("#eb178,#ep178,#eo178,#cp175,#cb175,.toast");
+  document.addEventListener("click", async e => {
+    if (!ED.on || inUI(e.target)) return; if (!e.target.closest("#app")) return; e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    const t = ED.tool; const fi = e.target.closest(".fi178");
+    if (t === "select") { if (fi) ED.sel = { add: 1, k: fi.dataset.k, id: fi.dataset.id }; else ED.sel = { k: scope(), s: selOf(e.target) }; outline(); return; }
+    if (t === "erase") { const path = e.target.closest("path"); snap(); const F = JSON.parse(JSON.stringify(FR())); if (fi) { const P = page_(F, fi.dataset.k); P.a = P.a.filter(x => x.id !== fi.dataset.id); } else if (path) { const P = page_(F, path.dataset.k); P.ink.splice(+path.dataset.i, 1); } else { ED.undo.pop(); return; } commit(F); return; }
+    if (["text", "box", "circle", "img", "btn"].includes(t)) {
+      const p = appPos(e); const a = { id: "f" + Date.now().toString(36), t, x: +p.x.toFixed(2), y: Math.round(p.y), w: t === "text" ? 30 : t === "btn" ? 16 : 18, c: t === "text" ? (ED.color || "#111111") : "#ffffff", bg: t === "text" ? "transparent" : (ED.color || "#0f766e"), fs: t === "text" ? 22 : 16 };
+      if (t === "circle") { a.r = 999; a.h = 120; a.w = 10; } if (t === "box") a.h = 120; if (t === "btn") { a.r = 999; a.ta = "center"; a.p = 10; }
+      if (t === "text" || t === "btn") { const s = prompt(T("اكتب الكلام:", "Type the text:"), t === "btn" ? T("اشترك دلوقتي", "Subscribe now") : ""); if (!s) return; a.text = s; if (t === "btn") { const h = prompt(T("الزرار يودّي فين؟ (مثلًا #/pricing)", "Where does it go? (e.g. #/pricing)"), "#/pricing"); if (h) a.href = h; } }
+      if (t === "img") { const u = await pickImage(); if (!u) return; a.src = u; a.h = 180; a.bg = "transparent"; }
+      snap(); const F = JSON.parse(JSON.stringify(FR())); page_(F, scope()).a.push(a); commit(F); ED.tool = "select"; ED.sel = { add: 1, k: scope(), id: a.id }; bar(); outline();
+    }
+  }, true);
+  async function pickImage() { return new Promise(res => { const i = document.createElement("input"); i.type = "file"; i.accept = "image/*"; i.onchange = async () => { const f = i.files[0]; if (!f) return res(null); const p = `free178/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_").slice(-40)}`; const r = await sb.storage.from("academy_public").upload(p, f, { contentType: f.type }); if (r.error) { toast(r.error.message, true); return res(null); } res(sb.storage.from("academy_public").getPublicUrl(p).data.publicUrl); }; i.click(); }); }
+  /* القلم: ارسم بالماوس أو بصباعك */
+  let pen = null;
+  document.addEventListener("pointerdown", e => { if (!ED.on || ED.tool !== "pen" || inUI(e.target) || !e.target.closest("#app")) return; e.preventDefault(); const p = appPos(e); pen = { pts: [[p.X, p.y]] }; const svg = document.querySelector("#fr178 .ink178"); if (svg) { pen.el = document.createElementNS("http://www.w3.org/2000/svg", "path"); pen.el.setAttribute("stroke", ED.color || "#ef4444"); pen.el.setAttribute("stroke-width", ED.w || 3); pen.el.setAttribute("fill", "none"); pen.el.setAttribute("stroke-linecap", "round"); pen.el.setAttribute("vector-effect", "non-scaling-stroke"); svg.appendChild(pen.el); } }, true);
+  document.addEventListener("pointermove", e => { if (!pen) return; e.preventDefault(); const p = appPos(e); pen.pts.push([p.X, p.y]); if (pen.el) pen.el.setAttribute("d", "M" + pen.pts.map(q => q[0].toFixed(1) + " " + Math.round(q[1])).join(" L")); }, true);
+  document.addEventListener("pointerup", () => { if (!pen) return; const pts = pen.pts; pen = null; if (pts.length < 2) return; snap(); const F = JSON.parse(JSON.stringify(FR())); page_(F, scope()).ink.push({ c: ED.color || "#ef4444", w: ED.w || 3, d: "M" + pts.map(q => q[0].toFixed(1) + " " + Math.round(q[1])).join(" L") }); commit(F); }, true);
+  css(`body.ed178 #app *{cursor:crosshair}body.ed178 #app{outline:2px dashed #f59e0b;outline-offset:-2px}body.ed178 #app *:hover{outline:1px dashed #f59e0b88}
+  #fr178{position:absolute;inset:0;pointer-events:none;z-index:40}.ink178{position:absolute;top:0;left:0;width:100%}body.ed178 .ink178 path{pointer-events:stroke}
+  .fi178{position:absolute;pointer-events:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1.5}.fi178-text{justify-content:flex-start;align-items:flex-start}.fi178-btn{cursor:pointer;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.15)}.fi178-btn:hover{filter:brightness(1.08)}
+  #eb178{position:fixed;z-index:10002;top:.5rem;left:50%;transform:translateX(-50%);display:flex;gap:.2rem;align-items:center;flex-wrap:wrap;justify-content:center;background:#0f172a;color:#fff;padding:.35rem .5rem;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.35);max-width:calc(100vw - .8rem)}
+  #eb178 button{background:transparent;border:0;color:#fff;border-radius:10px;padding:.25rem .4rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:1.05rem;line-height:1.1}#eb178 button small{font-size:.6rem;opacity:.8}#eb178 button.on{background:#f59e0b;color:#111}#eb178 button.save{background:#16a34a}#eb178 button:disabled{opacity:.35}
+  #eb178 .sep{width:1px;height:1.8rem;background:#334155;margin:0 .2rem}#eb178 input[type=color]{width:1.8rem;height:1.6rem;border:0;background:none;padding:0}#eb178 select{background:#1e293b;color:#fff;border:0;border-radius:6px}
+  #eo178{position:absolute;z-index:10001;outline:2px solid #f59e0b;pointer-events:none;border-radius:6px}#eo178 i{position:absolute;pointer-events:auto;width:26px;height:26px;border-radius:50%;background:#f59e0b;color:#111;display:grid;place-items:center;font-style:normal;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.3);touch-action:none}#eo178 .mv{top:-13px;left:calc(50% - 13px);cursor:move}#eo178 .rs{bottom:-13px;right:-13px;cursor:nwse-resize}
+  #ep178{position:fixed;z-index:10002;bottom:.6rem;inset-inline-end:.6rem;width:min(330px,calc(100vw - 1.2rem));max-height:60vh;overflow:auto}.ep178g{display:grid;grid-template-columns:1fr 1fr;gap:.3rem .6rem;margin-top:.4rem}.ep178g input[type=range]{width:100%}.ep178g input[type=color]{width:2rem;height:1.5rem;border:0;padding:0;background:none}
+  @media(max-width:640px){#eb178 button small{display:none}}`);
+  /* زرار القلم العائم للمالك */
+  function penBtn() { let b = document.getElementById("pb178"); if (!own() || ED.on) { b && b.remove(); return; } if (!b) { b = document.createElement("button"); b.id = "pb178"; b.title = T("ورقة وقلم: عدّل الصفحة دي بإيدك", "Paper & pen: edit this page by hand"); b.textContent = "✏️"; b.onclick = () => ed178(true); document.body.appendChild(b); } }
+  css(`#pb178{position:fixed;z-index:930;inset-inline-end:.7rem;bottom:calc(5.4rem + env(safe-area-inset-bottom));width:2.6rem;height:2.6rem;border-radius:50%;border:0;background:#f59e0b;color:#111;font-size:1.2rem;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;opacity:.85}#pb178:hover{opacity:1}`);
+
+  /* ================= 7) المكتبة الكبيرة: كل حاجة في مكان واحد ================= */
+  const CATS = [["all", "🧰", "الكل", "All", []], ["design", "🎨", "التصميمات", "Designs", ["تصميم", "Design", "خلفي", "لوجو", "Logo", "استوديو", "studio"]], ["fonts", "🔤", "الخطوط", "Fonts", []], ["trans", "🎞️", "الانتقالات", "Transitions", []], ["colors", "🌈", "الألوان", "Colours", ["لون", "colour", "color"]], ["layout", "🧭", "الشكل والقوايم", "Layout & menus", ["شريط", "قايم", "rail", "menu", "أيقون", "icon", "رئيسية", "home", "تنظيم"]], ["draw", "✏️", "ورقة وقلم", "Paper & pen", []], ["mine", "⭐", "تصميماتي", "My designs", []], ["opts", "⚙️", "كل الخيارات", "All options", []], ["ver", "🕰️", "النسخ", "Versions", []]];
+  function libPage() {
+    if (!own()) return pageWrap("🧰", "—", "", `<div class="card muted">—</div>`);
+    const c = state.lc178 || "all"; const q = (state.lq178 || "").trim();
+    const chips = `<div class="chips178 sticky178">${CATS.map(([k, ic, a, e]) => `<button class="${c === k ? "on" : ""}" onclick="state.lc178='${k}';render()">${ic} ${T(a, e)}</button>`).join("")}</div>`;
+    let body = "";
+    if (c === "fonts") body = fontsLib(); else if (c === "trans") body = transLib(); else if (c === "mine") body = presetsLib(); else if (c === "ver") { go16("ver178"); return ""; }
+    else if (c === "draw") body = `<div class="card"><h3>✏️ ${T("ورقة وقلم", "Paper & pen")}</h3><p class="sm">${T("افتح أي صفحة في الموقع ودوس الزرار البرتقالي ✏️ اللي تحت على الجنب (أو الزرار هنا). بعدها تقدر:", "Open any page and tap the orange ✏️ button at the bottom side (or this button). Then you can:")}</p><ul class="sm"><li>🖱️ ${T("تدوس على أي حاجة في الصفحة وتسحبها لأي مكان، وتكبّرها أو تصغّرها من المقبض، وتغيّر خطها ولونها وخلفيتها وحوافها وظلها وشفافيتها ولفّتها، أو تخبيها", "Tap anything and drag it anywhere, resize it from the handle, change its font, colour, background, corners, shadow, opacity and rotation, or hide it")}</li><li>✍️ ${T("ترسم بالقلم على الصفحة بأي لون وسُمك", "Draw on the page with any colour and thickness")}</li><li>🔤⬛⚪🖼️🔘 ${T("تضيف نص، مربع، دايرة، صورة، أو زرار بيودّي لأي صفحة", "Add text, a box, a circle, an image, or a button linking anywhere")}</li><li>📄/🌐 ${T("التعديل للصفحة دي بس أو لكل الصفحات", "Edit this page only or all pages")}</li><li>↶ ↷ ${T("رجوع وتقديم، والتعديل مايظهرش للناس غير لما تدوس «طبّق على الكل» (وبتتعمل نسخة احتياطية قبلها)", "Undo/redo; nobody sees it until you press “Publish” (a backup is made first)")}</li></ul><button class="btn btn-p" onclick="go16('home');setTimeout(()=>ed178(true),400)">✏️ ${T("ابدأ من الرئيسية", "Start on the home page")}</button></div>`;
+    else { let h = ""; try { h = ownerSettings(); } catch (e) { h = `<div class="err">${esc(e.message)}</div>`; } body = `<div id="lb178">${h}</div>`; }
+    return pageWrap("🧰", T("مكتبة كل حاجة", "The everything library"), T("التصميمات والخطوط والانتقالات والألوان وكل خيارات الموقع — اختار وعاين وطبّق", "Designs, fonts, transitions, colours and every site option — pick, preview, apply"),
+      `<input class="in" id="lq178" placeholder="🔎 ${T("دوّر على أي خيار (مثلًا: لوجو، صيانة، تسجيل، شريط…)", "Search any option (e.g. logo, maintenance, recording, bar…)")}" value="${esc(q)}" oninput="state.lq178=this.value;lib178Filter()" style="margin-bottom:.5rem">${chips}<div style="margin-top:.6rem">${body}</div>`, 1200);
+  }
+  window.lib178Filter = function () {
+    const box = document.getElementById("lb178"); if (!box) return; const q = (state.lq178 || "").toLowerCase(); const c = state.lc178 || "all"; const kw = (CATS.find(x => x[0] === c) || [])[4] || [];
+    [...box.children].forEach(card => { const t = (card.querySelector("h3") || card).textContent.toLowerCase(); const all = card.textContent.toLowerCase(); const okC = c === "all" || c === "opts" || kw.some(k => t.includes(k.toLowerCase())); const okQ = !q || all.includes(q); card.style.display = okC && okQ ? "" : "none"; });
+  };
+  css(`.sticky178{position:sticky;top:calc(var(--hdrh,60px) + .2rem);z-index:20;background:var(--bg);padding:.3rem 0}`);
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="margin-top:1rem;border:2px solid var(--accent)"><h3>🧰 ${T("مكتبة كل حاجة", "The everything library")}</h3><p class="sm">${T("كل التصميمات والخطوط والانتقالات والألوان والخيارات والنسخ في مكان واحد، بالبحث.", "Every design, font, transition, colour, option and version in one searchable place.")}</p><div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-p" onclick="go16('lib178')">🧰 ${T("افتح المكتبة", "Open the library")}</button><button class="btn btn-o" onclick="ed178(true)">✏️ ${T("ورقة وقلم", "Paper & pen")}</button><button class="btn btn-o" onclick="go16('ver178')">🕰️ ${T("نسخ الموقع", "Site versions")}</button></div></div>` + _os.apply(this, arguments); };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!own()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#f59e0b" onclick="go16('lib178')"><span>🧰</span><b>${T("مكتبة كل حاجة", "Everything library")}</b></button><button class="mstile" style="--c:#64748b" onclick="go16('ver178')"><span>🕰️</span><b>${T("نسخ الموقع", "Site versions")}</b></button>`); };
+  /* سطر التسجيل في الشروط */
+  if (typeof renderTerms === "function") { const _t = renderTerms; renderTerms = function () { return _t.apply(this, arguments).replace(`<div class="card pol57">`, `<div class="card pol57"><h3>${T("تسجيل الحصص", "Lesson recording")}</h3><p>${T("ربما يتم تسجيل الحصة لضمان جودة التعليم والحرص على تحسين جودة معلمينا. الصوت بيتمسح تلقائيًا بعد 3 أيام، ومحدش بيطّلع عليه غير إدارة الأكاديمية.", "Lessons may be recorded to ensure teaching quality and help us keep improving our teachers. Audio is deleted automatically after 3 days and is only accessible to the academy's management.")}</p>`); }; }
+
+  /* ================= الرسم ================= */
+  const _r = render; render = function () {
+    const prev = lastKey178; const rt2 = state.route;
+    if (rt2 === "ver178" || rt2 === "lib178") { let b; try { b = rt2 === "ver178" ? verPage() : libPage(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } if (b) show(b); setTimeout(() => { try { lib178Filter(); } catch (e) {} }, 0); }
+    else _r.apply(this, arguments);
+    lastKey178 = kNow();
+    try { pinCheck(); fontsApply(); freeApply(); animate(prev); penBtn(); if (ED.on) { bar(); setTimeout(outline, 30); } } catch (e) { console.warn(e); }
+  };
+  if (/^#\/(ver178|lib178)/.test(location.hash)) state.route = location.hash.slice(2).split("/")[0];
+  const _h = window.history.pushState; /* لما تتنقل وانت بتعدّل: الاختيار يتشال */
+  addEventListener("hashchange", () => { ED.sel = null; });
 })();
 
 // بدء التشغيل
