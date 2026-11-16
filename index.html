@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v183";
+const UI_VERSION = "2026-11-16-v184";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -26259,6 +26259,136 @@ Between lessons, the platform keeps you going:
   .lb183o{display:flex;gap:.25rem;margin-top:-.4rem;margin-bottom:.4rem;flex-wrap:wrap}.lb183o .btn{padding:.1rem .5rem}.lb183s{border:0;background:none;cursor:pointer;margin-inline-start:.3rem}
   .blk183 canvas{filter:blur(18px)}.blk183::after{content:"🙈";position:absolute;font-size:3rem}#pv181w{position:relative;align-items:center}`);
   applyFit(); setTimeout(sched, 800);
+})();
+
+/* ================= v184: «لوحة الطالب» — المعلم يحط للطالب ١٢ نوع حاجة تظهرله فوق في مساحته + إشعار + «تصميمات السوشيال» (إنستجرام/فيسبوك/تيك توك) جاهزة تنزّلها صور ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner" && !state.preview;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  if (!PAGES16.includes("social184")) PAGES16.push("social184");
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+
+  /* ======================= 1) لوحة الطالب ======================= */
+  const KINDS = {
+    note: ["📝", "ملاحظة", "Note", "اكتب ملاحظة للطالب"],
+    pin: ["📣", "إعلان مثبّت فوق", "Pinned announcement", "حاجة مهمة تفضل فوق لحد ما تشيلها"],
+    goal: ["🎯", "هدف الأسبوع", "Goal of the week", "مثلًا: حفظ سورة الملك كاملة"],
+    link: ["🔗", "صفحة أو مصدر", "Page or resource", "صفحة في الموقع (#/tasmee) أو أي لينك"],
+    audio: ["🎧", "رسالة صوتية", "Voice message", "سجّل رسالة بصوتك للطالب"],
+    video: ["🎬", "فيديو", "Video", "لينك يوتيوب أو أي فيديو"],
+    list: ["✅", "قائمة مهام صغيرة", "Mini checklist", "كل سطر = مهمة، والطالب يعلّم عليها"],
+    reward: ["🏅", "مكافأة / نجوم", "Reward / stars", "عدد النجوم وسببها"],
+    remind: ["⏰", "تذكير بتاريخ", "Dated reminder", "حاجة يفتكرها في يوم معيّن"],
+    wird: ["📖", "ورد من المصحف", "Mushaf portion", "سورة:آية – آية (مثلًا 67:1-15)"],
+    think: ["💭", "سؤال للتفكير", "Question to reflect on", "سؤال يرد عليه الطالب"],
+    cheer: ["🌟", "رسالة تشجيع", "Encouragement", "كلمة حلوة للطالب"]
+  };
+  const rowsOf = uid => useData("board184_" + uid, async () => { const r = await sb.from("student_board").select("*").eq("student_id", uid).order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(60); return r.data || []; });
+  window.sb184 = {
+    kind: (uid, k) => { state.sb184 = { uid, k }; render(); setTimeout(() => { const e = document.getElementById("sb184f"); e && e.scrollIntoView({ behavior: "smooth", block: "center" }); }, 60); },
+    rec: async btn => { if (window.__sb184mr) { window.__sb184mr.stop(); return; } try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); const ch = []; const mr = new MediaRecorder(s); window.__sb184mr = mr; mr.ondataavailable = e => ch.push(e.data); mr.onstop = () => { s.getTracks().forEach(t => t.stop()); window.__sb184mr = null; window.__sb184blob = new Blob(ch, { type: ch[0] && ch[0].type || "audio/webm" }); btn.textContent = "✅ " + T("اتسجّلت — سجّل تاني؟", "Recorded — again?"); }; mr.start(); btn.textContent = "⏹ " + T("وقّف", "Stop"); } catch (e) { toast(T("اسمح للمايك", "Allow the microphone"), true); } },
+    save: async uid => {
+      const k = (state.sb184 || {}).k || "note"; const g = id => (document.getElementById(id) || {}).value || ""; const title = g("sb184t").trim(), body = g("sb184b").trim(); const data = {};
+      if (k === "reward") data.stars = +g("sb184n") || 1; if (k === "remind") data.date = g("sb184d"); if (k === "link" || k === "video") data.url = g("sb184u").trim(); if (k === "wird") data.range = g("sb184u").trim(); if (k === "list") data.items = body.split("\n").map(s => s.trim()).filter(Boolean).map(t => ({ t, done: false }));
+      if (k === "audio") { const b = window.__sb184blob; if (!b) return toast(T("سجّل الرسالة الأول", "Record the message first"), true); const p = `board/${uid}/${Date.now()}.webm`; const up = await sb.storage.from("academy_public").upload(p, b, { contentType: b.type }); if (up.error) return toast(up.error.message, true); data.url = sb.storage.from("academy_public").getPublicUrl(p).data.publicUrl; window.__sb184blob = null; }
+      if (!title && !body && !data.url && !data.range) return toast(T("اكتب حاجة", "Write something"), true);
+      const r = await sb.from("student_board").insert({ student_id: uid, kind: k, title, body, data, pinned: k === "pin", show_until: g("sb184x") || null }); if (r.error) return toast(r.error.message, true);
+      state.sb184 = null; invalidate("board184_" + uid); toast(T("✅ اتحطّت ووصل للطالب إشعار", "✅ Added — the student got a notification")); render();
+    },
+    del: async (uid, id) => { if (!confirm(T("تشيلها؟", "Remove it?"))) return; await sb.from("student_board").delete().eq("id", id); invalidate("board184_" + uid); render(); },
+    pin: async (uid, id, v) => { await sb.from("student_board").update({ pinned: v }).eq("id", id); invalidate("board184_" + uid); render(); },
+    tick: async (uid, id, i) => { const r = rowsOf(uid).find(x => x.id === id); if (!r) return; const d = JSON.parse(JSON.stringify(r.data || {})); d.items[i].done = !d.items[i].done; await sb.from("student_board").update({ data: d }).eq("id", id); invalidate("board184_" + uid); render(); },
+    answer: async (uid, id) => { const r = rowsOf(uid).find(x => x.id === id); const a = prompt(T("ردّك:", "Your answer:"), (r && r.data && r.data.answer) || ""); if (a === null) return; const d = Object.assign({}, r.data || {}, { answer: a }); await sb.from("student_board").update({ data: d, done: true }).eq("id", id); invalidate("board184_" + uid); render(); toast("✅"); }
+  };
+  const embed = u => { const m = String(u || "").match(/(?:youtu\.be\/|v=|shorts\/)([\w-]{11})/); return m ? `<iframe class="sb184v" src="https://www.youtube-nocookie.com/embed/${m[1]}" allowfullscreen loading="lazy"></iframe>` : `<a class="btn btn-o" href="${esc(u)}" target="_blank" rel="noopener">▶ ${T("افتح الفيديو", "Open the video")}</a>`; };
+  function cardOf(x, uid, staff) {
+    const K = KINDS[x.kind] || KINDS.note; const d = x.data || {}; let inner = "";
+    if (x.kind === "list") inner = (d.items || []).map((it, i) => `<label class="sb184li"><input type="checkbox" ${it.done ? "checked" : ""} onchange="sb184.tick('${uid}','${x.id}',${i})"> <span class="${it.done ? "done" : ""}">${esc(it.t)}</span></label>`).join("");
+    else if (x.kind === "audio" && d.url) inner = `<audio controls preload="none" src="${esc(d.url)}" style="width:100%"></audio>`;
+    else if (x.kind === "video" && d.url) inner = embed(d.url);
+    else if (x.kind === "link" && d.url) inner = `<button class="btn btn-p" onclick="go179('${esc(d.url).replace(/'/g, "")}')">↗ ${T("افتح", "Open")}</button>`;
+    else if (x.kind === "reward") inner = `<div class="sb184st">${"⭐".repeat(Math.min(10, d.stars || 1))}</div>`;
+    else if (x.kind === "wird" && d.range) { const m = d.range.match(/(\d+)\s*:\s*(\d+)(?:\s*-\s*(\d+))?/); inner = `<div class="row" style="gap:.4rem;align-items:center"><b class="notr" translate="no">${m ? esc(sName ? sName(+m[1]) : m[1]) + " " + m[2] + (m[3] ? "–" + m[3] : "") : esc(d.range)}</b><button class="btn btn-p" onclick="go16('tasmee')">🎙️ ${T("سمّع", "Recite")}</button></div>`; }
+    else if (x.kind === "remind" && d.date) inner = `<b>📅 ${esc(new Date(d.date).toLocaleDateString(AR() ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" }))}</b>`;
+    else if (x.kind === "think") inner = d.answer ? `<div class="sb184ans">💬 ${esc(d.answer)}</div>` : (!staff ? `<button class="btn btn-p" onclick="sb184.answer('${uid}','${x.id}')">✍️ ${T("ردّ", "Answer")}</button>` : `<span class="xs muted">${T("لسه مردّش", "No answer yet")}</span>`);
+    return `<div class="sb184c k-${x.kind} ${x.pinned ? "pin" : ""}"><div class="sb184h"><span>${K[0]}</span><b>${esc(x.title || T(K[1], K[2]))}</b>${staff ? `<span class="row" style="gap:.15rem;margin-inline-start:auto"><button class="ibtn" title="${T("تثبيت", "Pin")}" onclick="sb184.pin('${uid}','${x.id}',${!x.pinned})">${x.pinned ? "📌" : "📍"}</button><button class="ibtn" onclick="sb184.del('${uid}','${x.id}')">🗑️</button></span>` : ""}</div>${x.body && x.kind !== "list" ? `<p class="sm" style="white-space:pre-wrap;margin:.3rem 0">${esc(x.body)}</p>` : ""}${inner}<div class="xs muted" style="margin-top:.3rem">${new Date(x.created_at).toLocaleDateString(AR() ? "ar-EG" : "en-GB", { day: "numeric", month: "short" })}</div></div>`;
+  }
+  function board(uid, staff) {
+    const L = rowsOf(uid).filter(x => staff || !x.show_until || new Date(x.show_until) >= new Date(new Date().toDateString()));
+    const f = state.sb184 && state.sb184.uid === uid ? state.sb184 : null; const K = f ? KINDS[f.k] : null;
+    const form = f ? `<div class="card sb184f" id="sb184f"><b>${K[0]} ${T(K[1], K[2])}</b> <span class="xs muted">${K[3]}</span>
+      <input class="in" id="sb184t" placeholder="${T("العنوان (اختياري)", "Title (optional)")}" style="margin-top:.4rem">
+      ${["link", "video", "wird"].includes(f.k) ? `<input class="in" id="sb184u" dir="ltr" placeholder="${f.k === "wird" ? "67:1-15" : f.k === "link" ? "#/tasmee  ·  https://…" : "https://youtu.be/…"}" style="margin-top:.4rem">` : ""}
+      ${f.k === "reward" ? `<label class="sm">⭐ <input class="in" id="sb184n" type="number" min="1" max="10" value="3" style="width:5rem"></label>` : ""}${f.k === "remind" ? `<input class="in" id="sb184d" type="date" style="margin-top:.4rem">` : ""}
+      ${f.k === "audio" ? `<button class="btn btn-p" style="margin-top:.4rem" onclick="sb184.rec(this)">🔴 ${T("سجّل", "Record")}</button>` : ""}
+      <textarea class="in" id="sb184b" rows="${f.k === "list" ? 5 : 3}" placeholder="${f.k === "list" ? T("كل سطر مهمة", "One task per line") : T("الكلام (اختياري)", "Text (optional)")}" style="margin-top:.4rem"></textarea>
+      <label class="xs muted">${T("تختفي عند الطالب بعد (اختياري)", "Hide from the student after (optional)")} <input class="in" id="sb184x" type="date" style="width:auto"></label>
+      <div class="row" style="gap:.4rem;margin-top:.5rem"><button class="btn btn-p" onclick="sb184.save('${uid}')">📌 ${T("حطها للطالب", "Add for the student")}</button><button class="btn btn-o" onclick="state.sb184=null;render()">✖</button></div></div>` : "";
+    return `<div class="card sb184"><h3>📌 ${staff ? T("لوحة الطالب — اللي هيظهرله فوق في مساحته", "Student board — shown at the top of their space") : T("من معلمك", "From your teacher")}</h3>
+      ${staff ? `<div class="sb184k">${Object.entries(KINDS).map(([k, v]) => `<button onclick="sb184.kind('${uid}','${k}')"><span>${v[0]}</span>${T(v[1], v[2])}</button>`).join("")}</div>${form}` : ""}
+      <div class="sb184g">${L.length ? L.map(x => cardOf(x, uid, staff)).join("") : `<p class="xs muted">${staff ? T("لسه مفيش — اختار نوع من فوق.", "Nothing yet — pick a type above.") : ""}</p>`}</div></div>`;
+  }
+  if (typeof sfTasks === "function") { const _st = sfTasks; sfTasks = function (uid, x) { const h = _st.apply(this, arguments); try { return board(uid, true) + h; } catch (e) { return h; } }; }
+  const _r = render; render = function () {
+    if (state.route === "social184") { let b; try { b = socialPage(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); return; }
+    const r = _r.apply(this, arguments);
+    try { if (state.route === "myspace" && state.auth && state.auth.user && role() === "student") { const uid = state.auth.user.id; const L = rowsOf(uid); if (L.length && !document.querySelector(".sb184")) { const g = document.querySelector(".msgrid"); const w = g ? g.parentNode : document.querySelector("#app .wrap"); if (w) (g || w.firstChild) ? (g || w.firstChild).insertAdjacentHTML("beforebegin", board(uid, false)) : w.insertAdjacentHTML("afterbegin", board(uid, false)); } } } catch (e) { console.warn(e); }
+    return r;
+  };
+  css(`.sb184{margin-bottom:1rem;border:2px solid color-mix(in srgb,var(--accent) 40%,var(--line))}.sb184k{display:flex;flex-wrap:wrap;gap:.3rem;margin:.4rem 0}.sb184k button{display:flex;gap:.3rem;align-items:center;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:.3rem .7rem;font:inherit;font-size:.8rem;cursor:pointer}.sb184k button:hover{border-color:var(--accent)}
+  .sb184f{margin:.5rem 0;display:flex;flex-direction:column;border:1.5px dashed var(--accent)}.sb184g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(16rem,100%),1fr));gap:.6rem;margin-top:.5rem}
+  .sb184c{border:1px solid var(--line);border-radius:14px;padding:.7rem;background:var(--card)}.sb184c.pin{border:2px solid #f59e0b;background:color-mix(in srgb,#f59e0b 7%,var(--card))}.sb184h{display:flex;gap:.4rem;align-items:center}.sb184h>span:first-child{font-size:1.3rem}.sb184li{display:flex;gap:.4rem;align-items:center;padding:.15rem 0}.sb184li .done{text-decoration:line-through;color:var(--muted)}.sb184st{font-size:1.6rem;letter-spacing:.1rem}.sb184ans{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:10px;padding:.4rem .6rem}.sb184v{width:100%;aspect-ratio:16/9;border:0;border-radius:10px}`);
+
+  /* ======================= 2) تصميمات السوشيال ======================= */
+  const SIZES = { sq: [1080, 1080, "Instagram / Facebook post 1:1"], pt: [1080, 1350, "Instagram portrait 4:5"], st: [1080, 1920, "Story / Reels / TikTok 9:16"], fb: [1640, 624, "Facebook cover"], yt: [1280, 720, "YouTube / video cover 16:9"], pp: [800, 800, T("صورة البروفايل", "Profile picture")] };
+  const TPL = [
+    ["brand", "🌙", ["القرآن بصوتك… بإتقان", "Recite the Quran beautifully"], ["معلمين مجازين — حصص لايف ١:١ بتوقيت بلدك", "Certified teachers — live 1-on-1 in your time zone"]],
+    ["trial", "🎁", ["أول حصة تجريبية مجانًا", "Your first trial lesson is free"], ["احجز دلوقتي واتعلّم مع معلم يصحّحلك كل حرف", "Book now and learn with a teacher who corrects every letter"]],
+    ["yearly", "💎", ["وفّر ٣٠٪ بالاشتراك السنوي", "Save 30% with a yearly plan"], ["اشترك مرة واحدة واتعلّم السنة كلها", "Subscribe once, learn all year"]],
+    ["challenge", "🔥", ["تحدّي ٣٠ يوم", "30-day challenge"], ["قيام + الصلوات في جماعة + وردك — يوم بيوم مع تذكير", "Night prayer + congregational prayers + wird — day by day with reminders"]],
+    ["maqam", "🎼", ["مقام الأسبوع: النهاوند", "Maqam of the week: Nahawand"], ["اسمع السلم والآهات ومارس بصوتك على الموالف", "Hear the scale and aahs and practise on the live tuner"]],
+    ["tajweed", "📖", ["قاعدة تجويد في دقيقة", "A tajweed rule in a minute"], ["الإخفاء: ١٥ حرف — اعرفهم وطبّقهم معانا", "Ikhfa’: 15 letters — learn and apply them with us"]],
+    ["kids", "🧒", ["السيرة النبوية للأطفال", "The Seerah for kids"], ["قصص مصوّرة + ألعاب + آداب المسلم الصغير", "Illustrated stories + games + manners for little Muslims"]],
+    ["library", "📚", ["مكتبة إسلامية مصوّرة", "An illustrated Islamic library"], ["الموسوعة الفقهية + بيان الإسلام + صفوة التفاسير + أكتر", "Fiqh Encyclopedia + Bayan al-Islam + Safwat al-Tafasir + more"]],
+    ["invite", "🤝", ["ادعي صحابك واكسب", "Invite friends and earn"], ["كل ١٠ يشتركوا = أسبوعين مجانًا ليك", "Every 10 who subscribe = 2 free weeks for you"]],
+    ["parents", "👨‍👩‍👧", ["لولي الأمر", "For parents"], ["تقرير أسبوعي بمستوى ابنك وواجباته وحضوره", "A weekly report on your child's level, homework and attendance"]],
+    ["teacher", "👨‍🏫", ["انضم كمعلم", "Join as a teacher"], ["مجاز في القراءات أو التجويد؟ درّس معانا أونلاين", "Certified in qira’at or tajweed? Teach with us online"]],
+    ["ramadan", "🌙", ["رمضان معانا غير", "Ramadan is different with us"], ["خطة ختمة + قيام + متابعة يومية", "A khatma plan + qiyam + daily tracking"]]
+  ];
+  const STY = [["#0b3a33", "#fcd34d", "#d1fae5"], ["#1e1b4b", "#f472b6", "#e0e7ff"], ["#fff8f1", "#b45309", "#3b2f2f"], ["#0f172a", "#38bdf8", "#e2e8f0"], ["#14532d", "#bef264", "#dcfce7"], ["#7f1d1d", "#fde68a", "#fee2e2"]];
+  const SO = () => state.so184 = state.so184 || { size: "sq", sty: 0, lang: "ar", edit: {} };
+  function post(t, i, size, sty, lang, w) {
+    const [id, ic, h, s] = t; const e = (SO().edit[id] || {}); const H = e.h || h[lang === "ar" ? 0 : 1], S = e.s || s[lang === "ar" ? 0 : 1]; const [bg, ac, fg] = STY[(sty + i) % STY.length]; const [W, Hh] = SIZES[size]; const sc = w / W;
+    const big = Math.round(Math.min(W, Hh) * .09); const url = (setv("domain184", "") || location.host);
+    return `<div class="so184p" data-id="${id}" style="width:${W}px;height:${Hh}px;transform:scale(${sc});margin-bottom:${-(Hh * (1 - sc))}px;margin-inline-end:${-(W * (1 - sc))}px;background:radial-gradient(120% 80% at 80% 0%,color-mix(in srgb,${ac} 35%,${bg}),${bg} 60%);color:${fg};direction:${lang === "ar" ? "rtl" : "ltr"}">
+      <div class="so184pat" style="color:${ac}"></div>
+      <div class="so184b" style="font-size:${Math.round(big * .45)}px"><i style="background:${ac};color:${bg}">إتقان</i>${lang === "ar" ? "أكاديمية إتقان" : "Itqan Academy"}</div>
+      <div class="so184ic" style="font-size:${big * 2.2}px">${ic}</div>
+      <h1 style="font-size:${big}px;color:${ac}">${esc(H)}</h1><p style="font-size:${Math.round(big * .48)}px">${esc(S)}</p>
+      <div class="so184cta" style="background:${ac};color:${bg};font-size:${Math.round(big * .42)}px">${lang === "ar" ? "✨ احجز حصتك المجانية" : "✨ Book your free lesson"}</div><div class="so184u" style="font-size:${Math.round(big * .3)}px">${url}</div></div>`;
+  }
+  window.so184 = {
+    set: (k, v) => { SO()[k] = v; render(); },
+    edit: id => { const t = TPL.find(x => x[0] === id); const lang = SO().lang; const cur = SO().edit[id] || {}; const h = prompt(T("العنوان", "Headline"), cur.h || t[2][lang === "ar" ? 0 : 1]); if (h === null) return; const s = prompt(T("السطر التاني", "Second line"), cur.s || t[3][lang === "ar" ? 0 : 1]); if (s === null) return; SO().edit[id] = { h, s }; render(); },
+    dl: async (btn, id) => {
+      const el = btn.closest(".so184w").querySelector(".so184p"); btn.textContent = "⏳";
+      try { await loadScriptOnce("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"); const clone = el.cloneNode(true); clone.style.transform = "none"; clone.style.margin = "0"; const hold = document.createElement("div"); hold.style.cssText = "position:fixed;left:-99999px;top:0"; hold.appendChild(clone); document.body.appendChild(hold); const cv = await html2canvas(clone, { backgroundColor: null, scale: 1, useCORS: true }); hold.remove(); const a = document.createElement("a"); a.download = `itqan-${id}-${SO().size}-${SO().lang}.png`; a.href = cv.toDataURL("image/png"); a.click(); btn.textContent = "⬇️ PNG"; } catch (e) { console.warn(e); btn.textContent = "⚠️"; toast(T("التنزيل مش شغال هنا — خد سكرين شوت", "Download failed here — take a screenshot"), true); }
+    }
+  };
+  function socialPage() {
+    if (!own()) return pageWrap("📱", "—", "", `<div class="card muted">—</div>`); const o = SO(); const w = Math.min(340, innerWidth - 60);
+    return pageWrap("📱", T("تصميمات السوشيال ميديا", "Social media designs"), T("12 تصميم × 6 مقاسات × 6 ستايلات، عربي وإنجليزي — عدّل الكلام بدوسة ونزّلها صورة PNG جاهزة للنشر.", "12 designs × 6 sizes × 6 styles, Arabic and English — edit the text with a tap and download a ready PNG."),
+      `<div class="card" style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center"><label class="sm">${T("المقاس", "Size")} <select class="in" style="width:auto" onchange="so184.set('size',this.value)">${Object.entries(SIZES).map(([k, v]) => `<option value="${k}" ${o.size === k ? "selected" : ""}>${esc(v[2])} (${v[0]}×${v[1]})</option>`).join("")}</select></label><label class="sm">${T("اللغة", "Language")} <select class="in" style="width:auto" onchange="so184.set('lang',this.value)"><option value="ar" ${o.lang === "ar" ? "selected" : ""}>عربي</option><option value="en" ${o.lang === "en" ? "selected" : ""}>English</option></select></label><span class="sm">${T("الستايل", "Style")}</span>${STY.map((s, i) => `<button title="${i + 1}" onclick="so184.set('sty',${i})" style="width:1.8rem;height:1.8rem;border-radius:50%;border:${o.sty === i ? "3px solid var(--fg)" : "1px solid var(--line)"};background:linear-gradient(135deg,${s[0]} 50%,${s[1]} 50%);cursor:pointer"></button>`).join("")}</div>
+      <div class="so184g">${TPL.map((t, i) => `<div class="so184w card">${post(t, i, o.size, o.sty, o.lang, w)}<div class="row" style="gap:.3rem;margin-top:.5rem"><button class="btn btn-o" onclick="so184.edit('${t[0]}')">✏️ ${T("عدّل الكلام", "Edit text")}</button><button class="btn btn-p" onclick="so184.dl(this,'${t[0]}')">⬇️ PNG</button></div></div>`).join("")}</div>
+      <p class="xs muted" style="margin-top:.8rem">${T("نصيحة: لكل منصة نفس الستايل عشان الناس تعرفك من أول نظرة. آيات القرآن اكتبها بنفسك من المصحف — مفيش أي نص قرآني متولّد.", "Tip: keep one style across platforms so people recognise you instantly. Type any Quran verses yourself from the mushaf — no Quranic text is generated.")}</p>`, 1300);
+  }
+  css(`.so184g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:1rem;margin-top:1rem}.so184w{overflow:hidden}
+  .so184p{transform-origin:top ${document.dir === "rtl" ? "right" : "left"};position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%;padding:7%;box-sizing:border-box;font-family:Tajawal,Inter,system-ui;text-align:center;border-radius:0}
+  .so184pat{position:absolute;inset:0;opacity:.08;background-image:radial-gradient(currentColor 2px,transparent 2.5px);background-size:46px 46px}.so184b{position:absolute;top:5%;display:flex;gap:.5em;align-items:center;font-weight:800;font-family:'El Messiri',Tajawal}.so184b i{font-style:normal;border-radius:.4em;padding:.15em .45em;font-family:'El Messiri'}
+  .so184p h1{font-family:'El Messiri','Playfair Display',Tajawal;margin:0;line-height:1.25;position:relative}.so184p p{margin:0;opacity:.92;line-height:1.5;max-width:85%;position:relative}.so184ic{line-height:1;position:relative}.so184cta{border-radius:999px;padding:.6em 1.4em;font-weight:900;margin-top:3%;position:relative}.so184u{position:absolute;bottom:4%;opacity:.75;font-family:Inter;direction:ltr}`);
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!own()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#db2777" onclick="go16('social184')"><span>📱</span><b>${T("تصميمات السوشيال", "Social designs")}</b></button>`); };
+  const m = location.hash.match(/^#\/social184/); if (m) state.route = "social184";
 })();
 
 // بدء التشغيل
