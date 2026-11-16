@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v203";
+const UI_VERSION = "2026-11-17-v204";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -28894,6 +28894,121 @@ Between lessons, the platform keeps you going:
   .hm203x{display:none!important}
   body.rm203 *,body.rm203 *::before,body.rm203 *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   .vs203g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.7rem}.pr203{border-bottom:1px solid var(--line);padding:.35rem 0}.pr203 summary{cursor:pointer;display:flex;gap:.4rem;align-items:center}.pr203 pre{white-space:pre-wrap;font-family:inherit;background:var(--bg);padding:.6rem;border-radius:10px;font-size:.85rem;line-height:1.8}`);
+})();
+
+/* ================= v204: الشرايط الجانبية (زرار يزق/فوق المحتوى + حجم + أيقونات صغيرة + ظاهرة كلها في نص الشاشة + الزق بيحصل وهي بتفتح) · نافذة التعديل (كبيرة ومقروءة + حفظ/إلغاء/الأصل/قفل الوضع/اخفيها من كل الصفحات + المخفي عليه سلة وترجّعه من مكانه) · أدوات الترتيب بتظهر للعنصر اللي تختاره بس · الفم واللسان بس اللي بيتحركوا + زرار تشغيل/إيقاف · «عرض بالتفصيل» بيفتح تحته من غير ما الصفحة تطير ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+  /* ======================= 1) الشرايط الجانبية ======================= */
+  try { if (localStorage.getItem("sp203c") == null) LSset("sp203c", true); } catch (e) {}
+  const SZ = k => +(LS("sz204", {})[k] || 1);
+  const modeOf = k => { try { const o = (setv("bar201", {}) || {}).bars || {}; const u = LS("bar201u", {}) || {}; return Object.assign({ mode: "hover" }, o[k] || {}, u[k] || {}).mode; } catch (e) { return "hover"; } };
+  window.bar204 = {
+    push(k) { const m = modeOf(k); bar201.set(k, { mode: m === "push" ? "hover" : "push" }, true); setTimeout(() => { bar201.tog(k); bar201.tog(k); }, 30); toast(m === "push" ? T("🪟 بيطلع فوق المحتوى من غير ما يزقه", "🪟 Overlays the page") : T("↔️ بيزق المحتوى وهو بيفتح", "↔️ Pushes the page"), false); },
+    size(k, d) { const S = LS("sz204", {}); S[k] = Math.max(.6, Math.min(1.6, Math.round(((+S[k] || 1) + d) * 10) / 10)); LSset("sz204", S); fix(); toast("🔍 " + Math.round(S[k] * 100) + "%"); },
+    icons() { if (window.sp203) sp203.compact(); setTimeout(fix, 60); }
+  };
+  function sideW(el) { const r = el.getBoundingClientRect(); return Math.round(r.width) + 16; }
+  function fix() {
+    document.querySelectorAll(".bar201").forEach(el => {
+      const k = /side185/.test(el.className) ? "tools" : "nav"; el.style.setProperty("--s204", SZ(k)); el.dataset.k204 = k;
+      const x = el.querySelector(".x201"); if (x && !x.querySelector(".p204")) {
+        x.insertAdjacentHTML("afterbegin", `<button class="p204" title="${T("يزق المحتوى ↔ يطلع فوقه", "Push ↔ overlay")}" onclick="event.stopPropagation();bar204.push('${k}')">⇆</button><button title="${T("صغّر", "Smaller")}" onclick="event.stopPropagation();bar204.size('${k}',-.1)">➖</button><button title="${T("كبّر", "Bigger")}" onclick="event.stopPropagation();bar204.size('${k}',.1)">➕</button>${k === "tools" ? `<button title="${T("أيقونات صغيرة ↔ بالأسماء", "Icons ↔ labels")}" onclick="event.stopPropagation();bar204.icons()">🔤</button>` : ""}`); }
+      const p = x && x.querySelector(".p204"); if (p) p.classList.toggle("on", modeOf(k) === "push");
+      if (el.classList.contains("open201")) document.body.style.setProperty("--pw204", sideW(el) + "px");
+    });
+    document.querySelectorAll(".sp203 .it203 > button:first-child").forEach(b => { if (b.dataset.ic204) return; const t = (b.textContent || "").replace(/\s+/g, " ").trim(); const m = t.match(/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}\p{Emoji_Modifier}]*)/u); b.dataset.ic204 = m ? m[1] : (b.querySelector("i") ? "" : t.slice(0, 1)); if (!b.title) b.title = t; });
+    document.querySelectorAll(".sp203.c203 details.g203").forEach(d => { if (!d.__o204) { d.__o204 = 1; d.open = true; } });
+  }
+  new MutationObserver(() => { clearTimeout(window.__f204); window.__f204 = setTimeout(fix, 90); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  css(`
+  html body.b201 #app{transition:padding-inline-start .45s cubic-bezier(.22,1,.36,1),padding-inline-end .45s cubic-bezier(.22,1,.36,1)!important}
+  html body.b201.push201-l #app{padding-inline-start:var(--pw204,14rem)!important;padding-inline-end:0}html body.b201.push201-r #app{padding-inline-end:var(--pw204,14rem)!important;padding-inline-start:0}
+  [dir=rtl] body.b201.push201-l #app{padding-inline-start:0!important;padding-inline-end:var(--pw204,14rem)!important}[dir=rtl] body.b201.push201-r #app{padding-inline-end:0!important;padding-inline-start:var(--pw204,14rem)!important}
+  html body.b201 .bar201{position:fixed!important;top:0!important;bottom:0!important;margin-block:auto!important;height:fit-content!important;max-height:calc((100dvh - 1.5rem) / var(--s204,1))!important;overflow:auto!important;zoom:var(--s204,1)}
+  html body.b201 .side185.bar201{width:auto!important;min-width:0!important}
+  html body.b201 .side185.bar201:has(.sp203:not(.c203)){width:15rem!important}
+  .x201{flex-wrap:wrap}.x201 button.on{background:var(--accent);color:#fff}
+  .sp203{max-height:none!important}
+  .sp203.c203{padding:.3rem!important}
+  .sp203.c203{width:104px!important}.sp203.c203 .g203{display:block!important;margin:0 0 .3rem;padding:0 0 .3rem;border-bottom:1px dashed var(--line)}
+  .sp203.c203 .g203:last-child{border-bottom:0}
+  .sp203.c203 .it203{position:relative;display:inline-block!important;vertical-align:top;margin:2px!important;width:auto!important}
+  .sp203.c203 .it203>button:first-child{width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;padding:0!important;font-size:0!important;justify-content:center!important;align-items:center!important;display:flex!important;overflow:hidden;border-radius:12px!important}
+  .sp203.c203 .it203>button:first-child::before{content:attr(data-ic204);font-size:1.25rem;line-height:1}
+  .sp203.c203 .it203>button:first-child i{font-size:1.05rem!important}
+  .sp203.c203 .it203>button:first-child:hover{transform:scale(1.08)}
+  .sp203.c203 .ed203{position:absolute;top:-6px;inset-inline-end:-6px;zoom:.8}
+  .sp203.c203 .hd203{flex-direction:column;align-items:center}
+  `);
+
+  /* ======================= 2) نافذة التعديل ======================= */
+  const EK = "itqan_ed189"; let SNAP;
+  window.ed204 = {
+    save() { SNAP = undefined; const p = document.getElementById("ed189p"); ed189.pub(); p && p.remove(); },
+    cancel() { if (SNAP !== undefined) { try { SNAP == null ? localStorage.removeItem(EK) : localStorage.setItem(EK, SNAP); } catch (e) {} } SNAP = undefined; const p = document.getElementById("ed189p"); p && p.remove(); render(); },
+    exit() { ed204.cancel(); if (document.body.classList.contains("ed189")) ed189.toggle(); if (state.uiEdit || state.editMode) { state.uiEdit = false; state.editMode = false; render(); } },
+    everywhere() { ed189.where("*"); ed189.set("hide", true); toast(T("🙈 هتختفي من كل الصفحات اللي فيها نفس الخانة (زي كل المقامات) — دوس 💾 حفظ", "🙈 Hidden on every similar page — press 💾 Save"), false); },
+    restore() { ed189.set("hide", false); }
+  };
+  function decorate(p) {
+    if (p.__d204) return; p.__d204 = 1; if (SNAP === undefined) { try { SNAP = localStorage.getItem(EK); } catch (e) { SNAP = null; } }
+    const x = p.querySelector("button[onclick*=\"ed189p').remove()\"]"); if (x) { x.setAttribute("onclick", "ed204.cancel()"); x.title = T("اقفل من غير حفظ", "Close without saving"); }
+    const hid = !!p.querySelector('input[type=checkbox][onchange*="hide"]:checked');
+    p.querySelectorAll('button[onclick="ed189.pub()"]').forEach(b => b.remove());
+    const ta = p.querySelector("textarea"); if (ta) { ta.rows = 4; ta.style.resize = "vertical"; }
+    p.insertAdjacentHTML("beforeend", `<div class="f204">${hid ? `<button class="btn btn-p" onclick="ed204.restore()">↩️ ${T("رجّعها مكانها", "Restore it")}</button>` : `<button class="btn btn-o" onclick="ed204.everywhere()">🙈 ${T("اخفيها من كل الصفحات اللي زيها (كل المقامات مثلًا)", "Hide on all similar pages")}</button>`}
+      <div class="row" style="gap:.35rem;flex-wrap:wrap"><button class="btn btn-p" onclick="ed204.save()">💾 ${T("حفظ", "Save")}</button><button class="btn btn-o" onclick="ed204.cancel()">✖ ${T("إلغاء", "Cancel")}</button><button class="btn btn-o" onclick="ed189.reset();ed204.save()">↩ ${T("الأصل", "Original")}</button><button class="btn btn-o" onclick="ed204.exit()">🚪 ${T("اقفل وضع التعديل", "Exit edit mode")}</button></div>
+      <p class="xs muted" style="margin:0">${T("اللي بتغيّره بيبان قدامك بس — ومش بيتحفظ لحد ما تدوس 💾 حفظ.", "Changes are a preview until you press 💾 Save.")}</p></div>`);
+    const fit = () => { const h = p.offsetHeight; let t = parseFloat(p.style.top) || 60; if (t + h > innerHeight - 8) t = Math.max(8, innerHeight - h - 8); p.style.top = t + "px"; let l = parseFloat(p.style.left) || 8; l = Math.max(8, Math.min(l, innerWidth - p.offsetWidth - 8)); p.style.left = l + "px"; };
+    requestAnimationFrame(fit);
+    const hd = p.firstElementChild; if (hd) { hd.style.cursor = "move"; hd.addEventListener("pointerdown", e => { if (e.target.closest("button")) return; const x0 = e.clientX - p.offsetLeft, y0 = e.clientY - p.offsetTop; const mv = ev => { p.style.left = (ev.clientX - x0) + "px"; p.style.top = Math.max(0, ev.clientY - y0) + "px"; }; const up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); }; addEventListener("pointermove", mv); addEventListener("pointerup", up); }); }
+  }
+  new MutationObserver(() => { const p = document.getElementById("ed189p"); if (p) decorate(p); }).observe(document.body, { childList: true });
+  css(`#ed189p{width:min(25rem,94vw)!important;max-height:calc(100dvh - 16px)!important;overflow:auto!important;font-size:.95rem;gap:.5rem!important;padding:.9rem!important;resize:both}
+  #ed189p label.xs{font-size:.88rem;display:flex;flex-direction:column;gap:.2rem}#ed189p label.xs:has(input[type=checkbox]){flex-direction:row;align-items:center}
+  #ed189p select,#ed189p textarea,#ed189p input.in{width:100%;font-size:.95rem;padding:.4rem .5rem;border-radius:.6rem;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+  #ed189p .f204{position:sticky;bottom:-.9rem;background:var(--card);border-top:1px solid var(--line);margin:0 -.9rem -.9rem;padding:.6rem .9rem .8rem;display:flex;flex-direction:column;gap:.4rem}
+  #ed189p .f204 .btn{padding:.35rem .7rem;font-size:.88rem}
+  body.ed189 .e189hid{opacity:.45!important;outline:2px dashed #ef4444!important;position:relative}
+  body.ed189 .e189hid::after{content:"🗑️ ${"مخفية — دوس عليها عشان ترجّعها"}";position:absolute;inset-block-start:-.7rem;inset-inline-start:.3rem;background:#ef4444;color:#fff;font-size:.7rem;padding:.05rem .4rem;border-radius:999px;white-space:nowrap;z-index:6;opacity:1}
+  .uiledit.uilhid{outline:2px dashed #ef4444!important;opacity:.5}
+  .uiledit.uilhid::after{content:"🗑️ مخفية — دوس 👁 ترجّعها";position:absolute;top:-.7rem;inset-inline-end:2rem;background:#ef4444;color:#fff;font-size:.68rem;padding:.05rem .4rem;border-radius:999px;z-index:6}
+  `);
+
+  /* ======================= 3) أدوات الترتيب: للعنصر اللي تختاره بس ======================= */
+  document.addEventListener("click", e => { if (!state.uiEdit) return; if (e.target.closest(".uiltb,.uilmv")) return; const k = e.target.closest(".uiledit"); if (!k) return; const was = k.classList.contains("uilsel"); document.querySelectorAll(".uilsel").forEach(x => x.classList.remove("uilsel")); if (!was) { k.classList.add("uilsel"); e.preventDefault(); e.stopPropagation(); } }, true);
+  css(`.uiledit>.uiltb,.uiledit>.uilmv{opacity:0;pointer-events:none;transition:opacity .15s}
+  .uiledit.uilsel>.uiltb,.uiledit.uilsel>.uilmv,.uiledit:hover:not(:has(.uiledit:hover))>.uiltb,.uiledit:hover:not(:has(.uiledit:hover))>.uilmv{opacity:1;pointer-events:auto}
+  .uiledit{outline:1px dashed transparent!important}.uiledit:hover:not(:has(.uiledit:hover)),.uiledit.uilsel{outline:2px dashed var(--accent)!important}
+  @media (hover:none){.uiledit:hover>.uiltb,.uiledit:hover>.uilmv{opacity:0;pointer-events:none}.uiledit.uilsel>.uiltb,.uiledit.uilsel>.uilmv{opacity:1;pointer-events:auto}}`);
+
+  /* ======================= 4) الفم واللسان مع الحركات ======================= */
+  window.mo204 = { play(btn) { const c = btn.closest(".vw173c"); const ss = c ? [...c.querySelectorAll("svg.m189")] : []; const on = btn.dataset.on === "1"; ss.forEach(s => { try { if (on) { s.pauseAnimations(); s.setCurrentTime(.8); } else { s.setCurrentTime(0); s.unpauseAnimations(); } } catch (e) {} }); btn.dataset.on = on ? "0" : "1"; btn.textContent = on ? "▶ " + T("شغّل الحركة", "Play") : "⏸ " + T("وقّف الحركة", "Stop"); },
+    all(btn) { const on = btn.dataset.on === "1"; document.querySelectorAll(".mo204").forEach(b => { if ((b.dataset.on === "1") === on) mo204.play(b); }); btn.dataset.on = on ? "0" : "1"; btn.textContent = on ? "▶ " + T("شغّل الكل", "Play all") : "⏸ " + T("وقّف الكل", "Stop all"); } };
+  function mouths() {
+    if (state.route !== "vow172") return; const cards = [...document.querySelectorAll(".vw173c")]; if (!cards.length) return;
+    cards.forEach(c => { const p = c.querySelector(".vw173p"); if (!p || !p.querySelector("svg.m189") || p.__v204) return; p.__v204 = 1;
+      p.querySelectorAll("svg.m189 > text").forEach(t => { if (/^(👄|👅)/.test(t.textContent.trim())) t.remove(); });
+      p.querySelectorAll("svg.m189").forEach(s => { try { s.pauseAnimations(); s.setCurrentTime(.8); } catch (e) {} });
+      p.insertAdjacentHTML("afterend", `<button class="btn btn-o mo204" data-on="0" onclick="mo204.play(this)">▶ ${T("شغّل الحركة", "Play")}</button>`); });
+    const first = cards[0]; const host = first.parentElement; if (host && !host.previousElementSibling?.classList?.contains("lg204")) host.insertAdjacentHTML("beforebegin", `<div class="lg204"><span>👄 ${T("الدايرة: الفم من قدّام", "Circle: mouth from the front")}</span><span>👅 ${T("الرسمة التانية: اللسان من الجنب", "Second drawing: tongue from the side")}</span><button class="btn btn-p" data-on="0" onclick="mo204.all(this)">▶ ${T("شغّل الكل", "Play all")}</button></div>`);
+  }
+  new MutationObserver(() => { clearTimeout(window.__m204); window.__m204 = setTimeout(mouths, 120); }).observe(document.body, { childList: true, subtree: true });
+  css(`html body .vw173p svg.m189,html body .vw173p svg.m189 *{animation:none!important}
+  .mo204{margin:.3rem 0 .5rem;padding:.25rem .8rem;font-size:.85rem}
+  .lg204{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.55rem .9rem;margin:.6rem 0;font-weight:600;font-size:.92rem}`);
+
+  /* ======================= 5) «عرض بالتفصيل» وأي زرار بيعيد الرسم: يفضل مكانه ======================= */
+  let ANC = null;
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#app [onclick]"); if (!b) { ANC = null; return; } const oc = b.getAttribute("onclick") || ""; if (!/render\(\)/.test(oc) || /go16|navigate|location/.test(oc)) { ANC = null; return; } ANC = { oc, top: b.getBoundingClientRect().top, at: Date.now() }; }, true);
+  const keep = () => { if (!ANC || Date.now() - ANC.at > 1500) return; let el = null; try { el = [...document.querySelectorAll("#app [onclick]")].find(x => x.getAttribute("onclick") === ANC.oc); } catch (e) {} if (!el) return; const d = el.getBoundingClientRect().top - ANC.top; if (Math.abs(d) > 2) window.scrollBy({ top: d, behavior: "instant" }); };
+  const app0 = document.getElementById("app"); if (app0) new MutationObserver(() => { if (!ANC) return; requestAnimationFrame(() => { keep(); setTimeout(keep, 60); setTimeout(() => { keep(); ANC = null; }, 200); }); }).observe(app0, { childList: true });
 })();
 
 // بدء التشغيل
