@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v182";
+const UI_VERSION = "2026-11-16-v183";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -25961,6 +25961,240 @@ Between lessons, the platform keeps you going:
   /* ======================= ربط ======================= */
   const _os = ownerSettings; ownerSettings = function () { const h = _os.apply(this, arguments); return payCard() + h; };
   const _r = render; render = function () { const r = _r.apply(this, arguments); try { proofLinks(); } catch (e) {} return r; };
+})();
+
+/* ================= v183: «مركز التحكم» — مقاس الصفحة حسب الشاشة + أي حاجة طالعة من الجنب تزق الكلام بنعومة بدل ما تغطيه + طريقة فتح أي أيقونة (صفحة/نافذة/جنب/تحت/تقسيم/شاشة كاملة/تاب) + كليك يمين وشمال + خريطة الموقع (كل أيقونة وصفحة فين بالظبط، إخفاء/تسمية/رجوع) + سجل تغييرات ورجوع لأي حاجة + التحكم في كتب المكتبة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner" && !state.preview;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  ["control183", "sitemap183", "history183"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const EMB = /[?&]embed=1/.test(location.search);
+
+  /* ======================= 0) سجل كل التغييرات + رجوع ======================= */
+  const NOHIST = new Set(["hist183"]);
+  const _ss = saveSetting16; saveSetting16 = async function (k, v) {
+    try { if (!NOHIST.has(k)) { const prev = (state.settings || {})[k]; const s = JSON.stringify(prev === undefined ? null : prev); if (s.length < 30000 && s !== JSON.stringify(v)) { const H = (setv("hist183", []) || []).slice(-39); H.push({ k, at: new Date().toISOString(), prev: prev === undefined ? null : prev }); const { data } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle(); const d = Object.assign({}, (data && data.data) || {}); d.hist183 = H; d[k] = v; await sb.from("site_settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() }); } } } catch (e) { console.warn(e); }
+    return _ss.apply(this, arguments);
+  };
+  const NAMES = { layout180: ["تصميم الموقع", "Site layout"], fit183: ["مقاس الصفحة", "Page fit"], ctl183: ["خريطة الموقع (إخفاء/أسامي/فتح)", "Site map (hide/rename/open)"], clicks183: ["الكليك يمين وشمال", "Left/right click"], lib183: ["المكتبة", "Library"], pay182: ["الدفع", "Payments"], aahv182: ["صوتك في الآهات", "Your aah voice"], icons179: ["أيقوناتك", "Your icons"], free178: ["الرسم بالورقة والقلم", "Pen & paper edits"], trans178: ["الانتقالات", "Transitions"], fonts178: ["الخطوط", "Fonts"], colors175: ["الألوان", "Colours"], plans: ["الباقات", "Plans"], mqcustom179: ["المقامات الجديدة", "Custom maqamat"], azureOn180: ["Azure", "Azure"] };
+  window.h183Restore = async i => { const H = setv("hist183", []) || []; const h = H[i]; if (!h || !confirm(T("ترجّع الإعداد ده للي كان عليه قبل التغيير ده؟ (التغيير الحالي هيتحفظ في السجل برضه)", "Restore this setting to what it was before this change? (The current value is kept in the history too)"))) return; await saveSetting16(h.k, h.prev); toast("↩ ✅"); };
+  function historyPage() {
+    const H = (setv("hist183", []) || []).map((h, i) => [h, i]).reverse();
+    return pageWrap("↩", T("سجل التغييرات والرجوع", "Change history & undo"), T("كل تغيير في إعدادات الموقع بيتحفظ هنا — تقدر ترجع لأي حاجة قبلها بدوسة، ومفيش حاجة بتتمسح.", "Every site-setting change is kept here — restore any earlier state with one tap; nothing is lost."),
+      `<div class="card">${H.length ? H.map(([h, i]) => `<div class="kv" style="align-items:center"><span><b>${esc(T(...(NAMES[h.k] || [h.k, h.k])))}</b> <span class="xs muted">${new Date(h.at).toLocaleString(AR() ? "ar-EG" : "en-GB", { dateStyle: "medium", timeStyle: "short" })}</span></span><button class="btn btn-o" style="padding:.15rem .6rem" onclick="h183Restore(${i})">↩ ${T("رجّع للي قبلها", "Restore previous")}</button></div>`).join("") : `<p class="muted">${T("لسه مفيش تغييرات.", "No changes yet.")}</p>`}</div>`, 900);
+  }
+
+  /* ======================= 1) مقاس الصفحة + الزق بدل التغطية ======================= */
+  const FIT = () => Object.assign({ maxw: "1200", pad: 16, push: "auto", side: "start", smooth: 280, sticky: "on", scale: "on", gap: "normal" }, setv("fit183", {}) || {}, (() => { try { return JSON.parse(localStorage.getItem("itqan_fit183") || "null") || {}; } catch (e) { return {}; } })());
+  function applyFit() {
+    const f = FIT(); let st = document.getElementById("fit183v"); if (!st) { st = document.createElement("style"); st.id = "fit183v"; document.head.appendChild(st); }
+    const mw = f.maxw === "full" ? "none" : f.maxw === "auto" ? "min(96vw, 1800px)" : (f.maxw + "px");
+    st.textContent = `#app .wrap{max-width:${mw}!important;padding-inline:${+f.pad || 16}px!important;transition:padding ${f.smooth}ms ease}
+      body{transition:padding ${f.smooth}ms ease}
+      ${f.scale === "on" ? "html{font-size:clamp(14.5px, 0.55vw + 12px, 17.5px)}" : ""}
+      ${f.gap === "tight" ? "#app .sec{padding-block:1.4rem!important}" : f.gap === "airy" ? "#app .sec{padding-block:4.5rem!important}" : ""}
+      ${f.sticky === "off" ? ".hdr{position:relative!important}" : f.sticky === "hide" ? ".hdr{transition:transform .3s}.hdr.hide183{transform:translateY(-100%)}" : ""}
+      ${f.side === "end" ? "#ctl113{inset-inline-start:auto!important;inset-inline-end:1rem!important}" : ""}`;
+  }
+  /* أي عنصر ثابت طالع من الجنب ولو هيغطي الكلام: نزق الصفحة ناحية التانية */
+  let pushT = null; function pushCheck() {
+    const f = FIT(); if (f.push === "overlay" || EMB) { document.body.style.paddingLeft = document.body.style.paddingRight = ""; return; }
+    const main = document.querySelector("#app .sec .wrap, #app .wrap"); if (!main) return; const mr = main.getBoundingClientRect(); let L = 0, R = 0;
+    document.querySelectorAll("body > *:not(#app):not(script):not(style)").forEach(el => {
+      const cs = getComputedStyle(el); if (cs.position !== "fixed" || cs.display === "none" || cs.visibility === "hidden" || +cs.opacity < .1) return; const r = el.getBoundingClientRect(); if (r.width < 60 || r.height < 120 || r.width > innerWidth * .6) return;
+      if (r.left < 4 && (f.push === "always" || r.right > mr.left + 2)) L = Math.max(L, r.width + 8);
+      if (r.right > innerWidth - 4 && (f.push === "always" || r.left < mr.right - 2)) R = Math.max(R, r.width + 8);
+    });
+    if (innerWidth < 700) { L = 0; R = 0; }
+    document.body.style.paddingLeft = L ? L + "px" : ""; document.body.style.paddingRight = R ? R + "px" : "";
+  }
+  const sched = () => { clearTimeout(pushT); pushT = setTimeout(pushCheck, 120); };
+  try { new MutationObserver(sched).observe(document.body, { childList: true, attributes: true, attributeFilter: ["style", "class"], subtree: false }); } catch (e) {} addEventListener("resize", sched);
+  let lastY = 0; addEventListener("scroll", () => { if (FIT().sticky !== "hide") return; const h = document.querySelector(".hdr"); if (!h) return; const y = scrollY; h.classList.toggle("hide183", y > lastY && y > 160); lastY = y; }, { passive: true });
+
+  /* ======================= 2) خريطة الموقع: كل أيقونة وصفحة فين بالظبط ======================= */
+  const CTL = () => Object.assign({ hide: {}, ren: {}, open: {}, land: {}, def: "page", deflan: "content" }, setv("ctl183", {}) || {});
+  const tgtOf = js => { js = String(js || ""); let m = js.match(/go16\(\s*'([^']+)'(?:\s*,\s*'([^']*)')?/); if (m) return m[1] + (m[2] ? "/" + m[2] : ""); m = js.match(/navigate\(\s*'([^']+)'/); if (m) return m[1]; m = js.match(/libGo\(\s*'([^']+)'/); if (m) return "library/" + m[1]; return null; };
+  const elTarget = el => { const a = el.getAttribute && (el.getAttribute("onclick") || el.getAttribute("data-js") || ""); let t = tgtOf(a); if (!t && el.tagName === "A") { const h = el.getAttribute("href") || ""; const m = h.match(/^#\/?([^?]+)/); if (m && m[1].length > 1) t = m[1]; } return t; };
+  const PLACE = [["header .nav, .hdr nav", ["القائمة اللي فوق", "Top menu"]], [".hdr .tools", ["أزرار الهيدر", "Header buttons"]], [".hdr", ["شريط الأقسام تحت الهيدر", "Section chips bar"]], ["footer, .foot", ["الفوتر", "Footer"]], [".msgrid", ["مساحتي", "My space"]], [".dr147, .ly180", ["الرئيسية: عايز تتعلم إيه", "Home: what to learn"]], [".bnav", ["الشريط اللي تحت (موبايل)", "Bottom bar (phone)"]], ["#nv180", ["القائمة الجانبية", "Side menu"]], [".ic179x", ["أيقوناتك", "Your icons"]], ["section", ["جوه الصفحة", "Inside the page"]]];
+  const placeOf = el => { for (const [sel, n] of PLACE) if (el.closest(sel)) return n; return ["مكان تاني", "Elsewhere"]; };
+  function scanHtml(html, where) { const d = document.createElement("div"); d.innerHTML = html; const out = []; d.querySelectorAll("[onclick],a[href^='#'],[data-js]").forEach(el => { const t = elTarget(el); if (!t) return; out.push({ t, n: (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 60), w: where || placeOf(el) }); }); return out; }
+  function inventory() {
+    const all = []; const add = (arr, w) => arr.forEach(x => all.push(Object.assign(x, w ? { w } : {})));
+    try { add(scanHtml(renderHeader())); } catch (e) {} try { add(scanHtml(renderFooter())); } catch (e) {}
+    try { add(scanHtml(doors147Html()), ["الرئيسية: عايز تتعلم إيه", "Home: what to learn"]); } catch (e) {}
+    try { DOMAINS().forEach(d => (d.tools || []).forEach(t => { const x = tgtOf(t[2]); if (x) all.push({ t: x, n: String(t[1] || ""), ic: t[0], w: [`قسم: ${(d.t || {}).ar || d.k}`, `Section: ${(d.t || {}).en || d.k}`] }); })); } catch (e) {}
+    try { if (state.auth && state.auth.user) add(scanHtml(renderMySpace())); } catch (e) {}
+    try { add(scanHtml(document.getElementById("app").innerHTML)); } catch (e) {}
+    try { document.querySelectorAll("body > nav, .bnav, #nv180, .ic179fl, .ic179dk").forEach(n => add(scanHtml(n.outerHTML))); } catch (e) {}
+    const by = new Map(); all.forEach(x => { if (!x.t || /^(home)$/.test(x.t) && false) return; if (!by.has(x.t)) by.set(x.t, { t: x.t, names: new Set(), ic: x.ic || "", places: new Set() }); const e = by.get(x.t); if (x.n) e.names.add(x.n); if (x.ic && !e.ic) e.ic = x.ic; e.places.add(T(x.w[0], x.w[1])); });
+    PAGES16.forEach(p => { if (!by.has(p)) by.set(p, { t: p, names: new Set(), ic: "", places: new Set() }); });
+    return [...by.values()].sort((a, b) => b.places.size - a.places.size);
+  }
+  const OPENM = { page: ["صفحة جديدة (العادي)", "New page (default)"], modal: ["نافذة في نص الشاشة", "Centre window"], right: ["لوحة من اليمين", "Panel from the right"], left: ["لوحة من الشمال", "Panel from the left"], bottom: ["تطلع من تحت", "Bottom sheet"], split: ["تقسيم: نص ونص", "Split view"], full: ["شاشة كاملة فوق الصفحة", "Full-screen overlay"], pop: ["فقاعة صغيرة جنب الأيقونة", "Small popover by the icon"], tab: ["تاب جديد", "New tab"] };
+  const LAND = { top: ["أول الصفحة", "Top of page"], content: ["أول المحتوى (بعد الهيدر)", "Start of content"], last: ["آخر مكان كنت فيه", "Where I last was"] };
+  window.c183 = {
+    hide: async (t, where) => { const c = CTL(); const h = Object.assign({}, c.hide); const cur = h[t] || []; h[t] = where === "*" ? ["*"] : cur.includes(where) ? cur.filter(x => x !== where) : cur.concat([where]); if (!h[t].length) delete h[t]; await saveSetting16("ctl183", Object.assign({}, c, { hide: h })); },
+    show: async t => { const c = CTL(); const h = Object.assign({}, c.hide); delete h[t]; await saveSetting16("ctl183", Object.assign({}, c, { hide: h })); },
+    ren: async t => { const c = CTL(); const r = Object.assign({}, c.ren); const cur = r[t] || {}; const ar = prompt(T("الاسم بالعربي (فاضي = الأصلي)", "Arabic name (empty = original)"), cur.ar || ""); if (ar === null) return; const en = prompt("English name (empty = original)", cur.en || ""); if (en === null) return; const ic = prompt(T("الأيقونة/الإيموجي (فاضي = الأصلية)", "Icon/emoji (empty = original)"), cur.ic || ""); if (ic === null) return; if (!ar && !en && !ic) delete r[t]; else r[t] = { ar, en, ic }; await saveSetting16("ctl183", Object.assign({}, c, { ren: r })); },
+    open: async (t, m) => { const c = CTL(); const o = Object.assign({}, c.open); if (m === "def") delete o[t]; else o[t] = m; await saveSetting16("ctl183", Object.assign({}, c, { open: o })); },
+    land: async (t, m) => { const c = CTL(); const o = Object.assign({}, c.land); if (m === "def") delete o[t]; else o[t] = m; await saveSetting16("ctl183", Object.assign({}, c, { land: o })); },
+    def: async (k, v) => { await saveSetting16("ctl183", Object.assign({}, CTL(), { [k]: v })); }
+  };
+  function sitemapPage() {
+    if (!own()) return pageWrap("🗺️", "—", "", `<div class="card muted">—</div>`);
+    const c = CTL(); const inv = inventory(); const q = (state.sm183q || "").trim();
+    const L = inv.filter(x => !q || x.t.includes(q) || [...x.names].some(n => n.includes(q)));
+    const selO = (t, cur) => `<select class="in" style="width:auto;font-size:.8rem" onchange="c183.open('${esc(t)}',this.value)"><option value="def">${T("زي الافتراضي", "Default")}</option>${Object.entries(OPENM).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+    const selL = (t, cur) => `<select class="in" style="width:auto;font-size:.8rem" onchange="c183.land('${esc(t)}',this.value)"><option value="def">${T("زي الافتراضي", "Default")}</option>${Object.entries(LAND).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+    return pageWrap("🗺️", T("خريطة الموقع الكاملة", "Complete site map"), T(`${inv.length} صفحة وأيقونة — كل واحدة موجودة فين بالظبط، وتقدر تخفيها من مكان واحد أو من كل الموقع، وتغيّر اسمها وأيقونتها وطريقة فتحها. الإخفاء مش مسح: «👁 رجّع» بيرجّعها زي ما كانت.`, `${inv.length} pages and icons — exactly where each one appears; hide it in one place or everywhere, rename it, change its icon and how it opens. Hiding isn't deleting: “👁 Restore” brings it back.`),
+      `<div class="card sm183top"><input class="in" placeholder="🔎 ${T("دوّر باسم أو صفحة", "Search by name or page")}" value="${esc(q)}" oninput="state.sm183q=this.value;clearTimeout(window.__sm183);window.__sm183=setTimeout(render,350)">
+        <label class="sm">${T("الفتح الافتراضي لكل الأيقونات", "Default opening for all icons")} <select class="in" style="width:auto" onchange="c183.def('def',this.value)">${Object.entries(OPENM).map(([k, v]) => `<option value="${k}" ${c.def === k ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select></label>
+        <label class="sm">${T("الصفحة تفتح على", "Pages open at")} <select class="in" style="width:auto" onchange="c183.def('deflan',this.value)">${Object.entries(LAND).map(([k, v]) => `<option value="${k}" ${c.deflan === k ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select></label>
+        <button class="btn btn-o" onclick="go16('history183')">↩ ${T("سجل التغييرات", "Change history")}</button></div>
+      <div class="sm183">${L.map(x => { const hid = c.hide[x.t] || []; const all = hid.includes("*"); const r = c.ren[x.t]; return `<div class="card sm183r ${all ? "off" : ""}"><div class="sm183h"><span class="sm183i">${esc((r && r.ic) || x.ic || "📄")}</span><div><b>${esc((r && (AR() ? r.ar : r.en)) || [...x.names][0] || x.t)}</b> <code class="xs">${esc(x.t)}</code>${r ? ` <span class="badge">${T("اسم جديد", "renamed")}</span>` : ""}${all ? ` <span class="badge" style="background:#dc2626;color:#fff">${T("مخفية من كل الموقع", "hidden everywhere")}</span>` : ""}<div class="xs muted">${x.places.size ? T(`موجودة في ${x.places.size} ${x.places.size > 1 ? "أماكن" : "مكان"}:`, `In ${x.places.size} place(s):`) : T("مش ظاهرة في أي مكان دلوقتي (صفحة بلينك بس)", "Not shown anywhere now (link-only page)")}</div></div></div>
+        <div class="sm183p">${[...x.places].map(p => `<button class="${hid.includes(p) || all ? "off" : ""}" title="${T("دوسة = إخفاء/إظهار في المكان ده بس", "Tap = hide/show here only")}" onclick="c183.hide('${esc(x.t)}','${esc(p).replace(/'/g, "")}')">${hid.includes(p) || all ? "🙈" : "👁"} ${esc(p)}</button>`).join("")}</div>
+        <div class="row" style="gap:.3rem;flex-wrap:wrap;align-items:center"><button class="btn btn-o sm183b" onclick="go179('#/${esc(x.t)}')">↗ ${T("افتح", "Open")}</button><button class="btn btn-o sm183b" onclick="c183.ren('${esc(x.t)}')">✏️ ${T("الاسم والأيقونة", "Name & icon")}</button>${hid.length ? `<button class="btn btn-p sm183b" onclick="c183.show('${esc(x.t)}')">👁 ${T("رجّعها في كل مكان", "Restore everywhere")}</button>` : `<button class="btn btn-o sm183b" onclick="if(confirm('${T("تخفيها من كل الموقع؟ (تقدر ترجّعها من هنا)", "Hide it everywhere? (restorable here)")}'))c183.hide('${esc(x.t)}','*')">🙈 ${T("اخفيها من كل الموقع", "Hide everywhere")}</button>`}<span class="xs">${T("تفتح:", "Opens:")}</span>${selO(x.t, c.open[x.t])}<span class="xs">${T("على:", "At:")}</span>${selL(x.t, c.land[x.t])}</div></div>`; }).join("")}</div>`, 1300);
+  }
+  /* تطبيق الإخفاء والأسامي على أي حاجة في الصفحة */
+  function applyCtl(root) {
+    const c = CTL(); const hasH = Object.keys(c.hide).length, hasR = Object.keys(c.ren).length; if (!hasH && !hasR) return;
+    (root || document).querySelectorAll("[onclick],a[href^='#'],[data-js]").forEach(el => {
+      if (el.closest(".sm183, #edBar, #ctl113p")) return; const t = elTarget(el); if (!t) return;
+      const h = c.hide[t]; if (h && (h.includes("*") || h.includes(T(...placeOf(el))))) { if (own()) { el.classList.add("hid183"); el.title = T("مخفية عن الزوار — رجّعها من خريطة الموقع", "Hidden from visitors — restore it from the site map"); } else el.style.display = "none"; }
+      const r = c.ren[t]; if (r && !el.__ren183) { el.__ren183 = 1; const nm = AR() ? r.ar : r.en; const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); const tx = []; while (w.nextNode()) if (w.currentNode.data.trim()) tx.push(w.currentNode); if (nm && tx.length) { const big = tx.sort((a, b) => b.data.trim().length - a.data.trim().length)[0]; big.data = big.data.replace(big.data.trim(), nm); } if (r.ic && tx.length > 1) { const ic = tx.find(n => n.data.trim().length <= 3 && /\p{Extended_Pictographic}/u.test(n.data)); if (ic) ic.data = r.ic; } }
+    });
+  }
+  /* صفحة مخفية من كل الموقع: الزوار ميقدروش يدخلوها */
+  const _rr = render;
+  /* ======================= 3) طريقة الفتح + الكليك يمين وشمال ======================= */
+  const CK = () => Object.assign({ left: "open", right: "menu", long: "menu", dbl: "none", mid: "tab" }, setv("clicks183", {}) || {});
+  let ovEl = null; function closeOv() { if (!ovEl) return; ovEl.classList.add("out"); const e = ovEl; ovEl = null; setTimeout(() => e.remove(), 260); }
+  window.ov183Close = closeOv;
+  function openIn(mode, t, anchor) {
+    if (mode === "tab") return window.open(location.origin + "/#/" + t, "_blank", "noopener");
+    closeOv(); const url = "/?embed=1#/" + t; const d = document.createElement("div"); d.className = "ov183 ov183-" + mode;
+    d.innerHTML = `<div class="ov183bg" onclick="ov183Close()"></div><div class="ov183w"><div class="ov183bar"><button onclick="ov183Close()">✕</button><span>${esc(t)}</span><button title="${T("افتحها صفحة كاملة", "Open as a full page")}" onclick="ov183Close();go179('#/${esc(t)}')">⤢</button><button title="${T("تاب جديد", "New tab")}" onclick="window.open('/#/${esc(t)}','_blank','noopener')">↗</button></div><iframe src="${url}" loading="eager"></iframe></div>`;
+    if (mode === "pop" && anchor) { const r = anchor.getBoundingClientRect(); const w = d.querySelector(".ov183w"); const W = Math.min(420, innerWidth - 20); w.style.width = W + "px"; w.style.left = Math.max(10, Math.min(innerWidth - W - 10, r.left + r.width / 2 - W / 2)) + "px"; w.style.top = Math.min(innerHeight - 440, r.bottom + 8) + "px"; }
+    document.body.appendChild(d); ovEl = d; requestAnimationFrame(() => d.classList.add("in")); if (mode === "split" || mode === "right" || mode === "left") sched();
+  }
+  addEventListener("keydown", e => { if (e.key === "Escape") closeOv(); });
+  function doAction(act, el, t, ev) {
+    if (act === "none") return; if (act === "default") return "pass";
+    if (act === "open") { const m = CTL().open[t] || CTL().def; if (m && m !== "page") { openIn(m, t, el); return; } return "pass"; }
+    if (["modal", "right", "left", "bottom", "split", "full", "pop", "tab"].includes(act)) { openIn(act, t, el); return; }
+    if (act === "menu") return ctxMenu(el, t, ev);
+    if (act === "fav") return fav(t, el);
+    if (act === "copy") { navigator.clipboard.writeText(location.origin + "/#/" + t).then(() => toast("📋 ✓")); return; }
+  }
+  function fav(t, el) { let L = []; try { L = JSON.parse(localStorage.getItem("itqan_fav183") || "[]"); } catch (e) {} const n = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); if (L.some(x => x.t === t)) { L = L.filter(x => x.t !== t); toast(T("اتشالت من المفضلة", "Removed from favourites")); } else { L.unshift({ t, n }); toast("⭐ " + T("اتضافت للمفضلة — هتلاقيها في مساحتك", "Added to favourites — find it in your space")); } try { localStorage.setItem("itqan_fav183", JSON.stringify(L.slice(0, 30))); } catch (e) {} }
+  function ctxMenu(el, t, ev) {
+    document.getElementById("cm183") && document.getElementById("cm183").remove(); const m = document.createElement("div"); m.id = "cm183";
+    const it = [["↗", T("افتح", "Open"), "page"], ["🪟", T("افتح في نافذة", "Open in a window"), "modal"], ["▥", T("افتح في لوحة جانبية", "Open in a side panel"), document.dir === "rtl" ? "left" : "right"], ["◫", T("تقسيم الشاشة", "Split screen"), "split"], ["⬆", T("تطلع من تحت", "Bottom sheet"), "bottom"], ["🗗", T("تاب جديد", "New tab"), "tab"], ["⭐", T("ضيف/شيل من المفضلة", "Add/remove favourite"), "fav"], ["🔗", T("انسخ اللينك", "Copy link"), "copy"]];
+    if (own()) it.push(["🙈", T("اخفيها من المكان ده", "Hide from this place"), "hidehere"], ["✏️", T("غيّر اسمها وأيقونتها", "Rename / change icon"), "ren"], ["🗺️", T("شوفها في خريطة الموقع", "Find in site map"), "map"]);
+    m.innerHTML = it.map(([i, n, a]) => `<button data-a="${a}"><span>${i}</span>${esc(n)}</button>`).join(""); document.body.appendChild(m);
+    const x = Math.min(innerWidth - m.offsetWidth - 8, ev.clientX), y = Math.min(innerHeight - m.offsetHeight - 8, ev.clientY); m.style.left = Math.max(8, x) + "px"; m.style.top = Math.max(8, y) + "px";
+    m.onclick = e => { const b = e.target.closest("button"); if (!b) return; const a = b.dataset.a; m.remove(); if (a === "page") go179("#/" + t); else if (a === "hidehere") c183.hide(t, T(...placeOf(el))); else if (a === "ren") c183.ren(t); else if (a === "map") { state.sm183q = t.split("/")[0]; go16("sitemap183"); } else doAction(a, el, t, e); };
+    setTimeout(() => addEventListener("click", function f(e) { if (!m.contains(e.target)) { m.remove(); removeEventListener("click", f, true); } }, true), 0);
+  }
+  const navEl = e => { const el = e.target.closest && e.target.closest("[onclick],a[href^='#'],[data-js]"); if (!el || el.closest("#cm183,.ov183,#edBar,#ctl113p,input,textarea,select,.hdr .tools button:not([onclick*='navigate']):not([onclick*='go16'])")) return null; const t = elTarget(el); return t ? [el, t] : null; };
+  document.addEventListener("click", e => { if (EMB || e.button !== 0 || e.ctrlKey || e.metaKey || state.edMode || document.body.classList.contains("ed178on")) return; const x = navEl(e); if (!x) return; const r = doAction(CK().left, x[0], x[1], e); if (r !== "pass") { e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener("contextmenu", e => { if (EMB) return; const x = navEl(e); if (!x) return; const a = CK().right; if (a === "default") return; e.preventDefault(); doAction(a, x[0], x[1], e); }, true);
+  document.addEventListener("dblclick", e => { if (EMB) return; const x = navEl(e); if (!x) return; const a = CK().dbl; if (a === "none") return; e.preventDefault(); doAction(a, x[0], x[1], e); }, true);
+  document.addEventListener("auxclick", e => { if (EMB || e.button !== 1) return; const x = navEl(e); if (!x) return; e.preventDefault(); doAction(CK().mid, x[0], x[1], e); }, true);
+  let lp = null; document.addEventListener("touchstart", e => { if (EMB) return; const x = navEl(e); if (!x) return; const a = CK().long; if (a === "none") return; const t0 = e.touches[0]; lp = setTimeout(() => { lp = "done"; doAction(a, x[0], x[1], { clientX: t0.clientX, clientY: t0.clientY }); }, 520); }, { passive: true });
+  ["touchend", "touchmove"].forEach(n => document.addEventListener(n, e => { if (lp === "done") { if (n === "touchend") e.preventDefault(); lp = null; return; } clearTimeout(lp); lp = null; }, { passive: false }));
+  /* الصفحة تفتح على فين */
+  const posMem = {}; const _gs = window.scrollTo; addEventListener("hashchange", () => { const c = CTL(); const t = (location.hash.match(/^#\/?([^?]+)/) || [])[1] || "home"; const m = c.land[t] || c.land[t.split("/")[0]] || c.deflan; setTimeout(() => { if (m === "top") _gs.call(window, { top: 0, behavior: "instant" }); else if (m === "last" && posMem[t] != null) _gs.call(window, { top: posMem[t], behavior: "instant" }); }, 60); });
+  addEventListener("scroll", () => { const t = (location.hash.match(/^#\/?([^?]+)/) || [])[1] || "home"; posMem[t] = scrollY; }, { passive: true });
+
+  /* ======================= 4) صفحة «مركز التحكم» ======================= */
+  const ACTS = { open: ["يفتح (بالطريقة اللي محددها)", "Open (your chosen way)"], menu: ["قائمة اختيارات", "Options menu"], modal: ["نافذة", "Window"], right: ["لوحة يمين", "Right panel"], left: ["لوحة شمال", "Left panel"], bottom: ["من تحت", "Bottom sheet"], split: ["تقسيم", "Split"], full: ["شاشة كاملة", "Full screen"], pop: ["فقاعة", "Popover"], tab: ["تاب جديد", "New tab"], fav: ["مفضلة", "Favourite"], copy: ["نسخ اللينك", "Copy link"], default: ["زي المتصفح العادي", "Browser default"], none: ["ولا حاجة", "Nothing"] };
+  window.f183 = async (k, v, local) => { if (local || !own()) { const o = Object.assign({}, (() => { try { return JSON.parse(localStorage.getItem("itqan_fit183") || "{}"); } catch (e) { return {}; } })(), { [k]: v }); try { localStorage.setItem("itqan_fit183", JSON.stringify(o)); } catch (e) {} applyFit(); sched(); render(); return; } try { localStorage.removeItem("itqan_fit183"); } catch (e) {} await saveSetting16("fit183", Object.assign({}, setv("fit183", {}) || {}, { [k]: v })); applyFit(); sched(); };
+  window.k183 = async (k, v) => { await saveSetting16("clicks183", Object.assign({}, CK(), { [k]: v })); };
+  function controlPage() {
+    const f = FIT(), c = CK(); const sel = (fn, k, D, cur) => `<select class="in" style="width:auto" onchange="${fn}('${k}',this.value)">${Object.entries(D).map(([x, v]) => `<option value="${x}" ${String(cur) === x ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+    const row = (lab, html) => `<div class="kv" style="align-items:center;flex-wrap:wrap;gap:.4rem"><span class="sm">${lab}</span><span>${html}</span></div>`;
+    return pageWrap("🎛️", T("مركز التحكم", "Control centre"), T("كل حاجة في الموقع بتتغيّر من هنا — وكل تغيير بيتحفظ في السجل وتقدر ترجعله.", "Everything on the site changes from here — every change is logged and can be undone."),
+      `<div class="c183g">
+      <div class="card"><h3>📐 ${T("مقاس الصفحة حسب الشاشة", "Page fit by screen")}</h3>
+        ${row(T("عرض المحتوى", "Content width"), sel("f183", "maxw", { full: ["الشاشة كلها", "Full screen"], auto: ["أوتوماتيك حسب الشاشة (96%)", "Auto (96% of screen)"], "1600": ["عريض 1600", "Wide 1600"], "1400": ["1400", "1400"], "1200": ["1200 (الحالي)", "1200 (current)"], "1000": ["ضيّق 1000", "Narrow 1000"], "820": ["عمود قراءة 820", "Reading column 820"] }, f.maxw))}
+        ${row(T("الهامش على الجناب", "Side padding"), `<input type="range" min="4" max="64" value="${f.pad}" onchange="f183('pad',+this.value)"> ${f.pad}px`)}
+        ${row(T("المسافات بين الأقسام", "Space between sections"), sel("f183", "gap", { tight: ["قليلة", "Tight"], normal: ["عادية", "Normal"], airy: ["واسعة", "Airy"] }, f.gap))}
+        ${row(T("حجم الخط يكبر ويصغر مع الشاشة", "Text scales with screen"), sel("f183", "scale", { on: ["أيوه", "Yes"], off: ["لا", "No"] }, f.scale))}
+        ${row(T("الهيدر", "Header"), sel("f183", "sticky", { on: ["ثابت فوق", "Sticky"], hide: ["يختفي وانت نازل ويرجع وانت طالع", "Hides on scroll down"], off: ["مش ثابت", "Not sticky"] }, f.sticky))}
+        ${row(T("لما حاجة تطلع من الجنب", "When something slides in from the side"), sel("f183", "push", { auto: ["تزق الكلام بس لو هتغطيه (الأحسن)", "Push text only if it would cover it (best)"], always: ["تزق الصفحة دايمًا", "Always push the page"], overlay: ["تيجي فوق الكلام", "Overlay on top"] }, f.push))}
+        ${row(T("سرعة الزق", "Push speed"), sel("f183", "smooth", { "0": ["فوري", "Instant"], "180": ["سريع", "Fast"], "280": ["ناعم", "Smooth"], "450": ["بطيء", "Slow"] }, String(f.smooth)))}
+        ${row(T("زرار «اللغة والعرض» في", "“Language & display” button on"), sel("f183", "side", { start: ["نفس الجنب (الحالي)", "Same side (current)"], end: ["الجنب التاني", "Other side"] }, f.side))}</div>
+      <div class="card"><h3>🖱️ ${T("الكليك يمين وشمال وكل حاجة", "Left/right click and more")}</h3>
+        ${row(T("كليك شمال (العادي)", "Left click"), sel("k183", "left", ACTS, c.left))}${row(T("كليك يمين", "Right click"), sel("k183", "right", ACTS, c.right))}${row(T("دبل كليك", "Double click"), sel("k183", "dbl", ACTS, c.dbl))}${row(T("زرار الماوس اللي في النص", "Middle mouse button"), sel("k183", "mid", ACTS, c.mid))}${row(T("ضغطة طويلة (موبايل)", "Long press (phone)"), sel("k183", "long", ACTS, c.long))}
+        <p class="xs muted">${T("ده بيشتغل على أي أيقونة أو زرار بيفتح صفحة في الموقع كله.", "Works on any icon or button that opens a page, site-wide.")}</p></div>
+      <div class="card"><h3>🧭 ${T("الأيقونات والصفحات", "Icons & pages")}</h3><p class="sm">${T("كل أيقونة وصفحة: موجودة فين بالظبط، اخفيها من مكان أو من الموقع كله، غيّر اسمها وأيقونتها وطريقة فتحها وتفتح على فين.", "Every icon and page: exactly where it is, hide it here or everywhere, rename it, change its icon, how it opens and where it lands.")}</p><button class="btn btn-p" onclick="go16('sitemap183')">🗺️ ${T("خريطة الموقع الكاملة", "Complete site map")}</button></div>
+      <div class="card"><h3>🎨 ${T("التصميم وترتيب الأيقونات", "Layout & icon arrangement")}</h3><button class="btn btn-p" onclick="go16('layouts180')">🎨 ${T("مكتبة التصميمات", "Layout library")}</button> <button class="btn btn-o" onclick="go16('lib178')">📚 ${T("مكتبة الخطوط والانتقالات", "Fonts & transitions library")}</button></div>
+      <div class="card"><h3>↩ ${T("الرجوع", "Undo")}</h3><p class="sm">${T("مفيش حاجة بتتمسح — كل تغيير ليه رجوع.", "Nothing is lost — every change can be undone.")}</p><button class="btn btn-p" onclick="go16('history183')">↩ ${T("سجل التغييرات", "Change history")}</button></div></div>`, 1300);
+  }
+
+  /* ======================= 5) التحكم في كتب المكتبة ======================= */
+  const LB = () => Object.assign({ hide: {}, ren: {}, cat: {}, sec: {} }, setv("lib183", {}) || {});
+  window.lb183 = {
+    hide: async id => { const c = LB(); const h = Object.assign({}, c.hide); h[id] = !h[id]; await saveSetting16("lib183", Object.assign({}, c, { hide: h })); },
+    ren: async (id, ar0, en0) => { const c = LB(); const r = Object.assign({}, c.ren); const ar = prompt(T("الاسم بالعربي", "Arabic title"), (r[id] || {}).ar || ar0 || ""); if (ar === null) return; const en = prompt("English title", (r[id] || {}).en || en0 || ""); if (en === null) return; r[id] = { ar, en }; await saveSetting16("lib183", Object.assign({}, c, { ren: r })); },
+    sec: async (id, s, e, title) => { const c = LB(); const m = Object.assign({}, c.sec); const L = (m[id] || []).slice(); const i = L.findIndex(x => x[0] === s); if (i >= 0) L.splice(i, 1); else L.push([s, e, title]); m[id] = L; await saveSetting16("lib183", Object.assign({}, c, { sec: m })); }
+  };
+  const CATS = { all: ["الكل", "All"], quran: ["القرآن", "Quran"], tafsir: ["التفسير", "Tafsir"], aqida: ["العقيدة", "Creed"], fiqh: ["الفقه", "Fiqh"], hadith: ["الحديث", "Hadith"], seerah: ["السيرة", "Seerah"], kids: ["للأطفال", "Kids"], arabic: ["العربي", "Arabic"], adhkar: ["الأذكار", "Adhkar"], other: ["تاني", "Other"] };
+  function libDecorate() {
+    if (state.route === "pdfbooks181") {
+      const c = LB(); const g = document.querySelector(".pb181g"); if (!g || g.__d183) return; g.__d183 = 1;
+      let lib = null; try { lib = JSON.parse(JSON.stringify(window.__lib181 || {})); } catch (e) {}
+      const cat = state.lb183c || "all"; g.insertAdjacentHTML("beforebegin", `<div class="motabs">${Object.entries(CATS).map(([k, v]) => `<button class="${cat === k ? "on" : ""}" onclick="state.lb183c='${k}';render()">${esc(T(v[0], v[1]))}</button>`).join("")}</div>`);
+      g.querySelectorAll(".pb181c").forEach(b => { const id = ((b.getAttribute("onclick") || "").match(/go16\('pdf181','([^'/]+)/) || [])[1]; if (!id) return; const meta = (window.__lib181b || {})[id] || {}; const bc = c.cat[id] || meta.cat || "other";
+        if (cat !== "all" && bc !== cat) { b.style.display = "none"; return; }
+        if (c.hide[id]) { if (!own()) { b.style.display = "none"; return; } b.classList.add("hid183"); }
+        const r = c.ren[id]; if (r && (AR() ? r.ar : r.en)) { const t = b.querySelector("b"); if (t) t.textContent = AR() ? r.ar : r.en; }
+        if (own()) b.insertAdjacentHTML("afterend", `<div class="lb183o"><button class="btn btn-o" onclick="lb183.hide('${id}')">${c.hide[id] ? "👁 " + T("رجّعه", "Show") : "🙈 " + T("اخفيه", "Hide")}</button><button class="btn btn-o" onclick="lb183.ren('${id}','${esc((meta.t || {}).ar || "").replace(/'/g, "")}','${esc((meta.t || {}).en || "").replace(/'/g, "")}')">✏️</button><select class="in" style="width:auto;font-size:.8rem" onchange="(async()=>{const c=Object.assign({cat:{}},setv('lib183',{})||{});c.cat=Object.assign({},c.cat,{'${id}':this.value});await saveSetting16('lib183',c)})()">${Object.entries(CATS).filter(([k]) => k !== "all").map(([k, v]) => `<option value="${k}" ${bc === k ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select></div>`); });
+    }
+    if (state.route === "pdf181") {
+      const id = String(state.pageArg || "").split("/")[0]; const c = LB(); const L = c.sec[id] || [];
+      document.querySelectorAll("#pv181l a").forEach(a => { if (a.__d183) return; a.__d183 = 1; const m = (a.getAttribute("onclick") || "").match(/pv181\.go\((\d+)\)/); if (!m) return; const s = +m[1]; const hid = L.find(x => x[0] === s); if (hid) { if (!own()) { a.style.display = "none"; return; } a.classList.add("hid183"); } if (own()) { const b = document.createElement("button"); b.className = "lb183s"; b.textContent = hid ? "👁" : "🙈"; b.title = hid ? T("رجّع القسم ده", "Show this section") : T("اخفي القسم ده عن الطلاب", "Hide this section from students"); b.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); const all = [...document.querySelectorAll("#pv181l a")].map(x => +((x.getAttribute("onclick") || "").match(/pv181\.go\((\d+)\)/) || [])[1]).filter(Boolean).sort((p, q) => p - q); const nx = all.find(p => p > s) || 999999; lb183.sec(id, s, nx - 1, a.textContent.slice(0, 50)); }; a.appendChild(b); } });
+      if (!own()) { const inp = document.getElementById("pv181p"); const p = inp ? +inp.value : 0; const blk = L.find(x => p >= x[0] && p <= x[1]); const w = document.getElementById("pv181w"); if (w) w.classList.toggle("blk183", !!blk); }
+    }
+  }
+  /* نحفظ بيانات الكتب عشان التصنيف */
+  const _f = window.fetch; window.fetch = function (u) { const p = _f.apply(this, arguments); try { if (String(u).includes("/library/books/library.json")) p.then(r => r.clone().json()).then(j => { window.__lib181 = j; window.__lib181b = {}; (j.books || []).forEach(b => window.__lib181b[b.id] = b); }).catch(() => {}); } catch (e) {} return p; };
+
+  /* ======================= ربط ======================= */
+  _rr; const _r2 = render; render = function () {
+    const rt = state.route; const c = CTL(); const tg = rt + (state.pageArg ? "/" + state.pageArg : "");
+    if (!own() && ((c.hide[rt] || []).includes("*") || (c.hide[tg] || []).includes("*")) && rt !== "home") { show(pageWrap("🙈", T("الصفحة دي مش متاحة دلوقتي", "This page isn't available right now"), "", `<div class="card"><button class="btn btn-p" onclick="navigate('home')">🏠 ${T("الرئيسية", "Home")}</button></div>`)); return; }
+    if (rt === "control183" || rt === "sitemap183" || rt === "history183") { let b; try { b = rt === "control183" ? controlPage() : rt === "sitemap183" ? sitemapPage() : historyPage(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); }
+    else _r2.apply(this, arguments);
+    try { applyFit(); applyCtl(document); libDecorate(); sched(); favTiles(); } catch (e) { console.warn(e); }
+  };
+  try { new MutationObserver(() => { clearTimeout(window.__c183); window.__c183 = setTimeout(() => { try { applyCtl(document); libDecorate(); } catch (e) {} }, 200); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
+  function favTiles() { if (state.route !== "myspace") return; const g = document.querySelector(".msgrid"); if (!g || g.__f183) return; g.__f183 = 1; let L = []; try { L = JSON.parse(localStorage.getItem("itqan_fav183") || "[]"); } catch (e) {} L.slice(0, 8).reverse().forEach(x => g.insertAdjacentHTML("afterbegin", `<button class="mstile" style="--c:#f59e0b" onclick="go179('#/${esc(x.t)}')"><span>⭐</span><b>${esc(x.n || x.t)}</b></button>`)); }
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!own()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#0ea5e9;outline:2px solid #0ea5e9" onclick="go16('control183')"><span>🎛️</span><b>${T("مركز التحكم", "Control centre")}</b></button><button class="mstile" style="--c:#0ea5e9" onclick="go16('sitemap183')"><span>🗺️</span><b>${T("خريطة الموقع", "Site map")}</b></button>`); };
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="border:2px solid #0ea5e9;margin-bottom:1rem"><h3>🎛️ ${T("مركز التحكم", "Control centre")}</h3><p class="sm">${T("مقاس الصفحة، الزق بدل التغطية، الكليك يمين وشمال، طريقة فتح كل أيقونة، خريطة الموقع، والرجوع لأي تغيير.", "Page fit, push instead of cover, left/right click, how each icon opens, the site map and undo for any change.")}</p><button class="btn btn-p" onclick="go16('control183')">🎛️ ${T("افتح", "Open")}</button> <button class="btn btn-o" onclick="go16('sitemap183')">🗺️</button> <button class="btn btn-o" onclick="go16('history183')">↩</button></div>` + _os.apply(this, arguments); };
+  const m = location.hash.match(/^#\/(control183|sitemap183|history183)/); if (m) state.route = m[1];
+  css(`.hid183{opacity:.4!important;outline:2px dashed #dc2626!important;outline-offset:2px}
+  .c183g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(26rem,100%),1fr));gap:1rem}.c183g .kv{border-bottom:1px dashed var(--line);padding:.35rem 0}
+  .sm183top{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;position:sticky;top:4.5rem;z-index:5}.sm183top .in:first-child{flex:1;min-width:12rem}
+  .sm183{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30rem,100%),1fr));gap:.6rem;margin-top:.8rem}.sm183r.off{opacity:.6;border-color:#dc2626}.sm183h{display:flex;gap:.6rem;align-items:flex-start}.sm183i{font-size:1.7rem}.sm183p{display:flex;flex-wrap:wrap;gap:.25rem;margin:.4rem 0}.sm183p button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:.15rem .55rem;font:inherit;font-size:.75rem;cursor:pointer}.sm183p button.off{background:#fee2e2;color:#991b1b;border-color:#fca5a5;text-decoration:line-through}.sm183b{padding:.15rem .55rem!important;font-size:.8rem}
+  #cm183{position:fixed;z-index:30000;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.25);padding:.3rem;min-width:13rem;animation:cm183 .14s ease}@keyframes cm183{from{opacity:0;transform:scale(.96)}}#cm183 button{display:flex;gap:.6rem;align-items:center;width:100%;border:0;background:none;color:var(--fg);font:inherit;font-size:.88rem;padding:.45rem .6rem;border-radius:8px;cursor:pointer;text-align:start}#cm183 button:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}#cm183 span{width:1.3rem;text-align:center}
+  .ov183{position:fixed;inset:0;z-index:25000;pointer-events:none}.ov183bg{position:absolute;inset:0;background:rgba(0,0,0,.35);opacity:0;transition:opacity .25s;pointer-events:auto}.ov183.in .ov183bg{opacity:1}.ov183-split .ov183bg,.ov183-pop .ov183bg{background:transparent}
+  .ov183w{position:absolute;background:var(--card);box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s}.ov183w iframe{flex:1;border:0;width:100%;background:var(--bg)}
+  .ov183bar{display:flex;gap:.3rem;align-items:center;padding:.35rem .5rem;border-bottom:1px solid var(--line)}.ov183bar span{flex:1;font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}.ov183bar button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;width:2rem;height:2rem;cursor:pointer}
+  .ov183-modal .ov183w{inset:6vh 6vw;border-radius:18px;transform:scale(.94);opacity:0}.ov183-modal.in .ov183w{transform:none;opacity:1}
+  .ov183-full .ov183w{inset:0;transform:translateY(4%);opacity:0}.ov183-full.in .ov183w{transform:none;opacity:1}
+  .ov183-right .ov183w{top:0;bottom:0;right:0;width:min(560px,92vw);transform:translateX(100%)}.ov183-left .ov183w{top:0;bottom:0;left:0;width:min(560px,92vw);transform:translateX(-100%)}.ov183-right.in .ov183w,.ov183-left.in .ov183w{transform:none}
+  .ov183-split .ov183w{top:0;bottom:0;${document.dir === "rtl" ? "left" : "right"}:0;width:50vw;transform:translateX(${document.dir === "rtl" ? "-" : ""}100%)}.ov183-split.in .ov183w{transform:none}@media(max-width:800px){.ov183-split .ov183w{width:100vw}}
+  .ov183-bottom .ov183w{left:0;right:0;bottom:0;height:min(80vh,720px);border-radius:20px 20px 0 0;transform:translateY(100%)}.ov183-bottom.in .ov183w{transform:none}
+  .ov183-pop .ov183w{height:420px;border-radius:16px;transform:scale(.9);opacity:0;transform-origin:top center}.ov183-pop.in .ov183w{transform:none;opacity:1}
+  .ov183.out .ov183w{opacity:0;transform:scale(.97)}.ov183.out .ov183bg{opacity:0}
+  .lb183o{display:flex;gap:.25rem;margin-top:-.4rem;margin-bottom:.4rem;flex-wrap:wrap}.lb183o .btn{padding:.1rem .5rem}.lb183s{border:0;background:none;cursor:pointer;margin-inline-start:.3rem}
+  .blk183 canvas{filter:blur(18px)}.blk183::after{content:"🙈";position:absolute;font-size:3rem}#pv181w{position:relative;align-items:center}`);
+  applyFit(); setTimeout(sched, 800);
 })();
 
 // بدء التشغيل
