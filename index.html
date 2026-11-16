@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v174";
+const UI_VERSION = "2026-11-16-v175";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23978,6 +23978,7 @@ body.ed158 .hv169{opacity:.4!important}
 })();
 
 
+
 /* ================= v171: وضع الصيانة + استوديو التصميم (12 تصميم مستوحى من أكبر مواقع المحتوى + اخلط من أي تصميم + حركة ناعمة) + أفكار الهيكل كاختيارات تتفعّل ================= */
 (function () {
   const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e);
@@ -24024,6 +24025,7 @@ body.ed158 .hv169{opacity:.4!important}
     ["📜", "مخطوطة رملية", "Sand manuscript", { pal: "sand", font: "naskh", card: "flat", dens: "comfy", mot: "soft", wid: "narrow" }, T("طابع تراثي للكتب والمتون.", "A classic feel for books and texts.")],
     ["📊", "محتوى كثيف منظّم (روح BBC)", "Dense & organised (BBC spirit)", { pal: "notion", font: "cairo", card: "sharp", dens: "dense", mot: "none", wid: "full" }, T("أكبر كمية محتوى في الشاشة من غير لخبطة.", "The most content per screen without clutter.")]
   ];
+  window.SK171 = { PAL, FONT, CARD, DENS, MOT, WID, SKINS };
   const SK = () => Object.assign({ pal: "original", font: "original", card: "original", dens: "original", mot: "soft", wid: "original" }, setv("skin171", {}) || {}, state.sk171 || {});
   function skApply() {
     const s = SK(); const st = document.getElementById("sk171"); let css = "";
@@ -24053,7 +24055,7 @@ body.ed158 .hv169{opacity:.4!important}
         <div style="background:${p.bg};padding:.6rem;font-family:${f}"><div style="height:10px;border-radius:4px;background:${p.accent};width:55%;margin-bottom:.4rem"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem">${[0, 1].map(() => `<div style="background:${p.card};border:${c.b.replace("var(--line)", p.line)};border-radius:${c.r};box-shadow:${c.sh};padding:.4rem;color:${p.fg};font-size:.7rem">▬▬▬<br><span style="opacity:.6">▬▬</span></div>`).join("")}</div></div>
         <div style="padding:.5rem .6rem"><b style="font-size:.85rem">${s[0]} ${esc(T(s[1], s[2]))}</b><div class="xs muted">${esc(s[4])}</div></div></button>`; }).join("");
     return `<div class="card" style="margin-top:1rem"><h3>🎨 ${T("استوديو التصميم — اختار، عاين، واخلط", "Design studio — pick, preview, mix")}</h3>
-      <p class="sm">${T("12 تصميم مستوحى من أشهر المواقع اللي فيها محتوى ضخم ومتنظّم. دوس على أي واحد تعاينه على الموقع كله (عندك بس). وتقدر تاخد اللون من تصميم، والخط من تاني، والكروت من تالت.", "12 designs inspired by famous content-heavy, well-organised sites. Tap one to preview it across the whole site (only you). Take colours from one, fonts from another, cards from a third.")}</p>
+      <p class="sm">${T(SKINS.length + " تصميم مستوحى من أشهر المواقع اللي فيها محتوى ضخم ومتنظّم. دوس على أي واحد تعاينه على الموقع كله (عندك بس). وتقدر تاخد اللون من تصميم، والخط من تاني، والكروت من تالت.", SKINS.length + " designs inspired by famous content-heavy, well-organised sites. Tap one to preview it across the whole site (only you). Take colours from one, fonts from another, cards from a third.")}</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(14rem,100%),1fr));gap:.6rem">${cards}</div>
       <h4 style="margin:1rem 0 .3rem">🧩 ${T("اخلط بحرية", "Mix freely")}</h4>
       <div class="row" style="gap:.5rem;flex-wrap:wrap;align-items:center"><label class="sm">🎨 ${T("الألوان", "Colours")} ${sw("pal", PAL)}</label><label class="sm">🔤 ${T("الخط", "Font")} ${sw("font", FONT)}</label><label class="sm">🃏 ${T("الكروت", "Cards")} ${sw("card", CARD)}</label><label class="sm">↔️ ${T("المسافات", "Spacing")} ${sw("dens", DENS)}</label><label class="sm">✨ ${T("الحركة", "Motion")} ${sw("mot", MOT)}</label><label class="sm">📐 ${T("العرض", "Width")} ${sw("wid", WID)}</label></div>
@@ -24579,6 +24581,234 @@ body.ed158 .hv169{opacity:.4!important}
   #ctl113{padding:.42rem .5rem!important;inset-inline-start:.35rem!important;opacity:.82;transition:opacity .2s,padding .2s}html body #ctl113 span{display:none!important}
   @media (hover:hover){#ctl113:hover{opacity:1;padding:.45rem .85rem!important}html body #ctl113:hover span{display:inline!important}}
   </style>`);
+})();
+
+/* ================= v175: تصميمات كتير جدًا (كل تصميم بيتطبّق كامل: ألوان + خط + كروت + هيدر + أزرار + خلفية + لوجو) + خلط حر + ٣٦ لوجو + «امسك أي لون»: دوس على أي حتة وغيّر لونها هي بس + لوحة كل ألوان الموقع ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner";
+  const S = window.SK171; if (!S) return;
+  document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;800&family=El+Messiri:wght@400;600;700&family=Changa:wght@400;600;700&family=Alexandria:wght@400;600;700&family=Markazi+Text:wght@400;600;700&family=Reem+Kufi:wght@400;600;700&family=Baloo+Bhaijaan+2:wght@400;600;800&family=Lateef:wght@400;700&family=Harmattan:wght@400;700&family=Mada:wght@400;600;800&family=Amiri:wght@400;700&display=swap"><style id="sk175"></style>`);
+
+  /* ---------- 1) ألوان وخطوط وكروت جديدة ---------- */
+  const P = (n1, n2, accent, bg, card, fg, muted, line, gold) => [n1, n2, { accent, bg, card, fg, muted, line, gold }];
+  Object.assign(S.PAL, {
+    azhar: P("أزهري عتيق", "Azhar heritage", "#7a4b1e", "#f8f2e7", "#fffbf3", "#2e2116", "#7b6a58", "#e9dcc6", "#b8862b"),
+    madinah: P("أخضر المدينة", "Madinah green", "#14532d", "#f2f7f3", "#ffffff", "#0f2417", "#4d6355", "#d8e8dc", "#c9a227"),
+    makkah: P("أسود وذهبي (الكسوة)", "Black & gold", "#a67c00", "#faf8f3", "#ffffff", "#141414", "#5d5a52", "#ece6d6", "#a67c00"),
+    ocean: P("أزرق البحر", "Ocean", "#0369a1", "#f0f8fc", "#ffffff", "#0c2333", "#4b6474", "#d5e8f2", "#f59e0b"),
+    rose: P("وردي ناعم", "Soft rose", "#be185d", "#fff6f9", "#ffffff", "#3b0d22", "#7d5466", "#f6dbe6", "#d97706"),
+    lavender: P("لافندر", "Lavender", "#6d28d9", "#f8f6ff", "#ffffff", "#24154a", "#655c7d", "#e6e0f8", "#d4a017"),
+    mint: P("نعناعي", "Mint", "#0d9488", "#f2fbf9", "#ffffff", "#0f2a27", "#4e6a66", "#d3eeea", "#e3a008"),
+    coral: P("مرجاني", "Coral", "#e11d48", "#fff7f5", "#ffffff", "#3a1416", "#7b5759", "#f8dcd8", "#f59e0b"),
+    olive: P("زيتوني", "Olive", "#4d7c0f", "#f7f9f0", "#ffffff", "#1f2a10", "#5c6649", "#e2e8cf", "#b45309"),
+    indigo: P("نيلي عميق", "Deep indigo", "#3730a3", "#f5f6fd", "#ffffff", "#141838", "#555b7c", "#dfe1f5", "#eab308"),
+    teal_dark: P("ليلي زمرّدي", "Emerald night", "#34d399", "#06201c", "#0b2e28", "#e6f6f1", "#9cc2b8", "#16453d", "#fcd34d"),
+    navy_dark: P("كحلي ليلي", "Navy night", "#60a5fa", "#0a1428", "#101d38", "#e7eefb", "#97a8c7", "#1e2f52", "#fbbf24"),
+    coffee: P("قهوة", "Coffee", "#6f4e37", "#f7f3ef", "#fffdfa", "#2b1d14", "#76665a", "#e8ddd2", "#c08a3e"),
+    sky: P("سماوي", "Sky", "#0284c7", "#f4fbff", "#ffffff", "#0b2534", "#557083", "#d9eef9", "#f97316"),
+    sunrise: P("شروق", "Sunrise", "#ea580c", "#fffaf3", "#ffffff", "#33180a", "#7c5f4c", "#f9e3cf", "#ca8a04"),
+    plum: P("برقوقي", "Plum", "#86198f", "#fdf6fe", "#ffffff", "#2f0b33", "#715a74", "#f1dcf3", "#d97706"),
+    slate: P("رمادي احترافي", "Professional slate", "#334155", "#f8fafc", "#ffffff", "#0f172a", "#64748b", "#e2e8f0", "#ca8a04"),
+    gold_lux: P("ذهبي فاخر", "Golden luxe", "#b8860b", "#fffdf6", "#ffffff", "#2a2108", "#6e6447", "#efe6c8", "#b8860b"),
+    forest: P("غابة", "Forest", "#166534", "#f3f8f2", "#ffffff", "#132a17", "#526b55", "#d7e9d5", "#a16207"),
+    turquoise: P("فيروزي (زليج)", "Turquoise tile", "#0e7490", "#f0fafb", "#ffffff", "#0b2a31", "#4d6d74", "#cfe9ee", "#c2410c"),
+    sepia: P("سيبيا كتب قديمة", "Sepia books", "#7c5a3a", "#f4ecdf", "#faf4ea", "#33261a", "#7a6a59", "#e3d5c0", "#9a6b2e"),
+    mono: P("أبيض وأسود", "Monochrome", "#111111", "#ffffff", "#ffffff", "#111111", "#666666", "#e5e5e5", "#111111"),
+    candy: P("أطفال ملوّن", "Kids candy", "#f43f5e", "#fffbeb", "#ffffff", "#3b2a10", "#7a6a4d", "#fde68a", "#8b5cf6"),
+    pastel: P("باستيل", "Pastel", "#8b5cf6", "#fbfaff", "#ffffff", "#2c2742", "#706a86", "#ebe7fb", "#f59e0b"),
+    desert_night: P("ليل الصحرا", "Desert night", "#f59e0b", "#1a1410", "#241c15", "#f6ede2", "#bfae99", "#3a2e23", "#fbbf24"),
+    royal: P("ملكي", "Royal", "#1e3a8a", "#f7f8fc", "#ffffff", "#111a33", "#56607d", "#e0e5f3", "#b8860b"),
+    cedar: P("أرز", "Cedar", "#065f46", "#f6faf8", "#ffffff", "#0d2b22", "#4f6b60", "#d9ebe3", "#b45309"),
+    nile: P("النيل", "Nile", "#0e7490", "#f4fbfa", "#ffffff", "#0f2a2c", "#506c6e", "#d4ecec", "#ca8a04")
+  });
+  Object.assign(S.FONT, {
+    almarai: ["المراعي", "Almarai", "'Almarai',system-ui"], kufi: ["كوفي حديث", "Noto Kufi", "'Noto Kufi Arabic',system-ui"], messiri: ["المسيري", "El Messiri", "'El Messiri',system-ui"], changa: ["شانجا", "Changa", "'Changa',system-ui"],
+    alexandria: ["الإسكندرية", "Alexandria", "'Alexandria',system-ui"], markazi: ["مركزي (قراءة)", "Markazi (reading)", "'Markazi Text',serif"], reem: ["ريم كوفي", "Reem Kufi", "'Reem Kufi',system-ui"], baloo: ["بالو (للأطفال)", "Baloo (kids)", "'Baloo Bhaijaan 2',system-ui"],
+    lateef: ["لطيف", "Lateef", "'Lateef',serif"], harmattan: ["هرمتان", "Harmattan", "'Harmattan',system-ui"], mada: ["مدى", "Mada", "'Mada',system-ui"], amiri: ["أميري (كلاسيكي)", "Amiri (classic)", "'Amiri',serif"]
+  });
+  Object.assign(S.CARD, {
+    glass: ["زجاجي", "Glass", { r: "18px", sh: "0 8px 30px rgba(15,23,42,.08)", b: "1px solid color-mix(in srgb,var(--line) 70%,transparent)" }],
+    outline: ["حدود ملوّنة", "Accent outline", { r: "14px", sh: "none", b: "1.5px solid color-mix(in srgb,var(--accent) 35%,var(--line))" }],
+    paper: ["ورقة", "Paper", { r: "4px", sh: "0 1px 0 var(--line),0 2px 6px rgba(0,0,0,.05)", b: "1px solid var(--line)" }],
+    neo: ["بارز (نيومورفيزم)", "Soft emboss", { r: "22px", sh: "6px 6px 14px rgba(0,0,0,.07),-6px -6px 14px rgba(255,255,255,.8)", b: "0" }],
+    brutal: ["جريء بظل صلب", "Bold solid shadow", { r: "12px", sh: "4px 4px 0 var(--fg)", b: "2px solid var(--fg)" }]
+  });
+  const HDR = { original: ["الأصلي", "Original"], glass: ["زجاجي شفاف", "Frosted glass"], solid: ["لون أساسي", "Solid accent"], dark: ["غامق", "Dark"], minimal: ["بسيط بخط تحت", "Minimal underline"], gradient: ["متدرّج", "Gradient"], gold: ["إطار ذهبي", "Gold trim"] };
+  const BTN = { original: ["الأصلي", "Original"], pill: ["مدوّر كامل", "Pill"], square: ["مربّع حاد", "Square"], gradient: ["متدرّج", "Gradient"], shadow: ["بظل", "Raised"], outline: ["حدود بس", "Outline"] };
+  const BG = () => ((window.DESIGN157 || {}).BG || []).reduce((o, b) => (o[b.id] = [b.n[0], b.n[1]], o), {});
+  const LG = () => ((window.DESIGN157 || {}).LOGO || []).reduce((o, b) => (o[b.id] = [b.n[0], b.n[1]], o), {});
+
+  /* ---------- 2) لوجوهات جديدة (٢٤) ---------- */
+  const LOGO = (window.DESIGN157 || {}).LOGO;
+  if (LOGO) {
+    const A = (t, s) => `<text x='32' y='${s || 42}' text-anchor='middle' font-size='${t.length > 1 ? 15 : 24}' font-family='Amiri,serif' fill='#fff'>${t}</text>`;
+    const add = (id, a, e, svg) => { if (!LOGO.some(x => x.id === id)) LOGO.push({ id, n: [a, e], svg }); };
+    add("circle", "دايرة بسيطة", "Simple circle", c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/>${A("إ")}</svg>`);
+    add("ring", "حلقة ذهبية", "Golden ring", c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/><circle cx='32' cy='32' r='23' fill='none' stroke='#d4a017' stroke-width='2'/>${A("إ")}</svg>`);
+    add("word", "كلمة «إتقان»", "Wordmark إتقان", c => `<svg viewBox='0 0 64 64'><rect x='2' y='12' width='60' height='40' rx='12' fill='${c}'/>${A("إتقان", 38)}</svg>`);
+    add("shield", "درع", "Shield", c => `<svg viewBox='0 0 64 64'><path d='M32 4l24 8v18c0 16-11 26-24 30C19 56 8 46 8 30V12z' fill='${c}'/>${A("إ", 40)}</svg>`);
+    add("drop", "قطرة", "Drop", c => `<svg viewBox='0 0 64 64'><path d='M32 4C20 22 12 32 12 42a20 20 0 0 0 40 0c0-10-8-20-20-38z' fill='${c}'/>${A("إ", 48)}</svg>`);
+    add("diamond", "معيّن", "Diamond", c => `<svg viewBox='0 0 64 64'><path d='M32 2l30 30-30 30L2 32z' fill='${c}'/>${A("إ", 41)}</svg>`);
+    add("oct", "مثمّن", "Octagon", c => `<svg viewBox='0 0 64 64'><path d='M22 4h20l18 18v20L42 60H22L4 42V22z' fill='${c}'/>${A("إ")}</svg>`);
+    add("rosette", "وردة إسلامية", "Islamic rosette", c => `<svg viewBox='0 0 64 64'><g fill='${c}'>${[0, 30, 60].map(r => `<rect x='14' y='14' width='36' height='36' rx='4' transform='rotate(${r} 32 32)'/>`).join("")}</g><circle cx='32' cy='32' r='13' fill='#fff' opacity='.18'/>${A("إ", 41)}</svg>`);
+    add("dome", "قبّة", "Dome", c => `<svg viewBox='0 0 64 64'><path d='M10 54V40a22 22 0 0 1 44 0v14z' fill='${c}'/><path d='M32 6v10' stroke='${c}' stroke-width='3'/><path d='M32 6a5 5 0 1 0 4 8 4 4 0 1 1-4-8z' fill='#d4a017'/><rect x='6' y='52' width='52' height='6' rx='2' fill='${c}'/>${A("إ", 49)}</svg>`);
+    add("minaret", "مئذنة", "Minaret", c => `<svg viewBox='0 0 64 64'><rect x='26' y='18' width='12' height='40' fill='${c}'/><path d='M24 18h16l-8-12z' fill='${c}'/><rect x='22' y='30' width='20' height='4' fill='#d4a017'/><rect x='18' y='56' width='28' height='4' rx='2' fill='${c}'/></svg>`);
+    add("openbook", "مصحف مفتوح", "Open mushaf", c => `<svg viewBox='0 0 64 64'><path d='M4 16c10-4 20-4 28 2c8-6 18-6 28-2v38c-10-4-20-4-28 2c-8-6-18-6-28-2z' fill='${c}'/><path d='M32 18v38' stroke='#fde68a' stroke-width='2'/><path d='M10 26h16M10 32h16M38 26h16M38 32h16' stroke='#fff' stroke-opacity='.6' stroke-width='2'/></svg>`);
+    add("pen", "قلم الخط", "Calligraphy pen", c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='14' fill='${c}'/><path d='M18 46L42 14l6 4-24 32-8 2z' fill='#fde68a'/><path d='M14 52c10-2 22-2 36 0' stroke='#fff' stroke-width='2' fill='none'/></svg>`);
+    add("tasbih", "سبحة", "Prayer beads", c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/>${Array.from({ length: 12 }, (_, i) => { const a = i / 12 * Math.PI * 2; return `<circle cx='${32 + 17 * Math.cos(a)}' cy='${32 + 17 * Math.sin(a)}' r='3.2' fill='#fde68a'/>`; }).join("")}</svg>`);
+    add("mic", "مايك التلاوة", "Recitation mic", c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/><rect x='26' y='14' width='12' height='22' rx='6' fill='#fff'/><path d='M20 32a12 12 0 0 0 24 0M32 44v6M24 50h16' stroke='#fde68a' stroke-width='3' fill='none' stroke-linecap='round'/></svg>`);
+    add("crescentstar", "هلال ونجمة", "Crescent & star", c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='16' fill='${c}'/><path d='M36 14a18 18 0 1 0 12 30 15 15 0 1 1-12-30z' fill='#fde68a'/><path d='M46 18l1.5 4 4 .3-3 2.6 1 4-3.5-2.2-3.5 2.2 1-4-3-2.6 4-.3z' fill='#fff'/></svg>`);
+    add("kufisq", "كوفي مربّع «إ»", "Square kufic", c => `<svg viewBox='0 0 64 64'><rect x='4' y='4' width='56' height='56' rx='6' fill='${c}'/><path d='M16 16h32v6H22v20h26v6H16z' fill='#fff'/><rect x='28' y='28' width='14' height='6' fill='#fde68a'/></svg>`);
+    add("leaf", "ورقة", "Leaf", c => `<svg viewBox='0 0 64 64'><path d='M8 56C8 26 26 8 56 8c0 30-18 48-48 48z' fill='${c}'/><path d='M14 50L46 18' stroke='#fde68a' stroke-width='2.5'/></svg>`);
+    add("sun", "شمس", "Sun", c => `<svg viewBox='0 0 64 64'><g stroke='${c}' stroke-width='4' stroke-linecap='round'>${Array.from({ length: 8 }, (_, i) => `<path d='M32 4v8' transform='rotate(${i * 45} 32 32)'/>`).join("")}</g><circle cx='32' cy='32' r='16' fill='${c}'/>${A("إ", 39)}</svg>`);
+    add("squircle", "مربّع ناعم متدرّج", "Gradient squircle", c => `<svg viewBox='0 0 64 64'><defs><linearGradient id='g175' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c}'/><stop offset='1' stop-color='#d4a017'/></linearGradient></defs><rect x='4' y='4' width='56' height='56' rx='20' fill='url(#g175)'/>${A("إ")}</svg>`);
+    add("outline", "خطوط بس", "Outline only", c => `<svg viewBox='0 0 64 64'><rect x='6' y='6' width='52' height='52' rx='16' fill='none' stroke='${c}' stroke-width='4'/><text x='32' y='43' text-anchor='middle' font-size='26' font-family='Amiri,serif' fill='${c}'>إ</text></svg>`);
+    add("double", "مربّعين متداخلين", "Interlocked squares", c => `<svg viewBox='0 0 64 64'><rect x='6' y='6' width='36' height='36' rx='8' fill='${c}'/><rect x='22' y='22' width='36' height='36' rx='8' fill='#d4a017' opacity='.85'/>${A("إ", 46)}</svg>`);
+    add("arabesque", "أرابيسك", "Arabesque", c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='${c}'/><g fill='none' stroke='#fde68a' stroke-width='1.6'>${[0, 45, 90, 135].map(r => `<ellipse cx='32' cy='32' rx='22' ry='8' transform='rotate(${r} 32 32)'/>`).join("")}</g></svg>`);
+    add("bounce", "قفزة لطيفة ✨", "Gentle bounce ✨", c => `<svg viewBox='0 0 64 64'><g class='a-pulse'><rect x='6' y='6' width='52' height='52' rx='18' fill='${c}'/></g>${A("إ")}</svg>`);
+    add("orbit", "نجم يدور حوالين ✨", "Orbiting star ✨", c => `<svg viewBox='0 0 64 64'><circle cx='32' cy='32' r='20' fill='${c}'/>${A("إ", 40)}<g class='a-spin'><circle cx='32' cy='4' r='3.5' fill='#d4a017'/></g></svg>`);
+  }
+
+  /* ---------- 3) تصميمات كاملة جديدة (ألوان + خط + كروت + هيدر + أزرار + خلفية + لوجو) ---------- */
+  const K = (ic, a, e, o, da, de) => [ic, a, e, Object.assign({ dens: "comfy", mot: "soft", wid: "wide", hdr: "original", btn: "original" }, o), T(da, de)];
+  const NEW = [
+    K("🕋", "الحرم (أسود وذهبي)", "Haram (black & gold)", { pal: "makkah", font: "messiri", card: "float", hdr: "gold", btn: "pill", bg: "goldara", logo: "rosette" }, "هيبة وفخامة بلمسة ذهبية.", "Dignified and luxurious with a gold touch."),
+    K("🌴", "المدينة المنوّرة", "Madinah", { pal: "madinah", font: "almarai", card: "soft", hdr: "solid", btn: "pill", bg: "domes", logo: "dome" }, "أخضر هادي وقباب.", "Calm green and domes."),
+    K("🏛️", "الأزهر العتيق", "Al-Azhar heritage", { pal: "azhar", font: "amiri", card: "paper", hdr: "minimal", btn: "square", bg: "parch", logo: "arch", wid: "narrow" }, "روح الكتب والمتون القديمة.", "The spirit of classical books."),
+    K("🌊", "البحر", "Ocean", { pal: "ocean", font: "alexandria", card: "glass", hdr: "glass", btn: "pill", bg: "waves", logo: "drop" }, "أزرق مريح وزجاج شفاف.", "Relaxing blue with frosted glass."),
+    K("🌸", "وردي ناعم (للبنات)", "Soft rose (for girls)", { pal: "rose", font: "baloo", card: "pill", hdr: "gradient", btn: "pill", bg: "garden", logo: "leaf", mot: "lively" }, "ناعم ومبهج.", "Soft and cheerful."),
+    K("💜", "لافندر هادي", "Calm lavender", { pal: "lavender", font: "readex", card: "soft", hdr: "glass", btn: "gradient", bg: "glass", logo: "squircle" }, "هدوء بلمسة عصرية.", "Calm with a modern touch."),
+    K("🌿", "نعناعي منعش", "Fresh mint", { pal: "mint", font: "mada", card: "outline", hdr: "minimal", btn: "pill", bg: "none", logo: "leaf" }, "خفيف ومنعش للمذاكرة.", "Light and fresh for studying."),
+    K("🪸", "مرجاني حيوي", "Lively coral", { pal: "coral", font: "changa", card: "soft", hdr: "solid", btn: "shadow", bg: "none", logo: "sun", mot: "lively" }, "طاقة وحماس.", "Energy and enthusiasm."),
+    K("🫒", "زيتوني طبيعي", "Natural olive", { pal: "olive", font: "markazi", card: "paper", hdr: "minimal", btn: "outline", bg: "parch", logo: "leaf", wid: "narrow" }, "طبيعي ومريح للقراءة الطويلة.", "Natural and comfy for long reads."),
+    K("🌌", "نيلي عميق", "Deep indigo", { pal: "indigo", font: "kufi", card: "float", hdr: "dark", btn: "gradient", bg: "stars8", logo: "crescentstar" }, "عمق وتركيز.", "Depth and focus."),
+    K("🌃", "ليل زمرّدي", "Emerald night", { pal: "teal_dark", font: "plex", card: "glass", hdr: "dark", btn: "pill", bg: "emerald", logo: "pulse" }, "للقيام والقراءة بالليل.", "For night prayer and reading."),
+    K("🌠", "كحلي ليلي", "Navy night", { pal: "navy_dark", font: "readex", card: "soft", hdr: "dark", btn: "pill", bg: "night", logo: "orbit" }, "سماء الليل بنجومها.", "The night sky and its stars."),
+    K("☕", "قهوة ودفا", "Coffee & warmth", { pal: "coffee", font: "harmattan", card: "paper", hdr: "minimal", btn: "square", bg: "parch", logo: "openbook", wid: "narrow" }, "دافي زي مكتبة قديمة.", "Warm like an old library."),
+    K("☁️", "سماوي خفيف", "Light sky", { pal: "sky", font: "tajawal", card: "soft", hdr: "glass", btn: "pill", bg: "none", logo: "circle" }, "خفيف جدًا وواضح.", "Very light and clear."),
+    K("🌅", "شروق", "Sunrise", { pal: "sunrise", font: "almarai", card: "float", hdr: "gradient", btn: "gradient", bg: "dunes", logo: "sun" }, "دافي ومشرق.", "Warm and bright."),
+    K("🍇", "برقوقي أنيق", "Elegant plum", { pal: "plum", font: "messiri", card: "soft", hdr: "solid", btn: "pill", bg: "marble", logo: "arabesque" }, "أناقة مختلفة.", "A different kind of elegance."),
+    K("🧑‍💼", "احترافي رمادي", "Professional slate", { pal: "slate", font: "plex", card: "sharp", hdr: "minimal", btn: "square", bg: "grid", logo: "kufisq", dens: "dense" }, "زي مواقع الشركات الكبيرة.", "Like big corporate sites."),
+    K("👑", "ذهبي ملكي", "Royal gold", { pal: "gold_lux", font: "amiri", card: "float", hdr: "gold", btn: "shadow", bg: "goldfloat", logo: "shine" }, "فخامة كاملة.", "Full luxury."),
+    K("🌲", "غابة", "Forest", { pal: "forest", font: "cairo", card: "soft", hdr: "solid", btn: "pill", bg: "garden", logo: "leaf" }, "أخضر عميق وطبيعي.", "Deep natural green."),
+    K("🧿", "زليج فيروزي", "Turquoise zellige", { pal: "turquoise", font: "reem", card: "outline", hdr: "gold", btn: "pill", bg: "zellige", logo: "rosette" }, "زخارف مغربية.", "Moroccan patterns."),
+    K("📖", "كتب قديمة (سيبيا)", "Old books (sepia)", { pal: "sepia", font: "lateef", card: "paper", hdr: "minimal", btn: "square", bg: "parch", logo: "pen", wid: "narrow" }, "زي صفحة مخطوطة.", "Like a manuscript page."),
+    K("⚫", "أبيض وأسود بسيط", "Simple monochrome", { pal: "mono", font: "kufi", card: "brutal", hdr: "minimal", btn: "square", bg: "none", logo: "outline", mot: "none" }, "جريء وواضح جدًا.", "Bold and very clear."),
+    K("🍭", "أطفال ملوّن", "Colourful kids", { pal: "candy", font: "baloo", card: "pill", hdr: "gradient", btn: "shadow", bg: "crescent", logo: "bounce", mot: "lively" }, "للأطفال: ملوّن ومرح.", "For kids: colourful and fun."),
+    K("🫧", "باستيل هادي", "Calm pastel", { pal: "pastel", font: "mada", card: "neo", hdr: "glass", btn: "pill", bg: "glass", logo: "squircle" }, "ألوان هادية جدًا.", "Very soft colours."),
+    K("🏜️", "ليل الصحرا", "Desert night", { pal: "desert_night", font: "messiri", card: "glass", hdr: "dark", btn: "pill", bg: "lantern", logo: "lantern" }, "فوانيس وليل دافي.", "Lanterns and a warm night."),
+    K("🏰", "ملكي أزرق", "Royal blue", { pal: "royal", font: "alexandria", card: "float", hdr: "gold", btn: "gradient", bg: "kufi", logo: "shield" }, "رسمي ومهيب.", "Formal and stately."),
+    K("🌳", "أرز", "Cedar", { pal: "cedar", font: "changa", card: "outline", hdr: "solid", btn: "pill", bg: "stars8", logo: "hex" }, "ثابت وهادي.", "Steady and calm."),
+    K("🛶", "النيل", "Nile", { pal: "nile", font: "almarai", card: "soft", hdr: "glass", btn: "pill", bg: "waves", logo: "wave" }, "مصري ومريح.", "Egyptian and relaxing."),
+    K("📚", "موسوعة (محتوى ضخم)", "Encyclopedia (huge content)", { pal: "slate", font: "markazi", card: "flat", hdr: "minimal", btn: "outline", bg: "none", logo: "openbook", dens: "dense", wid: "full", mot: "none" }, "أكبر كمية محتوى في الشاشة — زي ويكيبيديا.", "Most content per screen — like Wikipedia."),
+    K("🎓", "جامعة إلكترونية", "Online university", { pal: "indigo", font: "plex", card: "sharp", hdr: "solid", btn: "square", bg: "grid", logo: "shield", dens: "comfy" }, "زي Coursera وedX.", "Like Coursera and edX."),
+    K("🎧", "منصّة صوتيات", "Audio platform", { pal: "navy_dark", font: "alexandria", card: "float", hdr: "dark", btn: "pill", bg: "night", logo: "mic" }, "للتلاوات والمقامات — زي Spotify.", "For recitations and maqamat — like Spotify."),
+    K("🗞️", "جريدة", "Newspaper", { pal: "mono", font: "amiri", card: "paper", hdr: "minimal", btn: "square", bg: "none", logo: "word", dens: "dense", wid: "full", mot: "none" }, "أعمدة وعناوين — زي الجرايد الكبيرة.", "Columns and headlines — like big newspapers."),
+    K("🧕", "أكاديمية نسائية", "Women's academy", { pal: "plum", font: "baloo", card: "soft", hdr: "glass", btn: "pill", bg: "marble", logo: "leaf" }, "ناعم ومحترم.", "Soft and respectful."),
+    K("🧒", "ركن الأطفال", "Kids corner", { pal: "duo", font: "baloo", card: "brutal", hdr: "solid", btn: "shadow", bg: "crescent", logo: "bounce", mot: "lively" }, "زي ألعاب الأطفال التعليمية.", "Like kids' learning games."),
+    K("🪔", "رمضاني", "Ramadan", { pal: "desert_night", font: "reem", card: "glass", hdr: "gold", btn: "pill", bg: "lantern", logo: "pulse" }, "فوانيس وهلال.", "Lanterns and a crescent."),
+    K("🕊️", "سكينة", "Serenity", { pal: "qurancom", font: "naskh", card: "neo", hdr: "glass", btn: "pill", bg: "none", logo: "circle", wid: "narrow" }, "أقل حاجة على الشاشة — تركيز تام.", "Minimal screen — total focus.")
+  ];
+  NEW.forEach(n => { if (!S.SKINS.some(x => x[2] === n[2])) S.SKINS.push(n); });
+
+  /* ---------- 4) تطبيق الأجزاء الجديدة (هيدر، أزرار، خلفية ولوجو التصميم) ---------- */
+  const CUR = () => Object.assign({}, setv("skin171", {}) || {}, state.sk171 || {});
+  function apply175() {
+    const s = CUR(); let css = ""; const h = s.hdr || "original", b = s.btn || "original";
+    if (h === "glass") css += `.hdr{background:color-mix(in srgb,var(--card) 62%,transparent)!important;backdrop-filter:blur(14px) saturate(1.4)!important;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)!important}`;
+    if (h === "solid") css += `.hdr{background:var(--accent)!important;border:0!important}.hdr,.hdr a,.hdr .logo b,.hdr nav a,.hdr .logo small{color:#fff!important}.hdr .ibtn,.hdr .btn-o{background:rgba(255,255,255,.14)!important;color:#fff!important;border-color:rgba(255,255,255,.3)!important}`;
+    if (h === "dark") css += `.hdr{background:#0b1220!important;border-bottom:1px solid #1e293b!important}.hdr,.hdr a,.hdr .logo b,.hdr nav a{color:#e5edf7!important}.hdr .ibtn,.hdr .btn-o{background:#111a2e!important;color:#e5edf7!important;border-color:#24324f!important}`;
+    if (h === "minimal") css += `.hdr{background:var(--bg)!important;backdrop-filter:none!important;border-bottom:2px solid var(--fg)!important;box-shadow:none!important}`;
+    if (h === "gradient") css += `.hdr{background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--gold)))!important;border:0!important}.hdr,.hdr a,.hdr .logo b,.hdr nav a{color:#fff!important}.hdr .ibtn,.hdr .btn-o{background:rgba(255,255,255,.16)!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}`;
+    if (h === "gold") css += `.hdr{border-bottom:3px solid var(--gold)!important;box-shadow:0 1px 0 color-mix(in srgb,var(--gold) 40%,transparent),0 6px 18px rgba(0,0,0,.05)!important}`;
+    if (b === "pill") css += `#app .btn,.hdr .btn{border-radius:999px!important}`;
+    if (b === "square") css += `#app .btn,.hdr .btn{border-radius:4px!important}`;
+    if (b === "gradient") css += `#app .btn-p,.hdr .btn-p{background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 50%,var(--gold)))!important;border:0!important}`;
+    if (b === "shadow") css += `#app .btn{box-shadow:0 3px 0 color-mix(in srgb,var(--fg) 25%,transparent)!important;transform:translateY(-1px)}#app .btn:active{box-shadow:none!important;transform:translateY(1px)}`;
+    if (b === "outline") css += `#app .btn-p{background:transparent!important;color:var(--accent)!important;border:2px solid var(--accent)!important}`;
+    const st = document.getElementById("sk175"); if (st) st.textContent = css;
+  }
+  /* اختيار تصميم = يطبّق الخلفية واللوجو كمان (معاينة)، والحفظ يحفظهم */
+  const _pick = window.sk171Pick; window.sk171Pick = i => { const o = S.SKINS[i] && S.SKINS[i][3]; if (o && (o.bg || o.logo)) state.dz157 = Object.assign({}, state.dz157 || {}, o.bg ? { bg: o.bg } : {}, o.logo ? { logo: o.logo } : {}); else state.dz157 = null; return _pick(i); };
+  const _save = window.sk171Save; window.sk171Save = async () => { const dz = state.dz157; await _save(); if (dz) { const d = Object.assign({}, setv("design157", {}) || {}, dz); await saveSetting16("design157", { bg: d.bg, logo: d.logo }); state.dz157 = null; render(); } };
+  window.sk175Part = (k, v) => { if (k === "bg" || k === "logo") { state.dz157 = Object.assign({}, state.dz157 || {}, { [k]: v }); render(); return; } window.sk171Part(k, v); };
+
+  /* ---------- 5) «امسك أي لون»: دوس على أي حتة وغيّر لونها ---------- */
+  const CM = { on: false };
+  const RULES = () => Object.assign({}, setv("colors175", {}) || {}, state.col175 || {});
+  const VARS = [["--accent", "اللون الأساسي (الأزرار والروابط)", "Main colour (buttons & links)"], ["--bg", "خلفية الصفحة", "Page background"], ["--card", "خلفية الكروت", "Card background"], ["--fg", "لون الكلام", "Text colour"], ["--muted", "الكلام الباهت", "Muted text"], ["--line", "الحدود والخطوط", "Borders & lines"], ["--gold", "اللون الذهبي (التمييز)", "Gold highlight"]];
+  function applyColors() {
+    const R = RULES(); let css = "";
+    Object.entries(R).forEach(([sel, v]) => { if (!v) return; if (sel === ":root") { css += `:root{${Object.entries(v).map(([k, c]) => `${k}:${c}!important`).join(";")}}`; return; } const d = []; if (v.bg) d.push(`background:${v.bg}!important`); if (v.fg) d.push(`color:${v.fg}!important`); if (v.bd) d.push(`border-color:${v.bd}!important`); if (d.length) css += `${sel}{${d.join(";")}}`; });
+    let st = document.getElementById("col175"); if (!st) { st = document.createElement("style"); st.id = "col175"; document.head.appendChild(st); } st.textContent = css;
+  }
+  const SKIPC = /^(rv171|in|on|sel|ov|hid|lim172|sfhot172|col175h|a-spin|a-pulse)$/;
+  function selOf(el, only) {
+    if (el.id && !/^\d/.test(el.id)) return "#" + CSS.escape(el.id);
+    const part = e => { const c = [...e.classList].filter(x => !SKIPC.test(x)).slice(0, 2).map(x => "." + CSS.escape(x)).join(""); return (c || e.tagName.toLowerCase()) + (only && e.parentElement ? `:nth-child(${[...e.parentElement.children].indexOf(e) + 1})` : ""); };
+    const path = []; let e = el; for (let i = 0; i < 3 && e && e !== document.body; i++, e = e.parentElement) { path.unshift(part(e)); if (e.id) { path[0] = "#" + CSS.escape(e.id); break; } }
+    return path.join(" > ");
+  }
+  const hex = c => { const m = String(c).match(/\d+(\.\d+)?/g); if (!m || (m.length > 3 && +m[3] === 0)) return "#ffffff"; return "#" + m.slice(0, 3).map(x => (+x | 0).toString(16).padStart(2, "0")).join(""); };
+  function pop(el, x, y) {
+    document.getElementById("cp175") && document.getElementById("cp175").remove();
+    const only = !!state.col175only; const sel = selOf(el, only); const cs = getComputedStyle(el); const R = RULES()[sel] || {};
+    const d = document.createElement("div"); d.id = "cp175"; d.className = "card";
+    d.style.cssText = `position:fixed;z-index:10001;top:${Math.min(y + 12, innerHeight - 330)}px;left:${Math.min(Math.max(8, x - 150), innerWidth - 316)}px;width:300px`;
+    const row = (k, a, e, v) => `<label class="kv" style="align-items:center"><span class="sm">${T(a, e)}</span><span><input type="color" value="${hex(v)}" oninput="col175Set('${esc(sel).replace(/'/g, "\\'")}','${k}',this.value)"> <button class="btn btn-o" style="padding:.05rem .4rem" title="${T("رجّع الأصلي", "Reset")}" onclick="col175Set('${esc(sel).replace(/'/g, "\\'")}','${k}',null)">↺</button></span></label>`;
+    d.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center"><b class="sm">🎨 ${T("لون الحتة دي", "This element's colours")}</b><button class="btn btn-o" style="padding:.05rem .45rem" onclick="this.closest('#cp175').remove()">✕</button></div>
+      <code class="xs" style="display:block;margin:.3rem 0;word-break:break-all;opacity:.7">${esc(sel)}</code>
+      ${row("bg", "الخلفية", "Background", R.bg || cs.backgroundColor)}${row("fg", "الكلام", "Text", R.fg || cs.color)}${row("bd", "الحدود", "Border", R.bd || cs.borderTopColor)}
+      <label class="xs" style="display:flex;gap:.3rem;align-items:center;margin-top:.3rem"><input type="checkbox" ${only ? "checked" : ""} onchange="state.col175only=this.checked;col175Pick()"> ${T("الحتة دي بس (مش كل اللي شبهها)", "This exact one only (not similar ones)")}</label>`;
+    document.body.appendChild(d); CM.last = el;
+  }
+  window.col175Pick = () => { if (CM.last) { const r = CM.last.getBoundingClientRect(); pop(CM.last, r.left + r.width / 2, r.bottom); } };
+  window.col175Set = (sel, k, v) => { const all = Object.assign({}, RULES()); const r = Object.assign({}, all[sel] || {}); if (v == null) delete r[k]; else r[k] = v; all[sel] = r; state.col175 = all; applyColors(); bar(); };
+  function onClick(e) {
+    if (!CM.on) return; const t = e.target; if (t.closest("#cp175,#cb175")) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); pop(t, e.clientX, e.clientY);
+  }
+  function onOver(e) { if (!CM.on) return; document.querySelectorAll(".col175h").forEach(x => x.classList.remove("col175h")); if (!e.target.closest("#cp175,#cb175")) e.target.classList.add("col175h"); }
+  ["click", "mousedown", "pointerdown", "touchstart"].forEach(ev => document.addEventListener(ev, e => { if (CM.on && !e.target.closest("#cp175,#cb175")) { if (ev === "click") onClick(e); else { e.preventDefault(); e.stopPropagation(); } } }, { capture: true, passive: false }));
+  document.addEventListener("mouseover", onOver, true);
+  function bar() {
+    let b = document.getElementById("cb175"); if (!CM.on) { b && b.remove(); return; }
+    const dirty = !!state.col175;
+    if (!b) { b = document.createElement("div"); b.id = "cb175"; document.body.appendChild(b); }
+    b.innerHTML = `<b>🎨 ${T("وضع الألوان: دوس على أي حتة تغيّر لونها", "Colour mode: tap anything to recolour it")}</b><button class="btn btn-o" onclick="col175Vars()">🧪 ${T("كل ألوان الموقع", "All site colours")}</button>${dirty ? `<button class="btn btn-p" onclick="col175Save()">💾 ${T("طبّق على الكل", "Apply to everyone")}</button><button class="btn btn-o" onclick="state.col175=null;applyColors();bar175()">↺ ${T("إلغاء التغييرات", "Discard")}</button>` : ""}<button class="btn btn-o" onclick="col175Mode(false)">✕ ${T("خروج", "Exit")}</button>`;
+  }
+  window.bar175 = bar;
+  window.col175Mode = on => { CM.on = !!on; document.body.classList.toggle("cm175", CM.on); if (!on) { document.querySelectorAll(".col175h").forEach(x => x.classList.remove("col175h")); const p = document.getElementById("cp175"); p && p.remove(); } bar(); if (on) toast(T("دوس على أي حاجة في الموقع — زرار، كارت، عنوان، خلفية — وغيّر لونها. التغيير عندك بس لحد ما تدوس «طبّق على الكل».", "Tap anything — a button, card, title, background — to recolour it. Only you see it until you press “Apply to everyone”.")); };
+  window.col175Save = async () => { await saveSetting16("colors175", RULES()); state.col175 = null; applyColors(); bar(); toast("✅ " + T("الألوان اتطبّقت على الموقع كله", "Colours applied site-wide")); };
+  window.col175Vars = () => {
+    document.getElementById("cp175") && document.getElementById("cp175").remove(); const R = RULES()[":root"] || {}; const cs = getComputedStyle(document.documentElement);
+    const d = document.createElement("div"); d.id = "cp175"; d.className = "card"; d.style.cssText = "position:fixed;z-index:10001;top:5rem;inset-inline-end:1rem;width:min(340px,calc(100vw - 2rem));max-height:75vh;overflow:auto";
+    d.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center"><b>🧪 ${T("كل ألوان الموقع", "All site colours")}</b><button class="btn btn-o" style="padding:.05rem .45rem" onclick="this.closest('#cp175').remove()">✕</button></div><p class="xs muted">${T("اللون هنا بيغيّر كل الأماكن اللي بتستخدمه.", "A colour here changes everywhere it's used.")}</p>
+      ${VARS.map(([k, a, e]) => `<label class="kv" style="align-items:center"><span class="sm">${T(a, e)}</span><span><input type="color" value="${hex(R[k] || cs.getPropertyValue(k).trim() || "#000")}" oninput="col175Var('${k}',this.value)"> <button class="btn btn-o" style="padding:.05rem .4rem" onclick="col175Var('${k}',null)">↺</button></span></label>`).join("")}
+      <h4 style="margin:.6rem 0 .2rem">${T("التعديلات اللي عملتها", "Your edits")}</h4>${Object.keys(RULES()).filter(k => k !== ":root").map(k => `<div class="kv"><code class="xs" style="word-break:break-all">${esc(k)}</code><button class="btn btn-o" style="padding:.05rem .4rem" onclick="col175Del('${esc(k).replace(/'/g, "\\'")}')">🗑️</button></div>`).join("") || `<p class="xs muted">—</p>`}`;
+    document.body.appendChild(d);
+  };
+  window.col175Var = (k, v) => { const all = Object.assign({}, RULES()); const r = Object.assign({}, all[":root"] || {}); if (v == null) delete r[k]; else r[k] = v; all[":root"] = r; state.col175 = all; applyColors(); bar(); };
+  window.col175Del = k => { const all = Object.assign({}, RULES()); delete all[k]; state.col175 = all; applyColors(); bar(); col175Vars(); };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+  body.cm175 *{cursor:crosshair!important}.col175h{outline:2px dashed #f59e0b!important;outline-offset:2px}
+  #cb175{position:fixed;z-index:10000;bottom:.8rem;left:50%;transform:translateX(-50%);display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;justify-content:center;background:#0f172a;color:#fff;padding:.5rem .8rem;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:calc(100vw - 1rem);font-size:.85rem}
+  #cb175 .btn{padding:.25rem .7rem;font-size:.8rem}#cp175 input[type=color]{width:2.2rem;height:1.7rem;border:0;padding:0;background:none;cursor:pointer}
+  .sk175p{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.5rem}</style>`);
+
+  /* ---------- 6) الاستوديو: أجزاء زيادة للخلط + زرار وضع الألوان ---------- */
+  const sel = (k, D, cur) => `<select class="in" style="width:auto" onchange="sk175Part('${k}',this.value)">${Object.entries(D).map(([id, v]) => `<option value="${id}" ${cur === id ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+  const _os = ownerSettings; ownerSettings = function () {
+    let h = _os.apply(this, arguments); const s = CUR(); const dz = Object.assign({ bg: "none", logo: "default" }, setv("design157", {}) || {}, state.dz157 || {});
+    const extra = `<div class="sk175p"><label class="sm">🧭 ${T("الشريط اللي فوق", "Header")} ${sel("hdr", HDR, s.hdr || "original")}</label><label class="sm">🔘 ${T("الأزرار", "Buttons")} ${sel("btn", BTN, s.btn || "original")}</label><label class="sm">🖼️ ${T("الخلفية", "Background")} ${sel("bg", BG(), dz.bg)}</label><label class="sm">🔰 ${T("اللوجو", "Logo")} ${sel("logo", LG(), dz.logo)}</label></div>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-p" onclick="col175Mode(true)">🎨 ${T("امسك أي لون في الموقع وغيّره", "Pick any colour on the site and change it")}</button><button class="btn btn-o" onclick="col175Mode(true);col175Vars()">🧪 ${T("كل ألوان الموقع", "All site colours")}</button></div>`;
+    const k = h.indexOf("📐 "); if (k > 0) { const e = h.indexOf("</div>", k); if (e > 0) h = h.slice(0, e + 6) + extra + h.slice(e + 6); }
+    return h;
+  };
+
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { apply175(); applyColors(); } catch (e) {} return o; };
+  try { apply175(); applyColors(); } catch (e) {}
 })();
 
 // بدء التشغيل
