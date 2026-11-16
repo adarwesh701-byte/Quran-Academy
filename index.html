@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v171";
+const UI_VERSION = "2026-11-16-v172";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -24103,6 +24103,262 @@ body.ed158 .hv169{opacity:.4!important}
     return out;
   };
   window.addEventListener("resize", () => { try { mdock(); } catch (e) {} });
+})();
+
+/* ================= v172: ملف طلابي بالعدّادات + تسجيلات الطالب للمعلم + رسالة صوتية من المعلم + تصحيح الأحكام حكم حكم + الكلاسروم (قفل المايك، حد التسميع، الرسم فوق الشاشة) + المُوالِف بالقرار والجواب وجواب الجواب + مفاتيح مسجّلة لكل مقام + الآراء بالصوت والفيديو وقبل/بعد ================= */
+(function () {
+  const AR = () => state.lang === "ar";
+  const uidMe = () => state.auth && state.auth.user && state.auth.user.id;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* ---------- 1) ملف طلابي: عدّاد منوّر لكل طالب + pending ---------- */
+  let SFC = { at: 0, map: null, busy: false };
+  async function sfCounts(force) {
+    if (SFC.busy || (!force && SFC.map && Date.now() - SFC.at < 60000)) return SFC.map;
+    SFC.busy = true;
+    try {
+      const { data } = await sb.from("student_tasks").select("student_id,status,due_date,kind,created_by,submitted_at").neq("status", "done").limit(3000);
+      const m = {}; const today = new Date(new Date().toDateString());
+      (data || []).forEach(t => { const x = m[t.student_id] || (m[t.student_id] = { sub: 0, open: 0, late: 0 }); if (t.status === "submitted") x.sub++; else if (t.kind === "homework") { x.open++; if (t.due_date && new Date(t.due_date) < today) x.late++; } });
+      SFC = { at: Date.now(), map: m, busy: false };
+    } catch (e) { SFC.busy = false; }
+    return SFC.map;
+  }
+  window.sfCounts172 = sfCounts;
+  function decorateSF() {
+    if (!uidMe() || !(realRole() === "owner" || role() === "teacher")) return;
+    const tiles = [...document.querySelectorAll(".mstile[onclick*=\"go16('sfile','\"]")];
+    const allTile = [...document.querySelectorAll(".mstile[onclick=\"go16('sfile')\"]")];
+    if (!tiles.length && !allTile.length) return;
+    const apply = m => {
+      if (!m) return; let totSub = 0, totOpen = 0;
+      Object.values(m).forEach(x => { totSub += x.sub; totOpen += x.late; });
+      tiles.forEach(b => { const id = (b.getAttribute("onclick").match(/'([0-9a-f-]{36})'/) || [])[1]; const x = m[id]; b.querySelectorAll(".sfb172").forEach(e => e.remove()); if (!x) { b.style.order = 3; return; }
+        const h = (x.sub ? `<i class="sfb172 sub" title="${AR() ? "سلّم ومستني تصحيحك" : "Submitted, awaiting your review"}">📤 ${x.sub}</i>` : "") + (x.open ? `<i class="sfb172 pen ${x.late ? "late" : ""}" title="${AR() ? "واجبات لسه ماتسلّمتش" : "Homework not yet submitted"}">⏳ ${x.open}${x.late ? ` · ⚠️${x.late}` : ""}</i>` : "");
+        if (h) b.insertAdjacentHTML("beforeend", `<span class="sfbw172">${h}</span>`); b.style.order = x.sub ? 0 : x.late ? 1 : 2; if (x.sub) b.classList.add("sfhot172"); else b.classList.remove("sfhot172"); });
+      allTile.forEach(b => { b.querySelectorAll(".sfb172").forEach(e => e.remove()); if (totSub || totOpen) b.insertAdjacentHTML("beforeend", `<span class="sfbw172">${totSub ? `<i class="sfb172 sub">📤 ${totSub}</i>` : ""}${totOpen ? `<i class="sfb172 pen late">⚠️ ${totOpen}</i>` : ""}</span>`); });
+      if (tiles.length && !document.getElementById("sfleg172")) { const g = tiles[0].parentNode; g.style.display = "grid"; g.insertAdjacentHTML("beforebegin", `<p class="xs muted" id="sfleg172">📤 ${AR() ? "سلّم ومستني تصحيحك (بيطلع الأول)" : "submitted, awaiting your review (shown first)"} · ⏳ ${AR() ? "واجبات لسه ماتسلّمتش" : "not yet submitted"} · ⚠️ ${AR() ? "متأخر عن الميعاد" : "overdue"}</p>`); }
+    };
+    if (SFC.map) apply(SFC.map);
+    sfCounts().then(apply);
+  }
+  css(`.mstile{position:relative}.sfbw172{position:absolute;top:.3rem;inset-inline-end:.3rem;display:flex;gap:.2rem;flex-wrap:wrap;justify-content:flex-end}
+  .sfb172{font-style:normal;font-size:.72rem;font-weight:800;border-radius:999px;padding:.05rem .45rem;line-height:1.5}
+  .sfb172.sub{background:#dc2626;color:#fff;box-shadow:0 0 0 3px color-mix(in srgb,#dc2626 25%,transparent);animation:sfp172 1.6s infinite}
+  .sfb172.pen{background:color-mix(in srgb,#f59e0b 22%,var(--bg));color:var(--fg)}.sfb172.pen.late{background:#f59e0b;color:#111}
+  .sfhot172{outline:2px solid #dc2626;outline-offset:2px}@keyframes sfp172{50%{box-shadow:0 0 0 6px color-mix(in srgb,#dc2626 0%,transparent)}}
+  .stp172{display:inline-block;font-size:.72rem;font-weight:800;border-radius:999px;padding:.05rem .5rem;background:#f59e0b;color:#111;margin-inline-start:.3rem}`);
+
+  /* ---------- 2) الطالب يسجّل ويبعت لمعلمه — والملف بيتمسح بعد 3 أيام ---------- */
+  const REC = {};
+  async function recToggle(key, btn) {
+    if (REC[key] && REC[key].r) { REC[key].r.stop(); return; }
+    let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { return toast(AR() ? "اسمح للمتصفح يستخدم المايك" : "Allow microphone access", true); }
+    const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+    const r = new MediaRecorder(st, mime ? { mimeType: mime } : {}); const ch = []; const t0 = Date.now();
+    r.ondataavailable = e => e.data.size && ch.push(e.data);
+    r.onstop = () => { st.getTracks().forEach(t => t.stop()); clearInterval(REC[key] && REC[key].iv); const bl = new Blob(ch, { type: r.mimeType || "audio/webm" }); const f = new File([bl], `${key}-${Date.now()}.${/mp4/.test(bl.type) ? "m4a" : "webm"}`, { type: bl.type }); REC[key] = { f };
+      const b = document.getElementById(btn); if (b) { b.classList.remove("rec59on"); b.textContent = "🎙️ " + (AR() ? "سجّل تاني" : "Re-record"); }
+      const pv = document.getElementById(btn + "_pv"); if (pv) pv.innerHTML = `<audio controls src="${URL.createObjectURL(bl)}" style="width:100%;margin-top:.3rem"></audio>`; };
+    REC[key] = { r }; r.start();
+    const b = document.getElementById(btn); if (b) { b.classList.add("rec59on"); REC[key].iv = setInterval(() => { const s = Math.round((Date.now() - t0) / 1000); b.textContent = `⏹ ${AR() ? "وقّف" : "Stop"} ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }, 500); }
+  }
+  window.rec172 = recToggle;
+  function stuRecCard(uid) {
+    const ar = AR();
+    return `<div class="card rc172"><h3>🎤 ${ar ? "سجّل تلاوتك أو سؤالك وابعته لمعلمك" : "Record your recitation or question and send it to your teacher"}</h3>
+      <p class="xs muted">${ar ? "معلمك والإدارة بس اللي بيشوفوه، وبيوصلهم إشعار. الملف بيتمسح تلقائي بعد 3 أيام، والتصحيح بيفضل عندك." : "Only your teacher and the admin see it, and they get a notification. The file is deleted automatically after 3 days; the feedback stays with you."}</p>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem;align-items:center"><select class="in" id="rc172a" style="width:auto">${SF_AREAS.map(a => `<option value="${a[0]}" ${a[0] === "tasmee" ? "selected" : ""}>${sfA(a[0])}</option>`).join("")}</select>
+        <input class="in" id="rc172t" style="flex:1;min-width:12rem" placeholder="${ar ? "قرأت إيه؟ (مثلًا: الملك 1–10)" : "What did you read? (e.g. Al-Mulk 1–10)"}"></div>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem;align-items:center"><button class="btn btn-o" id="rc172b" onclick="rec172('stu','rc172b')">🎙️ ${ar ? "ابدأ التسجيل" : "Start recording"}</button>
+        <label class="btn btn-o">📎 ${ar ? "أو ارفع ملف" : "or upload a file"}<input type="file" id="rc172f" accept="audio/*,video/*,image/*,.pdf" multiple hidden onchange="this.parentNode.lastChild.textContent=' ('+this.files.length+')'"> </label>
+        <button class="btn btn-p" onclick="stuRecSend172('${uid}')">📤 ${ar ? "ابعت لمعلمك" : "Send to my teacher"}</button></div><div id="rc172b_pv"></div></div>`;
+  }
+  window.stuRecSend172 = async function (uid) {
+    const ar = AR(); const fi = document.getElementById("rc172f"); const fs = fi && fi.files.length ? [...fi.files] : []; if (REC.stu && REC.stu.f) fs.push(REC.stu.f);
+    if (!fs.length) return toast(ar ? "سجّل أو ارفع ملف الأول" : "Record or upload something first", true);
+    toast(ar ? "⏳ بيترفع…" : "⏳ Uploading…");
+    const up = await sfUpload(uid, fs, false); if (!up.length) return;
+    const title = (document.getElementById("rc172t").value || "").trim() || (ar ? "تسجيل من الطالب" : "Student recording");
+    const { data, error } = await sb.from("student_tasks").insert({ student_id: uid, created_by: uid, kind: "rec", area: document.getElementById("rc172a").value, title, status: "submitted", submitted_at: new Date().toISOString(), sub_files: up }).select("id").maybeSingle();
+    if (error) return toast(error.message, true);
+    try { const [a, o] = await Promise.all([sb.from("student_teacher_assignments").select("teacher_id").eq("student_id", uid), sb.from("profiles").select("id").eq("role", "owner").limit(3)]);
+      const to = [...new Set([...(a.data || []).map(x => x.teacher_id), ...(o.data || []).map(x => x.id)])].filter(x => x && x !== uid);
+      if (to.length) sb.from("notifications").insert(to.map(t => ({ user_id: t, kind: "hw_submitted", data: { task: data && data.id, student: uid, title: "🎤 " + title } }))).then(() => {}, () => {});
+    } catch (e) {}
+    delete REC.stu; toast(ar ? "✓ اتبعت لمعلمك — هيوصلك التصحيح هنا" : "✓ Sent — the feedback will appear here"); sfInv(uid);
+  };
+
+  /* ---------- 3) المعلم: رسالة صوتية مع الواجب + تصحيح الأحكام حكم حكم ---------- */
+  const RULES = [["izhar", "الإظهار", "Izhar"], ["idgham", "الإدغام", "Idgham"], ["ikhfa", "الإخفاء", "Ikhfa"], ["iqlab", "الإقلاب", "Iqlab"], ["ghunna", "الغنة", "Ghunnah"], ["qalqala", "القلقلة", "Qalqalah"], ["madd", "المدود", "Madd"], ["tafkhim", "التفخيم والترقيق", "Heavy/light letters"], ["ra", "أحكام الراء", "Ra rules"], ["lam", "اللامات", "Lam rules"], ["makharij", "المخارج", "Articulation points"], ["waqf", "الوقف والابتداء", "Stopping & starting"], ["hifz", "الحفظ (بدون لحن جلي)", "Memorisation (no clear errors)"]];
+  const _sfTaskForm = sfTaskForm;
+  sfTaskForm = function (uid) {
+    const h = _sfTaskForm(uid); if (!sfStaff() || uid === uidMe()) return h;
+    return h.replace(`<label class="btn btn-o">📎`, `<button type="button" class="btn btn-o" id="vn172b" onclick="rec172('vn','vn172b')">🎙️ ${AR() ? "رسالة صوتية" : "Voice note"}</button><label class="btn btn-o">📎`).replace(`</details>`, `<div id="vn172b_pv"></div></details>`);
+  };
+  const _sfAddTask = sfAddTask;
+  sfAddTask = async function (uid) {
+    const f = REC.vn && REC.vn.f; const inp = document.getElementById("sft_f");
+    if (f && inp) { try { const dt = new DataTransfer(); [...inp.files].forEach(x => dt.items.add(x)); dt.items.add(f); inp.files = dt.files; } catch (e) {} }
+    await _sfAddTask(uid); delete REC.vn;
+  };
+  const _sfTasks = sfTasks;
+  sfTasks = function (uid, x) {
+    let h = _sfTasks(uid, x); const ar = AR();
+    if (sfStaff() && uid !== uidMe()) {
+      x.tasks.filter(t => t.status === "submitted").forEach(t => {
+        const k = `<input class="in" id="sfg_${t.id}"`; const i = h.indexOf(k); if (i < 0) return; const rowStart = h.lastIndexOf(`<div class="row"`, i);
+        const pick = `<details class="rl172" ${t.area === "tasmee" || t.kind === "rec" ? "open" : ""}><summary class="b sm">🎯 ${ar ? "صحّح حكم حكم (اختياري)" : "Mark rule by rule (optional)"}</summary><div class="rl172g">${RULES.map(r => `<span class="rl172i" data-t="${t.id}" data-r="${ar ? r[1] : r[2]}"><b>${ar ? r[1] : r[2]}</b><button type="button" onclick="rl172(this,1)">✓</button><button type="button" onclick="rl172(this,-1)">✗</button></span>`).join("")}</div></details>`;
+        h = h.slice(0, rowStart) + pick + h.slice(rowStart);
+      });
+    }
+    if (sfStaff()) h = h.replace(/(<b>)(📝|💬) /g, "$1$2 ");
+    x.tasks.filter(t => t.kind === "rec").forEach(t => { h = h.replace(`<b>📝 ${esc(t.title)}</b>`, `<b>🎤 ${esc(t.title)}</b>`); });
+    if (uid === uidMe() && !sfStaff()) h = stuRecCard(uid) + h;
+    return h;
+  };
+  window.rl172 = function (b, v) { const s = b.parentNode; s.dataset.v = s.dataset.v == v ? "" : v; s.classList.toggle("ok", s.dataset.v == 1); s.classList.toggle("no", s.dataset.v == -1); };
+  const _sfReview = sfReview;
+  sfReview = async function (uid, id) {
+    const marks = [...document.querySelectorAll(`.rl172i[data-t="${id}"]`)].filter(s => s.dataset.v); const fb = document.getElementById("sfb_" + id);
+    if (marks.length && fb) { const ok = marks.filter(s => s.dataset.v == 1).map(s => s.dataset.r), no = marks.filter(s => s.dataset.v == -1).map(s => s.dataset.r); fb.value = [fb.value.trim(), ok.length ? "✅ " + ok.join("، ") : "", no.length ? "❌ " + (AR() ? "محتاج تراجع: " : "Needs work: ") + no.join("، ") : ""].filter(Boolean).join("\n"); }
+    return _sfReview(uid, id);
+  };
+  css(`.rc172{border:2px dashed var(--accent);margin-bottom:.8rem}.rl172{margin:.5rem 0}.rl172g{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem}
+  .rl172i{display:inline-flex;align-items:center;gap:.2rem;border:1px solid var(--line);border-radius:999px;padding:.1rem .2rem .1rem .5rem;font-size:.8rem}
+  .rl172i button{border:0;background:var(--bg);border-radius:999px;width:1.6rem;height:1.6rem;cursor:pointer}.rl172i.ok{background:color-mix(in srgb,#22c55e 18%,var(--card));border-color:#22c55e}.rl172i.no{background:color-mix(in srgb,#dc2626 15%,var(--card));border-color:#dc2626}`);
+
+  /* ---------- 4) الكلاسروم: قفل المايك، كتم الكل، حد التسميع، الرسم فوق الشاشة ---------- */
+  if (typeof rmToggleMic === "function") {
+    const _tm = rmToggleMic; rmToggleMic = async function () { if (RM.micLock && !rmMicOn() && !rmIsHost()) return toast(AR() ? "🔒 المعلم قافل المايك — ارفع إيدك ✋ لو عايز تتكلم" : "🔒 The teacher locked your mic — raise your hand ✋ to speak", true); return _tm.apply(this, arguments); };
+    const _ev = rmOnEv; rmOnEv = function (p) {
+      try { if (p && p.from !== RM.pid && (p.role === "host" || p.role === "owner")) {
+        if (p.type === "micLock" && (!p.to || p.to === RM.pid)) { RM.micLock = !!p.on; if (p.on && rmMicOn()) rmSetMic(false); toast(p.on ? (AR() ? "🔒 المعلم قفل المايك" : "🔒 Mic locked by the teacher") : (AR() ? "🔓 تقدر تفتح المايك دلوقتي" : "🔓 You can unmute now")); }
+        if (p.type === "tsLimit") { state.tsLimit172 = p.lim || null; applyLimit(); toast(p.lim ? (AR() ? `🎯 التسميع لحد ${sName(p.lim.s)} آية ${p.lim.a}` : `🎯 Recite up to ${sName(p.lim.s)} ${p.lim.a}`) : (AR() ? "🎯 اتشال حد التسميع" : "🎯 Limit removed")); }
+        if (p.type === "ann") annDraw(p.d);
+      } } catch (e) {}
+      return _ev.apply(this, arguments);
+    };
+    window.rmLockAll172 = function (on) { rmSend("micLock", { on }); RM.locks172 = on ? "all" : null; toast(on ? (AR() ? "🔒 قفلت مايك كل الطلاب" : "🔒 All student mics locked") : (AR() ? "🔓 فتحت المايكات" : "🔓 Mics unlocked")); rmRenderBar(); };
+    window.rmLockOne172 = function (pid) { RM.lk172 = RM.lk172 || {}; RM.lk172[pid] = !RM.lk172[pid]; rmSend("micLock", { to: pid, on: RM.lk172[pid] }); try { rmRenderPanel(); } catch (e) {} };
+    window.rmLimit172 = function () {
+      const ar = AR(); const cur = state.tsLimit172; const v = prompt(ar ? "التسميع لحد فين؟ اكتب رقم السورة:رقم الآية (مثلًا 67:10) — سيبها فاضية عشان تشيل الحد" : "Recite up to? surah:ayah (e.g. 67:10) — leave empty to remove", cur ? cur.s + ":" + cur.a : "");
+      if (v == null) return; const m = String(v).match(/(\d+)\s*[:：\/]\s*(\d+)/); const lim = m ? { s: +m[1], a: +m[2] } : null; state.tsLimit172 = lim; rmSend("tsLimit", { lim }); applyLimit(); toast(lim ? "🎯 ✓" : "🎯 —");
+    };
+    const _bar = rmRenderBar; rmRenderBar = function () {
+      _bar.apply(this, arguments); const b = rmEl("rmBar"); if (!b || !rmIsHost()) return; const ar = AR();
+      const mk = (id, ic, l, on, cls) => `<button class="rm-btn ${cls || ""}" id="${id}" onclick="${on}" title="${esc(l)}"><i class="fa-solid ${ic}"></i><span>${esc(l)}</span></button>`;
+      const more = document.getElementById("rbMore"); const html = mk("rbLock", RM.locks172 ? "fa-lock" : "fa-lock-open", RM.locks172 ? (ar ? "افتح المايكات" : "Unlock mics") : (ar ? "اقفل مايك الكل" : "Lock all mics"), `rmLockAll172(${!RM.locks172})`, RM.locks172 ? "on" : "") + mk("rbLim", "fa-flag-checkered", ar ? "حد التسميع" : "Recite limit", "rmLimit172()", state.tsLimit172 ? "on" : "") + mk("rbAnn", "fa-pen", ar ? "ارسم على الشاشة" : "Draw on screen", "ann172()", ANN.on ? "on" : "");
+      if (more) more.insertAdjacentHTML("beforebegin", html);
+    };
+    if (typeof rmRenderPanel === "function") { const _rp = rmRenderPanel; rmRenderPanel = function () { const r = _rp.apply(this, arguments); try { if (rmIsHost() && RM.panel === "people") document.querySelectorAll("#rmSide button[onclick^=\"rmPin('\"]").forEach(b => { const pid = (b.getAttribute("onclick").match(/rmPin\('([^']+)'\)/) || [])[1]; if (!pid || b.parentNode.querySelector(".lk172")) return; const lk = (RM.lk172 || {})[pid]; b.insertAdjacentHTML("afterend", `<button class="rm-pbtn lk172" title="${AR() ? "قفل/فتح المايك" : "Lock/unlock mic"}" onclick="rmLockOne172('${pid}')">${lk ? "🔒" : "🔓"}</button>`); }); } catch (e) {} return r; }; }
+    /* الرسم فوق الشاشة المشتركة — المعلم بيرسم والكل بيشوف */
+    const ANN = { on: false, cv: null, pts: null, color: "#ef4444" };
+    function annCanvas() { const main = rmEl("rmMain"); if (!main) return null; let c = document.getElementById("ann172"); if (!c) { c = document.createElement("canvas"); c.id = "ann172"; main.appendChild(c); } const r = main.getBoundingClientRect(); if (c.width !== Math.round(r.width) || c.height !== Math.round(r.height)) { const old = c.width ? c.toDataURL() : null; c.width = r.width; c.height = r.height; if (old) { const im = new Image(); im.onload = () => c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); im.src = old; } } return c; }
+    function annDraw(d) { const c = annCanvas(); if (!c || !d) return; const x = c.getContext("2d"); if (d.clear) return x.clearRect(0, 0, c.width, c.height); x.strokeStyle = d.c || "#ef4444"; x.lineWidth = 4; x.lineCap = x.lineJoin = "round"; x.beginPath(); d.p.forEach(([a, b], i) => { const X = a * c.width, Y = b * c.height; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }); x.stroke(); }
+    window.ann172 = function () {
+      ANN.on = !ANN.on; const c = annCanvas(); if (!c) return; c.classList.toggle("on", ANN.on); rmRenderBar();
+      let tb = document.getElementById("ann172t"); if (ANN.on && !tb) { rmEl("rmMain").insertAdjacentHTML("beforeend", `<div id="ann172t">${["#ef4444", "#facc15", "#22c55e", "#3b82f6", "#ffffff"].map(k => `<button style="background:${k}" onclick="ANN172c('${k}')"></button>`).join("")}<button onclick="ANN172x()">🧽</button><button onclick="ann172()">✕</button></div>`); } else if (!ANN.on && tb) tb.remove();
+      if (c.__b) return; c.__b = 1;
+      const pos = e => { const r = c.getBoundingClientRect(); const p = e.touches ? e.touches[0] : e; return [(p.clientX - r.left) / r.width, (p.clientY - r.top) / r.height]; };
+      const down = e => { if (!ANN.on) return; e.preventDefault(); ANN.pts = [pos(e)]; };
+      const move = e => { if (!ANN.on || !ANN.pts) return; e.preventDefault(); ANN.pts.push(pos(e)); const seg = { c: ANN.color, p: ANN.pts.slice(-2) }; annDraw(seg); if (ANN.pts.length % 6 === 0) { rmSend("ann", { d: { c: ANN.color, p: ANN.pts.slice(-7) } }); } };
+      const up = () => { if (ANN.pts && ANN.pts.length > 1) rmSend("ann", { d: { c: ANN.color, p: ANN.pts.slice(-7) } }); ANN.pts = null; };
+      c.addEventListener("mousedown", down); c.addEventListener("mousemove", move); window.addEventListener("mouseup", up);
+      c.addEventListener("touchstart", down, { passive: false }); c.addEventListener("touchmove", move, { passive: false }); c.addEventListener("touchend", up);
+    };
+    window.ANN172c = k => { ANN.color = k; };
+    window.ANN172x = () => { annDraw({ clear: 1 }); rmSend("ann", { d: { clear: 1 } }); };
+    css(`#ann172{position:absolute;inset:0;z-index:30;pointer-events:none;width:100%;height:100%}#ann172.on{pointer-events:auto;cursor:crosshair}
+    #ann172t{position:absolute;top:.5rem;left:50%;transform:translateX(-50%);z-index:31;display:flex;gap:.3rem;background:#0f172acc;padding:.3rem .5rem;border-radius:999px}
+    #ann172t button{width:1.7rem;height:1.7rem;border-radius:50%;border:2px solid #fff;cursor:pointer;color:#fff;background:#334155}`);
+  }
+  /* حد التسميع: أي آية بعد الحد بتتغطّى في المصحف — والطالب يقدر يحدده لنفسه في التسميع */
+  function applyLimit() {
+    const L = state.tsLimit172; document.querySelectorAll(".lim172").forEach(e => e.classList.remove("lim172"));
+    if (!L) return; document.querySelectorAll(".tj2 .w[data-v], [data-v].w").forEach(w => { const m = String(w.dataset.v).match(/(\d+)[:_](\d+)/); if (!m) return; const s = +m[1], a = +m[2]; if (s > L.s || (s === L.s && a > L.a)) w.classList.add("lim172"); });
+  }
+  css(`.lim172{filter:blur(6px);opacity:.35;pointer-events:none;user-select:none}`);
+
+  /* ---------- 5) المُوالِف: القرار والجواب وجواب الجواب + رسم أكبر ---------- */
+  if (typeof tnDrawLadder === "function") {
+    const REG = [[-1200, 0, "#64748b", "قرار القرار", "Below the base"], [0, 1200, "#10b981", "القرار", "Qarar (base)"], [1200, 2400, "#f59e0b", "الجواب", "Jawab (octave up)"], [2400, 3600, "#ef4444", "جواب الجواب", "Jawab al-jawab"]];
+    tnDrawLadder = function () {
+      const cv = document.getElementById("tn_cv"); if (!cv) return; if (cv.height < 560) { cv.width = 760; cv.height = 620; } const ctx = cv.getContext("2d"); const W = cv.width, H = cv.height; ctx.clearRect(0, 0, W, H);
+      const sc = MAQAM_SCALES[TN.maqam] || MAQAM_SCALES.bayati, lo = -700, hi = 3000, y = c => H - 16 - (c - lo) / (hi - lo) * (H - 32);
+      ctx.font = "13px Tajawal, sans-serif";
+      REG.forEach(([a, b, col, n1, n2]) => { const ya = y(Math.max(a, lo)), yb = y(Math.min(b, hi)); ctx.fillStyle = col + "1f"; ctx.fillRect(0, yb, W, ya - yb); ctx.fillStyle = col; ctx.textAlign = "right"; ctx.fillText(AR() ? n1 : n2, W - 8, yb + 16); });
+      [-1, 0, 1, 2].forEach(o => sc.forEach((v, i) => { const c = v + o * 1200; if (c < lo || c > hi) return; ctx.strokeStyle = i === 0 || i === 7 ? "rgba(16,185,129,.85)" : "rgba(148,163,184,.4)"; ctx.lineWidth = i === 0 || i === 7 ? 2 : 1; ctx.beginPath(); ctx.moveTo(40, y(c)); ctx.lineTo(W - 120, y(c)); ctx.stroke(); ctx.fillStyle = "#94a3b8"; ctx.textAlign = "left"; ctx.fillText(String(i === 7 ? 1 : i + 1), 14, y(c) + 4); }));
+      const now = performance.now(); ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 4; ctx.beginPath(); let on = false, last = null;
+      (TN.hist || []).forEach(([t, c]) => { const x = 40 + (1 - (now - t) / 8000) * (W - 168); if (c == null || c < lo || c > hi) { on = false; return; } last = c; if (!on) { ctx.moveTo(x, y(c)); on = true; } else ctx.lineTo(x, y(c)); }); ctx.stroke();
+      if (last != null) { const r = REG.find(([a, b]) => last >= a && last < b); const el = document.getElementById("tn_reg172"); if (el && r) { el.textContent = (AR() ? "انت دلوقتي في: " : "You are in: ") + (AR() ? r[3] : r[4]); el.style.color = r[2]; } }
+    };
+    const _tp = renderTunerPage; renderTunerPage = function () { return _tp().replace(`<div id="tn_msg"`, `<div id="tn_reg172" class="b" style="font-size:1.15rem;margin:.3rem 0">${AR() ? "القرار · الجواب · جواب الجواب" : "Qarar · Jawab · Jawab al-jawab"}</div><div id="tn_msg"`).replace(`<div class="grid g2" style="align-items:start">`, `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start">`); };
+  }
+
+  /* ---------- 6) مفاتيح مسجّلة لكل مقام (المالك يرفع ويسمّي ويخفي) ---------- */
+  const mqKeys = mid => ((setv("mqkeys172", {}) || {})[mid] || []);
+  async function mqKeysSave(mid, list) { const all = Object.assign({}, setv("mqkeys172", {}) || {}); all[mid] = list; await saveSetting16("mqkeys172", all); render(); }
+  function mqKeysCard(mid) {
+    const ar = AR(); const own = realRole() === "owner" && !state.preview; const list = mqKeys(mid).filter(k => own || !k.h);
+    if (!list.length && !own) return "";
+    return `<div class="card mqk172"><h3>🗝️ ${ar ? "مفاتيح مسجّلة للمقام" : "Recorded keys for this maqam"}</h3><p class="xs muted">${ar ? "كل مفتاح تسجيل قصير بيدخّلك في المقام من طبقة معيّنة — اسمع وقلّد." : "Each key is a short recording that opens the maqam from a given pitch — listen and imitate."}</p>
+      <div class="mqk172g">${list.map((k, i) => `<div class="mqk172i ${k.h ? "hid" : ""}"><b>${esc(k.n || (ar ? "مفتاح" : "Key") + " " + (i + 1))}</b><audio controls preload="none" src="${esc(k.u)}"></audio>${own ? `<div class="row" style="gap:.2rem"><button class="btn btn-o" style="padding:.1rem .45rem" onclick="mqK172('${mid}',${i},'ren')">✏️</button><button class="btn btn-o" style="padding:.1rem .45rem" onclick="mqK172('${mid}',${i},'hide')">${k.h ? "👁" : "🙈"}</button><button class="btn btn-o" style="padding:.1rem .45rem" onclick="mqK172('${mid}',${i},'up')">⬆️</button><button class="btn btn-o" style="padding:.1rem .45rem;color:var(--danger)" onclick="mqK172('${mid}',${i},'del')">🗑️</button></div>` : ""}</div>`).join("")}</div>
+      ${own ? `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.6rem;align-items:center"><input class="in" id="mqk172n" placeholder="${ar ? "اسم المفتاح (مثلًا: بياتي على ري — الشيخ فلان)" : "Key name"}" style="flex:1;min-width:12rem"><button class="btn btn-o" id="mqk172r" onclick="rec172('mqk','mqk172r')">🎙️ ${ar ? "سجّل" : "Record"}</button><label class="btn btn-o">📎 ${ar ? "ارفع" : "Upload"}<input type="file" id="mqk172f" accept="audio/*" multiple hidden onchange="this.parentNode.lastChild.textContent=' ('+this.files.length+')'"> </label><button class="btn btn-p" onclick="mqK172('${mid}',-1,'add')">➕ ${ar ? "أضف" : "Add"}</button></div><div id="mqk172r_pv"></div>` : ""}</div>`;
+  }
+  window.mqK172 = async function (mid, i, act) {
+    const list = mqKeys(mid).slice(); const ar = AR();
+    if (act === "add") { const fi = document.getElementById("mqk172f"); const fs = fi && fi.files.length ? [...fi.files] : []; if (REC.mqk && REC.mqk.f) fs.push(REC.mqk.f); if (!fs.length) return toast(ar ? "سجّل أو ارفع ملف" : "Record or upload", true); const nm = (document.getElementById("mqk172n").value || "").trim();
+      for (const f of fs) { const p = `mqkeys/${mid}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_").slice(-50)}`; const r = await sb.storage.from("academy_public").upload(p, f, { contentType: f.type || "audio/webm" }); if (r.error) { toast(r.error.message, true); continue; } list.push({ n: nm || f.name.replace(/\.[^.]+$/, ""), u: sb.storage.from("academy_public").getPublicUrl(p).data.publicUrl }); }
+      delete REC.mqk; }
+    else if (act === "del") { if (!confirm(ar ? "تمسح المفتاح ده؟" : "Delete this key?")) return; list.splice(i, 1); }
+    else if (act === "hide") list[i] = Object.assign({}, list[i], { h: !list[i].h });
+    else if (act === "ren") { const n = prompt(ar ? "الاسم" : "Name", list[i].n || ""); if (n == null) return; list[i] = Object.assign({}, list[i], { n: n.trim() }); }
+    else if (act === "up" && i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]];
+    await mqKeysSave(mid, list); toast("✓");
+  };
+  const _mo = maqamOne; maqamOne = function (cur) { const h = _mo(cur); const mid = (cur.meta || {}).maqam; if ((state.mqTab || "info") !== "info" || !mid) return h; const c = mqKeysCard(mid); if (!c) return h; const i = h.indexOf('<div class="mqinfo59">'); return i < 0 ? h + c : h.slice(0, i) + c + h.slice(i); };
+  css(`.mqk172g{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.5rem;margin-top:.5rem}.mqk172i{border:1px solid var(--line);border-radius:12px;padding:.5rem;display:flex;flex-direction:column;gap:.3rem}.mqk172i audio{width:100%}.mqk172i.hid{opacity:.5;border-style:dashed}`);
+
+  /* ---------- 7) الآراء: صوت أو فيديو + قبل وبعد ---------- */
+  const pubUrl = p => p ? sb.storage.from("academy_public").getPublicUrl(p).data.publicUrl : "";
+  const media = (p, t) => !p ? "" : /^video/.test(t || "") ? `<video controls preload="none" src="${esc(pubUrl(p))}" style="width:100%;border-radius:10px;max-height:260px"></video>` : `<audio controls preload="none" src="${esc(pubUrl(p))}" style="width:100%"></audio>`;
+  reviewsPublicSection = function () {
+    const list = useData("rvPublic172", () => q(sb.from("academy_reviews").select("id,name,country,rating,body,featured,created_at,media_path,media_type,before_path").eq("status", "approved").order("featured", { ascending: false }).order("created_at", { ascending: false }).limit(12)));
+    if (!Array.isArray(list) || !list.length) return ""; const ar = AR();
+    const avg = list.reduce((a, r) => a + r.rating, 0) / list.length;
+    return `<section class="sec"><div class="wrap"><div style="text-align:center;margin-bottom:1.4rem"><h2>💬 ${L("rvTitle")}</h2><div style="margin-top:.4rem">${stars5(avg)} <b>${avg.toFixed(1)}</b> <span class="muted sm">(${list.length})</span></div></div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${list.map(r => `<div class="card" style="${r.featured ? "border-color:var(--gold)" : ""}"><div>${stars5(r.rating)}</div>
+        ${r.before_path && r.media_path ? `<div class="ba172"><div><span>${ar ? "قبل" : "Before"}</span>${media(r.before_path, "audio")}</div><div><span>${ar ? "بعد" : "After"}</span>${media(r.media_path, r.media_type)}</div></div>` : media(r.media_path, r.media_type)}
+        ${r.body ? `<p class="sm" style="margin:.6rem 0;white-space:pre-wrap">“${esc(r.body)}”</p>` : ""}<div class="xs muted"><b style="color:var(--fg)">${esc(r.name || "—")}</b>${r.country ? " · " + esc(countryName(r.country)) : ""}</div></div>`).join("")}</div>${guaranteeBanner(true)}</div></section>`;
+  };
+  const _mrc = myReviewCard; myReviewCard = function () {
+    const h = _mrc(); if (!h) return h; const ar = AR(); const mine = ((Array.isArray(state.data.rvMine) ? state.data.rvMine : [])[0]) || {};
+    const add = `<div class="rvm172"><b class="sm">🎬 ${ar ? "سيب رأيك بصوتك أو بفيديو (اختياري)" : "Leave your review as a voice note or video (optional)"}</b>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem;align-items:center"><button type="button" class="btn btn-o" id="rv172r" onclick="rec172('rv','rv172r')">🎙️ ${ar ? "سجّل رأيك" : "Record"}</button><label class="btn btn-o">🎬 ${ar ? "ارفع فيديو/صوت" : "Upload video/audio"}<input type="file" id="rv172f" accept="video/*,audio/*" hidden onchange="this.parentNode.lastChild.textContent=' ✓'"> </label></div><div id="rv172r_pv"></div>
+      ${mine.media_path ? `<div style="margin-top:.4rem">${media(mine.media_path, mine.media_type)}</div>` : ""}
+      <details style="margin-top:.5rem"><summary class="sm b">🔁 ${ar ? "قبل وبعد: ارفع تسجيل قديم ليك (من أول ما بدأت)" : "Before & after: upload an old recording from when you started"}</summary><label class="btn btn-o" style="margin-top:.4rem">📎 ${ar ? "التسجيل القديم" : "Old recording"}<input type="file" id="rv172b" accept="audio/*,video/*" hidden onchange="this.parentNode.lastChild.textContent=' ✓'"> </label>${mine.before_path ? media(mine.before_path, "audio") : ""}</details>
+      <p class="xs muted" style="margin-top:.3rem">${ar ? "بيظهر للناس بعد موافقة الإدارة بس." : "Shown publicly only after the admin approves it."}</p></div>`;
+    return h.replace(`<button class="btn btn-p">${L("rvSend")}</button>`, add + `<button class="btn btn-p">${L("rvSend")}</button>`).replace(`required>`, `>`);
+  };
+  const _smr = saveMyReview; saveMyReview = async function () {
+    const uid = uidMe(); const ar = AR(); const up = async (f, tag) => { const p = `reviews/${uid}/${tag}-${Date.now()}.${(f.name.split(".").pop() || "webm").slice(0, 5)}`; const r = await sb.storage.from("academy_public").upload(p, f, { contentType: f.type || "audio/webm", upsert: true }); if (r.error) { toast(r.error.message, true); return null; } return p; };
+    const patch = {}; const vf = (document.getElementById("rv172f") || {}).files; const bf = (document.getElementById("rv172b") || {}).files;
+    const main = (vf && vf[0]) || (REC.rv && REC.rv.f); if (main) { toast(ar ? "⏳ بيترفع…" : "⏳ Uploading…"); const p = await up(main, "main"); if (p) { patch.media_path = p; patch.media_type = main.type || "audio/webm"; } }
+    if (bf && bf[0]) { const p = await up(bf[0], "before"); if (p) patch.before_path = p; }
+    const body = (document.getElementById("rv_b") || {}).value || ""; if (!body.trim() && !patch.media_path && !(((Array.isArray(state.data.rvMine) ? state.data.rvMine : [])[0]) || {}).media_path) return toast(ar ? "اكتب رأيك أو سجّله" : "Write or record your review", true);
+    await _smr(); if (Object.keys(patch).length) { patch.status = "pending"; await sb.from("academy_reviews").update(patch).eq("user_id", uid); invalidate("rvMine", "rvAll", "rvPublic172"); render(); } delete REC.rv;
+  };
+  const _ort = ownerReviewsTab; ownerReviewsTab = function (P) {
+    const h = _ort(P); const rv = state.data.rvAll; if (!Array.isArray(rv)) return h; const ms = rv.filter(r => r.media_path || r.before_path); if (!ms.length) return h; const ar = AR();
+    return `<div class="card" style="margin-bottom:1rem"><h3>🎬 ${ar ? "آراء بالصوت والفيديو" : "Voice & video reviews"}</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-top:.5rem">${ms.map(r => `<div class="card"><b class="sm">${esc(r.name || personName(r.user_id, P.map))}</b> <span class="badge ${r.status === "approved" ? "badge-a" : "badge-g"}">${r.status === "approved" ? L("rvApproved") : L("rvPending")}</span>${r.before_path ? `<div class="xs muted">${ar ? "قبل" : "Before"}</div>${media(r.before_path, "audio")}<div class="xs muted">${ar ? "بعد" : "After"}</div>` : ""}${media(r.media_path, r.media_type)}<div class="row" style="gap:.3rem;margin-top:.4rem">${r.status !== "approved" ? `<button class="btn btn-p" style="padding:.2rem .6rem" onclick="setReview('${r.id}',{status:'approved'})">${L("rvApprove")}</button>` : `<button class="btn btn-o" style="padding:.2rem .6rem" onclick="setReview('${r.id}',{status:'hidden'})">${L("rvHide")}</button>`}</div></div>`).join("")}</div></div>` + h;
+  };
+  css(`.rvm172{border:1px dashed var(--line);border-radius:12px;padding:.6rem}.ba172{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin:.4rem 0}.ba172 span{font-size:.75rem;font-weight:800;color:var(--muted)}`);
+
+  /* ---------- بعد كل رسم ---------- */
+  const _r = render; render = function () { const out = _r.apply(this, arguments); setTimeout(() => { try { decorateSF(); applyLimit(); } catch (e) {} }, 30); return out; };
+  /* إشعار تسليم جديد يحدّث العدّاد فورًا */
+  setInterval(() => { if (document.visibilityState === "visible" && uidMe() && (realRole() === "owner" || role() === "teacher")) sfCounts(true).then(() => decorateSF()); }, 90000);
 })();
 
 // بدء التشغيل
