@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v189";
+const UI_VERSION = "2026-11-16-v190";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27215,6 +27215,128 @@ Between lessons, the platform keeps you going:
   @keyframes in189{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}svg.an189go .dr189{stroke-dasharray:1;animation:dr189 1.1s ease both,in189 .3s both;animation-delay:calc(var(--i,0)*45ms)}@keyframes dr189{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
   @media (prefers-reduced-motion:reduce){svg.an189 *,svg.an189go *{opacity:1!important;animation:none!important}[class*=an-]{animation:none!important}}
   #bk189{margin-top:.8rem;padding:.6rem .8rem;border-radius:.8rem;background:color-mix(in srgb,#f59e0b 14%,var(--card));border:1px dashed #f59e0b;font-size:.85rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}`);
+})();
+
+/* ================= v190: الشرايط من غير رعشة — بتنزل من فوق لتحت فوق المحتوى (أو تزقّه)، تغطي اللوجو أو لأ، طرق إظهار كتير، والجانبية تطلع من الجنب بنفس الخيارات + خلفيات لكل قسم ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const hoverDev = () => matchMedia("(hover:hover) and (pointer:fine)").matches;
+  const RV = () => Object.assign({ on: "on", trig: "edge", style: "overlay", cover: "no", anim: "slide", delay: 700, zone: 70, strig: "edge", sstyle: "overlay", sanim: "slide", tdev: "arrow" }, setv("rv190", {}) || {});
+  let OPEN = false, SOPEN = false, tClose = 0, sClose = 0, lastY = 0;
+
+  function bars() { return [...document.querySelectorAll("#app .bar185")]; }
+  function hdr() { return document.querySelector("#app .hdr, #app > header"); }
+  function sides() { return [...document.querySelectorAll(".side185, #nv180.nv180-side, #nv180.nv180-rail")]; }
+  function layout() {
+    const c = RV(); const b = document.body; const on = c.on === "on"; b.classList.toggle("rv190", on); if (!on) return;
+    const touch = !hoverDev(); const trig = touch ? c.tdev : c.trig;
+    b.classList.remove(...[...b.classList].filter(x => /^rv190-/.test(x)));
+    b.classList.add("rv190-" + (trig === "always" ? "always" : c.style), "rv190-a-" + c.anim, "rv190-s" + c.sstyle, "rv190-sa-" + c.sanim, c.strig === "always" ? "rv190-salways" : "rv190-shide");
+    const h = hdr(); const hb = h ? Math.max(0, h.getBoundingClientRect().bottom) : 0; let top = c.cover === "yes" ? 0 : hb;
+    if (c.style === "overlay" && trig !== "always") bars().forEach(x => { x.style.setProperty("--t190", top + "px"); top += x.offsetHeight || 48; });
+    b.classList.toggle("rv190-open", OPEN || trig === "always"); b.classList.toggle("rv190-sopen", SOPEN || c.strig === "always");
+    let a = document.getElementById("ar190"); const needArrow = trig === "arrow" || trig === "click";
+    if (needArrow && trig !== "always") { if (!a) { a = document.createElement("button"); a.id = "ar190"; a.type = "button"; document.body.appendChild(a); a.onclick = () => { OPEN = !OPEN; layout(); }; } a.textContent = OPEN ? "▴" : "▾"; a.style.top = (c.cover === "yes" ? 4 : Math.max(4, hb - 14)) + "px"; } else if (a) a.remove();
+    let s = document.getElementById("sar190"); if (c.strig === "arrow") { if (!s) { s = document.createElement("button"); s.id = "sar190"; s.type = "button"; document.body.appendChild(s); s.onclick = () => { SOPEN = !SOPEN; layout(); }; } s.textContent = SOPEN ? (AR() ? "›" : "‹") : (AR() ? "‹" : "›"); } else if (s) s.remove();
+    if (c.sstyle === "push") { const w = SOPEN || c.strig === "always" ? Math.max(0, ...sides().map(x => x.offsetWidth || 0)) : 0; b.style.paddingInlineStart = w ? w + "px" : ""; } else b.style.paddingInlineStart = "";
+  }
+  const inRect = (el, x, y, pad) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width && x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad; };
+  addEventListener("mousemove", e => {
+    if (!document.body.classList.contains("rv190") || !hoverDev()) return; const c = RV(); const x = e.clientX, y = e.clientY; const h = hdr();
+    /* فوق: يفتح بالطريقة اللي اخترتها، ويفضل مفتوح طول ما الماوس عليه + مهلة قبل ما يقفل (عشان مايرعشش) */
+    if (c.trig !== "always" && c.trig !== "arrow" && c.trig !== "click" && c.trig !== "scroll") {
+      const want = c.trig === "edge" ? y < c.zone : c.trig === "logo" ? inRect(h && h.querySelector("a,.logo,.brand"), x, y, 6) : c.trig === "header" ? inRect(h, x, y, 0) : false;
+      const keep = OPEN && (bars().some(b => inRect(b, x, y, 24)) || inRect(h, x, y, 0) || y < c.zone);
+      if (want || keep) { clearTimeout(tClose); tClose = 0; if (!OPEN) { OPEN = true; layout(); } }
+      else if (OPEN && !tClose) tClose = setTimeout(() => { OPEN = false; tClose = 0; layout(); }, +c.delay || 700);
+    }
+    /* الجنب: نفس الفكرة */
+    if (c.strig === "edge") { const rtl = document.dir === "rtl"; const edge = rtl ? x > innerWidth - c.zone : x < c.zone; const keep = SOPEN && sides().some(s => inRect(s, x, y, 30));
+      if (edge || keep) { clearTimeout(sClose); sClose = 0; if (!SOPEN) { SOPEN = true; layout(); } } else if (SOPEN && !sClose) sClose = setTimeout(() => { SOPEN = false; sClose = 0; layout(); }, +c.delay || 700); }
+  }, { passive: true });
+  addEventListener("scroll", () => { const c = RV(); if (c.trig !== "scroll" || !document.body.classList.contains("rv190")) return; const y = scrollY; const o = y < 80 || y < lastY - 4; lastY = y; if (o !== OPEN) { OPEN = o; layout(); } }, { passive: true });
+  addEventListener("keydown", e => { if (e.target.closest && e.target.closest("input,textarea,[contenteditable]")) return; if (e.key === "m" || e.key === "M") { OPEN = !OPEN; layout(); } });
+  document.addEventListener("click", e => { const c = RV(); if (c.trig === "logo-click" && e.target.closest(".hdr .logo, .hdr a:first-child")) { if (!OPEN) { e.preventDefault(); OPEN = true; layout(); } } if (OPEN && (c.trig === "arrow" || c.trig === "click" || c.trig === "logo-click") && !e.target.closest(".bar185,.hdr,#ar190")) { OPEN = false; layout(); } }, true);
+  addEventListener("resize", () => { clearTimeout(window.__rv190); window.__rv190 = setTimeout(layout, 150); });
+
+  /* ---------- لوحة الخيارات ---------- */
+  window.rv190 = async (k, v) => { const c = Object.assign({}, setv("rv190", {}) || {}, { [k]: v }); await saveSetting16("rv190", c); OPEN = false; layout(); };
+  function card() {
+    const c = RV(); const sel = (k, O) => `<select class="in" style="width:auto" onchange="rv190('${k}',this.value)">${O.map(([v, a, e]) => `<option value="${v}" ${String(c[k]) === String(v) ? "selected" : ""}>${T(a, e)}</option>`).join("")}</select>`;
+    const row = (l, s) => `<div class="kv" style="align-items:center;gap:.5rem;flex-wrap:wrap"><span class="sm">${l}</span>${s}</div>`;
+    return `<div class="card" id="rv190c" style="border:2px solid #0ea5e9"><h3>🎚️ ${T("الشرايط: إزاي تظهر وتختفي (من غير رعشة)", "Bars: how they show and hide (no flicker)")}</h3>
+      ${row("🔛 " + T("النظام الجديد", "New system"), sel("on", [["on", "شغّال", "On"], ["off", "القديم", "Old"]]))}
+      <h4>⬇️ ${T("الشرايط اللي فوق", "Top bars")}</h4>
+      ${row(T("تظهر إمتى؟ (لاب)", "Show when? (laptop)"), sel("trig", [["edge", "الماوس يقرّب من فوق", "Mouse near the top"], ["header", "الماوس على الهيدر", "Mouse on header"], ["logo", "الماوس على اللوجو", "Mouse on logo"], ["logo-click", "دوسة على اللوجو", "Click the logo"], ["arrow", "سهم ▾ صغير", "Small ▾ arrow"], ["scroll", "لما تطلع لفوق بالسكرول", "Scrolling up"], ["always", "ظاهرة دايمًا", "Always shown"]]))}
+      ${row(T("الموبايل والتابلت", "Phone & tablet"), sel("tdev", [["arrow", "سهم ▾", "▾ arrow"], ["scroll", "لما يطلع لفوق", "Scrolling up"], ["always", "ظاهرة دايمًا", "Always"]]))}
+      ${row(T("بتظهر إزاي؟", "How?"), sel("style", [["overlay", "تنزل فوق المحتوى (الصفحة ماتتحركش)", "Drop over content (page stays still)"], ["push", "تزق المحتوى لتحت", "Push content down"]]))}
+      ${row(T("تغطي اللوجو؟", "Cover the logo?"), sel("cover", [["no", "لأ — تنزل تحت اللوجو", "No — below the logo"], ["yes", "أيوه — تنزل من أول الشاشة فوقه", "Yes — from the very top"]]))}
+      ${row(T("الحركة", "Animation"), sel("anim", [["slide", "تنزل من فوق لتحت", "Slide down"], ["fade", "تظهر بنعومة", "Fade"], ["drop", "تنزل بنطّة", "Drop with bounce"], ["unfold", "تتفرد زي الستارة", "Unfold"], ["none", "من غير حركة", "None"]]))}
+      ${row(T("تستنى قد إيه قبل ما تختفي", "Wait before hiding"), sel("delay", [[300, "سريع", "Fast"], [700, "عادي", "Normal"], [1500, "بطيء", "Slow"], [3000, "بطيء جدًا", "Very slow"]]))}
+      ${row(T("مساحة الإحساس من الحافة", "Edge sensitivity"), sel("zone", [[30, "صغيرة", "Small"], [70, "متوسطة", "Medium"], [120, "كبيرة", "Large"]]))}
+      <h4>↔️ ${T("الشرايط اللي في الجنب", "Side bars")}</h4>
+      ${row(T("تظهر إمتى؟", "Show when?"), sel("strig", [["edge", "الماوس يقرّب من الجنب", "Mouse near the side"], ["arrow", "سهم ‹ على الحافة", "Edge arrow ‹"], ["always", "ظاهرة دايمًا", "Always"]]))}
+      ${row(T("بتظهر إزاي؟", "How?"), sel("sstyle", [["overlay", "فوق المحتوى", "Over content"], ["push", "تزق المحتوى للجنب", "Push content aside"]]))}
+      ${row(T("الحركة", "Animation"), sel("sanim", [["slide", "تتسحب من الجنب", "Slide in"], ["fade", "تظهر بنعومة", "Fade"]]))}
+      <p class="xs muted">${T("سر الرعشة كان إن الشريط بيزق الصفحة فالماوس يخرج منه فيقفل… دلوقتي بيفضل مفتوح طول ما الماوس عليه أو قريب منه، وبيستنى شوية قبل ما يقفل. وفي «فوق المحتوى» الصفحة مابتتحركش خالص. وتقدر تفتح/تقفل بحرف M.", "No more flicker: it stays open while the mouse is on/near it and waits before closing. Press M to toggle.")}</p></div>`;
+  }
+
+  /* ---------- 🖼️ خلفيات لأي قسم ولو للموقع كله ---------- */
+  const BG = { "": ["من غير", "None"], logo: ["لوجو إتقان باهت", "Faded Itqan logo"], geo: ["زخرفة إسلامية هندسية", "Islamic geometric"], stars: ["نجوم ثمانية", "Eight-point stars"], arch: ["قوس محراب", "Mihrab arch"], lantern: ["فوانيس", "Lanterns"], waves: ["موجات صوت (مقامات)", "Sound waves (maqam)"], staff: ["سطور موسيقى", "Music staff"], paper: ["ورق قديم", "Parchment"], frame: ["إطار مزخرف", "Ornate frame"], night: ["سما بالليل ونجوم", "Night sky"], dawn: ["فجر", "Dawn"], green: ["أخضر هادي", "Calm green"], gold: ["دهبي ناعم", "Soft gold"], blobs: ["دواير ضباب", "Soft blobs"], dots: ["نقط", "Dots"], grid: ["مربعات خفيفة", "Light grid"], glass: ["زجاج", "Glass"], dunes: ["كثبان", "Dunes"], calli: ["خط عربي باهت", "Faded calligraphy"] };
+  window.BG190 = BG;
+  const bgRules = () => { let loc = null; try { if (realOwner()) loc = JSON.parse(localStorage.getItem("itqan_ed189") || "null"); } catch (e) {} return loc || setv("ed189", {}) || {}; };
+  function applyBg() {
+    document.querySelectorAll("[class*='bg190-']").forEach(el => { if (!el.__bg190k) return; [...el.classList].filter(c => c.startsWith("bg190-")).forEach(c => el.classList.remove(c)); });
+    const site = setv("bgsite190", "") ; let loc = null; try { if (realOwner()) loc = localStorage.getItem("itqan_bgs190"); } catch (e) {} const s = loc != null ? loc : site;
+    document.body.classList.remove(...[...document.body.classList].filter(c => c.startsWith("bgs190-"))); if (s) document.body.classList.add("bgs190-" + s);
+    Object.entries(bgRules()).forEach(([key, r]) => { if (!r.bg) return; const [sl, w] = key.split("§"); if (w !== "*" && w !== state.route) return; let el; try { el = document.querySelector(sl); } catch (e) { return; } if (el) { el.__bg190k = 1; el.classList.add("bg190-" + r.bg, "bg190"); } });
+  }
+  window.bgs190 = v => { try { localStorage.setItem("itqan_bgs190", v); } catch (e) {} applyBg(); render(); };
+  window.bgs190pub = async () => { let v = ""; try { v = localStorage.getItem("itqan_bgs190") || ""; } catch (e) {} await saveSetting16("bgsite190", v); try { localStorage.removeItem("itqan_bgs190"); } catch (e) {} applyBg(); };
+  function bgCard() { let cur = ""; try { cur = localStorage.getItem("itqan_bgs190"); } catch (e) {} if (cur == null) cur = setv("bgsite190", ""); return `<div class="card" id="bg190c"><h3>🖼️ ${T("خلفية الموقع كله", "Whole-site background")}</h3><div class="bg190g">${Object.entries(BG).map(([k, v]) => `<button class="bg190s ${k ? "bg190 bg190-" + k : ""} ${cur === k ? "on" : ""}" onclick="bgs190('${k}')"><b>${T(v[0], v[1])}</b></button>`).join("")}</div><div class="row" style="gap:.4rem;margin-top:.5rem"><button class="btn btn-p" onclick="bgs190pub()">🚀 ${T("طبّق للكل", "Publish")}</button><span class="xs muted">${T("ولخلفية قسم واحد بس: دوس ✏️ في الركن، ودوس على القسم، واختار «🖼️ خلفية».", "For one section: tap ✏️, tap the section, pick “🖼️ Background”.")}</span></div></div>`; }
+  /* نضيف «🖼️ خلفية» جوه لوحة ✏️ */
+  new MutationObserver(() => { const p = document.getElementById("ed189p"); if (!p || p.__bg190) return; p.__bg190 = 1; const anchor = p.querySelector("details"); const cur = (() => { const R = bgRules(); const k = Object.keys(R).find(k => document.querySelector(".ed189on") && (() => { try { return document.querySelector(k.split("§")[0]) === document.querySelector(".ed189on"); } catch (e) { return false; } })()); return k ? R[k].bg || "" : ""; })();
+    const l = document.createElement("label"); l.className = "xs"; l.innerHTML = `🖼️ ${T("خلفية القسم ده", "This section's background")} <select>${Object.entries(BG).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${T(v[0], v[1])}</option>`).join("")}</select>`; l.querySelector("select").onchange = e => { ed189.set("bg", e.target.value); setTimeout(applyBg, 50); }; anchor ? anchor.before(l) : p.appendChild(l); }).observe(document.body, { childList: true });
+
+  /* ---------- ربط ---------- */
+  const _r = render; render = function () { _r.apply(this, arguments); try { layout(); applyBg();
+    if (realOwner() && (state.route === "control183" || state.route === "layouts180")) { const m = document.querySelector("#app main .card, #app .wrap .card, #app .card"); if (m && !document.getElementById("rv190c") && state.route === "control183") m.insertAdjacentHTML("beforebegin", card()); const mix = document.getElementById("lv188") || document.querySelector(".ly180mix"); if (mix && !document.getElementById("bg190c") && state.route === "layouts180") mix.insertAdjacentHTML("afterend", bgCard() + (document.getElementById("rv190c") ? "" : card())); }
+  } catch (e) { console.warn(e); } };
+  try { new MutationObserver(() => { clearTimeout(window.__bg190); window.__bg190 = setTimeout(() => { try { applyBg(); layout(); } catch (e) {} }, 300); }).observe(document.getElementById("app") || document.body, { childList: true }); } catch (e) {}
+  setTimeout(layout, 300);
+
+  const geo = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='%230f766e' stroke-opacity='.13' stroke-width='1.2'%3E%3Cpath d='M40 4l10 26 26 10-26 10-10 26-10-26L4 40l26-10z'/%3E%3Ccircle cx='40' cy='40' r='12'/%3E%3C/g%3E%3C/svg%3E")`;
+  const star = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='%23b45309' fill-opacity='.09'%3E%3Crect x='20' y='20' width='20' height='20'/%3E%3Crect x='20' y='20' width='20' height='20' transform='rotate(45 30 30)'/%3E%3C/g%3E%3C/svg%3E")`;
+  const arch = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cpath d='M60 300V140Q60 40 150 10Q240 40 240 140V300' fill='none' stroke='%230f766e' stroke-opacity='.12' stroke-width='6'/%3E%3C/svg%3E")`;
+  const lant = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cg fill='none' stroke='%23b45309' stroke-opacity='.15' stroke-width='2'%3E%3Cpath d='M60 0v20M45 20h30l8 20-8 50H45l-8-50z'/%3E%3Cpath d='M50 90l10 15 10-15'/%3E%3C/g%3E%3C/svg%3E")`;
+  const wave = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='60'%3E%3Cpath d='M0 30 Q30 5 60 30 T120 30 T180 30 T240 30' fill='none' stroke='%230f766e' stroke-opacity='.14' stroke-width='2'/%3E%3Cpath d='M0 40 Q30 20 60 40 T120 40 T180 40 T240 40' fill='none' stroke='%230ea5e9' stroke-opacity='.1' stroke-width='2'/%3E%3C/svg%3E")`;
+  const staff = `repeating-linear-gradient(to bottom,transparent 0 14px,color-mix(in srgb,var(--fg) 9%,transparent) 14px 15px,transparent 15px 16px)`;
+  const B = { geo: `${geo}`, stars: `${star}`, arch: `${arch} center bottom/320px no-repeat`, lantern: `${lant}`, waves: `${wave}`, staff: `${staff}`, paper: "radial-gradient(circle at 20% 10%,#fff7e6,transparent 60%),linear-gradient(#fbf3e2,#f3e6c8)", night: "radial-gradient(1px 1px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 70%,#fff,transparent),radial-gradient(1px 1px at 85% 60%,#fff,transparent),linear-gradient(#0b1a33,#13294b)", dawn: "linear-gradient(180deg,#fde68a33,#fbcfe833 40%,#bae6fd33)", green: "linear-gradient(135deg,color-mix(in srgb,#0f766e 10%,var(--bg)),var(--bg))", gold: "linear-gradient(135deg,#fef3c755,#fde68a33)", blobs: "radial-gradient(40% 50% at 15% 20%,color-mix(in srgb,var(--accent) 16%,transparent),transparent),radial-gradient(35% 45% at 85% 70%,#f59e0b22,transparent)", dots: "radial-gradient(color-mix(in srgb,var(--fg) 14%,transparent) 1px,transparent 1.5px) 0 0/18px 18px", grid: "linear-gradient(color-mix(in srgb,var(--fg) 6%,transparent) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,color-mix(in srgb,var(--fg) 6%,transparent) 1px,transparent 1px) 0 0/28px 28px", glass: "linear-gradient(135deg,rgba(255,255,255,.55),rgba(255,255,255,.15))", dunes: "radial-gradient(120% 60% at 30% 110%,#f3d9a6,transparent 60%),radial-gradient(120% 60% at 80% 115%,#e9c27f88,transparent 60%),linear-gradient(#fffaf0,#fff3dc)" };
+  css(Object.entries(B).map(([k, v]) => `.bg190-${k},body.bgs190-${k}{background:${v}!important}`).join("") + `
+  .bg190{position:relative;isolation:isolate}.bg190-logo,.bg190-calli,.bg190-frame{position:relative;isolation:isolate}
+  .bg190-logo::before,body.bgs190-logo::before{content:"إ";position:absolute;inset:0;display:grid;place-items:center;font:700 min(60vw,420px)/1 'Amiri',serif;color:var(--accent);opacity:.06;pointer-events:none;z-index:-1}body.bgs190-logo::before{position:fixed}
+  .bg190-calli::before,body.bgs190-calli::before{content:"إتقان";position:absolute;inset:0;display:grid;place-items:center;font:700 min(30vw,260px)/1 'Amiri',serif;color:var(--fg);opacity:.04;transform:rotate(-8deg);pointer-events:none;z-index:-1}body.bgs190-calli::before{position:fixed}
+  .bg190-frame{outline:3px double color-mix(in srgb,#b45309 40%,transparent);outline-offset:-10px;background:${star}!important}body.bgs190-night,.bg190-night{color:#e5e7eb}
+  .bg190g{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.45rem}.bg190s{height:74px;border:1px solid var(--line);border-radius:.7rem;cursor:pointer;display:flex;align-items:flex-end;padding:.3rem;background:var(--bg);color:var(--fg);overflow:hidden}.bg190s b{font-size:.72rem;background:color-mix(in srgb,var(--card) 80%,transparent);border-radius:.4rem;padding:0 .3rem}.bg190s.on{outline:3px solid var(--accent)}
+  /* ===== الشرايط ===== */
+  body.rv190 .bar185,body.rv190 .hdr .nav{max-height:none!important;transform:none;opacity:1;pointer-events:auto}
+  body.rv190.rv190-overlay .bar185{position:fixed!important;top:var(--t190,64px);left:0;right:0;z-index:900;background:var(--card);box-shadow:0 14px 30px -18px rgba(0,0,0,.35);transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s,visibility 0s .32s;transform:translateY(-14px);opacity:0!important;visibility:hidden;pointer-events:none!important}
+  body.rv190.rv190-overlay.rv190-open .bar185{transform:none;opacity:1!important;visibility:visible;pointer-events:auto!important;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s,visibility 0s}
+  body.rv190.rv190-push .bar185{overflow:hidden;transition:max-height .35s ease,opacity .25s;max-height:0!important;opacity:0}body.rv190.rv190-push.rv190-open .bar185{max-height:24rem!important;opacity:1}
+  body.rv190:not(.rv190-always):not(.rv190-open) .hdr .nav{visibility:hidden;opacity:0!important;transition:opacity .2s,visibility 0s .2s}body.rv190.rv190-open .hdr .nav{visibility:visible;opacity:1!important;transition:opacity .25s}
+  body.rv190.rv190-a-fade .bar185{transform:none!important}body.rv190.rv190-a-drop.rv190-open .bar185{animation:drop190 .5s cubic-bezier(.3,1.6,.5,1)}@keyframes drop190{from{transform:translateY(-30px)}}
+  body.rv190.rv190-a-unfold .bar185{transform-origin:top;transform:scaleY(.2)}body.rv190.rv190-a-unfold.rv190-open .bar185{transform:none}body.rv190.rv190-a-none .bar185{transition:none!important}
+  #ar190{position:fixed;z-index:960;left:50%;transform:translateX(-50%);width:2.6rem;height:1.6rem;border-radius:0 0 .8rem .8rem;border:1px solid var(--line);border-top:0;background:var(--card);cursor:pointer;font-size:1rem;box-shadow:0 6px 14px -8px rgba(0,0,0,.3)}
+  body.rv190.rv190-shide .side185,body.rv190.rv190-shide #nv180.nv180-side,body.rv190.rv190-shide #nv180.nv180-rail{transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s;transform:translateX(calc(var(--sd190,1) * 100%))!important;opacity:0!important;pointer-events:none!important}
+  html[dir=rtl] body.rv190{--sd190:1}html[dir=ltr] body.rv190,html:not([dir=rtl]) body.rv190{--sd190:-1}
+  body.rv190.rv190-sopen .side185,body.rv190.rv190-sopen #nv180.nv180-side,body.rv190.rv190-sopen #nv180.nv180-rail{transform:none!important;opacity:1!important;pointer-events:auto!important}
+  body.rv190.rv190-sa-fade .side185{transform:none!important}body.rv190{transition:padding .32s ease}
+  body.rv190 .near-x{}body.rv190.near-top185 .bar185{}
+  #sar190{position:fixed;z-index:960;top:45%;inset-inline-start:0;width:1.4rem;height:3rem;border-radius:0 .8rem .8rem 0;border:1px solid var(--line);background:var(--card);cursor:pointer}html[dir=rtl] #sar190{border-radius:.8rem 0 0 .8rem}
+  body.rv190 #hh186{display:none!important}
+  @media (prefers-reduced-motion:reduce){body.rv190 .bar185,body.rv190 .side185{transition:none!important}}`);
 })();
 
 // بدء التشغيل
