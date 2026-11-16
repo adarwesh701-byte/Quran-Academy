@@ -1,5 +1,5 @@
 /* Itqan Academy service worker — app shell cache (network-first for the page, cache-first for static assets) */
-const CACHE = "itqan-v179";
+const CACHE = "itqan-v179b";
 const SHELL = ["/", "/index.html", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
@@ -31,8 +31,8 @@ self.addEventListener("fetch", (e) => {
     const isMain = url.pathname === "/" || url.pathname === "/index.html";
     if (url.pathname.startsWith("/archive/")) { e.respondWith(fetch(req).catch(() => caches.match("/index.html"))); return; }
     const net = fetch(req, { cache: "no-store" }).then((r) => { if (r.ok && isMain) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("/index.html", cp)); } return r; });
-    const slow = new Promise((res) => setTimeout(() => caches.match("/index.html").then((h) => h && res(h)), 4000));
-    e.respondWith(Promise.race([net, slow]).catch(() => caches.match("/index.html")));
+    const slow = isMain ? new Promise((res) => setTimeout(() => caches.match("/index.html").then((h) => h && res(h)), 6000)) : new Promise(() => {});
+    e.respondWith(Promise.race([net, slow]).catch(() => isMain ? caches.match("/index.html") : caches.match(req)));
     return;
   }
   if (url.origin === location.origin || /cdn\.jsdelivr|cdnjs|fonts\.(googleapis|gstatic)/.test(url.hostname)) {
