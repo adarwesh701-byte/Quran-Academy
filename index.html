@@ -24439,7 +24439,7 @@ body.ed158 .hv169{opacity:.4!important}
   function gameCard(kind) {
     const g = state.gm173 = state.gm173 && state.gm173.k === kind ? state.gm173 : null;
     if (!g) {
-      if (kind === "order") { const [s, n] = SHORT[Math.floor(Math.random() * SHORT.length)]; const a = 1 + Math.floor(Math.random() * n); state.gm173 = { k: kind, s, a, load: 1, score: (state.gm173s || 0) }; fetch(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-simple-clean`).then(r => r.json()).then(j => { const w = j.data.text.split(/\s+/).filter(Boolean); Object.assign(state.gm173, { words: w, pool: shuffle(w.map((t, i) => ({ t, i }))), got: [], load: 0 }); render(); }).catch(() => { state.gm173.load = 2; render(); }); }
+      if (kind === "order") { const [s, n] = SHORT[Math.floor(Math.random() * SHORT.length)]; const a = 1 + Math.floor(Math.random() * n); state.gm173 = { k: kind, s, a, load: 1, score: (state.gm173s || 0) }; fetch(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-simple`).then(r => r.json()).then(j => { let tx = j.data.text; if (s !== 1 && a === 1 && /^ب\S*س\S*م/.test(tx)) tx = tx.split(/\s+/).slice(4).join(" "); const w = tx.split(/\s+/).filter(Boolean); Object.assign(state.gm173, { words: w, pool: shuffle(w.map((t, i) => ({ t, i }))), got: [], load: 0 }); render(); }).catch(() => { state.gm173.load = 2; render(); }); }
       else if (kind === "mkh") { const items = shuffle(MKH.flatMap((m, i) => m[2].split(" ").map(c => ({ c, b: i })))).slice(0, 10); state.gm173 = { k: kind, items, bins: MKH.map(m => [AR() ? m[0] : m[1]]), done: {}, wrong: 0 }; }
       else { const items = shuffle([...shuffle(HEAVY).slice(0, 5), ...shuffle(LIGHT).slice(0, 5)]).map(c => ({ c, b: HEAVY.includes(c) ? 0 : 1 })); state.gm173 = { k: kind, items, bins: [[T("مفخّم (تقيل)", "Heavy")], [T("مرقّق (خفيف)", "Light")]], done: {}, wrong: 0 }; }
       return gameCard(kind);
@@ -24576,8 +24576,8 @@ body.ed158 .hv169{opacity:.4!important}
 /* ================= v174: تظبيطات من الاختبار — زرار «اللغة والعرض» بقى دايرة صغيرة على الحافة مايغطّيش المحتوى ================= */
 (function () {
   document.head.insertAdjacentHTML("beforeend", `<style>
-  #ctl113{padding:.42rem .5rem!important;inset-inline-start:.35rem!important;opacity:.82;transition:opacity .2s,padding .2s}#ctl113 span{display:none}
-  @media (hover:hover){#ctl113:hover{opacity:1;padding:.45rem .85rem!important}#ctl113:hover span{display:inline}}
+  #ctl113{padding:.42rem .5rem!important;inset-inline-start:.35rem!important;opacity:.82;transition:opacity .2s,padding .2s}html body #ctl113 span{display:none!important}
+  @media (hover:hover){#ctl113:hover{opacity:1;padding:.45rem .85rem!important}html body #ctl113:hover span{display:inline!important}}
   </style>`);
 })();
 
