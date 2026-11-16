@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v178";
+const UI_VERSION = "2026-11-16-v179";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23490,7 +23490,7 @@ html,body{max-width:100%;overflow-x:hidden}
     ev.preventDefault(); ev.stopImmediatePropagation(); gl164();
   }, true);
   const FREE = ["home", "pricing", "about", "contact", "booking", "signup", "login", "app", "policy", "terms", "privacy", "teachers", "cert", "level", "placement", "habits168", "adhkar", "qibla", "tasbih", "names", "hijri"];
-  function guard() { if (isGuest() && setv("guestlock164", true) && !FREE.includes(state.route)) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} setTimeout(gl164, 300); return true; } return false; }
+  function guard() { if (isGuest() && setv("guestlock164", true) && !FREE.includes(state.route) && !(state.route === "cp158" && state.pageArg === "x168")) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} setTimeout(gl164, 300); return true; } return false; }
 
   /* ---------- 5) المصحف: حجم الخط + المفخّم والمرقّق + تصحيح من غير ما النافذة تقفل ---------- */
   const z = () => +(localStorage.getItem("itqan_tjz") || 1);
@@ -25071,9 +25071,34 @@ body.ed158 .hv169{opacity:.4!important}
   .fgrid178{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(11rem,100%),1fr));gap:.4rem;max-height:26rem;overflow:auto;padding:.2rem}.fcard178{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);padding:.5rem;cursor:pointer;display:flex;flex-direction:column;gap:.15rem;text-align:start}.fcard178 b{font-size:1.15rem}.fcard178 span{font-size:.75rem;color:var(--muted)}.fcard178.on{border:2px solid var(--accent)}`);
 
   /* ================= 4) مكتبة الانتقالات ================= */
-  const ANIMS = { none: ["من غير حركة", "None", ""], fade: ["تلاشي ناعم", "Soft fade", "opacity:0"], slideL: ["انزلاق من الشمال", "Slide from left", "opacity:0;transform:translateX(-40px)"], slideR: ["انزلاق من اليمين", "Slide from right", "opacity:0;transform:translateX(40px)"], slideUp: ["طالع من تحت", "Rise up", "opacity:0;transform:translateY(30px)"], slideDown: ["نازل من فوق", "Drop down", "opacity:0;transform:translateY(-30px)"], zoomIn: ["تكبير", "Zoom in", "opacity:0;transform:scale(.94)"], zoomOut: ["تصغير", "Zoom out", "opacity:0;transform:scale(1.06)"], blur: ["ضبابي لواضح", "Blur to sharp", "opacity:0;filter:blur(10px)"], flipX: ["قلب أفقي", "Flip horizontal", "opacity:0;transform:perspective(900px) rotateY(18deg)"], flipY: ["قلب رأسي", "Flip vertical", "opacity:0;transform:perspective(900px) rotateX(-14deg)"], rotate: ["لفّة خفيفة", "Gentle turn", "opacity:0;transform:rotate(-2deg) scale(.97)"], skew: ["ميلان", "Skew", "opacity:0;transform:skewY(2deg) translateY(16px)"], curtain: ["ستارة", "Curtain", "clip-path:inset(0 0 100% 0)"], circle: ["دايرة بتكبر", "Circle reveal", "clip-path:circle(0% at 50% 30%)"], sheet: ["ورقة طالعة من الجنب (زي التطبيقات)", "Side sheet (app-like)", "transform:translateX(100%);box-shadow:-20px 0 40px rgba(0,0,0,.15)"], bottom: ["ورقة طالعة من تحت (موبايل)", "Bottom sheet (mobile)", "transform:translateY(60%);opacity:.3;border-radius:24px 24px 0 0"], stack: ["كروت فوق بعض", "Card stack", "opacity:0;transform:translateY(14px) scale(.98)"], bounce: ["نطّة", "Bounce", "opacity:0;transform:scale(.9)"] };
+  const ANIMS = { none: ["من غير حركة", "None", ""], fade: ["تلاشي ناعم", "Soft fade", "opacity:0"], slideL: ["انزلاق من الشمال", "Slide from left", "opacity:0;transform:translateX(-40px)"], slideR: ["انزلاق من اليمين", "Slide from right", "opacity:0;transform:translateX(40px)"], slideUp: ["طالع من تحت", "Rise up", "opacity:0;transform:translateY(30px)"], slideDown: ["نازل من فوق", "Drop down", "opacity:0;transform:translateY(-30px)"], zoomIn: ["تكبير", "Zoom in", "opacity:0;transform:scale(.94)"], zoomOut: ["تصغير", "Zoom out", "opacity:0;transform:scale(1.06)"], blur: ["ضبابي لواضح", "Blur to sharp", "opacity:0;filter:blur(10px)"], flipX: ["قلب أفقي", "Flip horizontal", "opacity:0;transform:perspective(900px) rotateY(18deg)"], flipY: ["قلب رأسي", "Flip vertical", "opacity:0;transform:perspective(900px) rotateX(-14deg)"], rotate: ["لفّة خفيفة", "Gentle turn", "opacity:0;transform:rotate(-2deg) scale(.97)"], skew: ["ميلان", "Skew", "opacity:0;transform:skewY(2deg) translateY(16px)"], curtain: ["ستارة", "Curtain", "clip-path:inset(0 0 100% 0)"], circle: ["دايرة بتكبر", "Circle reveal", "clip-path:circle(0% at 50% 30%)"], sheet: ["ورقة طالعة من الجنب (زي التطبيقات)", "Side sheet (app-like)", "transform:translateX(100%);box-shadow:-20px 0 40px rgba(0,0,0,.15)"], bottom: ["ورقة طالعة من تحت (موبايل)", "Bottom sheet (mobile)", "transform:translateY(60%);opacity:.3;border-radius:24px 24px 0 0"], stack: ["كروت فوق بعض", "Card stack", "opacity:0;transform:translateY(14px) scale(.98)"], bounce: ["نطّة", "Bounce", "opacity:0;transform:scale(.9)"],
+    pageFlip: ["قلب صفحة كتاب", "Book page flip", "transform:perspective(1400px) rotateY(-92deg);transform-origin:right center;opacity:.2"],
+    pageFlipL: ["قلب صفحة من الناحية التانية", "Page flip (other side)", "transform:perspective(1400px) rotateY(92deg);transform-origin:left center;opacity:.2"],
+    door: ["باب بيتفتح", "Door opening", "transform:perspective(1200px) rotateY(75deg);transform-origin:left center;opacity:0"],
+    doorR: ["باب بيتفتح من اليمين", "Door opening (right)", "transform:perspective(1200px) rotateY(-75deg);transform-origin:right center;opacity:0"],
+    window: ["شباك بيتفتح (ضلفتين)", "Window shutters open", "clip-path:inset(0 50% 0 50%)"],
+    windowV: ["شيش بيتفتح لفوق وتحت", "Shutters open up & down", "clip-path:inset(50% 0 50% 0)"],
+    paper: ["ورقة بتتفرد", "Paper unfolding", "transform:perspective(1000px) rotateX(-80deg);transform-origin:top center;opacity:0"],
+    fold: ["ورقة متطبّقة بتتفتح", "Folded sheet opening", "transform:scaleY(.04) skewX(8deg);transform-origin:top;opacity:.4"],
+    envelope: ["جواب طالع من ظرف", "Letter out of an envelope", "transform:translateY(60px) rotateX(35deg) scale(.92);opacity:0"],
+    book: ["كتاب بيتفتح", "Book opening", "transform:perspective(1600px) rotateY(-60deg) scale(.9);transform-origin:left center;opacity:0"],
+    scroll: ["مخطوطة بتتفرد", "Scroll unrolling", "clip-path:inset(0 0 100% 0);transform:scaleY(.96)"],
+    cube: ["مكعب بيلف", "Rotating cube", "transform:perspective(1200px) rotateY(90deg) translateZ(120px);opacity:0"],
+    swing: ["مرجيحة نازلة", "Swing down", "transform:perspective(900px) rotateX(-70deg);transform-origin:top center;opacity:0"],
+    drop: ["نازلة ونطّت", "Drop & settle", "transform:translateY(-80px);opacity:0"],
+    unfold: ["بتتفرد من النص", "Unfold from centre", "transform:scaleX(0);opacity:0"],
+    iris: ["عين الكاميرا", "Camera iris", "clip-path:circle(0% at 50% 50%)"],
+    diamond: ["معيّن بيكبر", "Diamond reveal", "clip-path:polygon(50% 50%,50% 50%,50% 50%,50% 50%)"],
+    wipe: ["مسحة من جنب", "Side wipe", "clip-path:inset(0 100% 0 0)"],
+    wipeR: ["مسحة من الجنب التاني", "Side wipe (other way)", "clip-path:inset(0 0 0 100%)"],
+    spiral: ["دوامة", "Spiral in", "transform:rotate(-180deg) scale(.3);opacity:0"],
+    newspaper: ["جرنال بيلف", "Spinning newspaper", "transform:rotate(-540deg) scale(0);opacity:0"],
+    dissolve: ["بيدوب ويظهر", "Dissolve", "opacity:0;filter:blur(18px) saturate(0);transform:scale(1.03)"],
+    elevator: ["أسانسير", "Elevator", "transform:translateY(100%);opacity:.6"],
+    tilt: ["ميلة ثلاثية", "3D tilt", "transform:perspective(900px) rotateX(20deg) rotateY(-12deg) translateY(30px);opacity:0"] };
+  window.ANIMS178 = ANIMS;
   const TS = () => Object.assign({ page: "fade", inner: "slideUp", speed: 260 }, setv("trans178", {}) || {}, state.trans178 || {});
-  function animCss() { let c = ""; Object.entries(ANIMS).forEach(([k, v]) => { if (!v[2]) return; c += `@keyframes a178${k}{from{${v[2]}}}.a178-${k}{animation:a178${k} var(--t178,260ms) ${k === "bounce" ? "cubic-bezier(.34,1.56,.64,1)" : "cubic-bezier(.2,.8,.2,1)"} both}`; }); return c; }
+  function animCss() { let c = ""; Object.entries(ANIMS).forEach(([k, v]) => { if (!v[2]) return; c += `@keyframes a178${k}{from{${v[2]}}}.a178-${k}{animation:a178${k} var(--t178,260ms) ${(k === "bounce" || k === "drop") ? "cubic-bezier(.34,1.56,.64,1)" : "cubic-bezier(.2,.8,.2,1)"} both}`; }); return c; }
   css(animCss() + `html[dir=rtl] .a178-sheet{animation-name:a178sheetR}@keyframes a178sheetR{from{transform:translateX(-100%)}}`);
   let lastKey178 = null;
   const kNow = () => [state.route, typeof state.pageArg === "string" ? state.pageArg : "", state.libSec || "", state.dash && state.dash.tab || ""].join("|");
@@ -25266,6 +25291,254 @@ body.ed158 .hv169{opacity:.4!important}
   if (/^#\/(ver178|lib178)/.test(location.hash)) state.route = location.hash.slice(2).split("/")[0];
   const _h = window.history.pushState; /* لما تتنقل وانت بتعدّل: الاختيار يتشال */
   addEventListener("hashchange", () => { ED.sel = null; });
+})();
+
+/* ================= v179: أيقوناتك بلينكات وتصميمات من المكتبة + صوت الكمبيوتر في المُوالف وأعلى/أوطى طبقة + اشتراك سنوي (الشهري × 12 − 30%) + شجرة فروع المقامات وقالب إنشاء مقام + ميكروفون كتابة بالصوت (عربي/إنجليزي) للمالك + إشعار الطالب بكل حاجة المعلم يعملها + «⭐ طلب خاص» في التسويق ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner" && !state.preview;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const role0 = () => !(state.auth && state.auth.user) ? "guest" : (realRole() === "owner" ? "owner" : role());
+  ["mq179", "special179"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  window.go179 = function (h) { h = String(h || "").trim(); if (!h) return; if (/^https?:/.test(h)) return window.open(h, "_blank", "noopener"); const m = h.replace(/^#?\/?/, "").split("/"); const r = m[0], a = m.slice(1).join("/") || undefined; if (PAGES16.includes(r)) go16(r, a); else navigate(r); };
+  css(`#ctl113{top:auto!important;bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}`);
+
+  /* ================= 1) أيقوناتك: إيموجي أو صورة + اسم + لينك + شكل من المكتبة + مكانها ================= */
+  const SHAPES = { circle: ["دايرة", "Circle", "50%"], squircle: ["مربع ناعم", "Squircle", "28%"], square: ["مربع", "Square", "8px"], pill: ["كبسولة", "Pill", "999px"], leaf: ["ورقة شجر", "Leaf", "50% 6px 50% 6px"], drop: ["قطرة", "Drop", "50% 50% 50% 8px"], hex: ["مسدّس", "Hexagon", "hex"], blob: ["فقاعة", "Blob", "42% 58% 63% 37% / 41% 44% 56% 59%"] };
+  const ANIM = { none: ["ثابت", "Still"], pulse: ["نبض", "Pulse"], bounce: ["نطّة", "Bounce"], glow: ["لمعة", "Glow"], spin: ["لفّة خفيفة", "Gentle spin"], wiggle: ["هزّة", "Wiggle"] };
+  const PLACES = { home: ["أول الرئيسية", "Top of home"], myspace: ["مساحتي", "My space"], header: ["الشريط اللي فوق", "Top bar"], float: ["زرار عايم على الجنب", "Floating button"], dock: ["شريط تحت (موبايل)", "Bottom bar (phone)"] };
+  const LINKS = [["#/pricing", "الأسعار", "Pricing"], ["#/booking", "الحصة التجريبية", "Trial lesson"], ["#/habits168", "متابعتي اليومية", "Daily tracker"], ["#/games172", "الألعاب", "Games"], ["#/maqamat", "المقامات", "Maqamat"], ["#/tasmee", "التسميع", "Recitation check"], ["#/library", "الأقسام", "Sections"], ["#/myspace", "مساحتي", "My space"], ["#/classroom", "الفصل", "Classroom"], ["#/adhkar", "الأذكار", "Adhkar"], ["#/badges172", "الشارات", "Badges"], ["#/journey172", "رحلتي", "My journey"]];
+  const ICS = () => (setv("icons179", []) || []);
+  const palette = () => { const P = (window.SK171 || {}).PAL || {}; const out = [["#0f766e", "#ffffff"]]; Object.values(P).forEach(p => { const c = p[2] || {}; if (c.accent) out.push([c.accent, "#ffffff"]); }); return out.slice(0, 40); };
+  function icHtml(x, big) {
+    const s = Object.assign({ shape: "squircle", bg: "#0f766e", fg: "#ffffff", grad: true, shadow: true, anim: "none", size: 56 }, x.st || {}); const sz = big ? s.size : Math.min(s.size, 44);
+    const rad = (SHAPES[s.shape] || SHAPES.squircle)[2]; const clip = rad === "hex" ? "clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%);" : `border-radius:${rad};`;
+    const bg = s.grad ? `linear-gradient(135deg,${s.bg},color-mix(in srgb,${s.bg} 55%,#000))` : s.bg;
+    const face = x.img ? `<img src="${esc(x.img)}" alt="" style="width:70%;height:70%;object-fit:contain">` : `<span style="font-size:${Math.round(sz * .48)}px;line-height:1">${esc(x.ic || "⭐")}</span>`;
+    return `<span class="ic179f ic179a-${esc(s.anim)}" style="width:${sz}px;height:${sz}px;${clip}background:${bg};color:${esc(s.fg)};${s.shadow ? "box-shadow:0 8px 20px color-mix(in srgb," + s.bg + " 35%,transparent);" : ""}">${face}</span>`;
+  }
+  const lbl = x => esc((x.l || {})[state.lang] || (x.l || {}).ar || (x.l || {}).en || "");
+  const vis = x => !x.roles || !x.roles.length || x.roles.includes(role0());
+  function icInject() {
+    const L = ICS().filter(x => vis(x) && !x.hide); document.querySelectorAll(".ic179x").forEach(e => e.remove()); if (!L.length) return;
+    const btn = (x, cls, big) => `<a href="#" class="ic179x ${cls}" title="${lbl(x)}" onclick="ic179Go('${esc(x.id)}');return false;">${icHtml(x, big)}${cls === "ic179h" ? "" : `<b>${lbl(x)}</b>`}</a>`;
+    const by = p => L.filter(x => (x.place || "home") === p);
+    if (state.route === "home" && by("home").length) { const w = document.querySelector("#app .hdr ~ section .wrap, #app section .wrap"); if (w) w.insertAdjacentHTML("afterbegin", `<div class="ic179x ic179row">${by("home").map(x => btn(x, "ic179t", true)).join("")}</div>`); }
+    if (state.route === "myspace" && by("myspace").length) { const g = document.querySelector(".msgrid"); if (g) g.insertAdjacentHTML("afterbegin", by("myspace").map(x => `<button class="mstile ic179x" onclick="ic179Go('${esc(x.id)}')"><span>${icHtml(x)}</span><b>${lbl(x)}</b></button>`).join("")); }
+    if (by("header").length) { const t = document.querySelector(".hdr .tools"); if (t) t.insertAdjacentHTML("afterbegin", by("header").map(x => btn(x, "ic179h")).join("")); }
+    if (by("float").length) document.body.insertAdjacentHTML("beforeend", `<div class="ic179x ic179fl">${by("float").map(x => btn(x, "ic179h", true)).join("")}</div>`);
+    if (by("dock").length && innerWidth <= 900) document.body.insertAdjacentHTML("beforeend", `<div class="ic179x ic179dk">${by("dock").map(x => btn(x, "ic179t")).join("")}</div>`);
+  }
+  window.ic179Go = function (id) { const x = ICS().find(i => i.id === id); if (!x) return; const h = x.href || ""; if (x.open === "tab" || /^https?:/.test(h)) return window.open(/^https?:/.test(h) ? h : location.origin + "/" + h, "_blank", "noopener"); go179(h); };
+  css(`.ic179f{display:inline-grid;place-items:center;flex:0 0 auto;transition:transform .2s}.ic179x:hover .ic179f{transform:translateY(-3px) scale(1.04)}
+  .ic179a-pulse{animation:ic179p 1.8s infinite}@keyframes ic179p{50%{transform:scale(1.07)}}.ic179a-bounce{animation:ic179b 1.6s infinite}@keyframes ic179b{0%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+  .ic179a-glow{animation:ic179g 2s infinite}@keyframes ic179g{50%{filter:brightness(1.25) drop-shadow(0 0 8px currentColor)}}.ic179a-spin{animation:ic179s 6s linear infinite}@keyframes ic179s{to{transform:rotate(360deg)}}.ic179a-wiggle{animation:ic179w 2.4s infinite}@keyframes ic179w{0%,90%,100%{transform:rotate(0)}93%{transform:rotate(-8deg)}96%{transform:rotate(8deg)}}
+  .ic179row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin:0 0 1rem}.ic179t{display:flex;flex-direction:column;align-items:center;gap:.3rem;text-decoration:none;color:var(--fg);font-size:.82rem;max-width:6.5rem;text-align:center}
+  .ic179h{display:inline-flex;text-decoration:none}.ic179fl{position:fixed;z-index:925;inset-inline-start:.7rem;bottom:calc(9rem + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:.5rem}
+  .ic179dk{position:fixed;z-index:899;left:50%;transform:translateX(-50%);bottom:calc(4.9rem + env(safe-area-inset-bottom));display:flex;gap:.8rem;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(12px);padding:.4rem .8rem;border-radius:18px;border:1px solid var(--line)}.ic179dk .ic179t b{font-size:.65rem}`);
+  /* المحرر */
+  const ED = () => state.ice179 = state.ice179 || { ic: "⭐", l: { ar: "", en: "" }, href: "#/pricing", place: "home", st: { shape: "squircle", bg: "#0f766e", fg: "#ffffff", grad: true, shadow: true, anim: "none", size: 56 }, roles: [] };
+  window.ice179 = (k, v) => { const e = ED(); if (k.startsWith("st.")) e.st[k.slice(3)] = v; else if (k.startsWith("l.")) e.l[k.slice(2)] = v; else e[k] = v; const p = document.getElementById("ice179p"); if (p) p.innerHTML = icHtml(e, true) + `<b>${esc(e.l[state.lang] || e.l.ar || "")}</b>`; };
+  window.ice179Role = (r, on) => { const e = ED(); e.roles = (e.roles || []).filter(x => x !== r); if (on) e.roles.push(r); };
+  window.ice179Img = async inp => { const f = inp.files[0]; if (!f) return; const p = `icons179/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_").slice(-40)}`; const r = await sb.storage.from("academy_public").upload(p, f, { contentType: f.type }); if (r.error) return toast(r.error.message, true); ice179("img", sb.storage.from("academy_public").getPublicUrl(p).data.publicUrl); toast("✓"); };
+  window.ice179Save = async () => { const e = JSON.parse(JSON.stringify(ED())); if (!(e.l.ar || e.l.en)) return toast(T("اكتب اسم للأيقونة", "Give the icon a name"), true); const L = ICS().slice(); const i = L.findIndex(x => x.id === e.id); if (!e.id) e.id = "i" + Date.now().toString(36); if (i >= 0) L[i] = e; else L.push(e); await saveSetting16("icons179", L); state.ice179 = null; toast("✅"); render(); };
+  window.ice179Edit = id => { state.ice179 = JSON.parse(JSON.stringify(ICS().find(x => x.id === id) || {})); render(); setTimeout(() => { const c = document.getElementById("ice179c"); c && c.scrollIntoView({ behavior: "smooth", block: "center" }); }, 60); };
+  window.ice179Del = async id => { if (!confirm(T("تمسح الأيقونة؟", "Delete the icon?"))) return; await saveSetting16("icons179", ICS().filter(x => x.id !== id)); render(); };
+  window.ice179Hide = async id => { await saveSetting16("icons179", ICS().map(x => x.id === id ? Object.assign({}, x, { hide: !x.hide }) : x)); render(); };
+  function iconsCard() {
+    const e = ED(); const s = e.st; const sel = (k, D, cur) => `<select class="in" style="width:auto" onchange="ice179('${k}',this.value)">${Object.entries(D).map(([id, v]) => `<option value="${id}" ${cur === id ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+    return `<div class="card" id="ice179c" style="margin-top:1rem"><h3>🔘 ${T("أيقوناتك: ضيف أيقونة بلينك", "Your icons: add an icon with a link")}</h3><p class="xs muted">${T("اختار شكلها ولونها من مكتبة الموقع، وحطها في أي مكان، وخليها تفتح أي صفحة بانتقال ناعم.", "Pick its shape and colour from the site library, place it anywhere, and have it open any page smoothly.")}</p>
+      <div class="ice179g"><div class="ice179pv" id="ice179p">${icHtml(e, true)}<b>${esc(e.l[state.lang] || e.l.ar || "")}</b></div><div>
+        <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><input class="in" style="width:5rem;text-align:center;font-size:1.3rem" value="${esc(e.ic || "")}" oninput="ice179('ic',this.value)" title="${T("إيموجي", "Emoji")}"><label class="btn btn-o">🖼️ ${T("أو صورة", "or an image")}<input type="file" accept="image/*" hidden onchange="ice179Img(this)"></label>
+          <input class="in" style="flex:1;min-width:8rem" placeholder="${T("الاسم بالعربي", "Arabic name")}" value="${esc(e.l.ar || "")}" oninput="ice179('l.ar',this.value)"><input class="in" style="flex:1;min-width:8rem" placeholder="English name" value="${esc(e.l.en || "")}" oninput="ice179('l.en',this.value)"></div>
+        <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.4rem"><label class="sm">🔗 <select class="in" style="width:auto" onchange="if(this.value){ice179('href',this.value);this.nextElementSibling.value=this.value}">${LINKS.map(([h, a, b]) => `<option value="${h}" ${e.href === h ? "selected" : ""}>${T(a, b)}</option>`).join("")}<option value="">${T("لينك تاني…", "Other link…")}</option></select><input class="in" style="width:14rem;direction:ltr" value="${esc(e.href || "")}" oninput="ice179('href',this.value)" placeholder="#/pricing  /  https://…"></label>
+          <label class="sm">${T("تفتح", "Opens")} <select class="in" style="width:auto" onchange="ice179('open',this.value)"><option value="same" ${e.open !== "tab" ? "selected" : ""}>${T("في نفس الصفحة بانتقال ناعم", "In place, smoothly")}</option><option value="tab" ${e.open === "tab" ? "selected" : ""}>${T("في تاب جديد", "New tab")}</option></select></label></div>
+        <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.4rem"><label class="sm">📍 ${sel("place", PLACES, e.place)}</label><label class="sm">🔷 ${sel("st.shape", SHAPES, s.shape)}</label><label class="sm">✨ ${sel("st.anim", ANIM, s.anim)}</label><label class="sm">📏 <input type="range" min="36" max="96" value="${s.size}" oninput="ice179('st.size',+this.value)"></label>
+          <label class="sm"><input type="checkbox" ${s.grad ? "checked" : ""} onchange="ice179('st.grad',this.checked)"> ${T("متدرّج", "Gradient")}</label><label class="sm"><input type="checkbox" ${s.shadow ? "checked" : ""} onchange="ice179('st.shadow',this.checked)"> ${T("ظل", "Shadow")}</label><label class="sm">${T("لون الرمز", "Symbol colour")} <input type="color" value="${s.fg}" oninput="ice179('st.fg',this.value)"></label></div>
+        <div class="ice179pal">${palette().map(([b]) => `<button style="background:${b}" title="${b}" onclick="ice179('st.bg','${b}')"></button>`).join("")}<input type="color" value="${s.bg}" oninput="ice179('st.bg',this.value)" title="${T("أي لون", "Any colour")}"></div>
+        <div class="row" style="gap:.6rem;flex-wrap:wrap;margin-top:.4rem" class="xs">${T("تظهر لـ:", "Shown to:")} ${[["guest", "الزوار", "Visitors"], ["student", "الطلاب", "Students"], ["teacher", "المدرسين", "Teachers"], ["owner", "انت", "You"]].map(([r, a, b]) => `<label class="sm"><input type="checkbox" ${!(e.roles || []).length || e.roles.includes(r) ? "checked" : ""} onchange="ice179Role('${r}',this.checked)"> ${T(a, b)}</label>`).join("")}</div>
+        <div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-p" onclick="ice179Save()">💾 ${e.id ? T("احفظ التعديل", "Save changes") : T("ضيف الأيقونة", "Add the icon")}</button>${e.id ? `<button class="btn btn-o" onclick="state.ice179=null;render()">✖ ${T("إلغاء", "Cancel")}</button>` : ""}</div></div></div>
+      ${ICS().length ? `<div class="ice179l">${ICS().map(x => `<div class="kv" style="align-items:center;${x.hide ? "opacity:.5" : ""}"><span class="row" style="gap:.5rem;align-items:center">${icHtml(x)}<b class="sm">${lbl(x)}</b><span class="xs muted">${esc((PLACES[x.place || "home"] || [])[AR() ? 0 : 1] || "")} · ${esc(x.href || "")}</span></span><span class="row" style="gap:.2rem"><button class="btn btn-o" style="padding:.15rem .5rem" onclick="ice179Edit('${x.id}')">✏️</button><button class="btn btn-o" style="padding:.15rem .5rem" onclick="ice179Hide('${x.id}')">${x.hide ? "👁" : "🙈"}</button><button class="btn btn-o" style="padding:.15rem .5rem" onclick="ice179Del('${x.id}')">🗑️</button></span></div>`).join("")}</div>` : ""}</div>`;
+  }
+  css(`.ice179g{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start;margin-top:.6rem}@media(max-width:640px){.ice179g{grid-template-columns:1fr}}.ice179pv{display:flex;flex-direction:column;align-items:center;gap:.4rem;min-width:7rem;padding:.8rem;border:1px dashed var(--line);border-radius:14px}
+  .ice179pal{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.5rem}.ice179pal button{width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer}.ice179pal input{width:1.8rem;height:1.6rem;border:0;padding:0;background:none}.ice179l{margin-top:.8rem}`);
+
+  /* ================= 2) المُوالف وأعلى/أوطى طبقة: من المايك أو من صوت الكمبيوتر (تسمع الطالب في الحصة) ================= */
+  const SRC = () => { try { return localStorage.getItem("itqan_src179") || "mic"; } catch (e) { return "mic"; } };
+  window.src179 = v => { try { localStorage.setItem("itqan_src179", v); } catch (e) {} if (v === "mic" && window.__sys179) { window.__sys179.getTracks().forEach(t => t.stop()); window.__sys179 = null; } render(); if (v === "sys") toast(T("لما تدوس «ابدأ»، اختار الشاشة أو التاب اللي فيه صوت الطالب وعلّم على «مشاركة الصوت».", "When you press Start, choose the screen or tab with the student's audio and tick “Share audio”."), false); };
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    const _gum = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = async function (c) {
+      const tunerLike = c && c.audio && !c.video && typeof c.audio === "object" && c.audio.echoCancellation === false && !(typeof RM !== "undefined" && RM && RM.joined);
+      if (tunerLike && SRC() === "sys" && navigator.mediaDevices.getDisplayMedia) {
+        let s = window.__sys179; if (!s || !s.getAudioTracks().some(t => t.readyState === "live")) { s = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); s.getVideoTracks().forEach(t => t.stop()); if (!s.getAudioTracks().length) { toast(T("ماتعلّمش على «مشاركة الصوت» — جرّب تاني واختار تاب أو الشاشة كلها", "Audio wasn't shared — try again and pick a tab or the whole screen"), true); throw new Error("no-audio"); } window.__sys179 = s; }
+        return new MediaStream(s.getAudioTracks().map(t => t.clone()));
+      }
+      return _gum(c);
+    };
+  }
+  const srcBar = () => `<div class="src179"><span class="xs muted">${T("الصوت جاي من:", "Sound from:")}</span><button class="${SRC() === "mic" ? "on" : ""}" onclick="src179('mic')">🎤 ${T("المايك (صوتي)", "Microphone (me)")}</button><button class="${SRC() === "sys" ? "on" : ""}" onclick="src179('sys')">🔊 ${T("صوت الكمبيوتر (طالب في الحصة، تسجيل، فيديو)", "Computer sound (a student in class, a recording, a video)")}</button></div>`;
+  css(`.src179{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;margin:.4rem 0 .6rem}.src179 button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:.3rem .8rem;cursor:pointer;font:inherit;font-size:.85rem}.src179 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}`);
+  if (typeof renderTunerPage === "function") { const _tp = renderTunerPage; renderTunerPage = function () { const h = _tp.apply(this, arguments); return h.replace(`<div id="tn_msg"`, srcBar() + `<div id="tn_msg"`); }; }
+  const _mp = maqamPage; maqamPage = function (kind, mid) { const h = _mp.apply(this, arguments); if (kind !== "aah" && kind !== "vtest") return h; const k = h.indexOf("vrRecord('low')"); if (k < 0) return srcBar() + h; const i = h.lastIndexOf('<div class="row"', k); return i < 0 ? h : h.slice(0, i) + srcBar() + h.slice(i); };
+
+  /* ================= 3) الاشتراك السنوي: الشهري × 12 بخصم 30% (بيتحسب أوتوماتيك من السيرفر) ================= */
+  const _rp = renderPricing; renderPricing = function () {
+    const yr = !!state.yr179; const all = PLANS.slice(); const hasY = all.some(p => p.yearly);
+    if (hasY) { const keep = all.filter(p => p.isTrial || (!!p.yearly === yr)); PLANS.length = 0; keep.forEach(p => PLANS.push(p)); }
+    let h; try { h = _rp.apply(this, arguments); } finally { if (hasY) { PLANS.length = 0; all.forEach(p => PLANS.push(p)); } }
+    if (!hasY) return h; const disc = +(setv("yearlyDiscount", 30) || 30);
+    const tog = `<div class="yr179"><button class="${!yr ? "on" : ""}" onclick="state.yr179=false;render()">${T("شهري", "Monthly")}</button><button class="${yr ? "on" : ""}" onclick="state.yr179=true;render()">${T("سنوي", "Yearly")} <span>${T(`وفّر ${disc}%`, `save ${disc}%`)}</span></button></div>${yr ? `<p class="sm muted" style="text-align:center;margin:-.3rem 0 .8rem">${T(`السنوي = سعر الشهر × 12 بخصم ${disc}% — بتدفع مرة واحدة وحصصك كلها بتتضاف لرصيدك.`, `Yearly = the monthly price × 12 with ${disc}% off — pay once and all your lessons are added to your balance.`)}</p>` : ""}`;
+    h = h.replace('<div class="grid">', tog + '<div class="grid">');
+    if (yr) { const tr = I18N[state.lang]; if (tr && tr.pr && tr.pr.perMonth) h = h.split(`<span class="sm muted">${esc(tr.pr.perMonth)}</span>`).join(`<span class="sm muted">${T("/ سنة", "/ year")}</span>`); all.filter(p => p.yearly && p.monthly).forEach(p => { const m = all.find(x => x.id === p.monthly); if (!m) return; const full = esc(money(m.price * 12, m.currency)); h = h.replace(`subscribePlan('${p.id}')`, `subscribePlan('${p.id}')" data-full="${full}`); }); }
+    return h;
+  };
+  css(`.yr179{display:flex;justify-content:center;gap:0;margin:0 auto 1rem;border:1px solid var(--line);border-radius:999px;width:max-content;overflow:hidden;background:var(--card)}.yr179 button{border:0;background:transparent;color:var(--fg);padding:.55rem 1.3rem;cursor:pointer;font:inherit;font-weight:700}.yr179 button.on{background:var(--accent);color:#fff}.yr179 span{font-size:.72rem;background:#f59e0b;color:#111;border-radius:999px;padding:.05rem .45rem;margin-inline-start:.3rem}`);
+
+  /* ================= 4) فروع المقامات: شجرة تحت كل مقام أساسي + قالب تعمل بيه مقام جديد ================= */
+  const CUST = () => (setv("mqcustom179", []) || []);
+  let custLoaded = "";
+  function loadCustom() { const L = CUST(); const sig = JSON.stringify(L); if (sig === custLoaded) return; custLoaded = sig; L.forEach(m => { const ex = MQ.find(x => x.id === m.id); const o = { id: m.id, ar: m.ar, en: m.en || m.ar, fam: m.fam, parent: m.parent || m.fam, tonic: +m.tonic || 0, sc: m.sc, use: m.use || "", custom: true, open: 0, close: 0 }; if (ex) Object.assign(ex, o); else MQ.push(o); MAQAM_SCALES[m.id] = m.sc; Object.keys(UI).forEach(lg => { const mm = UI[lg] && UI[lg].maqams; if (mm) mm[m.id] = lg === "ar" ? m.ar : (m.en || m.ar); }); }); }
+  const parentOf = m => m.parent || (m.id === m.fam ? null : m.fam);
+  function tree(id, depth) { const kids = MQ.filter(m => parentOf(m) === id && m.id !== id); if (!kids.length) return ""; return `<ul class="mt179">${kids.map(k => `<li><a href="#" onclick="go16('mq179','${k.id}');return false;">${esc(mqName(k))}</a>${k.custom ? ` <span class="badge" style="font-size:.65rem">${T("جديد", "new")}</span>` : ""}<span class="xs muted"> · ${esc(k.use || "").slice(0, 60)}</span>${depth < 4 ? tree(k.id, depth + 1) : ""}</li>`).join("")}</ul>`; }
+  function branchCard() {
+    loadCustom(); const ar = AR();
+    return `<div class="card mt179c ic179x"><h3>🌳 ${T("فروع كل مقام أساسي", "The branches of each main maqam")}</h3><p class="xs muted">${T("دوس على أي مقام أساسي تشوف فروعه، ودوس على الفرع يفتح صفحته (السلم، الآهات، مارس بصوتك).", "Open a main maqam to see its branches; tap a branch to open its page (scale, aahs, practice).")}</p>
+      ${MQ_FAMS.map(f => { const m = MQ.find(x => x.id === f); if (!m) return ""; const n = MQ.filter(x => x.fam === f && x.id !== f).length; return `<details class="mt179d"><summary><b>${esc(mqName(m))}</b> <span class="xs muted">(${n} ${T("فرع", "branches")})</span> <a href="#" class="xs" onclick="event.stopPropagation();go16('mq179','${m.id}');return false;">${T("صفحة المقام", "maqam page")} ←</a></summary>${tree(f, 1) || `<p class="xs muted">—</p>`}</details>`; }).join("")}
+      ${own() ? `<button class="btn btn-p" style="margin-top:.6rem" onclick="go16('mq179','new')">➕ ${T("اعمل مقام/فرع جديد من القالب", "Create a maqam / branch from the template")}</button>` : ""}</div>`;
+  }
+  css(`.mt179c{margin-bottom:1rem}.mt179d{border:1px solid var(--line);border-radius:12px;padding:.5rem .8rem;margin:.35rem 0}.mt179d summary{cursor:pointer}.mt179{margin:.3rem 0 0;padding-inline-start:1.2rem;border-inline-start:2px solid color-mix(in srgb,var(--accent) 35%,transparent)}.mt179 li{margin:.25rem 0}`);
+  /* صفحة المقام (للفروع والمقامات الجديدة) + القالب */
+  const NOTES = () => (typeof NOTE_NAMES !== "undefined" ? NOTE_NAMES : []).filter(([c, n]) => c >= -700 && c <= 1400);
+  const JINS = { "عجم (ماجور)": [0, 200, 400, 500], "نهاوند": [0, 200, 300, 500], "كرد": [0, 100, 300, 500], "حجاز": [0, 100, 400, 500], "بياتي": [0, 150, 300, 500], "رست": [0, 200, 350, 500], "صبا": [0, 150, 300, 400], "سيكاه": [0, 150, 350] };
+  function mqPage(id) {
+    loadCustom(); const ar = AR();
+    if (id === "new" || (state.mqe179 && state.mqe179.id === id)) {
+      if (!own()) return pageWrap("🎼", "—", "", `<div class="card muted">—</div>`);
+      const e = state.mqe179 = state.mqe179 && (id === "new" ? !state.mqe179.id : state.mqe179.id === id) ? state.mqe179 : (id === "new" ? { ar: "", en: "", parent: "nahawand", tonic: 0, sc: "0 200 300 500 700 800 1100 1200", use: "" } : Object.assign({}, CUST().find(x => x.id === id), { sc: (CUST().find(x => x.id === id) || {}).sc.join(" ") }));
+      const prev = String(e.sc).split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+      return pageWrap("🎼", e.id ? T("تعديل المقام", "Edit maqam") : T("مقام / فرع جديد", "New maqam / branch"), T("اكتب السلم وبيبدأ منين، والصفحة بتتعمل زي باقي المقامات بالظبط", "Write the scale and where it starts — the page is built just like the other maqamat"),
+        `<div class="card"><div class="fgrid"><div><label class="l">${T("الاسم بالعربي", "Arabic name")}</label><input class="in" value="${esc(e.ar)}" oninput="state.mqe179.ar=this.value"></div><div><label class="l">English name</label><input class="in" value="${esc(e.en)}" oninput="state.mqe179.en=this.value"></div>
+          <div><label class="l">${T("فرع من (تقدر تختار فرع كمان)", "Branch of (a branch works too)")}</label><select class="in" onchange="state.mqe179.parent=this.value">${MQ.filter(m => m.id !== e.id).map(m => `<option value="${m.id}" ${e.parent === m.id ? "selected" : ""}>${esc(mqName(m))}${MQ_FAMS.includes(m.id) ? " ★" : ""}</option>`).join("")}</select></div>
+          <div><label class="l">${T("بيبدأ منين (القرار)", "Starts from (tonic)")}</label><select class="in" onchange="state.mqe179.tonic=+this.value">${NOTES().map(([c, n]) => `<option value="${c}" ${+e.tonic === c ? "selected" : ""}>${esc(n.replace("?", ""))}</option>`).join("")}</select></div></div>
+          <label class="l" style="margin-top:.6rem">${T("السلم (بالسنت من القرار، 8 درجات — 100 = نص تون، 150 = ربع تون ونص، 200 = تون)", "Scale (cents from the tonic, 8 degrees — 100 = half tone, 150 = three-quarter, 200 = whole)")}</label><input class="in" dir="ltr" value="${esc(e.sc)}" oninput="state.mqe179.sc=this.value;document.getElementById('mqe179v').innerHTML=mqe179Prev(this.value)">
+          <div class="row" style="gap:.3rem;flex-wrap:wrap;margin:.4rem 0"><span class="xs muted">${T("أو ركّب من جنسين:", "Or build from two ajnas:")}</span>${Object.keys(JINS).map(j => `<button class="btn btn-o" style="padding:.15rem .5rem" onclick="mqe179J('${j}',0)">${j} ↓</button>`).join("")}<span class="xs muted">|</span>${Object.keys(JINS).map(j => `<button class="btn btn-o" style="padding:.15rem .5rem" onclick="mqe179J('${j}',1)">${j} ↑</button>`).join("")}</div>
+          <div id="mqe179v">${mqe179Prev(e.sc)}</div>
+          <label class="l">${T("بيتقري في إيه؟ (اختياري)", "When is it used? (optional)")}</label><input class="in" value="${esc(e.use)}" oninput="state.mqe179.use=this.value">
+          <div class="row" style="gap:.4rem;margin-top:.7rem"><button class="btn btn-p" onclick="mqe179Save()">💾 ${T("احفظ واعمل الصفحة", "Save & build the page")}</button>${e.id ? `<button class="btn btn-o" style="color:var(--danger)" onclick="mqe179Del('${e.id}')">🗑️ ${T("امسح", "Delete")}</button>` : ""}<button class="btn btn-o" onclick="mqe179Play()">🔊 ${T("اسمع السلم", "Hear the scale")}</button></div></div>`, 900);
+    }
+    const m = MQ.find(x => x.id === id); if (!m) return pageWrap("🎼", "—", "", `<div class="card muted">—</div>`);
+    const par = MQ.find(x => x.id === parentOf(m)); const kids = MQ.filter(x => parentOf(x) === m.id && x.id !== m.id);
+    const deg = m.sc.map((c, i) => `<div class="mq179d"><b>${i + 1}</b><span>${esc(noteName(m.tonic + c) || "—")}</span><small dir="ltr">${c}¢</small></div>`).join("");
+    const tab = state.mq179t || "aah";
+    return pageWrap("🎼", mqName(m), par ? T("فرع من ", "A branch of ") + mqName(par) : T("مقام أساسي", "Main maqam"),
+      `<div class="card"><div class="row" style="justify-content:space-between;gap:.5rem;flex-wrap:wrap;align-items:center"><span class="sm">${esc(m.use || "")}</span><span class="row" style="gap:.3rem">${par ? `<button class="btn btn-o" onclick="go16('mq179','${par.id}')">⬆️ ${esc(mqName(par))}</button>` : ""}<button class="btn btn-p" onclick="mqe179Play('${m.id}')">🔊 ${T("اسمع السلم", "Hear the scale")}</button>${own() && m.custom ? `<button class="btn btn-o" onclick="state.mqe179=null;state.mqe179=Object.assign({},CUST179().find(x=>x.id==='${m.id}'));state.mqe179.sc=state.mqe179.sc.join(' ');render()">✏️</button>` : ""}</span></div>
+        <div class="mq179s">${deg}</div>${kids.length ? `<p class="sm" style="margin-top:.6rem"><b>${T("فروعه:", "Its branches:")}</b> ${kids.map(k => `<a href="#" onclick="go16('mq179','${k.id}');return false;">${esc(mqName(k))}</a>`).join(" · ")}</p>` : ""}</div>
+      <div class="motabs" style="margin-top:.8rem">${[["aah", "🗣️ " + T("الآهات ومارس بصوتك", "Aahs & practise")], ["vtest", "🎤 " + T("اختبر نفسك", "Test yourself")], ["tuner", "🎙️ " + T("المُوالف", "Tuner")]].map(([k, n]) => `<button class="${tab === k ? "on" : ""}" onclick="state.mq179t='${k}';render()">${n}</button>`).join("")}</div>
+      <div style="margin-top:.6rem">${tab === "tuner" ? `<div class="card"><button class="btn btn-p" onclick="TN.maqam='${m.id}';go16('tuner')">🎙️ ${T("افتح المُوالف على المقام ده", "Open the tuner on this maqam")}</button></div>` : maqamPage(tab, m.id)}</div>`, 1000);
+  }
+  window.CUST179 = CUST;
+  window.mqe179Prev = v => { const a = String(v).split(/[\s,]+/).map(Number).filter(n => !isNaN(n)); const t = +((state.mqe179 || {}).tonic || 0); return `<div class="mq179s">${a.map((c, i) => `<div class="mq179d"><b>${i + 1}</b><span>${esc(noteName(t + c) || "—")}</span><small dir="ltr">${c}¢${i ? ` (+${c - a[i - 1]})` : ""}</small></div>`).join("")}</div>`; };
+  window.mqe179J = (j, up) => { const e = state.mqe179; const a = String(e.sc).split(/[\s,]+/).map(Number).filter(n => !isNaN(n)); const low = up ? a.slice(0, 4) : JINS[j]; const high = up ? JINS[j].map(c => c + 700) : a.slice(4).length ? a.slice(4) : [700, 900, 1100, 1200]; const s = low.concat(high); if (s[s.length - 1] !== 1200) s.push(1200); e.sc = [...new Set(s)].sort((x, y) => x - y).slice(0, 8).join(" "); render(); };
+  window.mqe179Play = id => { const m = id ? MQ.find(x => x.id === id) : { tonic: +((state.mqe179 || {}).tonic || 0), sc: String((state.mqe179 || {}).sc || "").split(/[\s,]+/).map(Number).filter(n => !isNaN(n)) }; if (!m || !m.sc.length) return; const notes = m.sc.map(c => [c, .55]).concat(m.sc.slice(0, -1).reverse().map(c => [c, .5])); try { aahSing(notes, mqTonicHz(m), state.mq && state.mq.voice || "m"); } catch (e) { toast(e.message, true); } };
+  window.mqe179Save = async () => { const e = state.mqe179; const sc = String(e.sc).split(/[\s,]+/).map(Number).filter(n => !isNaN(n)); if (!e.ar || sc.length < 5) return toast(T("اكتب الاسم و5 درجات على الأقل", "Write a name and at least 5 degrees"), true); const par = MQ.find(x => x.id === e.parent) || MQ[0]; const id = e.id || ("c" + Date.now().toString(36)); const item = { id, ar: e.ar.trim(), en: (e.en || "").trim() || e.ar.trim(), parent: par.id, fam: par.fam || par.id, tonic: +e.tonic || 0, sc, use: e.use || "" }; const L = CUST().filter(x => x.id !== id).concat([item]); await saveSetting16("mqcustom179", L); custLoaded = ""; loadCustom(); state.mqe179 = null; toast("✅"); go16("mq179", id); };
+  window.mqe179Del = async id => { if (!confirm(T("تمسح المقام ده؟", "Delete this maqam?"))) return; await saveSetting16("mqcustom179", CUST().filter(x => x.id !== id)); const i = MQ.findIndex(x => x.id === id); if (i >= 0) MQ.splice(i, 1); custLoaded = ""; state.mqe179 = null; go16("library"); };
+  css(`.mq179s{display:grid;grid-template-columns:repeat(auto-fit,minmax(5.2rem,1fr));gap:.35rem;margin-top:.6rem}.mq179d{border:1px solid var(--line);border-radius:12px;padding:.4rem;text-align:center;display:flex;flex-direction:column;gap:.1rem}.mq179d b{color:var(--accent)}.mq179d small{color:var(--muted);font-size:.7rem}`);
+
+  /* ================= 5) اكتب بصوتك (عربي أو إنجليزي) — للمالك في أي خانة كتابة ================= */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let mic = null, rec = null, field = null;
+  const dl = () => { try { return localStorage.getItem("itqan_dl179") || "ar-EG"; } catch (e) { return "ar-EG"; } };
+  function micShow(el) {
+    if (!SR || !own()) return; field = el; if (!mic) { mic = document.createElement("div"); mic.id = "dm179"; document.body.appendChild(mic); mic.addEventListener("mousedown", e => e.preventDefault()); }
+    mic.innerHTML = `<button class="go" title="${T("اتكلم وهكتب مكانك", "Speak and I'll type")}" onclick="dm179()">${rec ? "⏹" : "🎙️"}</button><button class="lg" onclick="dm179L()">${dl() === "ar-EG" ? "ع" : "EN"}</button>`;
+    const r = el.getBoundingClientRect(); mic.style.top = Math.max(4, r.top - 34) + "px"; mic.style.left = Math.min(innerWidth - 84, Math.max(4, (document.dir === "rtl" ? r.left : r.right - 80))) + "px"; mic.style.display = "flex"; mic.classList.toggle("on", !!rec);
+  }
+  document.addEventListener("focusin", e => { const t = e.target; if (t && (t.tagName === "TEXTAREA" || (t.tagName === "INPUT" && /^(text|search|)$/i.test(t.type || "text")))) micShow(t); });
+  document.addEventListener("focusout", () => setTimeout(() => { if (!rec && mic && !mic.matches(":hover") && document.activeElement !== field) mic.style.display = "none"; }, 200));
+  window.dm179L = () => { try { localStorage.setItem("itqan_dl179", dl() === "ar-EG" ? "en-US" : "ar-EG"); } catch (e) {} if (field) micShow(field); };
+  window.dm179 = () => {
+    if (rec) { rec.stop(); return; } if (!field) return; const f = field; rec = new SR(); rec.lang = dl(); rec.interimResults = true; rec.continuous = true;
+    const start = f.selectionStart != null ? f.selectionStart : f.value.length; const before = f.value.slice(0, start), after = f.value.slice(f.selectionEnd != null ? f.selectionEnd : start); let fin = "";
+    rec.onresult = ev => { let inter = ""; for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) fin += (fin && !/\s$/.test(fin) ? " " : "") + t.trim(); else inter += t; } const sp = before && !/\s$/.test(before) ? " " : ""; f.value = before + sp + fin + (inter ? " " + inter : "") + after; f.dispatchEvent(new Event("input", { bubbles: true })); };
+    rec.onend = () => { rec = null; f.dispatchEvent(new Event("change", { bubbles: true })); micShow(f); };
+    rec.onerror = e => { toast(e.error === "not-allowed" ? T("اسمح للمايك", "Allow the microphone") : e.error, true); };
+    rec.start(); micShow(f); f.focus();
+  };
+  css(`#dm179{position:fixed;z-index:10003;display:none;gap:.2rem;background:#0f172a;border-radius:999px;padding:.15rem;box-shadow:0 6px 16px rgba(0,0,0,.25)}#dm179 button{border:0;border-radius:999px;cursor:pointer;color:#fff;background:transparent;font-weight:800;height:1.8rem;min-width:1.8rem}#dm179 .go{background:#16a34a}#dm179.on .go{background:#dc2626;animation:sfp172 1.2s infinite}#dm179 .lg{font-size:.75rem}`);
+
+  /* ================= 6) إشعار الطالب بأي حاجة المعلم عملها (المصحف، التقدّم، الخطة، الواجب) ================= */
+  const _nt = notifText; notifText = function (n) { if (n && n.kind === "teacher_action") { const d = n.data || {}; const w = { mushaf: ["📖 معلمك علّم على كلمة في مصحفك", "📖 Your teacher marked a word in your mushaf"], progress: ["📈 معلمك حدّث مستواك", "📈 Your teacher updated your progress"], plan: ["🗓️ معلمك عملك خطة جديدة", "🗓️ Your teacher made you a new plan"], note: ["📝 معلمك كتبلك ملاحظة", "📝 Your teacher left you a note"] }[d.what] || ["🔔 معلمك عمل حاجة جديدة في صفحتك", "🔔 Your teacher updated your page"]; return T(w[0], w[1]) + (+d.n > 1 ? ` (${d.n})` : "") + (d.detail ? " — " + d.detail : ""); } return _nt.apply(this, arguments); };
+
+  /* ================= 7) ⭐ طلب خاص: رسالة الموقع + صور + فيديوهات + رسايل للطلاب والأهالي ================= */
+  const M = "/media/promo/";
+  const MSG = {
+    ar: `🌙 أكاديمية إتقان — القرآن بصوتك، بإتقان
+
+اتعلّم القرآن والتجويد ومقامات التلاوة والعربي مع معلمين مجازين، لايف ١:١ بتوقيت بلدك.
+
+وبين الحصص، المنصة معاك:
+🎙️ سمّع وردك واعرف غلطك فورًا
+📖 مصحف ملوّن بأحكام التجويد
+🎼 سلالم المقامات وآهات بصوت بشري ومُوالف لايف
+🕌 متابعتك اليومية: الصلوات والقيام والورد
+🎮 ألعاب للأطفال تعلّم بالحب
+👨‍👩‍👧 تقارير لولي الأمر كل أسبوع
+
+✨ أول حصة تجريبية مجانًا — احجزها دلوقتي:
+{u}`,
+    en: `🌙 Itqan Academy — recite the Quran beautifully, in your own voice
+
+Learn Quran, tajweed, recitation maqamat and Arabic with certified teachers — live, one-to-one, in your time zone.
+
+Between lessons, the platform keeps you going:
+🎙️ Recite your daily portion and see your mistakes instantly
+📖 A colour-coded tajweed mushaf
+🎼 Maqam scales, human-voice aahs and a live tuner
+🕌 Your daily tracker: prayers, night prayer and wird
+🎮 Learning games kids actually love
+👨‍👩‍👧 Weekly reports for parents
+
+✨ Your first trial lesson is free — book it now:
+{u}`
+  };
+  const STU = {
+    ar: [["تشجيع", "يا بطل 🌟 كل يوم بتقرا فيه حتى صفحة واحدة بيقرّبك من حلمك. افتح إتقان النهارده وسمّع وردك — هتفرح بنفسك 💚"], ["تحدّي", "🔥 تحدّي الأسبوع: ٧ أيام ورد ورا بعض على إتقان. اللي يكمّل ياخد شارة 🏅 — قدّها؟"], ["للأهل", "أهلًا يا ولي الأمر الكريم 🌿 ابنك/بنتك بيتعلّم القرآن معانا. سجّل في إتقان وهيوصلك تقرير كل أسبوع بمستواه وواجباته — وفيه حصة تجريبية مجانية لأي حد في البيت."], ["ادعي صحابك", "🎁 ابعت لينكك لصحابك: كل ١٠ يشتركوا = أسبوعين مجانًا ليك. والخير اللي هيتعلموه في ميزانك إن شاء الله 🤍 {u}"], ["رمضان", "🌙 رمضان قرّب! خطة ختمة + قيام ٣٠ يوم + متابعة يومية على إتقان. ابدأ من دلوقتي عشان توصل وانت مستعد ✨"], ["بعد الغياب", "وحشتنا 💚 مكانك في إتقان مستنيك. خمس دقايق بس النهارده — صفحة وتسميع — وارجع لإيقاعك."]],
+    en: [["Encourage", "Well done 🌟 Every day you read — even one page — brings you closer to your goal. Open Itqan today and recite your portion 💚"], ["Challenge", "🔥 This week's challenge: 7 days of wird in a row on Itqan. Finish it and earn a badge 🏅 — are you in?"], ["Parents", "Dear parent 🌿 your child is learning the Quran with us. Join Itqan to get a weekly report on their level and homework — and anyone at home can take a free trial lesson."], ["Invite friends", "🎁 Share your link: every 10 friends who subscribe = 2 free weeks for you. And the good they learn is in your scale too, in shā’ Allāh 🤍 {u}"], ["Ramadan", "🌙 Ramadan is near! A khatma plan + 30 nights of qiyām + daily tracking on Itqan. Start now so you arrive ready ✨"], ["Come back", "We miss you 💚 Your place at Itqan is waiting. Just five minutes today — one page and a recitation check — and you're back in rhythm."]]
+  };
+  const base = () => (typeof KIT_BASE === "function" ? KIT_BASE() : location.origin);
+  window.sp179Copy = async (k, i) => { const u = base(); const t = (i == null ? MSG[k] : STU[k][i][1]).split("{u}").join(u); try { await navigator.clipboard.writeText(t); toast("📋 ✓"); } catch (e) { prompt("", t); } };
+  window.sp179Wa = (k, i) => { const u = base(); const t = (i == null ? MSG[k] : STU[k][i][1]).split("{u}").join(u); window.open("https://wa.me/?text=" + encodeURIComponent(t), "_blank", "noopener"); };
+  function specialPage() {
+    if (!own()) return pageWrap("⭐", "—", "", `<div class="card muted">—</div>`); const u = base();
+    const vids = [["promo-ar.mp4", "🎬 فيديو الموقع — عربي (ريلز/تيك توك/ستوري)"], ["promo-en.mp4", "🎬 Site video — English (Reels/TikTok/Stories)"], ["demo-tracker-ar.mp4", "🎥 تجربة حقيقية: متابعتي اليومية"]];
+    const pics = ["p1-ar.png", "p2-ar.png", "p3-ar.png", "p4-ar.png", "p5-ar.png", "p1-en.png", "p2-en.png", "p3-en.png", "p4-en.png", "p5-en.png"];
+    return pageWrap("⭐", T("طلب خاص: تسويق الموقع", "Special request: marketing the site"), T("رسالة جاهزة بالعربي والإنجليزي + صور مصمّمة + فيديوهات من الموقع نفسه + رسايل للطلاب والأهالي", "A ready message in Arabic and English + designed images + videos from the site itself + messages for students and parents"),
+      `<div class="sp179v">${vids.map(([f, n]) => `<figure class="card"><video controls playsinline preload="metadata" src="${M}${f}" poster="${M}${f.replace(".mp4", ".jpg")}"></video><figcaption class="sm"><b>${n}</b> <a class="btn btn-o" style="padding:.15rem .6rem" href="${M}${f}" download>⬇️</a></figcaption></figure>`).join("")}</div>
+      <div class="sp179m">${["ar", "en"].map(k => `<div class="card sp179c" dir="${k === "ar" ? "rtl" : "ltr"}"><div class="sp179h">${k === "ar" ? "رسالة الموقع" : "The site in one message"}</div><pre>${esc(MSG[k].split("{u}").join(u))}</pre><div class="row" style="gap:.3rem"><button class="btn btn-p" onclick="sp179Copy('${k}')">📋 ${k === "ar" ? "انسخ" : "Copy"}</button><button class="btn btn-o" onclick="sp179Wa('${k}')">🟢 WhatsApp</button></div></div>`).join("")}</div>
+      <h3 style="margin:1.2rem 0 .5rem">🖼️ ${T("صور جاهزة للنشر (دوس عليها تكبر وتنزّلها)", "Ready-to-post images (tap to enlarge and download)")}</h3><div class="sp179g">${pics.map(p => `<a href="${M}${p}" target="_blank" download><img loading="lazy" src="${M}${p}" alt=""></a>`).join("")}</div>
+      <h3 style="margin:1.2rem 0 .5rem">💬 ${T("رسايل قصيرة للطلاب والأهالي", "Short messages for students and parents")}</h3><div class="sp179s">${["ar", "en"].map(k => STU[k].map(([t, x], i) => `<div class="card" dir="${k === "ar" ? "rtl" : "ltr"}"><b class="sm">${esc(t)}</b><p class="sm" style="margin:.3rem 0;white-space:pre-wrap">${esc(x.split("{u}").join(u))}</p><div class="row" style="gap:.3rem"><button class="btn btn-o" style="padding:.15rem .6rem" onclick="sp179Copy('${k}',${i})">📋</button><button class="btn btn-o" style="padding:.15rem .6rem" onclick="sp179Wa('${k}',${i})">🟢</button></div></div>`).join("")).join("")}</div>
+      <div class="card" style="margin-top:1rem"><h3>💡 ${T("فكرة: فيديو لكل محتوى في الموقع", "Idea: a video for every piece of content")}</h3><p class="sm">${T("نقدر نفتح الموقع كطالب، ونسجّل فيديو قصير لكل أداة ودرس (نسخة عربي ونسخة إنجليزي) بشكل أوتوماتيك — الفيديوهات اللي فوق أول دفعة. قولّي «كمّل الفيديوهات» وأعمل الباقي.", "We can open the site as a student and automatically record a short video for each tool and lesson (an Arabic and an English version) — the videos above are the first batch. Say “continue the videos” and I'll make the rest.")}</p></div>`, 1200);
+  }
+  css(`.sp179v{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(16rem,100%),1fr));gap:.8rem}.sp179v video{width:100%;border-radius:12px;background:#000;aspect-ratio:9/16;object-fit:contain}.sp179v figcaption{display:flex;justify-content:space-between;gap:.4rem;align-items:center;margin-top:.4rem}
+  .sp179m{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(20rem,100%),1fr));gap:.8rem;margin-top:1rem}.sp179c{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 10%,var(--card)),var(--card));border:1.5px solid color-mix(in srgb,var(--accent) 35%,var(--line))}.sp179h{font:700 1.4rem 'El Messiri','Tajawal',serif;color:var(--accent);margin-bottom:.4rem}.sp179c pre{white-space:pre-wrap;font:1rem/1.9 'Tajawal',system-ui;margin:0 0 .6rem}
+  .sp179g{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:.5rem}.sp179g img{width:100%;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .2s}.sp179g img:hover{transform:scale(1.03)}.sp179s{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(17rem,100%),1fr));gap:.5rem}`);
+  /* مكانه: أول تاب في عُدّة التسويق + أول مربع في مساحتي للمالك */
+  if (typeof renderKit === "function") { const _rk = renderKit; renderKit = function () { const h = _rk.apply(this, arguments); return h.replace(`<div class="tabs" style="margin:.4rem 0 1rem">`, `<div class="tabs" style="margin:.4rem 0 1rem"><button class="tab" style="background:#f59e0b;color:#111;font-weight:800" onclick="go16('special179')">⭐ ${T("طلب خاص", "Special request")}</button>`); }; }
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!own()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#f59e0b;outline:2px solid #f59e0b" onclick="go16('special179')"><span>⭐</span><b>${T("طلب خاص: التسويق", "Special: marketing")}</b></button>`); };
+
+  /* إعدادات المالك */
+  const _os = ownerSettings; ownerSettings = function () { const h = _os.apply(this, arguments); return `<div class="card" style="margin-top:1rem;border:2px solid #f59e0b"><h3>⭐ ${T("طلب خاص", "Special request")}</h3><p class="sm">${T("رسالة الموقع + الصور + الفيديوهات + رسايل الطلاب والأهالي — كله جاهز.", "The site message, images, videos and student/parent messages — all ready.")}</p><button class="btn btn-p" onclick="go16('special179')">⭐ ${T("افتح", "Open")}</button></div>` + iconsCard() + h; };
+
+  /* الرسم */
+  const _r = render; render = function () {
+    try { loadCustom(); } catch (e) {}
+    const rt = state.route;
+    if (rt === "mq179" || rt === "special179") { let b; try { b = rt === "mq179" ? mqPage(state.pageArg || "new") : specialPage(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); }
+    else _r.apply(this, arguments);
+    try { icInject(); const sec = state.route === "library" && typeof secKind === "function" ? secKind("mq_branch") : null; if (sec && state.libSec === sec.id && !document.querySelector(".mt179c")) { const w = document.querySelector("#app .hdr ~ section .wrap, #app section .wrap"); const h1 = w && w.querySelector("h1, .stitle"); const html = branchCard(); if (h1) h1.insertAdjacentHTML("afterend", html); else if (w) w.insertAdjacentHTML("afterbegin", html); } } catch (e) { console.warn(e); }
+  };
+  ["mq179", "special179"].forEach(p => { const m = location.hash.match(new RegExp("^#/" + p + "(?:/([^/?#]+))?")); if (m) { state.route = p; if (m[1]) state.pageArg = decodeURIComponent(m[1]); } });
 })();
 
 // بدء التشغيل
