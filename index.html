@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v173";
+const UI_VERSION = "2026-11-16-v174";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -24402,7 +24402,7 @@ body.ed158 .hv169{opacity:.4!important}
     if (st.view === "page") { const per = 10; const pages = Math.ceil(v.length / per); const p = Math.min(st.p || 0, pages - 1); list = v.slice(p * per, p * per + per);
       nav = `<div class="row rw173n"><button class="btn btn-o" ${p <= 0 ? "disabled" : ""} onclick="state.rw173.p=${p - 1};render()">${ar ? "→ السابقة" : "← Previous"}</button><b class="sm">${p + 1} / ${pages}</b><button class="btn btn-o" ${p >= pages - 1 ? "disabled" : ""} onclick="state.rw173.p=${p + 1};render()">${ar ? "التالية ←" : "Next →"}</button></div>`; }
     const bism = st.s !== 1 && st.s !== 9 ? `<div class="rw173b">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
-    return head + nav + `<div class="card rw173t" dir="rtl" lang="ar">${(st.view === "surah" || (st.p || 0) === 0) ? bism : ""}${list.map(x => `<span class="rw173a" ${rec ? `onclick="eaPlay('${eaUrl(rec, st.s + ":" + x.a)}')"` : ""}>${esc(x.t)} <i>﴿${x.a.toLocaleString("ar-EG")}﴾</i></span> `).join("")}</div>` + nav;
+    return head + nav + `<div class="card rw173t notr" dir="rtl" lang="ar" translate="no">${(st.view === "surah" || (st.p || 0) === 0) ? bism : ""}${list.map(x => `<span class="rw173a notr" ${rec ? `onclick="eaPlay('${eaUrl(rec, st.s + ":" + x.a)}')"` : ""}>${esc(x.t)} <i>﴿${x.a.toLocaleString("ar-EG")}﴾</i></span> `).join("")}</div>` + nav;
   }
   function rwQuiz() {
     const ar = AR(); const D = (typeof QR_DIFF !== "undefined" ? QR_DIFF : []).filter(d => /^\d+:\d+$/.test(d[0]));
@@ -24412,7 +24412,7 @@ body.ed158 .hv169{opacity:.4!important}
     const d = D[z.order[z.i]]; if (!z.opts) z.opts = shuffle([z.order[z.i], ...shuffle(z.order.filter(x => x !== z.order[z.i])).slice(0, 3)]);
     return `<div class="card rq173"><div class="row" style="justify-content:space-between"><b>❓ ${T("سؤال", "Question")} ${z.i + 1} / ${z.order.length}</b><span class="badge">⭐ ${z.score}</span></div>
       <p class="sm" style="margin:.5rem 0">${T("اسمع الكلمة دي برواية حفص، وبعدين اختار الوصف الصحيح لاختلاف القرّاء فيها:", "Listen to this word in Hafs, then choose the correct description of how the readers differ in it:")}</p>
-      <div class="row" style="gap:.5rem;align-items:center;justify-content:center"><button class="btn btn-o" onclick="eaPlay('${eaUrl("Husary_128kbps", d[0])}')">🔊</button><b class="notr" lang="ar" style="font:1.7rem 'Amiri',serif">${esc(d[1])}</b><span class="xs muted">(${esc(d[0])})</span></div>
+      <div class="row" style="gap:.5rem;align-items:center;justify-content:center"><button class="btn btn-o" onclick="eaPlay('${eaUrl("Husary_128kbps", d[0])}')">🔊</button><b class="notr" lang="ar" translate="no" style="font:1.7rem 'Amiri',serif">${esc(d[1])}</b><span class="xs muted">(${esc(d[0])})</span></div>
       <div class="rq173o">${z.opts.map(o => { const st = z.ans == null ? "" : o === z.order[z.i] ? "ok" : o === z.ans ? "no" : ""; return `<button class="${st}" ${z.ans != null ? "disabled" : ""} onclick="rq173(${o})" lang="ar">${esc(D[o][2])}</button>`; }).join("")}</div>
       ${z.ans != null ? `<div class="row" style="justify-content:flex-end;margin-top:.5rem"><button class="btn btn-p" onclick="state.rq173.i++;state.rq173.ans=null;state.rq173.opts=null;render()">${T("اللي بعده", "Next")} ←</button></div>` : ""}</div>`;
   }
@@ -24448,16 +24448,16 @@ body.ed158 .hv169{opacity:.4!important}
       if (g.load === 1) return loadingBox(); if (g.load === 2) return `<div class="card muted">${T("مقدرناش نجيب الآية — جرّب تاني", "Couldn't load the ayah — try again")}</div>`;
       const ok = g.got.length === g.words.length;
       return `<div class="card gm173"><p class="sm">${T("رتّب كلمات الآية: اسحب الكلمة بالماوس للسطر اللي فوق، أو دوس عليها على الموبايل.", "Put the ayah in order: drag each word to the line above, or tap it on a phone.")} <b>(${esc(sName(g.s))} ${g.a})</b></p>
-        <div class="gm173line" ondragover="event.preventDefault()" ondrop="gm173drop(event)">${g.got.map(x => `<span class="gm173w in">${esc(x.t)}</span>`).join(" ") || `<span class="xs muted">${T("اسحب هنا", "Drop here")}</span>`}</div>
-        <div class="gm173pool">${g.pool.filter(x => !g.got.includes(x)).map(x => `<span class="gm173w" draggable="true" ondragstart="event.dataTransfer.setData('text','${x.i}')" onclick="gm173pick(${x.i})">${esc(x.t)}</span>`).join("")}</div>
-        ${ok ? `<div class="gm173win">🎉 ${T("برافو! الآية صح", "Well done! Correct")} <button class="btn btn-p" onclick="state.gm173s=(state.gm173s||0)+1;state.gm173=null;render()">${T("آية تانية", "Another ayah")} ←</button> <button class="btn btn-o" onclick="eaPlay(eaUrl('Husary_128kbps','${g.s}:${g.a}'))">🔊</button></div>` : ""}
+        <div class="gm173line notr" lang="ar" translate="no" ondragover="event.preventDefault()" ondrop="gm173drop(event)">${g.got.map(x => `<span class="notr gm173w in">${esc(x.t)}</span>`).join(" ") || `<span class="xs muted">${T("اسحب هنا", "Drop here")}</span>`}</div>
+        <div class="gm173pool notr" lang="ar" translate="no">${g.pool.filter(x => !g.got.includes(x)).map(x => `<span class="notr gm173w" draggable="true" ondragstart="event.dataTransfer.setData('text','${x.i}')" onclick="gm173pick(${x.i})">${esc(x.t)}</span>`).join("")}</div>
+        ${ok ? `<div class="notr gm173win">🎉 ${T("برافو! الآية صح", "Well done! Correct")} <button class="btn btn-p" onclick="state.gm173s=(state.gm173s||0)+1;state.gm173=null;render()">${T("آية تانية", "Another ayah")} ←</button> <button class="btn btn-o" onclick="eaPlay(eaUrl('Husary_128kbps','${g.s}:${g.a}'))">🔊</button></div>` : ""}
         <p class="xs muted" style="margin-top:.4rem">⭐ ${g.score || state.gm173s || 0}</p></div>`;
     }
     const left = g.items.filter((x, i) => !g.done[i]);
     return `<div class="card gm173"><p class="sm">${kind === "mkh" ? T("اسحب كل حرف للمخرج بتاعه (أو دوس على الحرف وبعدين على الصندوق):", "Drag each letter to its articulation area (or tap the letter, then the box):") : T("اسحب كل حرف: مفخّم ولا مرقّق؟", "Drag each letter: heavy or light?")}</p>
-      <div class="gm173pool">${g.items.map((x, i) => g.done[i] ? "" : `<span class="gm173w big ${g.sel === i ? "sel" : ""}" draggable="true" ondragstart="event.dataTransfer.setData('text','${i}')" onclick="state.gm173.sel=${i};render()" lang="ar">${esc(x.c)}</span>`).join("")}</div>
-      <div class="gm173bins">${g.bins.map((b, bi) => `<div class="gm173bin" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="gm173bin(event,${bi})" onclick="state.gm173.sel!=null&&gm173put(state.gm173.sel,${bi})"><b>${esc(b[0])}</b><div>${g.items.map((x, i) => g.done[i] && x.b === bi ? `<span class="gm173w in" lang="ar">${esc(x.c)}</span>` : "").join("")}</div></div>`).join("")}</div>
-      ${!left.length ? `<div class="gm173win">🏆 ${T("خلصت!", "Done!")} ${T("الأخطاء", "Mistakes")}: ${g.wrong} <button class="btn btn-p" onclick="state.gm173=null;render()">↻ ${T("العب تاني", "Play again")}</button></div>` : ""}</div>`;
+      <div class="gm173pool notr" lang="ar" translate="no">${g.items.map((x, i) => g.done[i] ? "" : `<span class="notr gm173w big ${g.sel === i ? "sel" : ""}" draggable="true" ondragstart="event.dataTransfer.setData('text','${i}')" onclick="state.gm173.sel=${i};render()" lang="ar">${esc(x.c)}</span>`).join("")}</div>
+      <div class="gm173bins">${g.bins.map((b, bi) => `<div class="gm173bin notr" translate="no" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="gm173bin(event,${bi})" onclick="state.gm173.sel!=null&&gm173put(state.gm173.sel,${bi})"><b>${esc(b[0])}</b><div>${g.items.map((x, i) => g.done[i] && x.b === bi ? `<span class="notr gm173w in" lang="ar">${esc(x.c)}</span>` : "").join("")}</div></div>`).join("")}</div>
+      ${!left.length ? `<div class="notr gm173win">🏆 ${T("خلصت!", "Done!")} ${T("الأخطاء", "Mistakes")}: ${g.wrong} <button class="btn btn-p" onclick="state.gm173=null;render()">↻ ${T("العب تاني", "Play again")}</button></div>` : ""}</div>`;
   }
   window.gm173pick = function (i) { const g = state.gm173; const need = g.got.length; if (g.words[need] === g.pool.find(x => x.i === i).t) { g.got.push(g.pool.find(x => x.i === i)); } else { toast(T("مش دي — فكّر تاني", "Not that one — try again"), true); } render(); };
   window.gm173drop = function (e) { e.preventDefault(); gm173pick(+e.dataTransfer.getData("text")); };
@@ -24475,18 +24475,18 @@ body.ed158 .hv169{opacity:.4!important}
   .gm173win{margin-top:.6rem;padding:.6rem;border-radius:12px;background:color-mix(in srgb,#22c55e 15%,var(--bg));display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-weight:700}`);
 
   /* ---------- 3) شكل الفم واللسان مع الحركات ---------- */
-  const VOW = [["a", "الفتحة", "Fatha", "َ", "الفك السفلي بينزل لتحت والفم بيتفتح، واللسان بيكون مفرود وواطي في قاع الفم.", "The lower jaw drops and the mouth opens; the tongue lies flat and low.", { ry: 15, rx: 26, lip: 0, tongue: 34 }],
-    ["i", "الكسرة", "Kasra", "ِ", "الفك بينزل شوية بس، والشفايف بتتسحب للجنب، ووسط اللسان بيرتفع ناحية سقف الحلق.", "The jaw lowers slightly, the lips stretch sideways and the middle of the tongue rises toward the palate.", { ry: 6, rx: 30, lip: 0, tongue: 20 }],
-    ["u", "الضمة", "Damma", "ُ", "الشفايف بتتضم لقدّام على شكل دايرة صغيرة، وآخر اللسان بيرتفع لفوق.", "The lips round forward into a small circle and the back of the tongue rises.", { ry: 8, rx: 9, lip: 1, tongue: 24 }],
-    ["s", "السكون", "Sukun", "ْ", "مفيش حركة: الحرف بيتقفل على مخرجه والفم بيفضل على وضع الحرف نفسه.", "No vowel: the letter closes on its point of articulation and the mouth holds that position.", { ry: 2, rx: 22, lip: 0, tongue: 28 }]];
+  const VOW = [["a", "الفتحة", "Fatha", "َ", "الفك السفلي بينزل لتحت والفم بيتفتح، واللسان بيكون مفرود وواطي في قاع الفم.", "The lower jaw drops and the mouth opens; the tongue lies flat and low.", { ry: 15, rx: 26, lip: 0, f: 74, m: 76, b: 72 }],
+    ["i", "الكسرة", "Kasra", "ِ", "الفك بينزل شوية بس، والشفايف بتتسحب للجنب، ووسط اللسان بيرتفع ناحية سقف الحلق.", "The jaw lowers slightly, the lips stretch sideways and the middle of the tongue rises toward the palate.", { ry: 6, rx: 30, lip: 0, f: 52, m: 40, b: 64 }],
+    ["u", "الضمة", "Damma", "ُ", "الشفايف بتتضم لقدّام على شكل دايرة صغيرة، وآخر اللسان بيرتفع لفوق.", "The lips round forward into a small circle and the back of the tongue rises.", { ry: 8, rx: 9, lip: 1, f: 74, m: 62, b: 40 }],
+    ["s", "السكون", "Sukun", "ْ", "مفيش حركة: الحرف بيتقفل على مخرجه والفم بيفضل على وضع الحرف نفسه.", "No vowel: the letter closes on its point of articulation and the mouth holds that position.", { ry: 2, rx: 22, lip: 0, f: 60, m: 58, b: 60 }]];
   const mouth = o => `<svg viewBox="0 0 120 90" class="vw173s"><ellipse cx="60" cy="45" rx="54" ry="42" fill="color-mix(in srgb,#f3c79b 70%,var(--card))"/><ellipse cx="60" cy="52" rx="${o.rx + 6}" ry="${o.ry + 7}" fill="#c2410c" opacity=".85"/><ellipse cx="60" cy="52" rx="${o.rx}" ry="${Math.max(o.ry, 1.5)}" fill="#3b0d0d"/>${o.ry > 4 ? `<ellipse cx="60" cy="${52 + o.ry * .45}" rx="${Math.max(o.rx - 6, 4)}" ry="${Math.max(o.ry * .45, 2)}" fill="#f472b6"/>` : ""}${o.ry > 5 ? `<rect x="${60 - o.rx * .6}" y="${52 - o.ry}" width="${o.rx * 1.2}" height="3" rx="1.5" fill="#fff"/>` : ""}${o.lip ? `<circle cx="60" cy="52" r="${o.rx + 9}" fill="none" stroke="#c2410c" stroke-width="3" opacity=".6"/>` : ""}</svg>`;
-  const side = o => `<svg viewBox="0 0 140 100" class="vw173s"><path d="M10 20 Q70 0 120 25 L125 45" fill="none" stroke="#94a3b8" stroke-width="3"/><path d="M10 92 Q60 98 118 80" fill="none" stroke="#94a3b8" stroke-width="3"/><path d="M18 ${88 - (o.tongue > 30 ? 0 : 0)} Q55 ${o.tongue + 40} 95 ${o.tongue + 35 + (o.lip ? -14 : 0)} Q112 ${o.tongue + 42} 118 78" fill="#f472b6" stroke="#db2777" stroke-width="2"/><text x="6" y="14" font-size="9" fill="currentColor">${T("الشفايف", "lips")}</text><text x="100" y="18" font-size="9" fill="currentColor">${T("الحلق", "throat")}</text></svg>`;
+  const side = o => `<svg viewBox="0 0 140 100" class="vw173s"><path d="M22 30 Q70 8 122 30 L126 52" fill="none" stroke="#94a3b8" stroke-width="3"/><path d="M14 96 L128 96" stroke="#94a3b8" stroke-width="3"/>${o.lip ? `<ellipse cx="9" cy="52" rx="6" ry="11" fill="#c2410c" opacity=".8"/>` : `<path d="M4 ${46 - o.ry} Q14 ${42 - o.ry} 18 ${44 - o.ry}M4 ${58 + o.ry} Q14 ${62 + o.ry} 18 ${60 + o.ry}" stroke="#c2410c" stroke-width="5" fill="none" stroke-linecap="round"/>`}<path d="M18 96 Q18 ${o.f} 38 ${o.f} C58 ${o.m - 8} 88 ${o.m - 8} 104 ${o.b} Q122 ${o.b} 124 96 Z" fill="#f472b6" stroke="#db2777" stroke-width="2"/><text x="20" y="22" font-size="9" fill="currentColor">${T("سقف الحلق", "palate")}</text><text x="104" y="22" font-size="9" fill="currentColor">${T("الحلق", "throat")}</text><text x="0" y="12" font-size="9" fill="currentColor">${T("الشفايف", "lips")}</text></svg>`;
   function renderVowels() {
     if (!me()) return pageWrap("👄", T("شكل الفم واللسان مع الحركات", "Mouth & tongue for each vowel"), "", needLogin("vow172"));
     const c = state.vl173 || "ب"; const L = "ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي".split(" ");
     return pageWrap("👄", T("شكل الفم واللسان مع الحركات", "Mouth & tongue for each vowel"), T("اختار الحرف، وشوف الفم من قدّام واللسان من الجنب، ودوس 🔊 تسمع الحرف بالحركة", "Pick a letter, see the mouth from the front and the tongue from the side, and tap 🔊 to hear it"),
-      `<div class="card"><div class="vw173l">${L.map(x => `<button class="${x === c ? "on" : ""}" onclick="state.vl173='${x}';render()" lang="ar">${x}</button>`).join("")}</div></div>
-      <div class="vw173g">${VOW.map(([h, a, e, mark, da, de, o]) => `<div class="card vw173c"><div class="row" style="justify-content:space-between;align-items:center"><b>${T(a, e)}</b><span class="vw173big" lang="ar">${c}${mark}</span></div><div class="vw173p">${mouth(o)}${side(o)}</div><p class="sm">${T(da, de)}</p><button class="btn btn-p" onclick="(window.lq166?lq166('${c}','${h}'):Promise.resolve(false)).then(ok=>{if(!ok&&window.lhPlay)lhPlay('${c}','${h}')})">🔊 ${T("اسمع", "Listen")}</button></div>`).join("")}</div>`, 1100);
+      `<div class="card"><div class="vw173l notr" translate="no">${L.map(x => `<button class="${x === c ? "on" : ""}" onclick="state.vl173='${x}';render()" lang="ar">${x}</button>`).join("")}</div></div>
+      <div class="vw173g">${VOW.map(([h, a, e, mark, da, de, o]) => `<div class="card vw173c"><div class="row" style="justify-content:space-between;align-items:center"><b>${T(a, e)}</b><span class="vw173big notr" lang="ar" translate="no">${c}${mark}</span></div><div class="vw173p">${mouth(o)}${side(o)}</div><p class="sm">${T(da, de)}</p><button class="btn btn-p" onclick="(window.lq166?lq166('${c}','${h}'):Promise.resolve(false)).then(ok=>{if(!ok&&window.lhPlay)lhPlay('${c}','${h}')})">🔊 ${T("اسمع", "Listen")}</button></div>`).join("")}</div>`, 1100);
   }
   css(`.vw173l{display:flex;flex-wrap:wrap;gap:.3rem;direction:rtl}.vw173l button{font:1.4rem 'Amiri',serif;width:2.6rem;height:2.6rem;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}.vw173l button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   .vw173g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.7rem;margin-top:.7rem}.vw173c{display:flex;flex-direction:column;gap:.5rem}.vw173big{font:2.6rem 'Amiri',serif;color:var(--accent)}.vw173p{display:grid;grid-template-columns:1fr 1fr;gap:.3rem}.vw173s{width:100%;height:auto}`);
@@ -24512,13 +24512,13 @@ body.ed158 .hv169{opacity:.4!important}
   function renderJourney() {
     if (!me()) return pageWrap("🗺️", T("رحلتي", "My journey"), "", needLogin("journey172"));
     const d = sfData(me()); const x = Array.isArray(d) ? d[0] : null; if (!x) return pageWrap("🗺️", T("رحلتي", "My journey"), "", loadingBox());
-    const ST = [T("البداية", "Start"), T("الأساس", "Foundation"), T("النص", "Halfway"), T("التمكّن", "Mastery"), T("الإتقان 🏆", "Itqan 🏆")];
+    const ST = [T("البداية", "Start"), T("الأساس", "Basics"), T("النص", "Middle"), T("التمكّن", "Mastery"), T("الإتقان 🏆", "Itqan 🏆")];
     return pageWrap("🗺️", T("رحلتي", "My journey"), T("كل علم ليه طريق من ٥ محطات — النقطة المنوّرة هي انت دلوقتي (معلمك بيحدّث مكانك)", "Each science is a road of 5 stations — the glowing dot is you now (your teacher updates it)"),
       `<div class="jr173g">${SF_AREAS.map(([k, ic, a, e]) => { const p = x.prog.find(r => r.area === k) || {}; const pct = Math.max(0, Math.min(100, +p.pct || 0)); const at = Math.min(4, Math.floor(pct / 25));
         return `<div class="card jr173"><b>${ic} ${T(a, e)}</b><span class="xs muted">${esc(p.position || "")}</span><div class="jr173r">${ST.map((s, i) => `<div class="jr173s ${i < at ? "done" : i === at ? "now" : ""}"><i>${i < at ? "✓" : i === at ? "📍" : i + 1}</i><span>${s}</span></div>`).join("")}<div class="jr173l"><u style="width:${pct}%"></u></div></div><span class="sm b">${pct}%</span></div>`; }).join("")}</div>`, 1100);
   }
   css(`.jr173g{display:grid;gap:.7rem}.jr173{display:flex;flex-direction:column;gap:.3rem}.jr173r{position:relative;display:flex;justify-content:space-between;padding:.6rem 0}.jr173l{position:absolute;top:1.55rem;inset-inline:1rem;height:6px;background:var(--line);border-radius:9px;z-index:0}.jr173l u{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#22c55e);border-radius:9px}
-  html[dir=rtl] .jr173l u{margin-inline-start:0}.jr173s{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;width:20%;font-size:.75rem;text-align:center}.jr173s i{font-style:normal;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--card);border:2px solid var(--line);font-weight:800}
+  html[dir=rtl] .jr173l u{margin-inline-start:0}.jr173s{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;width:20%;font-size:.75rem;text-align:center;overflow-wrap:normal;word-break:keep-all}@media(max-width:480px){.jr173s{font-size:.62rem}}.jr173s i{font-style:normal;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--card);border:2px solid var(--line);font-weight:800}
   .jr173s.done i{background:var(--accent);color:#fff;border-color:var(--accent)}.jr173s.now i{border-color:var(--gold);box-shadow:0 0 0 5px color-mix(in srgb,var(--gold) 30%,transparent);animation:sfp172 1.8s infinite}`);
 
   /* ---------- 6) احفظ الصفحة من غير نت ---------- */
@@ -24571,6 +24571,14 @@ body.ed158 .hv169{opacity:.4!important}
     const o = _r.apply(this, arguments); try { sciApply(); } catch (e) {} return o;
   };
   PAGES.forEach(p => { if (new RegExp("^#/" + p).test(location.hash)) state.route = p; });
+})();
+
+/* ================= v174: تظبيطات من الاختبار — زرار «اللغة والعرض» بقى دايرة صغيرة على الحافة مايغطّيش المحتوى ================= */
+(function () {
+  document.head.insertAdjacentHTML("beforeend", `<style>
+  #ctl113{padding:.42rem .5rem!important;inset-inline-start:.35rem!important;opacity:.82;transition:opacity .2s,padding .2s}#ctl113 span{display:none}
+  @media (hover:hover){#ctl113:hover{opacity:1;padding:.45rem .85rem!important}#ctl113:hover span{display:inline}}
+  </style>`);
 })();
 
 // بدء التشغيل
