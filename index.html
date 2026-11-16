@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v209";
+const UI_VERSION = "2026-11-17-v210";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29378,6 +29378,20 @@ Between lessons, the platform keeps you going:
   setInterval(btn, 4000); setTimeout(btn, 800);
   css(`#un209{position:fixed;bottom:1rem;inset-inline-end:50%;transform:translateX(-50%);z-index:2950;border:0;border-radius:999px;background:#111;color:#fff;padding:.4rem .9rem;font:inherit;font-weight:700;font-size:.85rem;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;opacity:.85}
   [dir=ltr] #un209{transform:translateX(50%)}#un209:hover{opacity:1;background:var(--accent)}`);
+})();
+
+/* ================= v210: لما تفتح أي صفحة أو قسم من أيقونة، الصفحة بتبدأ من تحت الشرايط على طول (الشرايط مش بتظهر في وشك) — والرجوع بيرجّعك مكانك زي ما هو ================= */
+(function () {
+  let last = null, back = 0, clicked = 0;
+  addEventListener("popstate", () => { back = Date.now(); });
+  document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#app [onclick], #app a, .bar201 [onclick], .bnav [onclick], #dock196 [onclick]")) clicked = Date.now(); }, true);
+  const keyOf = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+  function headBottom() { let b = 0; document.querySelectorAll("#app .hdr, #app > header, #app .bar185, #app .dombar, #app .unav, #app .hdr .nav").forEach(el => { const cs = getComputedStyle(el); if (cs.display === "none" || cs.position === "fixed" || cs.position === "sticky") return; const r = el.getBoundingClientRect(); if (r.height) b = Math.max(b, r.bottom + scrollY); }); return b; }
+  function go() { const b = headBottom(); if (b > 0 && document.documentElement.scrollHeight - innerHeight >= b - 2) window.scrollTo({ top: b, behavior: "instant" }); }
+  const app = document.getElementById("app");
+  if (app) new MutationObserver(() => { const k = keyOf(); if (last === null) { last = k; return; } if (k === last) return; last = k;
+    if (Date.now() - back < 800 || Date.now() - clicked > 2500) return;
+    requestAnimationFrame(() => { go(); setTimeout(go, 90); setTimeout(go, 260); }); }).observe(app, { childList: true });
 })();
 
 // بدء التشغيل
