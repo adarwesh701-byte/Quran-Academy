@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v200";
+const UI_VERSION = "2026-11-16-v201";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -28511,6 +28511,195 @@ Between lessons, the platform keeps you going:
   .in200{animation:in200 .35s cubic-bezier(.22,1,.36,1)}@keyframes in200{from{opacity:0;transform:translateY(8px)}}
   .btn,.dmtool,.mstile,.libtile,.hourbtn{transition:transform .15s ease,box-shadow .2s,background .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.btn:active,.dmtool:active,.mstile:active,.libtile:active{transform:scale(.97)}
   @media (prefers-reduced-motion:reduce){.in200{animation:none}details::details-content{transition:none!important}}`);
+})();
+
+/* ================= v201: الشرايط الجانبية من غير رعشة ولا زق (الماوس من غير ما يزق — أو زرار صغير — أو تختار لكل شريط لوحده) + تطلع من الحافة لجوه + أشكال طلوع كتير + الطالب يتحكم في شرايطه + كل حاجة بتفتح بنعومة + استوديو الأسعار (سعر أساسي ونِسب ومناطق ودول) + موسوعة بيان الإسلام نص بفهرس زي الشاملة + لوحة الأدوات الجانبية بتصميم جديد ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const ownerView = () => realOwner() && !state.preview;
+  const me = () => state.auth && state.auth.user && state.auth.user.id;
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  ["price201", "bar201"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+
+  /* ======================= 1) الشرايط: نوقف القديم ونمسك إحنا ======================= */
+  const _sv = setv; setv = function (k, d) { const v = _sv.apply(this, arguments); if (k === "ps195") return Object.assign({}, v || {}, { on: "off" }); if (k === "rv190") { const tp = (_sv("bar201", {}) || {}).top || "overlay"; return Object.assign({}, v || {}, { sstyle: "overlay", style: tp === "push" ? "push" : "overlay" }); } return v; };
+  document.body.classList.remove("ps195");
+  const BARS = [["tools", ".side185", "🧰", "الأدوات", "Tools"], ["nav", "#nv180.nv180-side, #nv180.nv180-rail", "🧭", "التنقل", "Navigation"]];
+  const MODES = [["hover", "الماوس يقرّب يطلع (من غير ما يزق الصفحة)", "Hover (no push)"], ["button", "زرار صغير بس", "Small button only"], ["push", "الماوس يقرّب يطلع ويزق الصفحة بنعومة", "Hover and push"], ["always", "ظاهر على طول", "Always visible"], ["hidden", "مخفي خالص", "Hidden"]];
+  const FX = [["slide", "ينزلق من الحافة", "Slide from edge"], ["fade", "ينزلق ويظهر بالتدريج", "Slide + fade"], ["scale", "يكبر من الحافة", "Grow from edge"], ["flip", "ينفتح زي باب", "Door"], ["sheet", "زي صفحة جديدة (بخلفية)", "Like a new page"], ["spring", "نطّة ناعمة", "Soft spring"]];
+  const OWN = () => _sv("bar201", {}) || {};
+  const CFG = k => Object.assign({ mode: "hover", fx: "fade", stag: 1, delay: 450, zone: 14, label: 1 }, (OWN().bars || {})[k] || {}, (LS("bar201u", {}) || {})[k] || {});
+  window.bar201 = {
+    async set(k, p, mine) { if (mine || !realOwner()) { const U = LS("bar201u", {}); U[k] = Object.assign({}, U[k] || {}, p); LSset("bar201u", U); } else { const o = Object.assign({}, OWN()); o.bars = Object.assign({}, o.bars || {}); o.bars[k] = Object.assign({}, o.bars[k] || {}, p); await saveSetting16("bar201", o); } apply(true); if (state.route === "bar201") render(); },
+    async top(v) { await saveSetting16("bar201", Object.assign({}, OWN(), { top: v })); toast("✅"); render(); },
+    reset() { LSset("bar201u", {}); apply(true); render(); },
+    tog(k) { const el = elOf(k); if (!el) return; setOpen(k, el, !el.classList.contains("open201"), true); },
+    pin(k) { const S = LS("pin201", {}); S[k] = !S[k]; LSset("pin201", S); apply(true); }
+  };
+  const elOf = k => { const b = BARS.find(x => x[0] === k); return b && document.querySelector(b[1]); };
+  const sideOf = el => { const r = el.getBoundingClientRect(); return r.left + r.width / 2 < innerWidth / 2 ? "l" : "r"; };
+  const TM = {};
+  function setOpen(k, el, on, manual) { const c = CFG(k); if (c.mode === "always" || LS("pin201", {})[k]) on = true; el.classList.toggle("open201", on); const tab = document.getElementById("tab201-" + k); tab && tab.classList.toggle("on", on);
+    document.body.classList.toggle("push201-" + el.dataset.s201, on && c.mode === "push"); if (c.fx === "sheet") document.body.classList.toggle("dim201", on); }
+  function apply(force) {
+    document.body.classList.add("b201"); document.body.classList.remove("ps195");
+    BARS.forEach(([k, sel, ic, ar, en]) => { const el = document.querySelector(sel); let tab = document.getElementById("tab201-" + k); if (!el) { tab && tab.remove(); return; } const c = CFG(k);
+      if (!el.dataset.s201 || force) el.dataset.s201 = el.dataset.s201 && !force ? el.dataset.s201 : sideOf(el.classList.contains("open201") ? el : el);
+      el.classList.add("bar201"); el.dataset.fx = c.fx; el.dataset.mode = c.mode; el.style.setProperty("--st201", c.stag ? "1" : "0");
+      if (c.mode === "hidden") { el.classList.remove("open201"); el.style.display = "none"; tab && tab.remove(); return; } el.style.display = "";
+      if (!tab) { tab = document.createElement("button"); tab.id = "tab201-" + k; tab.className = "tab201"; tab.onclick = e => { e.stopPropagation(); bar201.tog(k); }; document.body.appendChild(tab);
+        tab.addEventListener("mouseenter", () => { const cc = CFG(k); if ((cc.mode === "hover" || cc.mode === "push") && matchMedia("(hover:hover)").matches) { clearTimeout(TM[k]); setOpen(k, el, true); } }); }
+      tab.dataset.s201 = el.dataset.s201; tab.innerHTML = `<span class="i">${ic}</span>${c.label ? `<span class="t">${T(ar, en)}</span>` : ""}<span class="a">${el.dataset.s201 === "l" ? "›" : "‹"}</span>`; tab.title = T("دوس تفتح/تقفل — أو غيّر طريقته من «شكل الشرايط»", "Click to open/close");
+      const y = (LS("y201", {}) || {})[k]; if (y != null) tab.style.top = y + "%";
+      if (!el.__b201) { el.__b201 = 1; el.addEventListener("mouseleave", () => { const cc = CFG(k); if ((cc.mode === "hover" || cc.mode === "push") && !LS("pin201", {})[k]) TM[k] = setTimeout(() => setOpen(k, el, false), cc.delay); }); el.addEventListener("mouseenter", () => clearTimeout(TM[k]));
+        if (!el.querySelector(".x201")) { const bar = document.createElement("div"); bar.className = "x201"; bar.innerHTML = `<button title="${T("ثبّته مفتوح", "Pin open")}" onclick="event.stopPropagation();bar201.pin('${k}')">📌</button><button title="${T("شكله وطريقة طلوعه", "Style")}" onclick="event.stopPropagation();go16('bar201')">⚙️</button><button title="${T("اقفل", "Close")}" onclick="event.stopPropagation();bar201.tog('${k}')">✕</button>`; el.prepend(bar); } }
+      if (c.mode === "always" || LS("pin201", {})[k]) setOpen(k, el, true); else if (force) setOpen(k, el, false); });
+  }
+  /* سحب الزرار لفوق/تحت */
+  document.addEventListener("pointerdown", e => { const t = e.target.closest && e.target.closest(".tab201"); if (!t || !e.altKey && !e.shiftKey && e.pointerType === "mouse") return; const k = t.id.replace("tab201-", ""); const y0 = e.clientY, t0 = t.getBoundingClientRect().top; let mv = 0; const mm = ev => { mv = 1; t.style.top = Math.max(5, Math.min(92, (t0 + ev.clientY - y0) / innerHeight * 100)) + "%"; }; const up = () => { removeEventListener("pointermove", mm); removeEventListener("pointerup", up); if (mv) { const Y = LS("y201", {}); Y[k] = parseFloat(t.style.top); LSset("y201", Y); } }; addEventListener("pointermove", mm); addEventListener("pointerup", up); });
+  addEventListener("keydown", e => { if (e.key === "Escape") BARS.forEach(([k]) => { const el = elOf(k); el && el.classList.contains("open201") && !LS("pin201", {})[k] && CFG(k).mode !== "always" && setOpen(k, el, false); }); });
+  document.addEventListener("click", e => { if (!document.body.classList.contains("dim201")) return; if (e.target.closest(".bar201,.tab201")) return; BARS.forEach(([k]) => { const el = elOf(k); el && CFG(k).fx === "sheet" && setOpen(k, el, false); }); });
+  new MutationObserver(() => { clearTimeout(window.__b201); window.__b201 = setTimeout(() => apply(false), 120); }).observe(document.body, { childList: true });
+
+  function barPage() {
+    const U = LS("bar201u", {}); const own = realOwner(); const tp = OWN().top || "overlay";
+    const row = ([k, , ic, ar, en]) => { const c = CFG(k); const sel = (key, list) => `<select class="in" style="width:auto" onchange="bar201.set('${k}',{${key}:this.value},${own ? "document.getElementById('mine201').checked" : "true"})">${list.map(o => `<option value="${o[0]}" ${c[key] === o[0] ? "selected" : ""}>${T(o[1], o[2])}</option>`).join("")}</select>`;
+      return `<div class="card"><h3>${ic} ${T(ar, en)}</h3><div class="fgrid" style="align-items:end"><label class="sm">${T("بيطلع إزاي", "How it opens")}<br>${sel("mode", MODES)}</label><label class="sm">${T("شكل الحركة", "Animation")}<br>${sel("fx", FX)}</label>
+        <label class="sm">${T("يستنى قبل ما يقفل (ثانية)", "Close delay (s)")}<br><input class="in" type="number" step=".1" min="0" max="5" value="${c.delay / 1000}" style="width:5rem" onchange="bar201.set('${k}',{delay:this.value*1000},${own ? "document.getElementById('mine201').checked" : "true"})"></label>
+        <label class="sm"><input type="checkbox" ${c.stag ? "checked" : ""} onchange="bar201.set('${k}',{stag:this.checked?1:0},${own ? "document.getElementById('mine201').checked" : "true"})"> ${T("الأيقونات تظهر واحدة ورا التانية", "Icons appear one by one")}</label>
+        <label class="sm"><input type="checkbox" ${c.label ? "checked" : ""} onchange="bar201.set('${k}',{label:this.checked?1:0},${own ? "document.getElementById('mine201').checked" : "true"})"> ${T("اسم على الزرار الصغير", "Label on the tab")}</label>
+        <button class="btn btn-p" onclick="bar201.tog('${k}')">👁️ ${T("جرّبه", "Try it")}</button></div></div>`; };
+    return pageWrap("🎛️", T("شكل الشرايط وطريقة طلوعها", "Side bars"), T("كل شريط لوحده: بيطلع إزاي وبأنهي حركة — وبيطلع من حافة الشاشة لجوه", "Per bar: how and with which motion — always from the screen edge inward"),
+      `${own ? `<div class="card"><label class="sm"><input type="checkbox" id="mine201"> ${T("التغيير ده ليا أنا بس (من غير ما أغيّر الأساسي للطلاب)", "Only for me (don't change the default)")}</label><p class="xs muted">${T("لو مش متعلّم: اللي بتختاره بيبقى الأساسي لكل الزوار والطلاب، وكل طالب يقدر يغيّر لنفسه من نفس الصفحة.", "Unticked: your choice becomes everyone's default; each student can still change it for themselves.")}</p>
+        <label class="sm">${T("الشريط اللي فوق", "Top bar")}: <select class="in" style="width:auto" onchange="bar201.top(this.value)"><option value="overlay" ${tp === "overlay" ? "selected" : ""}>${T("ينزل فوق الصفحة من غير ما يزقها (الأساسي)", "Over the page, no push (default)")}</option><option value="push" ${tp === "push" ? "selected" : ""}>${T("يزق الصفحة", "Push the page")}</option></select></label></div>` : ""}
+      ${BARS.map(row).join("")}<div class="card sm">💡 ${T("الزرار الصغير على الحافة: دوسة تفتح وتقفل. تحرّكه لفوق أو تحت: اسحبه وانت دايس Shift. وزرار Esc بيقفل أي شريط مفتوح.", "Tab: click to toggle; Shift+drag to move it up/down; Esc closes.")}</div>${Object.keys(U).length ? `<button class="btn btn-o" onclick="bar201.reset()">↩️ ${T("رجّع اختياراتي للأساسي", "Reset my choices")}</button>` : ""}`, 900);
+  }
+
+  /* ======================= 2) استوديو الأسعار ======================= */
+  const PDEF = { plat: 20, l50: 16, l25: 9.5, d8: 6.25, d12: 12.5, maq: 125, yr: 25, pyr: 45, wk: 35, life: 1645, sec: 30, tiers: null };
+  const PC = () => Object.assign({}, PDEF, _sv("pr201", {}) || {});
+  const r1 = v => Math.round(v); const r2 = v => Math.round(v * 2) / 2;
+  function compute(c) { const L = (n, per, d) => r1(n * per * (1 - d / 100)); const P = {};
+    P.pack4 = L(4, c.l50, 0); P.pack8 = L(8, c.l50, c.d8); P.pack12 = L(12, c.l50, c.d12); P.pack4_25 = r1(4 * c.l25); P.pack8_25 = L(8, c.l25, c.d8); P.pack12_25 = L(12, c.l25, c.d12);
+    P.maq4 = r1(P.pack4 * c.maq / 100); P.maq8 = r1(P.pack8 * c.maq / 100);
+    ["pack4", "pack8", "pack12", "pack4_25", "pack8_25", "pack12_25", "maq4", "maq8"].forEach(k => P[k + "_y"] = r1(P[k] * 12 * (1 - c.yr / 100)));
+    const S = { site_m: c.plat, site_y: r1(c.plat * 12 * (1 - c.pyr / 100)), site_w: r2(c.plat * c.wk / 100), site_l: r1(c.plat * c.life / 100) }; const sec = r2(c.plat * c.sec / 100); return { P, S, sec }; }
+  window.pr201 = {
+    async set(k, v) { const c = Object.assign({}, _sv("pr201", {}) || {}, { [k]: +v }); await saveSetting16("pr201", c); render(); },
+    async apply() { const c = PC(); const { P, S, sec } = compute(c); const nsec = (sectionsData() || []).filter(s => !s.parent_id && +s.price > 0); const floor = Math.ceil(c.plat * 1.2 / Math.max(nsec.length, 1) * 2) / 2; const secP = Math.max(sec, floor);
+      if (!confirm(T(`هطبّق: اشتراك المنصة ${c.plat}$، الحصة ${c.l50}$، المقامات ${c.maq}%، السنوي أوفر ${c.yr}%، كل قسم ${secP}$ — على كل الباقات. (نسخة من الأسعار القديمة بتتحفظ)`, "Apply to all plans?"))) return;
+      await saveSetting16("prices_bk201", { at: new Date().toISOString(), plans: _sv("plans", []), sitePlans: _sv("sitePlans", []), allAccess: _sv("allAccess", {}) });
+      const plans = (_sv("plans", []) || []).map(p => P[p.id] != null ? Object.assign({}, p, { price: P[p.id] }) : p); await saveSetting16("plans", plans);
+      const sp = (_sv("sitePlans", []) || []).map(p => S[p.id] != null ? Object.assign({}, p, { price: S[p.id] }) : p); await saveSetting16("sitePlans", sp);
+      await saveSetting16("allAccess", Object.assign({}, _sv("allAccess", {}) || {}, { price: c.plat, days: 30 }));
+      for (const s of nsec) await sb.from("content_sections").update({ price: secP }).eq("id", s.id); invalidate("secs"); toast(T("✅ اتطبّق على كل الأسعار", "✅ Applied")); render(); },
+    async undo() { const b = _sv("prices_bk201", null); if (!b) return toast(T("مفيش نسخة", "No backup"), true); await saveSetting16("plans", b.plans); await saveSetting16("sitePlans", b.sitePlans); await saveSetting16("allAccess", b.allAccess); toast("↩️"); render(); },
+    async plan(id, v) { const plans = (_sv("plans", []) || []).map(p => p.id === id ? Object.assign({}, p, { price: +v }) : p); await saveSetting16("plans", plans); toast("✅"); },
+    async tier(r, v) { const t = JSON.parse(JSON.stringify(_sv("priceTiers", {}) || {})); t.tiers = t.tiers || {}; t.tiers[r] = +v / 100; await saveSetting16("priceTiers", t); render(); },
+    async ctry(cc, field, v) { const t = JSON.parse(JSON.stringify(_sv("priceTiers", {}) || {})); t.countries = t.countries || {}; t.overrides = t.overrides || {}; cc = cc.toUpperCase();
+      if (field === "region") { t.countries[cc] = v; } else if (field === "pct") { if (v === "" || v == null) delete t.overrides[cc]; else t.overrides[cc] = +v / 100; } else if (field === "del") { delete t.countries[cc]; delete t.overrides[cc]; } await saveSetting16("priceTiers", t); render(); },
+    async allRegion(r, v) { const t = JSON.parse(JSON.stringify(_sv("priceTiers", {}) || {})); Object.keys(t.countries || {}).forEach(cc => { if (t.countries[cc] === r) { if (v === "" || v == null) delete (t.overrides || {})[cc]; else { t.overrides = t.overrides || {}; t.overrides[cc] = +v / 100; } } }); await saveSetting16("priceTiers", t); render(); },
+    open: {}
+  };
+  function pricePage() {
+    if (!realOwner()) return pageWrap("🔒", "—", "", ""); const c = PC(); const { P, S, sec } = compute(c); const t = _sv("priceTiers", {}) || {}; const names = t.names || {}; const regs = Object.keys(t.tiers || {}); const plans = _sv("plans", []) || [];
+    const inp = (k, lab, suf, step) => `<label class="sm pr201i">${lab}<span><input class="in" type="number" step="${step || 1}" value="${c[k]}" onchange="pr201.set('${k}',this.value)"> ${suf}</span></label>`;
+    const tbl = `<table class="tbl196"><tr><th>${T("الباقة", "Plan")}</th><th>${T("المحسوب", "Computed")}</th><th>${T("الحالي", "Current")}</th>${regs.map(r => `<th title="${esc(names[r] || r)}">${esc(r)}</th>`).join("")}</tr>${Object.entries(P).map(([id, v]) => { const cur = (plans.find(p => p.id === id) || {}).price; return `<tr><td>${esc(id)}</td><td><b>$${v}</b></td><td><input class="in" type="number" style="width:5.5rem" value="${cur ?? ""}" onchange="pr201.plan('${id}',this.value)"></td>${regs.map(r => `<td>$${Math.round(v * (t.tiers[r] || 1))}</td>`).join("")}</tr>`; }).join("")}
+      ${Object.entries(S).map(([id, v]) => `<tr><td>✨ ${esc(id)}</td><td><b>$${v}</b></td><td>—</td>${regs.map(r => `<td>$${Math.round(v * (t.tiers[r] || 1) * 10) / 10}</td>`).join("")}</tr>`).join("")}<tr><td>📂 ${T("قسم لوحده", "One section")}</td><td><b>$${sec}</b></td><td>—</td>${regs.map(r => `<td>$${Math.round(sec * (t.tiers[r] || 1) * 10) / 10}</td>`).join("")}</tr></table>`;
+    const byR = {}; Object.entries(t.countries || {}).forEach(([cc, r]) => (byR[r] = byR[r] || []).push(cc));
+    const regions = regs.map(r => `<details class="card" ${pr201.open[r] ? "open" : ""} ontoggle="pr201.open['${r}']=this.open"><summary class="row" style="justify-content:space-between;align-items:center;gap:.4rem;flex-wrap:wrap"><b>🌍 ${esc(names[r] || r)}</b><span class="row" style="gap:.3rem;align-items:center"><input class="in" type="number" min="5" max="300" step="5" value="${Math.round((t.tiers[r] || 1) * 100)}" style="width:5rem" onclick="event.stopPropagation()" onchange="pr201.tier('${r}',this.value)">% <span class="xs muted">${T("من السعر الأساسي", "of base")} · ${(byR[r] || []).length} ${T("دولة", "countries")}</span></span></summary>
+      <div class="pcg201">${(byR[r] || []).sort().map(cc => `<div class="pcc201"><b>${typeof flagOf === "function" ? flagOf(cc) : ""} ${cc}</b><select class="in xs" onchange="pr201.ctry('${cc}','region',this.value)">${regs.map(x => `<option value="${x}" ${x === r ? "selected" : ""}>${esc(x)}</option>`).join("")}</select><input class="in xs" type="number" placeholder="%" title="${T("نسبة خاصة للدولة دي", "Own % for this country")}" value="${t.overrides && t.overrides[cc] != null ? Math.round(t.overrides[cc] * 100) : ""}" onchange="pr201.ctry('${cc}','pct',this.value)"></div>`).join("")}</div>
+      <div class="row" style="gap:.3rem;margin-top:.5rem;flex-wrap:wrap"><input class="in" id="nc201-${r}" placeholder="${T("كود دولة (مثلًا FR)", "Country code")}" style="width:9rem;text-transform:uppercase"><button class="btn btn-o xs" onclick="pr201.ctry(document.getElementById('nc201-${r}').value,'region','${r}')">➕ ${T("ضيفها للمجموعة", "Add")}</button><input class="in" id="ar201-${r}" type="number" placeholder="%" style="width:5rem"><button class="btn btn-o xs" onclick="pr201.allRegion('${r}',document.getElementById('ar201-${r}').value)">${T("نسبة خاصة لكل دول المجموعة", "Set % for all")}</button></div></details>`).join("");
+    return pageWrap("💲", T("استوديو الأسعار", "Pricing studio"), T("سعر أساسي واحد، وكل حاجة نسبة منه — وتطبّق على كله بدوسة أو تعدّل يدوي", "One base price; everything is a percentage"),
+      `<div class="card"><h3>1️⃣ ${T("الأساسي", "Base")}</h3><div class="pr201g">${inp("plat", T("اشتراك المنصة الشهري", "Platform / month"), "$", .5)}${inp("l50", T("الحصة 50 دقيقة", "Lesson 50 min"), "$", .5)}${inp("l25", T("الحصة 25 دقيقة", "Lesson 25 min"), "$", .5)}${inp("maq", T("حصص المقامات", "Maqam lessons"), "% " + T("من العادي", "of normal"))}${inp("d8", T("خصم باقة 8 حصص", "8-lesson discount"), "%", .25)}${inp("d12", T("خصم باقة 12 حصة", "12-lesson discount"), "%", .25)}${inp("yr", T("السنوي أوفر (الحصص)", "Yearly saving (lessons)"), "%")}${inp("pyr", T("السنوي أوفر (المنصة)", "Yearly saving (platform)"), "%")}${inp("wk", T("الأسبوعي", "Weekly"), "% " + T("من الشهري", "of monthly"))}${inp("life", T("مدى الحياة", "Lifetime"), "% " + T("من الشهري", "of monthly"))}${inp("sec", T("القسم لوحده", "One section"), "% " + T("من المنصة", "of platform"))}</div>
+        <div class="row" style="gap:.4rem;margin-top:.7rem;flex-wrap:wrap"><button class="btn btn-p btn-lg" onclick="pr201.apply()">✅ ${T("طبّق على كل الأسعار", "Apply to everything")}</button><button class="btn btn-o" onclick="pr201.undo()">↩️ ${T("رجّع الأسعار اللي قبل كده", "Undo")}</button></div></div>
+      <div class="card" style="overflow:auto"><h3>2️⃣ ${T("الأسعار — المحسوب والحالي (تعدّل يدوي من خانة «الحالي») وكل منطقة", "Prices per plan and region")}</h3>${tbl}</div>
+      <h3 style="margin:1rem 0 .4rem">3️⃣ ${T("المناطق والدول — كل مجموعة نسبة، وأي دولة تنقلها أو تديها نسبة لوحدها", "Regions & countries")}</h3>${regions}
+      <p class="xs muted">${T("مكان الطالب بيتعرف من النت (مش من الدولة اللي اختارها)، والسعر بيتحسب على السيرفر وقت الدفع.", "Location comes from the network, prices are computed on the server at checkout.")}</p>`, 1200);
+  }
+
+  /* ======================= 3) موسوعة بيان الإسلام نص زي الشاملة ======================= */
+  const BASE = "https://raw.githubusercontent.com/adarwesh701-byte/Quran-Academy/library/books/";
+  const BY = window.BY201 = { lib: null, pg: null, txt: null, q: "", open: {}, job: null, fs: LS("k199fs", 1.15) };
+  async function lib() { if (BY.lib) return BY.lib; const j = await fetch(BASE + "library.json").then(r => r.json()); BY.lib = j.books.find(b => b.id === "bayan"); return BY.lib; }
+  async function loadJs(u) { if (document.querySelector(`script[src="${u}"]`)) return; await new Promise((ok, no) => { const s = document.createElement("script"); s.src = u; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+  let PDFS = {}; async function pdfOf(f) { await loadJs("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"); pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; return PDFS[f] || (PDFS[f] = pdfjsLib.getDocument(BASE + f).promise); }
+  let WK = null; async function worker() { if (WK) return WK; await loadJs("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"); WK = await Tesseract.createWorker("ara"); return WK; }
+  async function ocrPage(i) { const b = await lib(); const part = b.parts.find(p => i >= p.s && i <= p.e) || b.parts[0]; const pdf = await pdfOf(part.f); const pg = await pdf.getPage(i - part.s + 1); const vp = pg.getViewport({ scale: 2.2 }); const cv = document.createElement("canvas"); cv.width = vp.width; cv.height = vp.height; await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise; const w = await worker(); const { data } = await w.recognize(cv); return (data.text || "").replace(/[ \t]+\n/g, "\n").trim(); }
+  async function getText(i) { const { data } = await sb.from("lib_pages200").select("text").eq("book", "bayan").eq("page", i).maybeSingle(); if (data && data.text) return data.text; const t = await ocrPage(i); if (t && me()) { try { await sb.from("lib_pages200").insert({ book: "bayan", page: i, text: t }); } catch (e) {} } return t; }
+  window.by201 = {
+    async page(i) { i = Math.max(1, +i || 1); BY.pg = i; BY.txt = null; LSset("by201p", i); render(); try { const t = await getText(i); if (BY.pg !== i) return; BY.txt = t || "—"; } catch (e) { BY.txt = "⚠️ " + (e.message || e); } render(); const r = document.getElementById("kr199"); r && r.scrollIntoView({ block: "start", behavior: "smooth" }); },
+    tog(i) { BY.open[i] = !BY.open[i]; render(); },
+    async batch() { if (BY.job) { BY.job.stop = 1; return; } const b = await lib(); const { data } = await sb.from("lib_pages200").select("page").eq("book", "bayan").limit(20000); const have = new Set((data || []).map(x => x.page)); BY.job = { n: have.size, all: b.n, stop: 0 }; render();
+      for (let i = 1; i <= b.n && !BY.job.stop; i++) { if (have.has(i)) continue; try { const t = await ocrPage(i); if (t) { await sb.from("lib_pages200").upsert({ book: "bayan", page: i, text: t }); BY.job.n++; } } catch (e) {} if (i % 3 === 0) { const s = document.getElementById("job201"); if (s) s.textContent = `${BY.job.n} / ${BY.job.all}`; } } BY.job = null; render(); }
+  };
+  function bayanPage() { if (!BY.lib) { lib().then(render).catch(() => {}); return pageWrap("🛡️", T("موسوعة بيان الإسلام", "Bayan al-Islam"), "", loadingBox()); } const b = BY.lib; if (!BY.pg) setTimeout(() => by201.page(LS("by201p", 54)), 0);
+    const H = b.toc || []; const q = BY.q.trim(); let toc;
+    if (q) toc = H.map((x, i) => [x, i]).filter(([x]) => x[1].includes(q)).slice(0, 300).map(([x]) => `<a href="#" onclick="by201.page(${x[2]});return false" style="padding-inline-start:${x[0] * .7}rem">${esc(x[1])}</a>`).join("");
+    else { const out = []; const open = [true]; H.forEach((x, i) => { const lv = x[0]; let vis = true; for (let k = 0; k < lv; k++) if (!open[k + 1]) { vis = false; break; } const kids = H[i + 1] && H[i + 1][0] > lv; open[lv + 1] = !!BY.open[i]; open.length = lv + 2; if (vis) out.push(`<div class="ki199" style="padding-inline-start:${lv * .8}rem">${kids ? `<button class="kx199" onclick="by201.tog(${i})">${BY.open[i] ? "▾" : "◂"}</button>` : `<span class="kx199"></span>`}<a href="#" onclick="by201.page(${x[2]});return false">${esc(x[1])}</a></div>`); }); toc = out.join(""); }
+    const t = BY.txt; const body = t == null ? `<div class="card muted" style="text-align:center">⏳ ${T("بحوّل الصفحة دي لنص… (أول مرة بس — بعد كده بتفتح على طول للكل)", "Converting this page to text… (first time only)")}</div>` : `<div class="kt199" style="font-size:${BY.fs}rem;white-space:pre-wrap">${esc(t)}</div>`;
+    const nav = `<div class="row" style="gap:.3rem;justify-content:center;align-items:center;flex-wrap:wrap"><button class="btn btn-o" onclick="by201.page(${(BY.pg || 1) - 1})">→ ${T("اللي قبلها", "Prev")}</button><input class="in" type="number" min="1" max="${b.n}" value="${BY.pg || 1}" style="width:5.5rem;text-align:center" onchange="by201.page(this.value)"><span class="xs muted">/ ${b.n}</span><button class="btn btn-o" onclick="by201.page(${(BY.pg || 1) + 1})">${T("اللي بعدها", "Next")} ←</button><button class="btn btn-o" onclick="BY201.fs=Math.max(.9,BY201.fs-.1);render()">A−</button><button class="btn btn-o" onclick="BY201.fs=Math.min(2,BY201.fs+.1);render()">A+</button></div>`;
+    return pageWrap("🛡️", T("موسوعة بيان الإسلام — الرد على الشبهات", "Bayan al-Islam"), T("نص بفهرس كامل (١٤٢٥ عنوان) وبحث — وبتكمّل من آخر صفحة", "Text with a full 1,425-heading index"),
+      `<button class="btn btn-o" onclick="back196()">↩️ ${T("رجوع", "Back")}</button>${realOwner() ? `<div class="card sm">🔤 ${T("كل صفحة بتتحوّل لنص أول مرة حد يفتحها، وبتتحفظ للكل. عايز تحوّل الموسوعة كلها مرة واحدة؟ سيب اللابتوب مفتوح على الصفحة دي:", "Pages convert on first open. Convert all at once:")} <button class="btn ${BY.job ? "bad" : "btn-p"}" onclick="by201.batch()">${BY.job ? "⏹ " + T("وقّف", "Stop") : "▶ " + T("حوّل كله لنص", "Convert all")}</button> ${BY.job ? `<b id="job201">${BY.job.n} / ${BY.job.all}</b>` : ""}</div>` : ""}
+      <div class="kw199"><aside class="card ka199"><input class="in" placeholder="🔍 ${T("دوّر في الشبهات (مثلًا: تعدد الزوجات)", "Search the index")}" value="${esc(BY.q)}" oninput="BY201.q=this.value;clearTimeout(window.__by);window.__by=setTimeout(render,250)"><div class="kl199">${toc}</div></aside><main class="card" id="kr199">${nav}<hr style="opacity:.2">${body}<hr style="opacity:.2">${nav}</main></div>`, 1300); }
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () {
+    const rt = state.route; const arg = String(state.pageArg || "");
+    if (rt === "kutub199" && arg === "bayan") { let b; try { b = bayanPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); return; }
+    if (rt === "pdf181" && arg.split("/")[0] === "bayan" && !(realOwner() && LS("img201", 0))) { state.route = "kutub199"; state.pageArg = "bayan"; return render(); }
+    if (rt === "pdfbooks181" && !(realOwner() && LS("img201", 0))) { state.route = "kutub199"; state.pageArg = null; }
+    if (state.route === "price201") { show(pricePage()); return; } if (state.route === "bar201") { show(barPage()); return; }
+    _r.apply(this, arguments);
+    try { if (state.route === "kutub199" && !state.pageArg && !document.getElementById("by201t")) { const g = document.querySelector("#app .kg199"); g && g.insertAdjacentHTML("afterbegin", `<div class="card kb199" id="by201t" onclick="go16('kutub199','bayan')"><div style="font-size:2rem">🛡️</div><b>${T("موسوعة بيان الإسلام — الرد على الشبهات", "Bayan al-Islam")}</b>${LS("by201p", 0) ? `<span class="xs accent">↩️ ${T("كمّل من صفحة", "Resume p.")} ${LS("by201p", 0)}</span>` : ""}</div>`); if (realOwner() && !document.getElementById("img201")) g && g.insertAdjacentHTML("beforebegin", `<p class="xs" id="img201"><label><input type="checkbox" ${LS("img201", 0) ? "checked" : ""} onchange="localStorage.setItem('img201',this.checked?1:0)"> ${T("أنا: افتح النسخة المصوّرة بدل النص", "Me: open scanned version")}</label></p>`); }
+      document.querySelectorAll("#app button, #app a").forEach(el => { if (el.__n201) return; const s = el.innerHTML; if (s.includes("الموسوعة الفقهية، بيان الإسلام")) { el.__n201 = 1; el.innerHTML = s.replace(/المكتبة المصوّرة \(الموسوعة الفقهية، بيان الإسلام، مصحف الشمرلي\)/, "المكتبة: الموسوعة الفقهية + بيان الإسلام (نص)"); } else if (/الموسوعة الفقهية الكويتية/.test(s)) { el.__n201 = 1; el.innerHTML = s.replace(/ الكويتية/g, ""); } });
+      apply(false); } catch (e) { console.warn(e); }
+  };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#0e7490" onclick="go16('bar201')"><span>🎛️</span><b>${T("شكل الشرايط الجانبية", "Side bars")}</b></button>${realOwner() ? `<button class="mstile" style="--c:#15803d" onclick="go16('price201')"><span>💲</span><b>${T("استوديو الأسعار", "Pricing studio")}</b></button>` : ""}`); };
+  const m = location.hash.match(/^#\/(price201|bar201)/); if (m) state.route = m[1];
+  setTimeout(() => apply(true), 600);
+
+  css(`
+  html body.b201 :is(.side185,#nv180).bar201[data-s201]{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .4s,box-shadow .4s,filter .4s!important;will-change:transform;pointer-events:auto!important;z-index:85!important}
+  html body.b201 :is(.side185,#nv180).bar201[data-s201=l]:not(.open201){transform:translateX(calc(-100% - 12px))!important;opacity:0!important;pointer-events:none!important}
+  html body.b201 :is(.side185,#nv180).bar201[data-s201=r]:not(.open201){transform:translateX(calc(100% + 12px))!important;opacity:0!important;pointer-events:none!important}
+  html body.b201 :is(.side185,#nv180).bar201.open201{transform:none!important;opacity:1!important;box-shadow:0 20px 50px rgba(0,0,0,.25)!important}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=slide]:not(.open201){opacity:1!important}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=scale][data-s201=l]:not(.open201){transform:translateX(-30%) scale(.6)!important;transform-origin:left center}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=scale][data-s201=r]:not(.open201){transform:translateX(30%) scale(.6)!important;transform-origin:right center}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=flip][data-s201=l]:not(.open201){transform:perspective(900px) rotateY(80deg)!important;transform-origin:left center}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=flip][data-s201=r]:not(.open201){transform:perspective(900px) rotateY(-80deg)!important;transform-origin:right center}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=spring]{transition:transform .65s cubic-bezier(.34,1.56,.64,1),opacity .3s!important}
+  html body.b201 :is(.side185,#nv180).bar201[data-fx=sheet].open201{z-index:96!important}
+  body.dim201::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);z-index:90;animation:f201 .3s}
+  @keyframes f201{from{opacity:0}}
+  .bar201.open201 > *{animation:it201 .45s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--st201,1) * var(--i201,0) * 35ms)}
+  .bar201.open201 > *:nth-child(2){--i201:1}.bar201.open201 > *:nth-child(3){--i201:2}.bar201.open201 > *:nth-child(4){--i201:3}.bar201.open201 > *:nth-child(5){--i201:4}.bar201.open201 > *:nth-child(6){--i201:5}.bar201.open201 > *:nth-child(7){--i201:6}.bar201.open201 > *:nth-child(8){--i201:7}.bar201.open201 > *:nth-child(9){--i201:8}.bar201.open201 > *:nth-child(10){--i201:9}.bar201.open201 > *:nth-child(n+11){--i201:10}
+  .bar201[data-s201=l].open201 > *{--dx:-14px}.bar201[data-s201=r].open201 > *{--dx:14px}@keyframes it201{from{opacity:0;transform:translateX(var(--dx,0))}}
+  body.b201.push201-l #app{transition:padding .5s cubic-bezier(.22,1,.36,1);padding-inline-start:14rem}body.b201.push201-r #app{transition:padding .5s cubic-bezier(.22,1,.36,1);padding-inline-end:14rem}[dir=rtl] body.b201.push201-l #app{padding-inline-start:0;padding-inline-end:14rem}[dir=rtl] body.b201.push201-r #app{padding-inline-end:0;padding-inline-start:14rem}
+  .tab201{position:fixed;top:50%;z-index:84;display:flex;align-items:center;gap:.3rem;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 85%,transparent);backdrop-filter:blur(8px);color:var(--fg);padding:.45rem .5rem;cursor:pointer;font:inherit;font-size:.78rem;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .35s cubic-bezier(.22,1,.36,1),opacity .3s,background .2s;touch-action:none}
+  .tab201[data-s201=l]{left:0;border-radius:0 14px 14px 0;border-left:0}.tab201[data-s201=r]{right:0;border-radius:14px 0 0 14px;border-right:0;flex-direction:row-reverse}
+  .tab201 .t{max-width:0;overflow:hidden;white-space:nowrap;transition:max-width .35s}.tab201:hover .t{max-width:8rem}.tab201 .a{opacity:.6;font-size:1rem}.tab201:hover{background:var(--accent);color:#fff}
+  .tab201.on{opacity:0;pointer-events:none;transform:scale(.8)}.tab201[data-s201=l].on{transform:translateX(-100%)}.tab201[data-s201=r].on{transform:translateX(100%)}
+  .tab201 + .tab201{margin-top:3.2rem}#tab201-nav{top:calc(50% + 3.4rem)}
+  .x201{display:flex;gap:.2rem;justify-content:flex-end;padding:.2rem .1rem .4rem}.x201 button{border:0;background:var(--bg);border-radius:8px;cursor:pointer;padding:.15rem .4rem;font-size:.8rem}
+  /* لوحة الأدوات الجانبية: تصميم جديد */
+  html body.b201 .side185.bar201{background:color-mix(in srgb,var(--card) 92%,transparent)!important;backdrop-filter:blur(14px);border:1px solid var(--line)!important;border-radius:20px!important;padding:.6rem!important;gap:.35rem!important;max-height:84vh;overflow:auto;width:15rem!important;display:flex;flex-direction:column}
+  html body.b201 .side185.bar201 > button,html body.b201 .side185.bar201 > a{display:flex!important;align-items:center;gap:.5rem;width:100%!important;justify-content:flex-start!important;text-align:start;border-radius:12px!important;padding:.55rem .7rem!important;font-size:.86rem!important;font-weight:600;background:var(--bg)!important;color:var(--fg)!important;border:1px solid transparent!important;box-shadow:none!important;transition:background .2s,transform .2s,border-color .2s!important;min-height:2.4rem}
+  html body.b201 .side185.bar201 > button:hover,html body.b201 .side185.bar201 > a:hover{background:color-mix(in srgb,var(--accent) 12%,var(--bg))!important;border-color:color-mix(in srgb,var(--accent) 40%,transparent)!important;transform:translateX(0) scale(1.01)}
+  html body.b201 .side185.bar201 > button:first-of-type{background:linear-gradient(135deg,#7c3aed,#059669)!important;color:#fff!important}
+  /* كل حاجة بتفتح بنعومة */
+  .hlpov{animation:f201 .25s ease}.hlpov>.hlpbox{animation:pop201 .35s cubic-bezier(.22,1,.36,1)}@keyframes pop201{from{opacity:0;transform:translateY(14px) scale(.97)}}
+  #toast,.toast{animation:pop201 .3s cubic-bezier(.22,1,.36,1)}
+  .dk196p{transform-origin:center;animation:none}.dock196.open .dk196p{animation:pop201 .35s cubic-bezier(.22,1,.36,1)}
+  .mnav.open{animation:f201 .25s}.dropdown,.menu,.popover{animation:pop201 .25s}
+  .pr201g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.6rem}.pr201i{display:flex;flex-direction:column;gap:.2rem}.pr201i span{display:flex;align-items:center;gap:.3rem}.pr201i input{width:6rem}
+  .pcg201{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.35rem;margin-top:.5rem}.pcc201{display:flex;gap:.25rem;align-items:center;border:1px solid var(--line);border-radius:.6rem;padding:.25rem .35rem}.pcc201 .in{padding:.15rem .3rem;font-size:.75rem}.pcc201 input{width:3.6rem}
+  @media (prefers-reduced-motion:reduce){.bar201,.bar201 > *,.tab201{transition:none!important;animation:none!important}}`);
 })();
 
 // بدء التشغيل
