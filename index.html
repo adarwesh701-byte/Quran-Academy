@@ -27248,17 +27248,18 @@ Between lessons, the platform keeps you going:
   const inRect = (el, x, y, pad) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width && x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad; };
   addEventListener("mousemove", e => {
     if (!document.body.classList.contains("rv190") || !hoverDev()) return; const c = RV(); const x = e.clientX, y = e.clientY; const h = hdr();
-    /* فوق: يفتح بالطريقة اللي اخترتها، ويفضل مفتوح طول ما الماوس عليه + مهلة قبل ما يقفل (عشان مايرعشش) */
-    if (c.trig !== "always" && c.trig !== "arrow" && c.trig !== "click" && c.trig !== "scroll") {
-      const zx = () => { const w = innerWidth * (+c.zw || 100) / 100; const L = c.zpos === "center" ? (innerWidth - w) / 2 : c.zpos === "left" ? 0 : c.zpos === "right" ? innerWidth - w : 0; return x >= L && x <= L + (c.zpos === "full" ? innerWidth : w); };
-      const want = c.trig === "edge" ? (y < c.zone && zx()) : c.trig === "el" ? !!(c.tsel && [...document.querySelectorAll(c.tsel)].some(el => inRect(el, x, y, 4))) : c.trig === "logo" ? inRect(h && h.querySelector("a,.logo,.brand"), x, y, 6) : c.trig === "header" ? inRect(h, x, y, 0) : false;
-      const keep = OPEN && (bars().some(b => inRect(b, x, y, 24)) || inRect(h, x, y, 0) || y < c.zone);
-      if (want || keep) { clearTimeout(tClose); tClose = 0; if (!OPEN) { OPEN = true; layout(); } }
-      else if (OPEN && !tClose) tClose = setTimeout(() => { OPEN = false; tClose = 0; layout(); }, +c.delay || 700);
-    }
-    /* الجنب: نفس الفكرة */
-    if (c.strig === "edge" || c.strig === "el") { const rtl = document.dir === "rtl"; const sh = innerHeight * (+c.szh || 100) / 100; const st = c.szpos === "middle" ? (innerHeight - sh) / 2 : c.szpos === "bottom" ? innerHeight - sh : 0; const inY = c.szpos === "full" || (y >= st && y <= st + sh); const side = sides()[0]; const onLeft = side ? side.getBoundingClientRect().left + (side.offsetWidth || 0) / 2 < innerWidth / 2 : !rtl; const edge = c.strig === "el" ? !!(c.ssel && [...document.querySelectorAll(c.ssel)].some(el => inRect(el, x, y, 4))) : (onLeft ? x < (+c.szone || c.zone) : x > innerWidth - (+c.szone || c.zone)) && inY; const keep = SOPEN && sides().some(s => inRect(s, x, y, 30));
-      if (edge || keep) { clearTimeout(sClose); sClose = 0; if (!SOPEN) { SOPEN = true; layout(); } } else if (SOPEN && !sClose) sClose = setTimeout(() => { SOPEN = false; sClose = 0; layout(); }, +c.delay || 700); }
+    const zx = () => { const w = innerWidth * (+c.zw || 100) / 100; const L = c.zpos === "center" ? (innerWidth - w) / 2 : c.zpos === "left" ? 0 : c.zpos === "right" ? innerWidth - w : 0; return c.zpos === "full" || (x >= L && x <= L + w); };
+    const topHover = !["always", "arrow", "click", "scroll", "logo-click"].includes(c.trig);
+    const wantT = topHover && (c.trig === "edge" ? (y < c.zone && zx()) : c.trig === "el" ? !!(c.tsel && [...document.querySelectorAll(c.tsel)].some(el => inRect(el, x, y, 4))) : c.trig === "logo" ? inRect(h && h.querySelector("a,.logo,.brand"), x, y, 6) : c.trig === "header" ? inRect(h, x, y, 0) : false);
+    const keepT = OPEN && (bars().some(b => inRect(b, x, y, 24)) || inRect(h, x, y, 0) || (c.trig === "edge" && y < c.zone));
+    let wantS = false, keepS = false; const sideHover = c.strig === "edge" || c.strig === "el";
+    if (sideHover) { const rtl = document.dir === "rtl"; const sh = innerHeight * (+c.szh || 100) / 100; const st = c.szpos === "middle" ? (innerHeight - sh) / 2 : c.szpos === "bottom" ? innerHeight - sh : 0; const inY = c.szpos === "full" || (y >= st && y <= st + sh); const sd = sides()[0]; const onLeft = sd ? sd.getBoundingClientRect().left + (sd.offsetWidth || 0) / 2 < innerWidth / 2 : !rtl;
+      wantS = c.strig === "el" ? !!(c.ssel && [...document.querySelectorAll(c.ssel)].some(el => inRect(el, x, y, 4))) : (onLeft ? x < (+c.szone || c.zone) : x > innerWidth - (+c.szone || c.zone)) && inY; keepS = SOPEN && sides().some(s => inRect(s, x, y, 30)); }
+    /* مساحة مشتركة: واحد بس يطلع — اللي انت مختاره، أو اللي مفتوح أصلًا يفضل لوحده */
+    let T1 = wantT || keepT, S1 = wantS || keepS;
+    if (T1 && S1) { if (OPEN && !SOPEN) S1 = false; else if (SOPEN && !OPEN) T1 = false; else if (c.prio === "side") T1 = false; else S1 = false; }
+    if (topHover) { if (T1) { clearTimeout(tClose); tClose = 0; if (!OPEN) { OPEN = true; if (SOPEN && c.excl !== "both") { SOPEN = false; } layout(); } } else if (OPEN && !tClose) tClose = setTimeout(() => { OPEN = false; tClose = 0; layout(); }, +c.delay || 700); }
+    if (sideHover) { if (S1) { clearTimeout(sClose); sClose = 0; if (!SOPEN) { SOPEN = true; if (OPEN && c.excl !== "both") { OPEN = false; } layout(); } } else if (SOPEN && !sClose) sClose = setTimeout(() => { SOPEN = false; sClose = 0; layout(); }, +c.delay || 700); }
   }, { passive: true });
   addEventListener("scroll", () => { const c = RV(); if (c.trig !== "scroll" || !document.body.classList.contains("rv190")) return; const y = scrollY; const o = y < 80 || y < lastY - 4; lastY = y; if (o !== OPEN) { OPEN = o; layout(); } }, { passive: true });
   addEventListener("keydown", e => { if (e.target.closest && e.target.closest("input,textarea,[contenteditable]")) return; if (e.key === "m" || e.key === "M") { OPEN = !OPEN; layout(); } });
@@ -27290,6 +27291,9 @@ Between lessons, the platform keeps you going:
       ${row(T("الحركة", "Animation"), sel("anim", [["slide", "تنزل من فوق لتحت", "Slide down"], ["fade", "تظهر بنعومة", "Fade"], ["drop", "تنزل بنطّة", "Drop with bounce"], ["unfold", "تتفرد زي الستارة", "Unfold"], ["none", "من غير حركة", "None"]]))}
       ${row(T("تستنى قد إيه قبل ما تختفي", "Wait before hiding"), sel("delay", [[300, "سريع", "Fast"], [700, "عادي", "Normal"], [1500, "بطيء", "Slow"], [3000, "بطيء جدًا", "Very slow"]]))}
       ${row(T("مساحة الإحساس من الحافة", "Edge sensitivity"), sel("zone", [[30, "صغيرة", "Small"], [70, "متوسطة", "Medium"], [120, "كبيرة", "Large"]]))}
+      <h4>⚖️ ${T("لو الماوس في مكان مشترك بين حتتين", "If the mouse is where two zones overlap")}</h4>
+      ${row(T("مين يطلع؟", "Which one opens?"), sel("prio", [["top", "اللي فوق", "The top bars"], ["side", "اللي في الجنب", "The side bar"]]))}
+      ${row(T("لو واحد مفتوح والتاني اتطلب", "If one is open and the other is triggered"), sel("excl", [["one", "واحد بس في المرة (التاني يقفل)", "Only one at a time"], ["both", "يفضلوا الاتنين", "Allow both"]]))}
       <h4>↔️ ${T("الشرايط اللي في الجنب", "Side bars")}</h4>
       ${row(T("تظهر إمتى؟", "Show when?"), sel("strig", [["edge", "الماوس يقرّب من الجنب", "Mouse near the side"], ["el", "الماوس على حاجة معيّنة", "Mouse on a chosen element"], ["arrow", "سهم ‹ على الحافة", "Edge arrow ‹"], ["always", "ظاهرة دايمًا", "Always"]]))}
       ${row(T("مساحة الماوس في الجنب: العرض", "Side zone width"), `<input class="in" type="number" min="4" max="400" style="width:6rem" value="${c.szone || c.zone}" onchange="rv190('szone',+this.value)"> px`)}
