@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v192";
+const UI_VERSION = "2026-11-16-v193";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -8218,7 +8218,7 @@ appCtaBanner = function () {
 Object.assign(UI.en, {
   rm_fx: "Effects", rm_fxFilter: "Video filter", rm_fxSticker: "Fun stickers", rm_fxBg: "Background", rm_fxNone: "None", rm_fxBlur: "Blur",
   rm_fxF: { none: "Normal", warm: "Warm", cool: "Cool", bw: "Black & white", vintage: "Vintage", bright: "Bright", pop: "Cartoon pop" },
-  rm_fxS: { none: "None", crown: "👑 Crown", stars: "⭐ Stars", balloons: "🎈 Balloons", hearts: "💖 Hearts", frame: "🌈 Rainbow frame" },
+  rm_fxS: { none: "None", crown: "👑 Crown", stars: "⭐ Stars", balloons: "🎈 Balloons", hearts: "💖 Hearts", frame: "🖍️ Rainbow frame" },
   rm_fxB: { none: "None", blur: "Blur", emerald: "Emerald", night: "Night sky", sunrise: "Sunrise" }, rm_fxLoading: "Loading background effect…", rm_fxFail: "Background effect isn't available on this device",
   rm_fun: "Fun", rm_sounds: "Class sounds", rm_snd: { correct: "✅ Correct", wrong: "❌ Try again", applause: "👏 Applause", drum: "🥁 Drum roll", fanfare: "🎺 Celebration", bell: "🔔 Bell" },
   rm_star: "Give a star", rm_starGot: "got a star! ⭐", rm_starAll: "Stars for everyone", rm_confetti: "🎉 Confetti",
@@ -8242,7 +8242,7 @@ Object.assign(UI.en, {
 Object.assign(UI.ar, {
   rm_fx: "مؤثرات", rm_fxFilter: "فلتر الفيديو", rm_fxSticker: "ملصقات مرحة", rm_fxBg: "الخلفية", rm_fxNone: "بدون", rm_fxBlur: "تمويه",
   rm_fxF: { none: "عادي", warm: "دافئ", cool: "بارد", bw: "أبيض وأسود", vintage: "قديم", bright: "مضيء", pop: "كرتون" },
-  rm_fxS: { none: "بدون", crown: "👑 تاج", stars: "⭐ نجوم", balloons: "🎈 بالونات", hearts: "💖 قلوب", frame: "🌈 إطار ملون" },
+  rm_fxS: { none: "بدون", crown: "👑 تاج", stars: "⭐ نجوم", balloons: "🎈 بالونات", hearts: "💖 قلوب", frame: "🖍️ إطار ملون" },
   rm_fxB: { none: "بدون", blur: "تمويه", emerald: "زمردي", night: "سماء الليل", sunrise: "شروق" }, rm_fxLoading: "بنحمّل مؤثر الخلفية…", rm_fxFail: "مؤثر الخلفية مش متاح على الجهاز ده",
   rm_fun: "مرح", rm_sounds: "أصوات الفصل", rm_snd: { correct: "✅ صح", wrong: "❌ حاول تاني", applause: "👏 تصفيق", drum: "🥁 طبول", fanfare: "🎺 احتفال", bell: "🔔 جرس" },
   rm_star: "ادّي نجمة", rm_starGot: "خد نجمة! ⭐", rm_starAll: "نجوم للكل", rm_confetti: "🎉 احتفال",
@@ -12214,7 +12214,7 @@ function tjSafe(html) { const ph = []; const s = String(html).replace(/<tajweed 
 function tajPage(secId) {
   const s = state.tj = state.tj || { surah: 1 }; const full = libFull(); if (!full && s.surah !== 1) s.surah = 1;
   const d = useData("tj:" + s.surah, async () => { const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s.surah}?fields=text_uthmani_tajweed&per_page=300`).then(r => r.json()); return (r.verses || []).map(v => v.text_uthmani_tajweed); });
-  return `<div class="card" style="margin-top:1.2rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem"><h3>🌈 ${L("tjTitle")}</h3><select class="in" style="width:auto" onchange="if(!libFull()&&+this.value!==1){toast(L('smpLock'),true);this.value=1;return}state.tj.surah=+this.value;render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${s.surah === i + 1 ? "selected" : ""}>${full || i === 0 ? "" : "🔒 "}${i + 1}. ${esc(n)}</option>`).join("")}</select></div>
+  return `<div class="card" style="margin-top:1.2rem"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem"><h3>🖍️ ${L("tjTitle")}</h3><select class="in" style="width:auto" onchange="if(!libFull()&&+this.value!==1){toast(L('smpLock'),true);this.value=1;return}state.tj.surah=+this.value;render()">${SURAHS.map((n, i) => `<option value="${i + 1}" ${s.surah === i + 1 ? "selected" : ""}>${full || i === 0 ? "" : "🔒 "}${i + 1}. ${esc(n)}</option>`).join("")}</select></div>
     <details style="margin:.6rem 0"><summary class="b sm">${L("tjLegend")}</summary><div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.4rem">${Object.entries(TJ).filter(([k]) => !["slnt", "laam_shamsiyah", "idgham_mutaqaribayn"].includes(k)).map(([k, [c, a, e]]) => `<span class="badge" style="border-color:${c};color:${c}">● ${esc(state.lang === "ar" ? a : e)}</span>`).join("")}</div></details>
     ${!Array.isArray(d) ? loadingBox() : `<div class="tjtext">${d.map(tjSafe).join(" ")}</div>`}<p class="xs muted" style="margin-top:.5rem">Quran.com — text_uthmani_tajweed</p>${full ? "" : lockBox(secId)}</div>`;
 }
@@ -14692,7 +14692,7 @@ function renderLinks() {
   const L2 = (ic, t, go, cls) => `<a class="lnk ${cls || ""}" href="#" onclick="${go};return false;"><span>${ic}</span><b>${t}</b></a>`;
   const ext = (ic, t, href) => href ? `<a class="lnk" href="${esc(href)}" target="_blank" rel="noopener"><span>${ic}</span><b>${t}</b></a>` : "";
   return `<section class="sec"><div class="wrap" style="max-width:30rem;text-align:center"><div class="lnklogo">إ</div><h1 style="margin:.4rem 0 .2rem">${esc(I18N[state.lang].meta.siteName)}</h1><p class="muted sm">${L("lkSub")}</p>
-    <div class="lnks">${L2("✨", L("lkTrial"), "navigate('booking')", "pri")}${L2("🎼", L("lkMaq"), "go16('d','maqamat')")}${L2("🌈", L("lkTaj"), "go16('d','tajweed')")}${L2("📖", L("lkHifz"), "go16('d','hifz')")}${L2("🗣️", L("lkAr"), "go16('d','arabic')")}${L2("🎧", L("lkListen"), "navigate('library')")}${L2("📲", L("lkApp"), "navigate('app')")}
+    <div class="lnks">${L2("✨", L("lkTrial"), "navigate('booking')", "pri")}${L2("🎼", L("lkMaq"), "go16('d','maqamat')")}${L2("🖍️", L("lkTaj"), "go16('d','tajweed')")}${L2("📖", L("lkHifz"), "go16('d','hifz')")}${L2("🗣️", L("lkAr"), "go16('d','arabic')")}${L2("🎧", L("lkListen"), "navigate('library')")}${L2("📲", L("lkApp"), "navigate('app')")}
     ${ext("📸", "Instagram", u("instagram", "https://instagram.com/"))}${ext("🎵", "TikTok", u("tiktok", "https://www.tiktok.com/@"))}${ext("▶️", "YouTube", u("youtube", "https://youtube.com/@"))}${ext("💬", "WhatsApp", setv("whatsapp", "") ? "https://wa.me/" + String(setv("whatsapp", "")).replace(/\D/g, "") : null)}</div></div></section>`;
 }
 const _render36 = render;
@@ -15005,7 +15005,7 @@ DOMAINS = function () {
   const ar = ds.find(d => d.k === "arabic"); const root = sk("speak_root");
   if (ar) { ar.t = { ar: "اتكلم عربي", en: "Speak Arabic" }; if (root) ar.sec = root.id; const tr = k => sk("lang_track", s => (s.meta || {}).track === k);
     ar.tools = [["🇪🇬", "المصري / Egyptian", tr("eg") ? lib(tr("eg")) : "go16('lang','eg')", ""], ["📖", "الفصحى / Fusha", tr("fu") ? lib(tr("fu")) : "go16('lang','fu')", ""], ["🏝️", "الخليجي / Gulf", tr("gu") ? lib(tr("gu")) : "go16('lang','gu')", ""], ["🫒", "الفلسطيني / Palestinian", tr("pa") ? lib(tr("pa")) : "go16('lang','pa')", ""], ["🧭", L("ptTitle"), "go16('placement')", "placement"]]; }
-  const tj = ds.find(d => d.k === "tajweed"); if (tj) { const tc = sk("tajcolor"); tj.tools = [["🧭", state.lang === "ar" ? "رحلة التجويد" : "Tajweed journey", tj.sec ? `state.tc.ch=null;libGo('${tj.sec}')` : "navigate('library')", ""], ["🌈", state.lang === "ar" ? "المصحف الملوّن" : "Colour mushaf", lib(tc), ""], ["📕", state.lang === "ar" ? "مصحف أخطائي" : "My mistakes mushaf", tc ? `state.tjv.mark=true;libGo('${tc.id}')` : "navigate('library')", ""], ["🎬", L("stTitle"), tj.sec ? `libGo('${tj.sec}')` : "navigate('library')", "stories"], ["🌳", L("grTitle"), "go16('growth')", "growth"]]; }
+  const tj = ds.find(d => d.k === "tajweed"); if (tj) { const tc = sk("tajcolor"); tj.tools = [["🧭", state.lang === "ar" ? "رحلة التجويد" : "Tajweed journey", tj.sec ? `state.tc.ch=null;libGo('${tj.sec}')` : "navigate('library')", ""], ["🖍️", state.lang === "ar" ? "المصحف الملوّن" : "Colour mushaf", lib(tc), ""], ["📕", state.lang === "ar" ? "مصحف أخطائي" : "My mistakes mushaf", tc ? `state.tjv.mark=true;libGo('${tc.id}')` : "navigate('library')", ""], ["🎬", L("stTitle"), tj.sec ? `libGo('${tj.sec}')` : "navigate('library')", "stories"], ["🌳", L("grTitle"), "go16('growth')", "growth"]]; }
   return ds;
 };
 // «اتكلم عربي»: الأكاديمية فوق، والمحادثات والقصص الجاهزة تحت
@@ -15115,7 +15115,7 @@ function renderTasmee() {
 const _render41 = render;
 render = function () { if (state.route === "tasmee") { const app = document.getElementById("app"); if (!app) return; let body; try { body = renderTasmee(); } catch (e) { console.error(e); body = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); applyRename(app); taEnhance(); visitPing(false); } catch (e) {} return; } return _render41.apply(this, arguments); };
 const _DOMAINS41 = DOMAINS;
-DOMAINS = function () { const ds = _DOMAINS41(); const hz = ds.find(d => d.k === "hifz"); if (hz && hz.tools && !hz.tools.some(t => String(t[2]).includes("tasmee"))) hz.tools.splice(1, 0, ["🎤", L("tsT"), "go16('tasmee')", ""], ["🌈", state.lang === "ar" ? "المصحف الملوّن" : "Colour mushaf", "state.hzMushaf=true;go16('d','hifz')", ""]); return ds; };
+DOMAINS = function () { const ds = _DOMAINS41(); const hz = ds.find(d => d.k === "hifz"); if (hz && hz.tools && !hz.tools.some(t => String(t[2]).includes("tasmee"))) hz.tools.splice(1, 0, ["🎤", L("tsT"), "go16('tasmee')", ""], ["🖍️", state.lang === "ar" ? "المصحف الملوّن" : "Colour mushaf", "state.hzMushaf=true;go16('d','hifz')", ""]); return ds; };
 const _studentToday41 = studentToday;
 studentToday = function () { return _studentToday41().replace(/(<button class="btn btn-p" onclick="go16\('hifzt'\)">[^<]*<\/button>)/, `$1<button class="btn btn-o" onclick="go16('tasmee')">🎤 ${L("tsT")}</button>`); };
 
@@ -15264,7 +15264,7 @@ renderLibraryDb = function () {
   /* —— التجويد: المصحف الملوّن | المحتوى النظري —— */
   if (isTajRoot(cur)) {
     const tc = secs.find(s => (s.meta || {}).kind === "tajcolor" && s.parent_id === cur.id);
-    const items = [["mushaf", "🌈", ar ? "المصحف الملوّن" : "Colour-coded mushaf", ar ? "كل حكم بلون، استمع واعلّم أخطاءك" : "Every rule in colour — listen & mark mistakes", "#0d9488"],
+    const items = [["mushaf", "🖍️", ar ? "المصحف الملوّن" : "Colour-coded mushaf", ar ? "كل حكم بلون، استمع واعلّم أخطاءك" : "Every rule in colour — listen & mark mistakes", "#0d9488"],
       ["theory", "📘", ar ? "المحتوى النظري" : "Theory lessons", ar ? "رحلة التجويد: دروس وكروت واختبارات بالترتيب" : "The tajweed journey: lessons, cards & tests", "#7c3aed"]];
     let v = state.hv[cur.id] || ""; if (state.tc.ch) v = "theory";
     let h = _renderLibraryDb44(); if (tc && !state.tc.ch) { const mus = tajPage(tc.id); const q = h.indexOf(mus); if (q >= 0) h = h.slice(0, q) + h.slice(q + mus.length); }
@@ -15277,8 +15277,8 @@ renderLibraryDb = function () {
   if (isHifzHub(cur)) {
     const v = state.hv[cur.id] || ""; let h = _renderLibraryDb44();
     const k = h.lastIndexOf('<div style="margin-top:1rem">'); const base = k > 0 ? h.slice(0, k) : h;
-    if (v === "mushaf") { const g = base.indexOf('<div class="dmgrid"'); const pre = g > 0 ? base.slice(0, g) : base; return hvSlim(pre) + hvTabs(cur.id, [["mushaf", "🌈", ar ? "المصحف الملوّن" : "Colour mushaf"]], "mushaf") + hvWrap(tajPage(cur.id)); }
-    const card = `<div class="dmcard" style="--c:#0d9488;cursor:pointer" onclick="hvSet('${cur.id}','mushaf')"><div class="dmhead"><span class="dmic">🌈</span><div><h3>${ar ? "المصحف الملوّن" : "Colour-coded mushaf"}</h3><p class="sm">${ar ? "اقرأ وسمّع وعلّم أخطاءك بالأحمر." : "Read, recite and mark your mistakes in red."}</p></div></div></div>`;
+    if (v === "mushaf") { const g = base.indexOf('<div class="dmgrid"'); const pre = g > 0 ? base.slice(0, g) : base; return hvSlim(pre) + hvTabs(cur.id, [["mushaf", "🖍️", ar ? "المصحف الملوّن" : "Colour mushaf"]], "mushaf") + hvWrap(tajPage(cur.id)); }
+    const card = `<div class="dmcard" style="--c:#0d9488;cursor:pointer" onclick="hvSet('${cur.id}','mushaf')"><div class="dmhead"><span class="dmic">🖍️</span><div><h3>${ar ? "المصحف الملوّن" : "Colour-coded mushaf"}</h3><p class="sm">${ar ? "اقرأ وسمّع وعلّم أخطاءك بالأحمر." : "Read, recite and mark your mistakes in red."}</p></div></div></div>`;
     return hvSlim(base).replace('<div class="dmgrid" style="margin-top:1rem">', `<div class="dmgrid" style="margin-top:1rem">${card}`);
   }
   return _renderLibraryDb44();
@@ -15911,7 +15911,7 @@ const _ownerStatsTab50 = ownerStatsTab; ownerStatsTab = function () { let h = _o
 Object.assign(UI.ar, { ssPeople: "زوار جداد" }); Object.assign(UI.en, { ssPeople: "New visitors" });
 
 /* 5) رسالة الدعوة: مختصرة بلغة الطالب وفيها كل اللي في الأكاديمية */
-const INV = { ar: "🌙 أكاديمية إتقان — مكان واحد للقرآن والصوت:\n📖 خطة حفظ + تسميع من غير مصحف والموقع يصححلك\n🌈 مصحف ملوّن بأحكام التجويد + رحلة تجويد ومتون (التحفة والجزرية)\n🎼 المقامات الصوتية: آهات، مُوالف لصوتك، خمّن المقام، والتحويل بين المقامات\n📚 تفسير وأحاديث وسيرة وقصص الأنبياء من الكتب نفسها\n🗣️ اتكلم عربي (فصحى/مصري/خليجي/شامي)\n👨‍🏫 حصص مع معلمين، وأدوات كتير مجانية\nسجّل مجانًا من هنا 👇\n", en: "🌙 Itqan Academy — Quran & voice in one place:\n📖 Memorisation plan + recite from memory and get corrected\n🌈 Colour-coded tajweed mushaf + tajweed journey and classic poems\n🎼 Vocal maqamat: aahs, a live tuner, guess-the-maqam, modulations\n📚 Tafsir, hadith, seerah and stories of the prophets from the books themselves\n🗣️ Speak Arabic (MSA / Egyptian / Gulf / Levantine)\n👨‍🏫 Lessons with teachers, plus many free tools\nJoin free here 👇\n" };
+const INV = { ar: "🌙 أكاديمية إتقان — مكان واحد للقرآن والصوت:\n📖 خطة حفظ + تسميع من غير مصحف والموقع يصححلك\n🖍️ مصحف ملوّن بأحكام التجويد + رحلة تجويد ومتون (التحفة والجزرية)\n🎼 المقامات الصوتية: آهات، مُوالف لصوتك، خمّن المقام، والتحويل بين المقامات\n📚 تفسير وأحاديث وسيرة وقصص الأنبياء من الكتب نفسها\n🗣️ اتكلم عربي (فصحى/مصري/خليجي/شامي)\n👨‍🏫 حصص مع معلمين، وأدوات كتير مجانية\nسجّل مجانًا من هنا 👇\n", en: "🌙 Itqan Academy — Quran & voice in one place:\n📖 Memorisation plan + recite from memory and get corrected\n🖍️ Colour-coded tajweed mushaf + tajweed journey and classic poems\n🎼 Vocal maqamat: aahs, a live tuner, guess-the-maqam, modulations\n📚 Tafsir, hadith, seerah and stories of the prophets from the books themselves\n🗣️ Speak Arabic (MSA / Egyptian / Gulf / Levantine)\n👨‍🏫 Lessons with teachers, plus many free tools\nJoin free here 👇\n" };
 async function inviteText(link) { const lg = state.lang; let t = INV[lg]; if (!t) { const ck = "inv:" + lg; try { t = localStorage.getItem(ck); } catch (e) {} if (!t) { try { const r = await translateTexts({ t: INV.en.replace(/\n/g, " ¶ ") }, "en", lg); t = (r.t || INV.en).replace(/\s*¶\s*/g, "\n"); localStorage.setItem(ck, t); } catch (e) { t = INV.en; } } } return t + link; }
 async function shareInvite(link, how) { const t = await inviteText(link); if (how === "wa") return window.open("https://wa.me/?text=" + encodeURIComponent(t), "_blank", "noopener"); if (navigator.share) { try { await navigator.share({ text: t }); return; } catch (e) {} } try { await navigator.clipboard.writeText(t); toast(L("copied")); } catch (e) {} }
 const _referralCard50 = referralCard; referralCard = function () { const link = refLink(); return _referralCard50().replace(/<a class="btn btn-o" target="_blank" rel="noopener" href="https:\/\/wa\.me\/\?text=[^"]*">/, `<a class="btn btn-o" href="#" onclick="shareInvite('${esc(link)}','wa');return false;">`).replace(/onclick="navigator\.clipboard\.writeText\(document\.getElementById\('refl'\)\.value\)\.then\(\(\)=>toast\(L\('copied'\)\)\)"/, `onclick="shareInvite('${esc(link)}','copy')"`); };
@@ -16125,7 +16125,7 @@ const _spToggle53 = spToggle; spToggle = function () { const r = _spToggle53(); 
 const KIT_BASE = () => (setv("siteUrl", "") || location.origin || "https://itqan-maqamat-academy.vercel.app").replace(/\/$/, "");
 const KIT = [
   ["tasmee", "🎤", "سمّع من غير مصحف… والموقع يصحّحلك", "Recite from memory — and get corrected", ["اختار السورة ومن آية لآية", "اقرا بصوتك والموقع يطلّع الكلمات اللي غلطت فيها", "اختار أحكام التجويد اللي اتعلمتها وراجعها"], ["Pick a surah and range", "Recite aloud; see exactly which words you missed", "Choose the tajweed rules you learned and check them"], "#/tasmee", "#0f766e"],
-  ["mushaf", "🌈", "المصحف الملوّن بأحكام التجويد", "The colour-coded tajweed mushaf", ["كل حكم بلون: إظهار، إخفاء، إدغام، مدود، قلقلة…", "دوس على أي كلمة واسمعها من الشيخ الحصري", "علّم أخطاءك بالأحمر وارجعلها"], ["Every rule in its own colour", "Tap any word to hear Sheikh al-Husary", "Mark your mistakes in red and revisit them"], "#/d/tajweed", "#7c3aed"],
+  ["mushaf", "🖍️", "المصحف الملوّن بأحكام التجويد", "The colour-coded tajweed mushaf", ["كل حكم بلون: إظهار، إخفاء، إدغام، مدود، قلقلة…", "دوس على أي كلمة واسمعها من الشيخ الحصري", "علّم أخطاءك بالأحمر وارجعلها"], ["Every rule in its own colour", "Tap any word to hear Sheikh al-Husary", "Mark your mistakes in red and revisit them"], "#/d/tajweed", "#7c3aed"],
   ["journey", "🧭", "رحلة التجويد خطوة بخطوة", "The tajweed journey, step by step", ["١٢ محطة من النون الساكنة للوقف", "كروت سهلة + «اكتشف الحكم» في الآيات", "اختبار بعد كل محطة ونجوم ⭐"], ["12 stations from noon sakinah to waqf", "Easy cards + find-the-rule in real ayahs", "A test and stars after every station"], "#/d/tajweed", "#0284c7"],
   ["matn", "📜", "احفظ تحفة الأطفال والجزرية", "Memorise Tuhfat al-Atfal & the Jazariyyah", ["المتن بيت بيت", "خبّي الشطر التاني واختبر حفظك", "اسمع الباب كله"], ["Line by line", "Hide the second half and test yourself", "Listen to each chapter"], "#/matn", "#a16207"],
   ["maqam", "🎼", "تعلّم المقامات الصوتية", "Learn the vocal maqamat", ["سلالم وآهات لكل مقام", "مُوالف بيوريك صوتك فين على المقام", "التحويل من مقام لمقام"], ["Scales and aahs for every maqam", "A live tuner shows where your voice is", "Modulating from one maqam to another"], "#/d/maqamat", "#be185d"],
@@ -17137,7 +17137,7 @@ function tjWordInfo(w) {
   m.innerHTML = `<div class="tjwib"><div class="tjwiw notr" lang="ar">${w.innerHTML}</div>${cls.length ? cls.map(c => `<div class="tjwir"><span style="color:${TJ[c][0]}">●</span> <b>${esc(tcName(c))}</b>${MADD_DESC[c] ? `<div class="xs">${MADD_DESC[c][ar ? 0 : 1]}</div>` : ""}${c === "madda_permissible" ? `<div class="xs">${ar ? "مد جائز" : "Permissible madd"}${maddKind(w, c)}</div>` : ""}</div>`).join("") : `<p class="sm muted">${ar ? "مفيش حكم ملوّن في الكلمة دي." : "No coloured rule in this word."}</p>`}<div class="row" style="gap:.4rem;justify-content:center;margin-top:.5rem"><button class="btn btn-p" onclick="new Audio('${url}').play().catch(()=>{})">🔊 ${ar ? "الكلمة" : "Word"}</button><button class="btn btn-o" onclick="tjPlayOne(${+a - 1})">🎧 ${ar ? "الآية" : "Ayah"}</button><button class="btn btn-o" onclick="document.getElementById('tjWI').remove()">✕</button></div></div>`;
   m.onclick = e => { if (e.target === m) m.remove(); }; (document.fullscreenElement || document.body).appendChild(m);
 }
-/* لون بديل لعلامة 🌈 */
+/* لون بديل لعلامة 🖍️ */
 const _clean63 = clean57; clean57 = function (app) { _clean63(app); if (!app) return; const tw = document.createTreeWalker(app, NodeFilter.SHOW_TEXT, { acceptNode: n => n.data.includes("🌈") ? 1 : 2 }); let n; const ns = []; while ((n = tw.nextNode())) ns.push(n); ns.forEach(x => x.data = x.data.replace(/🌈/g, "📗")); };
 /* التسميع: أحكام التجويد بتظهر دايمًا (لو مفيش أحكام محددة نستخدم الأساسية) بس جوه «أظهر أحكام التجويد» */
 const _myTjRules63 = myTjRules; myTjRules = function () { const r = _myTjRules63(); return r && r.length ? r : ["ghunnah", "ikhafa", "idgham_ghunnah", "iqlab", "qalaqah", "madda_obligatory", "madda_necessary", "madda_permissible"]; };
@@ -24558,7 +24558,7 @@ body.ed158 .hv169{opacity:.4!important}
   const _os = ownerSettings; ownerSettings = function () {
     const d = ID(); const row = (ic, a, e, on, act) => `<div class="kv" style="align-items:center"><span class="sm">${ic} ${esc(T(a, e))}</span><button class="btn ${on ? "btn-p" : "btn-o"}" style="padding:.2rem .7rem" onclick="${act}">${on ? "✅ " + T("مفعّل", "On") : T("فعّل", "Turn on")}</button></div>`;
     return _os.apply(this, arguments) + `<div class="card" style="margin-top:1rem"><h3>🎨 ${T("باقي أفكار ملف التصميم", "More ideas from the design file")}</h3>
-      ${row("🌈", "4. لون مختلف لكل علم (التجويد أخضر، الحفظ بنفسجي، المقامات برتقالي…)", "4. A colour per science", d.sci, "id173('sci')")}
+      ${row("🖍️", "4. لون مختلف لكل علم (التجويد أخضر، الحفظ بنفسجي، المقامات برتقالي…)", "4. A colour per science", d.sci, "id173('sci')")}
       ${row("🧭", "13. جولة تعريفية أول مرة الطالب يدخل", "13. Guided tour on first visit", d.tour, "id173('tour')")}
       <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><button class="btn btn-o" onclick="localStorage.removeItem('itqan_tour173');tour173(0)">▶️ ${T("جرّب الجولة دلوقتي", "Try the tour now")}</button><button class="btn btn-o" onclick="go16('journey172')">🗺️ ${T("رحلتي", "My journey")}</button><button class="btn btn-o" onclick="go16('badges172')">🏅 ${T("الشارات", "Badges")}</button><button class="btn btn-o" onclick="go16('games172')">🎮 ${T("الألعاب", "Games")}</button><button class="btn btn-o" onclick="go16('vow172')">👄 ${T("شكل الفم", "Mouth shapes")}</button></div></div>`;
   };
@@ -25258,7 +25258,7 @@ body.ed158 .hv169{opacity:.4!important}
   css(`#pb178{position:fixed;z-index:930;inset-inline-end:.7rem;bottom:calc(5.4rem + env(safe-area-inset-bottom));width:2.6rem;height:2.6rem;border-radius:50%;border:0;background:#f59e0b;color:#111;font-size:1.2rem;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;opacity:.85}#pb178:hover{opacity:1}`);
 
   /* ================= 7) المكتبة الكبيرة: كل حاجة في مكان واحد ================= */
-  const CATS = [["all", "🧰", "الكل", "All", []], ["design", "🎨", "التصميمات", "Designs", ["تصميم", "Design", "خلفي", "لوجو", "Logo", "استوديو", "studio"]], ["fonts", "🔤", "الخطوط", "Fonts", []], ["trans", "🎞️", "الانتقالات", "Transitions", []], ["colors", "🌈", "الألوان", "Colours", ["لون", "colour", "color"]], ["layout", "🧭", "الشكل والقوايم", "Layout & menus", ["شريط", "قايم", "rail", "menu", "أيقون", "icon", "رئيسية", "home", "تنظيم"]], ["draw", "✏️", "ورقة وقلم", "Paper & pen", []], ["mine", "⭐", "تصميماتي", "My designs", []], ["opts", "⚙️", "كل الخيارات", "All options", []], ["ver", "🕰️", "النسخ", "Versions", []]];
+  const CATS = [["all", "🧰", "الكل", "All", []], ["design", "🎨", "التصميمات", "Designs", ["تصميم", "Design", "خلفي", "لوجو", "Logo", "استوديو", "studio"]], ["fonts", "🔤", "الخطوط", "Fonts", []], ["trans", "🎞️", "الانتقالات", "Transitions", []], ["colors", "🖍️", "الألوان", "Colours", ["لون", "colour", "color"]], ["layout", "🧭", "الشكل والقوايم", "Layout & menus", ["شريط", "قايم", "rail", "menu", "أيقون", "icon", "رئيسية", "home", "تنظيم"]], ["draw", "✏️", "ورقة وقلم", "Paper & pen", []], ["mine", "⭐", "تصميماتي", "My designs", []], ["opts", "⚙️", "كل الخيارات", "All options", []], ["ver", "🕰️", "النسخ", "Versions", []]];
   function libPage() {
     if (!own()) return pageWrap("🧰", "—", "", `<div class="card muted">—</div>`);
     const c = state.lc178 || "all"; const q = (state.lq178 || "").trim();
@@ -27609,6 +27609,43 @@ Between lessons, the platform keeps you going:
   .bk192pool{display:flex;flex-direction:column;gap:.3rem}.bk192pool button,.bk192m button,.bk192cards button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:.6rem;padding:.45rem .6rem;cursor:pointer;text-align:start}li.ok{color:#16a34a}li.no{color:#dc2626}
   .bk192m{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.bk192m>div{display:flex;flex-direction:column;gap:.3rem}.bk192m .sel{outline:2px solid var(--accent)}.bk192m .ok{background:color-mix(in srgb,#16a34a 15%,var(--bg))}
   .bk192cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem}.bk192cards button{min-height:90px;text-align:center;transition:transform .4s}.bk192cards button.f{transform:rotateY(180deg) scaleX(-1);background:color-mix(in srgb,var(--accent) 12%,var(--bg))}`);
+})();
+
+/* ================= v193: المجموعات في كل التصميمات مقفولة — دوسة تفتح لتحت، تفتح غيرها أو تنزل بعدها تتقفل لوحدها (من غير ما الصفحة تتنطّ) ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const C = () => Object.assign({ on: "on", auto: "on", first: "off" }, setv("acc193", {}) || {});
+  const GSEL = ".ly180 :is(.l-row,.l-unit,details.l-tog,details.l-acc,.l-read>article,.l-bento>section,.l-mega>section,.l-kan>section,.l-map>section,.l-rad,.l-ide details,[id^=lyg_])";
+  const ITEM = '[onclick^="ly180Open"]';
+  const isItemBox = el => el.matches(ITEM) || !!el.querySelector(ITEM);
+  function closeG(g, keep) {
+    if (!g.classList.contains("open193") && !(g.tagName === "DETAILS" && g.open)) return;
+    const r = g.getBoundingClientRect(); const above = r.bottom < 0; const h0 = document.documentElement.scrollHeight;
+    g.classList.remove("open193"); if (g.tagName === "DETAILS") g.open = false;
+    if (above && !keep) { const d = document.documentElement.scrollHeight - h0; if (d) window.scrollBy({ top: d, behavior: "instant" }); }
+  }
+  function openG(g) { document.querySelectorAll(GSEL).forEach(x => { if (x !== g) closeG(x); }); g.classList.add("open193"); if (g.tagName === "DETAILS") g.open = true; setTimeout(() => { const r = g.getBoundingClientRect(); if (r.top < 60 || r.top > innerHeight * .6) g.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30); }
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { if (C().auto !== "on") return; const g = e.target; if (!e.isIntersecting && g.classList.contains("open193") && e.boundingClientRect.bottom < 0) closeG(g); }), { threshold: 0 }) : null;
+  function setup() {
+    const c = C(); document.body.classList.toggle("acc193", c.on === "on"); if (c.on !== "on") return;
+    let first = true; document.querySelectorAll(GSEL).forEach(g => { if (g.__a193) return; g.__a193 = 1; if (!isItemBox(g)) return;
+      const kids = [...g.children]; const head = g.tagName === "DETAILS" ? g.querySelector("summary") : kids.find(k => !isItemBox(k)); if (!head) return; head.classList.add("hd193"); g.classList.add("g193"); if (g.tagName !== "DETAILS") kids.forEach(k => { if (k !== head && isItemBox(k)) k.classList.add("body193"); });
+      if (g.tagName === "DETAILS") { g.open = c.first === "on" && first; g.addEventListener("toggle", () => { if (g.open) { g.classList.add("open193"); document.querySelectorAll(GSEL).forEach(x => { if (x !== g) closeG(x); }); } else g.classList.remove("open193"); }); }
+      else { if (c.first === "on" && first) g.classList.add("open193"); head.setAttribute("role", "button"); head.tabIndex = 0; const tog = e => { if (e.target.closest(ITEM)) return; e.preventDefault(); g.classList.contains("open193") ? closeG(g, true) : openG(g); }; head.addEventListener("click", tog); head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") tog(e); }); }
+      first = false; io && io.observe(g); });
+  }
+  window.acc193 = async (k, v) => { await saveSetting16("acc193", Object.assign({}, setv("acc193", {}) || {}, { [k]: v })); document.querySelectorAll(GSEL).forEach(g => { g.__a193 = 0; g.classList.remove("open193"); }); setup(); };
+  function card() { const c = C(); const s = (k, O) => `<select class="in" style="width:auto" onchange="acc193('${k}',this.value)">${O.map(([v, l]) => `<option value="${v}" ${c[k] === v ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+    return `<div class="card" id="acc193c"><h3>🪗 ${T("المجموعات في الرئيسية (كل التصميمات)", "Home groups (all layouts)")}</h3><div class="row" style="gap:.8rem;flex-wrap:wrap"><label class="sm">${T("مقفولة وتفتح بدوسة", "Collapsed, open on tap")} ${s("on", [["on", T("أيوه", "Yes")], ["off", T("لأ، مفتوحة كلها", "No, all open")]])}</label><label class="sm">${T("تتقفل لوحدها لما تنزل بعدها", "Auto-close when scrolled past")} ${s("auto", [["on", T("أيوه", "Yes")], ["off", T("لأ", "No")]])}</label><label class="sm">${T("أول مجموعة مفتوحة", "First group open")} ${s("first", [["off", T("لأ", "No")], ["on", T("أيوه", "Yes")]])}</label></div><p class="xs muted">${T("لما تفتح مجموعة، اللي كانت مفتوحة بتتقفل. ولما تتقفل وهي فوقك الصفحة مابتتنطّش.", "Opening one closes the others; closing above you doesn't jump the page.")}</p></div>`; }
+  const _r = render; render = function () { _r.apply(this, arguments); try { setup(); if (realOwner() && state.route === "layouts180" && !document.getElementById("acc193c")) { const a = document.getElementById("lv188") || document.querySelector(".ly180mix"); a && a.insertAdjacentHTML("afterend", card()); } } catch (e) { console.warn(e); } };
+  try { new MutationObserver(() => { clearTimeout(window.__a193); window.__a193 = setTimeout(() => { try { setup(); } catch (e) {} }, 200); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
+  css(`body.acc193 .g193:not(.open193):not(details)>.body193{display:none!important}
+  body.acc193 .g193 .hd193{cursor:pointer;position:relative;user-select:none}body.acc193 .g193:not(details) .hd193::after{content:"▾";position:absolute;inset-inline-end:.8rem;top:50%;transform:translateY(-50%);transition:transform .3s;font-size:1.1rem;opacity:.75}
+  body.acc193 .g193.open193 .hd193::after{transform:translateY(-50%) rotate(180deg)}
+  body.acc193 .g193.open193>.body193{animation:op193 .35s cubic-bezier(.22,1,.36,1) both}@keyframes op193{from{opacity:0;transform:translateY(-8px)}}
+  body.acc193 .g193{margin-bottom:.5rem}`);
 })();
 
 // بدء التشغيل
