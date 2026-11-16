@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v205";
+const UI_VERSION = "2026-11-17-v206";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29166,6 +29166,71 @@ Between lessons, the platform keeps you going:
   /* زرار ⚙️ في الشرايط يفتح الصفحة الجديدة */
   new MutationObserver(() => document.querySelectorAll(".x201 button[onclick*=\"go16('bar201')\"]").forEach(b => b.setAttribute("onclick", "event.stopPropagation();go16('pop205')"))).observe(document.body, { childList: true, subtree: true });
   if (/^#\/pop205/.test(location.hash)) state.route = "pop205"; if (/^#\/inv205/.test(location.hash)) state.route = "inv205";
+})();
+
+/* ================= v206: «كل حاجة في مكان واحد» — الأقسام والأدوات بقوا بيعرضوا «عايز تتعلم إيه؟» نفسها بدل ما المحتوى يتكرر 3 مرات (وترجّعها بزرار) + وضع الترتيب من غير قيود: دوس على أي حاجة في الصفحة ← طلّعها لفوق/نزّلها/لأول المكان/لآخره/انقلها لأي حتة/اخفيها/غيّر كلامها — مسودة لحد «💾 حفظ للكل» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+  /* ======================= 1) مكان واحد ======================= */
+  const ONE = () => (setv("one206", { on: 1 }) || {}).on !== 0;
+  window.one206 = async on => { await saveSetting16("one206", { on: on ? 1 : 0 }); toast(on ? T("✅ المحتوى بقى في مكان واحد: «عايز تتعلم إيه؟»", "✅ One place") : T("↩️ رجعت الأقسام والأدوات زي الأول", "↩️ Restored")); render(); };
+  const dup = () => ONE() && (state.route === "tools" || (state.route === "library" && !state.libSec));
+  const _r = render; render = function () { if (!dup()) return _r.apply(this, arguments); _r.apply(this, arguments); try { const app = document.getElementById("app"); const main = app.querySelector("main") || app; const keepH = app.querySelector(".hdr, header"); const ft = app.querySelector("footer, .ftr, .foot");
+      const box = document.createElement("div"); box.id = "one206"; box.innerHTML = (realOwner() ? `<div class="wrap"><div class="card sm" style="margin-top:.8rem;border:2px dashed var(--accent)">🧭 ${T("الصفحة دي كانت بتكرر نفس اللي في الرئيسية — فبقت بتعرض «عايز تتعلم إيه؟» بس، وكل حاجة في مكان واحد.", "This page repeated the home page, so it now shows the single list.")} <button class="btn btn-o xs" onclick="one206(0)">↩️ ${T("رجّع الصفحة القديمة", "Restore the old page")}</button></div></div>` : "") + doors147Html();
+      [...(main === app ? app.children : main.children)].forEach(x => { if (x === keepH || x === ft || (keepH && x.contains(keepH)) || (ft && x.contains(ft)) || /^(nv180|tab201)/.test(x.id || "")) return; if (x.matches && x.matches("script,style,.aiw,#aiw,[class*=ai-],header,.hdr,nav,.unav,.bar185,.dombar,.bnav,.mnav,#dock196,[class*=bar],[class*=nav],[id*=bar],[id*=nav],.dr147h")) return; x.style.display = "none"; x.dataset.one206 = 1; });
+      (ft && ft.parentElement === (main === app ? app : main)) ? ft.before(box) : (main === app ? (ft ? ft.before(box) : app.appendChild(box)) : main.appendChild(box)); } catch (e) { console.warn(e); } };
+
+  /* ======================= 2) الترتيب من غير قيود ======================= */
+  const K = "arr206d"; const R = () => { const d = realOwner() ? LS(K, null) : null; return d || setv("arr206", {}) || {}; };
+  const draft = () => !!(realOwner() && LS(K, null));
+  const put = O => { LSset(K, O); apply(true); bar(); };
+  function selOf(el) { const parts = []; let n = el, d = 0; while (n && n.nodeType === 1 && n.id !== "app" && d < 8) { if (n.id && !/^\d/.test(n.id) && !/206|189|201|204|205/.test(n.id)) { parts.unshift("#" + CSS.escape(n.id)); break; } let p = n.tagName.toLowerCase(); const cl = [...n.classList].filter(c => !/^(on|sel206|hid206|uil|ed189|an189|e189|in200|open|active|go|hov)/.test(c)).slice(0, 2); if (cl.length) p += "." + cl.map(c => CSS.escape(c)).join("."); const par = n.parentElement; if (par) { const sib = [...par.children].filter(x => x.tagName === n.tagName); if (sib.length > 1) p += `:nth-of-type(${sib.indexOf(n) + 1})`; } parts.unshift(p); n = n.parentElement; d++; } return (parts[0] && parts[0][0] === "#" ? "" : "#app ") + parts.join(">"); }
+  const key = el => selOf(el) + "§" + state.route;
+  let CUR = null, SIG = "";
+  function apply(force) { const O = R(); const sig = JSON.stringify(O) + state.route + (document.getElementById("app") || {}).childElementCount; if (!force && sig === SIG) return; SIG = sig; const edit = editing();
+    const list = Object.entries(O).filter(([k]) => k.endsWith("§" + state.route) || k.endsWith("§*"));
+    list.forEach(([k, r]) => { let el; try { el = document.querySelector(k.split("§")[0]); } catch (e) { return; } if (!el || el.__a206 === sig) return; el.__a206 = sig;
+      if (r.to) { let t; try { t = document.querySelector(r.to); } catch (e) {} if (t && !t.contains(el)) r.at === "start" ? t.prepend(el) : t.appendChild(el); }
+      if (r.mv) { const p = el.parentElement; if (p) { const sib = [...p.children]; let i = sib.indexOf(el) + r.mv; i = Math.max(0, Math.min(sib.length - 1, i)); const ref = sib.filter(x => x !== el)[i]; ref ? p.insertBefore(el, ref) : p.appendChild(el); } }
+      if (r.txt) { const tn = [...el.childNodes].reverse().find(n => n.nodeType === 3 && n.nodeValue.trim()); if (tn) tn.nodeValue = " " + r.txt + " "; else if (!el.children.length) el.textContent = r.txt; }
+      el.classList.toggle("hid206", !!r.hide); if (r.hide && !edit) el.style.display = "none"; else if (el.dataset.h206 !== undefined || r.hide) el.style.display = ""; if (r.hide) el.dataset.h206 = 1; }); }
+  const editing = () => !!state.uiEdit && realOwner() && !state.preview;
+  const set = (p) => { if (!CUR) return; const O = Object.assign({}, R()); O[CUR] = Object.assign({}, O[CUR] || {}, p); Object.keys(O[CUR]).forEach(k => { if (O[CUR][k] === "" || O[CUR][k] === 0 || O[CUR][k] == null || O[CUR][k] === false) delete O[CUR][k]; }); if (!Object.keys(O[CUR]).length) delete O[CUR]; put(O); setTimeout(() => { let el; try { el = document.querySelector(CUR.split("§")[0]); } catch (e) {} if (el) pick(el, true); }, 60); };
+  window.arr206 = {
+    up() { set({ mv: ((R()[CUR] || {}).mv || 0) - 1 }); }, down() { set({ mv: ((R()[CUR] || {}).mv || 0) + 1 }); },
+    top() { set({ mv: -999 }); }, end() { set({ mv: 999 }); },
+    hide() { set({ hide: !(R()[CUR] || {}).hide }); },
+    txt() { const v = prompt(T("الكلام الجديد (فاضي = يرجع الأصلي):", "New text (empty = original):"), (R()[CUR] || {}).txt || ""); if (v === null) return; set({ txt: v.trim() }); },
+    all() { if (!CUR) return; const O = Object.assign({}, R()); const r = O[CUR]; delete O[CUR]; const nk = CUR.split("§")[0] + "§" + (CUR.endsWith("§*") ? state.route : "*"); O[nk] = r || {}; CUR = nk; put(O); toast(CUR.endsWith("§*") ? T("🌐 هيتطبق في كل الصفحات", "🌐 All pages") : T("📄 الصفحة دي بس", "📄 This page only")); },
+    move() { if (!CUR) return; toast("🎯 " + T("دوس على المكان اللي عايز تنقلها جواه", "Click the place to move it into")); const h = e => { e.preventDefault(); e.stopPropagation(); document.removeEventListener("click", h, true); const t = e.target.closest("#app *"); if (!t) return; const at = confirm(T("تحطها في أول المكان ده؟ (إلغاء = في آخره)", "Put it at the start? (Cancel = end)")) ? "start" : "end"; set({ to: selOf(t), at, mv: 0 }); }; setTimeout(() => document.addEventListener("click", h, true), 60); },
+    parent() { let el; try { el = document.querySelector(CUR.split("§")[0]); } catch (e) {} if (el && el.parentElement && el.parentElement.id !== "app") pick(el.parentElement, true); },
+    reset() { if (!CUR) return; const O = Object.assign({}, R()); delete O[CUR]; put(O); render(); },
+    async save() { await saveSetting16("arr206", R()); try { localStorage.removeItem(K); } catch (e) {} toast("✅ " + T("اتحفظ للكل", "Saved for everyone")); bar(); },
+    cancel() { try { localStorage.removeItem(K); } catch (e) {} close(); render(); bar(); }
+  };
+  function close() { document.getElementById("tb206") && document.getElementById("tb206").remove(); document.querySelectorAll(".sel206").forEach(x => x.classList.remove("sel206")); }
+  function pick(el, keep) { close(); el.classList.add("sel206"); CUR = Object.keys(R()).find(k => k.split("§")[0] === selOf(el) && k.endsWith("§*")) || key(el); const r = R()[CUR] || {};
+    const b = document.createElement("div"); b.id = "tb206"; const nm = (el.innerText || el.tagName).replace(/\s+/g, " ").trim().slice(0, 34);
+    b.innerHTML = `<b class="xs">🧩 ${esc(nm)}</b><div class="row">
+      <button title="${T("لفوق", "Up")}" onclick="arr206.up()">⬆️</button><button title="${T("لتحت", "Down")}" onclick="arr206.down()">⬇️</button><button title="${T("لأول المكان", "To the start")}" onclick="arr206.top()">⏫</button><button title="${T("لآخر المكان", "To the end")}" onclick="arr206.end()">⏬</button>
+      <button title="${T("انقلها لأي حتة", "Move anywhere")}" onclick="arr206.move()">🎯</button><button title="${T("غيّر الكلام", "Edit text")}" onclick="arr206.txt()">✏️</button><button title="${r.hide ? T("رجّعها", "Show") : T("اخفيها / شيلها", "Hide / remove")}" onclick="arr206.hide()">${r.hide ? "↩️" : "🗑️"}</button>
+      <button title="${T("اختار الحاجة الأكبر اللي هي جواها", "Select the bigger box around it")}" onclick="arr206.parent()">⬚</button><button title="${T("الصفحة دي بس / كل الصفحات", "This page / all pages")}" onclick="arr206.all()">${CUR.endsWith("§*") ? "🌐" : "📄"}</button><button title="${T("رجّعها زي ما كانت", "Original")}" onclick="arr206.reset()">↺</button><button onclick="document.getElementById('tb206').remove();document.querySelectorAll('.sel206').forEach(x=>x.classList.remove('sel206'))">✕</button></div>`;
+    document.body.appendChild(b); const rc = el.getBoundingClientRect(); b.style.top = Math.max(8, Math.min(innerHeight - b.offsetHeight - 8, rc.top - b.offsetHeight - 6 < 8 ? rc.bottom + 6 : rc.top - b.offsetHeight - 6)) + "px"; b.style.left = Math.max(8, Math.min(innerWidth - b.offsetWidth - 8, rc.left)) + "px"; }
+  document.addEventListener("click", e => { if (!editing()) return; if (e.target.closest("#tb206,#bar206,.uiltb,.uilmv,#uilBar,#simBar,.hdr .tools,#ed189p,#toast,.toast")) return; if (e.target.closest(".uiledit") && !e.altKey) return; const el = e.target.closest("#app *"); if (!el) return; e.preventDefault(); e.stopPropagation(); pick(el); }, true);
+  function bar() { let b = document.getElementById("bar206"); if (!editing() && !draft()) { b && b.remove(); return; } if (!realOwner()) return; if (!b) { b = document.createElement("div"); b.id = "bar206"; document.body.appendChild(b); }
+    b.innerHTML = `<span class="xs">🧩 ${T("دوس على أي حاجة ترتّبها", "Click anything to arrange it")}${draft() ? " · " + T("فيه تغييرات مش محفوظة", "Unsaved changes") : ""}</span><button class="btn btn-p xs" onclick="arr206.save()">💾 ${T("حفظ للكل", "Save for all")}</button>${draft() ? `<button class="btn btn-o xs" onclick="arr206.cancel()">✖ ${T("إلغاء", "Cancel")}</button>` : ""}`; }
+  new MutationObserver(() => { clearTimeout(window.__a206); window.__a206 = setTimeout(() => { apply(false); bar(); }, 60); }).observe(document.body, { childList: true, subtree: true });
+  css(`.sel206{outline:3px solid #7c3aed!important;outline-offset:2px}
+  #tb206{position:fixed;z-index:3000;background:#111;color:#fff;border-radius:14px;padding:.45rem .55rem;box-shadow:0 14px 34px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:.3rem;max-width:min(30rem,94vw)}
+  #tb206 .row{gap:.25rem;flex-wrap:wrap}#tb206 button{border:0;background:#2b2b2b;color:#fff;border-radius:9px;padding:.3rem .5rem;cursor:pointer;font-size:1rem}#tb206 button:hover{background:#7c3aed}
+  #bar206{position:fixed;bottom:4.5rem;inset-inline-start:50%;transform:translateX(50%);z-index:2900;background:var(--card);border:2px solid #7c3aed;border-radius:999px;padding:.35rem .5rem .35rem .8rem;display:flex;gap:.4rem;align-items:center;box-shadow:0 10px 26px rgba(0,0,0,.2)}
+  [dir=ltr] #bar206{transform:translateX(-50%)}
+  body .hid206{outline:2px dashed #ef4444!important;opacity:.45}`);
 })();
 
 // بدء التشغيل
