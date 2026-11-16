@@ -1,0 +1,38 @@
+# إرجاع أكاديمية إتقان كاملة من الصفر (لو أي حاجة باظت)
+
+> الملف ده جوه المشروع نفسه، وفي النسخة اللي بتنزلها كمان. اطبعه أو احفظه في مكانين.
+
+## الحاجات اللي لازم تكون محفوظة عندك (في فلاشة + درايف + إيميل تاني)
+1. **ملف الكود**: `itqan-site-YYYY-MM-DD.zip` (الموقع كله: `index.html` و`sw.js` والأيقونات والبيانات).
+2. **ملف البيانات**: `itqan-backup-YYYY-MM-DD.json`. بتنزّله من الموقع: آخر الصفحة ← «⬇️ نزّل نسخة البيانات دلوقتي».
+   - **فيه مفاتيحك السرية، فخلّيه في مكان آمن.**
+3. **ملف قاعدة البيانات**: `itqan-schema-YYYY-MM-DD.sql`. بينزل مع ملف البيانات في نفس الدوسة.
+4. **الكتب المصوّرة (PDF)**: موجودة على GitHub في فرع `library`. ولو GitHub راح، نزّل الفرع ده مرة كـ zip وخلّيه على هارد خارجي.
+
+## الخطوات (حوالي 20 دقيقة)
+1. **حساب جديد** (لو القديم راح): اعمل حساب GitHub وحساب Supabase وحساب Vercel، كلهم بالإيميل التاني بتاعك.
+2. **GitHub**:
+   - اعمل مستودع جديد اسمه `Quran-Academy`، وارفع محتوى `itqan-site.zip` فيه.
+   - ولو عندك نسخة الكتب، ارفعها في فرع اسمه `library`.
+3. **Supabase**:
+   - اعمل مشروع جديد.
+   - من **SQL Editor**: الصق ملف `itqan-schema-….sql` كله ودوس Run.
+   - من **Authentication ← Providers**: فعّل Email و Google زي الأول.
+4. **البيانات**:
+   - ابعت ملف `itqan-backup-….json` لـ Claude وقوله «رجّع البيانات دي في المشروع الجديد». هو هيعمل insert لكل جدول.
+   - جدول `book_rows` (نصوص الكتب) بيتبني تاني من الكتب أوتوماتيك.
+5. **Edge Functions**:
+   - الموجود في `backup/edge-functions/` اعمله Deploy بنفس الاسم.
+   - الباقي حمّله من المشروع القديم لو لسه موجود: `supabase functions download --project-ref ymycfxmigvvermsdnagm`. أو اطلب من Claude يكتبهم تاني من الوصف اللي في `APP.md`.
+   - أسامي الدوال: translate, send-email, calendar, phone-login, lesson-report, secure-media, payments, paypal-capture, art-gen, book-import, tts, book-tr, gcal-busy, tafsir-tr, purge-uploads, vclone, ai, vinbox, tr-run, dom-check, lesson-rec, azure-tts
+6. **غيّر المفاتيح في الكود**: في `index.html` دوّر على `ymycfxmigvvermsdnagm` وعلى الـ anon key، وحط بدالهم بتوع المشروع الجديد (من Supabase ← Settings ← API).
+7. **Vercel**: Import من GitHub، ومن غير أي إعدادات. هيطلعلك لينك الموقع على طول.
+8. **المالك**: سجّل دخول بإيميلك، وبعدين من SQL Editor نفّذ:
+   `update profiles set role='owner' where email='ايميلك';`
+9. **الملفات المرفوعة** (الصور والأصوات): مكانها Supabase Storage. لو المشروع القديم لسه شغّال، انقلها من Storage. أسامي الـ buckets موجودة في ملف البيانات.
+
+## نصايح عشان ماتقعش أصلًا
+- **مالك تاني**: ضيف إيميلك التاني كمالك من «👥 فريقي ← ➕ عيّن حد ← 👑 مالك تاني».
+- **فعّل الدخول بخطوتين** على GitHub و Supabase و Vercel و Gmail، واحفظ أكواد الطوارئ (recovery codes) مطبوعة.
+- **خد نسخة البيانات** مرة كل أسبوع، والموقع هيفكّرك في آخر الصفحة.
+- **ضيف إيميلك التاني** كـ Owner/Member في GitHub و Supabase و Vercel. ساعتها لو الأول راح، تدخل بالتاني على طول.
