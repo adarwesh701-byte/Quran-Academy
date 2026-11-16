@@ -25299,11 +25299,13 @@ body.ed158 .hv169{opacity:.4!important}
   const own = () => realRole() === "owner" && !state.preview;
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   const role0 = () => !(state.auth && state.auth.user) ? "guest" : (realRole() === "owner" ? "owner" : role());
+  if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('emb179');
   ["mq179", "special179"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
   function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
   window.go179 = function (h) { h = String(h || "").trim(); if (!h) return; if (/^https?:/.test(h)) return window.open(h, "_blank", "noopener"); const m = h.replace(/^#?\/?/, "").split("/"); const r = m[0], a = m.slice(1).join("/") || undefined; if (PAGES16.includes(r)) go16(r, a); else navigate(r); };
   document.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&display=swap">');
   css(`.logo>i{font-family:Amiri,'Traditional Arabic',serif!important;font-weight:700!important;font-style:normal;font-size:1.3em!important;line-height:1!important;padding-top:.12em}
+  html.emb179 #ctl113,html.emb179 #in176,html.emb179 #gb176,html.emb179 .ic179fl,html.emb179 #dm179,html.emb179 .ai-widget,html.emb179 .ai-fab,html.emb179 #pb178,html.emb179 #bk177{display:none!important}
   #ctl113{top:auto!important;bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}`);
 
   /* ================= 1) أيقوناتك: إيموجي أو صورة + اسم + لينك + شكل من المكتبة + مكانها ================= */
