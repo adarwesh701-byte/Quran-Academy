@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v187";
+const UI_VERSION = "2026-11-16-v188";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -26751,6 +26751,262 @@ Between lessons, the platform keeps you going:
   /* شريط التسجيل الصوتي ميظهرش في وضع الحصة */
   new MutationObserver(() => { if (document.body.classList.contains("lock187")) { const c = document.getElementById("ao185"); c && c.remove(); } }).observe(document.body, { childList: true });
   setTimeout(apply, 100);
+})();
+
+/* ================= v188: «👥 فريقي والصلاحيات» — موظفين بأدوار وصلاحيات، استثناءات لأي شخص، «شوف بعينه»، سجل نشاط، طلبات تعديل بموافقتك + «🙈 اللي يظهرلي أنا» + ألوان وتفاصيل كاملة لكل تصميم + «🎯 لوّن أي حتة» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const uid = () => state.auth && state.auth.user ? state.auth.user.id : null;
+  if (!PAGES16.includes("team188")) PAGES16.push("team188");
+
+  /* ---------- الصلاحيات ---------- */
+  const PERMS = [
+    ["viewall", "👁 يشوف الموقع كله زيك (قراية بس، من غير أي تعديل)", "👁 Sees the whole site like you (read-only)"],
+    ["students", "🎓 يشوف كل الطلاب وتقدمهم", "🎓 Sees all students and their progress"],
+    ["messages", "💬 يقرا الرسايل وطلبات التواصل", "💬 Reads messages and contact requests"],
+    ["support", "🛟 يرد ويقفل طلبات الدعم", "🛟 Handles support requests"],
+    ["money", "💳 يشوف الفلوس والطلبات والمدفوعات", "💳 Sees money, orders and payments"],
+    ["stats", "📊 يشوف الإحصائيات والزيارات", "📊 Sees stats and visits"],
+    ["content", "📚 يضيف ويعدّل المحتوى والأقسام", "📚 Adds and edits content and sections"],
+    ["request", "📝 يقترح تعديلات (تصميم/إعدادات) توصلك توافق عليها", "📝 Suggests changes you approve"],
+    ["activity", "📜 يشوف سجل النشاط", "📜 Sees the activity log"],
+    ["all", "⭐ كل الصلاحيات (ماعدا المفاتيح السرية)", "⭐ Everything (except secret keys)"]
+  ];
+  const PRESETS = {
+    assistant: ["🤝 مساعد مالك", "Assistant owner", { all: true, viewall: true }],
+    supervisor: ["🧭 مشرف", "Supervisor", { viewall: true, students: true, messages: true, stats: true, activity: true }],
+    teachall: ["🧑‍🏫 معلم بيشوف كل حاجة (من غير تعديل)", "Teacher who sees everything (no edits)", { viewall: true }],
+    support: ["🛟 دعم فني / خدمة عملاء", "Support", { messages: true, support: true }],
+    accountant: ["💳 محاسب", "Accountant", { money: true, stats: true }],
+    marketer: ["📣 مسوّق", "Marketer", { stats: true, request: true }],
+    editor: ["✍️ محرر محتوى", "Content editor", { content: true, request: true }],
+    custom: ["⚙️ مخصص", "Custom", {}]
+  };
+  let ME = null, MEu = null, LOADING = false;
+  async function loadMe() { const u = uid(); if (!u) { ME = null; MEu = null; return; } if (MEu === u || LOADING) return; LOADING = true; try { const { data } = await sb.from("staff187").select("*").eq("user_id", u).maybeSingle(); ME = data || null; } catch (e) {} MEu = u; LOADING = false; render(); }
+  const activeRow = r => r && r.active && (!r.expires_at || new Date(r.expires_at) > new Date());
+  const AS = () => { try { return JSON.parse(sessionStorage.getItem("itqan_as188") || "null"); } catch (e) { return null; } };
+  const row = () => { const a = realOwner() && AS(); return a ? a.row : ME; };
+  window.can188 = p => { if (realOwner() && !AS()) return true; const r = row(); if (!activeRow(r)) return false; return !!(r.perms && (r.perms[p] || r.perms.all)); };
+  const vaMode = () => { try { return localStorage.getItem("itqan_va188") || "all"; } catch (e) { return "all"; } };
+  window.va188 = m => { try { localStorage.setItem("itqan_va188", m); } catch (e) {} render(); };
+  const viewAll = () => !realOwner() && can188("viewall") && vaMode() === "all";
+
+  /* «يشوف كل حاجة زيك»: الواجهة كلها تفتحله، بس قاعدة البيانات مابتسمحلوش يكتب أي حاجة */
+  const _rr = realRole; realRole = function () { return viewAll() ? "owner" : _rr(); };
+  const _ro = role; role = function () { const r = _ro(); return viewAll() && !state.preview ? "owner" : r; };
+
+  /* أي «حفظ للكل» من موظف = طلب يوصلك */
+  const _ss = saveSetting16; saveSetting16 = async function (k, v) {
+    if (realOwner()) return _ss.apply(this, arguments);
+    if (!can188("request")) return toast(T("مش مسموحلك تعدّل", "You can't edit this"), true);
+    const { error } = await sb.from("staff_req187").insert({ key: k, value: v === undefined ? null : v });
+    toast(error ? error.message : T("📝 اتبعت للمالك يوافق عليه", "📝 Sent to the owner for approval"), !!error);
+  };
+
+  /* ---------- سجل النشاط ---------- */
+  let lastLog = {}; function logRoute() { const u = uid(); if (!u || AS()) return; const t = state.route + (state.pageArg ? "/" + state.pageArg : ""); const now = Date.now(); if (lastLog[t] && now - lastLog[t] < 120000) return; lastLog[t] = now; sb.from("activity187").insert({ action: "open", target: t.slice(0, 190) }).then(() => {}, () => {}); }
+  window.log188 = (action, target, meta) => { if (!uid()) return; sb.from("activity187").insert({ action: String(action).slice(0, 50), target: String(target || "").slice(0, 190), meta: meta || null }).then(() => {}, () => {}); };
+
+  /* ---------- استثناءات: اللي يتخفى عن شخص بعينه (أو عنك انت) ---------- */
+  const tgt = el => { const a = (el.getAttribute && (el.getAttribute("onclick") || el.getAttribute("data-js"))) || ""; let m = a.match(/go16\(\s*'([^']+)'(?:\s*,\s*'([^']*)')?/); if (m) return m[1] + (m[2] ? "/" + m[2] : ""); m = a.match(/navigate\(\s*'([^']+)'/); if (m) return m[1]; m = a.match(/libGo\(\s*'([^']+)'/); if (m) return "library/" + m[1]; return null; };
+  const lockedNow = () => document.body.classList.contains("lock187");
+  function denyList() { const r = row(); if (!r) return []; if (realOwner() && !AS()) { if (r.deny_when === "lock" && !lockedNow()) return []; return (r.deny || []).filter(x => x && !["team188", "myspace", "control183", "home", "layouts180"].includes(x)); } else if (!activeRow(r)) return []; return (r.deny || []).filter(Boolean); }
+  const hit = (L, t) => L.some(x => x === t || t.startsWith(x + "/") || (x.endsWith("*") && t.startsWith(x.slice(0, -1))));
+  function applyDeny() {
+    const D = denyList(); const A = (row() && activeRow(row()) && row().allow) || [];
+    document.querySelectorAll("#app [onclick], #app [data-js], #nv180 [onclick]").forEach(el => { const t = tgt(el); if (!t) return; if (D.length && hit(D, t)) { el.style.display = "none"; el.__d188 = 1; } else if (A.length && hit(A, t) && el.style.display === "none") el.style.display = ""; });
+  }
+
+  /* ---------- البيانات ---------- */
+  const C = { team: null, ppl: null, req: null, act: null };
+  async function loadTeam() {
+    const [a, b, c, d] = await Promise.all([sb.from("staff187").select("*"), sb.from("profiles").select("id,role,display_name,real_name,email,avatar_url,created_at").order("created_at", { ascending: false }).limit(500), sb.from("staff_req187").select("*").order("at", { ascending: false }).limit(200), sb.from("activity187").select("*").order("at", { ascending: false }).limit(400)]);
+    C.team = a.data || []; C.ppl = b.data || []; C.req = c.data || []; C.act = d.data || []; render();
+  }
+  const nm = id => { const p = (C.ppl || []).find(x => x.id === id); return p ? (p.display_name || p.real_name || p.email || id.slice(0, 6)) : (id || "").slice(0, 6); };
+  const rl = r => ({ owner: T("مالك", "Owner"), teacher: T("معلم", "Teacher"), student: T("طالب", "Student"), parent: T("ولي أمر", "Parent") }[r] || r);
+  const targets = () => { const D = (typeof DOORS147 !== "undefined" ? DOORS147 : []).map(o => ["world/" + o.id, (AR() ? o.ar : o.en) || o.id]); const P = (PAGES16 || []).map(p => [p, p]); return D.concat(P); };
+  const ago = d => { const s = (Date.now() - new Date(d)) / 1000; return s < 60 ? T("دلوقتي", "now") : s < 3600 ? Math.round(s / 60) + T(" د", "m") : s < 86400 ? Math.round(s / 3600) + T(" س", "h") : Math.round(s / 86400) + T(" يوم", "d"); };
+
+  window.tm188 = {
+    tab: t => { state.tm188 = t; render(); },
+    edit: id => { state.tm188e = id; render(); setTimeout(() => { const e = document.getElementById("tm188f"); e && e.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); },
+    preset: v => { const P = PRESETS[v]; if (!P) return; document.querySelectorAll("#tm188f [data-p]").forEach(i => i.checked = !!P[2][i.dataset.p]); },
+    save: async () => {
+      const f = document.getElementById("tm188f"); if (!f) return; const g = n => f.querySelector(`[name="${n}"]`);
+      const perms = {}; f.querySelectorAll("[data-p]").forEach(i => { if (i.checked) perms[i.dataset.p] = true; });
+      const lst = n => [...f.querySelectorAll(`[data-${n}]:checked`)].map(i => i.value).concat(((g(n + "x") || {}).value || "").split(/[,\n،]/).map(s => s.trim()).filter(Boolean));
+      const id = f.dataset.u; const exp = g("exp").value; const rowv = { user_id: id, title: g("title").value.trim() || null, preset: g("preset").value, perms, allow: lst("allow"), deny: lst("deny"), deny_when: g("when") ? g("when").value : "always", expires_at: exp ? new Date(exp + "T23:59:00").toISOString() : null, active: g("active").checked, note: g("note").value.trim() || null, updated_at: new Date().toISOString() };
+      const { error } = await sb.from("staff187").upsert(rowv); if (error) return toast(error.message, true);
+      log188("staff_save", nm(id), { perms: Object.keys(perms) }); toast("✅ " + T("اتحفظ — بيتطبّق عنده من أول ما يفتح الموقع", "Saved — applies as soon as they open the site")); if (id === uid()) { MEu = null; loadMe(); } state.tm188e = null; loadTeam();
+    },
+    pause: async (id, on) => { const { error } = await sb.from("staff187").update({ active: on, updated_at: new Date().toISOString() }).eq("user_id", id); if (error) return toast(error.message, true); log188(on ? "staff_on" : "staff_off", nm(id)); toast(on ? "▶️" : "⏸️ " + T("اتوقف فورًا", "Paused immediately")); loadTeam(); },
+    as: id => { const r = (C.team || []).find(x => x.user_id === id) || { perms: {}, deny: [], allow: [], active: true }; const p = (C.ppl || []).find(x => x.id === id) || {}; try { sessionStorage.setItem("itqan_as188", JSON.stringify({ id, name: nm(id), role: p.role, row: r })); } catch (e) {} state.preview = p.role === "owner" ? null : (p.role || "student"); navigate("home"); toast("👁 " + T("بتشوف الموقع بعين ", "Viewing as ") + nm(id)); },
+    unas: () => { try { sessionStorage.removeItem("itqan_as188"); } catch (e) {} state.preview = null; go16("team188"); },
+    req: async (id, ok) => { const r = (C.req || []).find(x => x.id === id); if (!r) return; if (ok) { await _ss(r.key, r.value); } await sb.from("staff_req187").update({ status: ok ? "approved" : "rejected", decided_at: new Date().toISOString() }).eq("id", id); log188(ok ? "req_ok" : "req_no", r.key); loadTeam(); },
+    reqView: id => { const r = (C.req || []).find(x => x.id === id); if (r) alert(JSON.stringify(r.value, null, 2).slice(0, 3000)); },
+    q: v => { state.tm188q = v; render(); setTimeout(() => { const i = document.getElementById("tm188q"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 0); }
+  };
+
+  function form(id) {
+    const r = (C.team || []).find(x => x.user_id === id) || { perms: {}, allow: [], deny: [], active: true, preset: "custom", deny_when: "always" }; const self = id === uid();
+    const TG = targets(); const known = new Set(TG.map(x => x[0]));
+    const box = (n, L) => `<div class="tm188tg">${TG.map(([k, l]) => `<label class="xs"><input type="checkbox" data-${n} value="${esc(k)}" ${(L || []).includes(k) ? "checked" : ""}> ${esc(l)}</label>`).join("")}</div><input class="in" name="${n}x" placeholder="${T("صفحات تانية (افصل بفاصلة) — مثال: library/fiqh , pricing", "Other pages, comma separated")}" value="${esc((L || []).filter(x => !known.has(x)).join(", "))}">`;
+    return `<div class="card" id="tm188f" data-u="${id}" style="border:2px solid var(--accent)"><h3>${self ? "🙈 " + T("اللي يظهرلك انت", "What you see") : "✏️ " + esc(nm(id))}</h3>
+      ${self ? `<p class="sm">${T("علّم على الحاجات اللي مش عايزها تظهرلك. تقدر تخليها تتخفى دايمًا، أو بس وانت في 🔒 وضع الحصة.", "Tick what you don't want to see — always, or only in 🔒 lesson mode.")}</p><label class="sm">${T("إمتى؟", "When?")} <select class="in" name="when" style="width:auto"><option value="always" ${r.deny_when !== "lock" ? "selected" : ""}>${T("دايمًا", "Always")}</option><option value="lock" ${r.deny_when === "lock" ? "selected" : ""}>${T("في وضع الحصة بس", "Only in lesson mode")}</option></select></label><input type="hidden" name="title"><input type="hidden" name="preset" value="custom"><input type="hidden" name="exp"><input type="checkbox" name="active" checked hidden><input type="hidden" name="note">` : `
+      <div class="row" style="gap:.5rem;flex-wrap:wrap"><label class="sm">${T("الدور", "Role")} <select class="in" name="preset" style="width:auto" onchange="tm188.preset(this.value)">${Object.entries(PRESETS).map(([k, v]) => `<option value="${k}" ${r.preset === k ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select></label>
+      <label class="sm">${T("المسمّى", "Title")} <input class="in" name="title" value="${esc(r.title || "")}" placeholder="${T("مثال: مشرف الحلقات", "e.g. Circles supervisor")}"></label>
+      <label class="sm">${T("لحد إمتى (اختياري)", "Until (optional)")} <input class="in" type="date" name="exp" value="${r.expires_at ? String(r.expires_at).slice(0, 10) : ""}"></label>
+      <label class="sm"><input type="checkbox" name="active" ${r.active ? "checked" : ""}> ${T("شغّال", "Active")}</label></div>
+      <h4>🔑 ${T("الصلاحيات", "Permissions")}</h4><div class="tm188pp">${PERMS.map(([k, a, e]) => `<label class="sm"><input type="checkbox" data-p="${k}" ${r.perms && r.perms[k] ? "checked" : ""}> ${T(a, e)}</label>`).join("")}</div>
+      <h4>✅ ${T("يفتحله استثنائي (حتى لو مقفولة لدوره)", "Extra pages opened for them")}</h4>${box("allow", r.allow)}
+      <input class="in" name="note" placeholder="${T("ملاحظة ليك", "Note")}" value="${esc(r.note || "")}">`}
+      <h4>🙈 ${self ? T("اخفي عني", "Hide from me") : T("يتقفل عنده بالذات", "Hidden for them only")}</h4>${box("deny", r.deny)}
+      <div class="row" style="gap:.4rem;margin-top:.6rem"><button class="btn btn-p" onclick="tm188.save()">💾 ${T("احفظ", "Save")}</button><button class="btn btn-o" onclick="state.tm188e=null;render()">${T("إلغاء", "Cancel")}</button></div></div>`;
+  }
+
+  function page() {
+    if (!realOwner()) return pageWrap("👥", "—", "", `<div class="card muted">${T("الصفحة دي لصاحب الموقع بس", "Owner only")}</div>`);
+    if (!C.team) { loadTeam(); return pageWrap("👥", T("فريقي والصلاحيات", "Team & permissions"), "", `<div class="card">⏳</div>`); }
+    const tab = state.tm188 || "team"; const pend = (C.req || []).filter(r => r.status === "pending");
+    const tabs = [["team", "👥 " + T("الفريق", "Team")], ["all", "➕ " + T("عيّن حد", "Assign someone")], ["req", "📝 " + T("طلبات التعديل", "Change requests") + (pend.length ? ` (${pend.length})` : "")], ["act", "📜 " + T("النشاط", "Activity")], ["me", "🙈 " + T("اللي يظهرلي", "What I see")], ["tips", "💡 " + T("اقتراحات", "Ideas")]];
+    let body = "";
+    if (state.tm188e && tab !== "me") body += form(state.tm188e);
+    const lastAct = id => { const a = (C.act || []).find(x => x.user_id === id); return a ? ago(a.at) + " · " + esc(a.target || a.action) : "—"; };
+    if (tab === "team") {
+      const L = (C.team || []).filter(r => r.user_id !== uid());
+      body += L.length ? `<div class="tm188g">${L.map(r => { const p = (C.ppl || []).find(x => x.id === r.user_id) || {}; const on = activeRow(r); return `<div class="card tm188c ${on ? "" : "off"}"><b>${esc(nm(r.user_id))}</b> <span class="badge">${esc(rl(p.role))}</span><div class="sm">${esc(r.title || T((PRESETS[r.preset] || PRESETS.custom)[0], (PRESETS[r.preset] || PRESETS.custom)[1]))}</div><div class="xs muted">${Object.keys(r.perms || {}).map(k => (PERMS.find(x => x[0] === k) || [k, k])[1].split(" ")[0]).join(" ")} ${r.deny && r.deny.length ? "· 🙈" + r.deny.length : ""} ${r.expires_at ? "· ⏳ " + String(r.expires_at).slice(0, 10) : ""}</div><div class="xs muted">🕒 ${lastAct(r.user_id)}</div><div class="row" style="gap:.3rem;margin-top:.4rem;flex-wrap:wrap"><button class="btn btn-o" onclick="tm188.edit('${r.user_id}')">✏️</button><button class="btn btn-o" title="${T("شوف بعينه", "View as")}" onclick="tm188.as('${r.user_id}')">👁</button><button class="btn btn-o" onclick="tm188.pause('${r.user_id}',${!r.active})">${r.active ? "⏸️ " + T("وقّف", "Pause") : "▶️ " + T("شغّل", "Resume")}</button><button class="btn btn-o" onclick="state.tm188=\'act\';state.tm188u=\'${r.user_id}\';render()">📜</button></div></div>`; }).join("")}</div>` : `<div class="card muted">${T("لسه مفيش موظفين. روح «➕ عيّن حد» واختار أي حد من المسجلين.", "No staff yet — go to “Assign someone”.")}</div>`;
+    }
+    if (tab === "all") {
+      const q = (state.tm188q || "").toLowerCase(); const L = (C.ppl || []).filter(p => p.id !== uid() && (!q || [p.display_name, p.real_name, p.email, p.role].join(" ").toLowerCase().includes(q)));
+      body += `<input id="tm188q" class="in" placeholder="🔎 ${T("دوّر باسم أو إيميل أو دور", "Search name, email or role")}" value="${esc(state.tm188q || "")}" oninput="tm188.q(this.value)"><div class="tm188g" style="margin-top:.6rem">${L.slice(0, 120).map(p => { const r = (C.team || []).find(x => x.user_id === p.id); return `<div class="card tm188c"><b>${esc(p.display_name || p.real_name || "—")}</b> <span class="badge">${esc(rl(p.role))}</span>${r ? ` <span class="badge" style="background:#dcfce7">${T("في الفريق", "Staff")}</span>` : ""}<div class="xs muted">🕒 ${lastAct(p.id)}</div><div class="row" style="gap:.3rem;margin-top:.4rem"><button class="btn btn-p" onclick="tm188.edit('${p.id}')">${r ? "✏️ " + T("الصلاحيات", "Permissions") : "➕ " + T("عيّنه", "Assign")}</button><button class="btn btn-o" onclick="tm188.as('${p.id}')">👁</button></div></div>`; }).join("")}</div>`;
+    }
+    if (tab === "req") body += (C.req || []).length ? (C.req || []).map(r => `<div class="card row" style="justify-content:space-between;gap:.5rem;flex-wrap:wrap;${r.status !== "pending" ? "opacity:.55" : ""}"><div><b>${esc(nm(r.user_id))}</b> · <code>${esc(r.key)}</code> <span class="xs muted">${ago(r.at)}</span> ${r.status !== "pending" ? `<span class="badge">${r.status === "approved" ? "✅" : "✖"}</span>` : ""}</div><div class="row" style="gap:.3rem"><button class="btn btn-o" onclick="tm188.reqView(${r.id})">👁 ${T("التفاصيل", "Details")}</button>${r.status === "pending" ? `<button class="btn btn-p" onclick="tm188.req(${r.id},true)">✅ ${T("وافق وطبّق", "Approve")}</button><button class="btn btn-o" onclick="tm188.req(${r.id},false)">✖ ${T("ارفض", "Reject")}</button>` : ""}</div></div>`).join("") : `<div class="card muted">${T("مفيش طلبات. أي موظف معاه «📝 يقترح تعديلات» لما يدوس «حفظ للكل» في أي حتة، التعديل بيوصلك هنا وانت توافق أو ترفض.", "No requests yet.")}</div>`;
+    if (tab === "act") { const u = state.tm188u; const L = (C.act || []).filter(a => !u || a.user_id === u); body += `<div class="row" style="gap:.4rem;margin-bottom:.5rem"><select class="in" style="width:auto" onchange="state.tm188u=this.value||null;render()"><option value="">${T("كل الناس", "Everyone")}</option>${[...new Set((C.act || []).map(a => a.user_id))].map(id => `<option value="${id}" ${u === id ? "selected" : ""}>${esc(nm(id))}</option>`).join("")}</select><button class="btn btn-o" onclick="loadTeam188()">🔄</button></div><div class="card" style="padding:0"><table class="tm188t"><tbody>${L.slice(0, 300).map(a => `<tr><td>${esc(nm(a.user_id))}</td><td>${esc(a.action === "open" ? T("فتح", "opened") : a.action)}</td><td><code>${esc(a.target || "")}</code></td><td class="muted">${ago(a.at)}</td></tr>`).join("") || `<tr><td class="muted">${T("لسه مفيش نشاط — بيتسجّل من دلوقتي", "Nothing yet — logging starts now")}</td></tr>`}</tbody></table></div>`; }
+    if (tab === "me") body += form(uid());
+    if (tab === "tips") body += `<div class="card"><ol class="sm" style="line-height:1.9">${TIPS().map(x => `<li>${x}</li>`).join("")}</ol></div>`;
+    return pageWrap("👥", T("فريقي والصلاحيات", "Team & permissions"), T("عيّن موظفين وادّيهم صلاحيات انت اللي بتحددها، اقفل أو افتح أي صفحة لأي حد بالذات، شوف الموقع بعين أي حد، وتابع مين عمل إيه. المفاتيح السرية (Gemini/Azure/الدفع) محدش يشوفها غيرك أبدًا.", "Assign staff with permissions you choose, open/close any page per person, view as anyone, and track activity. Secret keys stay yours only."),
+      `<div class="tabs" style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem">${tabs.map(([k, l]) => `<button class="btn ${tab === k ? "btn-p" : "btn-o"}" onclick="tm188.tab('${k}')">${l}</button>`).join("")}</div>${body}`, 1200);
+  }
+  window.loadTeam188 = loadTeam;
+  const TIPS = () => AR() ? [
+    "<b>أدوار جاهزة</b>: مساعد مالك، مشرف، «معلم بيشوف كل حاجة»، دعم، محاسب، مسوّق، محرر — وتعدّل أي واحد بعد كده.",
+    "<b>«معلم بيشوف كل حاجة»</b>: يفتح كل الصفحات زيك بالظبط، بس من غير ولا زرار تعديل، وقاعدة البيانات نفسها مابتسمحلوش يكتب.",
+    "<b>صلاحية مؤقتة</b>: حط تاريخ نهاية، وبعده تتقفل لوحدها (مثلًا مشرف لحد آخر رمضان).",
+    "<b>⏸️ إيقاف فوري</b>: زرار واحد يوقف أي موظف من غير ما تمسح حاجة.",
+    "<b>👁 شوف بعينه</b>: تشوف الموقع بالظبط زي ما هو شايفه، قبل ما تديله الصلاحية.",
+    "<b>📝 موافقة قبل النشر</b>: الموظف «يقترح» والتعديل يوصلك إشعار، وانت توافق أو ترفض.",
+    "<b>📜 سجل النشاط</b>: مين فتح إيه وإمتى، لكل شخص لوحده.",
+    "<b>🙈 استثناءات</b>: تقفل صفحة أو قسم لشخص واحد بس، أو تفتحله صفحة مقفولة لدوره.",
+    "<b>🙈 اللي يظهرلك انت</b>: تخفي عن نفسك اللي مش محتاجه، دايمًا أو في وضع الحصة بس.",
+    "<b>🔒 وضع الحصة</b> (Alt+L): كل حاجة موجودة ومن غير أزرار تعديل وانت بتشرح.",
+    "اقتراح جاي: <b>فرق</b> (فريق الحلقات، فريق الدعم) وكل فريق له صلاحيات مشتركة.",
+    "اقتراح جاي: <b>مشرف لكل مجموعة طلاب</b> يشوف طلابه بس.",
+    "اقتراح جاي: <b>تقرير أسبوعي</b> بنشاط الفريق يوصلك على الإيميل أو الواتساب.",
+    "اقتراح جاي: <b>مهام للموظفين</b> (تكليف + موعد + تم/لسه) من نفس الصفحة.",
+    "اقتراح جاي: <b>تنبيه</b> لو حد فتح صفحة الفلوس أو عمل حاجة حساسة بالليل.",
+    "اقتراح جاي: <b>دعوة موظف بلينك</b>، أول ما يسجّل يدخل بالدور اللي حددته.",
+    "اقتراح جاي: <b>صلاحيات حسب اللغة أو البلد</b> (مشرف للطلاب الإنجليز بس).",
+    "اقتراح جاي: <b>تقييم للموظف</b> من الطلاب بعد كل حصة أو رد."
+  ] : ["Ready roles; teacher-who-sees-all; temporary access; instant pause; view as; approval before publish; activity log; per-person exceptions; hide things from yourself; lesson mode (Alt+L). Coming: teams, group supervisors, weekly reports, staff tasks, sensitive-action alerts, invite links, language/country scopes, staff ratings."];
+
+  /* ---------- 🎨 ألوان وتفاصيل كاملة لأي تصميم ---------- */
+  const LYK = "itqan_ly180";
+  const lyCfg = () => { let loc = null; try { if (realOwner()) loc = JSON.parse(localStorage.getItem(LYK) || "null"); } catch (e) {} return Object.assign({}, setv("layout180", {}) || {}, loc || {}); };
+  const VARS = [["acc", "اللون الأساسي", "Main colour", "color"], ["bg", "الخلفية", "Background", "color"], ["fg", "لون الكلام", "Text", "color"], ["card", "الكروت", "Cards", "color"], ["line", "الحواف", "Borders", "color"], ["muted", "الكلام الباهت", "Muted text", "color"],
+    ["rad", "تدوير الحواف", "Corner radius", "range", 0, 40, "px"], ["fs", "حجم الخط", "Font size", "range", 80, 140, "%"], ["gap", "المسافات", "Spacing", "range", 0, 40, "px"], ["bw", "سُمك الحواف", "Border width", "range", 0, 6, "px"], ["sh", "الظل", "Shadow", "range", 0, 40, "px"], ["fw", "تُقل الخط", "Font weight", "range", 300, 900, ""], ["op", "شفافية الكروت", "Card opacity", "range", 40, 100, "%"]];
+  window.lv188 = (k, v) => { const c = lyCfg(); const vars = Object.assign({}, c.vars || {}, { [k]: v }); if (v === "") delete vars[k]; ly180Try(null, "vars", vars); };
+  window.lv188r = () => ly180Try(null, "vars", {});
+  function varsCss() {
+    const v = lyCfg().vars || {}; const site = lyCfg().site; if (!Object.keys(v).length) return "";
+    const sc = site ? "body,.ly180" : ".ly180"; let s = `${sc}{${v.acc ? `--acc:${v.acc};${site ? `--accent:${v.acc};` : ""}` : ""}${v.bg ? `--bg:${v.bg};` : ""}${v.fg ? `--fg:${v.fg};` : ""}${v.card ? `--card:${v.card};` : ""}${v.line ? `--line:${v.line};` : ""}${v.muted ? `--muted:${v.muted};` : ""}}`;
+    const box = site ? "#app .card,#app .mstile,.ly180 .lyb,.ly180 button" : ".ly180 .lyb,.ly180 button,.ly180 .card";
+    if (v.rad !== undefined) s += `${box}{border-radius:${v.rad}px!important}`; if (v.bw !== undefined) s += `${box}{border-width:${v.bw}px!important;border-style:solid}`;
+    if (v.sh !== undefined) s += `${box}{box-shadow:0 ${Math.round(v.sh / 3)}px ${v.sh}px -${Math.round(v.sh / 3)}px rgba(0,0,0,.25)!important}`; if (v.op !== undefined) s += `${box}{opacity:${v.op / 100}}`;
+    if (v.fs !== undefined) s += `${site ? "#app" : ".ly180"}{font-size:${v.fs}%}`; if (v.fw !== undefined) s += `${site ? "#app" : ".ly180"} b,${site ? "#app" : ".ly180"} h2,${site ? "#app" : ".ly180"} h3{font-weight:${v.fw}}`;
+    if (v.gap !== undefined) s += `.ly180 .wrap>div{gap:${v.gap}px!important}${site ? `#app .grid,#app .msgrid{gap:${v.gap}px!important}` : ""}`;
+    return s;
+  }
+  function varsPanel() {
+    const v = lyCfg().vars || {};
+    return `<div class="card" id="lv188"><h3>🎨 ${T("ألوان وتفاصيل التصميم ده — تحكم كامل", "Colours & details — full control")}</h3><p class="sm">${T("أي تغيير بيظهرلك انت بس، ولما تدوس «🚀 طبّق على الموقع» يظهر للكل. لو علّمت «على الموقع كله» فوق، الألوان بتمشي على كل الصفحات.", "Only you see changes until you publish.")}</p>
+      <div class="lv188g">${VARS.map(([k, a, e, t, mn, mx, u]) => t === "color" ? `<label class="sm">${T(a, e)} <input type="color" value="${esc(v[k] || "#0f766e")}" onchange="lv188('${k}',this.value)">${v[k] ? `<button class="btn btn-o" style="padding:0 .35rem" onclick="lv188('${k}','')">↩</button>` : ""}</label>` : `<label class="sm">${T(a, e)} <input type="range" min="${mn}" max="${mx}" value="${v[k] !== undefined ? v[k] : Math.round((mn + mx) / 2)}" onchange="lv188('${k}',+this.value)"> <span class="xs">${v[k] !== undefined ? v[k] + u : T("زي التصميم", "default")}</span></label>`).join("")}</div>
+      <div class="row" style="gap:.4rem;margin-top:.5rem;flex-wrap:wrap"><button class="btn btn-o" onclick="lv188r()">↩ ${T("رجّع ألوان التصميم الأصلية", "Reset to layout colours")}</button><button class="btn btn-o" onclick="ep188.on()">🎯 ${T("لوّن أي حتة صغيرة في الموقع", "Style any element")}</button><button class="btn btn-o" onclick="state.uiEdit=true;render()">🧩 ${T("رتّب/اخفي/سمّي أي أيقونة", "Arrange/hide/rename icons")}</button></div></div>`;
+  }
+
+  /* ---------- 🎯 لوّن أي حتة: دوس على أي حاجة في الموقع وغيّر لونها وحجمها وشكلها أو اخفيها ---------- */
+  const EK = "itqan_el188";
+  const elRules = () => { let loc = null; try { if (realOwner()) loc = JSON.parse(localStorage.getItem(EK) || "null"); } catch (e) {} return loc || setv("elcss188", {}) || {}; };
+  const elLocal = () => { try { return realOwner() && !!localStorage.getItem(EK); } catch (e) { return false; } };
+  function sel(el) {
+    const parts = []; let n = el; let d = 0;
+    while (n && n.nodeType === 1 && n.id !== "app" && d < 6) { if (n.id && !/^\d/.test(n.id)) { parts.unshift("#" + CSS.escape(n.id)); break; } let p = n.tagName.toLowerCase(); const cl = [...n.classList].filter(c => !/^(on|go|hov|am180|lb183|__)/.test(c)).slice(0, 2); if (cl.length) p += "." + cl.map(c => CSS.escape(c)).join("."); const par = n.parentElement; if (par) { const sib = [...par.children].filter(x => x.tagName === n.tagName); if (sib.length > 1) p += `:nth-of-type(${sib.indexOf(n) + 1})`; } parts.unshift(p); n = n.parentElement; d++; }
+    return (parts[0] && parts[0][0] === "#" ? "" : "#app ") + parts.join(">");
+  }
+  const scope = () => "[data-r188='" + state.route + "'] ";
+  function elCss() { const R = elRules(); return Object.entries(R).map(([s, st]) => { const k = s.split("§"); const where = k[1] === "*" ? "" : `[data-r188='${k[1]}'] `; const x = []; if (st.c) x.push(`color:${st.c}!important`); if (st.b) x.push(`background:${st.b}!important`); if (st.fs) x.push(`font-size:${st.fs}%!important`); if (st.r !== undefined && st.r !== "") x.push(`border-radius:${st.r}px!important`); if (st.p !== undefined && st.p !== "") x.push(`padding:${st.p}px!important`); if (st.bd) x.push(`border:2px solid ${st.bd}!important`); if (st.h) x.push("display:none!important"); if (st.fw) x.push(`font-weight:${st.fw}!important`); return x.length ? `body${where} ${k[0]}{${x.join(";")}}` : ""; }).join("\n"); }
+  let EP = false;
+  window.ep188 = {
+    on: () => { EP = true; document.body.classList.add("ep188"); toast("🎯 " + T("دوس على أي حاجة في الموقع عايز تغيّرها — Esc للخروج", "Click anything to style it — Esc to exit")); if (state.route === "layouts180") navigate("home"); },
+    off: () => { EP = false; document.body.classList.remove("ep188"); const p = document.getElementById("ep188p"); p && p.remove(); },
+    set: (s, k, v) => { const R = Object.assign({}, elRules()); R[s] = Object.assign({}, R[s] || {}, { [k]: v }); if (v === "" || v === false) delete R[s][k]; if (!Object.keys(R[s]).length) delete R[s]; try { localStorage.setItem(EK, JSON.stringify(R)); } catch (e) {} paint(); },
+    undo: s => { const R = Object.assign({}, elRules()); delete R[s]; try { localStorage.setItem(EK, JSON.stringify(R)); } catch (e) {} paint(); const p = document.getElementById("ep188p"); p && p.remove(); },
+    pub: async () => { const R = elRules(); await _ss("elcss188", R); try { localStorage.removeItem(EK); } catch (e) {} paint(); toast("✅ " + T("اتطبّق للكل", "Published for everyone")); render(); },
+    drop: () => { try { localStorage.removeItem(EK); } catch (e) {} paint(); render(); },
+    list: () => { state.route = "layouts180"; render(); }
+  };
+  function picker(el, x, y) {
+    const base = sel(el); const p0 = document.getElementById("ep188p"); p0 && p0.remove();
+    const p = document.createElement("div"); p.id = "ep188p"; p.style.cssText = `top:${Math.min(y + 10, innerHeight - 330)}px;left:${Math.min(Math.max(8, x - 140), innerWidth - 300)}px`;
+    const key = w => base + "§" + w; let cur = key(state.route); const st = () => elRules()[cur] || {};
+    const draw = () => { window.__ep188k = cur; const s = st(); p.innerHTML = `<div class="row" style="justify-content:space-between"><b class="sm">🎯 ${esc((el.textContent || el.tagName).trim().slice(0, 28))}</b><button class="btn btn-o" style="padding:0 .4rem" onclick="ep188.off()">✖</button></div>
+      <label class="xs">${T("فين؟", "Where?")} <select id="ep188w"><option value="${esc(state.route)}">${T("الصفحة دي بس", "This page only")}</option><option value="*" ${cur.endsWith("§*") ? "selected" : ""}>${T("في كل الصفحات", "Every page")}</option></select></label>
+      <div class="ep188g"><label class="xs">${T("لون الكلام", "Text")} <input type="color" data-k="c" value="${s.c || "#111111"}"></label><label class="xs">${T("الخلفية", "Background")} <input type="color" data-k="b" value="${s.b || "#ffffff"}"></label><label class="xs">${T("إطار", "Border")} <input type="color" data-k="bd" value="${s.bd || "#0f766e"}"></label>
+      <label class="xs">${T("الحجم", "Size")} <input type="range" min="60" max="220" data-k="fs" value="${s.fs || 100}"></label><label class="xs">${T("تدوير", "Radius")} <input type="range" min="0" max="40" data-k="r" value="${s.r !== undefined ? s.r : 8}"></label><label class="xs">${T("مسافة جوّه", "Padding")} <input type="range" min="0" max="40" data-k="p" value="${s.p !== undefined ? s.p : 8}"></label><label class="xs">${T("تُقل", "Weight")} <input type="range" min="300" max="900" step="100" data-k="fw" value="${s.fw || 500}"></label></div>
+      <label class="xs"><input type="checkbox" data-k="h" ${s.h ? "checked" : ""}> 🙈 ${T("اخفيها", "Hide it")}</label>
+      <div class="row" style="gap:.3rem;margin-top:.4rem;flex-wrap:wrap"><button class="btn btn-o" style="padding:.1rem .5rem" onclick="ep188.undo(window.__ep188k)">↩ ${T("رجّعها", "Reset")}</button><button class="btn btn-p" style="padding:.1rem .5rem" onclick="ep188.pub()">🚀 ${T("طبّق للكل", "Publish")}</button></div><p class="xs muted" style="margin:.3rem 0 0">${T("بيظهرلك انت بس لحد ما تدوس «طبّق للكل».", "Only you see it until you publish.")}</p>`;
+      p.querySelectorAll("[data-k]").forEach(i => i.addEventListener(i.type === "checkbox" ? "change" : "input", () => ep188.set(cur, i.dataset.k, i.type === "checkbox" ? i.checked : (i.type === "range" ? +i.value : i.value))));
+      p.querySelector("#ep188w").onchange = e => { const old = elRules()[cur]; cur = key(e.target.value); if (old) { const R = Object.assign({}, elRules()); R[cur] = old; delete R[base + "§" + state.route]; try { localStorage.setItem(EK, JSON.stringify(R)); } catch (er) {} paint(); } draw(); }; };
+    draw(); document.body.appendChild(p);
+  }
+  document.addEventListener("click", e => { if (!EP || !realOwner()) return; if (e.target.closest("#ep188p,#lk187,#hh186")) return; const el = e.target.closest("#app *"); if (!el) return; e.preventDefault(); e.stopPropagation(); document.querySelectorAll(".ep188on").forEach(x => x.classList.remove("ep188on")); el.classList.add("ep188on"); picker(el, e.clientX, e.clientY); }, true);
+  document.addEventListener("keydown", e => { if (EP && e.key === "Escape") ep188.off(); });
+  function paint() { let s = document.getElementById("st188"); if (!s) { s = document.createElement("style"); s.id = "st188"; document.head.appendChild(s); } s.textContent = varsCss() + "\n" + elCss(); document.body.setAttribute("data-r188", state.route || "home"); }
+
+  /* ---------- ربط ---------- */
+  const _r = render; render = function () {
+    loadMe();
+    if (state.route === "team188") { let b; try { b = page(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); }
+    else {
+      const t = state.route + (state.pageArg ? "/" + state.pageArg : ""); const D = denyList();
+      if (D.length && state.route !== "home" && hit(D, t) && !(realOwner() && !AS() && state.route === "team188")) show(pageWrap("🙈", T("الصفحة دي مش متاحة", "Not available"), "", `<div class="card"><button class="btn btn-p" onclick="navigate('home')">🏠</button></div>`));
+      else _r.apply(this, arguments);
+    }
+    try {
+      paint(); applyDeny(); logRoute();
+      if (state.route === "layouts180" && realOwner()) { const m = document.querySelector(".ly180mix"); if (m && !document.getElementById("lv188")) m.insertAdjacentHTML("afterend", varsPanel() + (elLocal() || Object.keys(elRules()).length ? `<div class="card"><b>🎯 ${T("التعديلات على الحاجات الصغيرة:", "Element tweaks:")}</b> ${Object.keys(elRules()).length} ${elLocal() ? `<span class="badge">👁 ${T("عندك انت بس", "only you")}</span> <button class="btn btn-p" onclick="ep188.pub()">🚀 ${T("طبّق للكل", "Publish")}</button> <button class="btn btn-o" onclick="ep188.drop()">↩ ${T("الغي اللي ماتطبّقش", "Discard unpublished")}</button>` : ""}</div>` : "")); }
+      const a = realOwner() && AS(); let bar = document.getElementById("as188");
+      if (a) { if (!bar) { bar = document.createElement("div"); bar.id = "as188"; document.body.appendChild(bar); } bar.innerHTML = `👁 ${T("بتشوف الموقع بعين", "Viewing as")} <b>${esc(a.name)}</b> <button class="btn btn-p" style="padding:.1rem .6rem" onclick="tm188.unas()">${T("ارجع لحسابي", "Back to me")}</button>`; } else if (bar) bar.remove();
+      if (!realOwner() && can188("viewall")) { let v = document.getElementById("va188"); if (!v) { v = document.createElement("button"); v.id = "va188"; v.type = "button"; document.body.appendChild(v); v.onclick = () => va188(vaMode() === "all" ? "me" : "all"); } v.textContent = vaMode() === "all" ? "👁 " + T("شايف كل حاجة", "Seeing everything") : "🧑‍🏫 " + T("وضعي العادي", "My normal view"); document.body.classList.toggle("lock187", vaMode() === "all"); }
+    } catch (e) { console.warn(e); }
+  };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!realOwner() || AS()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#16a34a;outline:2px solid #16a34a" onclick="go16('team188')"><span>👥</span><b>${T("فريقي والصلاحيات", "Team & permissions")}</b></button>`); };
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="border:2px solid #16a34a;margin-bottom:1rem"><h3>👥 ${T("فريقي والصلاحيات", "Team & permissions")}</h3><p class="sm">${T("موظفين، أدوار، صلاحيات، استثناءات لأي حد، «شوف بعينه»، سجل النشاط، طلبات التعديل، واللي يظهرلك انت.", "Staff, roles, permissions, exceptions, view-as, activity, requests.")}</p><button class="btn btn-p" onclick="go16('team188')">👥 ${T("افتح", "Open")}</button></div>` + _os.apply(this, arguments); };
+  const _nt = notifText; notifText = function (n) { if (n && n.kind === "staff_req") { const d = n.data || {}; return T(`📝 ${d.name || "موظف"} بيطلب تعديل: ${d.key || ""}`, `📝 ${d.name || "Staff"} requests a change: ${d.key || ""}`); } return _nt.apply(this, arguments); };
+  if (/^#\/team188/.test(location.hash)) state.route = "team188";
+
+  css(`.tm188g{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.6rem}.tm188c.off{opacity:.5}.tm188pp{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.3rem}.tm188tg{display:flex;flex-wrap:wrap;gap:.25rem .7rem;max-height:11rem;overflow:auto;border:1px solid var(--line);border-radius:.6rem;padding:.5rem;margin-bottom:.4rem}
+  .tm188t{width:100%;border-collapse:collapse}.tm188t td{padding:.35rem .6rem;border-bottom:1px solid var(--line);font-size:.82rem}
+  .lv188g{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.45rem}.lv188g input[type=range]{width:110px;vertical-align:middle}
+  body.ep188 #app *:hover{outline:2px dashed #f59e0b!important;cursor:crosshair!important}.ep188on{outline:3px solid #f59e0b!important}
+  #ep188p{position:fixed;z-index:2000;width:290px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:.9rem;box-shadow:0 18px 40px rgba(0,0,0,.25);padding:.7rem}.ep188g{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin:.4rem 0}.ep188g input[type=range]{width:100%}
+  #as188{position:fixed;z-index:1500;top:.5rem;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;border-radius:999px;padding:.35rem .5rem .35rem 1rem;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.3);display:flex;gap:.5rem;align-items:center}
+  #va188{position:fixed;z-index:950;bottom:calc(1rem + env(safe-area-inset-bottom));inset-inline-start:1rem;border-radius:999px;border:1px solid var(--line);background:var(--card);padding:.4rem .8rem;font-size:.8rem;box-shadow:0 6px 18px rgba(0,0,0,.15);cursor:pointer}
+  body.lock187 #lv188 button,body.lock187 #ep188p{display:none!important}`);
+  setTimeout(() => { try { paint(); } catch (e) {} }, 200);
 })();
 
 // بدء التشغيل
