@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v185";
+const UI_VERSION = "2026-11-16-v186";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -26551,6 +26551,182 @@ Between lessons, the platform keeps you going:
   const _r = render; render = function () { const r = _r.apply(this, arguments); try { applyUI(); audioBars(); applyVis(); if (state.route === "control183" && own()) { const g = document.querySelector(".c183g"); if (g && !g.__u185) { g.__u185 = 1; g.insertAdjacentHTML("afterbegin", uiCard()); } } } catch (e) { console.warn(e); } return r; };
   try { new MutationObserver(() => { clearTimeout(window.__u185t); window.__u185t = setTimeout(() => { try { audioBars(); applyVis(); sideMark(); markBars(); } catch (e) {} }, 250); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
   setTimeout(applyUI, 60);
+})();
+
+/* ================= v186: «لوحة اللي ناقص» (تعدّل وبعدين «اعرض للناس») + أصوات Gemini ليك بس لحد ما تنشرها + الهيدر لكل جهاز ومن غير حواف + زرار تسجيل المقام ظاهر + طبقات المشايخ (تحليل أوتوماتيك + مراجعتك) والطالب يشوف المشايخ المناسبين لصوته ويقلّدهم + شرح الطبقات والنوت ليك بالتفصيل + ربط ملف Notion بالطالب ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner" && !state.preview;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  ["todo186", "rr186", "notes186"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const ownerOnly = () => pageWrap("🔒", "—", "", `<div class="card muted">${T("الصفحة دي لصاحب الموقع بس", "Owner only")}</div>`);
+
+  /* ======================= 1) أصوات Gemini/Azure: ليك بس لحد ما تدوس «انشر» ======================= */
+  const live = () => !!setv("ttsLive186", false);
+  if (typeof vlFind === "function") { const _vf = vlFind; vlFind = async function (text, kind) {
+    const pv = setv("ttsProv185", "gemini"); const k = "v186|" + (own() ? "o" : "u") + "|" + live() + "|" + kind + "|" + text; if (VLC.has(k)) return VLC.get(k);
+    try { const h = await vlHash(text); const { data } = await sb.from("voice_lines").select("url,src,kind").eq("h", h).eq("status", "approved").limit(12); const rows = data || [];
+      let pick = rows.find(r => r.kind === kind && r.src === "human");
+      if (!pick && (own() || live())) pick = rows.find(r => r.kind === kind && r.src === pv) || rows.find(r => r.kind === kind && (r.src === "gemini" || r.src === "azure"));
+      if (!pick) pick = rows.find(r => r.kind === kind && r.src === "clone");
+      if (!pick && own() && String(text).trim().length <= 600) { sb.functions.invoke("azure-tts", { body: { text: String(text).trim(), kind } }).then(r => { if (r.data && r.data.url) { VLC.delete(k); } }).catch(() => {}); }
+      const u = pick ? pick.url : null; VLC.set(k, u); return u;
+    } catch (e) { return _vf.apply(this, arguments); } }; }
+  window.tl186 = async v => { if (v && !confirm(T("الأصوات الجديدة هتشتغل لكل الطلاب والزوار دلوقتي. متأكد؟", "The new voices will play for all students and visitors now. Sure?"))) return; await saveSetting16("ttsLive186", !!v); try { VLC.clear(); } catch (e) {} };
+
+  /* ======================= 2) «لوحة اللي ناقص»: تعدّل براحتك وبعدين «اعرض للناس» ======================= */
+  const DR = () => setv("draft186", {}) || {};
+  window.dr186 = async (k, v) => { await saveSetting16("draft186", Object.assign({}, DR(), { [k]: v })); };
+  window.pub186 = async k => { const d = DR(); if (k === "wa") { await saveSetting16("pay182", Object.assign({}, setv("pay182", {}) || {}, { wa: String(d.wa || "").replace(/^@/, "") })); } else if (k === "tag") { await saveSetting16("ui185", Object.assign({}, setv("ui185", {}) || {}, { tagAr: d.tagAr, tagEn: d.tagEn })); } else if (k === "voices") { await tl186(true); return; } toast(T("✅ اتعرضت للناس", "✅ Now visible to everyone")); };
+  function todoPage() {
+    if (!own()) return ownerOnly(); const d = DR(); const pay = setv("pay182", {}) || {}; const u185 = setv("ui185", {}) || {};
+    const card = (ic, t, body, state_) => `<div class="card td186"><div class="row" style="justify-content:space-between;align-items:center;gap:.4rem"><b>${ic} ${t}</b><span class="badge ${state_ === "done" ? "badge-g" : ""}">${state_ === "done" ? "✅ " + T("معروض للناس", "Live") : state_ === "draft" ? "📝 " + T("مسودة — ليك بس", "Draft — only you") : "⏳ " + T("لسه", "Not yet")}</span></div>${body}</div>`;
+    return pageWrap("📋", T("لوحة اللي ناقص", "What's left"), T("كل حاجة لسه ماخلصتش هنا: تكتبها وتعدّلها براحتك وتفضل ليك بس — ولما تدوس «🌍 اعرض للناس» تظهر للكل على طول.", "Everything still pending is here: fill it in and edit freely — it stays private until you press “🌍 Show to everyone”."),
+      `<div class="td186g">
+      ${card("💬", T("يوزر واتساب بيزنس (من غير رقمك)", "WhatsApp Business username (no number)"), `<input class="in" dir="ltr" placeholder="@itqan" value="${esc(d.wa || "")}" onchange="dr186('wa',this.value)"><div class="row" style="gap:.3rem;margin-top:.4rem"><button class="btn btn-p" onclick="pub186('wa')">🌍 ${T("اعرض للناس", "Show to everyone")}</button></div><p class="xs muted">${T("المعروض دلوقتي:", "Live now:")} <b dir="ltr">${pay.wa ? "@" + esc(pay.wa) : "—"}</b></p>`, pay.wa && pay.wa === String(d.wa || "").replace(/^@/, "") ? "done" : d.wa ? "draft" : "")}
+      ${card("🗣️", T("أصوات الموقع (Gemini)", "Site voices (Gemini)"), `<p class="sm">${T("Gemini بيقرا المحتوى ويتحفظ — انت بس اللي بتسمعه دلوقتي. لما يعجبك دوس «اعرض للناس».", "Gemini reads the content and it's saved — only you hear it for now. When you like it, press “Show to everyone”.")}</p><div class="row" style="gap:.3rem"><button class="btn btn-o" onclick="t185.test('m')">🔊 👨</button><button class="btn btn-o" onclick="t185.test('f')">🔊 👩</button><button class="btn btn-o" onclick="t185.batch()">🔁 ${T("اقرا الباقي دلوقتي", "Read the rest now")}</button>${live() ? `<button class="btn btn-o" onclick="tl186(false)">⏸ ${T("ارجعها ليا بس", "Back to only me")}</button>` : `<button class="btn btn-p" onclick="pub186('voices')">🌍 ${T("اعرض للناس", "Show to everyone")}</button>`}</div>`, live() ? "done" : "draft")}
+      ${card("🏷️", T("الشعار تحت اسم الأكاديمية", "Tagline under the name"), `<input class="in" value="${esc(d.tagAr || u185.tagAr || "مقامات صوتية • قرآن • تجويد • علوم إسلامية • القراءات العشر")}" onchange="dr186('tagAr',this.value)"><input class="in" dir="ltr" style="margin-top:.3rem" value="${esc(d.tagEn || u185.tagEn || "Maqamat • Quran • Tajweed • Islamic sciences • The ten qira’at")}" onchange="dr186('tagEn',this.value)"><button class="btn btn-p" style="margin-top:.4rem" onclick="pub186('tag')">🌍 ${T("اعرض للناس", "Show to everyone")}</button>`, u185.tagAr ? "done" : "draft")}
+      ${card("🎨", T("تصميم الموقع", "Site layout"), `<p class="sm">${T("جرّب براحتك — بيظهر ليك بس لحد ما تدوس «🚀 طبّق».", "Try freely — only you see it until you press “🚀 Publish”.")}</p><button class="btn btn-o" onclick="go16('layouts180')">🎨 ${T("افتح التصميمات", "Open layouts")}</button>`, setv("layout180", null) ? "done" : "")}
+      ${card("🎼", T("آهات بصوتك", "Aahs in your voice"), `<p class="sm">${T("في صفحة أي مقام هتلاقي زرار «🔴 سجّل المقام ده بصوتك» فوق — بيتحفظ ليك بس، و«🌍 للكل» لما تعجبك.", "Every maqam page has “🔴 Record this maqam in your voice” at the top — private first, “🌍 Everyone” when you like it.")}</p><button class="btn btn-o" onclick="go16('maqamat')">🎼 ${T("المقامات", "Maqamat")}</button>`, Object.keys(setv("aahv182", {}) || {}).length ? "draft" : "")}
+      ${card("🎙️", T("طبقات المشايخ", "Reciters' voice ranges"), `<p class="sm">${T("السيستم بيحلل كل شيخ ويكتبلك طبقته — انت تسمع وتصحّح وتعلّم ✓. الطالب يشوف بس المشايخ اللي علّمت عليهم.", "The system analyses each reciter and writes his range — you listen, correct and tick ✓. Students only see the ones you ticked.")}</p><button class="btn btn-o" onclick="go16('rr186')">🎙️ ${T("افتح", "Open")}</button> <button class="btn btn-o" onclick="go16('notes186')">📘 ${T("شرح الطبقات", "Notes guide")}</button>`, Object.values(setv("rr186", {}) || {}).some(x => x.ok) ? "done" : "")}
+      ${card("🔑", "Azure", `<p class="sm">${T("اختياري — Gemini شغّال بداله. لو حبيته: الزق المفتاح في الإعدادات ← أصوات Azure.", "Optional — Gemini works instead. If you want it: paste the key in Settings → Azure voices.")}</p>`, "")}
+      ${card("💳", "Paymob", `<p class="sm">${T("لما الحساب يتفعّل ابعتلي، وأنا أوصّله. لحد كده الدفع يدوي (PayPal + سكرين شوت).", "Tell me once the account is active and I'll connect it. Until then payment is manual (PayPal + screenshot).")}</p>`, "")}
+      ${card("🌐", T("الدومين", "Domain"), `<input class="in" dir="ltr" placeholder="theitqan.com" value="${esc(d.domain || "")}" onchange="dr186('domain',this.value)"><p class="xs muted">${T("اكتب اللي اشتريته وأنا أربطه.", "Write the one you bought and I'll connect it.")}</p>`, d.domain ? "draft" : "")}
+      ${card("🎬", T("فيديوهات لكل ميزة", "A video for every feature"), `<p class="sm">${T("فكّرني أعملها: فيديو احترافي منفصل لكل ميزة بمثال استخدام — عربي وإنجليزي — للنشر على كل السوشيال.", "Remind me: a separate professional video for each feature with a usage example — Arabic and English — for every social platform.")}</p>`, "")}
+      </div>`, 1300);
+  }
+  css(`.td186g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(21rem,100%),1fr));gap:.8rem}.td186{display:flex;flex-direction:column;gap:.4rem}`);
+
+  /* ======================= 3) الهيدر لكل جهاز + من غير حواف ======================= */
+  const DEV = () => innerWidth < 700 ? "phone" : (innerWidth < 1100 || matchMedia("(hover:none)").matches) ? "tablet" : "desktop";
+  const H6 = () => Object.assign({ desktop: "logo", tablet: "handle", phone: "handle", edge: "on" }, setv("hdr186", {}) || {});
+  function applyHdr() {
+    const h = H6(); const m = h[DEV()] || "all"; const b = document.body; if (!b) return;
+    [...b.classList].filter(c => /^u185-hdr-|^hd186-/.test(c)).forEach(c => b.classList.remove(c));
+    b.classList.add(m === "handle" ? "hd186-handle" : "u185-hdr-" + m, h.edge === "on" ? "hd186-edge" : "hd186-box");
+    if (m === "handle" && !document.getElementById("hh186")) { const x = document.createElement("button"); x.id = "hh186"; x.type = "button"; x.innerHTML = "☰"; x.title = T("القوائم", "Menus"); x.onclick = () => b.classList.toggle("bars-open186"); document.body.appendChild(x); }
+    if (m !== "handle") { const x = document.getElementById("hh186"); x && x.remove(); }
+  }
+  addEventListener("resize", () => { clearTimeout(window.__hd186); window.__hd186 = setTimeout(applyHdr, 150); });
+  css(`body.hd186-edge .hdr .wrap,body.hd186-edge .bar185 .wrap,body.hd186-edge .bar185>.wrap,body.hd186-edge .dombar .wrap{max-width:none!important;padding-inline:clamp(10px,1.6vw,28px)!important}
+  body.hd186-handle .bar185,body.hd186-handle .hdr .nav{max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height .35s ease,opacity .25s}
+  body.hd186-handle.bars-open186 .bar185,body.hd186-handle.bars-open186 .hdr .nav{max-height:24rem;opacity:1;pointer-events:auto}
+  #hh186{position:fixed;z-index:900;top:.55rem;inset-inline-end:50%;transform:translateX(${document.dir === "rtl" ? "-" : ""}50%);border:1px solid var(--line);background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(8px);color:var(--fg);border-radius:999px;width:2.4rem;height:1.6rem;font-size:.9rem;box-shadow:0 4px 12px rgba(0,0,0,.12);cursor:pointer}
+  body.nav180-rail #ctl113,body.nav180-side #ctl113{inset-inline-start:calc(4.6rem + 1rem)!important}body.nav180-side #ctl113{inset-inline-start:calc(13rem + 1rem)!important}`);
+  window.hd186 = async (k, v) => { await saveSetting16("hdr186", Object.assign({}, setv("hdr186", {}) || {}, { [k]: v })); applyHdr(); };
+  function hdrCard() {
+    const h = H6(); const M = { all: ["كله ظاهر", "All visible"], logo: ["اللوجو بس — الشرايط تطلع لما الماوس يقرّب (من غير دوس)", "Logo only — bars appear when the mouse comes near (no click)"], hover: ["الهيدر كله يطلع لما الماوس يقرّب", "Whole header appears on approach"], handle: ["زرار صغير ☰ يفتحها (للموبايل والتابلت)", "Small ☰ button opens them (phone/tablet)"] };
+    const sel = k => `<select class="in" style="width:auto" onchange="hd186('${k}',this.value)">${Object.entries(M).map(([x, v]) => `<option value="${x}" ${h[k] === x ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+    return `<div class="card" style="border:2px solid #0ea5e9"><h3>🖥️📱 ${T("الشرايط اللي فوق — لكل جهاز لوحده", "Top bars — per device")}</h3>
+      <div class="kv" style="align-items:center"><span class="sm">💻 ${T("لاب / كمبيوتر", "Laptop / desktop")}</span>${sel("desktop")}</div><div class="kv" style="align-items:center"><span class="sm">📲 ${T("تابلت", "Tablet")}</span>${sel("tablet")}</div><div class="kv" style="align-items:center"><span class="sm">📱 ${T("موبايل", "Phone")}</span>${sel("phone")}</div>
+      <div class="kv" style="align-items:center"><span class="sm">↔️ ${T("الشرايط بعرض الشاشة كلها (من غير حواف)", "Bars full width (no side margins)")}</span><select class="in" style="width:auto" onchange="hd186('edge',this.value)"><option value="on" ${h.edge === "on" ? "selected" : ""}>${T("أيوه", "Yes")}</option><option value="off" ${h.edge !== "on" ? "selected" : ""}>${T("لا", "No")}</option></select></div>
+      <p class="xs muted">${T("اقتراحي للموبايل والتابلت (مفيش ماوس): «زرار صغير ☰» — الشرايط مستخبية وتفتحها بلمسة، أو «كله ظاهر». وجهازك دلوقتي: ", "My suggestion for phone/tablet (no mouse): “small ☰ button” — bars hidden, open with one tap, or “All visible”. Your device now: ")}<b>${DEV()}</b></p></div>`;
+  }
+
+  /* ======================= 4) زرار «سجّل المقام ده بصوتك» ظاهر فوق ======================= */
+  if (typeof maqamPage === "function") { const _mp = maqamPage; maqamPage = function (kind, mid) { const h = _mp.apply(this, arguments); if (!own() || !(kind === "aah" || kind === "vtest") || !mid) return h; return `<div class="card rec186"><b>🎼 ${T("سجّل المقام ده بصوتك — والسيستم يعمل الباقي أوتوماتيك", "Record this maqam in your voice — the system does the rest automatically")}</b><span class="xs muted">${T("طالع ونازل وممدود والاختبار وصوتك للطالب — كله بطريقتك وفي طبقة كل طالب. بيتحفظ ليك بس لحد ما تدوس «🌍 للكل».", "Up, down, long aahs, the test and your voice to the student — all your way, in each student's range. Private until you press “🌍 Everyone”.")}</span><div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-p" onclick="av182Rec('${mid}',this)">🔴 ${T("سجّل دلوقتي", "Record now")}</button><label class="btn btn-o">📁 ${T("ارفع تسجيل", "Upload")}<input type="file" hidden accept="audio/*,video/*" onchange="av182File('${mid}',this)"></label></div><div id="av182s" class="sm"></div></div>` + h.replace('id="av182s"', 'id="av182s_x"'); }; }
+  css(`.rec186{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.8rem;border:2px solid #dc2626;background:color-mix(in srgb,#dc2626 6%,var(--card))}`);
+
+  /* ======================= 5) طبقات المشايخ ======================= */
+  const RR = () => setv("rr186", {}) || {};
+  const NN = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]; const SOL = ["دو", "دو♯", "ري", "مي♭", "مي", "فا", "فا♯", "صول", "لا♭", "لا", "سي♭", "سي"];
+  const note = f => { if (!(f > 0)) return "—"; const n = Math.round(12 * Math.log2(f / 440)) + 57; return NN[((n % 12) + 12) % 12] + Math.floor(n / 12); };
+  const solf = f => { if (!(f > 0)) return ""; const n = Math.round(12 * Math.log2(f / 440)) + 57; return SOL[((n % 12) + 12) % 12] + Math.floor(n / 12); };
+  const NOTES = (() => { const o = []; for (let n = 28; n <= 76; n++) { const f = 440 * Math.pow(2, (n - 57) / 12); o.push([+f.toFixed(1), NN[n % 12] + Math.floor(n / 12) + " · " + SOL[n % 12]]); } return o; })();
+  function track(buf) { const sr0 = buf.sampleRate, raw = buf.getChannelData(0); const ds = Math.max(1, Math.round(sr0 / 8000)), sr = sr0 / ds; const x = new Float32Array(Math.floor(raw.length / ds)); for (let i = 0; i < x.length; i++) x[i] = raw[i * ds];
+    const W = 512, H = Math.round(sr * .04), minL = Math.floor(sr / 700), maxL = Math.floor(sr / 65); const out = [];
+    for (let s = 0; s + W + maxL < x.length; s += H) { let e = 0; for (let i = 0; i < W; i++) e += x[s + i] * x[s + i]; if (Math.sqrt(e / W) < .02) continue; const d = new Float32Array(maxL + 1); let run = 0, best = -1;
+      for (let l = 1; l <= maxL; l++) { let sum = 0; for (let i = 0; i < W; i += 2) { const q = x[s + i] - x[s + i + l]; sum += q * q; } run += sum; d[l] = sum * l / (run || 1); if (best < 0 && l > minL + 1 && d[l - 1] < .12 && d[l - 1] <= d[l] && d[l - 1] <= d[l - 2]) best = l - 1; }
+      if (best > 0) out.push(sr / best); }
+    return out; }
+  const pct = (a, p) => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; };
+  async function analyse(url) { const r = await fetch(url, { mode: "cors" }); if (!r.ok) throw new Error("http " + r.status); const ab = await r.arrayBuffer(); const ac = new (window.AudioContext || window.webkitAudioContext)(); const buf = await ac.decodeAudioData(ab); try { ac.close(); } catch (e) {} const f = track(buf); if (f.length < 40) throw new Error("few"); return { low: +pct(f, .08).toFixed(1), med: +pct(f, .5).toFixed(1), high: +pct(f, .95).toFixed(1), n: f.length }; }
+  const recList = () => { let L = []; try { L = (MP3Q.list || []).map(r => ({ id: "mq-" + r.id, name: r.name, mo: r.mo, url: (r.server || "").replace(/\/?$/, "/") })); } catch (e) {} return L; };
+  window.rr186 = {
+    one: async (id, s1, btn) => { const r = recList().find(x => x.id === id); if (!r) return; btn && (btn.textContent = "⏳"); const surs = [s1 || 1, 112]; const res = []; for (const s of surs) { try { res.push(await analyse(r.url + String(s).padStart(3, "0") + ".mp3")); } catch (e) { res.push({ err: String(e.message || e) }); } }
+      const ok = res.filter(x => !x.err); const all = Object.assign({}, RR()); const prev = all[id] || {};
+      if (!ok.length) { all[id] = Object.assign({}, prev, { err: res.map(x => x.err).join(", "), at: Date.now() }); }
+      else all[id] = Object.assign({}, prev, { low: Math.min(...ok.map(x => x.low)), med: +(ok.reduce((a, x) => a + x.med, 0) / ok.length).toFixed(1), high: Math.max(...ok.map(x => x.high)), n: ok.reduce((a, x) => a + x.n, 0), err: null, at: Date.now(), name: r.name, url: r.url, samples: surs });
+      await saveSetting16("rr186", all); },
+    all: async btn => { const L = recList().filter(r => !RR()[r.id] || RR()[r.id].err); if (!confirm(T(`هحلّل ${L.length} شيخ واحد ورا التاني (ممكن ياخد وقت — سيب الصفحة مفتوحة). أكمّل؟`, `I'll analyse ${L.length} reciters one by one (keep the page open). Continue?`))) return; window.__rr186stop = false; for (let i = 0; i < L.length && !window.__rr186stop; i++) { btn.textContent = `⏳ ${i + 1}/${L.length}`; await rr186.one(L[i].id); } btn.textContent = "✅"; },
+    stop: () => { window.__rr186stop = true; },
+    set: async (id, k, v) => { const all = Object.assign({}, RR()); all[id] = Object.assign({}, all[id] || {}, { [k]: v }); if (k !== "ok") all[id].edited = true; await saveSetting16("rr186", all); },
+    play: (id, s) => { const r = recList().find(x => x.id === id) || RR()[id]; if (!r) return; const a = new Audio((r.url) + String(s || 1).padStart(3, "0") + ".mp3"); a.play(); window.__rr186a && window.__rr186a.pause(); window.__rr186a = a; },
+    tone: f => { try { const ac = new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; o.type = "triangle"; g.gain.value = .15; o.connect(g); g.connect(ac.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + 1.2); o.stop(ac.currentTime + 1.3); } catch (e) {} }
+  };
+  function rrPage() {
+    if (!own()) return ownerOnly(); const L = recList(); const R = RR(); const q = (state.rr186q || "").trim(); const f = state.rr186f || "all";
+    const rows = L.filter(r => (!q || r.name.includes(q) || (r.mo || "").includes(q)) && (f === "all" || (f === "todo" && !R[r.id]) || (f === "done" && R[r.id] && !R[r.id].err && !R[r.id].ok) || (f === "ok" && R[r.id] && R[r.id].ok) || (f === "err" && R[r.id] && R[r.id].err))).slice(0, 120);
+    const nsel = (id, k, v) => `<select class="in" style="width:auto;font-size:.78rem" onchange="rr186.set('${id}','${k}',+this.value)"><option value="">—</option>${NOTES.map(([fr, n]) => `<option value="${fr}" ${v && Math.abs(Math.log2(v / fr)) < 1 / 24 ? "selected" : ""}>${n} (${fr}Hz)</option>`).join("")}</select>`;
+    const cnt = { all: L.length, todo: L.filter(r => !R[r.id]).length, done: L.filter(r => R[r.id] && !R[r.id].err && !R[r.id].ok).length, ok: L.filter(r => R[r.id] && R[r.id].ok).length, err: L.filter(r => R[r.id] && R[r.id].err).length };
+    return pageWrap("🎙️", T("طبقات المشايخ", "Reciters' voice ranges"), T("السيستم بيسمع الفاتحة والإخلاص لكل شيخ ويطلّع أوطى وأعلى طبقة وطبقته المعتادة. انت تسمع، تصحّح لو لازم، وتعلّم ✓ — والطالب يشوف بس اللي عليهم ✓.", "The system listens to al-Fatiha and al-Ikhlas for each reciter and finds his lowest, highest and usual pitch. You listen, correct if needed and tick ✓ — students only see ticked ones."),
+      `<div class="card" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"><input class="in" style="flex:1;min-width:12rem" placeholder="🔎 ${T("اسم الشيخ", "Reciter name")}" value="${esc(q)}" oninput="state.rr186q=this.value;clearTimeout(window.__rq);window.__rq=setTimeout(render,350)">
+        <div class="motabs">${[["all", "الكل", "All"], ["todo", "لسه", "To do"], ["done", "اتحلّل — راجعه", "Analysed — review"], ["ok", "✓ اتراجع", "✓ Reviewed"], ["err", "مقدرتش", "Failed"]].map(([k, a, e]) => `<button class="${f === k ? "on" : ""}" onclick="state.rr186f='${k}';render()">${T(a, e)} (${cnt[k]})</button>`).join("")}</div>
+        <button class="btn btn-p" onclick="rr186.all(this)">🔬 ${T("حلّل كل اللي لسه", "Analyse all remaining")}</button><button class="btn btn-o" onclick="rr186.stop()">⏹</button><button class="btn btn-o" onclick="go16('notes186')">📘 ${T("شرح الطبقات والنوت", "Pitch & notes guide")}</button></div>
+      ${!L.length ? `<div class="card muted">⏳ ${T("بجيب قايمة المشايخ…", "Loading reciters…")}</div>` : ""}
+      <div class="rr186g">${rows.map(r => { const x = R[r.id] || {}; return `<div class="card rr186c ${x.ok ? "ok" : ""}"><div class="row" style="justify-content:space-between;gap:.3rem"><b>${esc(r.name)}</b><span class="xs muted">${esc(r.mo || "")}</span></div>
+        ${x.err ? `<p class="xs" style="color:#b45309">⚠️ ${T("مقدرتش أسمعه من هنا", "Couldn't analyse here")} (${esc(x.err)})</p>` : x.low ? `<div class="rr186bar"><span style="--a:${Math.max(0, (Math.log2(x.low / 65)) / Math.log2(700 / 65) * 100)}%;--b:${Math.min(100, (Math.log2(x.high / 65)) / Math.log2(700 / 65) * 100)}%;--m:${(Math.log2(x.med / 65)) / Math.log2(700 / 65) * 100}%"></span></div>
+          <div class="xs" dir="ltr" style="text-align:center"><b>${note(x.low)}</b> (${solf(x.low)}) — <b>${note(x.med)}</b> — <b>${note(x.high)}</b> (${solf(x.high)})</div>
+          <div class="row xs" style="gap:.2rem;flex-wrap:wrap;align-items:center">${T("أوطى", "Low")} ${nsel(r.id, "low", x.low)} ${T("المعتادة", "Usual")} ${nsel(r.id, "med", x.med)} ${T("أعلى", "High")} ${nsel(r.id, "high", x.high)}</div>` : `<p class="xs muted">${T("لسه ماتحلّلش", "Not analysed yet")}</p>`}
+        <div class="row" style="gap:.25rem;flex-wrap:wrap;margin-top:.3rem"><button class="btn btn-o" onclick="rr186.play('${r.id}',1)">▶ ${T("الفاتحة", "Fatiha")}</button><button class="btn btn-o" onclick="rr186.play('${r.id}',112)">▶ ${T("الإخلاص", "Ikhlas")}</button>${x.med ? `<button class="btn btn-o" title="${T("اسمع النغمة المعتادة", "Hear the usual pitch")}" onclick="rr186.tone(${x.med})">🎵</button>` : ""}<button class="btn btn-o" onclick="rr186.one('${r.id}',1,this)">🔬 ${x.low ? T("حلّل تاني", "Re-analyse") : T("حلّل", "Analyse")}</button>${x.low ? `<label class="sm"><input type="checkbox" ${x.ok ? "checked" : ""} onchange="rr186.set('${r.id}','ok',this.checked)"> ✓ ${T("صح — اعرضه للطلاب", "Correct — show to students")}</label>` : ""}</div></div>`; }).join("")}</div>`, 1400);
+  }
+  css(`.rr186g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(21rem,100%),1fr));gap:.6rem;margin-top:.8rem}.rr186c.ok{border:2px solid #16a34a}.rr186c .btn{padding:.15rem .5rem;font-size:.78rem}
+  .rr186bar{position:relative;height:.7rem;border-radius:999px;background:linear-gradient(90deg,#1e3a8a,#0ea5e9,#22c55e,#f59e0b,#dc2626);opacity:.25;margin:.5rem 0 .3rem}.rr186bar span{position:absolute;inset-block:0;left:var(--a);right:calc(100% - var(--b));background:var(--accent);border-radius:999px;opacity:1}.rr186bar span::after{content:"";position:absolute;left:calc((var(--m) - var(--a)) / (var(--b) - var(--a)) * 100%);top:-3px;width:4px;height:calc(100% + 6px);background:#111;border-radius:2px}`);
+  /* الطالب: المشايخ المناسبين لصوته + قلّده */
+  function matchCard() {
+    const p = (state.auth && state.auth.profile) || {}; const lo = +p.voice_low, hi = +p.voice_high; if (!(lo > 0 && hi > lo)) return "";
+    const R = Object.entries(RR()).filter(([, x]) => x.ok && x.low && x.high); if (!R.length) return "";
+    const fit = x => { let best = 0, sh = 0; for (const k of [-1, 0, 1]) { const a = x.low * Math.pow(2, k), b = x.high * Math.pow(2, k); const ov = Math.max(0, Math.min(b, hi) - Math.max(a, lo)) / (b - a); if (ov > best) { best = ov; sh = k; } } return [best, sh]; };
+    const L = R.map(([id, x]) => [id, x, ...fit(x)]).filter(z => z[2] > .35).sort((a, b) => b[2] - a[2]).slice(0, 6); if (!L.length) return "";
+    return `<div class="card mc186"><h3>🧑‍🏫 ${T("المشايخ المناسبين لطبقة صوتك", "Reciters that suit your voice range")}</h3><p class="xs muted" dir="ltr">${T("مساحة صوتك:", "Your range:")} ${note(lo)} (${solf(lo)}) → ${note(hi)} (${solf(hi)})</p>
+      <div class="mc186g">${L.map(([id, x, s, sh]) => `<div class="mc186c"><b>${esc(x.name || id)}</b><span class="xs">${Math.round(s * 100)}% ${T("مناسب", "match")}${sh ? (sh > 0 ? T(" — أعلى منه بأوكتاف", " — an octave above him") : T(" — أوطى منه بأوكتاف", " — an octave below him")) : ""}</span><div class="row" style="gap:.25rem"><button class="btn btn-o" onclick="rr186.play('${id}',1)">▶ ${T("اسمع", "Listen")}</button><button class="btn btn-p" onclick="mc186.copy('${id}',${sh},this)">🎤 ${T("قلّده", "Imitate")}</button></div><div class="xs" id="mc186r_${id.replace(/\W/g, "")}"></div></div>`).join("")}</div></div>`;
+  }
+  window.mc186 = { copy: async (id, sh, btn) => { const x = RR()[id]; if (!x) return; rr186.play(id, 112); toast(T("اسمع الشيخ وبعدين اقرا معاه/بعده — بسجّل 12 ثانية", "Listen, then recite along/after — recording 12 seconds"));
+    try { const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true } }); const ch = []; const mr = new MediaRecorder(s); mr.ondataavailable = e => ch.push(e.data); btn.textContent = "⏺ 12s"; mr.start(); await new Promise(r => setTimeout(r, 12000)); mr.stop(); await new Promise(r => mr.onstop = r); s.getTracks().forEach(t => t.stop()); btn.textContent = "🎤 " + T("قلّده", "Imitate");
+      const ac = new (window.AudioContext || window.webkitAudioContext)(); const buf = await ac.decodeAudioData(await new Blob(ch).arrayBuffer()); const f = track(buf); const el = document.getElementById("mc186r_" + id.replace(/\W/g, "")); if (f.length < 15) { el.textContent = T("الصوت ضعيف — قرّب من المايك", "Too quiet — move closer to the mic"); return; }
+      const me = pct(f, .5), target = x.med * Math.pow(2, sh); const st = 12 * Math.log2(me / target); el.innerHTML = Math.abs(st) < 1 ? "✅ " + T("طبقتك مطابقة للشيخ! 🌟", "Your pitch matches the reciter! 🌟") : (st > 0 ? "⬇️ " + T(`انت أعلى منه بـ ${st.toFixed(1)} نص تون — انزل شوية`, `You're ${st.toFixed(1)} semitones above — go a bit lower`) : "⬆️ " + T(`انت أوطى منه بـ ${(-st).toFixed(1)} نص تون — اطلع شوية`, `You're ${(-st).toFixed(1)} semitones below — go a bit higher`)); } catch (e) { toast(T("اسمح للمايك", "Allow the microphone"), true); } } };
+  css(`.mc186{margin:.8rem 0;border:2px solid var(--accent)}.mc186g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(15rem,100%),1fr));gap:.5rem}.mc186c{border:1px solid var(--line);border-radius:12px;padding:.6rem;display:flex;flex-direction:column;gap:.3rem}.mc186c .btn{padding:.15rem .55rem}`);
+
+  /* ======================= 6) شرح الطبقات والنوت (ليك بس) ======================= */
+  function notesPage() {
+    if (!own()) return ownerOnly();
+    const tbl = [["C (دو)", "رست", "Rast"], ["D (ري)", "دوكاه", "Dukah"], ["E♭ نص بيمول (مي نص بيمول)", "سيكاه", "Sikah"], ["F (فا)", "جهاركاه", "Jaharkah"], ["G (صول)", "نوا", "Nawa"], ["A (لا)", "حسيني", "Husayni"], ["B♭ نص بيمول (سي نص بيمول)", "أوج", "Awj"], ["C (دو العالية)", "كردان", "Kardan"]];
+    const ex = [["C2", 65.4, "أوطى صوت رجالي عميق جدًا (نادر)"], ["E2", 82.4, "صوت رجالي واطي قوي (باص)"], ["A2", 110, "قرار شائع لقرّاء الرجالة الواطيين"], ["C3", 130.8, "قرار رجالي متوسط — كتير من المشايخ هنا"], ["E3", 164.8, "قرار رجالي عالي / جواب رجالي واطي"], ["A3", 220, "جواب رجالي شائع"], ["C4", 261.6, "«دو الوسطى» — قرار حريمي واطي، وجواب جواب للرجالة"], ["A4", 440, "النغمة المرجعية العالمية «لا 440» — جواب حريمي"], ["C5", 523.3, "جواب جواب حريمي"]];
+    return pageWrap("📘", T("شرح الطبقات والنوت — بالتفصيل", "Pitch & notes — in detail"), T("عشان تعرف تحدد طبقة أي شيخ صح وتصحّح لو السيستم غلط", "So you can set any reciter's range correctly and fix it if the system is wrong"), `<div class="nt186">
+      <div class="card"><h3>1) يعني إيه «طبقة»؟</h3><p>الطبقة = سرعة اهتزاز الصوت في الثانية، وبتتقاس بالـ <b>هرتز (Hz)</b>. كل ما الرقم يكبر الصوت يعلى. صوت الراجل العادي في الكلام حوالي <b>100–150 Hz</b>، والست حوالي <b>180–250 Hz</b>. لما الرقم <b>يتضاعف</b> (110 ← 220) الصوت بيعلى <b>أوكتاف</b> كامل — نفس النغمة بس أعلى، زي ما الطفل يقرا نفس اللحن اللي أبوه بيقراه.</p></div>
+      <div class="card"><h3>2) أسامي النوت: حروف ولا «دو ري مي»؟</h3><p>في نظامين لنفس النوت السبعة:</p><div class="nt186t"><b>C</b><b>D</b><b>E</b><b>F</b><b>G</b><b>A</b><b>B</b><span>دو</span><span>ري</span><span>مي</span><span>فا</span><span>صول</span><span>لا</span><span>سي</span></div><p>الحروف ده النظام الإنجليزي، و«دو ري مي» ده النظام الإيطالي/الفرنسي المستخدم في مصر. <b>C = دو</b> و <b>A = لا</b> وهكذا.</p></div>
+      <div class="card"><h3>3) الرقم اللي جنب الحرف (C3 ، A2 ، F1…)</h3><p>الرقم هو رقم <b>الأوكتاف</b>. كل ما يكبر الصوت يعلى أوكتاف. يعني <b>A2 = 110 Hz</b> و <b>A3 = 220 Hz</b> و <b>A4 = 440 Hz</b> — نفس النغمة «لا» بس كل مرة أعلى الضعف. <b>F1</b> مثلًا = 43.7 Hz — ده أوطى من أي صوت إنسان تقريبًا، فلو السيستم كتب F1 يبقى غلط أكيد.</p>
+        <table class="tbl"><tr><th>النوتة</th><th>Hz</th><th>معناها في التلاوة</th><th></th></tr>${ex.map(([n, f, d]) => `<tr><td dir="ltr"><b>${n}</b></td><td>${f}</td><td>${d}</td><td><button class="btn btn-o" style="padding:.1rem .5rem" onclick="rr186.tone(${f})">🔊</button></td></tr>`).join("")}</table></div>
+      <div class="card"><h3>4) ♯ (دييز) و ♭ (بيمول) — زي F♯ و A♭</h3><p><b>♯ دييز</b> = النوتة تعلى نص تون. <b>♭ بيمول</b> = النوتة توطى نص تون. فـ <b>F♯ (فا دييز)</b> هي نفسها <b>G♭ (صول بيمول)</b>. ولو شفت <b>F##</b> يعني دييزين = تعلى تون كامل = <b>G</b>. بين كل نوتتين جنب بعض في الأوكتاف <b>12 نص تون</b>.</p>
+        <p><b>Ab2</b> يعني <b>A♭2</b> = «لا بيمول» في الأوكتاف التاني = 103.8 Hz.</p></div>
+      <div class="card"><h3>5) ربع التون — سرّ المقامات العربي</h3><p>المقامات زي <b>البياتي والسيكاه والراست</b> فيها نوت <b>نص بيمول</b> (ربع تون) — مش موجودة على البيانو. بنكتبها كده: <b>E𝄳</b> أو «مي نص بيمول». السيستم بيقيس بالـ <b>سنت</b>: النص تون = 100 سنت، والربع تون = 50 سنت تقريبًا.</p>
+        <table class="tbl"><tr><th>النوتة الغربية</th><th>اسمها في المقامات</th><th>English</th></tr>${tbl.map(r => `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td></tr>`).join("")}</table></div>
+      <div class="card"><h3>6) القرار والجواب وجواب الجواب</h3><p><b>القرار</b> = المنطقة الواطية اللي الشيخ بيبدأ منها. <b>الجواب</b> = أعلى منها بأوكتاف (الضعف). <b>جواب الجواب</b> = أعلى بأوكتافين. لما السيستم يكتب «أوطى ← أعلى» للشيخ، أوطى رقم قريب من قراره، وأعلى رقم قريب من أعلى جواب وصله في العيّنة.</p></div>
+      <div class="card"><h3>7) إزاي تراجع اللي السيستم كتبه</h3><ol><li>دوس ▶ واسمع الشيخ، وبعدين دوس 🎵 تسمع «الطبقة المعتادة» اللي السيستم طلّعها — لازم تحس إنها في نص صوته.</li><li>لو النغمة شكلها أوطى أو أعلى بأوكتاف من صوته (بتحس إنها نفس اللحن بس بعيدة جدًا)، غيّرها لنفس الحرف بالرقم اللي جنبه (مثلًا A2 بدل A3).</li><li>الأوطى: أوطى نغمة واضحة بيقراها (مش كحّة ولا نَفَس). الأعلى: أعلى نغمة وصلها في القراءة.</li><li>مدى رجالي طبيعي للمشايخ تقريبًا: <b>A2 → E4</b>. حريمي: <b>E3 → A4</b>. أي حاجة برّه كده بكتير غالبًا غلط.</li><li>لما تكون متأكد علّم ✓ — بعدها بس يظهر للطلاب.</li></ol></div>
+      <div class="card"><h3>8) إزاي الطالب بيتطابق مع الشيخ</h3><p>الطالب بيسجّل أوطى وأعلى صوت عنده. السيستم بيقارن مساحته بمساحة كل شيخ (ولو الطالب طفل أو ست، بيقارنه بالشيخ بعد ما يعلّيه أوكتاف). يطلعله أكتر 6 مناسبين، مع «▶ اسمع» و«🎤 قلّده» — وبيقوله لو هو أعلى أو أوطى من الشيخ بكام نص تون.</p></div></div>`, 1000);
+  }
+  css(`.nt186 .card{margin-bottom:.8rem;line-height:1.95}.nt186t{display:grid;grid-template-columns:repeat(7,1fr);gap:.25rem;text-align:center;margin:.5rem 0}.nt186t b{background:var(--accent);color:#fff;border-radius:8px;padding:.3rem}.nt186t span{border:1px solid var(--line);border-radius:8px;padding:.3rem}`);
+
+  /* ======================= 7) ربط ملف Notion بالطالب ======================= */
+  const NT = () => setv("notion186", {}) || {};
+  window.nt186 = async uid => { const cur = NT()[uid] || ""; const u = prompt(T("لينك صفحة الطالب في Notion (فاضي = شيل الربط)", "The student's Notion page link (empty = unlink)"), cur); if (u === null) return; const all = Object.assign({}, NT()); if (u.trim()) all[uid] = u.trim(); else delete all[uid]; await saveSetting16("notion186", all); };
+  if (typeof sfTasks === "function") { const _st = sfTasks; sfTasks = function (uid) { const h = _st.apply(this, arguments); if (realRole() !== "owner" && role() !== "teacher") return h; const u = NT()[uid]; return `<div class="card nt186c"><b>📓 Notion</b>${u ? `<a class="btn btn-o" href="${esc(u)}" target="_blank" rel="noopener">↗ ${T("افتح ملفه في Notion", "Open in Notion")}</a>` : `<span class="xs muted">${T("مش مربوط", "Not linked")}</span>`}${own() ? `<button class="btn btn-o" onclick="nt186('${uid}')">🔗 ${u ? T("عدّل الربط", "Edit link") : T("اربط ملف Notion", "Link a Notion page")}</button>` : ""}<span class="xs muted">${T("قريب: «اقرا Notion» يقترح ✓ للسور والمراجعات وأنت توافق.", "Soon: “Read Notion” suggests ✓ for surahs and reviews for your approval.")}</span></div>` + h; }; }
+  css(`.nt186c{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem}`);
+
+  /* ======================= ربط ======================= */
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="border:2px solid #f59e0b;margin-bottom:1rem"><h3>📋 ${T("لوحة اللي ناقص", "What's left")}</h3><p class="sm">${T("كل حاجة لسه ماخلصتش — تعدّلها براحتك وبعدين «🌍 اعرض للناس».", "Everything pending — edit freely, then “🌍 Show to everyone”.")}</p><button class="btn btn-p" onclick="go16('todo186')">📋 ${T("افتح", "Open")}</button></div>` + hdrCard() + _os.apply(this, arguments); };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!own()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#f59e0b;outline:2px solid #f59e0b" onclick="go16('todo186')"><span>📋</span><b>${T("لوحة اللي ناقص", "What's left")}</b></button><button class="mstile" style="--c:#7c3aed" onclick="go16('rr186')"><span>🎙️</span><b>${T("طبقات المشايخ", "Reciters' ranges")}</b></button>`); };
+  const _r = render; render = function () {
+    const rt = state.route;
+    if (rt === "todo186" || rt === "rr186" || rt === "notes186") { let b; try { b = rt === "todo186" ? todoPage() : rt === "rr186" ? rrPage() : notesPage(); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); }
+    else _r.apply(this, arguments);
+    try { applyHdr(); if (rt === "control183" && own()) { const g = document.querySelector(".c183g"); if (g && !g.__h186) { g.__h186 = 1; g.insertAdjacentHTML("afterbegin", hdrCard()); } }
+      if (!document.querySelector(".mc186") && (rt === "tuner" || rt === "maqamat" || rt === "mq179" || rt === "placement")) { const w = document.querySelector("#app .sec .wrap, #app section .wrap"); const m = matchCard(); if (w && m) w.insertAdjacentHTML("beforeend", m); }
+      if (rt === "rr186" && !recList().length && !window.__rr186w) { window.__rr186w = setInterval(() => { if (recList().length) { clearInterval(window.__rr186w); window.__rr186w = null; render(); } }, 800); } } catch (e) { console.warn(e); }
+  };
+  const m = location.hash.match(/^#\/(todo186|rr186|notes186)/); if (m) state.route = m[1];
+  setTimeout(applyHdr, 80);
 })();
 
 // بدء التشغيل
