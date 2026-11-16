@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v168";
+const UI_VERSION = "2026-11-16-v169";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23476,7 +23476,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
   /* ---------- 4) الزائر: يشوف الأيقونات، وأي محتوى يتفتح بالتسجيل المجاني ---------- */
   const isGuest = () => { if (state.auth && state.auth.user) return false; try { return !Object.keys(localStorage).some(k => /^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)); } catch (e) { return !state.auth || !state.auth.user; } };
-  const OPEN = /navigate\('(home|pricing|about|contact|booking|signup|login|app|policy|terms|privacy|teachers)'\)|langModal|setTheme|menuOpen|aiOpen|ctlPanel|lghdr|state\.lang|go16\('(level|placement)'/;
+  const OPEN = /navigate\('(home|pricing|about|contact|booking|signup|login|app|policy|terms|privacy|teachers|habits168|adhkar)'\)|langModal|setTheme|menuOpen|aiOpen|ctlPanel|lghdr|state\.lang|go16\('(level|placement|habits168|adhkar|qibla|tasbih|names|hijri|prayer)'/;
   const LOCK = /libGo|go16\(|navigate\('|openContent|eaPlay|tjPlay|playAudio|mqPlay|spOpen|story|daVideo|daPick/;
   window.gl164 = function () {
     if (document.querySelector(".gl164")) return; const m = document.createElement("div"); m.className = "gl164"; m.onclick = e => { if (e.target === m) m.remove(); };
@@ -23489,7 +23489,7 @@ html,body{max-width:100%;overflow-x:hidden}
     const oc = el.getAttribute("onclick") || el.getAttribute("href") || ""; if (OPEN.test(oc) || !LOCK.test(oc)) return;
     ev.preventDefault(); ev.stopImmediatePropagation(); gl164();
   }, true);
-  const FREE = ["home", "pricing", "about", "contact", "booking", "signup", "login", "app", "policy", "terms", "privacy", "teachers", "cert", "level", "placement"];
+  const FREE = ["home", "pricing", "about", "contact", "booking", "signup", "login", "app", "policy", "terms", "privacy", "teachers", "cert", "level", "placement", "habits168", "adhkar", "qibla", "tasbih", "names", "hijri"];
   function guard() { if (isGuest() && setv("guestlock164", true) && !FREE.includes(state.route)) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} setTimeout(gl164, 300); return true; } return false; }
 
   /* ---------- 5) المصحف: حجم الخط + المفخّم والمرقّق + تصحيح من غير ما النافذة تقفل ---------- */
@@ -23792,7 +23792,7 @@ body.rail168hide #rail158:not(:hover):not(.open) .rh{font-size:0}
   };
   function streak(k) { let n = 0; const d = new Date(); if (!(day(today())[k])) d.setDate(d.getDate() - 1); for (let i = 0; i < 400; i++) { const x = H.days[today(d)]; if (x && x[k]) n++; else break; d.setDate(d.getDate() - 1); } return n; }
   function page() {
-    if (!state.auth || !state.auth.user) return pageWrap("🕌", T("متابعتي اليومية", "My daily tracker"), "", `<div class="card" style="text-align:center"><p>${T("سجّل مجانًا وابدأ متابعة صلاتك وقيامك وورْدك يوم بيوم، مع تذكير.", "Sign up free to track your prayers, qiyām and wird day by day, with reminders.")}</p><button class="btn btn-p" onclick="navigate('signup')">✨ ${T("سجّل مجانًا", "Sign up free")}</button></div>`);
+    /* الزائر كمان يقدر يستخدمها (بتتحفظ على جهازه) */
     pull(); const d = day(today()); const S = H.cfg.show; const tt = H.times && H.times.d === today() ? H.times.t : null; if (!tt && !H.__tq) { H.__tq = 1; times().then(t => { H.__tq = 0; if (t) { render(); schedule(); } }); }
     const st = (c) => [["⬜", T("لسه", "Not yet")], ["🕌", T("جماعة", "In congregation")], ["✅", T("لوحدي", "Alone")], ["❌", T("فاتت", "Missed")]][c || 0];
     const q0 = new Date(H.cfg.qiyamStart + "T00:00:00"); const qdays = Array.from({ length: 30 }, (_, i) => { const x = new Date(q0); x.setDate(x.getDate() + i); return today(x); }); const qdone = qdays.filter(x => (H.days[x] || {}).qiyam).length; const over = new Date() > new Date(qdays[29] + "T23:59:59");
@@ -23836,6 +23836,144 @@ body.rail168hide #rail158:not(:hover):not(.open) .rh{font-size:0}
     return out;
   };
   if (/^#\/habits168/.test(location.hash)) state.route = "habits168";
+})();
+
+
+/* ================= v169: الشريط الجانبي بطول الموقع مايغطيش المحتوى + تتحكم في شكله كله + أي زرار (منهم اللغة والعرض وشريط الأدوات فوق) تزقّه يستخبى + الصور تعرف رايحة فين بالظبط + تحدّي القيام مظبوط على أي شاشة + المتابعة اليومية والأذكار من غير تسجيل ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e); const own = () => realRole() === "owner" && !state.preview;
+  const RC = () => Object.assign({ push: true, w: 17, t: 14, trigger: "hover", side: "start", label: "", mob: true }, setv("rail169", {}) || {}, state.rc169 || {});
+
+  /* ---------- 1) الشريط الجانبي ---------- */
+  document.head.insertAdjacentHTML("beforeend", `<style id="rs169"></style><style>
+html body #rail158.r169:not(.dock){top:0!important;bottom:0!important;height:100vh!important;max-height:100vh!important;transform:none!important;opacity:1!important;border-radius:0!important;max-width:none!important;width:var(--rt169,14px);transition:width .2s ease;box-shadow:none;z-index:2147482500}
+html body #rail158.r169:not(.dock) .rh{width:var(--rt169,14px)!important;flex:0 0 var(--rt169,14px)!important;min-height:0!important;writing-mode:vertical-rl;font-size:.7rem!important;letter-spacing:.05em;overflow:hidden;white-space:nowrap}
+html body #rail158.r169:not(.dock) .ri{display:none!important}
+html body #rail158.r169.on169:not(.dock){width:var(--rw169,17rem);box-shadow:0 0 30px #0002}
+html body #rail158.r169.on169:not(.dock) .ri{display:flex!important;flex:1;min-width:0;max-width:none;padding:1rem .6rem;overflow-y:auto;overflow-x:hidden}
+html body #rail158.r169 .ri>*{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;width:100%;line-height:1.35}
+html body #rail158.r169 .ri>[data-l]::after{white-space:normal}
+body.p169s{padding-inline-start:var(--rpad169,14px)!important;transition:padding .2s ease}
+body.p169e{padding-inline-end:var(--rpad169,14px)!important;transition:padding .2s ease}
+#rb169{display:none;position:fixed;bottom:1rem;z-index:2147482600;border:0;border-radius:999px;width:3rem;height:3rem;font-size:1.3rem;background:var(--accent,#0f766e);color:#fff;box-shadow:0 8px 24px #0004}
+@media (max-width:900px){html body #rail158.r169:not(.dock){width:0}html body #rail158.r169:not(.dock) .rh{display:none!important}html body #rail158.r169.on169:not(.dock){width:min(86vw,var(--rw169,17rem))}body.p169s,body.p169e{padding-inline:0!important}#rb169.m169{display:block}}
+.col169{position:relative}
+.cb169{position:absolute;top:-8px;inset-inline-end:-8px;width:18px;height:18px;border-radius:50%;border:0;background:#0f172a;color:#fff;font-size:11px;line-height:18px;padding:0;cursor:pointer;z-index:5;opacity:.0;transition:opacity .15s}
+.col169:hover>.cb169{opacity:.85}
+.tab169{position:fixed;z-index:2147482400;border:0;background:var(--accent,#0f766e);color:#fff;cursor:pointer;font-size:.8rem;padding:.35rem .25rem;border-radius:0 10px 10px 0;opacity:.75}
+.tab169:hover{opacity:1}
+.hv169{opacity:0!important;transition:opacity .2s}.hv169:hover,.hv169:focus-within{opacity:1!important}
+body.ed158 .hv169{opacity:.4!important}
+.hdr .tools.tc169>*:not(.tbtn169):not(.lghdr){display:none!important}
+.tbtn169{font-weight:800}
+.cu158 .card{min-width:0;overflow:hidden}
+</style>`);
+  let railOpen = false;
+  function railApply() {
+    const r = document.getElementById("rail158"); const c = RC();
+    const s = document.getElementById("rs169"); s.textContent = `:root{--rw169:${c.w}rem;--rt169:${c.t}px}`;
+    document.body.classList.remove("p169s", "p169e");
+    let b = document.getElementById("rb169");
+    if (!r || r.classList.contains("dock")) { if (b) b.classList.remove("m169"); return; }
+    r.classList.add("r169"); r.classList.toggle("on169", railOpen);
+    const h = r.querySelector(".rh"); if (h) h.textContent = c.t >= 22 ? (c.label || T("☰ محتوى الصفحة", "☰ Page contents")) : "⋮";
+    if (c.push) { const L = r.classList.contains("L"); const rtl = document.documentElement.dir === "rtl"; const startSide = L !== rtl; document.body.classList.add(startSide ? "p169s" : "p169e"); document.body.style.setProperty("--rpad169", railOpen ? `calc(${c.w}rem)` : c.t + "px"); }
+    if (!b) { b = document.createElement("button"); b.id = "rb169"; b.textContent = "☰"; b.onclick = () => { railOpen = !railOpen; railApply(); }; document.body.appendChild(b); }
+    b.classList.toggle("m169", !!c.mob); b.style.left = r.classList.contains("L") ? "1rem" : "auto"; b.style.right = r.classList.contains("L") ? "auto" : "1rem";
+    if (!r.__169) { r.__169 = 1;
+      r.addEventListener("mouseenter", () => { if (RC().trigger === "hover" && innerWidth > 900) { railOpen = true; railApply(); } });
+      r.addEventListener("mouseleave", () => { if (RC().trigger === "hover" && innerWidth > 900) { railOpen = false; railApply(); } });
+      r.querySelector(".rh") && r.querySelector(".rh").addEventListener("click", e => { e.stopPropagation(); railOpen = !railOpen; railApply(); }, true);
+    }
+  }
+  document.addEventListener("click", e => { if (railOpen && !e.target.closest("#rail158,#rb169")) { railOpen = false; railApply(); } }, true);
+  window.rc169 = function (k, v) { state.rc169 = Object.assign({}, state.rc169 || {}, { [k]: v }); render(); };
+  window.rc169Save = async function () { await saveSetting16("rail169", RC()); state.rc169 = null; toast("✅"); render(); };
+  function railCard() {
+    const c = RC();
+    return `<div class="card" style="margin-top:1rem"><h3>☰ ${T("الشريط الجانبي — تحكّم كامل", "Side rail — full control")}</h3><p class="sm">${T("يشتغل لما تختار «شريط جانبي» أو «مختلط» من «شكل الموقع». أي تغيير بيظهر عندك علطول، و«احفظ» يطبّقه على الكل.", "Applies when “Side rail” or “Mixed” is chosen in Site layout. Changes preview instantly; “Save” applies them to everyone.")}</p>
+      <div class="row" style="gap:.8rem;flex-wrap:wrap;align-items:center">
+        <label class="sm"><input type="checkbox" ${c.push ? "checked" : ""} onchange="rc169('push',this.checked)"> ${T("مايغطيش المحتوى (المحتوى يتزق جنبه)", "Don't cover the content (push it aside)")}</label>
+        <label class="sm">${T("يفتح لما", "Opens on")}: <select class="in" style="width:auto" onchange="rc169('trigger',this.value)"><option value="hover" ${c.trigger === "hover" ? "selected" : ""}>${T("أقرّب الماوس", "Mouse hover")}</option><option value="click" ${c.trigger === "click" ? "selected" : ""}>${T("أدوس عليه", "Click")}</option></select></label>
+        <label class="sm">${T("عرضه وهو مفتوح", "Open width")}: <input type="range" min="12" max="28" value="${c.w}" oninput="rc169('w',+this.value)"> ${c.w}</label>
+        <label class="sm">${T("سُمكه وهو مستخبي", "Hidden thickness")}: <input type="range" min="4" max="40" value="${c.t}" oninput="rc169('t',+this.value)"> ${c.t}px</label>
+        <label class="sm">${T("المكتوب عليه", "Label")}: <input class="in" style="width:10rem" value="${esc(c.label)}" placeholder="${T("☰ محتوى الصفحة", "☰ Page contents")}" onchange="rc169('label',this.value)"></label>
+        <label class="sm"><input type="checkbox" ${c.mob ? "checked" : ""} onchange="rc169('mob',this.checked)"> ${T("في الموبايل والتابلت: زرار ☰ يفتحه", "On phones/tablets: a ☰ button opens it")}</label>
+      </div><button class="btn btn-p" style="margin-top:.6rem" onclick="rc169Save()">💾 ${T("احفظ للكل", "Save for everyone")}</button></div>`;
+  }
+
+  /* ---------- 2) أي زرار تزقّه يستخبى (اللغة والعرض، شريط الأدوات فوق، الدرج) ---------- */
+  const COL = () => { try { return JSON.parse(localStorage.getItem("itqan_col169") || "{}"); } catch (e) { return {}; } };
+  const setCol = (k, v) => { const c = COL(); if (v) c[k] = 1; else delete c[k]; localStorage.setItem("itqan_col169", JSON.stringify(c)); };
+  window.col169 = function (k, v) { setCol(k, v); render(); };
+  function collapsibles() {
+    const c = COL();
+    /* زرار اللغة والعرض */
+    const L = document.getElementById("ctl113");
+    if (L && !L.classList.contains("hide158")) {
+      let tb = document.getElementById("tab169L");
+      if (c.lang) { L.style.setProperty("display", "none", "important"); if (!tb) { tb = document.createElement("button"); tb.id = "tab169L"; tb.className = "tab169"; tb.textContent = "🌐"; tb.title = T("اللغة والعرض", "Language & display"); tb.onclick = () => col169("lang", 0); document.body.appendChild(tb); } const r = L.getBoundingClientRect(); tb.style.bottom = "6rem"; tb.style.left = "0"; }
+      else { if (tb) tb.remove(); L.style.removeProperty("display"); if (!L.querySelector(".cb169")) { L.classList.add("col169"); const x = document.createElement("button"); x.className = "cb169"; x.textContent = "‹"; x.title = T("زقّه يستخبى", "Tuck it away"); x.onclick = e => { e.stopPropagation(); col169("lang", 1); }; L.appendChild(x); } }
+    }
+    /* شريط الأدوات فوق (للأونر) */
+    const tools = document.querySelector(".hdr .tools");
+    if (tools && own()) {
+      tools.classList.toggle("tc169", !!c.tools);
+      let tb = tools.querySelector(".tbtn169"); if (!tb) { tb = document.createElement("button"); tb.className = "ibtn tbtn169"; tools.appendChild(tb); }
+      tb.textContent = c.tools ? "⋯" : "‹"; tb.title = c.tools ? T("أظهر الأدوات", "Show tools") : T("خبّي الأدوات", "Hide tools"); tb.onclick = () => col169("tools", c.tools ? 0 : 1);
+    }
+  }
+
+  /* ---------- 3) أي زرار: يظهر دايمًا / لما تقرّب بس / مستخبي (من 🛠️ في محرّر الأيقونات) ---------- */
+  function vis() {
+    const C = setv("icons160", {}) || {};
+    Object.entries(C).forEach(([k, v]) => { if (!v.vis) return; document.querySelectorAll(".hdr .tools > *, .hdr .nav > a, #rail158 .ri > *, #sd152 > button, #ctl113, .cust158i, #app .libgrid > *, #app .dmgrid > *, #app .w147t").forEach(el => { const kk = el.dataset.k158 || el.id || (el.title || "").trim() || (el.getAttribute("aria-label") || "") || "t:" + (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); if (kk !== k) return; el.classList.toggle("hv169", v.vis === "hover"); if (v.vis === "hide" && !document.body.classList.contains("ed158")) el.style.setProperty("display", "none", "important"); }); });
+  }
+  document.addEventListener("click", ev => {
+    const box = document.querySelector(".ip160 .hlpbox"); if (!box || box.querySelector(".vis169")) return;
+  }, true);
+  const obs = new MutationObserver(() => { const box = document.querySelector(".ip160 .hlpbox"); if (!box || box.querySelector(".vis169")) return; const h = box.querySelector("h3"); const label = h ? h.textContent.replace(/^🛠️\s*/, "") : ""; const el = [...document.querySelectorAll(".lk160")].find(e => (e.innerText || e.title || "").replace(/\s+/g, " ").trim().slice(0, 50) === label); if (!el) return; const k = el.dataset.k158 || el.id || (el.title || "").trim() || (el.getAttribute("aria-label") || "") || "t:" + (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40); const cur = ((setv("icons160", {}) || {})[k] || {}).vis || "always"; const row = document.createElement("div"); row.className = "row vis169"; row.style.cssText = "margin-top:.5rem;gap:.4rem;flex-wrap:wrap;align-items:center"; row.innerHTML = `<b class="sm">👁 ${T("يظهر إزاي", "Visibility")}</b>${[["always", T("دايمًا", "Always")], ["hover", T("لما أقرّب بس", "Only on hover")], ["hide", T("مستخبي", "Hidden")]].map(o => `<button class="btn ${cur === o[0] ? "btn-p" : "btn-o"}" style="padding:.2rem .6rem" data-v="${o[0]}">${o[1]}</button>`).join("")}`; row.querySelectorAll("button").forEach(b => b.onclick = async () => { const all = Object.assign({}, setv("icons160", {}) || {}); all[k] = Object.assign({}, all[k] || {}, { vis: b.dataset.v === "always" ? undefined : b.dataset.v }); if (!all[k].vis) delete all[k].vis; await saveSetting16("icons160", all); toast("✅"); render(); row.querySelectorAll("button").forEach(x => x.className = "btn " + (x === b ? "btn-p" : "btn-o")); }); const ref = box.querySelector("#ip160f"); ref ? ref.before(row) : box.appendChild(row); });
+  obs.observe(document.body, { childList: true });
+
+  /* ---------- 4) الصور: مكتوب تحت كل صورة هي رايحة فين بالظبط ---------- */
+  const NM = {};
+  async function names(ids) { const need = ids.filter(id => !(id in NM)); if (!need.length) return; need.forEach(id => NM[id] = null); const S = typeof sectionsData === "function" ? sectionsData() || [] : []; const byId = {}; (Array.isArray(S) ? S : []).forEach(s => byId[s.id] = s); const path = s => { const out = []; let x = s; for (let i = 0; i < 4 && x; i++) { out.unshift((x.title || {})[state.lang] || (x.title || {}).ar || ""); x = byId[x.parent_id]; } return out.filter(Boolean).join(" ‹ "); };
+    const rest = []; need.forEach(id => { if (byId[id]) NM[id] = { t: T("قسم", "Section"), p: path(byId[id]), go: `libGo('${id}')` }; else rest.push(id); });
+    if (rest.length) { try { const { data } = await sb.from("contents").select("id,title,section_id").in("id", rest); (data || []).forEach(c => NM[c.id] = { t: T("محتوى", "Item"), p: ((c.title || {})[state.lang] || (c.title || {}).ar || "") + (byId[c.section_id] ? " — " + T("جوه", "in") + " " + path(byId[c.section_id]) : ""), go: c.section_id ? `libGo('${c.section_id}')` : "" }); } catch (e) {} }
+    render();
+  }
+  function galLabels() {
+    const g = document.querySelector(".ag164 .grid"); if (!g) return; const rows = state.data.ag164 || []; const ids = [];
+    g.querySelectorAll("label").forEach((lab, i) => { const r = rows.filter(x => !state.ag164.grp || ((x.meta || {}).group || T("بدون قسم", "No section")) === state.ag164.grp)[i]; if (!r) return; const t = (r.meta && r.meta.target) || r.key; const m = String(t).match(/^id:(.+)$/); const pg = String(t).match(/^page:(.+)$/); const cd = String(t).startsWith("card:");
+      let txt = "", go = ""; if (m) { const n = NM[m[1]]; if (n === undefined) ids.push(m[1]); if (n) { txt = `${n.t}: ${n.p}`; go = n.go; } } else if (pg) txt = T("بانر صفحة: ", "Page banner: ") + pg[1]; else if (cd) txt = T("كارت بعنوان: ", "Card titled: ") + String(r.prompt || "").split(" — ")[0]; else if (String(t).startsWith("surah:")) txt = T("صورة سورة ", "Sūrah image ") + t.split(":")[1]; else txt = t;
+      let w = lab.querySelector(".wh169"); if (!w) { w = document.createElement("div"); w.className = "wh169 xs"; w.style.cssText = "padding:.2rem .4rem;background:color-mix(in srgb,var(--accent,#0f766e) 8%,transparent)"; lab.appendChild(w); }
+      w.innerHTML = `📍 ${esc(txt || "…")}${go ? ` <a href="#" onclick="event.preventDefault();event.stopPropagation();${go}">${T("افتح المكان", "Open")}</a>` : ""}`; });
+    if (ids.length) names([...new Set(ids)]);
+  }
+
+  /* ---------- 5) الأقسام الفاضية ماتظهرش (اللهجات اللي لسه مالهاش دروس) ---------- */
+  function empties() {
+    const S = typeof sectionsData === "function" ? sectionsData() : null; if (!Array.isArray(S)) return;
+    const empty = new Set(S.filter(s => (s.meta || {}).kind === "lang_track" && !(s.meta || {}).hasContent && !S.some(k => k.parent_id === s.id)).map(s => s.id));
+    const cnt = state.data.emp169; if (cnt === undefined) { state.data.emp169 = null; sb.from("contents").select("section_id").in("section_id", [...empty]).then(r => { state.data.emp169 = new Set((r.data || []).map(x => x.section_id)); render(); }); return; } if (!cnt) return;
+    empty.forEach(id => { if (cnt.has(id)) return; document.querySelectorAll(`#app [onclick*="${id}"]`).forEach(el => { const c = el.closest(".libgrid > *, .dmgrid > *, .hvgrid > *, .w147t, .dmcard, .card") || el; if (own()) { c.style.opacity = ".45"; c.title = T("فاضي — مش ظاهر للطلاب لحد ما تحطله محتوى", "Empty — hidden from students until you add content"); } else c.style.setProperty("display", "none", "important"); }); });
+  }
+
+  /* ---------- 6) من غير تسجيل: المتابعة اليومية والأذكار وأي أداة دينية عامة ---------- */
+
+  /* ---------- 7) تحدّي القيام: التقويم جوه الكارت على أي شاشة ---------- */
+  document.head.insertAdjacentHTML("beforeend", `<style>#app .card [style*="grid-template-columns:repeat(10,1fr)"]{grid-template-columns:repeat(auto-fill,minmax(2.1rem,1fr))!important}#app .card button[title^="20"]{min-width:0;font-size:.8rem}</style>`);
+
+  const _os = ownerSettings; ownerSettings = function () { return railCard() + _os.apply(this, arguments); };
+  const _r = render;
+  render = function () {
+    const out = _r.apply(this, arguments);
+    try { railApply(); } catch (e) { console.error(e); }
+    try { collapsibles(); vis(); } catch (e) { console.error(e); }
+    try { galLabels(); empties(); } catch (e) { console.error(e); }
+    return out;
+  };
+  window.addEventListener("resize", () => { try { railApply(); } catch (e) {} });
 })();
 
 // بدء التشغيل
