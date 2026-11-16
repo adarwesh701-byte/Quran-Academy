@@ -25557,7 +25557,7 @@ Between lessons, the platform keeps you going:
   function items() {
     const out = []; let ds = []; try { ds = DOMAINS(); } catch (e) {}
     ds.forEach(d => (d.tools || []).forEach(t => out.push({ ic: t[0], n: String(t[1] || "").replace(/^[^\p{L}\p{N}]+/u, ""), js: t[2], d: d.k, dn: (d.t || {})[state.lang] || (d.t || {}).ar || "", ds: (d.s || {})[state.lang] || (d.s || {}).ar || "", c: d.color || "#0f766e", dic: d.ic })));
-    return out;
+    const seen = new Set(); return out.filter(i => { const k = String(i.js).replace(/\s+/g, ""); if (seen.has(k)) return false; seen.add(k); return true; });
   }
   const items0 = items; function itemsG() { const g = cfg().grp; let L = items0(); if (g === "alpha") L = L.slice().sort((a, b) => a.n.localeCompare(b.n, state.lang)); if (g === "flat" || g === "alpha") L = L.map(x => Object.assign({}, x, { d: "all", dn: T("كل الأدوات", "All tools"), ds: "", dic: "🧰" })); return L; }
   const groups = () => { const m = new Map(); itemsG().forEach(i => { if (!m.has(i.d)) m.set(i.d, { k: i.d, n: i.dn, s: i.ds, c: i.c, ic: i.dic, list: [] }); m.get(i.d).list.push(i); }); return [...m.values()]; };
