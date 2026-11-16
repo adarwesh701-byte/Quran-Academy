@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v204";
+const UI_VERSION = "2026-11-17-v205";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29009,6 +29009,163 @@ Between lessons, the platform keeps you going:
   document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#app [onclick]"); if (!b) { ANC = null; return; } const oc = b.getAttribute("onclick") || ""; if (!/render\(\)/.test(oc) || /go16|navigate|location/.test(oc)) { ANC = null; return; } ANC = { oc, top: b.getBoundingClientRect().top, at: Date.now() }; }, true);
   const keep = () => { if (!ANC || Date.now() - ANC.at > 1500) return; let el = null; try { el = [...document.querySelectorAll("#app [onclick]")].find(x => x.getAttribute("onclick") === ANC.oc); } catch (e) {} if (!el) return; const d = el.getBoundingClientRect().top - ANC.top; if (Math.abs(d) > 2) window.scrollBy({ top: d, behavior: "instant" }); };
   const app0 = document.getElementById("app"); if (app0) new MutationObserver(() => { if (!ANC) return; requestAnimationFrame(() => { keep(); setTimeout(keep, 60); setTimeout(() => { keep(); ANC = null; }, 200); }); }).observe(app0, { childList: true });
+})();
+
+/* ================= v205: «كل حاجة بتطلع» في صفحة واحدة (فوق المحتوى/تزقّه، الدخول والخروج، الاتجاه، المدة، الحجم، شكلها وهي مقفولة) + الماوس مايحرّكش حاجة (مفيش رعشة) + زرار الحافة يتسحب لفوق وتحت ويصغر ويكبر لأي حد + أيقونات الجنب بتصميم موحّد + «جرد الأكاديمية» (كل حاجة متكررة كام مرة وفين، وتشيلها من أي مكان) ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["pop205", "inv205"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+
+  /* ======================= 1) إعدادات «كل حاجة بتطلع» ======================= */
+  const DEF = { still: 1, tools: { fxIn: "fade", fxOut: "fade", dur: 400, vpos: "middle", closed: "icon", tsz: 1 }, nav: { fxIn: "fade", fxOut: "fade", dur: 400, vpos: "middle", closed: "icon", tsz: 1 } };
+  const G = () => { const o = setv("pop205", {}) || {}; const u = LS("pop205u", {}) || {}; return { still: u.still != null ? u.still : o.still != null ? o.still : DEF.still, tools: Object.assign({}, DEF.tools, o.tools || {}, u.tools || {}), nav: Object.assign({}, DEF.nav, o.nav || {}, u.nav || {}) }; };
+  const mineBox = () => !!(document.getElementById("mine205") || {}).checked;
+  window.pop205 = {
+    async set(k, p) { const mine = !realOwner() || mineBox(); if (mine) { const u = LS("pop205u", {}); if (k === "still") u.still = p; else u[k] = Object.assign({}, u[k] || {}, p); LSset("pop205u", u); } else { const o = Object.assign({}, setv("pop205", {}) || {}); if (k === "still") o.still = p; else o[k] = Object.assign({}, o[k] || {}, p); await saveSetting16("pop205", o); } still(); applyBars(); render(); },
+    bar(k, p) { if (window.bar201) bar201.set(k, p, !realOwner() || mineBox()); setTimeout(render, 80); },
+    top(k, v) { if (window.rv190 && realOwner()) rv190(k, v).then(render); },
+    try(k) { if (window.bar201) bar201.tog(k); }, reset() { LSset("pop205u", {}); LSset("bar201u", {}); LSset("tpos205", {}); render(); }
+  };
+  /* الماوس مايحرّكش أي حاجة: الشرايط بتفتح بالدوسة بس */
+  function still() { const on = +G().still === 1; document.body.classList.toggle("still205", on);
+    if (on && window.bar201) { try { const u = LS("bar201u", {}); ["tools", "nav"].forEach(k => { const m = Object.assign({ mode: "hover" }, ((setv("bar201", {}) || {}).bars || {})[k] || {}, u[k] || {}).mode; if (m === "hover" || m === "push") { u[k] = Object.assign({}, u[k] || {}, { mode: m === "push" ? "pushclick205" : "button" }); } }); LSset("bar201u", u); } catch (e) {} } }
+  /* «يزق المحتوى» بالدوسة: نسيبه زرار ونزق احنا */
+  const _hold = {};
+  function applyBars() { const g = G();
+    document.querySelectorAll(".bar201").forEach(el => { const k = /side185/.test(el.className) ? "tools" : "nav"; const c = g[k]; el.style.setProperty("--d205", (+c.dur || 400) + "ms"); el.dataset.vpos = c.vpos;
+      const open = el.classList.contains("open201"); if (_hold[k] !== open) { _hold[k] = open; el.dataset.fx = open ? c.fxIn : c.fxOut; }
+      const m = el.dataset.mode; if (m === "pushclick205") { el.dataset.mode = "button"; } const pushMode = (Object.assign({}, ((setv("bar201", {}) || {}).bars || {})[k] || {}, (LS("bar201u", {}) || {})[k] || {}).mode === "pushclick205");
+      if (pushMode) { const s = el.dataset.s201; document.body.classList.toggle("push201-" + s, open); if (open) document.body.style.setProperty("--pw204", Math.round(el.getBoundingClientRect().width) + 16 + "px"); }
+      const tab = document.getElementById("tab201-" + k); if (tab) { tab.dataset.closed = c.closed; const P = LS("tpos205", {})[k]; if (P) { if (P.y != null) tab.style.top = P.y + "%"; tab.style.setProperty("--ts205", P.s || 1); } } });
+  }
+  new MutationObserver(() => { clearTimeout(window.__p205); window.__p205 = setTimeout(applyBars, 40); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  setTimeout(() => { still(); applyBars(); }, 600);
+  /* بلّغ bar201 إن «pushclick205» زرار */
+  const _sv = setv; setv = function (k, d) { const v = _sv.apply(this, arguments); if (k === "rv190" && +G().still === 1) { const o = Object.assign({}, v || {}); if (!["always", "arrow", "click", "scroll", "logo-click"].includes(o.trig || "edge")) o.trig = "always"; if (!o.tdev || o.tdev === "scroll") o.tdev = "always"; return o; } if (k === "bar201" && v && v.bars) { const o = JSON.parse(JSON.stringify(v)); Object.values(o.bars).forEach(b => { if (b.mode === "pushclick205") b.mode = "button"; }); return o; } return v; };
+  const _ls = Storage.prototype.getItem; Storage.prototype.getItem = function (k) { const v = _ls.apply(this, arguments); if (k === "bar201u" && v && v.includes("pushclick205")) return v.replace(/pushclick205/g, "button"); return v; };
+  const rawU = () => { try { return JSON.parse(_ls.call(localStorage, "bar201u") || "{}"); } catch (e) { return {}; } };
+  const pushOn = k => (rawU()[k] || {}).mode === "pushclick205" || (((_sv("bar201", {}) || {}).bars || {})[k] || {}).mode === "pushclick205";
+  new MutationObserver(ms => ms.forEach(m => { const el = m.target; if (!el.classList || !el.classList.contains("bar201")) return; const k = /side185/.test(el.className) ? "tools" : "nav"; if (!pushOn(k)) return; const open = el.classList.contains("open201"); document.body.classList.toggle("push201-" + el.dataset.s201, open); if (open) document.body.style.setProperty("--pw204", Math.round(el.getBoundingClientRect().width) + 16 + "px"); })).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class"] });
+  /* زرار الحافة: يتسحب لفوق وتحت لأي حد، وعجلة الماوس مع Ctrl تكبّر/تصغّر */
+  let drag = null;
+  document.addEventListener("pointerdown", e => { const t = e.target.closest && e.target.closest(".tab201"); if (!t || e.button > 0) return; drag = { t, y0: e.clientY, top0: t.getBoundingClientRect().top, mv: 0, id: e.pointerId }; }, true);
+  addEventListener("pointermove", e => { if (!drag) return; const dy = e.clientY - drag.y0; if (!drag.mv && Math.abs(dy) < 6) return; drag.mv = 1; drag.t.style.top = Math.max(3, Math.min(94, (drag.top0 + dy) / innerHeight * 100)) + "%"; drag.t.style.transform = "none"; }, true);
+  addEventListener("pointerup", e => { if (!drag) return; const d = drag; drag = null; if (!d.mv) return; const k = d.t.id.replace("tab201-", ""); const P = LS("tpos205", {}); P[k] = Object.assign({}, P[k] || {}, { y: parseFloat(d.t.style.top) }); LSset("tpos205", P); const stop = ev => { ev.stopPropagation(); ev.preventDefault(); removeEventListener("click", stop, true); }; addEventListener("click", stop, true); setTimeout(() => removeEventListener("click", stop, true), 300); }, true);
+  addEventListener("wheel", e => { const t = e.target.closest && e.target.closest(".tab201"); if (!t || !e.ctrlKey) return; e.preventDefault(); const k = t.id.replace("tab201-", ""); const P = LS("tpos205", {}); const s = Math.max(.6, Math.min(2, Math.round(((P[k] || {}).s || 1) * 10 - Math.sign(e.deltaY)) / 10)); P[k] = Object.assign({}, P[k] || {}, { s }); LSset("tpos205", P); t.style.setProperty("--ts205", s); }, { passive: false, capture: true });
+  window.tab205 = { size(k, d) { const P = LS("tpos205", {}); const s = Math.max(.6, Math.min(2, Math.round((((P[k] || {}).s || 1) + d) * 10) / 10)); P[k] = Object.assign({}, P[k] || {}, { s }); LSset("tpos205", P); applyBars(); render(); } };
+
+  css(`
+  html body.b201 .bar201[data-s201]{transition-duration:var(--d205,400ms)!important}
+  html body.b201 .bar201[data-vpos=top]{top:.75rem!important;bottom:auto!important;margin:0!important}
+  html body.b201 .bar201[data-vpos=bottom]{top:auto!important;bottom:.75rem!important;margin:0!important}
+  .bar201[data-fx=up]:not(.open201){transform:translateY(-40px)!important;opacity:0!important}.bar201[data-fx=down]:not(.open201){transform:translateY(40px)!important;opacity:0!important}
+  .bar201[data-fx=none]{transition:none!important}
+  .tab201{transform-origin:center;zoom:var(--ts205,1);cursor:grab;touch-action:none}.tab201:active{cursor:grabbing}
+  .tab201[data-closed=icon] .t{display:none}.tab201[data-closed=label] .t{max-width:8rem!important}
+  .tab201[data-closed=line]{padding:0!important;width:6px;height:64px;border-radius:6px!important;background:var(--accent)!important;opacity:.7}.tab201[data-closed=line] > *{display:none}
+  .tab201[data-closed=none]{opacity:0!important;width:10px;height:90px}
+  body.still205 #ar190{display:block}
+  /* أيقونات الشريط الجانبي (الصفحات) بتصميم موحّد زي الأدوات */
+  #nv180.nv180-rail,#nv180.nv180-side{padding:.4rem!important;gap:.3rem!important;width:auto!important;min-width:0!important;border-radius:18px!important;background:color-mix(in srgb,var(--card) 92%,transparent)!important;backdrop-filter:blur(14px);border:1px solid var(--line)!important;display:flex!important;flex-direction:column!important;align-items:center}
+  #nv180.nv180-rail button,#nv180.nv180-side button{width:46px!important;height:46px!important;min-height:46px!important;padding:0!important;border-radius:14px!important;justify-content:center!important;align-items:center!important;background:var(--bg)!important;border:1px solid transparent!important;position:relative;transition:background .2s,transform .2s,border-color .2s!important;flex-direction:column;gap:0!important}
+  #nv180.nv180-rail button:hover,#nv180.nv180-side button:hover{background:color-mix(in srgb,var(--accent) 14%,var(--bg))!important;border-color:color-mix(in srgb,var(--accent) 45%,transparent)!important;transform:scale(1.06)}
+  #nv180.nv180-rail button span,#nv180.nv180-side button span{font-size:1.3rem!important;line-height:1}
+  #nv180.nv180-rail button b,#nv180.nv180-side button b{display:none!important}
+  body.lbl205 #nv180 button{width:62px!important;height:58px!important}body.lbl205 #nv180 button b{display:block!important;font-size:.58rem!important;font-weight:600;max-width:58px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:2px}
+  html body.b201 .sp203.c203{width:auto!important}
+  html body.b201 .sp203.c203 .it203{display:block!important;margin:0 0 4px!important}
+  html body.b201 .sp203.c203 .it203>button:first-child{width:46px!important;max-width:46px!important;height:46px!important;min-height:46px!important;border-radius:14px!important}
+  body.lbl205 .sp203.c203 .it203>button:first-child{width:62px!important;max-width:62px!important;height:58px!important;font-size:.58rem!important;flex-direction:column;white-space:normal;line-height:1.1;overflow:hidden}
+  body.lbl205 .sp203.c203 .it203>button:first-child::before{font-size:1.2rem;margin-bottom:2px}
+  `);
+  const lbl = () => document.body.classList.toggle("lbl205", !!LS("lbl205", false)); lbl();
+  window.lbl205 = () => { LSset("lbl205", !LS("lbl205", false)); lbl(); render(); };
+
+  const FXL = [["fade", "يظهر بنعومة", "Fade"], ["slide", "ينزلق من الحافة", "Slide from edge"], ["scale", "يكبر من الحافة", "Grow"], ["flip", "ينفتح زي باب", "Door"], ["spring", "نطّة ناعمة", "Spring"], ["up", "يطلع لفوق", "Up"], ["down", "ينزل لتحت", "Down"], ["sheet", "زي صفحة جديدة", "Like a new page"], ["none", "من غير حركة", "None"]];
+  function popPage() {
+    const g = G(); const own = realOwner(); const B = k => Object.assign({ mode: "hover", delay: 450 }, ((_sv("bar201", {}) || {}).bars || {})[k] || {}, rawU()[k] || {});
+    const sel = (fn, list, cur) => `<select class="in" style="width:auto" onchange="${fn}">${list.map(o => `<option value="${o[0]}" ${String(cur) === String(o[0]) ? "selected" : ""}>${T(o[1], o[2])}</option>`).join("")}</select>`;
+    const row = (l, s) => `<div class="kv" style="align-items:center;gap:.6rem;flex-wrap:wrap"><span class="sm">${l}</span><span>${s}</span></div>`;
+    const sideCard = (k, ic, ar, en) => { const c = g[k], b = B(k); const P = LS("tpos205", {})[k] || {};
+      return `<div class="card"><h3>${ic} ${T(ar, en)}</h3>
+        ${row("🖱️ " + T("بيفتح إزاي", "Opens how"), sel(`pop205.bar('${k}',{mode:this.value})`, [["button", "بالدوسة على زرار الحافة (من غير ماوس)", "Click the edge tab"], ["pushclick205", "بالدوسة — ويزق المحتوى", "Click — and push the page"], ["hover", "الماوس يقرّب — فوق المحتوى", "Hover — over the page"], ["push", "الماوس يقرّب — ويزق المحتوى", "Hover — push the page"], ["always", "ظاهر على طول", "Always visible"], ["hidden", "مخفي خالص", "Hidden"]], b.mode))}
+        ${row("📥 " + T("حركة الدخول", "Enter animation"), sel(`pop205.set('${k}',{fxIn:this.value})`, FXL, c.fxIn))}
+        ${row("📤 " + T("حركة الخروج", "Exit animation"), sel(`pop205.set('${k}',{fxOut:this.value})`, FXL, c.fxOut))}
+        ${row("⏱️ " + T("سرعتها", "Speed"), sel(`pop205.set('${k}',{dur:+this.value})`, [[150, "سريعة جدًا", "Very fast"], [250, "سريعة", "Fast"], [400, "عادية", "Normal"], [650, "هادية", "Calm"], [1000, "بطيئة", "Slow"]], c.dur))}
+        ${row("↕️ " + T("مكانها", "Position"), sel(`pop205.set('${k}',{vpos:this.value})`, [["top", "فوق", "Top"], ["middle", "في النص (ظاهرة كلها)", "Middle (fully visible)"], ["bottom", "تحت", "Bottom"]], c.vpos))}
+        ${row("👁️ " + T("شكلها وهي مقفولة", "Closed look"), sel(`pop205.set('${k}',{closed:this.value})`, [["icon", "أيقونة صغيرة على الحافة", "Small icon on the edge"], ["label", "أيقونة واسم", "Icon and name"], ["line", "خط رفيع بس", "Thin line only"], ["none", "مفيش حاجة (تفتح بالحافة)", "Nothing (edge only)"]], c.closed))}
+        ${row("🔍 " + T("حجم زرار الحافة", "Edge tab size"), `<button class="btn btn-o" onclick="tab205.size('${k}',-.1)">➖</button> <b>${Math.round((P.s || 1) * 100)}%</b> <button class="btn btn-o" onclick="tab205.size('${k}',.1)">➕</button>`)}
+        ${row("🔍 " + T("حجم الشريط وهو مفتوح", "Open bar size"), `<button class="btn btn-o" onclick="bar204.size('${k}',-.1)">➖</button> <button class="btn btn-o" onclick="bar204.size('${k}',.1)">➕</button>`)}
+        ${row("⌛ " + T("يستنى قبل ما يقفل", "Wait before closing"), `<input class="in" type="number" step=".1" min="0" max="5" value="${(b.delay || 450) / 1000}" style="width:5rem" onchange="pop205.bar('${k}',{delay:this.value*1000})"> ${T("ثانية", "s")}`)}
+        <button class="btn btn-p" onclick="pop205.try('${k}')">👁️ ${T("جرّبه دلوقتي", "Try it now")}</button></div>`; };
+    const rv = (() => { try { return _sv("rv190", {}) || {}; } catch (e) { return {}; } })();
+    return pageWrap("🎛️", T("كل حاجة بتطلع: إزاي تطلع وتدخل", "Everything that pops out"), T("لكل شريط أو قايمة: فوق المحتوى ولا تزقّه، حركة الدخول والخروج، مكانها، شكلها وهي مقفولة، وحجمها", "For each bar: overlay or push, enter/exit motion, position, closed look and size"),
+      `<div class="card" style="border:2px solid var(--accent)"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${+g.still === 1 ? "checked" : ""} onchange="pop205.set('still',this.checked?1:0)"> 🧊 ${T("الماوس مايحرّكش أي حاجة (مفيش رعشة) — كل الشرايط بتفتح بالدوسة بس", "The mouse never moves anything — bars open on click only")}</label>
+        ${own ? `<label class="sm row" style="gap:.4rem;margin-top:.5rem"><input type="checkbox" id="mine205"> ${T("التغيير ليا أنا بس (من غير ما أغيّر الأساسي للطلاب)", "Only for me (keep everyone's default)")}</label>` : `<p class="xs muted">${T("اختياراتك هنا ليك انت بس.", "Your choices apply only to you.")}</p>`}
+        <label class="sm row" style="gap:.4rem;margin-top:.3rem"><input type="checkbox" ${LS("lbl205", false) ? "checked" : ""} onchange="lbl205()"> 🔤 ${T("اكتب اسم صغير تحت كل أيقونة في الشرايط", "Small name under each icon")}</label></div>
+      ${sideCard("tools", "🧰", "شريط الأدوات", "Tools bar")}${sideCard("nav", "🧭", "شريط الصفحات", "Pages bar")}
+      ${own ? `<div class="card"><h3>⬇️ ${T("الشرايط اللي فوق", "Top bars")}</h3>
+        ${row("🖱️ " + T("بتظهر إمتى", "Show when"), sel("pop205.top('trig',this.value)", [["always", "ظاهرة دايمًا (مفيش رعشة)", "Always (no flicker)"], ["arrow", "سهم ▾ صغير", "Small ▾ arrow"], ["click", "دوسة", "Click"], ["scroll", "لما تطلع لفوق في الصفحة", "When scrolling up"], ["edge", "الماوس يقرّب من فوق", "Mouse near the top"]], rv.trig || "edge"))}
+        ${row("📐 " + T("فوق المحتوى ولا تزقّه", "Overlay or push"), sel("pop205.top('style',this.value)", [["overlay", "فوق المحتوى (الصفحة ماتتحركش)", "Over the content"], ["push", "تزق المحتوى لتحت", "Push the content down"]], rv.style || "overlay"))}
+        ${row("📥 " + T("الحركة", "Animation"), sel("pop205.top('anim',this.value)", [["slide", "تنزل من فوق", "Slide down"], ["fade", "تظهر بنعومة", "Fade"], ["drop", "نطّة", "Drop"], ["unfold", "زي الستارة", "Unfold"], ["none", "من غير حركة", "None"]], rv.anim || "slide"))}
+        ${row("⌛ " + T("تستنى قبل ما تختفي", "Wait before hiding"), sel("pop205.top('delay',+this.value)", [[300, "سريع", "Fast"], [700, "عادي", "Normal"], [1500, "بطيء", "Slow"], [3000, "بطيء جدًا", "Very slow"]], rv.delay || 700))}
+        <p class="xs muted">${T("خيارات أكتر (مساحة الماوس، تغطي اللوجو، الموبايل) في «شكل الموقع».", "More options in Site look.")}</p></div>` : ""}
+      <div class="card sm">💡 ${T("زرار الحافة: اسحبه بالماوس أو بصباعك لفوق وتحت، وكبّره أو صغّره بـ Ctrl + عجلة الماوس أو من هنا.", "Edge tab: drag it up/down; resize with Ctrl + wheel or here.")}</div>
+      <button class="btn btn-o" onclick="pop205.reset()">↩️ ${T("رجّع اختياراتي للأساسي", "Reset my choices")}</button>`, 900);
+  }
+
+  /* ======================= 2) جرد الأكاديمية: كل حاجة متكررة كام مرة وفين ======================= */
+  const I = window.I205 = { data: null, q: "", tab: "content", busy: 0 };
+  const norm = s => String(s || "").replace(/[ً-ٰٟـ]/g, "").replace(/[إأآا]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[^\p{L}\p{N}]+/gu, " ").trim().toLowerCase();
+  const tt = x => { try { return locText(x.title) || ""; } catch (e) { return typeof x.title === "string" ? x.title : ""; } };
+  async function load() { I.busy = 1; const [s, c] = await Promise.all([sb.from("content_sections").select("id,title,parent_id,is_visible,icon").limit(5000), sb.from("contents").select("id,title,section_id,status,type").limit(10000)]); I.data = { s: s.data || [], c: (c.data || []).filter(x => x.status !== "draft") }; I.busy = 0; render(); }
+  const pathOf = id => { const S = I.data.s; const out = []; let n = S.find(x => x.id === id); let d = 0; while (n && d < 8) { out.unshift((n.icon || "📁") + " " + tt(n)); n = S.find(x => x.id === n.parent_id); d++; } return out.join(" ← "); };
+  window.inv205 = {
+    tab(t) { I.tab = t; render(); }, q(v) { I.q = v; clearTimeout(window.__i205); window.__i205 = setTimeout(render, 250); },
+    async delC(id) { const c = I.data.c.find(x => x.id === id); if (!confirm(T(`تشيل «${tt(c)}» من «${pathOf(c.section_id)}»؟\nهيفضل في السلة 10 أيام وتقدر ترجّعه من «منظّم المحتوى».`, "Remove from this place? (10-day bin)"))) return; const r = await sb.from("contents").update({ status: "draft" }).eq("id", id); if (r.error) return toast(r.error.message, true); const TR = (setv("trash200", []) || []).concat([{ type: "content", id, title: tt(c), at: new Date().toISOString(), prev: c.status }]); await saveSetting16("trash200", TR); invalidate("libCt", "secs"); toast("🗑️ " + T("اتشال من المكان ده", "Removed from this place")); load(); },
+    async hideS(id, on) { const r = await sb.from("content_sections").update({ is_visible: !on }).eq("id", id); if (r.error) return toast(r.error.message, true); invalidate("secs"); toast(on ? "🙈" : "👁️"); load(); },
+    async scan() { if (!window.map196) return toast(T("مش متاح", "Unavailable"), true); toast("⏳ " + T("بفحص كل صفحات الموقع… استنى دقيقة", "Scanning every page… wait a minute")); await map196.scan(); state.route = "inv205"; location.hash = "#/inv205"; render(); },
+    hideL(i) { const x = I.lk[i]; if (x) map196.hide(x.d, x.page, x.pk, x.t).then(render); },
+    async unhideL(d, page, pk, t) { const H = (setv("hide196", []) || []).filter(h => !(h.d === d && h.page === page && h.pk === pk && h.t === t)); await saveSetting16("hide196", H); render(); }
+  };
+  function invPage() {
+    if (!realOwner()) return pageWrap("🔒", "—", "", ""); if (!I.data) { if (!I.busy) load(); return pageWrap("📋", T("جرد الأكاديمية", "Academy inventory"), "", loadingBox()); }
+    const q = norm(I.q); const D = I.data; const H = setv("hide196", []) || [];
+    const gC = {}; D.c.forEach(c => { const k = norm(tt(c)); if (!k) return; (gC[k] = gC[k] || []).push(c); });
+    const gS = {}; D.s.forEach(s => { const k = norm(tt(s)); if (!k) return; (gS[k] = gS[k] || []).push(s); });
+    const M = (window.MAP196 || {}).data; const gL = {}; I.lk = []; if (M) M.items.forEach(x => { const k = x.d; (gL[k] = gL[k] || []).push(x); });
+    const dupC = Object.values(gC).filter(a => a.length > 1).sort((a, b) => b.length - a.length);
+    const dupS = Object.values(gS).filter(a => a.length > 1).sort((a, b) => b.length - a.length);
+    const dupL = Object.entries(gL).filter(([, a]) => a.length > 1).sort((a, b) => b[1].length - a[1].length);
+    const hit = s => !q || norm(s).includes(q);
+    const tabs = [["content", "📄", T("المحتوى المتكرر", "Repeated content"), dupC.length], ["sections", "📁", T("الأقسام المتكررة", "Repeated sections"), dupS.length], ["links", "🔗", T("الأزرار والروابط المتكررة", "Repeated buttons & links"), M ? dupL.length : "?"], ["all", "📚", T("كل حاجة (العدد في كل قسم)", "Everything (count per section)"), D.c.length]];
+    let body = "";
+    if (I.tab === "content") body = dupC.filter(a => hit(tt(a[0]))).slice(0, 300).map(a => `<div class="card i205"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><b>📄 ${esc(tt(a[0]))}</b><span class="badge">${T("متكرر", "repeated")} ${a.length}×</span></div>${a.map(c => `<div class="kv"><span class="sm">${esc(pathOf(c.section_id) || T("من غير قسم", "No section"))}</span><button class="btn btn-o xs" onclick="inv205.delC('${c.id}')">🗑️ ${T("شيله من هنا", "Remove here")}</button></div>`).join("")}</div>`).join("") || `<p class="muted">✅ ${T("مفيش محتوى متكرر", "No repeated content")}</p>`;
+    if (I.tab === "sections") body = dupS.filter(a => hit(tt(a[0]))).slice(0, 300).map(a => `<div class="card i205"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><b>📁 ${esc(tt(a[0]))}</b><span class="badge">${a.length}×</span></div>${a.map(s => `<div class="kv"><span class="sm ${s.is_visible === false ? "muted" : ""}">${esc(pathOf(s.id))} · ${D.c.filter(c => c.section_id === s.id).length} ${T("عنصر", "items")}${s.is_visible === false ? " · 🙈" : ""}</span><button class="btn btn-o xs" onclick="inv205.hideS('${s.id}',${s.is_visible !== false})">${s.is_visible === false ? "👁️ " + T("رجّعه", "Show") : "🙈 " + T("اخفيه من هنا", "Hide here")}</button></div>`).join("")}</div>`).join("") || `<p class="muted">✅ ${T("مفيش أقسام متكررة", "No repeated sections")}</p>`;
+    if (I.tab === "links") body = !M ? `<div class="card"><p>${T("لازم أفحص كل صفحات الموقع الأول (دقيقة تقريبًا).", "Scan every page first (about a minute).")}</p><button class="btn btn-p" onclick="inv205.scan()">🔎 ${T("افحص الموقع", "Scan the site")}</button></div>` :
+      `<p class="xs muted">${T("آخر فحص", "Last scan")}: ${new Date(M.at).toLocaleString()} <button class="btn btn-o xs" onclick="inv205.scan()">🔄 ${T("افحص تاني", "Rescan")}</button></p>` + dupL.filter(([d, a]) => hit(d + " " + a.map(x => x.t).join(" "))).slice(0, 300).map(([d, a]) => `<div class="card i205"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><b>🔗 ${esc(a[0].t)}</b><span class="badge">${a.length}×</span></div><p class="xs muted">→ ${esc(d)}</p>${a.map(x => { const i = I.lk.push(x) - 1; const hid = H.some(h => h.d === x.d && h.page === x.page && h.pk === x.pk && h.t === x.t); return `<div class="kv"><span class="sm ${hid ? "muted" : ""}">${esc(x.page)} · ${esc(x.pl)} · «${esc(x.t)}»${hid ? " · 🙈" : ""}</span>${hid ? `<button class="btn btn-o xs" onclick="inv205.unhideL(${esc(JSON.stringify(x.d))},${esc(JSON.stringify(x.page))},${esc(JSON.stringify(x.pk))},${esc(JSON.stringify(x.t))})">👁️ ${T("رجّعه", "Show")}</button>` : `<button class="btn btn-o xs" onclick="inv205.hideL(${i})">🙈 ${T("شيله من هنا", "Remove here")}</button>`}</div>`; }).join("")}</div>`).join("");
+    if (I.tab === "all") { const tops = D.s.filter(s => !s.parent_id); const cnt = id => { const kids = D.s.filter(x => x.parent_id === id); return D.c.filter(c => c.section_id === id).length + kids.reduce((n, k) => n + cnt(k.id), 0); };
+      const row = (s, lv) => `<div class="kv" style="padding-inline-start:${lv * 1.1}rem"><span class="sm ${s.is_visible === false ? "muted" : ""}">${esc(s.icon || "📁")} ${esc(tt(s))}${s.is_visible === false ? " 🙈" : ""}</span><span class="row" style="gap:.3rem"><span class="badge">${cnt(s.id)}</span><button class="btn btn-o xs" onclick="inv205.hideS('${s.id}',${s.is_visible !== false})">${s.is_visible === false ? "👁️" : "🙈"}</button></span></div>` + D.s.filter(x => x.parent_id === s.id).map(k => row(k, lv + 1)).join("");
+      body = q ? `<div class="card">${D.c.filter(c => hit(tt(c))).slice(0, 400).map(c => `<div class="kv"><span class="sm">📄 ${esc(tt(c))} <span class="xs muted">— ${esc(pathOf(c.section_id))}</span></span><button class="btn btn-o xs" onclick="inv205.delC('${c.id}')">🗑️</button></div>`).join("") || "—"}</div>` : `<div class="card">${tops.map(s => row(s, 0)).join("")}</div>`; }
+    return pageWrap("📋", T("جرد الأكاديمية", "Academy inventory"), T("كل حاجة في الأكاديمية: متكررة كام مرة، وفي أنهي أقسام، وتشيلها من أي مكان (بتروح السلة 10 أيام)", "Everything: how many times it repeats, where, and remove it from any place (10-day bin)"),
+      `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">${tabs.map(([k, ic, n, c]) => `<button class="btn ${I.tab === k ? "btn-p" : "btn-o"}" onclick="inv205.tab('${k}')">${ic} ${n} <span class="badge">${c}</span></button>`).join("")}</div>
+      <input class="in" style="max-width:24rem;margin-bottom:.6rem" placeholder="🔍 ${T("دوّر على أي حاجة", "Search anything")}" value="${esc(I.q)}" oninput="inv205.q(this.value)">
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem"><button class="btn btn-o xs" onclick="I205.data=null;render()">🔄 ${T("حدّث", "Refresh")}</button><button class="btn btn-o xs" onclick="go16('org200')">🗂️ ${T("منظّم المحتوى والسلة", "Organiser & bin")}</button></div>${body}`, 1000);
+  }
+  css(`.i205{margin-bottom:.6rem}.i205 .kv{gap:.5rem;align-items:center}.btn.xs{padding:.15rem .5rem;font-size:.78rem}`);
+
+  /* ======================= 3) الربط بالإعدادات ومساحتي ======================= */
+  const _r = render; render = function () { if (state.route === "pop205") { let b; try { b = popPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); return; } if (state.route === "inv205") { let b; try { b = invPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); return; } _r.apply(this, arguments); };
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="border:2px solid #7c3aed;margin-bottom:1rem"><h3>🧭 ${T("تنظيم الأكاديمية وشكلها", "Organise the academy")}</h3><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn btn-p" onclick="go16('inv205')">📋 ${T("جرد الأكاديمية: كل حاجة متكررة وفين", "Inventory: what repeats and where")}</button><button class="btn btn-p" onclick="go16('pop205')">🎛️ ${T("كل حاجة بتطلع: فوق المحتوى ولا تزقّه", "Everything that pops out")}</button></div></div>` + _os.apply(this, arguments); };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#7c3aed" onclick="go16('pop205')"><span>🎛️</span><b>${T("كل حاجة بتطلع", "Pop-outs")}</b></button>${realOwner() ? `<button class="mstile" style="--c:#0f766e" onclick="go16('inv205')"><span>📋</span><b>${T("جرد الأكاديمية", "Inventory")}</b></button>` : ""}`); };
+  /* زرار ⚙️ في الشرايط يفتح الصفحة الجديدة */
+  new MutationObserver(() => document.querySelectorAll(".x201 button[onclick*=\"go16('bar201')\"]").forEach(b => b.setAttribute("onclick", "event.stopPropagation();go16('pop205')"))).observe(document.body, { childList: true, subtree: true });
+  if (/^#\/pop205/.test(location.hash)) state.route = "pop205"; if (/^#\/inv205/.test(location.hash)) state.route = "inv205";
 })();
 
 // بدء التشغيل
