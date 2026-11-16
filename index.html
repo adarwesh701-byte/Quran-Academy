@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v198";
+const UI_VERSION = "2026-11-16-v199";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -9027,7 +9027,10 @@ renderLibraryDb = function () {
   const kids = {}; vis.forEach(s => { const pid = s.parent_id && ids.has(s.parent_id) ? s.parent_id : "_"; (kids[pid] = kids[pid] || []).push(s); });
   const memo = {};
   const count = (id) => memo[id] != null ? memo[id] : (memo[id] = (bySec[id] || []).length + (pBy[id] || []).length + (kids[id] || []).reduce((a, k) => a + count(k.id), 0));
-  const shown = (arr) => arr; // v16: كل الأقسام تظهر حتى لو فاضية
+  /* v199: المحتوى بيظهر بترتيبه الطبيعي (الأول فالأول) + القسم الفاضي مايظهرش غير للمالك لحد ما يترفع فيه حاجة */
+  Object.values(bySec).forEach(a => a.sort((x, y) => { const tx = String(ctTitleOf(x) || ""), ty = String(ctTitleOf(y) || ""); const sx = +((x.meta || {}).sort ?? NaN), sy = +((y.meta || {}).sort ?? NaN); if (!isNaN(sx) && !isNaN(sy) && sx !== sy) return sx - sy; const d = new Date(x.created_at) - new Date(y.created_at); return Math.abs(d) > 2000 ? d : tx.localeCompare(ty, "ar", { numeric: true }); }));
+  const hasStuff = (s, g) => { g = g || new Set(); if (g.has(s.id)) return false; g.add(s.id); return count(s.id) > 0 || !!((s.meta || {}).kind) || (kids[s.id] || []).some(k => hasStuff(k, g)); };
+  const shown = (arr) => isOwner && !state.preview ? arr : arr.filter(s => hasStuff(s));
   const cur = state.libSec && vis.find(s => s.id === state.libSec);
   if (!cur) {
     const roots = shown(kids["_"] || []);
