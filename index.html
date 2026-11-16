@@ -28718,7 +28718,7 @@ Between lessons, the platform keeps you going:
   window.b202 = {
     async toc() { if (B.toc) return; try { B.toc = await jget("a=toc"); } catch (e) { B.toc = []; } render(); },
     async list(id) { B.open[id] = !B.open[id]; render(); if (!B.lists[id]) { try { B.lists[id] = await jget("a=list&id=" + id); } catch (e) { B.lists[id] = []; } render(); } },
-    async art(id, lid) { B.cur = { id, lid }; LSset("b202cur", B.cur); B.art = null; render(); try { B.art = await jget("a=page&id=" + encodeURIComponent(id)); } catch (e) { B.art = { err: e.message }; } render(); const r = document.getElementById("kr199"); r && r.scrollIntoView({ block: "start", behavior: "smooth" }); },
+    async art(id, lid) { B.cur = { id, lid }; LSset("b202cur", B.cur); B.art = null; render(); try { B.art = await jget("a=page&v=5&id=" + encodeURIComponent(id)); if (B.art && B.art.paras) { const c = B.art.paras.findIndex(p => /مواضيع ذات ارتباط|redirect/.test(p.t)); if (c >= 0) B.art.paras.length = c; } } catch (e) { B.art = { err: e.message }; } render(); const r = document.getElementById("kr199"); r && r.scrollIntoView({ block: "start", behavior: "smooth" }); },
     async search(q) { B.q = q; if (q.trim().length < 2) { B.hits = null; return render(); } B.hits = "…"; render(); try { B.hits = await jget("a=search&q=" + encodeURIComponent(q.trim())); } catch (e) { B.hits = []; } render(); },
     step(d) { const L = B.lists[B.cur && B.cur.lid] || []; const i = L.findIndex(x => x.id === B.cur.id); const n = L[i + d]; if (n) this.art(n.id, B.cur.lid); },
     fs(d) { B.fs = Math.max(.9, Math.min(2, B.fs + d)); LSset("k199fs", B.fs); render(); }
