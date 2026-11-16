@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v170";
+const UI_VERSION = "2026-11-16-v171";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -23975,6 +23975,134 @@ body.ed158 .hv169{opacity:.4!important}
     return out;
   };
   window.addEventListener("resize", () => { try { railApply(); } catch (e) {} });
+})();
+
+
+/* ================= v171: وضع الصيانة + استوديو التصميم (12 تصميم مستوحى من أكبر مواقع المحتوى + اخلط من أي تصميم + حركة ناعمة) + أفكار الهيكل كاختيارات تتفعّل ================= */
+(function () {
+  const ar = () => state.lang === "ar"; const T = (a, e) => (ar() ? a : e);
+  const staff = () => ["owner", "teacher"].includes(realRole());
+  const own = () => realRole() === "owner";
+
+  /* ---------- 1) وضع الصيانة ---------- */
+  const M = () => Object.assign({ on: false, msg: "" }, setv("maint171", {}) || {});
+  window.maint171 = async function (on) { const m = M(); m.on = !!on; if (on) { const t = prompt(T("رسالة للزوار (اختياري):", "Message for visitors (optional):"), m.msg || T("بنحسّن الموقع عشانك — راجعين خلال شوية بإذن الله 🌙", "We're improving the site for you — back shortly, in shā' Allāh 🌙")); if (t === null) return; m.msg = t; } await saveSetting16("maint171", m); toast(on ? "🛠️ " + T("الموقع في الصيانة — محدش غيرك انت والمدرسين شايفه", "Maintenance on — only you and teachers can see the site") : "✅ " + T("الموقع رجع للكل", "Site is back for everyone")); render(); };
+  function maintPage() { const m = M(); return `<section class="sec" style="min-height:80vh;display:flex;align-items:center"><div class="wrap" style="max-width:560px;text-align:center"><div class="card" style="padding:2.4rem 1.4rem"><div style="font-size:3rem">🛠️</div><h1 style="margin:.4rem 0">${T("الموقع في صيانة", "We're doing some maintenance")}</h1><p class="muted">${esc(m.msg || T("بنحسّن الموقع عشانك — راجعين خلال شوية بإذن الله 🌙", "We're improving the site for you — back shortly 🌙"))}</p><button class="btn btn-o" style="margin-top:1rem" onclick="location.reload()">↻ ${T("جرّب تاني", "Try again")}</button><p class="xs muted" style="margin-top:1rem"><a href="#" onclick="navigate('login');return false">${T("دخول فريق الأكاديمية", "Staff sign-in")}</a></p></div></div></section>`; }
+
+  /* ---------- 2) استوديو التصميم ---------- */
+  document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Cairo:wght@400;700&family=Readex+Pro:wght@400;600&family=Noto+Naskh+Arabic:wght@400;700&display=swap"><style id="sk171"></style>`);
+  const PAL = {
+    original: ["الأصلي", "Original", null],
+    qurancom: ["قرآن هادي", "Calm Quran", { accent: "#1f8a70", bg: "#f7f8f6", card: "#ffffff", fg: "#1c2321", muted: "#5b6661", line: "#e3e8e5", gold: "#b08d3c" }],
+    khan: ["أكاديمي أزرق", "Academic blue", { accent: "#1865f2", bg: "#f7f8fa", card: "#ffffff", fg: "#21242c", muted: "#5e6370", line: "#dfe3ea", gold: "#ffb100" }],
+    duo: ["مرح أخضر", "Playful green", { accent: "#58a700", bg: "#fbfff5", card: "#ffffff", fg: "#3c3c3c", muted: "#777", line: "#e5e5e5", gold: "#ff9600" }],
+    notion: ["هادي رمادي", "Quiet grey", { accent: "#2f3437", bg: "#ffffff", card: "#ffffff", fg: "#37352f", muted: "#787774", line: "#ebebea", gold: "#d9730d" }],
+    apple: ["فاخر أبيض", "Premium white", { accent: "#0071e3", bg: "#f5f5f7", card: "#ffffff", fg: "#1d1d1f", muted: "#6e6e73", line: "#e5e5ea", gold: "#bf8a30" }],
+    medium: ["مقالات", "Editorial", { accent: "#1a8917", bg: "#ffffff", card: "#ffffff", fg: "#242424", muted: "#6b6b6b", line: "#f2f2f2", gold: "#c17d11" }],
+    stripe: ["بنفسجي متدرّج", "Violet gradient", { accent: "#635bff", bg: "#f6f9fc", card: "#ffffff", fg: "#0a2540", muted: "#425466", line: "#e3e8ee", gold: "#ff7a59" }],
+    headspace: ["هادي دافي", "Warm calm", { accent: "#f47d31", bg: "#fff8f0", card: "#ffffff", fg: "#3d2a1e", muted: "#7a6252", line: "#f3e3d3", gold: "#e0a100" }],
+    emerald: ["زمرّدي ذهبي", "Emerald & gold", { accent: "#0f766e", bg: "#f3faf8", card: "#ffffff", fg: "#0b2b26", muted: "#4b635e", line: "#d7ebe6", gold: "#c99a2e" }],
+    night: ["ليلي", "Night", { accent: "#38bdf8", bg: "#0b1220", card: "#111a2e", fg: "#e5edf7", muted: "#93a4bf", line: "#1e2a44", gold: "#fbbf24" }],
+    sand: ["رملي مخطوطة", "Sand manuscript", { accent: "#8a5a2b", bg: "#f6efe3", card: "#fffaf1", fg: "#3a2a18", muted: "#7c6750", line: "#eadcc6", gold: "#b07d2a" }]
+  };
+  const FONT = { original: ["الأصلي", "Original", null], tajawal: ["تجوال", "Tajawal", "'Tajawal',system-ui"], plex: ["آي بي إم بلكس", "IBM Plex Arabic", "'IBM Plex Sans Arabic',system-ui"], cairo: ["القاهرة", "Cairo", "'Cairo',system-ui"], readex: ["ريدكس", "Readex Pro", "'Readex Pro',system-ui"], naskh: ["نسخ (للقراءة)", "Naskh (reading)", "'Noto Naskh Arabic',serif"] };
+  const CARD = { original: ["الأصلي", "Original", null], soft: ["ناعم مدوّر", "Soft rounded", { r: "18px", sh: "0 6px 24px rgba(15,23,42,.06)", b: "1px solid var(--line)" }], flat: ["مسطّح بحدود", "Flat bordered", { r: "10px", sh: "none", b: "1px solid var(--line)" }], float: ["طاير بظل", "Floating shadow", { r: "20px", sh: "0 14px 40px rgba(15,23,42,.10)", b: "0" }], pill: ["مدوّر جدًا (مرح)", "Very round (playful)", { r: "26px", sh: "0 4px 0 rgba(0,0,0,.08)", b: "2px solid var(--line)" }], sharp: ["حاد احترافي", "Sharp professional", { r: "6px", sh: "0 1px 2px rgba(0,0,0,.06)", b: "1px solid var(--line)" }] };
+  const DENS = { original: ["الأصلي", "Original", null], airy: ["براح (Apple)", "Airy (Apple)", { p: "1.6rem", g: "1.4rem", lh: 1.8 }], comfy: ["مريح", "Comfortable", { p: "1.2rem", g: "1rem", lh: 1.7 }], dense: ["مزحوم منظّم (أخبار)", "Dense & organised (news)", { p: ".8rem", g: ".6rem", lh: 1.5 }] };
+  const MOT = { none: ["من غير حركة", "No motion"], soft: ["ناعمة (تطلع بهدوء)", "Soft (gentle reveal)"], lively: ["حيوية", "Lively"] };
+  const WID = { original: ["الأصلي", "Original"], narrow: ["عمود قراءة (مقالات)", "Reading column"], wide: ["واسع", "Wide"], full: ["عرض الشاشة كله", "Full width"] };
+  const SKINS = [
+    ["🕌", "قرآن هادي (روح Quran.com)", "Calm Quran (Quran.com spirit)", { pal: "qurancom", font: "naskh", card: "flat", dens: "airy", mot: "soft", wid: "narrow" }, T("قراءة مريحة، مساحات كبيرة، تركيز على النص.", "Comfortable reading, generous space, text first.")],
+    ["🎓", "أكاديمي (روح Khan Academy)", "Academic (Khan Academy spirit)", { pal: "khan", font: "plex", card: "sharp", dens: "comfy", mot: "soft", wid: "wide" }, T("مسارات ودروس كتير متنظّمة بوضوح.", "Lots of paths and lessons, clearly organised.")],
+    ["🦉", "مرح للأطفال (روح Duolingo)", "Playful (Duolingo spirit)", { pal: "duo", font: "cairo", card: "pill", dens: "comfy", mot: "lively", wid: "original" }, T("ألوان مبهجة وأزرار مدوّرة وحركة حيوية.", "Cheerful colours, round buttons, lively motion.")],
+    ["🗂️", "مكتبة منظّمة (روح Notion)", "Organised library (Notion spirit)", { pal: "notion", font: "plex", card: "flat", dens: "dense", mot: "none", wid: "wide" }, T("محتوى ضخم ببساطة وهدوء — مناسب للكتب.", "Huge content, calm and simple — great for books.")],
+    ["🍎", "فاخر (روح Apple)", "Premium (Apple spirit)", { pal: "apple", font: "readex", card: "float", dens: "airy", mot: "soft", wid: "wide" }, T("فخامة، خط كبير، ظهور ناعم وأنت نازل.", "Premium feel, big type, soft reveal as you scroll.")],
+    ["📰", "مقالات (روح Medium)", "Editorial (Medium spirit)", { pal: "medium", font: "naskh", card: "flat", dens: "comfy", mot: "soft", wid: "narrow" }, T("للتفسير والسيرة والمقالات الطويلة.", "For tafsir, sīrah and long reads.")],
+    ["💜", "تقني متدرّج (روح Stripe)", "Gradient tech (Stripe spirit)", { pal: "stripe", font: "readex", card: "soft", dens: "comfy", mot: "soft", wid: "wide" }, T("حديث ونظيف بلمسة بنفسجي.", "Modern and clean with a violet touch.")],
+    ["🧘", "هادي دافي (روح Headspace)", "Warm calm (Headspace spirit)", { pal: "headspace", font: "tajawal", card: "pill", dens: "airy", mot: "soft", wid: "original" }, T("هدوء وطمأنينة — مناسب للأذكار والتلاوة.", "Calm and reassuring — for adhkār and recitation.")],
+    ["💎", "زمرّدي ذهبي (إتقان)", "Emerald & gold (Itqan)", { pal: "emerald", font: "tajawal", card: "soft", dens: "comfy", mot: "soft", wid: "wide" }, T("هوية الأكاديمية بشكل أنعم وأشيك.", "The academy's identity, smoother and more polished.")],
+    ["🌙", "ليلي (للقراءة بالليل)", "Night (for night reading)", { pal: "night", font: "plex", card: "soft", dens: "comfy", mot: "soft", wid: "wide" }, T("مريح للعين بالليل.", "Easy on the eyes at night.")],
+    ["📜", "مخطوطة رملية", "Sand manuscript", { pal: "sand", font: "naskh", card: "flat", dens: "comfy", mot: "soft", wid: "narrow" }, T("طابع تراثي للكتب والمتون.", "A classic feel for books and texts.")],
+    ["📊", "محتوى كثيف منظّم (روح BBC)", "Dense & organised (BBC spirit)", { pal: "notion", font: "cairo", card: "sharp", dens: "dense", mot: "none", wid: "full" }, T("أكبر كمية محتوى في الشاشة من غير لخبطة.", "The most content per screen without clutter.")]
+  ];
+  const SK = () => Object.assign({ pal: "original", font: "original", card: "original", dens: "original", mot: "soft", wid: "original" }, setv("skin171", {}) || {}, state.sk171 || {});
+  function skApply() {
+    const s = SK(); const st = document.getElementById("sk171"); let css = "";
+    const p = PAL[s.pal] && PAL[s.pal][2]; if (p && state.theme !== "dark") css += `:root{--accent:${p.accent}!important;--bg:${p.bg}!important;--card:${p.card}!important;--fg:${p.fg}!important;--muted:${p.muted}!important;--line:${p.line}!important;--gold:${p.gold}!important}body{background-color:var(--bg)}`;
+    const f = FONT[s.font] && FONT[s.font][2]; if (f) css += `body,#app,.hdr,button,input,select,textarea{font-family:${f}!important}`;
+    const c = CARD[s.card] && CARD[s.card][2]; if (c) css += `#app .card,#app .dmcard,#app .libgrid>*,#app .dmgrid>*,#app .w147t,#app .cu158>button{border-radius:${c.r}!important;box-shadow:${c.sh}!important;border:${c.b}!important}#app .btn{border-radius:${c.r === "26px" ? "999px" : c.r}!important}`;
+    const d = DENS[s.dens] && DENS[s.dens][2]; if (d) css += `#app .card{padding:${d.p}!important}#app .libgrid,#app .dmgrid,#app .cu158,#app .grid{gap:${d.g}!important}#app{line-height:${d.lh}}`;
+    if (s.wid === "narrow") css += `#app .wrap{max-width:860px!important}`; else if (s.wid === "wide") css += `#app .wrap{max-width:1320px!important}`; else if (s.wid === "full") css += `#app .wrap{max-width:none!important;padding-inline:clamp(.8rem,2.5vw,2.5rem)!important}`;
+    if (s.mot !== "none") css += `html{scroll-behavior:smooth}#app .card,#app .dmcard,#app .btn,#app .libgrid>*,#app .dmgrid>*{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,background-color .2s,opacity .4s}#app .card:hover,#app .libgrid>*:hover,#app .dmgrid>*:hover{transform:translateY(-${s.mot === "lively" ? 4 : 2}px)}#app .rv171{opacity:0;transform:translateY(${s.mot === "lively" ? 22 : 12}px)}#app .rv171.in{opacity:1;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1)}#app>section,#app>.sec{animation:pg171 .35s ease}@keyframes pg171{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}`;
+    css += `@media (prefers-reduced-motion:reduce){#app .rv171{opacity:1!important;transform:none!important}#app>section{animation:none!important}}`;
+    st.textContent = css;
+    if (s.mot !== "none") reveal();
+  }
+  let io = null;
+  function reveal() {
+    if (!("IntersectionObserver" in window)) return; io = io || new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
+    document.querySelectorAll("#app .card:not(.rv171), #app .libgrid>*:not(.rv171), #app .dmgrid>*:not(.rv171), #app .cu158>*:not(.rv171)").forEach((el, i) => { const r = el.getBoundingClientRect(); if (r.top < innerHeight) return; el.classList.add("rv171"); el.style.transitionDelay = Math.min(i % 6, 5) * 40 + "ms"; io.observe(el); });
+  }
+  window.sk171Pick = i => { state.sk171 = Object.assign({}, SKINS[i][3]); render(); toast("👁 " + T("معاينة عندك بس — «طبّق على الكل» لو عجبك", "Preview for you only — “Apply to all” if you like it")); };
+  window.sk171Part = (k, v) => { state.sk171 = Object.assign({}, SK(), { [k]: v }); render(); };
+  window.sk171Save = async () => { if (window.sh158Save) { /* نسخة احتياطية من التصميم الحالي */ try { const L = (setv("snaps158", []) || []).slice(); L.unshift({ id: "a" + Date.now(), auto: 1, name: T("قبل تغيير استوديو التصميم", "Before a design-studio change"), at: new Date().toISOString(), data: { shell158: setv("shell158", {}), design157: setv("design157", {}), bgimg158: setv("bgimg158", {}), skin171: setv("skin171", {}) } }); await saveSetting16("snaps158", L.slice(0, 30)); } catch (e) {} }
+    await saveSetting16("skin171", SK()); state.sk171 = null; toast("✅ " + T("اتطبّق على الموقع كله", "Applied site-wide")); render(); };
+  const sw = (k, D) => `<select class="in" style="width:auto" onchange="sk171Part('${k}',this.value)">${Object.entries(D).map(([id, v]) => `<option value="${id}" ${SK()[k] === id ? "selected" : ""}>${esc(T(v[0], v[1]))}</option>`).join("")}</select>`;
+  function studio() {
+    const cards = SKINS.map((s, i) => { const p = PAL[s[3].pal][2] || { accent: "#047857", bg: "#f8fafc", card: "#fff", fg: "#0f172a", line: "#e2e8f0" }; const c = CARD[s[3].card][2] || { r: "14px", sh: "0 4px 12px #0001", b: "1px solid #e2e8f0" }; const f = FONT[s[3].font][2] || "system-ui";
+      return `<button class="sk171c" onclick="sk171Pick(${i})" style="text-align:start;border:2px solid var(--line);border-radius:16px;padding:0;overflow:hidden;background:var(--card);cursor:pointer;color:inherit">
+        <div style="background:${p.bg};padding:.6rem;font-family:${f}"><div style="height:10px;border-radius:4px;background:${p.accent};width:55%;margin-bottom:.4rem"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem">${[0, 1].map(() => `<div style="background:${p.card};border:${c.b.replace("var(--line)", p.line)};border-radius:${c.r};box-shadow:${c.sh};padding:.4rem;color:${p.fg};font-size:.7rem">▬▬▬<br><span style="opacity:.6">▬▬</span></div>`).join("")}</div></div>
+        <div style="padding:.5rem .6rem"><b style="font-size:.85rem">${s[0]} ${esc(T(s[1], s[2]))}</b><div class="xs muted">${esc(s[4])}</div></div></button>`; }).join("");
+    return `<div class="card" style="margin-top:1rem"><h3>🎨 ${T("استوديو التصميم — اختار، عاين، واخلط", "Design studio — pick, preview, mix")}</h3>
+      <p class="sm">${T("12 تصميم مستوحى من أشهر المواقع اللي فيها محتوى ضخم ومتنظّم. دوس على أي واحد تعاينه على الموقع كله (عندك بس). وتقدر تاخد اللون من تصميم، والخط من تاني، والكروت من تالت.", "12 designs inspired by famous content-heavy, well-organised sites. Tap one to preview it across the whole site (only you). Take colours from one, fonts from another, cards from a third.")}</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(14rem,100%),1fr));gap:.6rem">${cards}</div>
+      <h4 style="margin:1rem 0 .3rem">🧩 ${T("اخلط بحرية", "Mix freely")}</h4>
+      <div class="row" style="gap:.5rem;flex-wrap:wrap;align-items:center"><label class="sm">🎨 ${T("الألوان", "Colours")} ${sw("pal", PAL)}</label><label class="sm">🔤 ${T("الخط", "Font")} ${sw("font", FONT)}</label><label class="sm">🃏 ${T("الكروت", "Cards")} ${sw("card", CARD)}</label><label class="sm">↔️ ${T("المسافات", "Spacing")} ${sw("dens", DENS)}</label><label class="sm">✨ ${T("الحركة", "Motion")} ${sw("mot", MOT)}</label><label class="sm">📐 ${T("العرض", "Width")} ${sw("wid", WID)}</label></div>
+      <div class="row" style="gap:.4rem;margin-top:.7rem;flex-wrap:wrap"><button class="btn btn-p" onclick="sk171Save()">✅ ${T("طبّق على الكل", "Apply to all")}</button>${state.sk171 ? `<button class="btn btn-o" onclick="state.sk171=null;render()">↺ ${T("الغي المعاينة", "Cancel preview")}</button>` : ""}<button class="btn btn-o" onclick="state.sk171={pal:'original',font:'original',card:'original',dens:'original',mot:'none',wid:'original'};render()">🏛️ ${T("عاين الأصلي", "Preview the original")}</button></div>
+      <p class="xs muted">${T("أي تصميم قبل ما تغيّره بيتحفظ في «تصميماتك المحفوظة» وترجعله بدوسة.", "Every previous design is kept in “Your saved designs” to restore with one tap.")}</p></div>`;
+  }
+
+  /* ---------- 3) أفكار الهيكل (من ملف التصميم) كاختيارات ---------- */
+  const ID = () => Object.assign({ search: false, cont: true, mdock: false }, setv("ideas171", {}) || {});
+  window.id171 = async (k) => { const d = ID(); d[k] = !d[k]; await saveSetting16("ideas171", d); render(); };
+  function ideasCard() {
+    const d = ID(); const sh = setv("shell158", {}) || {};
+    const row = (k, ic, a, e, on, act) => `<div class="kv" style="align-items:center"><span class="sm">${ic} ${esc(T(a, e))}</span><button class="btn ${on ? "btn-p" : "btn-o"}" style="padding:.2rem .7rem" onclick="${act}">${on ? "✅ " + T("مفعّل", "On") : T("فعّل", "Turn on")}</button></div>`;
+    return `<div class="card" style="margin-top:1rem"><h3>🧭 ${T("أفكار التنظيم (من ملف التصميم)", "Organisation ideas (from the design file)")}</h3>
+      ${row("cont", "⏯️", "11. «كمّل من مكان ما وقفت» في الرئيسية", "11. “Continue where you left off” on home", d.cont, "id171('cont')")}
+      ${row("search", "🔍", "12. بحث كبير لكل حاجة في الرئيسية", "12. One big search on home", d.search, "id171('search')")}
+      ${row("mdock", "📱", "8. شريط أيقونات تحت على الموبايل", "8. Bottom icon bar on phones", d.mdock, "id171('mdock')")}
+      ${row("md", "📑", "6. قايمة جانبية والمحتوى جنبها جوه الصفحة", "6. Side list with content beside it", sh.md !== false, "sh158Save(Object.assign({}, (setv('shell158',{})||{}), {md:!SHMD171()})).then(()=>render())")}
+      ${row("rail", "☰", "9. الشريط الجانبي «محتوى الصفحة»", "9. “Page contents” side rail", sh.mode === "side" || sh.mode === "mixed", "sh158Save(Object.assign({}, (setv('shell158',{})||{}), {mode:(['side','mixed'].includes((setv('shell158',{})||{}).mode)?'classic':'side')})).then(()=>render())")}
+      ${row("home", "🏠", "1–5. الرئيسية الجديدة (مقدمة + برامج + ليه إتقان)", "1–5. The new home (intro + programmes + why Itqan)", setv("home165", "off") === "on", "home165(setv('home165','off')==='on'?'off':'on')")}
+      <p class="xs muted">${T("الباقي من الملف (الرحلة، الألوان لكل علم، الشارات، الجولة التعريفية) هعملهم واحدة واحدة.", "The rest from the file (journey map, colour per science, badges, guided tour) are coming one by one.")}</p></div>`;
+  }
+  window.SHMD171 = () => (setv("shell158", {}) || {}).md !== false;
+  /* «كمّل من مكان ما وقفت» */
+  try { const last = JSON.parse(localStorage.getItem("itqan_last171") || "null"); window.__last171 = last; } catch (e) {}
+  function trackLast() { if (["home", "login", "signup", "dashboard", "pricing", "about", "contact"].includes(state.route)) return; const h = document.querySelector("#app h1, #app h2"); if (!h) return; const v = { r: state.route, a: state.pageArg || null, s: state.libSec || null, t: h.textContent.trim().slice(0, 60), h: location.hash }; window.__last171 = v; try { localStorage.setItem("itqan_last171", JSON.stringify(v)); } catch (e) {} }
+  window.last171Go = () => { const v = window.__last171; if (!v) return; if (v.s && v.r === "library") libGo(v.s); else if (PAGES16.includes(v.r)) go16(v.r, v.a); else navigate(v.r); };
+  function homeExtras() {
+    if (state.route !== "home") return; const d = ID(); const w = document.querySelector("#app .hdr ~ section .wrap"); if (!w) return;
+    if (d.cont && window.__last171 && !document.getElementById("ct171")) { const c = document.createElement("div"); c.id = "ct171"; c.className = "card"; c.style.cssText = "margin:.6rem 0;display:flex;gap:.7rem;align-items:center;cursor:pointer"; c.onclick = last171Go; c.innerHTML = `<div style="font-size:1.6rem">⏯️</div><div style="flex:1;min-width:0"><div class="xs muted">${T("كمّل من مكان ما وقفت", "Continue where you left off")}</div><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(window.__last171.t)}</b></div><span class="btn btn-p">${T("كمّل", "Continue")}</span>`; w.prepend(c); }
+    if (d.search && !document.getElementById("bs171")) { const s = document.createElement("div"); s.id = "bs171"; s.style.cssText = "margin:.8rem 0"; s.innerHTML = `<button onclick="srOpen109()" style="width:100%;display:flex;align-items:center;gap:.6rem;padding:.9rem 1.2rem;border-radius:999px;border:2px solid var(--accent);background:var(--card);color:var(--muted);font:inherit;font-size:1.05rem;cursor:text;box-shadow:0 6px 20px #0000000d">🔍 ${T("دوّر على أي حاجة: سورة، مقام، حكم تجويد، درس…", "Search anything: a sūrah, a maqam, a tajweed rule, a lesson…")}</button>`; w.prepend(s); }
+  }
+  function mdock() { const on = ID().mdock && innerWidth <= 900; document.body.classList.toggle("md171", on); let b = document.getElementById("mdk171"); if (!on) { if (b) b.remove(); return; } if (!b) { b = document.createElement("nav"); b.id = "mdk171"; document.body.appendChild(b); } const it = [["🏠", T("الرئيسية", "Home"), "navigate('home')"], ["🧑‍🎓", T("مساحتي", "My space"), "navigate('dashboard')"], ["📖", T("المصحف", "Mushaf"), "go16('tasmee')"], ["🕌", T("متابعتي", "Tracker"), "go16('habits168')"], ["🧭", T("المزيد", "More"), "go16('tools')"]]; b.innerHTML = it.map(x => `<button onclick="${x[2]}"><span>${x[0]}</span><small>${x[1]}</small></button>`).join(""); }
+  document.head.insertAdjacentHTML("beforeend", `<style>#mdk171{position:fixed;bottom:0;left:0;right:0;z-index:2147482000;display:flex;background:var(--card,#fff);border-top:1px solid var(--line,#e5e7eb);box-shadow:0 -6px 20px #0001;padding:.25rem .2rem calc(.25rem + env(safe-area-inset-bottom))}#mdk171 button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:.05rem;font:inherit;color:inherit;padding:.25rem 0;cursor:pointer}#mdk171 span{font-size:1.25rem}#mdk171 small{font-size:.66rem}body.md171{padding-bottom:4.2rem}body.md171 #rb169{bottom:5rem}</style>`);
+
+  const _os = ownerSettings;
+  ownerSettings = function () { const m = M(); return `<div class="card" style="margin-top:1rem;border:2px solid ${m.on ? "#f59e0b" : "var(--line)"}"><h3>🛠️ ${T("وضع الصيانة", "Maintenance mode")}</h3><p class="sm">${T("وانت شغال على الموقع، اقفله على الزوار والطلاب لحد ما تخلص. انت والمدرسين بتشوفوه عادي.", "Close the site to visitors and students while you work. You and teachers still see it.")}</p><button class="btn ${m.on ? "btn-o" : "btn-p"}" onclick="maint171(${!m.on})">${m.on ? "✅ " + T("رجّع الموقع للكل", "Reopen the site") : "🛠️ " + T("شغّل وضع الصيانة", "Turn maintenance on")}</button></div>` + studio() + ideasCard() + _os.apply(this, arguments); };
+
+  const _r = render;
+  render = function () {
+    const m = M();
+    if (m.on && !staff() && !["login"].includes(state.route)) { const app = document.getElementById("app"); if (app) { app.innerHTML = maintPage(); return; } }
+    const out = _r.apply(this, arguments);
+    try { skApply(); } catch (e) { console.error(e); }
+    try { if (m.on && staff()) { let b = document.getElementById("mb171"); if (!b) { b = document.createElement("div"); b.id = "mb171"; b.style.cssText = "position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:2147483000;background:#f59e0b;color:#111;font-weight:800;font-size:.8rem;padding:.2rem .8rem;border-radius:0 0 10px 10px;cursor:pointer"; b.onclick = () => maint171(false); document.body.appendChild(b); } b.textContent = "🛠️ " + T("الموقع في الصيانة — دوس هنا عشان ترجّعه", "Maintenance on — tap to reopen"); } else { const b = document.getElementById("mb171"); if (b) b.remove(); } } catch (e) {}
+    try { trackLast(); homeExtras(); mdock(); } catch (e) { console.error(e); }
+    return out;
+  };
+  window.addEventListener("resize", () => { try { mdock(); } catch (e) {} });
 })();
 
 // بدء التشغيل
