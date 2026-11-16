@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v180";
+const UI_VERSION = "2026-11-16-v181";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -25738,6 +25738,84 @@ Between lessons, the platform keeps you going:
   .mn-carousel i{width:17%;height:34px}.mn-appgrid{justify-content:center}.mn-appgrid i{width:17%;height:20px;border-radius:6px}.mn-masonry{display:block;columns:4;column-gap:4px}.mn-masonry i{width:100%;margin-bottom:4px}.mn-path{flex-direction:column;align-items:center;flex-wrap:nowrap}.mn-path i{width:18px;height:14px;border-radius:50%}.mn-sidebar,.mn-dashboard{padding-inline-start:30%}.mn-sidebar em,.mn-dashboard em{position:absolute;inset-inline-start:4px;top:4px;bottom:4px;width:26%}.mn-sidebar i,.mn-dashboard i{width:30%;height:22px}.mn-catalog u,.mn-feed u,.mn-chips u{width:100%;height:10px}.mn-catalog i,.mn-chips i{width:31%;height:36px}.mn-tiles i{width:31%;height:30px;border-radius:0}.mn-tiles i:nth-child(1){width:64%}.mn-feed i{width:31%;height:30px;border-radius:0}.mn-list i{width:100%;height:9px}.mn-reading i{width:70%;height:16px;margin:auto}.mn-bento i{height:46px}.mn-bento i:nth-child(1),.mn-bento i:nth-child(4){width:62%}.mn-bento i:nth-child(2),.mn-bento i:nth-child(3){width:34%}.mn-cinema i{width:48%;height:44px;background:#111}.mn-shots i{width:22%;height:24px}.mn-mega i{width:30%;height:8px}.mn-kanban i{width:30%;height:22px}.mn-index i{width:45%;height:7px}.mn-reels{justify-content:center}.mn-reels i{width:40%;height:100%;border-radius:8px;background:#111}.mn-bubbles{justify-content:center;align-items:center}.mn-bubbles i{width:26px;height:26px;border-radius:50%}.mn-def i{width:47%;height:46px}
   `);
   setTimeout(apply, 50);
+})();
+
+/* ================= v181: «المكتبة المصوّرة» — الموسوعة الفقهية الكويتية (45 جزء) + موسوعة بيان الإسلام + مصحف الشمرلي + اللؤلؤ والمرجان — عارض صفحات سريع بفهرس وبحث ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  ["pdfbooks181", "pdf181"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const BASE = "https://raw.githubusercontent.com/adarwesh701-byte/Quran-Academy/library/books/";
+  let LIB = null, libP = null;
+  function loadLib() { if (LIB) return Promise.resolve(LIB); if (!libP) libP = fetch(BASE + "library.json").then(r => r.json()).then(j => (LIB = j)).catch(e => { libP = null; throw e; }); return libP; }
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const last = id => { try { return +localStorage.getItem("itqan_pdf181_" + id) || 0; } catch (e) { return 0; } };
+  const setLast = (id, p) => { try { localStorage.setItem("itqan_pdf181_" + id, p); } catch (e) {} };
+
+  function listPage() {
+    if (!LIB) { loadLib().then(() => render()).catch(() => { const el = document.getElementById("pb181"); if (el) el.innerHTML = `<div class="err">${T("المكتبة مش متاحة دلوقتي — جرّب كمان شوية", "The library isn't available right now — try again shortly")}</div>`; }); return pageWrap("📚", T("المكتبة المصوّرة", "Scanned library"), "", `<div id="pb181">${loadingBox()}</div>`); }
+    return pageWrap("📚", T("المكتبة المصوّرة", "Scanned library"), T("الكتب بصفحاتها الأصلية زي المطبوع بالظبط — بفهرس وبحث في العناوين وبتكمّل من آخر صفحة وقفت عندها.", "Books with their original printed pages — with an index, title search and resume from where you stopped."),
+      `<div class="pb181g">${LIB.books.map(b => { const lp = last(b.id); return `<button class="card pb181c" style="--c:${b.c || "#0f766e"}" onclick="go16('pdf181','${b.id}${lp ? "/" + lp : ""}')"><span class="pb181i">${b.ic || "📘"}</span><b>${esc(b.t[state.lang] || b.t.ar)}</b><small>${esc(b.a || "")}</small><small>${(b.n || 0).toLocaleString()} ${T("صفحة", "pages")}${b.parts.length > 1 ? " · " + b.parts.length + " " + T("جزء", "parts") : ""}</small>${lp ? `<em>▶ ${T("كمّل من صفحة", "Resume page")} ${lp}</em>` : ""}</button>`; }).join("")}</div>`, 1100);
+  }
+
+  /* ---------- العارض ---------- */
+  const V = { doc: null, part: -1, b: null, p: 1, z: 1, busy: false, toc: false, q: "" };
+  async function ensurePdf() { if (window.pdfjsLib) return; await loadScriptOnce("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"); pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; }
+  const partOf = (b, p) => { const i = b.parts.findIndex(x => p - 1 >= x.s && p - 1 <= x.e); return i < 0 ? 0 : i; };
+  async function draw() {
+    const b = V.b; if (!b) return; const cv = document.getElementById("pv181c"); const st = document.getElementById("pv181s"); if (!cv) return;
+    V.p = Math.max(1, Math.min(b.n, V.p)); setLast(b.id, V.p); const pi = partOf(b, V.p); const part = b.parts[pi];
+    const inp = document.getElementById("pv181p"); if (inp) inp.value = V.p; try { history.replaceState(null, "", "#/pdf181/" + b.id + "/" + V.p); } catch (e) {}
+    const tag = ++V.tag; if (st) st.textContent = "⏳";
+    try {
+      await ensurePdf();
+      if (V.part !== pi || !V.doc) { if (V.doc) { try { V.doc.destroy(); } catch (e) {} } V.doc = await pdfjsLib.getDocument({ url: BASE + part.f, disableAutoFetch: true, disableStream: false, rangeChunkSize: 262144 }).promise; V.part = pi; }
+      const pg = await V.doc.getPage(V.p - part.s); if (tag !== V.tag) return;
+      const box = document.getElementById("pv181w"); const wAvail = Math.min(box.clientWidth - 8, 1100); const vp0 = pg.getViewport({ scale: 1 }); const sc = (wAvail / vp0.width) * V.z; const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const vp = pg.getViewport({ scale: sc * dpr }); const tmp = document.createElement("canvas"); tmp.width = vp.width; tmp.height = vp.height;
+      await pg.render({ canvasContext: tmp.getContext("2d"), viewport: vp }).promise; if (tag !== V.tag) return;
+      cv.width = tmp.width; cv.height = tmp.height; cv.style.width = (vp.width / dpr) + "px"; cv.getContext("2d").drawImage(tmp, 0, 0);
+      cv.classList.remove("in181"); void cv.offsetWidth; cv.classList.add("in181");
+      if (st) st.textContent = ""; const h = curHead(); const hd = document.getElementById("pv181h"); if (hd) hd.textContent = h;
+      if (V.p < b.n && partOf(b, V.p + 1) === pi) V.doc.getPage(V.p + 1 - part.s).catch(() => {});
+    } catch (e) { console.warn(e); if (st) st.textContent = "⚠️ " + T("الصفحة مش راضية تحمّل — جرّب تاني", "The page didn't load — try again"); }
+  }
+  function curHead() { const t = (V.b.toc || []).filter(x => x[2] != null && x[2] + 1 <= V.p); return t.length ? t.slice(-2).map(x => x[1]).join(" ‹ ") : ""; }
+  window.pv181 = { go: p => { V.p = +p || 1; draw(); }, nx: d => { V.p += d; draw(); }, z: d => { V.z = Math.max(.6, Math.min(3, V.z + d)); draw(); },
+    toc: () => { V.toc = !V.toc; const e = document.getElementById("pv181t"); if (e) e.classList.toggle("on", V.toc); },
+    q: v => { V.q = v; const e = document.getElementById("pv181l"); if (e) e.innerHTML = tocHtml(); }, fs: () => { const e = document.getElementById("pv181"); if (!document.fullscreenElement) e.requestFullscreen && e.requestFullscreen(); else document.exitFullscreen(); } };
+  function tocHtml() { const q = (V.q || "").trim(); const L = (V.b.toc || []).filter(x => x[2] != null && (!q || x[1].includes(q))).slice(0, 600); return L.map(x => `<a href="#" style="padding-inline-start:${.4 + Math.min(x[0], 5) * .7}rem" onclick="pv181.go(${x[2] + 1});${innerWidth < 900 ? "pv181.toc();" : ""}return false">${esc(x[1])}<small>${x[2] + 1}</small></a>`).join("") || `<p class="xs muted" style="padding:.6rem">—</p>`; }
+  function viewer(id) {
+    if (!LIB) { loadLib().then(() => render()); return pageWrap("📚", "…", "", loadingBox()); }
+    const b = LIB.books.find(x => x.id === id); if (!b) return pageWrap("📚", "—", "", `<div class="card muted">—</div>`);
+    if (V.b !== b) { V.b = b; V.doc = null; V.part = -1; V.z = 1; } const arg = String(state.pageArg || "").split("/"); V.p = +arg[1] || last(b.id) || 1; V.tag = 0;
+    setTimeout(draw, 30);
+    const notr = b.kind === "mushaf" ? "notr" : "";
+    return `<section class="sec" style="padding:.6rem 0"><div class="wrap" style="max-width:1300px"><div id="pv181" class="${notr}" translate="${notr ? "no" : "yes"}">
+      <div class="pv181bar"><button class="btn btn-o" onclick="go16('pdfbooks181')">← ${T("المكتبة", "Library")}</button><b class="pv181n">${b.ic || "📘"} ${esc(b.t[state.lang] || b.t.ar)}</b>
+        <button class="btn btn-o" onclick="pv181.toc()">☰ ${T("الفهرس", "Index")}</button>
+        <span class="row" style="gap:.2rem;align-items:center"><button class="btn btn-o" onclick="pv181.nx(${document.dir === "rtl" ? 1 : -1})">${document.dir === "rtl" ? "→" : "←"}</button><input id="pv181p" class="in" type="number" min="1" max="${b.n}" style="width:5.2rem;text-align:center" onchange="pv181.go(this.value)"><span class="xs muted">/ ${b.n}</span><button class="btn btn-o" onclick="pv181.nx(${document.dir === "rtl" ? -1 : 1})">${document.dir === "rtl" ? "←" : "→"}</button></span>
+        <span class="row" style="gap:.2rem"><button class="btn btn-o" onclick="pv181.z(-.2)">➖</button><button class="btn btn-o" onclick="pv181.z(.2)">➕</button><button class="btn btn-o" onclick="pv181.fs()">⛶</button></span><span id="pv181s" class="xs"></span></div>
+      <div class="xs muted" id="pv181h" style="margin:.3rem 0"></div>
+      <div class="pv181body"><aside id="pv181t"><input class="in" placeholder="🔎 ${T("دوّر في العناوين", "Search titles")}" oninput="pv181.q(this.value)" value="${esc(V.q || "")}"><div id="pv181l">${tocHtml()}</div></aside><div id="pv181w"><canvas id="pv181c"></canvas></div></div>
+      ${b.note ? `<p class="xs muted" style="margin-top:.5rem">${esc(b.note[state.lang] || b.note.ar)}</p>` : ""}</div></div></section>`;
+  }
+  document.addEventListener("keydown", e => { if (state.route !== "pdf181" || /INPUT|TEXTAREA/.test((e.target || {}).tagName || "")) return; const rtl = document.dir === "rtl"; if (e.key === "ArrowLeft") pv181.nx(rtl ? 1 : -1); if (e.key === "ArrowRight") pv181.nx(rtl ? -1 : 1); });
+  let tx = null; document.addEventListener("touchstart", e => { if (state.route === "pdf181" && e.target.id === "pv181c" && V.z <= 1) tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener("touchend", e => { if (tx == null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 60) pv181.nx((dx > 0) === (document.dir === "rtl") ? -1 : 1); }, { passive: true });
+  css(`.pb181g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(15rem,100%),1fr));gap:.9rem}.pb181c{display:flex;flex-direction:column;gap:.3rem;text-align:start;cursor:pointer;border-top:5px solid var(--c);font:inherit;color:inherit}.pb181c:hover{transform:translateY(-3px)}.pb181i{font-size:2.4rem}.pb181c small{color:var(--muted)}.pb181c em{font-style:normal;color:var(--c);font-weight:700;font-size:.85rem}
+  #pv181{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.6rem}#pv181:fullscreen{overflow:auto;border-radius:0}.pv181bar{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}.pv181n{flex:1;min-width:10rem}
+  .pv181body{display:flex;gap:.6rem;align-items:flex-start}#pv181t{display:none;width:17rem;flex:0 0 auto;max-height:80vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:.4rem;position:sticky;top:4.5rem;background:var(--card)}#pv181t.on{display:block}#pv181t a{display:flex;justify-content:space-between;gap:.4rem;padding:.3rem .4rem;border-radius:6px;text-decoration:none;color:var(--fg);font-size:.85rem}#pv181t a:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}#pv181t small{color:var(--muted)}
+  @media(max-width:900px){#pv181t.on{position:fixed;inset:4rem .5rem auto;z-index:50;width:auto;max-height:70vh;box-shadow:0 20px 50px rgba(0,0,0,.3)}}
+  #pv181w{flex:1;overflow:auto;display:flex;justify-content:center;min-height:60vh;background:color-mix(in srgb,var(--fg) 4%,transparent);border-radius:10px;padding:4px}#pv181c{box-shadow:0 6px 24px rgba(0,0,0,.18);background:#fff;max-width:none}.in181{animation:in181 .35s ease}@keyframes in181{from{opacity:.25;transform:perspective(1200px) rotateY(${document.dir === "rtl" ? "-" : ""}8deg)}to{opacity:1;transform:none}}`);
+  /* ---------- ربط ---------- */
+  const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { const s = ds.find(d => d.k === "sciences") || ds[ds.length - 1]; if (s && !(s.tools || []).some(t => String(t[2]).includes("pdfbooks181"))) s.tools.unshift(["📚", T("المكتبة المصوّرة (الموسوعة الفقهية، بيان الإسلام، مصحف الشمرلي)", "Scanned library (Fiqh Encyclopedia, Bayan al-Islam, Shamarly mushaf)"), "go16('pdfbooks181')", ""]); } catch (e) {} return ds; };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#92400e" onclick="go16('pdfbooks181')"><span>📚</span><b>${T("المكتبة المصوّرة", "Scanned library")}</b></button>`); };
+  const _r = render; render = function () {
+    const rt = state.route; if (rt === "pdfbooks181" || rt === "pdf181") { let b; try { b = rt === "pdfbooks181" ? listPage() : viewer(String(state.pageArg || "").split("/")[0]); } catch (e) { console.error(e); b = `<div class="err">${esc(e.message)}</div>`; } show(b); return; }
+    return _r.apply(this, arguments);
+  };
+  const m = location.hash.match(/^#\/(pdfbooks181|pdf181)(?:\/(.+))?/); if (m) { state.route = m[1]; if (m[2]) state.pageArg = decodeURIComponent(m[2]); }
 })();
 
 // بدء التشغيل
