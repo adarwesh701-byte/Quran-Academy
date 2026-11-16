@@ -29,7 +29,7 @@ const Q = new URLSearchParams(location.search); const LANG = Q.get("lang") || "a
 document.documentElement.lang = LANG; document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
 const T = (a, e) => LANG === "ar" ? a : e;
 const brand = `<div class="brand"><i>إتقان</i>${T("أكاديمية إتقان", "Itqan Academy")}</div>`;
-const phone = id => `<div class="phone"><div class="scr"><iframe id="${id}" src="/?embed=1#/home"></iframe></div><div class="tap" id="tap_${id}"></div></div>`;
+const phone = id => `<div class="phone"><div class="scr"><iframe id="${id}" data-src="/?embed=1#/home"></iframe></div><div class="tap" id="tap_${id}"></div></div>`;
 const PROMO = [
   { html: `${brand}<h1>${T("القرآن بصوتك… <em>بإتقان</em>", "Recite the Quran <em>beautifully</em>")}</h1><p class="sub">${T("معلمين مجازين لايف ١:١ بتوقيت بلدك + منصة بتتابعك كل يوم", "Certified teachers, live 1-on-1 in your time zone + a platform that keeps you going every day")}</p>${phone("f1")}`, go: "home" },
   { html: `${brand}<h1>${T("صلاتك وقيامك ووردك <em>يوم بيوم</em>", "Prayers, night prayer & wird — <em>day by day</em>")}</h1><p class="sub">${T("مع تذكير قبل كل صلاة بنص ساعة — ببلاش ومن غير تسجيل", "With a reminder 30 minutes before each prayer — free, no sign-up")}</p>${phone("f2")}`, go: "habits168", act: w => { const b = w.document.querySelectorAll(".hb168p button, [onclick*='hb168.pr']"); [0, 1].forEach(i => b[i] && b[i].click()); } },
@@ -46,13 +46,15 @@ const DEMO = [
   { cap: T("وكل يوم تشوف تقدّمك 💚", "See your progress every day 💚"), act: w => w.scrollTo(0, 0) }
 ];
 const root = document.getElementById("root");
+function boot(){ setTimeout(()=>document.querySelectorAll('iframe[data-src]').forEach(f=>{ if(ONLY==null || f.closest('.s.on')) f.src=f.dataset.src; }), 2500); }
 function prep(f, cb) { f.addEventListener("load", () => { const w = f.contentWindow; const go = () => { try { if (w.setLang && w.state.lang !== LANG) w.setLang(LANG); } catch (e) {} cb && cb(w); }; setTimeout(go, 1800); }, { once: true }); }
 if (MODE === "promo") {
+  const LIST = ONLY != null ? [PROMO[+ONLY]] : PROMO; const OFF = ONLY != null ? +ONLY : 0;
   root.innerHTML = PROMO.map((s, i) => `<section class="s" id="s${i}">${s.html}<div class="cta" style="${i === 4 ? "display:none" : ""}">${T("✨ أول حصة تجريبية مجانًا", "✨ First trial lesson free")}</div></section>`).join("");
   PROMO.forEach((s, i) => { const f = document.getElementById("f" + (i + 1)); if (f) prep(f, w => { if (s.go && s.go !== "home") { try { w.go16 ? (w.PAGES16.includes(s.go) ? w.go16(s.go) : w.navigate(s.go)) : 0; } catch (e) {} } setTimeout(() => { try { s.act && s.act(w); } catch (e) {} }, 1500); }); });
-  let i = ONLY != null ? +ONLY : 0; const show = () => { document.querySelectorAll(".s").forEach((e, k) => e.classList.toggle("on", k === i)); }; show(); if (ONLY == null) setInterval(() => { i = (i + 1) % PROMO.length; show(); }, DUR);
+  let i = ONLY != null ? +ONLY : 0; const show = () => { document.querySelectorAll(".s").forEach((e, k) => e.classList.toggle("on", k === i)); }; show(); if (ONLY == null) setInterval(() => { i = (i + 1) % PROMO.length; show(); }, DUR); boot();
 } else {
   root.innerHTML = `<section class="s on">${brand}<h1 id="cap" style="font-size:32px;min-height:84px"></h1>${phone("fd")}<div class="cta">${T("✨ جرّبها ببلاش", "✨ Try it free")}</div></section>`;
-  const f = document.getElementById("fd"); prep(f, w => { let k = 0; const step = () => { const d = DEMO[k]; document.getElementById("cap").textContent = d.cap; try { if (d.act) d.act(w); if (d.tap) { const b = w.document.querySelectorAll(".hb168p button, [onclick*='hb168.pr']"); d.tap.forEach(t => { const el = b[t]; if (!el) return; el.scrollIntoView({ block: "center" }); const r = el.getBoundingClientRect(); const tp = document.getElementById("tap_fd"); tp.style.left = (12 + (r.left + r.width / 2) * .75) + "px"; tp.style.top = (12 + (r.top + r.height / 2) * .75) + "px"; tp.classList.add("on"); setTimeout(() => { el.click(); tp.classList.remove("on"); }, 700); }); } } catch (e) {} k++; if (k < DEMO.length) setTimeout(step, DUR); }; step(); });
+  boot(); const f = document.getElementById("fd"); prep(f, w => { let k = 0; const step = () => { const d = DEMO[k]; document.getElementById("cap").textContent = d.cap; try { if (d.act) d.act(w); if (d.tap) { const b = w.document.querySelectorAll(".hb168p button, [onclick*='hb168.pr']"); d.tap.forEach(t => { const el = b[t]; if (!el) return; el.scrollIntoView({ block: "center" }); const r = el.getBoundingClientRect(); const tp = document.getElementById("tap_fd"); tp.style.left = (12 + (r.left + r.width / 2) * .75) + "px"; tp.style.top = (12 + (r.top + r.height / 2) * .75) + "px"; tp.classList.add("on"); setTimeout(() => { el.click(); tp.classList.remove("on"); }, 700); }); } } catch (e) {} k++; if (k < DEMO.length) setTimeout(step, DUR); }; step(); });
 }
 </script></body></html>
