@@ -25302,7 +25302,9 @@ body.ed158 .hv169{opacity:.4!important}
   ["mq179", "special179"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
   function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
   window.go179 = function (h) { h = String(h || "").trim(); if (!h) return; if (/^https?:/.test(h)) return window.open(h, "_blank", "noopener"); const m = h.replace(/^#?\/?/, "").split("/"); const r = m[0], a = m.slice(1).join("/") || undefined; if (PAGES16.includes(r)) go16(r, a); else navigate(r); };
-  css(`#ctl113{top:auto!important;bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}`);
+  document.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&display=swap">');
+  css(`.logo>i{font-family:Amiri,'Traditional Arabic',serif!important;font-weight:700!important;font-style:normal;font-size:1.3em!important;line-height:1!important;padding-top:.12em}
+  #ctl113{top:auto!important;bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}`);
 
   /* ================= 1) أيقوناتك: إيموجي أو صورة + اسم + لينك + شكل من المكتبة + مكانها ================= */
   const SHAPES = { circle: ["دايرة", "Circle", "50%"], squircle: ["مربع ناعم", "Squircle", "28%"], square: ["مربع", "Square", "8px"], pill: ["كبسولة", "Pill", "999px"], leaf: ["ورقة شجر", "Leaf", "50% 6px 50% 6px"], drop: ["قطرة", "Drop", "50% 50% 50% 8px"], hex: ["مسدّس", "Hexagon", "hex"], blob: ["فقاعة", "Blob", "42% 58% 63% 37% / 41% 44% 56% 59%"] };
