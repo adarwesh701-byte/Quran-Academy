@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v213";
+const UI_VERSION = "2026-11-17-v214";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29698,6 +29698,24 @@ Between lessons, the platform keeps you going:
       <div class="g"><button class="s" onclick="cf213.save()">💾 ${T("احفظ", "Save")}</button><button onclick="cf213.back()">↶ ${T("ارجع خطوة", "Undo step")}</button><button onclick="cf213.all()">↩️ ${T("ارجع الكل", "Revert all")}</button><button style="grid-column:1/-1" onclick="event.stopPropagation();cf213.later()">✏️ ${T("كمّل تعديل (احفظ بعدين)", "Keep editing (save later)")}</button></div>`; }
 
   const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="border:2px solid var(--accent);margin-bottom:1rem"><label class="row" style="gap:.5rem;align-items:center;font-weight:700"><input type="checkbox" ${LS("cf213", 1) === 1 ? "checked" : ""} onchange="cf213.set(this.checked)"> 💾 ${T("لا شيء يُحفظ تلقائيًا: بعد أي تعديل اسألني «احفظ / ارجع / كمّل تعديل»", "Nothing saves by itself: after any change ask me Save / Revert / Keep editing")}</label></div>` + _os.apply(this, arguments); };
+})();
+
+/* ================= v214: «خليني مكاني» — لما تدوس أيقونة أو تبويب جوه نفس الصفحة (زي القرآن / الصوت والمقامات / العربي) الصفحة ماتطلعش لفوق: الحاجة اللي دوست عليها تفضل في نفس مكانها على الشاشة بالظبط ================= */
+(function () {
+  const _st = window.scrollTo.bind(window), _sb = window.scrollBy.bind(window), _siv = Element.prototype.scrollIntoView;
+  let K = null;              /* {route, until, y, top, oc, tx} */
+  const blocked = () => K && Date.now() < K.until && state.route === K.route;
+  window.scrollTo = function () { if (blocked()) return; return _st.apply(window, arguments); };
+  window.scrollBy = function () { if (blocked()) return; return _sb.apply(window, arguments); };
+  try { const de = document.documentElement; const d = Object.getOwnPropertyDescriptor(Element.prototype, "scrollTop"); if (d && d.set) Object.defineProperty(de, "scrollTop", { get() { return d.get.call(this); }, set(v) { if (blocked()) return; d.set.call(this, v); }, configurable: true }); } catch (e) {}
+  const txt = el => (el.innerText || "").replace(/\s+/g, " ").trim().slice(0, 60);
+  document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("#app [onclick], #app a[href]"); if (!el || el.closest(".hdr, header, .bar185, .dombar, .unav, footer")) return;
+    K = { route: state.route, until: Date.now() + 1800, y: scrollY, top: el.getBoundingClientRect().top, oc: el.getAttribute("onclick") || el.getAttribute("href") || "", tx: txt(el) }; }, true);
+  function find() { const all = [...document.querySelectorAll("#app [onclick], #app a[href]")].filter(x => (x.getAttribute("onclick") || x.getAttribute("href") || "") === K.oc);
+    return all.find(x => txt(x) === K.tx) || all[0] || null; }
+  function keep() { if (!blocked()) return; if (state.route !== K.route) { K = null; return; } const el = find(); if (el && el.getBoundingClientRect().height) { const d = el.getBoundingClientRect().top - K.top; if (Math.abs(d) > 1) _st(0, scrollY + d); } else if (Math.abs(scrollY - K.y) > 1) _st(0, K.y); }
+  const app = document.getElementById("app");
+  if (app) new MutationObserver(() => { if (!blocked()) return; keep(); requestAnimationFrame(keep); setTimeout(keep, 60); setTimeout(keep, 160); setTimeout(keep, 320); setTimeout(keep, 600); }).observe(app, { childList: true, subtree: true });
 })();
 
 // بدء التشغيل
