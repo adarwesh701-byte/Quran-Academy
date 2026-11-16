@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v197";
+const UI_VERSION = "2026-11-16-v198";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27433,7 +27433,7 @@ Between lessons, the platform keeps you going:
     return { pages: [await file.text()] };
   }
   /* كتاب صور (مسكانر): نقراه بـ OCR مجاني على جهازك */
-  /* v196: اللي اتقرا بيتحفظ على الجهاز — لو الصفحة رفرشت أو النت فصل يكمّل من مكانه */
+  /* (196) اللي اتقرا بيتحفظ على الجهاز — لو الصفحة رفرشت أو النت فصل يكمّل من مكانه */
   const IDB = { db: null, open() { return this.db || (this.db = new Promise((ok, no) => { const r = indexedDB.open("itqan196", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); })); },
     async get(k) { try { const db = await this.open(); return await new Promise(ok => { const r = db.transaction("kv").objectStore("kv").get(k); r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); }); } catch (e) { return null; } },
     async set(k, v) { try { const db = await this.open(); await new Promise(ok => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} } };
@@ -27865,6 +27865,278 @@ Between lessons, the platform keeps you going:
   setTimeout(mark, 400);
 })();
 
+/* ================= v196: رجوع لنفس المكان اللي جيت منه + يكمّل من مكانك + اختبار تحت المصحف (قراءة الكلمة / حكم التجويد) + الأحكام التفصيلية مطوية + صوت الكلمة والآية تحت الخطأ + شريط تقدّم لرفع الكتاب + شرح تفصيلي لكل حرف + شريط تطبيقات جانبي زي الموبايل (ترتيب بالسحب، الأكتر استخدامًا، قفل، تحريك لفوق/تحت) + قفل للشرايط الجانبية + خريطة كل الروابط في الموقع ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const uid = () => state.auth && state.auth.user && state.auth.user.id;
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  let AU = null; const play = u => { try { if (!AU) AU = new Audio(); AU.pause(); AU.src = u; AU.play().catch(() => toast(T("مفيش صوت للكلمة دي", "No audio for this word"), true)); } catch (e) {} };
+  window.play196 = play;
+  ["map196"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+
+  /* ======================= 1) رجوع للمكان اللي جيت منه + يكمّل من مكانك ======================= */
+  const NV = () => Object.assign({ mode: "place", pill: 1 }, setv("back196", {}) || {});
+  const hkey = () => location.hash || "#/home";
+  let STACK = LS("nav196s", []); let popping = false;
+  const _ps = history.pushState.bind(history);
+  history.pushState = function (s, t, u) { try { const cur = hkey(); const nxt = u ? String(u) : cur; if (nxt !== cur) { STACK.push(cur); if (STACK.length > 60) STACK.shift(); try { sessionStorage.setItem("nav196s", JSON.stringify(STACK)); } catch (e) {} } } catch (e) {} return _ps(s, t, u); };
+  try { STACK = JSON.parse(sessionStorage.getItem("nav196s") || "[]"); } catch (e) { STACK = []; }
+  let saveT; addEventListener("scroll", () => { if (popping) return; clearTimeout(saveT); saveT = setTimeout(() => { const m = LS("pos196", {}); m[hkey()] = Math.round(scrollY); const ks = Object.keys(m); if (ks.length > 250) delete m[ks[0]]; LSset("pos196", m); }, 350); }, { passive: true });
+  const restore = () => { const y = LS("pos196", {})[hkey()] || 0; if (!y) return; [60, 260, 700].forEach(ms => setTimeout(() => { if (Math.abs(scrollY - y) > 30 && document.body.scrollHeight > y) window.scrollTo({ top: y, behavior: "instant" }); }, ms)); };
+  addEventListener("popstate", () => { popping = true; STACK.pop(); try { sessionStorage.setItem("nav196s", JSON.stringify(STACK)); } catch (e) {} if (NV().mode !== "top") restore(); setTimeout(() => popping = false, 900); });
+  window.back196 = () => { if (STACK.length) history.back(); else navigate("home"); };
+  const isBackish = el => { const t = (el.innerText || el.textContent || "").trim(); if (t.length > 24) return false; return /^(?:[⬅️➡️→←↩️🔙↪️]\s*)?(?:رجوع|ارجع|العودة|الرجوع|Back)\b/.test(t) || /^[→←⬅️➡️↩️🔙]$/.test(t); };
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest(".libcrumb a:first-child, button, a"); if (!a) return;
+    const first = a.matches(".libcrumb a:first-child"); const oc = a.getAttribute("onclick") || ""; const href = a.getAttribute("href") || "";
+    if (first || (isBackish(a) && /navigate\(|go16\(|libOpen\(|state\.route\s*=/.test(oc + href) && !/qz|rd|step|prev|wi=|si=/.test(oc))) {
+      if (!STACK.length) return; e.preventDefault(); e.stopPropagation(); back196();
+    }
+  }, true);
+  let lastH = hkey();
+  function pill() { const k = hkey(); if (k === lastH) return; lastH = k; if (popping) return; const c = NV(); const y = LS("pos196", {})[k] || 0; if (y < 700 || c.mode === "top") return;
+    if (c.mode === "auto") { restore(); return; } if (!c.pill) return;
+    let p = document.getElementById("rs196"); p && p.remove(); p = document.createElement("button"); p.id = "rs196"; p.className = "rs196"; p.innerHTML = `↩️ ${T("كمّل من حيث وقفت", "Continue where you stopped")}`; p.onclick = () => { window.scrollTo({ top: y, behavior: "smooth" }); p.remove(); }; document.body.appendChild(p); setTimeout(() => p && p.remove(), 9000); }
+
+  /* ======================= 2) اختبار تحت المصحف ======================= */
+  const QZ = window.QZ196 = { mode: null, i: 0, n: 10, sc: 0, cur: null, ans: null, rules: LS("qz196r", null) };
+  const tjName = k => (TJ[k] ? (AR() ? TJ[k][1] : TJ[k][2]) : k);
+  const allRules = () => Object.keys(typeof TJ === "object" ? TJ : {}).filter(k => k !== "slnt" && k !== "end");
+  const selRules = () => (QZ.rules && QZ.rules.length ? QZ.rules : allRules().filter(k => k !== "ham_wasl"));
+  const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function qzCard() {
+    const r = new Set(selRules());
+    return `<div class="card qz196" id="qz196" style="margin-top:1rem"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>📝 ${T("اختبر نفسك على السورة دي", "Test yourself on this surah")}</h3><span class="row" style="gap:.3rem;flex-wrap:wrap"><button class="btn btn-p" onclick="qz196.start('word')">🔊 ${T("قراءة الكلمة", "Read the word")}</button><button class="btn btn-p" onclick="qz196.start('rule')">🎨 ${T("أحكام التجويد", "Tajweed rules")}</button><button class="btn btn-o" onclick="qz196.start('mix')">🔀 ${T("الاتنين", "Both")}</button></span></div>
+      <details class="qz196r"><summary class="sm b">⚙️ ${T("اختار الأحكام اللي يمتحن فيها", "Choose the rules to test")} (${r.size})</summary><div class="row" style="gap:.3rem;flex-wrap:wrap;margin-top:.4rem">${allRules().map(k => `<label class="chip" style="border:1px solid var(--line);border-radius:999px;padding:.1rem .55rem;font-size:.8rem;cursor:pointer;color:${TJ[k][0]}"><input type="checkbox" ${r.has(k) ? "checked" : ""} onchange="qz196.rule('${k}',this.checked)"> ${esc(tjName(k))}</label>`).join("")}</div>
+      <div class="row" style="gap:.3rem;margin-top:.4rem"><button class="btn btn-o" style="padding:.15rem .6rem" onclick="qz196.all(1)">${T("كلهم", "All")}</button><button class="btn btn-o" style="padding:.15rem .6rem" onclick="qz196.all(0)">${T("ولا واحد", "None")}</button><label class="sm">${T("عدد الأسئلة", "Questions")} <input class="in" type="number" min="3" max="50" value="${QZ.n}" style="width:4rem" onchange="QZ196.n=Math.max(3,+this.value||10)"></label></div></details>
+      <div id="qz196b"></div></div>`;
+  }
+  function words() { return [...document.querySelectorAll(".tj2 .w")].filter(w => w.innerText.trim().length > 1); }
+  function makeQ(mode) {
+    const W = words(); if (W.length < 4) return null; const m = mode === "mix" ? (Math.random() < .5 ? "word" : "rule") : mode;
+    if (m === "rule") { const rs = new Set(selRules()); const spans = []; W.forEach(w => w.querySelectorAll("[class^='tj-'],[class*=' tj-']").forEach(sp => { const k = [...sp.classList].find(c => c.startsWith("tj-")); if (k && rs.has(k.slice(3)) && sp.innerText.trim()) spans.push([w, sp, k.slice(3)]); }));
+      if (spans.length) { const [w, sp, k] = spans[Math.floor(Math.random() * spans.length)]; const pool = shuf([...rs].filter(x => x !== k && TJ[x])).slice(0, 3); const opts = shuf([k].concat(pool.length >= 2 ? pool : shuf(allRules().filter(x => x !== k)).slice(0, 3)));
+        const cl = w.cloneNode(true); cl.querySelectorAll("[class^='tj-'],[class*=' tj-']").forEach(x => x.classList.add("qzp196")); const tgt = [...w.querySelectorAll("[class^='tj-'],[class*=' tj-']")].indexOf(sp); const tc = cl.querySelectorAll("[class^='tj-'],[class*=' tj-']")[tgt]; tc && tc.classList.add("qzt196");
+        return { m: "rule", html: cl.innerHTML, ans: k, opts: opts.map(o => [o, tjName(o)]), v: w.dataset.v, i: +w.dataset.i }; }
+      if (mode === "rule") return { none: 1 }; }
+    const w = W[Math.floor(Math.random() * W.length)]; const txt = w.innerText.trim(); const others = shuf([...new Set(W.map(x => x.innerText.trim()).filter(t => t !== txt))]).sort((a, b) => Math.abs(a.length - txt.length) - Math.abs(b.length - txt.length)).slice(0, 6);
+    const opts = shuf([txt].concat(shuf(others).slice(0, 3)));
+    return { m: "word", ans: txt, opts: opts.map(o => [o, o]), v: w.dataset.v, i: +w.dataset.i };
+  }
+  function qzRender() {
+    const b = document.getElementById("qz196b"); if (!b) return; const q = QZ.cur;
+    if (!QZ.mode) { const h = LS("qz196h", []); b.innerHTML = h.length ? `<p class="xs muted" style="margin-top:.5rem">🕘 ${T("آخر نتايجك", "Last results")}: ${h.slice(0, 5).map(x => `<b>${x.p}%</b> <span class="xs">(${esc(x.s)})</span>`).join(" · ")}</p>` : ""; return; }
+    if (QZ.i >= QZ.n) { const p = Math.round(QZ.sc / QZ.n * 100); const h = LS("qz196h", []); h.unshift({ p, s: sName((state.tj || {}).surah || 1), m: QZ.mode, at: Date.now() }); LSset("qz196h", h.slice(0, 30));
+      b.innerHTML = `<div style="text-align:center;padding:1rem"><div style="font-size:2.4rem">${p >= 80 ? "🏆" : p >= 50 ? "👍" : "💪"}</div><h3>${QZ.sc} / ${QZ.n} — ${p}%</h3><div class="row" style="gap:.4rem;justify-content:center"><button class="btn btn-p" onclick="qz196.start(QZ196.mode)">🔁 ${T("تاني", "Again")}</button><button class="btn btn-o" onclick="QZ196.mode=null;qz196.r()">✖ ${T("قفل", "Close")}</button></div></div>`; QZ.mode = null; return; }
+    if (!q) return; if (q.none) { b.innerHTML = `<p class="sm muted" style="margin-top:.5rem">${T("مفيش أحكام من اللي اخترتها في السورة دي — اختار أحكام تانية.", "None of the chosen rules appear in this surah — pick others.")}</p>`; QZ.mode = null; return; }
+    const [s, a] = q.v.split(":"); const done = QZ.ans != null;
+    b.innerHTML = `<div class="qzq196"><div class="xs muted">${QZ.i + 1} / ${QZ.n} · ✅ ${QZ.sc}</div>
+      ${q.m === "word" ? `<p class="b" style="margin:.4rem 0">${T("اسمع الكلمة واختار هي أنهي واحدة", "Listen and pick the word you hear")}</p><button class="btn btn-o" onclick="play196(wbwUrl(${s},${a},${q.i + 1}))">🔊 ${T("اسمع الكلمة", "Hear the word")}</button>`
+        : `<p class="b" style="margin:.4rem 0">${T("إيه حكم الجزء اللي تحته خط؟", "What is the rule of the underlined part?")}</p><div class="qzw196 notr" lang="ar">${q.html}</div><span class="xs muted">${esc(sName(+s))} ${a}</span>`}
+      <div class="qzo196">${q.opts.map(([k, l]) => `<button class="btn ${!done ? "btn-o" : k === q.ans ? "btn-p" : QZ.ans === k ? "bad" : "btn-o"} ${q.m === "word" ? "notr" : ""}" ${q.m === "word" ? 'lang="ar" style="font:1.35rem/1.8 Amiri,serif"' : ""} onclick="qz196.pick(${esc(JSON.stringify(k))})">${esc(l)}</button>`).join("")}</div>
+      ${done ? `<div class="row" style="gap:.35rem;flex-wrap:wrap;margin-top:.5rem">${QZ.ans === q.ans ? `<b style="color:#16a34a">✔ ${T("صح!", "Correct!")}</b>` : `<b style="color:#dc2626">✘ ${T("الصح", "Answer")}: ${esc(q.m === "rule" ? tjName(q.ans) : q.ans)}</b>`}
+        <button class="btn btn-o" onclick="play196(wbwUrl(${s},${a},${q.i + 1}))">🔊 ${T("الكلمة", "Word")}</button><button class="btn btn-o" onclick="play196(eaUrl('Husary_128kbps','${q.v}'))">🎧 ${T("الآية (الحصري)", "Ayah (Husary)")}</button><button class="btn btn-p" onclick="qz196.next()">${T("اللي بعده", "Next")} ⬅</button></div>
+        ${q.m === "rule" ? ruleHelp(q.ans) : ""}` : ""}</div>`;
+    if (q.m === "word" && !done && !q.played) { q.played = 1; play(wbwUrl(+s, +a, q.i + 1)); }
+  }
+  function ruleHelp(k) { try { const c = (typeof TJC !== "undefined" ? TJC : []).find(x => (x.cls || []).includes(k)); if (!c) return ""; return `<details style="margin-top:.4rem"><summary class="xs b">📖 ${T("اشرحلي الحكم ده", "Explain this rule")}</summary>${(c.cards || []).slice(0, 4).map(x => `<p class="sm"><b>${esc(x[0])}:</b> ${esc(x[1])}</p>`).join("")}</details>`; } catch (e) { return ""; } }
+  window.qz196 = {
+    start(m) { QZ.mode = m; QZ.i = 0; QZ.sc = 0; QZ.ans = null; QZ.cur = makeQ(m); qzRender(); document.getElementById("qz196").scrollIntoView({ block: "nearest", behavior: "smooth" }); },
+    pick(k) { if (QZ.ans != null) return; QZ.ans = k; if (k === QZ.cur.ans) QZ.sc++; qzRender(); },
+    next() { QZ.i++; QZ.ans = null; QZ.cur = QZ.i < QZ.n ? makeQ(QZ.mode) : null; qzRender(); },
+    rule(k, on) { const s = new Set(selRules()); on ? s.add(k) : s.delete(k); QZ.rules = [...s]; LSset("qz196r", QZ.rules); const sm = document.querySelector(".qz196r summary"); if (sm) sm.lastChild.textContent = ` (${s.size})`; },
+    all(on) { QZ.rules = on ? allRules() : []; LSset("qz196r", QZ.rules); document.querySelectorAll(".qz196r input").forEach(x => x.checked = !!on); },
+    r: qzRender
+  };
+  if (typeof tajPage === "function") { const _tp = tajPage; tajPage = function () { let h = _tp.apply(this, arguments); try { if (state.tjq && state.qz) return h; const s = (state.tj || {}).surah || 1; if (Array.isArray(state.data["tj:" + s]) && !h.includes('id="qz196"')) h += qzCard(); } catch (e) {} return h; }; }
+
+  /* ======================= 3) نافذة الخطأ: الأحكام التفصيلية مطوية + صوت الكلمة والآية ======================= */
+  const MA = () => Object.assign({ word: 1, ayah: 1, rd: "Husary_128kbps" }, setv("mmau196", {}) || {});
+  const auBtns = (vk, i) => { const [s, a] = String(vk).split(":"); const c = MA(); return `${c.word ? `<button class="btn btn-o mmau196" style="padding:.1rem .45rem" title="${T("صوت الكلمة لوحدها", "Word audio")}" onclick="event.stopPropagation();play196(wbwUrl(${+s},${+a},${+i + 1}))">🔊 ${T("الكلمة", "Word")}</button>` : ""}${c.ayah ? `<button class="btn btn-o mmau196" style="padding:.1rem .45rem" onclick="event.stopPropagation();play196(eaUrl('${c.rd}','${s}:${a}'))">🎧 ${T("الآية", "Ayah")}</button>` : ""}`; };
+  if (typeof mmOpen === "function") { const _o = mmOpen; mmOpen = function (vk, i) { _o.apply(this, arguments); try { const box = document.getElementById("mmModal"); if (!box) return; const det = box.querySelector(".dt165"); if (det) { det.open = false; const sm = det.querySelector("summary"); if (sm && !sm.dataset.q196) { sm.dataset.q196 = 1; sm.insertAdjacentHTML("beforeend", ` <span class="xs muted">(${T("دوس عشان تفتح", "tap to open")})</span>`); } }
+        if (!box.querySelector(".mmaurow196")) { const h = box.querySelector("h3, h2, b"); const row = document.createElement("div"); row.className = "row mmaurow196"; row.style.cssText = "gap:.3rem;flex-wrap:wrap;margin:.35rem 0"; row.innerHTML = auBtns(vk, i) + (realOwner() ? `<button class="btn btn-o" style="padding:.1rem .45rem" onclick="event.stopPropagation();go16('map196');document.getElementById('mmModal')&&document.getElementById('mmModal').remove()">⚙️</button>` : ""); (h && h.parentElement === box.firstElementChild ? h : box.firstElementChild || box).after(row); } } catch (e) {} }; }
+  if (typeof mmListCard === "function") { const _ml = mmListCard; mmListCard = function (surah) { let h = _ml.apply(this, arguments); try { const u = mmUser(); const all = state.data["mmAll:" + u]; if (!Array.isArray(all)) return h; const open = all.filter(m => !m.resolved).slice(0, 40); let k = 0; h = h.replace(/<b class="mmw">/g, m => { const x = open[k++]; return x ? `<span class="row" style="display:inline-flex;gap:.2rem">${auBtns(x.vkey, x.w)}</span> ` + m : m; }); } catch (e) {} return h; }; }
+
+  /* ======================= 4) شريط تقدّم لرفع الكتاب ======================= */
+  const BP = { ph: "", t0: 0, last: "" };
+  setInterval(() => { const st = document.getElementById("bk192st"); if (!st) return; const t = (st.textContent || "").trim(); let bar = document.getElementById("bar196");
+    if (!t) { if (bar && !bar.dataset.done) { bar.dataset.done = 1; bar.querySelector("i").style.width = "100%"; bar.querySelector("span").textContent = "✅ " + T("خلص", "Done"); setTimeout(() => bar && bar.remove(), 2500); } return; }
+    if (!bar) { st.insertAdjacentHTML("afterend", `<div id="bar196" class="bar196"><div><i></i></div><span></span></div>`); bar = document.getElementById("bar196"); }
+    if (t === BP.last) return; BP.last = t; const m = t.match(/(\d+)\s*(?:من|\/)\s*(\d+)/); const ph = /🔎|OCR/.test(t) ? "ocr" : /✂️|Split/.test(t) ? "split" : /📄|Reading/.test(t) ? "read" : /📦|♻️/.test(t) ? "cache" : "start";
+    if (ph !== BP.ph) { BP.ph = ph; BP.t0 = Date.now(); }
+    let pct = ph === "start" ? 2 : ph === "split" ? 96 : ph === "cache" ? 90 : 5; let eta = "";
+    if (m) { const a = +m[1], n = +m[2] || 1; const f = a / n; pct = ph === "ocr" ? 45 + f * 50 : 3 + f * 40; const el = (Date.now() - BP.t0) / 1000; if (a > 1) { const rem = el / (a - 1) * (n - a); eta = rem > 5 ? ` · ⏱️ ${T("فاضل حوالي", "about")} ${rem > 90 ? Math.round(rem / 60) + T(" دقيقة", " min") : Math.round(rem) + T(" ثانية", " s")}` : ""; } }
+    bar.querySelector("i").style.width = Math.min(99, Math.round(pct)) + "%"; bar.querySelector("span").textContent = `${Math.round(pct)}% — ${ph === "read" ? T("بقرا الصفحات", "Reading pages") : ph === "ocr" ? T("بقرا الصفحات المصوّرة", "Reading scanned pages") : ph === "split" ? T("بقسّم لفصول وأعمل الأسئلة", "Making chapters & quizzes") : ph === "cache" ? T("بكمّل من اللي اتقرا قبل كده", "Resuming saved progress") : T("بجهّز", "Preparing")}${m ? ` (${m[1]}/${m[2]})` : ""}${eta}`;
+  }, 400);
+  /* يكمّل القراءة في أي كتاب من مكانه */
+  addEventListener("beforeunload", () => { const m = LS("pos196", {}); m[hkey()] = Math.round(scrollY); LSset("pos196", m); });
+
+  /* ======================= 5) شرح تفصيلي لكل حرف (تعلّم القراءة) ======================= */
+  const MK = { "ا": ["الجوف (الفراغ اللي في الفم والحلق)", "حرف مدّ: بيتمدّ حركتين بعد الفتحة، ومبيتشكّلش لوحده. همزة القطع (أ) غير الألف.", "الهمزة (ء/أ)"], "ب": ["الشفتين مع بعض", "قفل الشفايف كويس وافتحهم مرة واحدة؛ صوته واضح ومجهور.", "الميم (م) والباء الفارسية P"], "ت": ["طرف اللسان مع أصول الثنايا العليا", "صوت خفيف مهموس (فيه نفَس). متخليهوش يبقى طاء.", "الطاء (ط) والتاء المربوطة (ة)"], "ث": ["طرف اللسان مع أطراف الثنايا العليا (اللسان يطلع شوية)", "طلّع طرف لسانك بين سنانك وانفخ هوا خفيف.", "السين (س) والتاء (ت)"], "ج": ["وسط اللسان مع اللي فوقه من سقف الحلق", "صوت قوي (شديد)؛ في الفصحى بيتنطق «ج» معطّشة مش «g» المصرية.", "الشين (ش) والياء (ي)"], "ح": ["وسط الحلق", "صوت مبحوح من نص الحلق من غير خشونة؛ متقلبهوش هاء.", "الهاء (ه) والخاء (خ)"], "خ": ["أدنى الحلق (أقرب حتة للفم)", "صوت فيه خشونة زي اللي بيكح خفيف، والحرف مفخّم.", "الحاء (ح) والغين (غ)"], "د": ["طرف اللسان مع أصول الثنايا العليا", "صوت قوي ولو ساكن بيتقلقل (قلقلة).", "الذال (ذ) والضاد (ض)"], "ذ": ["طرف اللسان مع أطراف الثنايا العليا", "زي الثاء بس بصوت (مجهور)؛ متقولهاش «ز» ولا «د».", "الزاي (ز) والظاء (ظ)"], "ر": ["طرف اللسان مع اللثة فوق", "بيتفخّم مع الفتحة والضمة وبيترقّق مع الكسرة؛ من غير تكرار زيادة.", "اللام (ل) والغين (غ) عند بعض الناس"], "ز": ["طرف اللسان مع الثنايا السفلى (صفير)", "صوت صفير مجهور.", "السين (س) والذال (ذ)"], "س": ["طرف اللسان مع الثنايا السفلى (صفير)", "صفير مهموس خفيف؛ متفخّموش يبقى صاد.", "الصاد (ص) والثاء (ث)"], "ش": ["وسط اللسان مع سقف الحلق", "صوت متفشّي (الهوا بينتشر في الفم).", "السين (س) والجيم (ج)"], "ص": ["طرف اللسان مع الثنايا السفلى (صفير مفخّم)", "زي السين بس مفخّم: ارفع آخر لسانك.", "السين (س)"], "ض": ["حافة اللسان مع الأضراس العليا", "أصعب حرف؛ مفخّم وطويل المخرج. متقلبهوش ظاء ولا دال.", "الظاء (ظ) والدال (د)"], "ط": ["طرف اللسان مع أصول الثنايا العليا", "تاء مفخّمة قوية؛ ولو ساكنة بتتقلقل.", "التاء (ت)"], "ظ": ["طرف اللسان مع أطراف الثنايا العليا", "ذال مفخّمة: طلّع لسانك وفخّم.", "الذال (ذ) والضاد (ض) والزاي (ز)"], "ع": ["وسط الحلق", "صوت من الحلق فيه ضغط بسيط؛ متقلبهوش همزة.", "الهمزة (ء) والحاء (ح)"], "غ": ["أدنى الحلق", "زي الخاء بس بصوت (مجهور) ومفخّم.", "الخاء (خ) والراء الفرنساوي"], "ف": ["أطراف الثنايا العليا مع باطن الشفة السفلى", "حط سنانك فوق على شفايفك تحت وانفخ.", "الثاء (ث) وحرف V"], "ق": ["أقصى اللسان مع اللي فوقه من سقف الحلق", "قاف فصيحة مفخّمة قوية (مش همزة زي العامية)؛ وبتتقلقل.", "الكاف (ك) والهمزة"], "ك": ["أقصى اللسان بعد مخرج القاف بشوية", "صوت مرقّق فيه نفَس.", "القاف (ق)"], "ل": ["حافة اللسان مع اللثة فوق", "مرقّقة دايمًا إلا في لفظ الجلالة بعد فتح أو ضم.", "الراء (ر) والنون (ن)"], "م": ["الشفتين مع بعض (من غير ما يقفلوا جامد)", "فيها غنّة من الأنف، خصوصًا لو مشدّدة.", "الباء (ب) والنون (ن)"], "ن": ["طرف اللسان مع اللثة تحت مخرج اللام", "فيها غنّة من الأنف؛ أحكامها كتير في التجويد (إظهار، إدغام، إقلاب، إخفاء).", "اللام (ل) والميم (م)"], "ه": ["أقصى الحلق", "صوت نفَس هادي من آخر الحلق؛ في آخر الكلمة متضيعهوش.", "الحاء (ح) والتاء المربوطة (ة)"], "و": ["الشفتين (مع ضمّهم)", "حرف مدّ بعد الضمة (oo)، وحرف عادي لو متحرّك (wa).", "الضمة"], "ي": ["وسط اللسان مع سقف الحلق", "حرف مدّ بعد الكسرة (ee)، وحرف عادي لو متحرّك (ya).", "الألف اللينة (ى) والكسرة"] };
+  const MKe = { "ا": "From the open space of mouth & throat — a long 'aa' after fatha.", "ح": "Middle of the throat — a breathy h, never a plain ه.", "ع": "Middle of the throat with slight squeeze.", "خ": "Top of the throat, rough, heavy.", "غ": "Top of the throat, voiced, heavy.", "ق": "Back of the tongue with soft palate — a deep heavy q.", "ض": "Side of the tongue with upper molars — heavy and long.", "ص": "Heavy s.", "ط": "Heavy t.", "ظ": "Heavy dh with the tongue tip out." };
+  const SP = { "ة": ["التاء المربوطة", "شكلها زي الهاء وفوقها نقطتين، وبتيجي في آخر الكلمة بس. لو كمّلت القراءة (وصلت) بتنطقها «ت»: مَدْرَسَةٌ كَبِيرَةٌ = madrasatun kabeeratun. ولو وقفت عليها بتنطقها «هـ» ساكنة: مدرسه. بتيجي غالبًا في الأسماء المؤنثة (شجرة، مدينة، فاطمة). متلخبطهاش مع «ت» المفتوحة اللي بتفضل تاء دايمًا (بيت، بنات، كتبتْ).", "Written like ه with two dots, only at a word's end. Say 't' when you continue and 'h' when you stop."], "ى": ["الألف اللينة (المقصورة)", "شكلها زي الياء من غير نقط، وبتيجي في آخر الكلمة بس، وبتتنطق ألف ممدودة «aa»: مُوسَى، عَلَى، هُدًى. لو الكلمة اتصل بيها ضمير بترجع ألف عادية: على ← عليه.", "Looks like ي without dots, at the end only, sounds like long 'aa'."], "ء": ["الهمزة", "وقفة سريعة في الحلق (زي أول «أ»). بتتكتب على ألف (أ، إ) أو واو (ؤ) أو ياء (ئ) أو لوحدها على السطر (ء) حسب الحركة اللي معاها واللي قبلها.", "A glottal stop; written on alif, waw, yaa or alone."], "ال": ["ال التعريف", "قبل الحروف القمرية (ابغ حجك وخف عقيمه) اللام بتتنطق: الْقَمَر. وقبل الحروف الشمسية اللام مبتتنطقش والحرف اللي بعدها بيتشدّد: الشَّمْس.", "Sun & moon letters: the l is silent before sun letters."] };
+  const MARK = { "َ": ["الفتحة", "خط صغير مايل فوق الحرف، صوتها «a» قصيرة: بَ = ba. افتح بُقّك شوية."], "ُ": ["الضمة", "واو صغيرة فوق الحرف، صوتها «u» قصيرة: بُ = bu. ضمّ شفايفك."], "ِ": ["الكسرة", "خط صغير تحت الحرف، صوتها «i» قصيرة: بِ = bi. انزل بفكك شوية."], "ْ": ["السكون", "دايرة صغيرة فوق الحرف: معناها الحرف من غير حركة، بتقف عليه وتكمّل: أَبْ = ab."], "ّ": ["الشدة", "زي حرف w صغير فوق الحرف: معناها الحرف مكرر مرتين، أول واحد ساكن والتاني متحرّك: رَبَّ = rab-ba."], "ً": ["تنوين الفتح", "فتحتين: بتتنطق «an» في آخر الكلمة: كِتَابًا = kitaaban. وغالبًا بييجي بعدها ألف مبتتنطقش."], "ٌ": ["تنوين الضم", "ضمتين: بتتنطق «un»: كِتَابٌ = kitaabun."], "ٍ": ["تنوين الكسر", "كسرتين تحت الحرف: بتتنطق «in»: كِتَابٍ = kitaabin."], "ٰ": ["الألف الخنجرية", "ألف صغيرة واقفة فوق الحرف: بتتنطق ألف ممدودة رغم إنها مش مكتوبة كاملة: الرَّحْمَٰن."] };
+  function exHtml(key) {
+    const own = setv("ex196", {}) || {}; const extra = own[key] ? `<p class="sm" style="white-space:pre-wrap;border-inline-start:3px solid var(--accent);padding-inline-start:.5rem">${esc(own[key])}</p>` : "";
+    let h = "";
+    if (MK[key]) { const L1 = (typeof RD_L !== "undefined" ? RD_L : []).find(x => x[0] === key) || []; const nm = (typeof RD_NAME_AR !== "undefined" && RD_NAME_AR[key]) || key; const forms = typeof rdForms === "function" ? rdForms(key) : [key]; const nj = (typeof RD_NOJOIN !== "undefined" ? RD_NOJOIN : "").includes(key);
+      const ex = (typeof RD_WORDS !== "undefined" ? RD_WORDS : []).filter(w => w[0].includes(key)).slice(0, 4);
+      h = `<p class="sm"><b>${T("اسمه", "Name")}:</b> ${esc(nm)} · <b>${T("صوته", "Sound")}:</b> <span dir="ltr">${esc(L1[2] || "")}</span></p>
+        <p class="sm"><b>👄 ${T("بيطلع منين (المخرج)", "Where it comes from")}:</b> ${esc(AR() ? MK[key][0] : (MKe[key] || MK[key][0]))}</p>
+        <p class="sm"><b>💡 ${T("إزاي تنطقه صح", "How to say it")}:</b> ${esc(MK[key][1])}</p>
+        <p class="sm"><b>⚠️ ${T("بيتلخبط مع", "Often confused with")}:</b> ${esc(MK[key][2])}</p>
+        <p class="sm"><b>🔗 ${T("أشكاله في الكلمة", "Its shapes")}:</b> <span class="notr" lang="ar" style="font:1.5rem Amiri,serif">${forms.map((f, i) => `${f} <span class="xs muted">(${[T("لوحده", "alone"), T("أول", "start"), T("نص", "middle"), T("آخر", "end")][i]})</span>`).join(" · ")}</span></p>
+        <p class="sm">${nj ? `🚫 ${T("الحرف ده مبيتوصلش باللي بعده: بعده لازم الحرف اللي جاي يبدأ من جديد (زي ا د ذ ر ز و).", "This letter never joins the next letter.")}` : `✅ ${T("بيتوصل باللي قبله واللي بعده.", "Joins on both sides.")}`}</p>
+        ${ex.length ? `<p class="sm"><b>📝 ${T("أمثلة", "Examples")}:</b> ${ex.map(w => `<button class="rdw" onclick="rdSay(${esc(JSON.stringify(w[0]))})"><span class="notr" lang="ar">${w[0]}</span><small>${esc(w[1])}</small></button>`).join(" ")}</p>` : ""}`; }
+    else if (SP[key]) h = `<p class="sm"><b>${esc(SP[key][0])}</b></p><p class="sm">${esc(AR() ? SP[key][1] : SP[key][2])}</p>`;
+    else if (MARK[key]) h = `<p class="sm"><b>${esc(MARK[key][0])}</b></p><p class="sm">${esc(MARK[key][1])}</p>`;
+    return h + extra + (realOwner() ? `<button class="btn btn-o xs" style="margin-top:.3rem" onclick="ex196Edit(${esc(JSON.stringify(key))})">✏️ ${T("زوّد شرح من عندك", "Add your own explanation")}</button>` : "");
+  }
+  window.ex196Edit = async key => { const own = Object.assign({}, setv("ex196", {}) || {}); const v = prompt(T("اكتب الشرح الزيادة (فاضي = امسح)", "Extra explanation (empty = delete)"), own[key] || ""); if (v == null) return; if (v.trim()) own[key] = v.trim(); else delete own[key]; await saveSetting16("ex196", own); render(); };
+  function addExplain() {
+    const app = document.getElementById("app"); if (!app) return;
+    app.querySelectorAll(".rdcard, .rdsp").forEach(c => { if (c.querySelector(".ex196")) return; const big = c.querySelector(".rdbig"); if (!big) return; let k = big.textContent.trim(); if (c.classList.contains("rdcard") && k.length > 1) { const mk = [...k].reverse().find(ch => MARK[ch]); if (mk) k = mk; } if (!MK[k] && !SP[k] && !MARK[k]) { if (!SP[k]) return; }
+      const d = document.createElement("details"); d.className = "ex196"; d.innerHTML = `<summary class="btn btn-o" style="display:inline-flex;margin-top:.4rem">📖 ${T("الشرح بالتفصيل", "Full explanation")}</summary><div class="ex196b">${exHtml(k)}</div>`; c.appendChild(d); });
+  }
+
+  /* ======================= 6) شريط التطبيقات الجانبي (زي الموبايل) ======================= */
+  const DK = () => Object.assign({ on: 1, side: "start", y: 45, lock: 0, pins: [], hover: 1 }, LS("dock196:" + (uid() || "g"), {}));
+  const DKset = p => { LSset("dock196:" + (uid() || "g"), Object.assign(DK(), p)); dockDraw(true); };
+  const VIS = () => LS("visits196", {});
+  function track() { const k = hkey(); if (/^#\/?$/.test(k)) return; const v = VIS(); const h = document.querySelector("#app h1, #app h2"); const ttl = ((h && h.innerText) || document.title || k).trim().slice(0, 34); const x = v[k] || { n: 0 }; x.n++; x.t = ttl || x.t; x.at = Date.now(); v[k] = x; LSset("visits196", v); }
+  const ICO = k => /tuner|موالف/.test(k) ? "🎚️" : /maqam/.test(k) ? "🎵" : /hifz/.test(k) ? "🧠" : /book/.test(k) ? "📚" : /library/.test(k) ? "📂" : /taj|tj/.test(k) ? "🎨" : /dashboard/.test(k) ? "📅" : /myspace/.test(k) ? "🏠" : /me196|tch196/.test(k) ? "🧑‍🏫" : /pdf/.test(k) ? "📖" : /tools/.test(k) ? "🧰" : "🔖";
+  const goH = k => { const m = String(k).match(/^#\/([^/?]+)(?:\/([^?]+))?/); if (!m) return navigate("home"); if (m[1] === "library") return libOpen(m[2] || null); go16(m[1], m[2] ? decodeURIComponent(m[2]) : null); };
+  window.dock196 = {
+    toggle() { const d = document.getElementById("dock196"); d && d.classList.toggle("open"); },
+    pinHere() { const c = DK(); const k = hkey(); if (c.pins.some(p => p.k === k)) return toast(T("مثبّتة قبل كده", "Already pinned")); const h = document.querySelector("#app h1, #app h2"); c.pins.push({ k, t: ((h && h.innerText) || document.title).trim().slice(0, 30), i: ICO(k) }); DKset({ pins: c.pins }); toast("📌"); },
+    unpin(i) { const c = DK(); c.pins.splice(i, 1); DKset({ pins: c.pins }); },
+    go(k) { goH(k); const d = document.getElementById("dock196"); if (d && !DK().lock) d.classList.remove("open"); },
+    lock() { DKset({ lock: DK().lock ? 0 : 1 }); toast(DK().lock ? T("🔒 مش هيفتح بالماوس — بس بالدوسة", "🔒 Opens on click only") : T("🔓 بيفتح لما الماوس يقرّب", "🔓 Opens on hover")); },
+    side() { DKset({ side: DK().side === "start" ? "end" : "start" }); },
+    hide() { DKset({ on: 0 }); toast(T("اتقفل — ترجّعه من «مساحتي»", "Hidden — bring it back from My space")); },
+    on() { DKset({ on: 1 }); }
+  };
+  function dockDraw(force) {
+    const g = setv("dock196g", { on: 1 }) || {}; let d = document.getElementById("dock196"); const c = DK();
+    if (!g.on || !c.on || document.body.classList.contains("lock187")) { d && d.remove(); return; }
+    const wasOpen = d && d.classList.contains("open"); if (d && !force) return; d && d.remove();
+    const v = VIS(); const top = Object.entries(v).filter(([k]) => !c.pins.some(p => p.k === k)).sort((a, b) => b[1].n - a[1].n).slice(0, 6);
+    const adds = (setv("add196", []) || []).filter(a => a.place === "dock");
+    d = document.createElement("div"); d.id = "dock196"; d.className = "dock196 " + (c.side === "end" ? "e" : "s") + (wasOpen ? " open" : ""); d.style.top = c.y + "%";
+    d.innerHTML = `<div class="dk196h" title="${T("اسحب لفوق أو تحت — دوس تفتح", "Drag up/down — click to open")}"><span>⋮</span></div><div class="dk196p">
+      <div class="row" style="justify-content:space-between;align-items:center;gap:.2rem"><b class="xs">📱 ${T("تطبيقاتي", "My apps")}</b><span class="row" style="gap:.15rem"><button class="dk196x" title="${c.lock ? T("مقفول: بيفتح بالدوسة بس", "Locked: click only") : T("بيفتح بالماوس — دوس عشان تقفله", "Opens on hover — click to lock")}" onclick="dock196.lock()">${c.lock ? "🔒" : "🔓"}</button><button class="dk196x" title="${T("الناحية التانية", "Other side")}" onclick="dock196.side()">⇄</button><button class="dk196x" title="${T("اقفله", "Hide")}" onclick="dock196.hide()">✕</button></span></div>
+      <div class="dk196l" id="dk196pins">${c.pins.map((p, i) => `<div class="dk196i" draggable="true" data-i="${i}" onclick="dock196.go('${esc(p.k)}')" title="${esc(p.t)}"><span>${p.i || "🔖"}</span><small>${esc(p.t)}</small><b class="dk196rm" onclick="event.stopPropagation();dock196.unpin(${i})">×</b></div>`).join("")}${adds.map(a => `<div class="dk196i" onclick="dock196.go('${esc(a.dest)}')"><span>${esc(a.icon || "🔗")}</span><small>${esc(a.label)}</small></div>`).join("")}</div>
+      <button class="btn btn-o xs" style="width:100%;margin:.25rem 0" onclick="dock196.pinHere()">📌 ${T("ثبّت الصفحة دي", "Pin this page")}</button>
+      ${top.length ? `<b class="xs">🔥 ${T("الأكتر استخدامًا", "Most used")}</b><div class="dk196l">${top.map(([k, x]) => `<div class="dk196i" onclick="dock196.go('${esc(k)}')" title="${esc(x.t || k)}"><span>${ICO(k)}</span><small>${esc(x.t || k)}</small></div>`).join("")}</div>` : ""}
+      <p class="xs muted" style="margin:.2rem 0 0">↕️ ${T("اسحب المثبّتة عشان ترتّبها", "Drag pins to reorder")}</p></div>`;
+    document.body.appendChild(d);
+    const hd = d.querySelector(".dk196h"); let drag = null;
+    hd.addEventListener("pointerdown", e => { drag = { y0: e.clientY, t0: d.getBoundingClientRect().top, moved: 0 }; hd.setPointerCapture(e.pointerId); });
+    hd.addEventListener("pointermove", e => { if (!drag) return; const dy = e.clientY - drag.y0; if (Math.abs(dy) > 4) drag.moved = 1; if (drag.moved) d.style.top = Math.max(4, Math.min(92, (drag.t0 + dy) / innerHeight * 100)) + "%"; });
+    hd.addEventListener("pointerup", () => { if (!drag) return; const m = drag.moved; drag = null; if (m) { const c2 = DK(); c2.y = parseFloat(d.style.top); LSset("dock196:" + (uid() || "g"), c2); } else dock196.toggle(); });
+    let hv; d.addEventListener("mouseenter", () => { if (!DK().lock && matchMedia("(hover:hover)").matches) { clearTimeout(hv); d.classList.add("open"); } });
+    d.addEventListener("mouseleave", () => { if (!DK().lock) hv = setTimeout(() => d.classList.remove("open"), 500); });
+    let from = null; d.querySelectorAll("#dk196pins .dk196i[draggable]").forEach(it => { it.addEventListener("dragstart", () => from = +it.dataset.i); it.addEventListener("dragover", e => e.preventDefault()); it.addEventListener("drop", e => { e.preventDefault(); const to = +it.dataset.i; if (from == null || from === to) return; const c2 = DK(); const [x] = c2.pins.splice(from, 1); c2.pins.splice(to, 0, x); DKset({ pins: c2.pins }); }); });
+  }
+  document.addEventListener("click", e => { const d = document.getElementById("dock196"); if (d && d.classList.contains("open") && !d.contains(e.target) && DK().lock) d.classList.remove("open"); });
+
+  /* ======================= 7) قفل للشرايط الجانبية (ظل) + تحريكها لفوق/تحت ======================= */
+  const LK = () => LS("lk196", {}); let pass = 0, passAt = 0;
+  const sideEls = () => [...document.querySelectorAll(".side185, #nv180.nv180-side, #nv180.nv180-rail")];
+  addEventListener("mousemove", e => {
+    if (!document.body.classList.contains("ps195")) return; const lk = LK(); if (!lk.l && !lk.r) return;
+    if (pass) { if (Date.now() - passAt > 900 && !document.querySelector(".so195")) pass = 0; else return; }
+    const x = e.clientX; const zone = Math.max(+((setv("ps195", {}) || {}).zone || 40), 2) + 20;
+    const ed = x <= zone ? "l" : x >= innerWidth - zone ? "r" : null; if (ed && lk[ed] && !document.querySelector(`.so195[data-e195="${ed}"]`)) e.stopImmediatePropagation();
+  }, true);
+  document.addEventListener("click", e => { if (!document.body.classList.contains("ps195")) return; const lk = LK(); const b = e.target.closest && e.target.closest(".side185, #nv180"); if (!b || b.classList.contains("so195")) return; const ed = b.dataset.e195; if (!ed || !lk[ed]) return;
+    e.preventDefault(); e.stopPropagation(); pass = 1; passAt = Date.now(); dispatchEvent(new MouseEvent("mousemove", { clientX: e.clientX, clientY: e.clientY, bubbles: true })); }, true);
+  function sideExtras() {
+    if (!document.body.classList.contains("ps195")) return; const lk = LK(); const ys = LS("sy196", {});
+    sideEls().forEach(el => { const ed = el.dataset.e195; if (!ed) return; let b = el.querySelector(":scope > .lk196"); if (!b) { b = document.createElement("button"); b.className = "lk196"; b.onclick = ev => { ev.stopPropagation(); const L2 = LK(); L2[ed] = L2[ed] ? 0 : 1; LSset("lk196", L2); sideExtras(); toast(L2[ed] ? T("🔒 الشريط ده مش هيطلع بالماوس — دوس على الظل يطلع", "🔒 Click the sliver to open") : T("🔓 بيطلع لما الماوس يقرّب", "🔓 Opens on hover")); }; el.appendChild(b);
+        const g = document.createElement("span"); g.className = "mv196"; g.textContent = "↕"; g.title = T("اسحب لفوق أو تحت", "Drag up/down"); el.appendChild(g); let st = null;
+        g.addEventListener("pointerdown", ev => { ev.stopPropagation(); st = { y0: ev.clientY, t0: el.getBoundingClientRect().top }; g.setPointerCapture(ev.pointerId); });
+        g.addEventListener("pointermove", ev => { if (!st) return; el.style.top = Math.max(0, st.t0 + ev.clientY - st.y0) + "px"; el.style.bottom = "auto"; });
+        g.addEventListener("pointerup", () => { if (!st) return; st = null; const Y = LS("sy196", {}); Y[ed + (el.id || el.className.split(" ")[0])] = el.style.top; LSset("sy196", Y); }); }
+      b.textContent = lk[ed] ? "🔒" : "🔓"; b.title = lk[ed] ? T("مقفول — بيفتح بالدوسة بس", "Locked") : T("بيطلع بالماوس — دوس تقفله", "Hover mode — click to lock");
+      const yk = ys[ed + (el.id || el.className.split(" ")[0])]; if (yk && el.classList.contains("side185")) { el.style.top = yk; el.style.bottom = "auto"; } });
+  }
+
+  /* ======================= 8) خريطة كل الروابط في الموقع ======================= */
+  const PLACE = el => el.closest("#dock196") ? ["dock", T("شريط تطبيقاتي", "Apps dock")] : el.closest(".mnav") ? ["menu", T("المنيو", "Menu")] : el.closest(".hdr, header") ? ["header", T("الشريط اللي فوق", "Top bar")] : el.closest("footer, .ftr, .foot") ? ["footer", T("آخر الصفحة (الفوتر)", "Footer")] : el.closest(".side185, #nv180, .side") ? ["side", T("الشريط الجانبي", "Side bar")] : el.closest(".bnav") ? ["bottom", T("الشريط اللي تحت", "Bottom bar")] : ["page", T("جوه الصفحة", "In the page")];
+  function destOf(el) { const oc = el.getAttribute("onclick") || ""; const hr = el.getAttribute("href") || ""; let m;
+    if ((m = oc.match(/go16\(\s*'([^']+)'(?:\s*,\s*'([^']*)')?/))) return m[1] + (m[2] ? "/" + m[2] : ""); if ((m = oc.match(/navigate\(\s*'([^']+)'/))) return m[1]; if ((m = oc.match(/libOpen\(\s*'([^']+)'/))) return "library/" + m[1];
+    if ((m = oc.match(/state\.route\s*=\s*'([^']+)'/))) return m[1]; if ((m = hr.match(/^#\/(.+)/))) return m[1]; return null; }
+  function scanNow(route) { const out = []; document.querySelectorAll("[onclick], a[href^='#/']").forEach(el => { const d = destOf(el); if (!d) return; if (el.closest("#map196,#ed189p,#sim189m")) return; const t = (el.innerText || el.title || "").replace(/\s+/g, " ").trim().slice(0, 50); if (!t) return; const [pk, pl] = PLACE(el); out.push({ d, page: route, pk, pl, t }); }); return out; }
+  const MP = window.MAP196 = { busy: 0, prog: "", data: LS("map196", null), q: "" };
+  window.map196 = {
+    async scan() { if (MP.busy) return; MP.busy = 1; const keep = { r: state.route, a: state.pageArg, y: scrollY }; const seen = new Set(); const queue = ["home", "library", "tools", "myspace", "pricing", "dashboard"].concat(PAGES16.filter(p => !/192|map196|edit/.test(p))); const all = [];
+      try { while (queue.length && seen.size < 70) { const r = queue.shift(); if (seen.has(r) || /\//.test(r)) continue; seen.add(r); MP.prog = `${seen.size} — ${r}`; state.route = r; state.pageArg = null; try { render(); } catch (e) {} await new Promise(s => setTimeout(s, 650)); const res = scanNow(r); res.forEach(x => { all.push(x); const base = x.d.split("/")[0]; if (!seen.has(base) && !queue.includes(base) && !/library/.test(base)) queue.push(base); }); }
+      } finally { MP.busy = 0; MP.prog = ""; state.route = "map196"; state.pageArg = null; }
+      const ded = {}; all.forEach(x => { const k = x.d + "|" + x.page + "|" + x.pk + "|" + x.t; ded[k] = x; }); MP.data = { at: Date.now(), items: Object.values(ded) }; LSset("map196", MP.data); render(); },
+    async hide(d, page, pk, t) { const H = (setv("hide196", []) || []).slice(); H.push({ d, page, pk, t }); await saveSetting16("hide196", H); render(); toast(T("🙈 اتخفى من المكان ده بس", "Hidden from this place only")); },
+    async unhide(i) { const H = (setv("hide196", []) || []).slice(); H.splice(i, 1); await saveSetting16("hide196", H); render(); },
+    async add(d, label) { const place = prompt(T("تحطه فين؟ اكتب: footer (آخر الصفحة) أو home (أول الرئيسية) أو dock (شريط تطبيقات الكل)", "Where? footer / home / dock"), "footer"); if (!place) return; const icon = prompt(T("أيقونة (إيموجي)", "Icon"), "🔗") || "🔗"; const A = (setv("add196", []) || []).slice(); A.push({ dest: d.includes("/") ? "#/" + d : "#/" + d, label, icon, place: place.trim() }); await saveSetting16("add196", A); render(); },
+    async unadd(i) { const A = (setv("add196", []) || []).slice(); A.splice(i, 1); await saveSetting16("add196", A); render(); },
+    async nav(k, v) { const c = Object.assign(NV(), { [k]: v }); await saveSetting16("back196", c); toast("✅"); },
+    async set(k, v) { await saveSetting16(k, v); render(); }
+  };
+  function applyHide() { const H = setv("hide196", []) || []; if (!H.length) return; const r = state.route; const ownEd = realOwner() && document.body.classList.contains("ed189on");
+    document.querySelectorAll("[onclick], a[href^='#/']").forEach(el => { if (el.closest("#map196")) return; const d = destOf(el); if (!d) return; const t = (el.innerText || el.title || "").replace(/\s+/g, " ").trim().slice(0, 50); const pk = PLACE(el)[0];
+      if (H.some(h => h.d === d && h.t === t && h.pk === pk && (h.page === r || h.pk !== "page"))) { if (ownEd) el.style.opacity = ".35"; else el.style.display = "none"; } }); }
+  function applyAdd() { const A = setv("add196", []) || []; if (!A.length) return; const app = document.getElementById("app"); if (!app) return;
+    const f = A.filter(a => a.place === "footer"); const ft = app.querySelector("footer, .ftr, .foot"); if (f.length && ft && !ft.querySelector(".add196")) ft.insertAdjacentHTML("afterbegin", `<div class="add196 row" style="gap:.4rem;flex-wrap:wrap;justify-content:center;margin:.4rem 0">${f.map(a => `<a class="btn btn-o" href="#" onclick="dock196.go('${esc(a.dest)}');return false">${esc(a.icon)} ${esc(a.label)}</a>`).join("")}</div>`);
+    const h = A.filter(a => a.place === "home"); if (h.length && state.route === "home" && !app.querySelector(".add196h")) { const hd = app.querySelector(".hdr, header"); (hd || app.firstElementChild) && (hd || app.firstElementChild).insertAdjacentHTML("afterend", `<div class="add196h row" style="gap:.4rem;flex-wrap:wrap;justify-content:center;margin:.6rem auto;max-width:1100px">${h.map(a => `<a class="btn btn-p" href="#" onclick="dock196.go('${esc(a.dest)}');return false">${esc(a.icon)} ${esc(a.label)}</a>`).join("")}</div>`); } }
+  function mapPage() {
+    if (!realOwner()) return pageWrap("🔒", T("للمالك بس", "Owner only"), "", "");
+    const D = MP.data; const H = setv("hide196", []) || []; const A = setv("add196", []) || []; const nv = NV(); const ma = MA(); const g = setv("dock196g", { on: 1 }) || {};
+    let body = `<div class="card"><h3>↩️ ${T("الرجوع وفتح الصفحات", "Back & reopening pages")}</h3>
+      <label class="sm">${T("لما ترجع لصفحة", "When you go back to a page")}: <select class="in" style="width:auto" onchange="map196.nav('mode',this.value)">${[["place", "ترجع لنفس مكانك (الأساسي)", "Return to your spot (default)"], ["top", "ترجع لأول الصفحة", "Go to the top"], ["auto", "دايمًا تكمّل من مكانك حتى لو فتحتها من جديد", "Always resume your spot"]].map(o => `<option value="${o[0]}" ${nv.mode === o[0] ? "selected" : ""}>${T(o[1], o[2])}</option>`).join("")}</select></label>
+      <label class="sm" style="display:block;margin-top:.3rem"><input type="checkbox" ${nv.pill ? "checked" : ""} onchange="map196.nav('pill',this.checked?1:0)"> ${T("لما تفتح صفحة كنت نازل فيها: يظهر زرار «كمّل من حيث وقفت»", "Show a 'continue where you stopped' button")}</label>
+      <p class="xs muted">${T("و«📚 كل الأقسام» وأي زرار «رجوع» بقوا بيرجعوك للصفحة اللي كنت فيها فعلًا.", "'All sections' and any Back button now return to the page you came from.")}</p></div>
+      <div class="card"><h3>🔊 ${T("تحت أخطاء المصحف", "Under Mushaf mistakes")}</h3><label class="sm"><input type="checkbox" ${ma.word ? "checked" : ""} onchange="map196.set('mmau196',Object.assign(${esc(JSON.stringify(ma))},{word:this.checked?1:0}))"> ${T("صوت الكلمة لوحدها", "Word audio")}</label> · <label class="sm"><input type="checkbox" ${ma.ayah ? "checked" : ""} onchange="map196.set('mmau196',Object.assign(${esc(JSON.stringify(ma))},{ayah:this.checked?1:0}))"> ${T("الآية كاملة", "Whole ayah")}</label>
+        <select class="in" style="width:auto" onchange="map196.set('mmau196',Object.assign(${esc(JSON.stringify(ma))},{rd:this.value}))">${[["Husary_128kbps", "الحصري"], ["Husary_Muallim_128kbps", "الحصري المعلّم"], ["Minshawy_Murattal_128kbps", "المنشاوي"], ["Minshawy_Teacher_128kbps", "المنشاوي المعلّم"], ["Alafasy_128kbps", "العفاسي"]].map(o => `<option value="${o[0]}" ${ma.rd === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
+      <div class="card"><h3>📱 ${T("شريط التطبيقات الجانبي (للكل)", "Apps dock (everyone)")}</h3><label class="sm"><input type="checkbox" ${g.on ? "checked" : ""} onchange="map196.set('dock196g',{on:this.checked?1:0})"> ${T("يظهر للطلاب والزوار", "Show to students & visitors")}</label> <button class="btn btn-o" onclick="dock196.on()">${T("رجّعه عندي", "Show it for me")}</button>
+        <p class="xs muted">${T("كل طالب بيرتّبه بنفسه بالسحب، يثبّت أي صفحة، يحرّكه لفوق أو تحت، ويقفله عشان مايفتحش بالماوس.", "Each student reorders, pins, moves and locks it.")}</p></div>
+      <div class="card" id="map196"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>🗺️ ${T("كل رابط في الموقع محطوط فين", "Where every link lives")}</h3><button class="btn btn-p" onclick="map196.scan()" ${MP.busy ? "disabled" : ""}>${MP.busy ? "⏳ " + esc(MP.prog) : "🔎 " + T("افحص الموقع كله دلوقتي", "Scan the whole site")}</button></div>
+      <p class="xs muted">${T("الفحص بيلف على كل صفحة ويعدّ كل زرار ولينك: بيودّي فين، ومحطوط في أنهي صفحة، وفي أنهي مكان (فوق، الجنب، جوه الصفحة، تحت). تقدر تخفي أي نسخة مكررة من مكانها، أو تضيف لينك في مكان جديد.", "The scan visits every page and lists each link, where it sits and where it goes.")}</p>`;
+    if (D && D.items) { const by = {}; D.items.forEach(x => (by[x.d] = by[x.d] || []).push(x)); const q = MP.q.trim(); const ent = Object.entries(by).filter(([d, xs]) => !q || d.includes(q) || xs.some(x => x.t.includes(q))).sort((a, b) => b[1].length - a[1].length);
+      body += `<div class="row" style="gap:.4rem;margin:.5rem 0;flex-wrap:wrap"><input class="in" style="max-width:16rem" placeholder="🔍 ${T("دوّر (مثلًا: المصحف الملوّن)", "Search")}" value="${esc(MP.q)}" oninput="MAP196.q=this.value;clearTimeout(window.__mq);window.__mq=setTimeout(render,350)"><span class="badge">${ent.length} ${T("صفحة/وجهة", "destinations")} · ${D.items.length} ${T("رابط", "links")}</span><span class="xs muted">${T("آخر فحص", "Last scan")}: ${esc(new Date(D.at).toLocaleString())}</span></div>
+        ${ent.slice(0, 120).map(([d, xs]) => `<details class="mp196"><summary><b>${esc((xs[0] || {}).t || d)}</b> <span class="xs muted" dir="ltr">#/${esc(d)}</span> <span class="badge ${xs.length > 4 ? "badge-g" : ""}">${xs.length}× ${xs.length > 4 ? T("مكرر كتير", "many copies") : ""}</span></summary>
+          <table class="tbl196"><tr><th>${T("في صفحة", "On page")}</th><th>${T("المكان", "Place")}</th><th>${T("مكتوب عليه", "Label")}</th><th></th></tr>${xs.map(x => `<tr><td>${esc(x.page)}</td><td>${esc(x.pl)}</td><td>${esc(x.t)}</td><td><button class="btn btn-o xs" onclick='map196.hide(${esc(JSON.stringify(x.d))},${esc(JSON.stringify(x.page))},${esc(JSON.stringify(x.pk))},${esc(JSON.stringify(x.t))})'>🙈 ${T("اخفيه هنا", "Hide here")}</button></td></tr>`).join("")}</table>
+          <button class="btn btn-o xs" onclick='map196.add(${esc(JSON.stringify(d))},${esc(JSON.stringify((xs[0] || {}).t || d))})'>➕ ${T("حطه في مكان تاني", "Add it somewhere else")}</button></details>`).join("")}`; }
+    body += `</div>${H.length ? `<div class="card"><h3>🙈 ${T("اللي خفيته", "Hidden")} (${H.length})</h3>${H.map((h, i) => `<div class="kv"><span class="sm">${esc(h.t)} — ${esc(h.page)} · ${esc(h.pk)}</span><button class="btn btn-o xs" onclick="map196.unhide(${i})">↩️ ${T("رجّعه", "Restore")}</button></div>`).join("")}</div>` : ""}
+      ${A.length ? `<div class="card"><h3>➕ ${T("اللي ضفته في أماكن جديدة", "Added links")}</h3>${A.map((a, i) => `<div class="kv"><span class="sm">${esc(a.icon)} ${esc(a.label)} → ${esc(a.place)}</span><button class="btn btn-o xs" onclick="map196.unadd(${i})">🗑️</button></div>`).join("")}</div>` : ""}`;
+    return pageWrap("🗺️", T("خريطة الموقع والتحكم في الأماكن", "Site map & placement"), T("كل لينك فين، وشيله أو حطه في مكان تاني", "Every link and where it is"), body, 1100);
+  }
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () {
+    if (state.route === "map196") { let b; try { b = mapPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); after(); return; }
+    _r.apply(this, arguments); after();
+  };
+  window.after196 = () => after();
+  function after() { try { pill(); addExplain(); applyHide(); applyAdd(); setTimeout(() => { track(); dockDraw(); sideExtras(); applyHide(); }, 300); } catch (e) { console.warn(e); } }
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); const own = realOwner(); return h.replace('<div class="msgrid">', `<div class="msgrid">${own ? `<button class="mstile" style="--c:#0f766e" onclick="go16('map196')"><span>🗺️</span><b>${T("خريطة الموقع والأماكن", "Site map")}</b></button>` : ""}${!DK().on ? `<button class="mstile" style="--c:#6366f1" onclick="dock196.on()"><span>📱</span><b>${T("رجّع شريط تطبيقاتي", "Show my apps dock")}</b></button>` : ""}`); };
+  if (/^#\/map196/.test(location.hash)) state.route = "map196";
+  css(`.rs196{position:fixed;bottom:5.2rem;inset-inline-start:50%;transform:translateX(50%);z-index:80;border:0;border-radius:999px;padding:.55rem 1.1rem;background:var(--accent);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:pointer;animation:rs196 .4s ease}[dir=ltr] .rs196{transform:translateX(-50%)}@keyframes rs196{from{opacity:0;translate:0 12px}}
+  .qzo196{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.4rem;margin-top:.5rem}.qzw196{font:2rem/2.2 'Amiri',serif;text-align:center;padding:.4rem;background:var(--bg);border-radius:.7rem;margin:.3rem 0}.qzw196 .qzp196{color:inherit!important;background:none!important}.qzw196 .qzt196{text-decoration:underline 3px #dc2626;text-underline-offset:10px;color:#dc2626!important}.qz196 .bad{background:#fee2e2;border-color:#dc2626;color:#991b1b}
+  .bar196{margin:.5rem 0}.bar196>div{height:12px;background:var(--line);border-radius:99px;overflow:hidden}.bar196 i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#f59e0b);transition:width .5s;border-radius:99px}.bar196 span{font-size:.82rem;display:block;margin-top:.25rem}
+  .ex196 summary{list-style:none;cursor:pointer}.ex196 summary::-webkit-details-marker{display:none}.ex196b{text-align:start;margin-top:.4rem;padding:.6rem;border-radius:.7rem;background:var(--bg);line-height:1.9}.ex196b p{margin:.25rem 0}
+  .dock196{position:fixed;z-index:70;display:flex;align-items:flex-start;transition:transform .4s cubic-bezier(.22,1,.36,1);transform:translateY(-50%)}.dock196.s{inset-inline-start:0;flex-direction:row-reverse}.dock196.e{inset-inline-end:0}
+  .dk196h{width:14px;height:64px;background:color-mix(in srgb,var(--accent) 70%,transparent);border-radius:0 12px 12px 0;cursor:grab;display:grid;place-items:center;color:#fff;font-size:.8rem;box-shadow:3px 0 12px rgba(0,0,0,.2);touch-action:none;opacity:.75}.dock196.e .dk196h{border-radius:12px 0 0 12px}[dir=rtl] .dock196.s .dk196h{border-radius:12px 0 0 12px}[dir=rtl] .dock196.e .dk196h{border-radius:0 12px 12px 0}
+  .dk196p{display:none;width:200px;max-height:70vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.5rem;box-shadow:0 18px 40px rgba(0,0,0,.22)}.dock196.open .dk196p{display:block;animation:rs196 .25s}.dock196.open .dk196h{opacity:1}
+  .dk196l{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;margin:.3rem 0}.dk196i{position:relative;display:flex;flex-direction:column;align-items:center;gap:.1rem;padding:.3rem .1rem;border-radius:.6rem;cursor:pointer;text-align:center}.dk196i:hover{background:var(--bg)}.dk196i span{font-size:1.35rem}.dk196i small{font-size:.62rem;line-height:1.2;max-height:2.4em;overflow:hidden}.dk196rm{position:absolute;top:-2px;inset-inline-end:2px;font-size:.75rem;opacity:0}.dk196i:hover .dk196rm{opacity:.7}.dk196x{border:0;background:none;cursor:pointer;font-size:.85rem;padding:.1rem .2rem}
+  .lk196{position:absolute;top:8px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:.7rem;cursor:pointer;z-index:2;padding:0;line-height:1}.mv196{position:absolute;top:34px;width:22px;height:22px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:.75rem;display:grid;place-items:center;cursor:ns-resize;touch-action:none;z-index:2}
+  [data-e195=l]>.lk196,[data-e195=l]>.mv196{right:-26px}[data-e195=r]>.lk196,[data-e195=r]>.mv196{left:-26px}body:not(.ps195) .lk196,body:not(.ps195) .mv196{display:none}
+  .tbl196{width:100%;border-collapse:collapse;font-size:.82rem;margin:.4rem 0}.tbl196 td,.tbl196 th{border-bottom:1px solid var(--line);padding:.25rem .35rem;text-align:start}.mp196{border-bottom:1px solid var(--line);padding:.35rem 0}.mp196 summary{cursor:pointer}
+  body.lock187 #dock196{display:none}@media print{#dock196,.rs196{display:none}}`);
+})();
+
 /* ================= v197: علاقة الطالب بالمعلم كلها جوه الموقع — «مع معلمي» للطالب (الحصة الجاية، الواجبات، المصادر، التقارير، الرسائل، ترتيب الأسبوع، أهدافي) + «لوحة المعلم» (جدول الحصص تشيك ليست: حضور/تقييم/واجب/تأجيل، استيراد المواعيد، مراجعة الواجبات ونشرها في قسم، طلابي، إضافة طالب بالإيميل، سعر خاص وتجديد تلقائي، طالبي من بره 7 أيام) + واجب منظّم (أبواب التجويد بالتفصيل + امتحان على الدرس + امتحان على اللي فات صح/غلط + تسميع من آية لآية بتسجيل + ميعاد آخر قبل الحصة الجاية + مدّ الوقت + ترحيل واجب فات) + اشتراك قسم أو اتنين + التسميع (كل أحكام التجويد، صوت السيستم للمعلمين بس، صوت الكلمة، ارفع للمعلم) + سرعة لأي تسجيل ================= */
 (function () {
   const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
@@ -28138,6 +28410,11 @@ Between lessons, the platform keeps you going:
   .tp197{border:1px solid var(--line);border-radius:.6rem;padding:.3rem .5rem;margin:.25rem 0}.tp197 summary{cursor:pointer}.ck197{font-size:.75rem;padding:.1rem .45rem;border-radius:999px;background:var(--bg);border:1px solid var(--line)}.ck197.ok{background:color-mix(in srgb,#16a34a 15%,transparent);border-color:#16a34a}
   .chat197{display:flex;flex-direction:column;gap:.35rem;max-height:55vh;overflow:auto}.chat197>div{align-self:flex-start;max-width:80%;background:var(--bg);padding:.4rem .65rem;border-radius:.8rem}.chat197>div.mine{align-self:flex-end;background:color-mix(in srgb,var(--accent) 18%,var(--card))}.chat197 small{display:block;font-size:.65rem;opacity:.6}
   .sub197.on{border:2px solid var(--accent)}.q197 .bad,.les197 .bad{background:#fee2e2;border-color:#dc2626;color:#991b1b}.sp197{display:inline-flex;gap:.15rem;margin:.15rem 0}.sp197 button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;font-size:.7rem;padding:.05rem .35rem;cursor:pointer}.sp197 button.on{background:var(--accent);color:#fff}`);
+})();
+
+/* ================= v198: شريط التطبيقات والشرح والخريطة يشتغلوا كمان في صفحات «مع معلمي» و«لوحة المعلم» والواجب والاشتراك ================= */
+(function () {
+  const _r = render; render = function () { _r.apply(this, arguments); try { if (["me196", "tch196", "hw196", "sub196"].includes(state.route) && window.after196) window.after196(); } catch (e) {} };
 })();
 
 // بدء التشغيل
