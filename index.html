@@ -25771,7 +25771,7 @@ Between lessons, the platform keeps you going:
       await ensurePdf();
       if (V.part !== pi || !V.doc) { if (V.doc) { try { V.doc.destroy(); } catch (e) {} } V.doc = await pdfjsLib.getDocument({ url: BASE + part.f, disableAutoFetch: true, disableStream: false, rangeChunkSize: 262144 }).promise; V.part = pi; }
       const pg = await V.doc.getPage(V.p - part.s); if (tag !== V.tag) return;
-      const box = document.getElementById("pv181w"); const wAvail = Math.min(box.clientWidth - 8, 1100); const vp0 = pg.getViewport({ scale: 1 }); const sc = (wAvail / vp0.width) * V.z; const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const box = document.getElementById("pv181w"); const wAvail = Math.min(box.clientWidth - 8, 1100); const vp0 = pg.getViewport({ scale: 1 }); const hAvail = Math.max(420, (document.fullscreenElement ? innerHeight - 70 : innerHeight - 150)); const sc = Math.min(wAvail / vp0.width, hAvail / vp0.height) * V.z; const dpr = Math.min(2, window.devicePixelRatio || 1);
       const vp = pg.getViewport({ scale: sc * dpr }); const tmp = document.createElement("canvas"); tmp.width = vp.width; tmp.height = vp.height;
       await pg.render({ canvasContext: tmp.getContext("2d"), viewport: vp }).promise; if (tag !== V.tag) return;
       cv.width = tmp.width; cv.height = tmp.height; cv.style.width = (vp.width / dpr) + "px"; cv.getContext("2d").drawImage(tmp, 0, 0);
@@ -25788,7 +25788,7 @@ Between lessons, the platform keeps you going:
   function viewer(id) {
     if (!LIB) { loadLib().then(() => render()); return pageWrap("📚", "…", "", loadingBox()); }
     const b = LIB.books.find(x => x.id === id); if (!b) return pageWrap("📚", "—", "", `<div class="card muted">—</div>`);
-    if (V.b !== b) { V.b = b; V.doc = null; V.part = -1; V.z = 1; } const arg = String(state.pageArg || "").split("/"); V.p = +arg[1] || last(b.id) || 1; V.tag = 0;
+    if (V.b !== b) { V.b = b; V.doc = null; V.part = -1; V.z = 1; } const hm = location.hash.match(/^#\/pdf181\/[^/]+\/(\d+)/); const arg = String(state.pageArg || "").split("/"); V.p = +arg[1] || (hm ? +hm[1] : 0) || last(b.id) || 1; V.tag = 0;
     setTimeout(draw, 30);
     const notr = b.kind === "mushaf" ? "notr" : "";
     return `<section class="sec" style="padding:.6rem 0"><div class="wrap" style="max-width:1300px"><div id="pv181" class="${notr}" translate="${notr ? "no" : "yes"}">
