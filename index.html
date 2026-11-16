@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v190";
+const UI_VERSION = "2026-11-16-v191";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -27362,6 +27362,46 @@ Between lessons, the platform keeps you going:
   #sar190{position:fixed;z-index:960;top:45%;inset-inline-start:0;width:1.4rem;height:3rem;border-radius:0 .8rem .8rem 0;border:1px solid var(--line);background:var(--card);cursor:pointer}html[dir=rtl] #sar190{border-radius:.8rem 0 0 .8rem}
   body.rv190 #hh186{display:none!important}.z190{position:fixed;z-index:899;background:repeating-linear-gradient(45deg,#0ea5e922 0 8px,#0ea5e911 8px 16px);outline:2px dashed #0ea5e9;color:#0369a1;font-size:.7rem;display:grid;place-items:center;pointer-events:none}.zt190{outline:3px dashed #0ea5e9!important;outline-offset:3px}
   @media (prefers-reduced-motion:reduce){body.rv190 :is(.bar185,.dombar,.hdr .nav),body.rv190 .side185{transition:none!important}}`);
+})();
+
+/* ================= v191: كل الأسعار في الموقع كله بعملة بلد الزائر (مصر = جنيه بس) + المصري يدفع بالجنيه بس + القريب مايشوفش أي محتوى مدفوع ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const nice = (v, c) => { if (c === "EGP" || c === "PKR" || c === "INR" || c === "TRY" || c === "NGN" || c === "IDR") return v >= 1000 ? Math.round(v / 10) * 10 : v >= 100 ? Math.round(v / 5) * 5 : Math.round(v); if (["KWD", "BHD", "OMR", "JOD"].includes(c)) return Math.round(v * 10) / 10; return v >= 20 ? Math.round(v) : Math.round(v * 2) / 2; };
+  /* سعر الجنيه: لو انت محدد سعر صرف في إعدادات الدفع ناخده، وإلا السعر الحالي */
+  const egpRate = () => { const p = setv("payments", {}) || {}; return +p.egpRate > 0 ? +p.egpRate : (typeof FX !== "undefined" && FX && FX.EGP) || null; };
+  function conv(v, from, to) {
+    if (from === to) return +v; if (to === "EGP" && from === "USD" && egpRate()) return +v * egpRate(); if (from === "EGP" && to === "USD" && egpRate()) return +v / egpRate();
+    try { return convert(v, from, to); } catch (e) { return null; }
+  }
+  const _m = money; money = function (v, c) {
+    c = (c || "USD").toUpperCase(); let to = "USD"; try { to = displayCur(); } catch (e) {}
+    if (!v || to === c) return _m.apply(this, arguments); const x = conv(v, c, to); if (x == null) return _m.apply(this, arguments);
+    let s; try { s = fmtCur(nice(x, to), to); } catch (e) { s = Math.round(x) + " " + to; }
+    return realOwner() ? `${s} (${_m(v, c)})` : s;
+  };
+  /* money2 كان بيكتب الأصلي جنبه: للزوار نخليه بعملتهم بس */
+  const _m2 = money2; money2 = function (v, c) { if (realOwner()) return _m2.apply(this, arguments); return esc(money(v, c)); };
+
+  /* ---------- المصري يدفع بالجنيه بس ---------- */
+  const isEG = () => { try { return displayCur() === "EGP"; } catch (e) { return false; } };
+  function payFilter() {
+    if (!isEG() || realOwner()) return; const rt = state.route || ""; if (!/pay|checkout|pricing|booking|plan|order/i.test(rt) && !document.querySelector("#app [class*=pay], #app [id*=pay]")) return;
+    document.querySelectorAll("#app button, #app a, #app label, #app li, #app option").forEach(el => { if (el.__p191 || el.children.length > 4) return; const t = (el.textContent || "").trim(); if (t.length > 120) return; if (/PayPal|باي ?بال|USD|\$\s?\d|بالدولار|Crypto|USDT|Wise|Payoneer/i.test(t) && !/جنيه|EGP|ج\.م/.test(t)) { el.__p191 = 1; const box = el.closest("label, li, button, a") || el; if ((box.textContent || "").length < 160) box.style.display = "none"; } });
+    const top = document.querySelector("#app .card"); if (top && !document.getElementById("eg191")) top.insertAdjacentHTML("beforebegin", `<div id="eg191" class="card sm" style="border-color:#16a34a">🇪🇬 ${T("الدفع بالجنيه المصري: كارت (فيزا/ميزة)، محفظة، أو تحويل.", "Payment in Egyptian pounds: card, wallet or transfer.")}</div>`);
+  }
+
+  /* ---------- القريب: مايشوفش أي محتوى عليه فلوس ولا قفل ---------- */
+  const LOCK = /(🔒|🔐|💎|مدفوع|بفلوس|للمشتركين|للمشتركين بس|اشترك عشان|اشترك لفتح|افتحه بـ|Premium|Paid|Subscribers? only|Unlock)/i;
+  function closeScrub() {
+    if (!document.body.classList.contains("close189")) return;
+    document.querySelectorAll("#app .badge, #app small, #app em, #app span, #app b").forEach(el => { if (el.__c191 || el.children.length) return; const t = (el.textContent || "").trim(); if (t.length < 40 && LOCK.test(t)) { el.__c191 = 1; el.style.display = "none"; } });
+    document.querySelectorAll("#app button, #app .card, #app li").forEach(el => { if (el.__c191) return; const t = (el.textContent || "").trim(); if (t.length < 90 && /(اشترك|ادفع|Subscribe|Buy|اشتري)/i.test(t) && LOCK.test(t)) { el.__c191 = 1; el.style.display = "none"; } });
+  }
+
+  const _r = render; render = function () { _r.apply(this, arguments); try { payFilter(); closeScrub(); } catch (e) {} };
+  try { new MutationObserver(() => { clearTimeout(window.__p191); window.__p191 = setTimeout(() => { try { payFilter(); closeScrub(); } catch (e) {} }, 300); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
 })();
 
 // بدء التشغيل
