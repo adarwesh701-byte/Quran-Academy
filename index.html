@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v201";
+const UI_VERSION = "2026-11-16-v202";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -28700,6 +28700,68 @@ Between lessons, the platform keeps you going:
   .pr201g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.6rem}.pr201i{display:flex;flex-direction:column;gap:.2rem}.pr201i span{display:flex;align-items:center;gap:.3rem}.pr201i input{width:6rem}
   .pcg201{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.35rem;margin-top:.5rem}.pcc201{display:flex;gap:.25rem;align-items:center;border:1px solid var(--line);border-radius:.6rem;padding:.25rem .35rem}.pcc201 .in{padding:.15rem .3rem;font-size:.75rem}.pcc201 input{width:3.6rem}
   @media (prefers-reduced-motion:reduce){.bar201,.bar201 > *,.tab201{transition:none!important;animation:none!important}}`);
+})();
+
+/* ================= v202: موسوعة بيان الإسلام نص كامل من الموقع الرسمي (فهرس بالأقسام + بحث + بتكمّل من آخر شبهة) + كل طلابك من الجدول في «لوحة المعلم» وجدولك الأسبوعي (الكل زي بعض) ومواعيدهم بتتقفل في الحجز ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const FN = q => `${(typeof CONFIG !== "undefined" && CONFIG.supabaseUrl) || "https://ymycfxmigvvermsdnagm.supabase.co"}/functions/v1/bayan?${q}`;
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const jget = async q => { const r = await fetch(FN(q)); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+
+  /* ======================= 1) بيان الإسلام ======================= */
+  const B = window.B202 = { toc: null, lists: {}, open: {}, art: null, cur: LS("b202cur", null), q: "", hits: null, fs: LS("k199fs", 1.15), busy: 0 };
+  window.b202 = {
+    async toc() { if (B.toc) return; try { B.toc = await jget("a=toc"); } catch (e) { B.toc = []; } render(); },
+    async list(id) { B.open[id] = !B.open[id]; render(); if (!B.lists[id]) { try { B.lists[id] = await jget("a=list&id=" + id); } catch (e) { B.lists[id] = []; } render(); } },
+    async art(id, lid) { B.cur = { id, lid }; LSset("b202cur", B.cur); B.art = null; render(); try { B.art = await jget("a=page&id=" + encodeURIComponent(id)); } catch (e) { B.art = { err: e.message }; } render(); const r = document.getElementById("kr199"); r && r.scrollIntoView({ block: "start", behavior: "smooth" }); },
+    async search(q) { B.q = q; if (q.trim().length < 2) { B.hits = null; return render(); } B.hits = "…"; render(); try { B.hits = await jget("a=search&q=" + encodeURIComponent(q.trim())); } catch (e) { B.hits = []; } render(); },
+    step(d) { const L = B.lists[B.cur && B.cur.lid] || []; const i = L.findIndex(x => x.id === B.cur.id); const n = L[i + d]; if (n) this.art(n.id, B.cur.lid); },
+    fs(d) { B.fs = Math.max(.9, Math.min(2, B.fs + d)); LSset("k199fs", B.fs); render(); }
+  };
+  const q199 = s => esc(s).replace(/﴿([^﴾]*)﴾/g, '<span class="kq199">﴿$1﴾</span>').replace(/«([^»]{2,400})»/g, '<span class="kh202">«$1»</span>');
+  function bayanPage() {
+    if (!B.toc) { b202.toc(); return pageWrap("🛡️", T("موسوعة بيان الإسلام", "Bayan al-Islam"), "", loadingBox()); }
+    if (!B.art && B.cur && !B.busy) { B.busy = 1; setTimeout(() => { B.busy = 0; b202.art(B.cur.id, B.cur.lid); if (B.cur.lid && !B.lists[B.cur.lid]) b202.list(B.cur.lid); }, 0); }
+    const side = B.hits ? (B.hits === "…" ? loadingBox() : `<div class="kl199">${B.hits.map(h => `<a href="#" onclick="b202.art('${h.id}',null);return false">${esc(h.t)}</a>`).join("") || `<p class="xs muted">${T("مفيش نتايج", "No results")}</p>`}</div>`)
+      : B.toc.map((g, gi) => `<details class="tg202" ${gi === 0 || B.toc[gi].lists.some(l => B.cur && l.id === B.cur.lid) ? "open" : ""}><summary class="b">${esc(g.g)}</summary>${g.lists.map(l => `<div class="ki199"><button class="kx199" onclick="b202.list(${l.id})">${B.open[l.id] ? "▾" : "◂"}</button><a href="#" onclick="b202.list(${l.id});return false"><b>${esc(l.t)}</b></a></div>${B.open[l.id] ? `<div class="kl199" style="padding-inline-start:1.2rem">${!B.lists[l.id] ? `<span class="xs muted">⏳</span>` : B.lists[l.id].map(x => `<a href="#" class="${B.cur && B.cur.id === x.id ? "on202" : ""}" onclick="b202.art('${x.id}',${l.id});return false">${esc(x.t)}</a>`).join("")}</div>` : ""}`).join("")}</details>`).join("");
+    const a = B.art; const body = !B.cur ? `<div style="text-align:center;padding:2rem"><div style="font-size:3rem">🛡️</div><p>${T("اختار شبهة من الفهرس، أو دوّر بكلمة (مثلًا: الميراث، السيف، تعدد الزوجات).", "Pick a topic from the index or search.")}</p></div>` : !a ? loadingBox() : a.err ? `<div class="err">${esc(a.err)}</div>`
+      : `<h2 class="kt202">${esc((a.title || "").replace(/\(\*\)$/, ""))}</h2><div class="kt199" style="font-size:${B.fs}rem">${a.paras.map((p, i) => i === 0 && p.h ? "" : p.h ? `<h3 class="kh199">${q199(p.t)}</h3>` : /^(\[\d+\]|\(\*\))/.test(p.t) ? `<p class="kf202">${q199(p.t)}</p>` : `<p>${q199(p.t)}</p>`).join("")}</div>`;
+    const nav = B.cur && B.cur.lid ? `<div class="row" style="gap:.3rem;justify-content:center;flex-wrap:wrap"><button class="btn btn-o" onclick="b202.step(-1)">→ ${T("الشبهة اللي قبلها", "Previous")}</button><button class="btn btn-o" onclick="b202.fs(-.1)">A−</button><button class="btn btn-o" onclick="b202.fs(.1)">A+</button><button class="btn btn-o" onclick="b202.step(1)">${T("اللي بعدها", "Next")} ←</button></div>` : `<div class="row" style="gap:.3rem;justify-content:center"><button class="btn btn-o" onclick="b202.fs(-.1)">A−</button><button class="btn btn-o" onclick="b202.fs(.1)">A+</button></div>`;
+    return pageWrap("🛡️", T("موسوعة بيان الإسلام — الرد على الشبهات", "Bayan al-Islam — answering doubts"), T("النص الكامل: مضمون الشبهة، وإبطالها، والتفصيل، والخلاصة، والمراجع", "Full text: the claim, refutation, details, summary, references"),
+      `<button class="btn btn-o" onclick="back196()">↩️ ${T("رجوع", "Back")}</button><div class="kw199"><aside class="card ka199"><input class="in" placeholder="🔍 ${T("دوّر في كل الشبهات", "Search all topics")}" value="${esc(B.q)}" oninput="clearTimeout(window.__b2);const v=this.value;window.__b2=setTimeout(()=>b202.search(v),600)">${side}</aside><main class="card" id="kr199">${nav}<hr style="opacity:.2">${body}<hr style="opacity:.2">${nav}</main></div>`, 1300);
+  }
+
+  /* ======================= 2) كل طلابك من الجدول ======================= */
+  const R = window.R202 = { list: null };
+  async function loadR() { const { data } = await sb.from("roster202").select("*").order("name"); R.list = data || []; render(); }
+  const DN = ["الأحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"];
+  window.r202 = {
+    async email(id) { const r = R.list.find(x => x.id === id); const e = prompt(T(`إيميل ${r.name} — أول ما يدخل بيه بيبقى طالبك على الموقع أوتوماتيك`, `Email for ${r.name}`), r.email || ""); if (e == null) return; const em = e.trim().toLowerCase(); await sb.from("roster202").update({ email: em || null }).eq("id", id); if (em) await sb.from("pre196").upsert({ email: em, mine: true, days: 7, role: "student" }); toast("✅"); loadR(); },
+    async add() { const n = prompt(T("اسم الطالب", "Student name")); if (!n) return; const s = prompt(T("المواعيد: يوم ساعة مدة، مفصولة بفاصلة — مثلًا: الأحد 18:00 50, الخميس 20:30 50", "Slots e.g. sun 18:00 50, thu 20:30 50"), ""); const slots = (s || "").split(/[,،]/).map(x => x.trim().split(/\s+/)).filter(x => x.length >= 2).map(([d, t, m]) => ({ dow: Math.max(0, DN.findIndex(z => d.includes(z.slice(0, 3)) || z.includes(d))), t, m: +m || 50 }));
+      const { data: own } = await sb.from("profiles").select("id").eq("role", "owner").limit(1); await sb.from("roster202").insert({ name: n.trim(), slots, teacher_id: own && own[0] && own[0].id }); loadR(); },
+    async off(id, on) { await sb.from("roster202").update({ active: on }).eq("id", id); loadR(); }
+  };
+  function rosterCard() { if (!R.list) { loadR(); return loadingBox(); } const S = state.data.x197st || []; const norm = s => String(s || "").toLowerCase().replace(/[^a-z؀-ۿ]/g, "");
+    return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>📋 ${T("كل طلابك من الجدول", "All your students from the calendar")} (${R.list.filter(x => x.active).length})</h3><button class="btn btn-p" onclick="r202.add()">➕ ${T("طالب", "Student")}</button></div><p class="xs muted">${T("الكل زي بعض (بريبلي أو بره). مواعيدهم بتتقفل لوحدها في جدول الحجز. ضيف إيميل أي طالب فيبقى طالبك على الموقع أول ما يدخل (طالبك + خصم 50%).", "All the same. Their times are blocked in booking. Add an email to link them.")}</p>
+      <table class="tbl196"><tr><th>${T("الطالب", "Student")}</th><th>${T("المواعيد", "Times")}</th><th>${T("على الموقع", "On the site")}</th><th></th></tr>${R.list.map(r => { const on = S.find && S.find(p => norm(p.display_name || p.real_name).startsWith(norm(r.name).slice(0, 5)) || (r.email && (p.email || "").toLowerCase() === r.email)); return `<tr style="${r.active ? "" : "opacity:.45"}"><td><b>${esc(r.name)}</b></td><td class="xs">${(r.slots || []).map(s => `${DN[s.dow]} ${esc(s.t)} (${s.m}د)`).join(" · ")}</td><td class="xs">${on ? "✅ " + esc(on.email || "") : r.email ? "⏳ " + esc(r.email) : `<button class="btn btn-o xs" onclick="r202.email('${r.id}')">📧 ${T("ضيف إيميله", "Add email")}</button>`}</td><td><button class="btn btn-o xs" onclick="r202.off('${r.id}',${!r.active})">${r.active ? "⏸" : "▶"}</button></td></tr>`; }).join("")}</table></div>`; }
+  function weekAdd() { const tw = document.getElementById("tw199"); if (!tw || tw.dataset.r202 || !R.list) return; tw.dataset.r202 = 1; const tbl = tw.querySelector("table.wk199"); if (!tbl) return;
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0); const rows = [...tbl.querySelectorAll("tr")].slice(1); const ths = rows.map(r => r.querySelector("th").textContent.trim());
+    R.list.filter(r => r.active).forEach(r => (r.slots || []).forEach(s => { for (let i = 0; i < 7; i++) { const d = new Date(d0.getTime() + i * 864e5); if (d.getDay() !== s.dow) continue; const [h, m] = s.t.split(":").map(Number);
+        let idx = -1, curH = null; rows.forEach((row, k) => { const t = ths[k]; if (t) curH = +t.split(":")[0]; const mm = t ? 0 : 30; if (curH === h && mm === (m >= 30 ? 30 : 0)) idx = k; }); if (idx < 0) continue;
+        for (let q = 0; q < Math.max(1, Math.round(s.m / 30)); q++) { const row = rows[idx + q]; if (!row) break; const cell = row.children[i + 1]; if (!cell) continue; cell.className = "w199 mine" + (q ? " cont" : ""); if (!q) cell.textContent = r.name.split(" ")[0]; cell.title = r.name; } } })); }
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () {
+    if (state.route === "kutub199" && String(state.pageArg || "") === "bayan" && !(realOwner() && LS("img201", 0) === 1 && LS("bayanocr202", 0))) { let b; try { b = bayanPage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); try { window.after196 && window.after196(); } catch (e) {} return; }
+    _r.apply(this, arguments);
+    try { if (state.route === "tch196" && realOwner()) { const T197 = window.TC197 || {}; if (T197.tab === "st" && !document.getElementById("ro202")) { const t = document.querySelector("#app .tabs197"); t && t.insertAdjacentHTML("afterend", `<div id="ro202">${rosterCard()}</div>`); } if (T197.tab === "today") { if (!R.list) loadR(); else weekAdd(); } } } catch (e) { console.warn(e); }
+  };
+  css(`.tg202{margin:.3rem 0;border-bottom:1px solid var(--line);padding-bottom:.3rem}.tg202 summary{cursor:pointer;padding:.3rem 0;color:var(--accent)}.kl199 a.on202{background:color-mix(in srgb,var(--accent) 15%,transparent);font-weight:700}.kt202{color:var(--accent);font-family:'Amiri',serif;line-height:1.6;margin:.4rem 0 .8rem}.kh202{color:#7c2d12}.kf202{font-size:.8em;opacity:.8;border-top:1px dashed var(--line);padding-top:.3rem}`);
 })();
 
 // بدء التشغيل
