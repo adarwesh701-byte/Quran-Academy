@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v208";
+const UI_VERSION = "2026-11-17-v209";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29322,6 +29322,62 @@ Between lessons, the platform keeps you going:
   const _p = window.prompt; window.prompt = (m, d) => _p(ON() && typeof m === "string" ? conv(m) : m, d);
   window.dia208 = async v => { await saveSetting16("dia208", v); location.reload(); };
   const _os = ownerSettings; ownerSettings = function () { const cur = setv("dia208", "fusha") || "fusha"; return `<div class="card notr" style="border:2px solid #0891b2;margin-bottom:1rem"><h3>🗣️ ${T("لغة واجهة الموقع بالعربي", "Arabic interface wording")}</h3><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn ${cur === "fusha" ? "btn-p" : "btn-o"}" onclick="dia208('fusha')">📖 ${T("الفصحى (لكل العرب)", "Standard Arabic")}</button><button class="btn ${cur === "eg" ? "btn-p" : "btn-o"}" onclick="dia208('eg')">🇪🇬 ${T("المصري", "Egyptian")}</button></div><p class="xs muted">${T("بيغيّر كلام الأزرار والعناوين والشرح بس — القرآن والكتب والمحتوى زي ما هم.", "Changes buttons, headings and hints only.")}</p></div>` + _os.apply(this, arguments); };
+})();
+
+/* ================= v209: الشريط اللي فوق مقفول على اللوجو واللي جنبه بس — وزرار سهم كريتيف تحت اللوجو بينزّل الشرايط التلاتة وتزق المحتوى لتحت · زرار «↶ تراجع» (و Ctrl+Z) يرجّع أي تعديل خطوة بخطوة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+  /* ======================= 1) الشريط اللي فوق ======================= */
+  const ROWS = "#app .bar185, #app .dombar, #app .hdr .nav, #app .unav";
+  let OPEN = LS("tb209", false);
+  window.tb209 = () => { OPEN = !OPEN; LSset("tb209", OPEN); paint(true); };
+  function paint(anim) { document.body.classList.add("tb209"); document.body.classList.toggle("tb209-open", OPEN);
+    const h = document.querySelector("#app .hdr, #app > header"); if (!h) return; let b = document.getElementById("tbb209");
+    if (!b || !h.contains(b)) { b && b.remove(); b = document.createElement("button"); b.id = "tbb209"; b.type = "button"; b.onclick = e => { e.stopPropagation(); tb209(); }; h.appendChild(b); }
+    b.className = OPEN ? "on" : ""; b.title = OPEN ? T("اقفل القوائم", "Collapse the menus") : T("افتح القوائم", "Expand the menus");
+    b.innerHTML = `<span class="ch">⌄</span><span class="lb">${OPEN ? T("اقفل القوائم", "Close menus") : T("القوائم", "Menus")}</span>`;
+    if (anim && OPEN) document.querySelectorAll(ROWS).forEach(r => { r.classList.remove("in209"); void r.offsetWidth; r.classList.add("in209"); }); }
+  new MutationObserver(() => { const h = document.querySelector("#app .hdr"); if (h && !h.querySelector("#tbb209")) paint(false); }).observe(document.body, { childList: true, subtree: true });
+  css(`
+  body.tb209:not(.tb209-open) :is(#app .bar185, #app .dombar, #app .hdr .nav, #app .unav){display:none!important}
+  body.tb209.tb209-open :is(#app .bar185, #app .dombar, #app .hdr .nav, #app .unav){position:static!important;transform:none!important;opacity:1!important;pointer-events:auto!important;visibility:visible!important;top:auto!important}
+  .in209{animation:in209 .38s cubic-bezier(.22,1,.36,1) both}@keyframes in209{from{opacity:0;transform:translateY(-10px)!important;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+  #app .hdr{position:relative}
+  #tbb209{position:absolute;bottom:-15px;inset-inline-start:50%;transform:translateX(50%);z-index:60;display:flex;align-items:center;gap:.35rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.15rem .7rem .15rem .55rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.12);transition:background .2s,box-shadow .2s}
+  [dir=ltr] #tbb209{transform:translateX(-50%)}
+  #tbb209 .ch{display:inline-block;font-size:1.15rem;line-height:.8;transition:transform .35s cubic-bezier(.22,1,.36,1);animation:bob209 2.4s ease-in-out infinite}
+  #tbb209.on .ch{transform:rotate(180deg);animation:none}
+  #tbb209:hover{background:var(--accent);color:#fff;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 45%,transparent)}
+  @keyframes bob209{0%,100%{translate:0 0}50%{translate:0 3px}}
+  @media (prefers-reduced-motion:reduce){#tbb209 .ch{animation:none}.in209{animation:none}}
+  `);
+  setTimeout(() => paint(false), 300);
+
+  /* ======================= 2) تراجع عن أي تعديل ======================= */
+  const KEYS = /^(itqan_ed189|arr206d|bar201u|pop205u|tpos205|sz204|sp203c|sp203fav|sp203hide|ht207|lbl205|ui203u|y201|pin201|lk196|sy196|tb209|int200)$/;
+  const LOC = []; let quiet = 0;
+  const _set = Storage.prototype.setItem, _rem = Storage.prototype.removeItem;
+  Storage.prototype.setItem = function (k, v) { if (this === localStorage && !quiet && KEYS.test(k)) { const prev = Storage.prototype.getItem.call(this, k); if (prev !== String(v)) { LOC.push({ k, prev, at: Date.now() }); if (LOC.length > 60) LOC.shift(); setTimeout(btn, 30); } } return _set.apply(this, arguments); };
+  Storage.prototype.removeItem = function (k) { if (this === localStorage && !quiet && KEYS.test(k)) { const prev = Storage.prototype.getItem.call(this, k); if (prev != null) { LOC.push({ k, prev, at: Date.now() }); setTimeout(btn, 30); } } return _rem.apply(this, arguments); };
+  const HIST = () => (setv("hist183", []) || []);
+  let busy = 0;
+  window.undo209 = async () => { if (busy) return; const l = LOC[LOC.length - 1]; const H = HIST(); const h = realOwner() ? H[H.length - 1] : null; const ht = h ? new Date(h.at).getTime() : 0;
+    if (!l && !h) return toast(T("مفيش حاجة ترجعها", "Nothing to undo"));
+    busy = 1; try {
+      if (l && (!h || l.at >= ht)) { LOC.pop(); quiet = 1; try { l.prev == null ? localStorage.removeItem(l.k) : localStorage.setItem(l.k, l.prev); } finally { quiet = 0; } toast("↶ " + T("رجعت خطوة", "Undone")); render(); }
+      else { await saveSetting16(h.k, h.prev); const H2 = HIST().slice(); H2.splice(H2.length - 2, 2); await saveSetting16("hist183", H2); toast("↶ " + T("رجعت خطوة", "Undone")); }
+    } finally { busy = 0; btn(); } };
+  function btn() { let b = document.getElementById("un209"); const n = LOC.length + (realOwner() ? HIST().length : 0); if (!n || (!realOwner() && !LOC.length)) { b && b.remove(); return; }
+    if (!b) { b = document.createElement("button"); b.id = "un209"; b.type = "button"; b.onclick = () => undo209(); document.body.appendChild(b); } b.innerHTML = `↶ <span>${T("تراجع", "Undo")}</span>`; b.title = T("ارجع آخر تعديل (Ctrl+Z) — وكل التعديلات القديمة في «سجل التغييرات»", "Undo the last change (Ctrl+Z)"); }
+  addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z" || e.key === "ظ")) { if (e.target.closest && e.target.closest("input,textarea,[contenteditable]")) return; e.preventDefault(); undo209(); } });
+  setInterval(btn, 4000); setTimeout(btn, 800);
+  css(`#un209{position:fixed;bottom:1rem;inset-inline-end:50%;transform:translateX(-50%);z-index:2950;border:0;border-radius:999px;background:#111;color:#fff;padding:.4rem .9rem;font:inherit;font-weight:700;font-size:.85rem;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;opacity:.85}
+  [dir=ltr] #un209{transform:translateX(50%)}#un209:hover{opacity:1;background:var(--accent)}`);
 })();
 
 // بدء التشغيل
