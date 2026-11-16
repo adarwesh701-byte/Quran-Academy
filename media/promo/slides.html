@@ -47,7 +47,7 @@ const DEMO = [
 ];
 const root = document.getElementById("root");
 function boot(){ setTimeout(()=>document.querySelectorAll('iframe[data-src]').forEach(f=>{ if(ONLY==null || f.closest('.s.on')) f.src=f.dataset.src; }), 2500); }
-function prep(f, cb) { f.addEventListener("load", () => { const w = f.contentWindow; const go = () => { try { if (w.setLang && w.state.lang !== LANG) w.setLang(LANG); } catch (e) {} cb && cb(w); }; setTimeout(go, 1800); }, { once: true }); }
+function prep(f, cb) { f.addEventListener("load", () => { if (!f.getAttribute("src") || f.dataset.done) return; f.dataset.done = 1; const w = f.contentWindow; const go = () => { try { if (w.setLang && w.state.lang !== LANG) w.setLang(LANG); } catch (e) {} cb && cb(w); }; setTimeout(go, 1800); }); }
 if (MODE === "promo") {
   const LIST = ONLY != null ? [PROMO[+ONLY]] : PROMO; const OFF = ONLY != null ? +ONLY : 0;
   root.innerHTML = PROMO.map((s, i) => `<section class="s" id="s${i}">${s.html}<div class="cta" style="${i === 4 ? "display:none" : ""}">${T("✨ أول حصة تجريبية مجانًا", "✨ First trial lesson free")}</div></section>`).join("");
