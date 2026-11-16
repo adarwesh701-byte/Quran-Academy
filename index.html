@@ -25012,7 +25012,7 @@ body.ed158 .hv169{opacity:.4!important}
   function pinCheck() {
     if (pinChecked || !state.settings || !Object.keys(state.settings).length) return; pinChecked = true;
     const p = setv("pin178", null); let skip = false; try { skip = !!sessionStorage.getItem("itqan_nopin"); } catch (e) {}
-    if (p && p.v && p.ui !== UI_VERSION && !location.pathname.startsWith("/archive/") && !skip) location.replace("/archive/" + p.v + ".html" + location.hash);
+    if (p && p.v && p.ui !== UI_VERSION && !location.pathname.startsWith("/archive/") && !skip) { const u = "/archive/" + p.v + ".html"; fetch(u, { method: "HEAD", cache: "no-store" }).then(r => { if (r.ok) location.replace(u + location.hash); else { try { sessionStorage.setItem("itqan_nopin", "1"); } catch (e) {} if (realRole() === "owner") toast("⚠️ " + (state.lang === "ar" ? `النسخة المثبّتة ${p.v} مش موجودة — بنعرض أحدث نسخة` : `Pinned version ${p.v} is missing — showing the latest`), true); } }).catch(() => {}); }
   }
   function verPage() {
     if (!own()) return pageWrap("🕰️", "—", "", `<div class="card muted">—</div>`);
