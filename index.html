@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v176";
+const UI_VERSION = "2026-11-16-v177";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -24868,6 +24868,134 @@ body.ed158 .hv169{opacity:.4!important}
 
   const _r = render; render = function () { const o = _r.apply(this, arguments); try { mode(); guestBar(); setTimeout(installNudge, 2500); } catch (e) {} return o; };
   mode();
+})();
+
+/* ================= v177: تسجيل صوت كل حصة (عربي + إنجليزي + تنبيه لو حد بيحاول ياخد الطالب برّه) ويتمسح بعد 10 أيام + انتقال ناعم بين الصفحات من غير ما الصفحة تطلع لفوق + «رجوع لمكانك» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* ---------- 1) تسجيل الحصة (بيسجّل من جهاز الطالب — المعلم مايقدرش يوقفه) ---------- */
+  const PART = 5 * 60 * 1000;
+  function recAllowed() { return RM && RM.joined && RM.kind === "lesson" && !rmIsHost() && setv("lrec177", { on: true }).on !== false && window.MediaRecorder && RM.ac; }
+  function lrStart() {
+    if (RM.lrec || !recAllowed()) return;
+    let dest; try { dest = RM.ac.createMediaStreamDestination(); } catch (e) { return; }
+    const L = { dest, mixed: new Set(), nodes: [], part: 0 }; RM.lrec = L;
+    const add = s => { (s && s.getAudioTracks ? s.getAudioTracks() : []).forEach(t => { if (L.mixed.has(t.id) || t.readyState !== "live") return; try { const n = RM.ac.createMediaStreamSource(new MediaStream([t])); n.connect(dest); L.nodes.push(n); L.mixed.add(t.id); } catch (e) {} }); };
+    L.scan = () => { add(RM.local); Object.values(RM.peers || {}).forEach(p => Object.values(p.streams || {}).forEach(add)); };
+    L.scan(); L.iv = setInterval(L.scan, 3000);
+    const mime = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", "audio/webm"].find(m => MediaRecorder.isTypeSupported(m)) || "";
+    const one = () => {
+      if (RM.lrec !== L) return; const chunks = []; const t0 = Date.now();
+      let mr; try { mr = new MediaRecorder(dest.stream, Object.assign({ audioBitsPerSecond: 24000 }, mime ? { mimeType: mime } : {})); } catch (e) { return; }
+      mr.ondataavailable = e => e.data && e.data.size && chunks.push(e.data);
+      mr.onstop = () => { const secs = Math.round((Date.now() - t0) / 1000); const type = (mr.mimeType || "audio/webm"); const bl = new Blob(chunks, { type }); if (secs >= 8 && Object.keys(RM.peers || {}).length) upload(bl, type, secs, new Date(t0).toISOString()); if (RM.lrec === L) one(); };
+      L.mr = mr; mr.start(10000); L.cut = setTimeout(() => { try { mr.state !== "inactive" && mr.stop(); } catch (e) {} }, PART);
+    };
+    one(); try { rmTopUpdate(); } catch (e) {}
+  }
+  async function upload(bl, type, secs, at) {
+    try { const ext = /mp4/.test(type) ? "m4a" : /ogg/.test(type) ? "ogg" : "webm"; const path = `${RM.id}/${RM.uid}/${Date.now()}.${ext}`; const kind = RM.kind, rid = RM.id;
+      const up = await sb.storage.from("lessonrec").upload(path, bl, { contentType: type.split(";")[0] }); if (up.error) return;
+      await sb.from("lesson_recordings").insert({ room_kind: kind, room_id: rid, recorder: state.auth.user.id, path, mime: type, secs, started_at: at });
+    } catch (e) {}
+  }
+  function lrStop() { const L = RM && RM.lrec; if (!L) return; RM.lrec = null; clearInterval(L.iv); clearTimeout(L.cut); try { L.mr && L.mr.state !== "inactive" && L.mr.stop(); } catch (e) {} L.nodes.forEach(n => { try { n.disconnect(); } catch (e) {} }); }
+  if (typeof rmJoin === "function") {
+    const _j = rmJoin; rmJoin = async function () { const r = await _j.apply(this, arguments); setTimeout(lrStart, 4000); return r; };
+    const _td = roomTeardown; roomTeardown = function () { try { lrStop(); } catch (e) {} return _td.apply(this, arguments); };
+    setInterval(() => { try { if (RM && RM.joined && !RM.lrec) lrStart(); } catch (e) {} }, 15000);
+    /* إشعار واضح للكل إن الحصة بتتسجّل */
+    const _tu = rmTopUpdate; rmTopUpdate = function () { _tu.apply(this, arguments); try { const el = rmEl("rmTop"); if (el && RM.kind === "lesson" && setv("lrec177", { on: true }).on !== false && !el.querySelector(".lr177")) el.querySelector(".t") && el.querySelector(".t").insertAdjacentHTML("afterend", `<span class="rm-chip lr177" title="${T("صوت الحصة بيتسجّل عشان جودة التعليم ومتابعة الإدارة، وبيتمسح تلقائي بعد 10 أيام", "Lesson audio is recorded for quality and admin review, and deleted automatically after 10 days")}">🔴 ${T("الحصة بتتسجّل", "Recorded")}</span>`); } catch (e) {} };
+  }
+  css(`.lr177{background:#7f1d1d!important;color:#fff!important}`);
+
+  /* ---------- 2) المالك: تسجيل كل حصة + التفريغ عربي وإنجليزي + التنبيهات ---------- */
+  async function signed(p) { const { data } = await sb.storage.from("lessonrec").createSignedUrl(p, 3600); return data && data.signedUrl; }
+  function lrBlock(rows) {
+    const ar = AR(); if (!rows.length) return `<p class="sm muted">${T("مفيش تسجيل للحصة دي (أو اتمسح بعد 10 أيام).", "No recording for this lesson (or it was deleted after 10 days).")}</p>`;
+    const fl = rows.flatMap(r => r.flags || []);
+    return `${fl.length ? `<div class="lr177f"><b>🚩 ${T("تنبيهات", "Alerts")}</b>${fl.map(f => `<div class="sm">• ${esc(f)}</div>`).join("")}</div>` : `<p class="xs" style="color:#16a34a">✅ ${T("مفيش تنبيهات في الحصة دي", "No alerts in this lesson")}</p>`}
+      <div class="row" style="gap:.3rem;margin:.4rem 0"><button class="btn btn-o" style="padding:.2rem .7rem" onclick="state.lrL='ar';document.querySelectorAll('.lr177t').forEach(e=>e.dataset.l='ar')">العربي</button><button class="btn btn-o" style="padding:.2rem .7rem" onclick="document.querySelectorAll('.lr177t').forEach(e=>e.dataset.l='en')">English</button></div>
+      ${rows.map((r, i) => `<div class="lr177p"><div class="row" style="justify-content:space-between;align-items:center;gap:.4rem;flex-wrap:wrap"><b class="sm">🎧 ${T("جزء", "Part")} ${i + 1} · ${esc(fmtDT(r.started_at || r.created_at))} · ${Math.round((r.secs || 0) / 60)} ${T("د", "min")}</b><span class="xs muted">${r.status === "done" ? "" : r.status === "error" ? "⚠️ " + esc(r.err || "") : "⏳ " + T("بيتفرّغ…", "Transcribing…")}</span></div>
+        <audio controls preload="none" data-p="${esc(r.path)}" style="width:100%;margin:.3rem 0" onplay="lr177Src(this)"></audio>
+        ${r.transcript_ar || r.transcript_en ? `<div class="lr177t" data-l="ar"><div class="ar" dir="rtl" lang="ar">${esc(r.transcript_ar || "—")}</div><div class="en" dir="ltr">${esc(r.transcript_en || "—")}</div></div>` : ""}</div>`).join("")}`;
+  }
+  window.lr177Src = async function (a) { if (a.src) return; const u = await signed(a.dataset.p); if (u) { a.src = u; a.play().catch(() => {}); } };
+  if (typeof openLessonReport === "function") {
+    const _ol = openLessonReport; openLessonReport = async function (id) {
+      const r = await _ol.apply(this, arguments); if (realRole() !== "owner") return r;
+      try { const m = document.getElementById("lrModal"); const card = m && m.querySelector(".card"); if (!card) return r;
+        const { data } = await sb.from("lesson_recordings").select("*").eq("room_id", String(id)).order("created_at");
+        card.insertAdjacentHTML("beforeend", `<div style="margin-top:1.2rem"><h4>🎙️ ${T("تسجيل الحصة (بيتمسح بعد 10 أيام)", "Lesson recording (deleted after 10 days)")}</h4>${lrBlock(data || [])}</div>`);
+      } catch (e) {}
+      return r;
+    };
+  }
+  /* صفحة «تسجيلات الحصص» للمالك — اللي فيها تنبيهات بتطلع الأول */
+  if (!PAGES16.includes("lrec177")) PAGES16.push("lrec177");
+  function page() {
+    if (realRole() !== "owner") return pageWrap("🎙️", "—", "", `<div class="card muted">—</div>`);
+    const d = useData("lrec177", async () => { const { data } = await sb.from("lesson_recordings").select("room_id,created_at,secs,flags,status").order("created_at", { ascending: false }).limit(1000); const by = {}; (data || []).forEach(r => { const x = by[r.room_id] || (by[r.room_id] = { id: r.room_id, at: r.created_at, secs: 0, flags: 0, parts: 0, pend: 0 }); x.secs += r.secs || 0; x.flags += (r.flags || []).length; x.parts++; if (r.status !== "done") x.pend++; });
+      const ids = Object.keys(by); const ls = ids.length ? ((await sb.from("lessons").select("id,start_time,track,student_id,teacher_id").in("id", ids.filter(x => /^[0-9a-f-]{36}$/.test(x)))).data || []) : []; ls.forEach(l => Object.assign(by[l.id], { l })); return [Object.values(by).sort((a, b) => (b.flags - a.flags) || b.at.localeCompare(a.at))]; });
+    const P = peopleMap(); const set = setv("lrec177", { on: true });
+    const head = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><span class="sm">${T("كل حصة بتتسجّل صوت من جهاز الطالب (المعلم مايقدرش يوقفه)، وبتتفرّغ عربي وإنجليزي، وأي محاولة لأخد الطالب برّه الأكاديمية بتطلعلك 🚩. التسجيلات بتتمسح تلقائي بعد 10 أيام. الطالب والمعلم بيشوفوا علامة «🔴 الحصة بتتسجّل».", "Every lesson is recorded (audio) from the student's device so the teacher can't stop it, transcribed in Arabic and English, and anything that looks like taking the student outside the academy is flagged 🚩. Recordings are deleted automatically after 10 days. Both sides see “🔴 Recorded”.")}</span><button class="btn ${set.on !== false ? "btn-p" : "btn-o"}" onclick="saveSetting16('lrec177',{on:${set.on === false}}).then(()=>render())">${set.on !== false ? "✅ " + T("التسجيل شغّال", "Recording on") : T("شغّل التسجيل", "Turn recording on")}</button></div></div>`;
+    if (!Array.isArray(d)) return pageWrap("🎙️", T("تسجيلات الحصص", "Lesson recordings"), "", head + loadingBox());
+    return pageWrap("🎙️", T("تسجيلات الحصص", "Lesson recordings"), T("آخر 10 أيام", "Last 10 days"), head + (d[0].length ? d[0].map(x => `<a href="#" class="card lr177r ${x.flags ? "bad" : ""}" onclick="openLessonReport('${x.id}');return false;"><b>${x.flags ? "🚩 " + x.flags + " · " : ""}${esc(fmtDT((x.l || {}).start_time || x.at))}</b><span class="sm">${x.l ? `🎓 ${esc(personName(x.l.teacher_id, P.map))} ↔ 👤 ${esc(personName(x.l.student_id, P.map))}` : ""}</span><span class="xs muted">${x.parts} ${T("جزء", "parts")} · ${Math.round(x.secs / 60)} ${T("دقيقة", "min")}${x.pend ? " · ⏳ " + x.pend : ""}</span></a>`).join("") : `<p class="muted">${T("لسه مفيش تسجيلات.", "No recordings yet.")}</p>`), 1000);
+  }
+  css(`.lr177f{border:2px solid #dc2626;border-radius:12px;padding:.5rem .7rem;background:color-mix(in srgb,#dc2626 8%,var(--card));margin:.4rem 0}.lr177p{border-top:1px solid var(--line);padding:.5rem 0}
+  .lr177t{max-height:16rem;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:.5rem .7rem;white-space:pre-wrap;font-size:.9rem;line-height:1.8}.lr177t[data-l=ar] .en,.lr177t[data-l=en] .ar{display:none}
+  .lr177r{display:flex;flex-direction:column;gap:.15rem;margin-bottom:.5rem;text-decoration:none;color:inherit}.lr177r.bad{border:2px solid #dc2626}`);
+
+  /* ---------- 3) الانتقال بين الصفحات: مفيش طلوع لفوق ولا رعشة ---------- */
+  const NAV = () => Object.assign({ mode: "smart", back: true }, setv("nav177", {}) || {});
+  let lastClick = 0, lastY = 0, keyAtClick = "";
+  const keyNow = () => [state.route, state.libSec || "", typeof state.pageArg === "string" ? state.pageArg : "", state.dash && state.dash.tab || ""].join("|");
+  document.addEventListener("pointerdown", () => { lastClick = Date.now(); lastY = scrollY; keyAtClick = keyNow(); }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { lastClick = Date.now(); lastY = scrollY; keyAtClick = keyNow(); } }, true);
+  function contentTop() { const h = document.querySelector(".hdr"); const hh = h && getComputedStyle(h).position !== "static" ? h.getBoundingClientRect().height : 0; const t = document.querySelector("#app h1, #app .sec h2, #app .card"); if (!t) return 0; return Math.max(0, t.getBoundingClientRect().top + scrollY - hh - 12); }
+  const _st = window.scrollTo; let deferred = null;
+  window.scrollTo = function (a, b) {
+    const y = typeof a === "object" && a ? a.top : b; const m = NAV().mode;
+    if (y === 0 && m !== "top" && Date.now() - lastClick < 1500) {
+      clearTimeout(deferred); deferred = setTimeout(() => {
+        const changed = keyNow() !== keyAtClick;
+        if (m === "stay" && !changed) return;
+        const ct = contentTop(); if (scrollY > ct + 4 || (m === "smart" && scrollY > ct)) _st.call(window, { top: ct, behavior: "smooth" });
+        if (changed) backChip();
+      }, 30);
+      return;
+    }
+    return _st.apply(window, arguments);
+  };
+  /* رجوع لمكانك */
+  function backChip() {
+    if (!NAV().back || lastY < 500) return; let c = document.getElementById("bk177"); if (c) c.remove();
+    c = document.createElement("button"); c.id = "bk177"; c.className = "btn"; c.innerHTML = `↩ ${T("رجوع لمكانك", "Back to where you were")}`;
+    c.onclick = () => { c.remove(); history.back(); }; document.body.appendChild(c); clearTimeout(window.__bk177); window.__bk177 = setTimeout(() => c.remove(), 9000);
+  }
+  css(`#bk177{position:fixed;z-index:940;top:calc(var(--hdrh,64px) + .6rem);left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);border-radius:999px;padding:.4rem 1rem;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:tr173 .25s ease;border:0}`);
+  /* أثناء الرسم: الطول بيتثبت لحظة عشان الصفحة ماتترعشش ولا تقفز */
+  const _r = render; render = function () {
+    const app = document.getElementById("app"); const k0 = keyNow(); if (app) app.style.minHeight = app.offsetHeight + "px";
+    if (state.route === "lrec177" && app) { let b; try { b = page(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} clearTimeout(window.__mh177); window.__mh177 = setTimeout(() => { app.style.minHeight = ""; }, 400); return; }
+    const o = _r.apply(this, arguments);
+    if (app) { clearTimeout(window.__mh177); window.__mh177 = setTimeout(() => { app.style.minHeight = ""; }, keyNow() === k0 ? 600 : 250); }
+    return o;
+  };
+  if (/^#\/lrec177/.test(location.hash)) state.route = "lrec177";
+  /* إعدادات الانتقال + مدخل التسجيلات */
+  const _os = ownerSettings; ownerSettings = function () {
+    const n = NAV(); const opt = (v, a, e, d1, d2) => `<label class="opt" style="padding:.5rem .7rem;display:flex;gap:.5rem;align-items:flex-start"><input type="radio" name="nav177" ${n.mode === v ? "checked" : ""} onchange="saveSetting16('nav177',Object.assign({},setv('nav177',{})||{},{mode:'${v}'})).then(()=>render())"><span><b class="sm">${T(a, e)}</b><br><span class="xs muted">${T(d1, d2)}</span></span></label>`;
+    return `<div class="card" style="margin-top:1rem"><h3>🧭 ${T("الانتقال بين الصفحات", "Moving between pages")}</h3>
+      ${opt("smart", "ذكي (المقترح)", "Smart (recommended)", "لما تفتح حاجة جوه الصفحة، بتنزل على أول المحتوى الجديد بنعومة، من غير ما ترجع لأول الموقع (الهيدر والقوايم).", "Opening something inside a page glides to the start of the new content — never back up to the site header.")}
+      ${opt("stay", "خليك مكانك", "Stay put", "لو التغيير جوه نفس الصفحة، الشاشة متتحركش خالص.", "Changes inside the same page never move the screen.")}
+      ${opt("top", "زي الأول (لأول الصفحة)", "Classic (to the top)", "كل صفحة جديدة بتبدأ من فوق خالص.", "Every new page starts at the very top.")}
+      <label class="xs" style="display:flex;gap:.4rem;align-items:center;margin-top:.4rem"><input type="checkbox" ${n.back ? "checked" : ""} onchange="saveSetting16('nav177',Object.assign({},setv('nav177',{})||{},{back:this.checked}))"> ↩ ${T("زرار «رجوع لمكانك» لما تفتح صفحة داخلية وانت نازل تحت", "“Back to where you were” chip after opening an inner page from far down")}</label>
+      <div class="row" style="margin-top:.6rem"><button class="btn btn-o" onclick="go16('lrec177')">🎙️ ${T("تسجيلات الحصص والتنبيهات", "Lesson recordings & alerts")}</button></div></div>` + _os.apply(this, arguments);
+  };
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (realRole() !== "owner") return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#dc2626" onclick="go16('lrec177')"><span>🎙️</span><b>${T("تسجيلات الحصص", "Lesson recordings")}</b></button>`); };
 })();
 
 // بدء التشغيل
