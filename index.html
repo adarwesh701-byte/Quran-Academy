@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v193";
+const UI_VERSION = "2026-11-16-v194";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -10678,7 +10678,7 @@ function renderMaqamatPage() {
           ${state.auth.user ? `<button class="chip ${state.mq.mine ? "on" : ""}" onclick="${fullAccess && q_ ? "state.mq.mine=true;render()" : "toast(L('" + (fullAccess ? "vrNeed" : "vrPaid") + "'),true)"}">🎤 ${L("mqMine")} ${fullAccess ? "" : "🔒"}</button>` : ""}</div>
         <label class="l">${L("mqSpeed")}</label><input type="range" min="0.6" max="1.6" step="0.1" value="${state.mq.speed}" oninput="state.mq.speed=+this.value" style="width:100%">
         <div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.6rem">${L("mqPatterns").map((p, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="mqPlay(${i})">▶ ${esc(p)}</button>`).join("")}
-          <button class="btn btn-p" onclick="mqPlay('gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" id="mqStopBtn" style="display:none;color:var(--danger)" onclick="aahStop()">⏹ ${L("mqStop")}</button></div></div>${vr}</div></div>`, 1200);
+          <button class="btn btn-o" onclick="mqPlay('gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" id="mqStopBtn" style="display:none;color:var(--danger)" onclick="aahStop()">⏹ ${L("mqStop")}</button></div></div>${vr}</div></div>`, 1200);
 }
 function mqHighlight(c) { document.querySelectorAll(".mqstep").forEach(e => { const v = +e.dataset.c; e.classList.toggle("on", Math.abs(((c % 1200) + 1200) % 1200 - v) < 1 || (c === 1200 && v === 1200)); }); }
 function mqPlay(p) { const m = MQ.find(x => x.id === state.mq.id); const notes = p === "gen" ? mqGenerate(m, Date.now(), state.mq.speed) : mqPattern(m, p, state.mq.speed); aahSing(notes, mqTonicHz(m), state.mq.voice, mqHighlight); }
@@ -11080,7 +11080,7 @@ function mqAllowed(kind, mid) { return (MAQ_FREE[kind] || []).includes(mid) || m
 function maqamPage(kind, mid) {
   const m = MQ.find(x => x.id === mid); if (!m) return "";
   const n = m.sc.length - 1, info = `<div class="kv"><span>${L("mqQarar")}</span><b>${esc(noteName(m.tonic) || "")}</b></div><div class="kv"><span>${L("mqJawab")}</span><b>${esc(noteName(m.tonic + m.sc[n]) || "")}</b></div><div class="kv"><span>${L("mqUse")}</span><span class="sm">${esc(m.use || "")}</span></div>`;
-  if (kind === "aah") return `<div class="card" style="margin-top:1.2rem"><h3>🗣️ ${esc(mqName(m))}</h3>${info}<div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.7rem">${L("mqPatterns").map((p, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="mqPagePlay('${mid}',${i})">▶ ${esc(p)}</button>`).join("")}<button class="btn btn-p" onclick="mqPagePlay('${mid}','gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" onclick="state.mq.id='${mid}';go16('maqamat')">🎼 ${L("mqTitle")}</button></div></div>`;
+  if (kind === "aah") return `<div class="card" style="margin-top:1.2rem"><h3>🗣️ ${esc(mqName(m))}</h3>${info}<div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.7rem">${L("mqPatterns").map((p, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="mqPagePlay('${mid}',${i})">▶ ${esc(p)}</button>`).join("")}<button class="btn btn-o" onclick="mqPagePlay('${mid}','gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" onclick="state.mq.id='${mid}';go16('maqamat')">🎼 ${L("mqTitle")}</button></div></div>`;
   if (kind === "vtest") return `<div class="card" style="margin-top:1.2rem;text-align:center"><h3>🎤 ${esc(mqName(m))}</h3>${info}<button class="btn btn-p btn-lg" style="margin-top:.8rem" onclick="TN.maqam='${MAQAMS.includes(mid) ? mid : "bayati"}';go16('tuner')">🎤 ${L("tnStart")}</button></div>`;
   if (kind === "nasheed") { const p = POEMS[MQ.indexOf(m) % POEMS.length];
     return `<div class="card" style="margin-top:1.2rem"><h3>🌙 ${esc(p.t)} — ${esc(mqName(m))}</h3><div class="nsv">${p.v.map(v => { const [a, b] = v.split(" ... "); return `<div class="nsl"><span>${esc(a)}</span><span>${esc(b || "")}</span></div>`; }).join("")}</div>
@@ -12066,7 +12066,7 @@ maqamPage = function (kind, mid) {
   <div class="card" style="margin-top:1rem"><h3>${L("vtStep2")} — ${esc(mqName(m))}</h3>
     <div class="row" style="gap:.3rem;flex-wrap:wrap;margin:.6rem 0">${q_ ? `<button class="chip ${use === "mine" ? "on" : ""}" onclick="state.mq.mine=true;render()">🎤 ${L("vtMine")}</button>` : ""}${[["m", "mqMale"], ["f", "mqFemale"]].map(([v, l]) => `<button class="chip ${use === v ? "on" : ""}" onclick="state.mq.voice='${v}';state.mq.mine=false;render()">${L(l)}</button>`).join("")}</div>
     <div class="kv"><span>${L("mqQarar")}</span><b>${esc(noteName(m.tonic) || "")}</b></div><div class="kv"><span>${L("mqJawab")}</span><b>${esc(noteName(m.tonic + m.sc[m.sc.length - 1]) || "")}</b></div><div class="kv"><span>${L("mqUse")}</span><span class="sm">${esc(m.use || "")}</span></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.4rem;margin-top:.7rem">${L("mqPatterns").map((pt, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="vtPlay('${mid}',${i})">▶ ${esc(pt)}</button>`).join("")}<button class="btn btn-p" onclick="vtPlay('${mid}','gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" style="color:var(--danger)" onclick="aahStop()">⏹ ${L("mqStop")}</button></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.4rem;margin-top:.7rem">${L("mqPatterns").map((pt, i) => `<button class="btn btn-o" style="justify-content:flex-start" onclick="vtPlay('${mid}',${i})">▶ ${esc(pt)}</button>`).join("")}<button class="btn btn-o" onclick="vtPlay('${mid}','gen')">✨ ${L("mqNew")}</button><button class="btn btn-o" style="color:var(--danger)" onclick="aahStop()">⏹ ${L("mqStop")}</button></div></div>
   <div class="card" style="margin-top:1rem"><h3>${L("vtStep3")}</h3><p class="sm muted" style="margin:.3rem 0 .7rem">${L("vtStep3s")}</p>${tunerWidget(true)}</div>`;
 };
 function vtPlay(mid, p) { const m = MQ.find(x => x.id === mid); AAH.vol = 1; const voice = state.mq.mine && myQarar() ? (+((state.auth.profile || {}).voice_low) > 150 ? "f" : "m") : (state.mq.voice || "m"); aahSing(p === "gen" ? mqGenerate(m, Date.now(), 1) : mqPattern(m, p, 1), mqTonicHz(m), voice); }
@@ -26773,6 +26773,7 @@ Between lessons, the platform keeps you going:
     ["content", "📚 يضيف ويعدّل المحتوى والأقسام", "📚 Adds and edits content and sections"],
     ["request", "📝 يقترح تعديلات (تصميم/إعدادات) توصلك توافق عليها", "📝 Suggests changes you approve"],
     ["activity", "📜 يشوف سجل النشاط", "📜 Sees the activity log"],
+    ["voice", "🎙️ يسجّل أصوات للمحتوى (توصلك توافق قبل ما تظهر)", "🎙️ Records content voices (you approve)"],
     ["all", "⭐ كل الصلاحيات (ماعدا المفاتيح السرية)", "⭐ Everything (except secret keys)"]
   ];
   const PRESETS = {
@@ -27387,7 +27388,7 @@ Between lessons, the platform keeps you going:
   /* ---------- المصري يدفع بالجنيه بس ---------- */
   const isEG = () => { try { return displayCur() === "EGP"; } catch (e) { return false; } };
   function payFilter() {
-    if (!isEG() || realOwner()) return; const rt = state.route || ""; if (!/pay|checkout|pricing|booking|plan|order/i.test(rt) && !document.querySelector("#app [class*=pay], #app [id*=pay]")) return;
+    if (!isEG() || realOwner()) return; const M = ((setv("pay182", {}) || {}).methods || []); if (!M.some(x => /vodafone|instapay|card|kashier|bank|fawry/.test(x))) return; const rt = state.route || ""; if (!/pay|checkout|pricing|booking|plan|order/i.test(rt) && !document.querySelector("#app [class*=pay], #app [id*=pay]")) return;
     document.querySelectorAll("#app button, #app a, #app label, #app li, #app option").forEach(el => { if (el.__p191 || el.children.length > 4) return; const t = (el.textContent || "").trim(); if (t.length > 120) return; if (/PayPal|باي ?بال|USD|\$\s?\d|بالدولار|Crypto|USDT|Wise|Payoneer/i.test(t) && !/جنيه|EGP|ج\.م/.test(t)) { el.__p191 = 1; const box = el.closest("label, li, button, a") || el; if ((box.textContent || "").length < 160) box.style.display = "none"; } });
     const top = document.querySelector("#app .card"); if (top && !document.getElementById("eg191")) top.insertAdjacentHTML("beforebegin", `<div id="eg191" class="card sm" style="border-color:#16a34a">🇪🇬 ${T("الدفع بالجنيه المصري: كارت (فيزا/ميزة)، محفظة، أو تحويل.", "Payment in Egyptian pounds: card, wallet or transfer.")}</div>`);
   }
@@ -27646,6 +27647,118 @@ Between lessons, the platform keeps you going:
   body.acc193 .g193.open193 .hd193::after{transform:translateY(-50%) rotate(180deg)}
   body.acc193 .g193.open193>.body193{animation:op193 .35s cubic-bezier(.22,1,.36,1) both}@keyframes op193{from{opacity:0;transform:translateY(-8px)}}
   body.acc193 .g193{margin-bottom:.5rem}`);
+})();
+
+/* ================= v194: الصفحة مابتتنطّش لفوق تاني + «أول ما تتفتح يظهر إيه» لأي صفحة/أيقونة + «ادعُ أصدقاءك» = أسبوعين محتوى لما 10 يشتركوا (أوتوماتيك) + عدّاد اشتراك المحتوى + 🎙️ مسجّلين أصوات بموافقتك (صوت البشر بيشيل Gemini) + أي حتة تظهر لناس بعينهم ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const uid = () => state.auth && state.auth.user ? state.auth.user.id : null;
+  const AS = () => { try { return JSON.parse(sessionStorage.getItem("itqan_as188") || "null"); } catch (e) { return null; } };
+  const ownerView = () => realOwner() && !AS() && !state.preview;
+  if (!PAGES16.includes("voice194")) PAGES16.push("voice194");
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+
+  /* ======================= 1) الصفحة مابتطلعش لفوق لوحدها ======================= */
+  /* لما حاجة بتتحمّل وتعمل render، الصفحة كانت بتقصر لحظة فالمتصفح يطلعك لفوق. دلوقتي بنحافظ على مكانك. */
+  let lastRoute = null;
+  function keepScroll(fn) {
+    const app = document.getElementById("app"); const same = state.route + "|" + (state.pageArg || "") === lastRoute; const y = scrollY;
+    if (same && app && y > 0) app.style.minHeight = app.offsetHeight + "px";
+    fn(); lastRoute = state.route + "|" + (state.pageArg || "");
+    if (same && y > 0) { if (Math.abs(scrollY - y) > 2) window.scrollTo({ top: y, behavior: "instant" }); setTimeout(() => { if (app) app.style.minHeight = ""; }, 700); }
+  }
+  document.documentElement.style.overflowAnchor = "auto";
+
+  /* ======================= 2) أول ما الصفحة تتفتح يظهر إيه ======================= */
+  const LAND = () => setv("land194", {}) || {};
+  let landed = "";
+  function doLand() {
+    const key = state.route + (state.pageArg ? "/" + state.pageArg : ""); if (landed === key) return; const L = LAND(); const r = L[key] || L[state.route]; if (!r) { landed = key; return; }
+    let el = null; try { el = document.querySelector(r.sel); } catch (e) {} if (!el) return; landed = key;
+    setTimeout(() => { if (r.act === "click") el.click(); else { el.scrollIntoView({ behavior: "smooth", block: "start" }); el.classList.add("land194"); setTimeout(() => el.classList.remove("land194"), 2200); } }, 250);
+  }
+  /* نضيف الاختيار جوه لوحة ✏️ */
+  function selOf(el) { const P = []; let n = el; while (n && n.nodeType === 1 && n.id !== "app" && P.length < 7) { if (n.id && !/^\d/.test(n.id) && !/189|194/.test(n.id)) { P.unshift("#" + CSS.escape(n.id)); break; } let p = n.tagName.toLowerCase(); const cl = [...n.classList].filter(c => !/^(on|go|hov|ed189on|an189|land194|open193)/.test(c)).slice(0, 2); if (cl.length) p += "." + cl.map(c => CSS.escape(c)).join("."); const par = n.parentElement; if (par) { const sib = [...par.children].filter(x => x.tagName === n.tagName); if (sib.length > 1) p += `:nth-of-type(${sib.indexOf(n) + 1})`; } P.unshift(p); n = n.parentElement; } return (P[0] && P[0][0] === "#" ? "" : "#app ") + P.join(">"); }
+  const tgt = el => { const a = (el && el.getAttribute && (el.getAttribute("onclick") || el.getAttribute("data-js"))) || ""; let m = a.match(/go16\(\s*'([^']+)'(?:\s*,\s*'([^']*)')?/); if (m) return m[1] + (m[2] ? "/" + m[2] : ""); m = a.match(/navigate\(\s*'([^']+)'/); if (m) return m[1]; m = a.match(/libGo\(\s*'([^']+)'/); if (m) return "library/" + m[1]; return null; };
+  window.land194 = async act => { const el = document.querySelector(".ed189on"); if (!el) return; const L = Object.assign({}, LAND()); const key = state.route + (state.pageArg ? "/" + state.pageArg : ""); if (act === "off") delete L[key]; else L[key] = { sel: selOf(el), act }; await saveSetting16("land194", L); landed = ""; toast(act === "off" ? "↩" : "✅ " + T("أول ما الصفحة دي تتفتح هتروح على الحتة دي", "This will show first when the page opens")); };
+  /* ======================= 6) أي حتة تظهر لناس بعينهم بس ======================= */
+  const ONLY = () => setv("only194", {}) || {};
+  window.only194 = async () => { const el = document.querySelector(".ed189on"); if (!el) return; const box = el.closest("[onclick],[data-js]"); const key = (box && tgt(box)) || ("sel:" + selOf(el) + "§" + state.route); const cur = ONLY()[key] || { emails: [], ids: [] };
+    const v = prompt(T("اكتب إيميلات الناس اللي تظهرلهم (افصل بفاصلة). سيبها فاضية = تظهر للكل.", "Emails that can see it (comma separated). Empty = everyone."), (cur.emails || []).join(", ")); if (v == null) return;
+    const emails = v.split(/[,\s]+/).map(x => x.trim().toLowerCase()).filter(Boolean); let ids = []; if (emails.length) { const { data } = await sb.from("profiles").select("id,email").in("email", emails); ids = (data || []).map(x => x.id); const miss = emails.filter(e => !(data || []).some(x => (x.email || "").toLowerCase() === e)); if (miss.length) toast(T("مش لاقي حساب للإيميلات دي: ", "No account for: ") + miss.join(", "), true); }
+    const O = Object.assign({}, ONLY()); if (!emails.length) delete O[key]; else O[key] = { emails, ids }; await saveSetting16("only194", O); toast("✅"); };
+  function applyOnly() {
+    if (ownerView()) return; const O = ONLY(); const keys = Object.keys(O); if (!keys.length) return; const me = (AS() && AS().id) || uid();
+    keys.forEach(k => { const r = O[k]; if (!r || !(r.ids || []).length || (r.ids || []).includes(me)) return;
+      if (k.startsWith("sel:")) { const [s, w] = k.slice(4).split("§"); if (w !== state.route) return; try { document.querySelectorAll(s).forEach(e => e.style.display = "none"); } catch (e) {} }
+      else document.querySelectorAll("#app [onclick],#app [data-js]").forEach(e => { const t = tgt(e); if (t && (t === k || t.startsWith(k + "/"))) e.style.display = "none"; }); });
+  }
+  function blockedRoute() { if (ownerView()) return false; const O = ONLY(); const me = (AS() && AS().id) || uid(); const t = state.route + (state.pageArg ? "/" + state.pageArg : ""); return Object.entries(O).some(([k, r]) => !k.startsWith("sel:") && (t === k || t.startsWith(k + "/") || state.route === k) && (r.ids || []).length && !(r.ids || []).includes(me)); }
+  new MutationObserver(() => { const p = document.getElementById("ed189p"); if (!p || p.__l194) return; p.__l194 = 1; const d = document.createElement("div"); d.className = "xs"; d.style.cssText = "border-top:1px dashed var(--line);padding-top:.35rem;display:flex;gap:.3rem;flex-wrap:wrap;align-items:center";
+    d.innerHTML = `🎯 ${T("أول ما الصفحة دي تتفتح:", "When this page opens:")} <button class="btn btn-o" style="padding:0 .4rem" onclick="land194('scroll')">${T("تروح على الحتة دي", "Scroll here")}</button><button class="btn btn-o" style="padding:0 .4rem" onclick="land194('click')">${T("تتفتح لوحدها", "Open it")}</button><button class="btn btn-o" style="padding:0 .4rem" onclick="land194('off')">↩</button><br>👥 <button class="btn btn-o" style="padding:0 .4rem" onclick="only194()">${T("تظهر لناس بعينهم بس (إيميلات)", "Only specific people (emails)")}</button>`;
+    const det = p.querySelector("details"); det ? det.before(d) : p.appendChild(d); }).observe(document.body, { childList: true });
+
+  /* ======================= 3) ادعُ أصدقاءك: أسبوعين محتوى لما 10 يشتركوا ======================= */
+  const REF = () => Object.assign({ need: 10, days: 14 }, setv("ref194", {}) || {});
+  function patchInvite() { try { const r = REF(); if (I18N.ar) I18N.ar.inviteText = `شارك رابطك الخاص. لما ${r.need} من أصحابك يشتركوا في أي باقة، بيتفتحلك كل محتوى الموقع ${r.days === 14 ? "أسبوعين" : r.days + " يوم"} هدية أوتوماتيك — وكل ${r.need} أصحاب كمان أسبوعين كمان!`; if (I18N.en) I18N.en.inviteText = `Share your personal link. When ${r.need} friends subscribe to any package, all site content opens for you for ${r.days} days automatically — and again for every ${r.need} more!`; } catch (e) {} }
+  patchInvite();
+  function fixInviteDom() { document.querySelectorAll("#app p, #app .sm").forEach(p => { if (p.__i194 || p.children.length > 2) return; const t = p.textContent || ""; if (/رصيد(ًا)? داخل حسابك|في محفظتك|balance inside your academy|in your wallet/.test(t) && /صديق|friend/i.test(t)) { p.__i194 = 1; p.textContent = L("inviteText").replace(/\{[rg]\}/g, ""); } }); }
+  window.ref194 = async (k, v) => { await saveSetting16("ref194", Object.assign({}, setv("ref194", {}) || {}, { [k]: +v })); patchInvite(); };
+  const _nt = notifText; notifText = function (n) { if (n && n.kind === "ref_reward") { const d = n.data || {}; return T(`🎁 ${d.friends} من أصحابك اشتركوا — اتفتحلك كل المحتوى ${d.days} يوم هدية!`, `🎁 ${d.friends} friends subscribed — all content open for ${d.days} days!`); } return _nt.apply(this, arguments); };
+
+  /* ======================= 4) عدّاد الاشتراك في المحتوى ======================= */
+  let ACC = undefined, ACCu = null;
+  async function loadAcc() { const u = uid(); if (!u || ACCu === u) return; ACCu = u; const { data } = await sb.from("content_access").select("expires_at,scope,created_at,source").eq("user_id", u).gt("expires_at", new Date().toISOString()).order("expires_at", { ascending: false }).limit(1); ACC = (data || [])[0] || null; render(); }
+  function timerHtml() {
+    if (!ACC || !ACC.expires_at) return ""; const end = new Date(ACC.expires_at).getTime(), start = new Date(ACC.created_at || Date.now() - 864e5 * 30).getTime(); const left = end - Date.now(); if (left <= 0) return ""; const pct = Math.max(2, Math.min(100, Math.round(left / Math.max(1, end - start) * 100))); const close = document.body.classList.contains("close189");
+    const warn = left < 864e5 * 5; return `<div id="tm194" class="card ${warn ? "warn" : ""}" data-end="${end}"><div class="tm194r"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="18" cy="18" r="15.9" fill="none" stroke="${warn ? "#f59e0b" : "var(--accent)"}" stroke-width="3" stroke-dasharray="${pct} 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg><b>${Math.floor(left / 864e5)}</b><small>${T("يوم", "days")}</small></div><div style="flex:1"><b>${ACC.source === "referral" ? "🎁 " + T("هدية أصحابك", "Friends' gift") : "⏳ " + T("اشتراكك في محتوى الموقع", "Your content subscription")}</b><div class="tm194c" dir="ltr">—</div><div class="xs muted">${T("بينتهي", "Ends")} ${new Date(end).toLocaleDateString(AR() ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" })}</div></div>${!close && warn ? `<button class="btn btn-p" onclick="navigate('pricing')">🔄 ${T("جدّد", "Renew")}</button>` : ""}</div>`;
+  }
+  setInterval(() => { const e = document.getElementById("tm194"); if (!e) return; const left = +e.dataset.end - Date.now(); const c = e.querySelector(".tm194c"); if (!c) return; if (left <= 0) { c.textContent = T("انتهى", "Ended"); return; } const d = Math.floor(left / 864e5), h = Math.floor(left % 864e5 / 36e5), m = Math.floor(left % 36e5 / 6e4), s = Math.floor(left % 6e4 / 1e3); c.textContent = `${d}${T("ي", "d")} ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`; }, 1000);
+  function placeTimer() { if (!["home", "myspace", "dashboard"].includes(state.route) || document.getElementById("tm194")) return; const h = timerHtml(); if (!h) return; const a = document.querySelector("#app .hdr, #app > header"); const host = document.querySelector("#app main") || (a && a.nextElementSibling); if (host) host.insertAdjacentHTML("afterbegin", `<div class="wrap" style="margin-top:.6rem">${h}</div>`); }
+
+  /* ======================= 5) 🎙️ مسجّلين الأصوات ======================= */
+  const canVoice = () => realOwner() || (window.can188 && can188("voice"));
+  const V = { rows: null, pend: null, q: "", rec: null };
+  async function vLoad() { const [a, b] = await Promise.all([sb.from("voice_lines").select("h,text,kind,src,url,status").eq("status", "approved").order("created_at", { ascending: false }).limit(2000), sb.from("voice_lines").select("id,h,text,kind,url,status,by_user,created_at").in("status", ["pending", "rejected"]).order("created_at", { ascending: false }).limit(400)]); const m = new Map(); (a.data || []).forEach(r => { const k = r.h + "|" + r.kind; const x = m.get(k) || { h: r.h, text: r.text, kind: r.kind, human: false, ai: null }; if (r.src === "human") x.human = r.url; else x.ai = x.ai || r.url; m.set(k, x); }); V.rows = [...m.values()]; V.pend = b.data || []; render(); }
+  window.v194 = {
+    q: v => { V.q = v; render(); setTimeout(() => { const i = document.getElementById("v194q"); i && (i.focus(), i.setSelectionRange(v.length, v.length)); }, 0); },
+    play: u => { new Audio(u).play(); },
+    rec: async (h, kind) => { if (V.rec) { V.rec.stop(); return; } try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); const mr = new MediaRecorder(st); const ch = []; mr.ondataavailable = e => ch.push(e.data); mr.onstop = async () => { st.getTracks().forEach(t => t.stop()); V.rec = null; render(); await up(new Blob(ch, { type: mr.mimeType || "audio/webm" }), h, kind); }; mr.start(); V.rec = mr; V.recH = h + "|" + kind; render(); } catch (e) { toast(T("محتاج إذن المايك", "Mic permission needed"), true); } },
+    file: async (inp, h, kind) => { const f = inp.files[0]; if (f) await up(f, h, kind); },
+    ok: async (id, yes) => { const r = V.pend.find(x => x.id === id); const { error } = await sb.from("voice_lines").update({ status: yes ? "approved" : "rejected" }).eq("id", id); if (error) return toast(error.message, true); if (yes && r) await sb.from("voice_lines").update({ src: "human" }).eq("id", id); toast(yes ? "✅ " + T("اتوافق — صوت Gemini اتشال من المكان ده", "Approved — Gemini voice replaced") : "✖"); window.log188 && log188(yes ? "voice_ok" : "voice_no", id); vLoad(); }
+  };
+  async function up(blob, h, kind) { const r = (V.rows || []).find(x => x.h === h && x.kind === kind); if (!r) return; toast("⏳"); const ext = (blob.type || "").includes("mp4") ? "m4a" : (blob.type || "").includes("mpeg") ? "mp3" : "webm"; const path = `u-${uid()}/v194-${h.slice(0, 16)}-${kind}-${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from("voice").upload(path, blob, { contentType: blob.type || "audio/webm" }); if (error) return toast(error.message, true); const url = sb.storage.from("voice").getPublicUrl(path).data.publicUrl;
+    const st = realOwner() ? "approved" : "pending"; const { error: e2 } = await sb.from("voice_lines").insert({ h, text: r.text, kind, src: "human", url, status: st, by_user: uid() }); if (e2) return toast(e2.message, true); toast(st === "approved" ? "✅" : "📨 " + T("اتبعت للمالك يسمعه ويوافق", "Sent for approval")); vLoad(); }
+  function voicePage() {
+    if (!canVoice()) return pageWrap("🎙️", "—", "", `<div class="card muted">${T("الصفحة دي للي معاه صلاحية تسجيل الأصوات", "Voice recorders only")}</div>`);
+    if (!V.rows) { vLoad(); return pageWrap("🎙️", T("تسجيل أصوات المحتوى", "Record content voices"), "", `<div class="card">⏳</div>`); }
+    const q = V.q.toLowerCase(); const L = V.rows.filter(r => !q || (r.text || "").toLowerCase().includes(q)); const need = L.filter(r => !r.human); const mine = (V.pend || []).filter(p => p.by_user === uid());
+    const byUser = {}; (V.rows || []).forEach(() => {});
+    return pageWrap("🎙️", T("تسجيل أصوات المحتوى", "Record content voices"), T("أي جملة في الموقع مقروءة بصوت Gemini تقدر تسجّلها بصوتك. أول ما المالك يوافق، صوتك بيظهر للطلاب بداله، وصوت Gemini بيتشال من المكان ده لوحده.", "Record any line; once approved your voice replaces Gemini's."),
+      `${realOwner() ? `<div class="card"><h3>📨 ${T("مستني موافقتك", "Awaiting your approval")} (${(V.pend || []).filter(p => p.status === "pending").length})</h3>${(V.pend || []).filter(p => p.status === "pending").map(p => `<div class="row v194r"><button class="btn btn-o" onclick="v194.play('${esc(p.url)}')">▶</button><span class="sm" style="flex:1">${esc((p.text || "").slice(0, 160))}</span><button class="btn btn-p" onclick="v194.ok('${p.id}',true)">✅</button><button class="btn btn-o" onclick="v194.ok('${p.id}',false)">✖</button></div>`).join("") || `<p class="sm muted">—</p>`}<p class="xs muted">${T("عشان تدي حد الميزة دي: «👥 فريقي ← ➕ عيّن حد» ← دوّر بإيميله ← علّم «🎙️ يسجّل أصوات». ومن «📜 النشاط» تشوف كل واحد سجّل كام عشان تحاسبه.", "To grant: Team → Assign → tick 🎙️ Voice.")}</p></div>` : `<div class="card sm">📨 ${T("تسجيلاتك المستنية موافقة", "Your pending recordings")}: ${mine.filter(p => p.status === "pending").length} · ✖ ${mine.filter(p => p.status === "rejected").length}</div>`}
+      <input id="v194q" class="in" placeholder="🔎 ${T("دوّر في الجمل", "Search lines")}" value="${esc(V.q)}" oninput="v194.q(this.value)"><p class="xs muted">${T(`محتاج صوت بشري: ${need.length} · متسجّل: ${L.length - need.length}`, `Need human voice: ${need.length}`)}</p>
+      ${L.slice(0, 120).map(r => `<div class="card v194r ${r.human ? "done" : ""}"><span class="sm" style="flex:1">${esc((r.text || "").slice(0, 220))}</span>${r.human ? `<button class="btn btn-o" title="${T("صوت بشري", "Human")}" onclick="v194.play('${esc(r.human)}')">🧑 ▶</button>` : r.ai ? `<button class="btn btn-o" title="Gemini" onclick="v194.play('${esc(r.ai)}')">🤖 ▶</button>` : ""}<button class="btn ${V.rec && V.recH === r.h + "|" + r.kind ? "btn-p" : "btn-o"}" onclick="v194.rec('${r.h}','${r.kind}')">${V.rec && V.recH === r.h + "|" + r.kind ? "⏹" : "🔴"}</button><label class="btn btn-o">📤<input type="file" hidden accept="audio/*" onchange="v194.file(this,'${r.h}','${r.kind}')"></label></div>`).join("")}`, 1100);
+  }
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () {
+    const args = arguments; loadAcc();
+    if (state.route === "voice194") { keepScroll(() => { let b; try { b = voicePage(); } catch (e) { b = `<div class="err">${esc(e.message)}</div>`; } show(b); }); return; }
+    if (blockedRoute()) { show(pageWrap("🔒", T("الصفحة دي مش متاحة", "Not available"), "", `<div class="card"><button class="btn btn-p" onclick="navigate('home')">🏠</button></div>`)); return; }
+    keepScroll(() => _r.apply(this, args));
+    try { applyOnly(); fixInviteDom(); placeTimer(); setTimeout(doLand, 120);
+      if (realOwner() && state.route === "team188" && !document.getElementById("ref194c")) { const t = document.querySelector("#app .tabs"); const r = REF(); t && t.insertAdjacentHTML("beforebegin", `<div class="card sm" id="ref194c">🎁 ${T("ادعُ أصدقاءك: لما", "Invite friends: when")} <input class="in" type="number" min="1" style="width:4rem" value="${r.need}" onchange="ref194('need',this.value)"> ${T("أصحاب يشتركوا، بيتفتحله المحتوى", "friends subscribe, content opens for")} <input class="in" type="number" min="1" style="width:4rem" value="${r.days}" onchange="ref194('days',this.value)"> ${T("يوم — أوتوماتيك", "days — automatically")}</div>`); }
+    } catch (e) { console.warn(e); }
+  };
+  try { new MutationObserver(() => { clearTimeout(window.__o194); window.__o194 = setTimeout(() => { try { applyOnly(); fixInviteDom(); } catch (e) {} }, 250); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) {}
+  const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); if (!canVoice()) return h; return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#db2777" onclick="go16('voice194')"><span>🎙️</span><b>${T("تسجيل أصوات المحتوى", "Record voices")}</b></button>`); };
+  if (/^#\/voice194/.test(location.hash)) state.route = "voice194";
+  css(`.land194{outline:3px solid #f59e0b;outline-offset:4px;border-radius:12px;transition:outline-color 1.5s}
+  #tm194{display:flex;gap:.9rem;align-items:center;border-color:var(--accent)}#tm194.warn{border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 8%,var(--card))}.tm194r{position:relative;width:64px;height:64px;flex:none}.tm194r svg{width:100%;height:100%}.tm194r b{position:absolute;inset:0;display:grid;place-items:center;font-size:1.25rem;margin-top:-.4rem}.tm194r small{position:absolute;bottom:.7rem;left:0;right:0;text-align:center;font-size:.6rem}.tm194c{font:600 1.15rem ui-monospace,monospace;letter-spacing:.04em}
+  .v194r{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.3rem 0}.v194r.done{opacity:.7;border-color:#16a34a}`);
 })();
 
 // بدء التشغيل
