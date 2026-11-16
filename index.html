@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-16-v181";
+const UI_VERSION = "2026-11-16-v182";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -25816,6 +25816,151 @@ Between lessons, the platform keeps you going:
     return _r.apply(this, arguments);
   };
   const m = location.hash.match(/^#\/(pdfbooks181|pdf181)(?:\/(.+))?/); if (m) { state.route = m[1]; if (m[2]) state.pageArg = decodeURIComponent(m[2]); }
+})();
+
+/* ================= v182: الدفع اليدوي (PayPal + لقطة شاشة + واتساب باليوزر) أو فيزا مباشرة — بزرار + «صوتك في الآهات»: سجّل أو ارفع تسجيل لأي مقام والسيستم يطلّع منه الآهات لكل التمارين (طالع/نازل/طويلة) في طبقة صوت كل طالب، بنسخ وإرجاع ومعاينة ليك بس ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const own = () => realRole() === "owner" && !state.preview;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* ======================= 1) الدفع ======================= */
+  const PC = () => Object.assign({ mode: "manual", methods: ["paypal"], wa: "", proof: true, note: { ar: "", en: "" } }, setv("pay182", {}) || {});
+  const _pb = paymentBlock; paymentBlock = function (rec, kind) {
+    const c = PC(); const _po = paymentOptions; let h;
+    const done = rec.payment_status === "paid" || rec.payment_status === "waived";
+    try {
+      paymentOptions = function () { let o = _po.apply(this, arguments); if (c.mode === "manual") o = o.filter(x => (c.methods || []).includes(x.id)); return o; };
+      h = _pb.apply(this, arguments);
+    } finally { paymentOptions = _po; }
+    if (done) return h;
+    if (c.mode === "card") { const i = h.indexOf("<h3", h.indexOf(L("payMethods")) + 5); return `<div class="notice">${T("💳 الدفع بالفيزا / ماستركارد مباشرة — بعد الدفع اشتراكك بيتفعّل.", "💳 Pay directly by Visa / Mastercard — your plan is activated after payment.")}</div>` + (i > 0 ? h.slice(0, i) + `<details style="margin:.6rem 0"><summary class="sm">${T("دفعت بطريقة تانية؟ أكّد هنا", "Paid another way? Confirm here")}</summary>` + h.slice(i).replace(/(<\/form>)/, "$1</details>") : h); }
+    const wa = String(c.wa || "").replace(/^@/, ""); const note = (c.note || {})[state.lang] || (c.note || {}).ar || "";
+    const steps = `<div class="card pay182"><b>✅ ${T("المتاح حاليًا:", "Available right now:")} ${(c.methods || []).map(m => ({ paypal: "PayPal", card: "Visa / Mastercard", vodafone: "Vodafone Cash", instapay: "InstaPay", bank: T("تحويل بنكي", "Bank transfer") }[m] || m)).join(" · ")}</b>
+      <ol class="sm"><li>${T("ادفع المبلغ بالطريقة اللي فوق (زرار PayPal بيفتح بالمبلغ جاهز).", "Pay the amount with the method below (the PayPal button opens with the amount filled in).")}</li><li>${T("خد لقطة شاشة (سكرين شوت) لإثبات الدفع.", "Take a screenshot of the payment confirmation.")}</li><li>${T("ارفعها هنا تحت", "Upload it here below")}${wa ? T(` — أو ابعتها على واتساب لليوزر: `, ` — or send it on WhatsApp to the username: `) + `<b dir="ltr" class="mono">@${esc(wa)}</b> <button type="button" class="ibtn" onclick="navigator.clipboard.writeText('@${esc(wa)}');toast('📋 ✓')">📋</button>` : ""}.</li><li>${T("هنراجع ونفعّل اشتراكك في أسرع وقت 💚", "We'll check and activate your plan as soon as possible 💚")}</li></ol>${note ? `<p class="sm" style="white-space:pre-wrap">${esc(note)}</p>` : ""}</div>`;
+    const proof = c.proof ? `<div class="pay182u"><label class="l">📸 ${T("لقطة شاشة الدفع", "Payment screenshot")}</label><input type="file" accept="image/*,application/pdf" class="in" id="pay182f" onchange="pay182Up(this,'${rec.id}')"><div class="xs muted" id="pay182s">${T("بعد ما ترفعها، اكتب اسمك أو رقم العملية وأكّد.", "After uploading, add your name or the transaction ID and confirm.")}</div></div>` : "";
+    h = h.replace(`<h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>`, steps + `<h3 style="margin-bottom:.8rem">${L("payMethods")}</h3>`);
+    return h.replace(`<div><label class="l">${L("payRef")}</label>`, proof + `<div><label class="l">${L("payRef")}</label>`);
+  };
+  window.pay182Up = async (inp, id) => {
+    const f = inp.files[0]; if (!f || !(state.auth && state.auth.user)) return; if (f.size > 8e6) return toast(T("الصورة كبيرة — أقل من 8 ميجا", "Image too large — under 8 MB"), true);
+    const p = `${state.auth.user.id}/payproof/${id}-${Date.now()}.${(f.name.split(".").pop() || "jpg").slice(0, 5)}`; const s = document.getElementById("pay182s"); if (s) s.textContent = "⏳";
+    const r = await sb.storage.from("homework").upload(p, f, { contentType: f.type }); if (r.error) { if (s) s.textContent = ""; return toast(r.error.message, true); }
+    const ref = document.getElementById("pay_ref"); if (ref) ref.value = ((ref.value || "").replace(/📸 hw:\S+/g, "").trim() + " 📸 hw:" + p).trim();
+    if (s) s.textContent = "✅ " + T("اترفعت — دوس تأكيد تحت", "Uploaded — press confirm below"); toast("✅");
+  };
+  /* المالك يشوف لقطة الشاشة بدوسة */
+  window.pay182Open = async p => { const r = await sb.storage.from("homework").createSignedUrl(p, 600); if (r.error) return toast(r.error.message, true); window.open(r.data.signedUrl, "_blank", "noopener"); };
+  function proofLinks() { if (!own()) return; const w = document.createTreeWalker(document.getElementById("app") || document.body, NodeFilter.SHOW_TEXT); const hits = []; while (w.nextNode()) { const n = w.currentNode; if (/📸 hw:\S+/.test(n.data) && !(n.parentNode && n.parentNode.closest && n.parentNode.closest("input,textarea,.pay182l"))) hits.push(n); } hits.forEach(n => { const sp = document.createElement("span"); sp.innerHTML = esc(n.data).replace(/📸 hw:(\S+)/g, (m, p) => `<button type="button" class="btn btn-o pay182l" style="padding:.1rem .5rem" onclick="pay182Open('${p.replace(/'/g, "")}')">📸 ${T("شوف الإثبات", "View proof")}</button>`); n.parentNode.replaceChild(sp, n); }); }
+  window.pay182Save = async () => { const g = id => document.getElementById(id); const c = { mode: g("p182m").value, methods: [...document.querySelectorAll(".p182me:checked")].map(x => x.value), wa: g("p182w").value.trim().replace(/^@/, ""), proof: g("p182p").checked, note: { ar: g("p182na").value, en: g("p182ne").value } }; await saveSetting16("pay182", c); toast("✅"); render(); };
+  function payCard() {
+    const c = PC(); let ids = []; try { ids = paymentOptions().map(o => [o.id, o.label]); } catch (e) {} if (!ids.some(x => x[0] === "card")) ids.unshift(["card", "Visa / Mastercard"]);
+    return `<div class="card" style="margin-top:1rem;border:2px solid #16a34a"><h3>💳 ${T("طرق الدفع اللي تظهر للطلاب", "Payment methods shown to students")}</h3>
+      <label class="sm">${T("الوضع", "Mode")} <select id="p182m" class="in" style="width:auto"><option value="manual" ${c.mode === "manual" ? "selected" : ""}>${T("يدوي: يحوّل ويبعت إثبات (الحالي)", "Manual: pay then send proof (current)")}</option><option value="card" ${c.mode === "card" ? "selected" : ""}>${T("فيزا مباشرة (بعد ما يتعمل حساب Paymob)", "Direct card (once Paymob is set up)")}</option><option value="both" ${c.mode === "both" ? "selected" : ""}>${T("الاتنين", "Both")}</option></select></label>
+      <div class="row" style="gap:.6rem;flex-wrap:wrap;margin:.4rem 0">${ids.map(([id, n]) => `<label class="sm"><input type="checkbox" class="p182me" value="${esc(id)}" ${(c.methods || []).includes(id) ? "checked" : ""}> ${esc(n)}</label>`).join("")}</div>
+      <label class="sm">${T("يوزر واتساب (من غير ما رقمك يظهر)", "WhatsApp username (your number stays hidden)")} <input id="p182w" class="in" dir="ltr" style="width:12rem" placeholder="@itqan" value="${esc(c.wa ? "@" + c.wa : "")}"></label>
+      <label class="sm" style="margin-inline-start:.6rem"><input type="checkbox" id="p182p" ${c.proof ? "checked" : ""}> ${T("رفع لقطة الشاشة في الموقع", "Screenshot upload on the site")}</label>
+      <div class="fgrid" style="margin-top:.4rem"><textarea id="p182na" class="in" rows="2" placeholder="${T("ملاحظة إضافية بالعربي (اختياري)", "Extra note in Arabic (optional)")}">${esc((c.note || {}).ar || "")}</textarea><textarea id="p182ne" class="in" rows="2" dir="ltr" placeholder="Extra note in English (optional)">${esc((c.note || {}).en || "")}</textarea></div>
+      <button class="btn btn-p" style="margin-top:.5rem" onclick="pay182Save()">💾 ${T("احفظ", "Save")}</button><p class="xs muted" style="margin-top:.4rem">${T("لقطات الشاشة بتتحفظ في مكان خاص — محدش يشوفها غيرك والطالب نفسه. في صفحة الطلبات هتلاقي زرار «📸 شوف الإثبات».", "Screenshots are stored privately — only you and the student can see them. On the orders page you'll find a “📸 View proof” button.")}</p></div>`;
+  }
+  css(`.pay182{border:2px solid #16a34a;background:color-mix(in srgb,#16a34a 7%,var(--card));margin-bottom:1rem}.pay182 ol{margin:.5rem 0 0;padding-inline-start:1.3rem;line-height:1.9}.pay182u{border:1.5px dashed var(--line);border-radius:12px;padding:.6rem}`);
+
+  /* ======================= 2) صوتك في الآهات ======================= */
+  const AV = () => setv("aahv182", {}) || {};
+  let curMq = null; const _tz = mqTonicHz; mqTonicHz = function (m) { if (m && m.id) curMq = m.id; return _tz.apply(this, arguments); };
+  const _mp = maqamPage; maqamPage = function (kind, mid) { if (mid) curMq = mid; let h = _mp.apply(this, arguments); if (kind === "aah" || kind === "vtest") { try { h = panel(mid || curMq) + h; preload(mid || curMq); } catch (e) { console.warn(e); } } return h; };
+  /* أي نسخة تتسمع: المالك يسمع المعاينة لو مختارها، الباقي يسمع اللي «للكل» */
+  function pick(mid, g) { const all = AV(); for (const k of [mid, "all"]) { const e = all[k]; if (!e) continue; const F = g === "f"; const id = (own() && ((F && e.previewF) || e.preview)) || (F && e.liveF) || e.live; const v = (e.vers || []).find(x => x.id === id); if (v) return v; } return null; }
+  const BUF = {}; const LOADING = {};
+  async function loadV(v) { if (!v) return null; if (BUF[v.id]) return BUF[v.id]; if (LOADING[v.id]) return LOADING[v.id]; LOADING[v.id] = (async () => { const ac = aahCtx(); const b = await ac.decodeAudioData(await (await fetch(v.url)).arrayBuffer()); BUF[v.id] = b; return b; })().catch(e => { delete LOADING[v.id]; console.warn(e); return null; }); return LOADING[v.id]; }
+  function preload(mid) { ["m", "f"].forEach(g => { const v = pick(mid, g); if (v) loadV(v); }); }
+  const _as = aahSing; aahSing = function (notes, tonicHz, voice, onStep) {
+    const v = pick(curMq, voice); const buf = v && BUF[v.id]; if (!v || !buf || !(v.grains || []).length) { if (v && !buf) loadV(v); return _as.apply(this, arguments); }
+    aahStop(); const ac = aahCtx(); const t0 = ac.currentTime + .08; const hz = c => tonicHz * Math.pow(2, c / 1200);
+    if (!AAH.rev) { const len = ac.sampleRate * 2.2, b = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); } AAH.rev = b; }
+    const out = ac.createGain(); out.gain.value = AAH.vol == null ? 1 : AAH.vol; const cv = ac.createConvolver(); cv.buffer = AAH.rev; const wet = ac.createGain(); wet.gain.value = .22; out.connect(ac.destination); out.connect(cv); cv.connect(wet); wet.connect(ac.destination);
+    let fem = null; if (voice === "f" && (v.g || "m") === "m") { fem = ac.createBiquadFilter(); fem.type = "peaking"; fem.frequency.value = 2800; fem.gain.value = -4; fem.Q.value = .8; fem.connect(out); }
+    let t = t0; const nodes = [], marks = []; const G = v.grains;
+    notes.forEach(([c, d]) => {
+      const f = hz(c); const gr = G.slice().sort((a, b) => Math.abs(Math.log2(a.f / f)) - Math.abs(Math.log2(b.f / f)))[0];
+      const src = ac.createBufferSource(); src.buffer = buf; src.playbackRate.value = f / gr.f; src.loop = true; src.loopStart = gr.t + gr.d * .25; src.loopEnd = gr.t + gr.d * .8;
+      const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.95, t + .07); g.gain.setValueAtTime(.95, t + Math.max(.08, d - .06)); g.gain.linearRampToValueAtTime(0, t + d + .08);
+      src.connect(g); g.connect(fem || out); src.start(t, gr.t + gr.d * .1); src.stop(t + d + .12); nodes.push(src); marks.push([t, c]); t += d;
+    });
+    AAH.nodes = nodes; AAH.playing = true;
+    const tick = () => { if (!AAH.playing) return; const now = ac.currentTime; const cur = marks.filter(m => m[0] <= now).pop(); if (cur && onStep) onStep(cur[1]); if (now < t + .3) AAH.timer = setTimeout(tick, 60); else aahStop(); };
+    tick(); const b = document.getElementById("mqStopBtn"); if (b) b.style.display = "";
+  };
+  /* تحليل التسجيل: نطلّع الطبقة كل لحظة ونلقط النغمات الثابتة */
+  function pitchTrack(buf) {
+    const sr0 = buf.sampleRate; const raw = buf.getChannelData(0); const ds = Math.max(1, Math.round(sr0 / 16000)); const sr = sr0 / ds; const x = new Float32Array(Math.floor(raw.length / ds)); for (let i = 0; i < x.length; i++) x[i] = raw[i * ds];
+    const W = 1024, H = 256, minL = Math.floor(sr / 900), maxL = Math.floor(sr / 70); const fr = [];
+    for (let s = 0; s + W + maxL < x.length; s += H) {
+      let e = 0; for (let i = 0; i < W; i++) e += x[s + i] * x[s + i]; const rms = Math.sqrt(e / W); if (rms < .012) { fr.push([s / sr, 0, rms]); continue; }
+      const dd = new Float32Array(maxL + 1); let run = 0, cm = new Float32Array(maxL + 1); cm[0] = 1;
+      for (let l = 1; l <= maxL; l++) { let sum = 0; for (let i = 0; i < W; i += 2) { const q = x[s + i] - x[s + i + l]; sum += q * q; } dd[l] = sum; run += sum; cm[l] = dd[l] * l / (run || 1); }
+      let L = -1; for (let l = minL; l < maxL; l++) if (cm[l] < .15 && cm[l] < cm[l + 1]) { L = l; break; }
+      if (L < 0) { fr.push([s / sr, 0, rms]); continue; } const a = cm[L - 1], b = cm[L], c = cm[L + 1]; const sh = (a - c) / (2 * (a - 2 * b + c) || 1); fr.push([s / sr, sr / (L + sh), rms]);
+    }
+    return { fr, hop: H / sr };
+  }
+  function grainsOf(tr) {
+    const out = []; const fr = tr.fr; let i = 0;
+    while (i < fr.length) { if (!fr[i][1]) { i++; continue; } let j = i; const c0 = 1200 * Math.log2(fr[i][1]); let sum = 0, n = 0; while (j < fr.length && fr[j][1] && Math.abs(1200 * Math.log2(fr[j][1]) - c0) < 45) { sum += fr[j][1]; n++; j++; } const d = (j - i) * tr.hop; if (d >= .3) out.push({ t: +fr[i][0].toFixed(3), d: +d.toFixed(3), f: +(sum / n).toFixed(2) }); i = Math.max(j, i + 1); }
+    const bins = {}; out.forEach(g => { const k = Math.round(12 * Math.log2(g.f / 55)); if (!bins[k] || bins[k].d < g.d) bins[k] = g; }); return Object.values(bins).sort((a, b) => a.f - b.f).slice(0, 24);
+  }
+  /* ارفع/سجّل */
+  let mr = null, chunks = [];
+  window.av182Rec = async (mid, btn) => {
+    if (mr) { mr.stop(); return; }
+    try { const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); chunks = []; mr = new MediaRecorder(s); mr.ondataavailable = e => chunks.push(e.data); mr.onstop = () => { s.getTracks().forEach(t => t.stop()); mr = null; const b = new Blob(chunks, { type: chunks[0] && chunks[0].type || "audio/webm" }); av182Use(mid, b, "rec.webm"); }; mr.start(); btn.textContent = "⏹ " + T("وقّف التسجيل", "Stop recording"); btn.classList.add("rec59on"); }
+    catch (e) { toast(T("اسمح للمايك", "Allow the microphone"), true); }
+  };
+  window.av182File = (mid, inp) => { const f = inp.files[0]; if (f) av182Use(mid, f, f.name); };
+  async function av182Use(mid, blob, name) {
+    const st = document.getElementById("av182s"); const say = t => { if (st) st.textContent = t; }; say("⏳ " + T("بحلّل التسجيل وبطلّع الآهات…", "Analysing the recording and extracting the aahs…"));
+    try {
+      const ac = aahCtx(); const buf = await ac.decodeAudioData(await blob.arrayBuffer()); if (buf.duration > 600) return say(T("أقصى طول 10 دقايق", "Max 10 minutes"));
+      const G = grainsOf(pitchTrack(buf)); if (G.length < 3) return say("⚠️ " + T("ملقيتش نغمات ثابتة كفاية — سجّل آهات ممدودة (كل نغمة نص ثانية على الأقل) في مكان هادي.", "Not enough steady notes — record sustained aahs (at least half a second per note) somewhere quiet."));
+      const scope = (document.getElementById("av182sc") || {}).value || mid; const g = (document.getElementById("av182g") || {}).value || "m";
+      const ext = (blob.type.split("/")[1] || "webm").split(";")[0].slice(0, 5); const path = `aahvoice/${scope}/${Date.now()}.${ext}`;
+      const up = await sb.storage.from("academy_public").upload(path, blob, { contentType: blob.type || "audio/webm" }); if (up.error) return say("⚠️ " + up.error.message);
+      const url = sb.storage.from("academy_public").getPublicUrl(path).data.publicUrl;
+      const all = JSON.parse(JSON.stringify(AV())); const e = all[scope] = all[scope] || { vers: [], live: null, preview: null };
+      const v = { id: "v" + Date.now().toString(36), url, g, grains: G, low: G[0].f, high: G[G.length - 1].f, dur: +buf.duration.toFixed(1), at: new Date().toISOString(), name: String(name || "").slice(0, 60) };
+      e.vers.unshift(v); e[g === "f" ? "previewF" : "preview"] = v.id; BUF[v.id] = buf; await saveSetting16("aahv182", all);
+      say("✅ " + T(`اتطلّع ${G.length} نغمة بصوتك — دلوقتي انت بس اللي بتسمعها. لو عجبتك دوس «🌍 للكل».`, `${G.length} notes extracted in your voice — only you hear it now. If you like it, press “🌍 Everyone”.`)); render();
+    } catch (er) { console.warn(er); say("⚠️ " + T("الملف ده مش راضي يتقري — جرّب mp3 أو m4a أو wav", "Couldn't read this file — try mp3, m4a or wav")); }
+  }
+  window.av182Set = async (scope, field, id) => { const all = JSON.parse(JSON.stringify(AV())); const e = all[scope] = all[scope] || { vers: [] }; const vv = (e.vers || []).find(x => x.id === id); const fk = vv && vv.g === "f" ? field + "F" : field; if (id === null) { e[field] = null; e[field + "F"] = null; } else e[fk] = id; if (field === "live" && (e.preview === id || e.previewF === id)) { e.preview = e.preview === id ? null : e.preview; e.previewF = e.previewF === id ? null : e.previewF; } await saveSetting16("aahv182", all); toast("✅"); render(); };
+  window.av182Del = async (scope, id) => { if (!confirm(T("تمسح النسخة دي؟", "Delete this version?"))) return; const all = JSON.parse(JSON.stringify(AV())); const e = all[scope]; if (!e) return; e.vers = e.vers.filter(v => v.id !== id); ["live", "liveF", "preview", "previewF"].forEach(k => { if (e[k] === id) e[k] = null; }); await saveSetting16("aahv182", all); render(); };
+  /* تسجيل الأستاذ الأصلي في طبقة الطالب (نفس السرعة) */
+  function stretch(buf, r) { const ac = aahCtx(); const N = 2048, H = 512, Ha = Math.round(H / r); const inp = buf.getChannelData(0); const outLen = Math.floor(inp.length * r) + N; const o = new Float32Array(outLen), w = new Float32Array(outLen); const win = new Float32Array(N).map((_, i) => .5 - .5 * Math.cos(2 * Math.PI * i / N)); let a = 0, s = 0; while (a + N < inp.length && s + N < outLen) { for (let i = 0; i < N; i++) { o[s + i] += inp[a + i] * win[i]; w[s + i] += win[i]; } a += Ha; s += H; } for (let i = 0; i < outLen; i++) if (w[i] > 1e-3) o[i] /= w[i]; const b = ac.createBuffer(1, outLen, buf.sampleRate); b.copyToChannel(o, 0); return b; }
+  let orig = null; window.av182Orig = async (mid, btn) => {
+    if (orig) { try { orig.stop(); } catch (e) {} orig = null; btn.textContent = "🎧 " + T("اسمع الأستاذ في طبقتك", "Hear the teacher in your range"); return; }
+    const v = pick(mid, state.mq && state.mq.voice || "m"); if (!v) return; btn.textContent = "⏳"; const buf = await loadV(v); if (!buf) return;
+    const m = MQ.find(x => x.id === mid) || {}; const target = mqTonicHz(m); const src0 = v.tonic || v.low; let r = target / src0; while (r > 1.6) r /= 2; while (r < .62) r *= 2;
+    const ac = aahCtx(); const sb2 = Math.abs(r - 1) < .02 ? buf : stretch(buf, r); orig = ac.createBufferSource(); orig.buffer = sb2; orig.playbackRate.value = Math.abs(r - 1) < .02 ? 1 : r; orig.connect(ac.destination); orig.onended = () => { orig = null; btn.textContent = "🎧 " + T("اسمع الأستاذ في طبقتك", "Hear the teacher in your range"); }; orig.start(); btn.textContent = "⏹";
+  };
+  function panel(mid) {
+    if (!mid) return ""; const has = pick(mid, "m") || pick(mid, "f");
+    const stu = has ? `<div class="card av182p"><b>🎧 ${T("الآهات هنا بصوت أستاذ الأكاديمية — في طبقة صوتك انت", "The aahs here are in the academy teacher's voice — in your own range")}</b> <button class="btn btn-o" onclick="av182Orig('${mid}',this)">🎧 ${T("اسمع الأستاذ في طبقتك", "Hear the teacher in your range")}</button></div>` : "";
+    if (!own()) return stu;
+    const all = AV(); const mk = scope => { const e = all[scope] || { vers: [] }; return (e.vers || []).map(v => `<div class="kv av182v"><span><b>${new Date(v.at).toLocaleString(state.lang === "ar" ? "ar-EG" : "en-GB", { dateStyle: "medium", timeStyle: "short" })}</b> · ${v.g === "f" ? "👩" : "👨"} · ${v.grains.length} ${T("نغمة", "notes")} · ${v.dur}s ${(e.live === v.id || e.liveF === v.id) ? `<span class="badge" style="background:#16a34a;color:#fff">🌍 ${T("للكل", "Everyone")}</span>` : ""}${(e.preview === v.id || e.previewF === v.id) ? `<span class="badge">🔒 ${T("ليك بس", "Only you")}</span>` : ""}</span><span class="row" style="gap:.2rem;flex-wrap:wrap"><button class="btn btn-o" onclick="new Audio('${v.url}').play()">▶</button>${!(e.live === v.id || e.liveF === v.id) ? `<button class="btn btn-p" onclick="av182Set('${scope}','live','${v.id}')">🌍 ${T("للكل", "Everyone")}</button>` : ""}${!(e.preview === v.id || e.previewF === v.id) ? `<button class="btn btn-o" onclick="av182Set('${scope}','preview','${v.id}')">🔒 ${T("جرّبها ليا بس", "Only me")}</button>` : ""}<button class="btn btn-o" onclick="av182Del('${scope}','${v.id}')">🗑️</button></span></div>`).join("") + ((e.live || e.liveF || e.preview || e.previewF) ? `<div class="row" style="gap:.3rem;margin-top:.3rem">${(e.live || e.liveF) ? `<button class="btn btn-o" onclick="av182Set('${scope}','live',null)">↩ ${T("رجّع الصوت القديم للكل", "Restore the old voice for everyone")}</button>` : ""}${(e.preview || e.previewF) ? `<button class="btn btn-o" onclick="av182Set('${scope}','preview',null)">✖ ${T("بطّل المعاينة", "Stop previewing")}</button>` : ""}</div>` : ""); };
+    const name = (MQ.find(x => x.id === mid) ? mqName(MQ.find(x => x.id === mid)) : mid);
+    return stu + `<details class="card av182o" ${(all[mid] || all.all) ? "" : ""}><summary><b>🎙️ ${T("صوتك انت في الآهات", "Your own voice in the aahs")}</b> <span class="xs muted">— ${T("سجّل أو ارفع تسجيل، والسيستم يطلّع منه الآهات لكل التمارين (طالع/نازل/ممدودة/الاختبار) في طبقة صوت كل طالب", "record or upload, and the system builds the aahs for every exercise (up/down/long/test) in each student's range")}</span></summary>
+      <ol class="xs" style="line-height:1.9;margin:.5rem 0"><li>${T("غنّي السلم «آه» طالع ونازل بطريقتك، كل نغمة ممدودة نص ثانية أو أكتر (كل ما تطوّل أحسن).", "Sing the scale on “aah” up and down your way, each note held half a second or more (longer is better).")}</li><li>${T("أو ارفع أي تسجيل ليك (موبايل، واتساب، فيديو) — السيستم بيلقط النغمات الثابتة منه.", "Or upload any recording of yours (phone, WhatsApp, video) — the system picks the steady notes from it.")}</li><li>${T("بتتحفظ «ليك بس» الأول تجرّبها، وبعدين «🌍 للكل». وتقدر ترجع لأي نسخة قبلها أو للصوت القديم.", "It's saved “only for you” first to try, then “🌍 Everyone”. You can go back to any earlier version or to the old voice.")}</li></ol>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><label class="sm">${T("ينطبق على", "Applies to")} <select id="av182sc" class="in" style="width:auto"><option value="${mid}">${T("مقام ", "Maqam ")}${esc(name)} ${T("بس", "only")}</option><option value="all">${T("كل المقامات (الافتراضي)", "All maqamat (default)")}</option></select></label><label class="sm">${T("الصوت", "Voice")} <select id="av182g" class="in" style="width:auto"><option value="m">👨 ${T("رجالي", "Male")}</option><option value="f">👩 ${T("حريمي", "Female")}</option></select></label>
+        <button class="btn btn-p" onclick="av182Rec('${mid}',this)">🔴 ${T("سجّل دلوقتي", "Record now")}</button><label class="btn btn-o">📁 ${T("ارفع تسجيل من أي حتة", "Upload a recording")}<input type="file" hidden accept="audio/*,video/*" onchange="av182File('${mid}',this)"></label></div>
+      <div id="av182s" class="sm" style="margin:.4rem 0"></div>
+      ${mk(mid) ? `<h4 style="margin:.6rem 0 .3rem">${T("نسخ المقام ده", "This maqam's versions")}</h4>${mk(mid)}` : ""}${mk("all") ? `<h4 style="margin:.6rem 0 .3rem">${T("النسخ العامة (كل المقامات)", "General versions (all maqamat)")}</h4>${mk("all")}` : ""}
+      <p class="xs muted" style="margin-top:.4rem">${T("ملحوظة: لو الصوت الرجالي بس موجود، الطالبات بيسمعوه في طبقتهم بعد تعديل خفيف — والأحسن تسجّل نسخة حريمي كمان (أو ترفع تسجيل لمعلمة).", "Note: if only a male version exists, female students hear it moved to their range with light correction — better to also add a female version (or upload a female teacher's recording).")}</p></details>`;
+  }
+  css(`.av182o{margin-bottom:.8rem;border:2px dashed var(--accent)}.av182o summary{cursor:pointer}.av182p{margin-bottom:.8rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;justify-content:space-between;background:color-mix(in srgb,var(--accent) 8%,var(--card))}.av182v{align-items:center;flex-wrap:wrap;gap:.4rem}.av182v .btn{padding:.15rem .55rem}`);
+
+  /* ======================= ربط ======================= */
+  const _os = ownerSettings; ownerSettings = function () { const h = _os.apply(this, arguments); return payCard() + h; };
+  const _r = render; render = function () { const r = _r.apply(this, arguments); try { proofLinks(); } catch (e) {} return r; };
 })();
 
 // بدء التشغيل
