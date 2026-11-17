@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v220";
+const UI_VERSION = "2026-11-17-v221";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30463,6 +30463,54 @@ Between lessons, the platform keeps you going:
   .ft220{position:absolute;top:6px;inset-inline-start:6px;border:0;border-radius:999px;background:rgba(255,255,255,.9);cursor:pointer;width:28px;height:28px;z-index:2}.libtile{position:relative}
   #st220{gap:.3rem;flex-wrap:wrap;margin:.3rem 0 .8rem}
   #md220{position:fixed;inset:0;z-index:50000;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:1rem}.mb220{background:var(--card);color:var(--fg);border-radius:18px;padding:1rem 1.1rem;width:min(680px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}.mc220{margin-top:.6rem}.mc220 select.in{width:100%}`);
+})();
+
+/* ================= v221: «التحويل من مقام لمقام» بين المقامات الأساسية بس · أي خانة فاضية مابتظهرش لحد غيرك لحد ما يتحط فيها محتوى · الفروع في أماكنها حسب المعروف (Maqam World والمدرسة المصرية) + «🌿 فروع المقام» جوه صفحة كل مقام أساسي و«➕ فرع جديد له» · سوزدلارا وشهناز وسوزدلار ليهم صفحات · سجل التعديلات + نسخة احتياطية يومية ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const MAIN = ["rast", "bayati", "saba", "hijaz", "nahawand", "sikah", "ajam", "kurd"];
+
+  /* ======================= 1) التحويل بين الأساسية بس ======================= */
+  const onlyMain = fn => function () { const keep = MQ.slice(); const m = keep.filter(x => MAIN.includes(x.id)); MQ.length = 0; m.forEach(x => MQ.push(x)); try { return fn.apply(this, arguments); } finally { MQ.length = 0; keep.forEach(x => MQ.push(x)); } };
+  try { renderTahwil = onlyMain(renderTahwil); } catch (e) {}
+  try { const _mt = modTab; modTab = function (cur) { const mid = ((cur || {}).meta || {}).maqam; if (!MAIN.includes(mid)) return ""; return onlyMain(_mt).apply(this, arguments); }; } catch (e) {}
+
+  /* ======================= 2) الخانات الفاضية مخفية عن الكل غيرك ======================= */
+  const CNT = () => useData("cnt221", async () => { const r = await sb.rpc("section_counts"); return r.data || []; });
+  let memo = null;
+  const _sd = sectionsData; sectionsData = function () { const S = _sd.apply(this, arguments); if (!Array.isArray(S) || own()) return S; const C = CNT(); if (!Array.isArray(C)) return S;
+    if (memo && memo.S === S && memo.C === C) return memo.out;
+    const n = new Map(C.map(x => [x.section_id, +x.n || 0])); const kids = new Map(); S.forEach(s => { if (s.parent_id) { if (!kids.has(s.parent_id)) kids.set(s.parent_id, []); kids.get(s.parent_id).push(s); } });
+    const tool = s => { const k = (s.meta || {}).kind; return !!k && k !== "mqgroup" && k !== "folder"; }; const M = new Map();
+    const full = s => { if (M.has(s.id)) return M.get(s.id); M.set(s.id, false); const v = (n.get(s.id) || 0) > 0 || tool(s) || (kids.get(s.id) || []).some(full); M.set(s.id, v); return v; };
+    const out = S.filter(full); memo = { S, C, out }; return out; };
+
+  /* ======================= 3) الفروع في أماكنها ======================= */
+  const KNOWN = { hijazkarkurd: "kurd", lami: "kurd", atharkurd: "kurd", nakriz: "nahawand", nawaathar: "nahawand", farahfaza: "nahawand", murassa: "nahawand", nahawandkabir: "nahawand", sultaniyakah: "nahawand", suznak: "rast", nairuz: "rast", mahur: "rast", yakah: "rast", kirdan: "rast", suzdalara: "rast", husseini: "bayati", shuri: "bayati", muhayyar: "bayati", bayatayn: "bayati", zamzam: "saba", hijazkar: "hijaz", shadaraban: "hijaz", zanjaran: "hijaz", shahnaz: "hijaz", suzidil: "hijaz", huzam: "sikah", iraq: "sikah", rahat: "sikah", jiharkah: "ajam", ajamushayran: "ajam" };
+  try { MQ.forEach(m => { if (KNOWN[m.id]) m.fam = KNOWN[m.id]; }); } catch (e) {}
+  const famOf = id => ((setv("fam220", {}) || {})[id]) || KNOWN[id] || ((MQ.find(x => x.id === id) || {}).fam) || "other";
+  const FN = { rast: "الرست", bayati: "البياتي", saba: "الصبا", hijaz: "الحجاز", nahawand: "النهاوند", sikah: "السيكاه", ajam: "العجم", kurd: "الكرد" };
+  function branchesBox() { if (state.route !== "library" || !state.libSec) return; const app = document.getElementById("app"); if (!app || app.querySelector("#br221")) return; const S = sectionsData(); if (!Array.isArray(S)) return; const s = S.find(x => x.id === state.libSec); const mid = s && (s.meta || {}).kind === "maqam" && s.meta.maqam; if (!mid || !MAIN.includes(mid)) return;
+    const L = S.filter(x => (x.meta || {}).kind === "maqam" && x.meta.maqam !== mid && !MAIN.includes(x.meta.maqam) && famOf(x.meta.maqam) === mid); if (!L.length && !own()) return;
+    const h = [...app.querySelectorAll("h1, h2")].find(x => !x.closest(".hdr")); if (!h) return; const anchor = app.querySelector("#st220") || h;
+    anchor.insertAdjacentHTML("afterend", `<details class="card" id="br221" open><summary class="b">🌿 ${T("فروع " + FN[mid], (MQ.find(x => x.id === mid) || {}).en + " branches")} <small class="muted">(${L.length})</small></summary><div class="libgrid" style="margin-top:.5rem">${L.map(x => `<a class="libtile" href="#" onclick="libOpen('${x.id}');return false;"><span class="ic">${esc(x.icon || "🎼")}</span><b>${esc(secTitle(x))}</b></a>`).join("")}</div>${own() ? `<button class="btn btn-p xs" style="margin-top:.5rem" onclick="nb221('${mid}')">➕ ${T("فرع جديد لل" + FN[mid].replace(/^ال/, "ـ"), "New " + mid + " branch")}</button>` : ""}</details>`); }
+  window.nb221 = fam => { const p = (sectionsData() || []).find(x => (x.meta || {}).kind === "mq_branch"); nb220(p ? p.id : null); setTimeout(() => { const f = document.getElementById("nb_f"); if (f) f.value = fam; const c = document.getElementById("nb_c"); if (c) c.value = fam; }, 30); };
+
+  /* ======================= 4) سجل التعديلات ======================= */
+  const _ss = saveSetting16; saveSetting16 = async function (k, v) { const r = await _ss.apply(this, arguments); try { if (state.auth && state.auth.user) sb.from("audit221").insert({ user_id: state.auth.user.id, k: String(k), note: JSON.stringify(v).slice(0, 300) }).then(() => {}, () => {}); } catch (e) {} return r; };
+  if (!PAGES16.includes("log221")) PAGES16.push("log221");
+  function logPage() { if (!own()) return pageWrap("🔒", "—", "", ""); const L = useData("log221", async () => (await sb.from("audit221").select("at,k,note").order("at", { ascending: false }).limit(300)).data || []); const B = useData("bk221", async () => (await sb.from("backup221").select("id,at").order("at", { ascending: false }).limit(14)).data || []);
+    window.bk221 = async id => { const { data } = await sb.from("backup221").select("*").eq("id", id).single(); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" })); a.download = "itqan-backup-" + String(data.at).slice(0, 10) + ".json"; a.click(); };
+    return pageWrap("🧾", T("سجل التعديلات والنسخ الاحتياطية", "Change log & backups"), T("كل إعداد اتغيّر ومتى — ونسخة احتياطية أوتوماتيك كل يوم (آخر 14 يوم)", "Every setting change, plus a daily automatic backup (last 14 days)"), `<button class="btn btn-o" onclick="back196()">↩️ ${T("رجوع", "Back")}</button>
+      <div class="card"><h3>💾 ${T("النسخ الاحتياطية اليومية", "Daily backups")}</h3>${!Array.isArray(B) ? loadingBox() : B.map(b => `<button class="btn btn-o xs" style="margin:.15rem" onclick="bk221(${b.id})">⬇️ ${esc(typeof fmtDT === 'function' ? fmtDT(b.at) : b.at)}</button>`).join("") || "—"}<p class="xs muted">${T("فيها إعدادات الموقع كلها والأقسام والمستخدمين. نزّل واحدة واحفظها في مكان تاني.", "Settings, sections and users. Download one and keep it elsewhere.")}</p></div>
+      <div class="card"><h3>🧾 ${T("آخر التعديلات", "Recent changes")}</h3>${!Array.isArray(L) ? loadingBox() : `<table class="tbl196"><tr><th>${T("الوقت", "Time")}</th><th>${T("الإعداد", "Setting")}</th><th>${T("القيمة", "Value")}</th></tr>${L.map(x => `<tr><td class="xs">${esc(typeof fmtDT === 'function' ? fmtDT(x.at) : x.at)}</td><td><code>${esc(x.k)}</code></td><td class="xs" style="max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.note || "")}</td></tr>`).join("")}</table>`}</div>`, 1000); }
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); if (own()) h = h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#475569" onclick="go16('log221')"><span>🧾</span><b>${T("سجل التعديلات والنسخ الاحتياطية", "Change log & backups")}</b></button>`); return h; };
+
+  const _r = render; render = function () { if (state.route === "log221") { const app = document.getElementById("app"); app.innerHTML = renderHeader() + logPage() + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} } else _r.apply(this, arguments); try { (setv("mq220", []) || []).forEach(c => { if (!MQ.some(x => x.id === c.id)) MQ.push(Object.assign({}, c)); }); branchesBox(); } catch (e) { console.warn("v221", e); } };
+  let t1; new MutationObserver(() => { clearTimeout(t1); t1 = setTimeout(() => { try { branchesBox(); } catch (e) {} }, 160); }).observe(document.body, { childList: true });
+  const m = location.hash.match(/^#\/log221/); if (m) state.route = "log221";
 })();
 
 // بدء التشغيل
