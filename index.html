@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v228";
+const UI_VERSION = "2026-11-17-v229";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30817,7 +30817,6 @@ Between lessons, the platform keeps you going:
   html body #sd152:not(.open):not(:hover):not(:focus-within) .sdh{width:14px!important;background:color-mix(in srgb,var(--accent) 22%,var(--card))!important}
   html body #sd152{min-width:14px}
   @media (min-width:601px) and (max-width:900px){html body .nv180-rail,html body .nv180-side{display:flex!important}html body #nv180 button{transform:scale(.88)}}
-  @media (min-width:901px){html body .hdr .wrap,html body #app .hdr>div{flex-wrap:nowrap!important}html body .hdr .tools{flex-wrap:nowrap!important;gap:.3rem!important;min-width:0;overflow-x:auto;scrollbar-width:none}html body .hdr .tools>*{height:36px!important;min-height:36px!important;min-width:36px!important;padding-inline:.55rem!important;font-size:.82rem!important;flex:none}html body .hdr .tools>[data-k219=trial]{padding-inline:.9rem!important}}
   html body .hdr .tools>[data-k219=theme],html body .hdr .tools>[data-k219=theme] *{opacity:1!important;color:var(--fg)!important;font-weight:700!important;filter:none!important}
   `);
 })();
@@ -30868,7 +30867,7 @@ Between lessons, the platform keeps you going:
   const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
   function settle() { const k = key(); if (k === lastK) return; const first = lastK == null; lastK = k; if (Date.now() - popT < 1200) return; const start = Date.now();
     const target = () => { let top = false; try { top = window.__top216 ? window.__top216() : false; } catch (e) {} if (top || first) return 0; const h = document.querySelector("#app .hdr, #app > header"); return h ? Math.max(0, h.getBoundingClientRect().bottom + scrollY) : 0; };
-    [140, 450, 1000].forEach(ms => setTimeout(() => { if (user > start || key() !== k) return; const y = target(); if (Math.abs(scrollY - y) > 40 && document.documentElement.scrollHeight > y + innerHeight * .5) window.scrollTo({ top: y, behavior: "instant" }); if (scrollX) window.scrollTo({ left: 0, top: scrollY, behavior: "instant" }); }, ms)); }
+    [60, 240].forEach(ms => setTimeout(() => { if (user > start || key() !== k) return; const y = target(); if (Math.abs(scrollY - y) > 40 && document.documentElement.scrollHeight > y + innerHeight * .5) window.scrollTo({ top: y, behavior: "instant" }); if (scrollX) window.scrollTo({ left: 0, top: scrollY, behavior: "instant" }); }, ms)); }
 
   const _r = render; render = function () { if (state.route === "tf228") show(tfPage()); else _r.apply(this, arguments); try { fixLinks(); letterTf(); prBtn(); settle(); } catch (e) { console.warn("v228", e); } };
   let t8; new MutationObserver(() => { clearTimeout(t8); t8 = setTimeout(() => { try { fixLinks(); letterTf(); prBtn(); } catch (e) {} }, 180); }).observe(document.body, { childList: true });
@@ -30881,6 +30880,21 @@ Between lessons, the platform keeps you going:
   #prb228{font-size:1rem}body.pr228 #prb228{background:var(--accent)!important;color:#fff!important}
   body{--pk215:34px!important}#sd152 *,.out215,.out215 *,[class*="flt158"],[class*="flt158"] *{animation:none!important}
   html,body{overflow-x:hidden}`);
+})();
+
+/* ================= v229: الهيدر رجع طبيعي (الاسم والجملة جنب اللوجو، والقوائم بتنزل كاملة) · مفيش رعشة لما تفتح أيقونة: المحتوى بيظهر مرة واحدة بعد ما يترتب ================= */
+(function () {
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+  let last = key(), t = null;
+  function veil() { const k = key(); if (k === last) return; last = k; const b = document.body; b.classList.add("ld229"); clearTimeout(t); t = setTimeout(() => b.classList.remove("ld229"), 280); }
+  const _r = render; render = function () { veil(); return _r.apply(this, arguments); };
+  css(`
+  body.ld229 #app>*:not(.hdr):not(header):not(.bar185):not(.dombar):not(.unav){opacity:0!important;transition:none!important}
+  #app>*:not(.hdr):not(header){transition:opacity .18s ease}
+  html body #app .hdr .logo,html body #app .hdr a.logo,html body #app .hdr .brand{flex:none!important;min-width:max-content!important}
+  html body #app .hdr .logo *,html body #app .hdr .brand *{white-space:nowrap}
+  `);
 })();
 
 // بدء التشغيل
