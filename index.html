@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v219";
+const UI_VERSION = "2026-11-17-v220";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30360,6 +30360,109 @@ Between lessons, the platform keeps you going:
   .tsb219{display:flex;flex-direction:column;align-items:center;justify-content:center;width:13rem;height:13rem;border-radius:50%;margin:1.2rem auto;border:0;cursor:pointer;background:radial-gradient(circle at 30% 30%,color-mix(in srgb,var(--accent) 60%,#fff),var(--accent));color:#fff;box-shadow:0 14px 34px color-mix(in srgb,var(--accent) 40%,transparent);transition:transform .08s}.tsb219:active{transform:scale(.96)}.tsb219 span{font-size:3.4rem;font-weight:800}.tsb219 small{font-size:1rem}
   #ct219{position:fixed;bottom:1rem;inset-inline-end:5.5rem;z-index:900;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.4rem .9rem;font:inherit;font-size:.82rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12);max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   body[data-ss219=ramadan],body[data-ss219=eid]{--accent:#b8860b}.ssb219{text-align:center;padding:.45rem;background:linear-gradient(90deg,#78350f,#b8860b,#78350f);color:#fff;font-weight:700}`);
+})();
+
+/* ================= v220: المقامات الفرعية متقسّمة في كل مكان حسب القرار (فروع الرست، فروع البياتي، فروع النهاوند، فروع العجم…) وتغيّر فرع أي مقام بدوسة · «➕ فرع جديد» يعمل صفحة مقام كاملة زي التانيين (السلم من عندك أو منسوخ من مقام تاني) · لأي صفحة في المكتبة: «🧬 اعمل زيها» / «➕ صفحة جوّاها» / «↪️ انقلها» / «✏️ الاسم والأيقونة» من غير ما ترجعلي ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner" && !state.preview; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const J = s => esc(JSON.stringify(s));
+
+  /* ======================= 1) العائلات (حسب القرار) ======================= */
+  const FAM = [["rast", "الرست", "Rast", "قرار رست (دو)"], ["bayati", "البياتي", "Bayati", "قرار دوكاه بجنس بياتي"], ["saba", "الصبا", "Saba", "جنس صبا على القرار"], ["hijaz", "الحجاز", "Hijaz", "جنس حجاز على القرار"], ["nahawand", "النهاوند", "Nahawand", "جنس نهاوند على القرار"], ["sikah", "السيكاه", "Sikah", "قرار سيكاه (مي نص بيمول)"], ["ajam", "العجم", "Ajam", "جنس عجم على القرار"], ["kurd", "الكرد", "Kurd", "جنس كرد على القرار"]];
+  const DEF = { muhayyar: "bayati", bayatayn: "bayati", ajamushayran: "ajam", nahawandkabir: "nahawand", sultaniyakah: "nahawand", kirdan: "rast", nawaathar: "nahawand", shahnaz: "hijaz", suzidil: "hijaz", husseini: "bayati", shuri: "bayati" };
+  const CUS = () => setv("mq220", []) || [];
+  function inject() { try { CUS().forEach(m => { const i = MQ.findIndex(x => x.id === m.id); if (i >= 0) MQ[i] = Object.assign({}, MQ[i], m); else MQ.push(m); }); } catch (e) {} }
+  inject();
+  const famOf = id => { const o = (setv("fam220", {}) || {})[id]; if (o) return o; const m = (typeof MQ !== "undefined" ? MQ : []).find(x => x.id === id); return (m && m.fam) || DEF[id] || "other"; };
+  const famName = f => { const x = FAM.find(z => z[0] === f); return x ? T("فروع " + x[1], x[2] + " branches") : T("فروع تانية", "Other branches"); };
+  const famSub = f => { const x = FAM.find(z => z[0] === f); return x ? x[3] : ""; };
+  const secs = () => { const s = sectionsData(); return Array.isArray(s) ? s : []; };
+  const secById = id => secs().find(s => s.id === id);
+  const refresh = () => { delete state.data.sections; render(); };
+
+  /* ======================= 2) التقسيم في المكتبة ======================= */
+  window.mq220 = {
+    open(f) { const o = LS("mqo220", {}); o[f] = !o[f]; LSset("mqo220", o); },
+    async fam(id) { const L = FAM.map((f, i) => `${i + 1}) ${f[1]}`).join("\n"); const a = prompt(T("المقام ده من فروع أنهي مقام؟ (حسب القرار)\n", "Which family (by tonic)?\n") + L + "\n9) " + T("تانية", "Other"), ""); if (!a) return; const f = (FAM[+a - 1] || ["other"])[0]; await saveSetting16("fam220", Object.assign({}, setv("fam220", {}) || {}, { [id]: f })); toast("✅"); render(); }
+  };
+  function group() {
+    if (state.route !== "library") return; document.querySelectorAll("#app .libgrid").forEach(g => {
+      if (g.__g220) return; const tiles = [...g.querySelectorAll(":scope > .libtile")]; if (tiles.length < 4) return;
+      const info = tiles.map(t => { const m = (t.getAttribute("onclick") || "").match(/lib(?:Open|Go)\('([0-9a-f-]{36})'/); const s = m && secById(m[1]); return { t, s, mq: s && (s.meta || {}).kind === "maqam" ? (s.meta || {}).maqam : null }; });
+      if (info.filter(x => x.mq).length < Math.max(4, tiles.length * .7)) return;
+      const par = info[0].s && secById(info[0].s.parent_id); const isBranch = par && (/فرعي|Branch/i.test((par.title || {}).ar + " " + (par.title || {}).en) || ["mq_branch"].includes((par.meta || {}).kind));
+      if (!isBranch) { g.__g220 = 1; return; } g.__g220 = 1;
+      const by = {}; info.forEach(x => { const f = x.mq ? famOf(x.mq) : "other"; (by[f] = by[f] || []).push(x); });
+      const order = FAM.map(f => f[0]).concat(["other"]).filter(f => by[f]); const O = LS("mqo220", {});
+      const box = document.createElement("div"); box.className = "fg220";
+      order.forEach(f => { const d = document.createElement("details"); d.className = "fd220"; d.open = O[f] !== undefined ? !!O[f] : false; d.addEventListener("toggle", () => { const o = LS("mqo220", {}); o[f] = d.open; LSset("mqo220", o); });
+        d.innerHTML = `<summary><span class="fi220">🎼</span><b>${esc(famName(f))}</b><small>${esc(famSub(f))}</small><em>${by[f].length}</em></summary>`; const inner = document.createElement("div"); inner.className = "libgrid fl220";
+        by[f].forEach(x => { inner.appendChild(x.t); if (own() && x.mq && !x.t.querySelector(".ft220")) x.t.insertAdjacentHTML("beforeend", `<button class="ft220" title="${T("غيّر الفرع", "Change family")}" onclick="event.preventDefault();event.stopPropagation();mq220.fam('${x.mq}')">🏷️</button>`); });
+        d.appendChild(inner); box.appendChild(d); });
+      g.replaceWith(box);
+      if (own()) box.insertAdjacentHTML("beforebegin", `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.4rem 0"><button class="btn btn-p" onclick="nb220('${par.id}')">➕ ${T("فرع جديد (صفحة مقام كاملة)", "New branch (full maqam page)")}</button><span class="xs muted">${T("🏷️ على أي مقام تغيّر هو من فروع مين", "🏷️ on a tile changes its family")}</span></div>`);
+    }); }
+
+  /* ======================= 3) نافذة صغيرة عامة ======================= */
+  function modal(title, body, onOk) { document.getElementById("md220") && document.getElementById("md220").remove(); const m = document.createElement("div"); m.id = "md220"; m.innerHTML = `<div class="mb220"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">${title}</h3><button class="btn btn-o xs" onclick="document.getElementById('md220').remove()">✕</button></div><div class="mc220">${body}</div><div class="row" style="gap:.4rem;justify-content:flex-end;margin-top:.7rem"><button class="btn btn-o" onclick="document.getElementById('md220').remove()">${T("إلغاء", "Cancel")}</button><button class="btn btn-p" id="ok220">✅ ${T("تمام", "OK")}</button></div></div>`; document.body.appendChild(m); m.addEventListener("click", e => { if (e.target === m) m.remove(); }); document.getElementById("ok220").onclick = async () => { const b = document.getElementById("ok220"); b.disabled = true; b.textContent = "⏳"; try { if (await onOk(id => (document.getElementById(id) || {}).value, id => (document.getElementById(id) || {}).checked) !== false) m.remove(); } catch (e) { toast(e.message, true); } b.disabled = false; b.textContent = "✅ " + T("تمام", "OK"); }; }
+  const path = s => { const out = []; let x = s, n = 0; while (x && n++ < 8) { out.unshift(secTitle(x)); x = secById(x.parent_id); } return out.join(" ← "); };
+  const parentSel = (id, cur) => `<select id="${id}" class="in"><option value="">${T("— فوق خالص (قسم رئيسي) —", "— top level —")}</option>${secs().map(s => [s, path(s)]).sort((a, b) => a[1].localeCompare(b[1], "ar")).map(([s, p]) => `<option value="${s.id}" ${s.id === cur ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>`;
+  const famSel = (id, cur) => `<select id="${id}" class="in">${FAM.map(f => `<option value="${f[0]}" ${f[0] === cur ? "selected" : ""}>${T("فروع " + f[1], f[2])} — ${f[3]}</option>`).join("")}<option value="other">${T("تانية", "Other")}</option></select>`;
+  const TON = [[-500, "يكاه (صول واطي)"], [-300, "عشيران (لا واطي)"], [-200, "عجم عشيران (سي♭ واطي)"], [-150, "عراق (سي نص بيمول واطي)"], [0, "رست (دو)"], [200, "دوكاه (ري)"], [350, "سيكاه (مي نص بيمول)"], [500, "جهاركاه (فا)"], [700, "نوا (صول)"], [900, "حسيني (لا)"]];
+  const mqSel = id => `<select id="${id}" class="in"><option value="">${T("— هكتب السلم بنفسي —", "— I'll type the scale —")}</option>${MQ.map(m => `<option value="${m.id}">${esc(AR() ? m.ar : m.en)} (${(m.sc || []).join(" ")})</option>`).join("")}</select>`;
+  const nextSort = pid => Math.max(0, ...secs().filter(s => s.parent_id === pid).map(s => +s.sort || 0)) + 1;
+
+  /* ======================= 4) فرع جديد = صفحة مقام كاملة ======================= */
+  window.nb220 = pid => modal("➕ " + T("فرع جديد", "New branch"), `<div class="g218">
+      <label class="sm">${T("الاسم بالعربي", "Arabic name")}<input id="nb_ar" class="in" placeholder="سوزدلارا"></label><label class="sm">${T("الاسم بالإنجليزي", "English name")}<input id="nb_en" class="in" placeholder="Suzdalara"></label>
+      <label class="sm">${T("من فروع (حسب القرار)", "Family (by tonic)")}${famSel("nb_f", "rast")}</label><label class="sm">${T("القرار", "Tonic")}<select id="nb_t" class="in">${TON.map(([v, l]) => `<option value="${v}" ${v === 0 ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+      <label class="sm" style="display:block;margin-top:.5rem">${T("انسخ السلم من مقام", "Copy the scale from")}${mqSel("nb_c")}</label>
+      <label class="sm" style="display:block;margin-top:.4rem">${T("أو اكتب السلم بالسنت من القرار (8 أرقام، الربع تون = 50)", "Or type the scale in cents (8 numbers)")}<input id="nb_s" class="in" placeholder="0, 200, 350, 500, 700, 800, 1100, 1200"></label>
+      <label class="sm" style="display:block;margin-top:.4rem">${T("بيتقري فين / ملاحظة (القرار كذا والجواب كذا…)", "Usage / note")}<input id="nb_u" class="in" placeholder="القرار رست والجواب نهاوند"></label>
+      <label class="sm" style="display:block;margin-top:.4rem">${T("المكان", "Place")}${parentSel("nb_p", pid)}</label>
+      <label class="ck218" style="display:inline-block;margin-top:.4rem"><input type="checkbox" id="nb_cc"> ${T("انسخ كمان محتوى المقام اللي نسخت سلمه (التسجيلات والشرح) — تقدر تمسحه بعدين", "Also copy that maqam's content")}</label>`,
+    async (v, ck) => { const ar = (v("nb_ar") || "").trim(); if (!ar) { toast(T("اكتب الاسم", "Name?"), true); return false; } const en = (v("nb_en") || "").trim() || ar; const src = MQ.find(m => m.id === v("nb_c"));
+      let sc = (v("nb_s") || "").split(/[,،\s]+/).map(Number).filter(x => !isNaN(x) && x >= 0); if (sc.length < 5) sc = src ? src.sc.slice() : null; if (!sc) { toast(T("اكتب السلم أو اختار مقام تنسخ منه", "Scale or source needed"), true); return false; }
+      const id = "c" + (en.toLowerCase().replace(/[^a-z0-9]/g, "") || "mq") + Date.now().toString(36).slice(-4); const m = { id, ar, en, fam: v("nb_f"), tonic: +v("nb_t"), sc, use: v("nb_u") || "", custom: 1 };
+      await saveSetting16("mq220", CUS().concat([m])); inject();
+      const parent = v("nb_p") || null; const ins = await sb.from("content_sections").insert({ title: { ar: "مقام " + ar, en: "Maqam " + en }, icon: "🎼", sort: nextSort(parent), is_visible: true, parent_id: parent, meta: { kind: "maqam", maqam: id } }).select("id").single(); if (ins.error) throw ins.error;
+      if (ck("nb_cc") && src) { const old = secs().find(s => (s.meta || {}).maqam === src.id && (s.meta || {}).kind === "maqam"); if (old) await copyContents(old.id, ins.data.id); }
+      toast("✅ " + T("اتعمل فرع «" + ar + "» بصفحة كاملة", "Branch created")); refresh(); });
+
+  /* ======================= 5) أدوات أي صفحة في المكتبة ======================= */
+  async function copyContents(from, to) { const { data, error } = await sb.from("contents").select("*").eq("section_id", from); if (error) throw error; const rows = (data || []).map(r => { const x = Object.assign({}, r); delete x.id; delete x.created_at; delete x.updated_at; x.views = 0; x.section_id = to; return x; }); for (let i = 0; i < rows.length; i += 50) { const r = await sb.from("contents").insert(rows.slice(i, i + 50)); if (r.error) throw r.error; } return rows.length; }
+  async function copyTree(s, parent, title, deep, kids) { const n = Object.assign({}, s); delete n.id; delete n.created_at; n.parent_id = parent; n.title = title; n.sort = nextSort(parent); const r = await sb.from("content_sections").insert(n).select("id").single(); if (r.error) throw r.error; if (deep) await copyContents(s.id, r.data.id); if (kids) for (const c of secs().filter(x => x.parent_id === s.id)) await copyTree(c, r.data.id, c.title, deep, kids); return r.data.id; }
+  window.st220 = {
+    dup(id) { const s = secById(id); if (!s) return; const t = s.title || {}; const isMq = (s.meta || {}).kind === "maqam";
+      modal("🧬 " + T("اعمل صفحة زي دي", "Duplicate this page"), `<div class="g218"><label class="sm">${T("الاسم بالعربي", "Arabic")}<input id="du_ar" class="in" value="${esc((t.ar || "") + " (نسخة)")}"></label><label class="sm">${T("الاسم بالإنجليزي", "English")}<input id="du_en" class="in" value="${esc((t.en || "") + " (copy)")}"></label></div>
+        <label class="sm" style="display:block;margin-top:.4rem">${T("تتحط فين", "Where")}${parentSel("du_p", s.parent_id)}</label>
+        <label class="ck218" style="display:inline-block;margin-top:.4rem"><input type="checkbox" id="du_c" checked> ${T("انسخ المحتوى اللي جواها", "Copy its content")}</label> <label class="ck218" style="display:inline-block"><input type="checkbox" id="du_k"> ${T("وكل الصفحات اللي جواها", "And its sub-pages")}</label>
+        ${isMq ? `<p class="sm" style="margin:.6rem 0 .2rem"><b>🎼 ${T("ده مقام — عايز سلم جديد؟", "It's a maqam — new scale?")}</b></p><input id="du_s" class="in" placeholder="${T("سيبه فاضي = نفس السلم. أو اكتب 8 أرقام بالسنت", "Empty = same scale, or 8 cents values")}"><div style="margin-top:.3rem">${famSel("du_f", famOf((s.meta || {}).maqam))}</div>` : ""}`,
+        async (v, ck) => { const title = Object.assign({}, t, { ar: v("du_ar"), en: v("du_en") || v("du_ar") }); const nid = await copyTree(s, v("du_p") || null, title, ck("du_c"), ck("du_k"));
+          if (isMq) { const src = MQ.find(m => m.id === s.meta.maqam) || {}; let sc = (v("du_s") || "").split(/[,،\s]+/).map(Number).filter(x => !isNaN(x) && x >= 0); const id = "c" + Date.now().toString(36); const nm = (v("du_ar") || "").replace(/^مقام\s*/, ""); const m = Object.assign({}, src, { id, ar: nm, en: (v("du_en") || nm).replace(/^Maqam\s*/i, ""), fam: v("du_f") || src.fam, custom: 1 }); if (sc.length >= 5) m.sc = sc; await saveSetting16("mq220", CUS().concat([m])); inject(); await sb.from("content_sections").update({ meta: Object.assign({}, s.meta, { maqam: id }) }).eq("id", nid); }
+          toast("✅ " + T("اتعملت", "Done")); refresh(); }); },
+    add(id) { const s = secById(id); const kid = secs().find(x => x.parent_id === id); modal("➕ " + T("صفحة جديدة جوّا «" + (s ? secTitle(s) : "") + "»", "New page inside"), `<div class="g218"><label class="sm">${T("الاسم بالعربي", "Arabic")}<input id="ad_ar" class="in"></label><label class="sm">${T("الاسم بالإنجليزي", "English")}<input id="ad_en" class="in"></label><label class="sm">${T("الأيقونة", "Icon")}<input id="ad_i" class="in" value="${esc((kid && kid.icon) || "📁")}"></label><label class="sm">${T("صورة الغلاف (لينك — اختياري)", "Cover URL")}<input id="ad_c" class="in"></label></div>
+        <label class="sm" style="display:block;margin-top:.4rem">${T("نوعها", "Type")}<select id="ad_k" class="in"><option value="same">${T("زي الصفحات اللي جنبها", "Same as its siblings")}${kid ? " (" + esc(secTitle(kid)) + ")" : ""}</option><option value="plain">${T("صفحة عادية (كتب/دروس/ملفات)", "Plain page")}</option><option value="book">${T("كتاب", "Book")}</option></select></label>`,
+        async v => { const ar = (v("ad_ar") || "").trim(); if (!ar) { toast(T("اكتب الاسم", "Name?"), true); return false; } const meta = v("ad_k") === "same" && kid ? Object.assign({}, kid.meta || {}) : v("ad_k") === "book" ? { kind: "book" } : {}; if (meta.kind === "maqam") { toast(T("لصفحة مقام استخدم «➕ فرع جديد» علشان تحط السلم", "Use “New branch” for maqams"), true); return false; }
+          const r = await sb.from("content_sections").insert({ title: { ar, en: v("ad_en") || ar }, icon: v("ad_i") || "📁", cover_url: v("ad_c") || null, sort: nextSort(id), is_visible: true, parent_id: id, meta }).select("id").single(); if (r.error) throw r.error; toast("✅"); refresh(); }); },
+    move(id) { const s = secById(id); modal("↪️ " + T("انقل «" + secTitle(s) + "»", "Move"), `<label class="sm" style="display:block">${T("لفين؟", "To where?")}${parentSel("mv_p", s.parent_id)}</label><p class="xs muted">${T("كل اللي جواها بيتنقل معاها.", "Everything inside moves with it.")}</p>`, async v => { const p = v("mv_p") || null; if (p === id) return false; const r = await sb.from("content_sections").update({ parent_id: p, sort: nextSort(p) }).eq("id", id); if (r.error) throw r.error; toast("✅"); refresh(); }); },
+    edit(id) { const s = secById(id); const t = s.title || {}; const d = s.description || {}; modal("✏️ " + T("الاسم والشكل", "Name & look"), `<div class="g218"><label class="sm">${T("الاسم بالعربي", "Arabic")}<input id="ed_ar" class="in" value="${esc(t.ar || "")}"></label><label class="sm">${T("الاسم بالإنجليزي", "English")}<input id="ed_en" class="in" value="${esc(t.en || "")}"></label><label class="sm">${T("الأيقونة (إيموجي)", "Icon")}<input id="ed_i" class="in" value="${esc(s.icon || "")}"></label><label class="sm">${T("صورة الغلاف (لينك)", "Cover URL")}<input id="ed_c" class="in" value="${esc(s.cover_url || "")}"></label></div><label class="sm" style="display:block;margin-top:.4rem">${T("الوصف", "Description")}<textarea id="ed_d" class="in" rows="2">${esc(d.ar || "")}</textarea></label><label class="ck218" style="display:inline-block;margin-top:.4rem"><input type="checkbox" id="ed_v" ${s.is_visible !== false ? "checked" : ""}> ${T("ظاهرة", "Visible")}</label>`,
+      async (v, ck) => { const r = await sb.from("content_sections").update({ title: Object.assign({}, t, { ar: v("ed_ar"), en: v("ed_en") }), icon: v("ed_i"), cover_url: v("ed_c") || null, description: Object.assign({}, d, { ar: v("ed_d") }), is_visible: ck("ed_v") }).eq("id", id); if (r.error) throw r.error; toast("✅"); refresh(); }); }
+  };
+  function toolsBar() { if (state.route !== "library" || !own() || !state.libSec) return; const app = document.getElementById("app"); if (!app || app.querySelector("#st220")) return; const s = secById(state.libSec); if (!s) return; const h1 = [...app.querySelectorAll("h1, h2")].find(x => !x.closest(".hdr")); if (!h1) return;
+    h1.insertAdjacentHTML("afterend", `<div id="st220" class="row"><button class="btn btn-o xs" onclick="st220.add('${s.id}')">➕ ${T("صفحة جوّاها", "Page inside")}</button><button class="btn btn-o xs" onclick="st220.dup('${s.id}')">🧬 ${T("اعمل زيها", "Duplicate")}</button><button class="btn btn-o xs" onclick="st220.move('${s.id}')">↪️ ${T("انقلها", "Move")}</button><button class="btn btn-o xs" onclick="st220.edit('${s.id}')">✏️ ${T("الاسم والشكل", "Name & look")}</button>${(s.meta || {}).kind === "maqam" ? `<button class="btn btn-o xs" onclick="mq220.fam('${s.meta.maqam}')">🏷️ ${T("من فروع مين", "Family")}: ${esc(famName(famOf(s.meta.maqam)).replace(/^فروع /, ""))}</button>` : ""}<button class="btn btn-o xs" onclick="nb220('${(s.meta || {}).kind === "maqam" ? s.parent_id : s.id}')">🎼 ${T("فرع مقام جديد", "New maqam branch")}</button></div>`); }
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () { _r.apply(this, arguments); try { group(); toolsBar(); } catch (e) { console.warn("v220", e); } };
+  let t0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { group(); toolsBar(); } catch (e) {} }, 150); }).observe(document.body, { childList: true });
+  css(`.fg220{display:flex;flex-direction:column;gap:.5rem;margin-top:.8rem}.fd220{border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden;border-inline-start:4px solid #7c3aed}.fd220 summary{display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;cursor:pointer;list-style:none;min-height:48px}.fd220 summary::-webkit-details-marker{display:none}.fd220 summary b{font-size:1rem}.fd220 summary small{color:var(--muted);font-size:.75rem}.fd220 summary em{margin-inline-start:auto;font-style:normal;background:var(--bg);border-radius:999px;padding:0 .5rem;font-size:.75rem}.fd220[open] summary{border-bottom:1px solid var(--line)}.fl220{padding:.6rem;margin:0!important}
+  .ft220{position:absolute;top:6px;inset-inline-start:6px;border:0;border-radius:999px;background:rgba(255,255,255,.9);cursor:pointer;width:28px;height:28px;z-index:2}.libtile{position:relative}
+  #st220{gap:.3rem;flex-wrap:wrap;margin:.3rem 0 .8rem}
+  #md220{position:fixed;inset:0;z-index:50000;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:1rem}.mb220{background:var(--card);color:var(--fg);border-radius:18px;padding:1rem 1.1rem;width:min(680px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}.mc220{margin-top:.6rem}.mc220 select.in{width:100%}`);
 })();
 
 // بدء التشغيل
