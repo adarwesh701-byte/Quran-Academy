@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v214";
+const UI_VERSION = "2026-11-17-v215";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29389,7 +29389,7 @@ Between lessons, the platform keeps you going:
   function headBottom() { let b = 0; document.querySelectorAll("#app .hdr, #app > header, #app .bar185, #app .dombar, #app .unav, #app .hdr .nav").forEach(el => { const cs = getComputedStyle(el); if (cs.display === "none" || cs.position === "fixed" || cs.position === "sticky") return; const r = el.getBoundingClientRect(); if (r.height) b = Math.max(b, r.bottom + scrollY); }); return b; }
   function go() { const b = headBottom(); if (b > 0 && document.documentElement.scrollHeight - innerHeight >= b - 2) window.scrollTo({ top: b, behavior: "instant" }); }
   const app = document.getElementById("app");
-  if (app) new MutationObserver(() => { const k = keyOf(); if (last === null) { last = k; return; } if (k === last) return; last = k;
+  if (app) new MutationObserver(() => { if (window.__off210) return; const k = keyOf(); if (last === null) { last = k; return; } if (k === last) return; last = k;
     if (Date.now() - back < 800 || Date.now() - clicked > 2500) return;
     requestAnimationFrame(() => { go(); setTimeout(go, 90); setTimeout(go, 260); }); }).observe(app, { childList: true });
 })();
@@ -29704,6 +29704,7 @@ Between lessons, the platform keeps you going:
 (function () {
   const _st = window.scrollTo.bind(window), _sb = window.scrollBy.bind(window), _siv = Element.prototype.scrollIntoView;
   let K = null;              /* {route, until, y, top, oc, tx} */
+  window.__k214off = () => { K = null; };
   const blocked = () => K && Date.now() < K.until && state.route === K.route;
   window.scrollTo = function () { if (blocked()) return; return _st.apply(window, arguments); };
   window.scrollBy = function () { if (blocked()) return; return _sb.apply(window, arguments); };
@@ -29716,6 +29717,168 @@ Between lessons, the platform keeps you going:
   function keep() { if (!blocked()) return; if (state.route !== K.route) { K = null; return; } const el = find(); if (el && el.getBoundingClientRect().height) { const d = el.getBoundingClientRect().top - K.top; if (Math.abs(d) > 1) _st(0, scrollY + d); } else if (Math.abs(scrollY - K.y) > 1) _st(0, K.y); }
   const app = document.getElementById("app");
   if (app) new MutationObserver(() => { if (!blocked()) return; keep(); requestAnimationFrame(keep); setTimeout(keep, 60); setTimeout(keep, 160); setTimeout(keep, 320); setTimeout(keep, 600); }).observe(app, { childList: true, subtree: true });
+})();
+
+/* ================= v215: خلفيات إسلامية كبيرة للصفحة (12 شكل) مع التحكم في الكثافة والحجم + كثافة صور الخلفية في الكروت والبانرات · الشرايط اللي فوق: تنزل باللمس/المرور من النص أو بالأيقونة (خيارات بالتفصيل) وترجع مقفولة مع كل صفحة · أيقونات التحميل والرسائل والجرس ظاهرة جنب اللغة · كل الصفحات بتفتح من تحت اللوجو على طول + رعشة أقل · الدرج الشمال بنفس حجم الشريط اليمين · الأزرار العائمة (العرض واللغة، ✏️، 🎭…) مستخبية في الحافة وتطلع بالمرور أو الضغط، وأي حد يسحبها لأي مكان ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const DEF = { trig: "both", noicon: 0, isz: 1, ipos: "center", icol: "accent", leave: 1, delay: 250, keep: 0, hdr3: 1, fab: "hover", peek: 14, sd: "hover", bg: "none", bgo: 6, bgs: 1, bgfix: 1, bgp: {}, cimg: 100 };
+  const U = () => Object.assign({}, DEF, setv("ui215", {}) || {});
+  window.ui215 = { async set(p) { await saveSetting16("ui215", Object.assign(U(), p)); apply(); render(); }, async page(route, id) { const u = U(); const m = Object.assign({}, u.bgp || {}); if (!route) return; if (id === "") delete m[route]; else m[route] = id; await saveSetting16("ui215", Object.assign(u, { bgp: m })); apply(); render(); } };
+  const scrollTopNative = y => { try { Object.getOwnPropertyDescriptor(Element.prototype, "scrollTop").set.call(document.scrollingElement || document.documentElement, y); } catch (e) { scrollTo(0, y); } };
+
+  /* ======================= 1) الخلفيات الإسلامية ======================= */
+  const star = (cx, cy, R, r, n, rot) => { rot = rot == null ? -90 : rot; const p = []; for (let i = 0; i < n * 2; i++) { const a = (rot + i * 180 / n) * Math.PI / 180, q = i % 2 ? r : R; p.push((cx + q * Math.cos(a)).toFixed(1) + "," + (cy + q * Math.sin(a)).toFixed(1)); } return `<polygon points="${p.join(" ")}"/>`; };
+  const sv = (w, h, inner, fill) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><g fill="${fill ? "C" : "none"}" stroke="C" stroke-width="1.6" stroke-linejoin="round">${inner}</g></svg>`;
+  const corners = (w, h, f) => [[0, 0], [w, 0], [0, h], [w, h]].map(([x, y]) => f(x, y)).join("");
+  const BG = [
+    ["khatam", "النجمة الثمانية (الخاتم)", () => ({ s: sv(160, 160, star(80, 80, 54, 23, 8) + `<circle cx="80" cy="80" r="64"/>` + corners(160, 160, (x, y) => star(x, y, 54, 23, 8)), 0), z: 160 })],
+    ["rub", "ربع الحزب", () => ({ s: sv(150, 150, `<rect x="40" y="40" width="70" height="70"/><rect x="40" y="40" width="70" height="70" transform="rotate(45 75 75)"/><circle cx="75" cy="75" r="20"/>` + corners(150, 150, (x, y) => `<circle cx="${x}" cy="${y}" r="26"/>`)), z: 150 })],
+    ["flower", "الدوائر المتشابكة", () => ({ s: sv(60, 104, [[0, 0], [60, 0], [30, 52], [0, 104], [60, 104], [-30, 52], [90, 52]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="30"/>`).join("")), z: 60 })],
+    ["mash", "مشربية", () => ({ s: sv(48, 48, `<path d="M0 24 L24 0 L48 24 L24 48 Z"/><circle cx="24" cy="24" r="5"/>` + corners(48, 48, (x, y) => `<circle cx="${x}" cy="${y}" r="5"/>`)), z: 48 })],
+    ["zellige", "زليج مغربي", () => ({ s: sv(120, 120, star(60, 60, 46, 30, 8, -90) + star(60, 60, 22, 14, 8, -67.5) + corners(120, 120, (x, y) => `<rect x="${x - 14}" y="${y - 14}" width="28" height="28" transform="rotate(45 ${x} ${y})"/>`)), z: 120 })],
+    ["hexa", "النجمة السداسية", () => ({ s: sv(120, 104, star(60, 52, 40, 23, 6) + corners(120, 104, (x, y) => star(x, y, 40, 23, 6)) + `<circle cx="60" cy="52" r="12"/>`), z: 120 })],
+    ["star12", "النجمة الاثنا عشرية", () => ({ s: sv(220, 220, star(110, 110, 88, 56, 12) + star(110, 110, 44, 30, 12, -75) + `<circle cx="110" cy="110" r="100"/>` + corners(220, 220, (x, y) => star(x, y, 30, 18, 8))), z: 220 })],
+    ["crescent", "أهلّة ونجوم", () => ({ s: sv(320, 320, `<path d="M96 48 A44 44 0 1 0 140 122 A36 36 0 1 1 96 48 Z"/>` + [[210, 70, 9], [250, 210, 6], [80, 240, 7], [180, 280, 5], [290, 130, 5]].map(([x, y, r]) => star(x, y, r, r * .42, 5)).join(""), 1), z: 320 })],
+    ["sky", "قباب ومآذن (كبيرة)", () => ({ s: sv(1600, 420, `<rect x="0" y="380" width="1600" height="40"/><path d="M520 380 V250 A180 150 0 0 1 880 250 V380 Z"/><path d="M700 100 V40"/><path d="M688 70 A12 12 0 0 1 712 70" />` + [[380, 70], [1020, 70], [200, 160], [1200, 160]].map(([x, y]) => `<rect x="${x}" y="${y + 40}" width="30" height="${340 - y}"/><path d="M${x - 6} ${y + 40} L${x + 15} ${y} L${x + 36} ${y + 40} Z"/>`).join("") + `<path d="M260 380 V300 A80 70 0 0 1 420 300 V380 Z"/><path d="M1180 380 V300 A80 70 0 0 1 1340 300 V380 Z"/><path d="M40 380 V330 A50 40 0 0 1 140 330 V380 Z"/><path d="M1460 380 V330 A50 40 0 0 1 1560 330 V380 Z"/>`, 1), z: 1600, rep: "repeat-x", pos: "center bottom" })],
+    ["mihrab", "قوس المحراب (كبير)", () => ({ s: sv(1000, 1400, `<path d="M100 1400 V620 Q100 160 500 60 Q900 160 900 620 V1400"/><path d="M160 1400 V640 Q160 230 500 130 Q840 230 840 640 V1400"/>` + star(500, 330, 70, 30, 8) + `<circle cx="500" cy="330" r="90"/>`), z: 1000, rep: "no-repeat", pos: "center center", fit: "contain" })],
+    ["lantern", "فوانيس معلّقة", () => ({ s: sv(240, 320, [[60, 90], [180, 150]].map(([x, l]) => `<path d="M${x} 0 V${l}"/><path d="M${x - 16} ${l + 10} L${x + 16} ${l + 10} L${x + 22} ${l + 52} L${x} ${l + 74} L${x - 22} ${l + 52} Z"/><path d="M${x - 10} ${l} H${x + 10} L${x + 16} ${l + 10} H${x - 16} Z"/>` + star(x, l + 38, 8, 3.5, 8)).join("")), z: 240, rep: "repeat-x", pos: "center top" })],
+    ["rosette", "وردة إسلامية كبيرة", () => ({ s: sv(900, 900, star(450, 450, 420, 330, 16) + star(450, 450, 300, 200, 16, -78.75) + star(450, 450, 180, 110, 8) + `<circle cx="450" cy="450" r="430"/><circle cx="450" cy="450" r="90"/>`), z: 900, rep: "no-repeat", pos: "center center", fit: "min(92vh,92vw)" })]
+  ];
+  const acc = () => (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "#0f766e").trim() || "#0f766e";
+  function bgUrl(id, op, col) { const b = BG.find(x => x[0] === id); if (!b) return null; const o = b[2](); const svg = o.s.replace(/"C"/g, `"${col || acc()}"`).replace("<g ", `<g stroke-opacity="${op}" fill-opacity="${op}" `); return Object.assign({ url: `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")` }, o); }
+  function bgApply() { const u = U(); const id = (u.bgp || {})[state.route] || u.bg; let st = document.getElementById("bg215s"); if (!st) { st = document.createElement("style"); st.id = "bg215s"; document.head.appendChild(st); }
+    let out = ""; if (id && id !== "none") { const b = bgUrl(id, Math.max(.01, Math.min(1, (+u.bgo || 6) / 100))); if (b) { const sz = b.fit ? b.fit : Math.round(b.z * (+u.bgs || 1)) + "px"; out = `body{background-image:${b.url}!important;background-repeat:${b.rep || "repeat"}!important;background-position:${b.pos || "center top"}!important;background-size:${b.fit ? (b.fit === "contain" ? "auto 92vh" : b.fit) : sz + " auto"}!important;background-attachment:${+u.bgfix ? "fixed" : "scroll"}!important}`; } }
+    const ci = +u.cimg; if (ci < 100) out += `#app .ci215{isolation:isolate}#app .ci215::after{content:"";position:absolute;inset:0;z-index:-1;background:var(--card,#fff);opacity:${((100 - ci) / 100).toFixed(2)};border-radius:inherit;pointer-events:none}`;
+    st.textContent = out;
+    if (ci < 100) document.querySelectorAll('#app [style*="background-image"], #app [style*="background:url"], #app [style*="background: url"]').forEach(el => { if (el.classList.contains("ci215")) return; if (getComputedStyle(el).position === "static") el.style.position = "relative"; el.classList.add("ci215"); }); else document.querySelectorAll(".ci215").forEach(el => el.classList.remove("ci215")); }
+
+  /* ======================= 2) الشرايط اللي فوق: اللمس من النص أو الأيقونة ======================= */
+  const isOpen = () => document.body.classList.contains("tb209-open");
+  const openTop = v => { if (isOpen() !== !!v && window.tb209) tb209(); };
+  let byHover = 0, leaveT = null;
+  function zone() { const u = U(); const h = document.querySelector("#app .hdr"); if (!h) return; let z = document.getElementById("zn215");
+    if (u.trig === "click") { z && z.remove(); return; }
+    if (!z || !h.contains(z)) { z && z.remove(); z = document.createElement("div"); z.id = "zn215"; z.title = T("مرّر هنا لتنزل القوائم", "Hover to open the menus"); h.appendChild(z);
+      z.addEventListener("mouseenter", () => { if (U().trig === "click") return; clearTimeout(leaveT); setTimeout(() => { if (z.matches(":hover") && !isOpen()) { byHover = 1; openTop(1); } }, +U().delay || 0); });
+      z.addEventListener("click", e => { e.stopPropagation(); byHover = 0; openTop(!isOpen()); }); }
+    const b = document.getElementById("tbb209"); if (b && !b.__z215) { b.__z215 = 1; b.addEventListener("mouseenter", () => { const t = U().trig; if ((t === "hover" || t === "both") && !isOpen()) { byHover = 1; openTop(1); } }); b.addEventListener("click", () => { byHover = 0; }, true); } }
+  document.addEventListener("mousemove", e => { if (!byHover || !isOpen() || !+U().leave) return; let bottom = 0; document.querySelectorAll("#app .hdr, #app .bar185, #app .dombar, #app .hdr .nav, #app .unav").forEach(el => { const r = el.getBoundingClientRect(); if (r.height) bottom = Math.max(bottom, r.bottom); });
+    if (e.clientY > bottom + 40) { if (!leaveT) leaveT = setTimeout(() => { leaveT = null; if (byHover && isOpen()) { byHover = 0; openTop(0); } }, 450); } else { clearTimeout(leaveT); leaveT = null; } }, { passive: true });
+  css(`#zn215{position:absolute;bottom:0;left:22%;width:56%;height:16px;z-index:55;cursor:pointer}
+  #zn215:hover{background:linear-gradient(to top,color-mix(in srgb,var(--accent) 18%,transparent),transparent);border-radius:12px 12px 0 0}
+  body[data-ni215="1"] #tbb209{display:none!important}
+  #tbb209{zoom:var(--isz215,1)}
+  body[data-ic215=gold] #tbb209{--accent:#b8860b}body[data-ic215=gray] #tbb209{--accent:#64748b}body[data-ic215=purple] #tbb209{--accent:#7c3aed}
+  body[data-ip215=start]:not([data-tb211=burger]):not([data-tb211=cord]) #tbb209{left:auto!important;right:auto!important;inset-inline-start:84px!important;transform:none!important}
+  body[data-ip215=end]:not([data-tb211=burger]):not([data-tb211=cord]) #tbb209{left:auto!important;right:auto!important;inset-inline-end:84px!important;transform:none!important}
+  body[data-ip215]:not([data-ip215=center])[data-tb211=star] #tbb209.on{transform:rotate(180deg)!important}`);
+
+  /* ======================= 3) أيقونات التحميل والرسائل والجرس جنب اللغة ======================= */
+  function hdr3() { const on = !!+U().hdr3; document.querySelectorAll(".hdr .tools > button").forEach(b => { const h = b.innerHTML; const k = /fa-download|pwabtn/.test(h + b.className) || /fa-comment-dots/.test(h) || /fa-bell/.test(h); b.classList.toggle("keep215", on && k); }); }
+  css(`html body .hdr .tools.tc169.tc169>.keep215.keep215.keep215{display:inline-flex!important}`);
+
+  /* ======================= 4) كل صفحة تفتح من تحت اللوجو + رعشة أقل ======================= */
+  window.__off210 = 1;
+  try { history.scrollRestoration = "manual"; } catch (e) {}
+  document.documentElement.classList.add("boot215"); setTimeout(() => document.documentElement.classList.remove("boot215"), 1400);
+  css(`html.boot215 *,html.boot215 *::before,html.boot215 *::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}
+  html.hide215 #app{visibility:hidden}`);
+  document.documentElement.classList.add("hide215"); setTimeout(() => document.documentElement.classList.remove("hide215"), 900);
+  let last = null, back = 0, clk = null, first = 1;
+  addEventListener("popstate", () => { back = Date.now(); });
+  document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("[onclick], a[href]"); if (el) clk = { at: Date.now(), oc: el.getAttribute("onclick") || el.getAttribute("href") || "", tx: (el.innerText || "").replace(/\s+/g, " ").trim().slice(0, 60) }; }, true);
+  const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+  const logoBottom = () => { const h = document.querySelector("#app .hdr, #app > header"); if (!h) return 0; const r = h.getBoundingClientRect(); return r.height ? r.bottom + scrollY : 0; };
+  function below() { const app = document.getElementById("app"); const b = logoBottom(); if (!app || !b) return; app.style.minHeight = (innerHeight + b + 2) + "px"; scrollTopNative(b); }
+  const appEl = document.getElementById("app");
+  if (appEl) new MutationObserver(() => { const k = key(); if (k === last) return; const prev = last; last = k;
+    if (!+U().keep && isOpen() && window.tb209) { byHover = 0; tb209(); }
+    if (Date.now() - back < 900) { first = 0; return; }
+    if (first) { first = 0; below(); requestAnimationFrame(() => { below(); document.documentElement.classList.remove("hide215"); }); return; }
+    if (prev && clk && Date.now() - clk.at < 2500 && prev.split("|")[0] === state.route) { const same = [...document.querySelectorAll("#app [onclick], #app a[href]")].some(x => (x.getAttribute("onclick") || x.getAttribute("href") || "") === clk.oc && (x.innerText || "").replace(/\s+/g, " ").trim().slice(0, 60) === clk.tx); if (same) return; }
+    if (window.__k214off) __k214off(); below(); requestAnimationFrame(below); }).observe(appEl, { childList: true });
+  /* القوائم مقفولة مع كل فتح للموقع */
+  if (!+U().keep) { try { localStorage.setItem("tb209", "false"); } catch (e) {} setTimeout(() => { if (isOpen() && window.tb209) tb209(); }, 200); }
+
+  /* ======================= 5) الدرج الشمال بنفس حجم الشريط اليمين ======================= */
+  const noEmoji = s => String(s || "").replace(/^[\p{Extended_Pictographic}\p{Emoji_Modifier}‍️\s]+/u, "").trim();
+  function drawer() { const d = document.getElementById("sd152"); if (!d) return; document.body.dataset.sd215 = U().sd;
+    d.querySelectorAll("button:not(.sdh)").forEach(b => { if (b.dataset.l215) return; const t = (b.innerText || b.textContent || b.title || "").replace(/\s+/g, " ").trim(); const m = t.match(/^([\p{Extended_Pictographic}\p{Emoji_Modifier}‍️]+)/u); b.dataset.ic215 = m ? m[1] : (b.querySelector("i") ? "" : t.slice(0, 1)); b.dataset.l215 = noEmoji(t) || t; if (!b.title) b.title = t; if (b.querySelector("i") && !m) b.classList.add("hi215"); }); }
+  css(`#sd152{padding-block:.35rem!important;gap:.2rem!important;max-height:92vh;overflow:auto;scrollbar-width:none;align-items:center}
+  #sd152 button:not(.sdh){width:calc(var(--t211,42px) + 8px)!important;min-width:0!important;height:calc(var(--t211,42px) + 13px)!important;padding:0!important;font-size:0!important;border-radius:12px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;background:var(--bg)!important;border:1px solid transparent!important;color:var(--fg)!important}
+  #sd152 button:not(.sdh):hover{border-color:color-mix(in srgb,var(--accent) 45%,transparent)!important;background:color-mix(in srgb,var(--accent) 12%,var(--bg))!important}
+  #sd152 button:not(.sdh)::before{content:attr(data-ic215);font-size:calc(var(--t211,42px)*.45);line-height:1}
+  #sd152 button.hi215 i{font-size:calc(var(--t211,42px)*.4)!important}
+  #sd152 button:not(.sdh)::after{content:attr(data-l215);font-size:9.5px;font-weight:600;line-height:1.1;max-width:calc(var(--t211,42px) + 4px);overflow:hidden;text-overflow:ellipsis;margin-top:2px;color:var(--muted)}
+  body:not(.lb211) #sd152 button:not(.sdh){height:var(--t211,42px)!important}body:not(.lb211) #sd152 button:not(.sdh)::after{display:none}
+  body[data-sd215=click] #sd152:hover:not(.open):not(:focus-within){transform:translateX(calc(100% - 1.25rem))}
+  [dir=rtl] body[data-sd215=click] #sd152:hover:not(.open):not(:focus-within),body[data-sd215=click][dir=rtl] #sd152:hover:not(.open){transform:translateX(calc(-100% + 1.25rem))}
+  body[data-sd215=always] #sd152{transform:none!important}`);
+
+  /* ======================= 6) الأزرار العائمة: مستخبية في الحافة + تتسحب لأي مكان ======================= */
+  const EX = "#sd152,#dr212b,#cf213,#un209,#toast,.toast,.h207,.bar201,#nv180,.side185,#dock196,#zn215,#tbb209,.updbar,#mb171,#ed189p,#sim189m,.hlpov,#map196,dialog";
+  const POS = () => LS("pos215", {});
+  const idOf = el => el.id || "t:" + (el.title || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 24);
+  function floaters() { const out = []; [...document.body.children].forEach(el => { if (el.matches(EX) || el.closest("#app")) return; const cs = getComputedStyle(el); if (cs.position !== "fixed" || cs.display === "none") return; const r = el.getBoundingClientRect(); if (!r.width || r.width > 260 || r.height > 90) return; out.push(el); }); return out; }
+  function fab() { const u = U(); document.body.dataset.fab215 = u.fab; document.body.style.setProperty("--pk215", (+u.peek || 14) + "px"); const P = POS();
+    floaters().forEach(el => { if (!el.classList.contains("fl215")) { el.classList.add("fl215"); drag(el); } const p = P[idOf(el)];
+      if (p) { const x = Math.round(p.x * innerWidth), y = Math.round(p.y * innerHeight); [["left", x + "px"], ["top", y + "px"], ["right", "auto"], ["bottom", "auto"], ["inset-inline-start", "auto"], ["inset-inline-end", "auto"]].forEach(([k, v]) => { if (el.style.getPropertyValue(k) !== v) el.style.setProperty(k, v, "important"); }); if (k0(el)) el.style.setProperty("left", x + "px", "important"); }
+      edge(el); }); }
+  const k0 = () => 0;
+  function edge(el) { if (el.classList.contains("out215") || el.__drag) return; const tr = (getComputedStyle(el).translate || "0").split(" ")[0]; const tx = parseFloat(tr) || 0; const r = el.getBoundingClientRect(); const L = r.left - tx, R = innerWidth - (r.right - tx); const pk = +U().peek || 14;
+    if (Math.min(L, R) > 150) { el.dataset.edge = ""; return; } if (L <= R) { el.dataset.edge = "l"; el.style.setProperty("--tx215", -(L + r.width - pk) + "px"); } else { el.dataset.edge = "r"; el.style.setProperty("--tx215", (R + r.width - pk) + "px"); } }
+  function drag(el) { let st = null, moved = 0;
+    el.addEventListener("pointerdown", e => { if (e.button) return; st = { x: e.clientX, y: e.clientY, r: el.getBoundingClientRect() }; moved = 0; }, true);
+    addEventListener("pointermove", e => { if (!st) return; const dx = e.clientX - st.x, dy = e.clientY - st.y; if (!moved && Math.hypot(dx, dy) < 7) return; moved = 1; el.__drag = 1; el.classList.add("out215", "dr215");
+      const x = Math.max(0, Math.min(innerWidth - st.r.width, st.r.left + dx)), y = Math.max(0, Math.min(innerHeight - st.r.height, st.r.top + dy)); [["left", x + "px"], ["top", y + "px"], ["right", "auto"], ["bottom", "auto"], ["inset-inline-start", "auto"], ["inset-inline-end", "auto"]].forEach(([k, v]) => el.style.setProperty(k, v, "important")); }, { passive: true });
+    addEventListener("pointerup", () => { if (!st) return; st = null; if (!moved) return; const r = el.getBoundingClientRect(); const P = POS(); P[idOf(el)] = { x: r.left / innerWidth, y: r.top / innerHeight }; LSset("pos215", P); el.classList.remove("dr215");
+      const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; el.addEventListener("click", kill, { capture: true, once: true }); setTimeout(() => { el.removeEventListener("click", kill, true); el.__drag = 0; el.classList.remove("out215"); edge(el); }, 400); });
+    el.addEventListener("click", e => { const m = document.body.dataset.fab215; const touch = matchMedia("(hover:none)").matches; if (!el.dataset.edge || m === "out" || el.classList.contains("out215")) return; if (m === "click" || touch) { e.stopPropagation(); e.preventDefault(); el.classList.add("out215"); } }, true); }
+  document.addEventListener("click", e => { document.querySelectorAll(".fl215.out215").forEach(el => { if (!el.contains(e.target) && !el.__drag) el.classList.remove("out215"); }); });
+  css(`.fl215{transition:translate .28s cubic-bezier(.22,1,.36,1),opacity .2s!important;touch-action:none}
+  body:not([data-fab215=out]) .fl215[data-edge=l]:not(.out215),body:not([data-fab215=out]) .fl215[data-edge=r]:not(.out215){translate:var(--tx215,0) 0!important}
+  body[data-fab215=hover] .fl215[data-edge]:hover{translate:0 0!important}
+  .fl215.dr215{transition:none!important;cursor:grabbing;opacity:.85}`);
+
+  /* ======================= 7) الإعدادات ======================= */
+  css(`.bg215g{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.5rem}.bg215g button{height:92px;border:2px solid var(--line);border-radius:12px;cursor:pointer;background-color:var(--card);position:relative;font:inherit;font-size:.72rem;font-weight:700;display:flex;align-items:flex-end;justify-content:center;padding:.25rem;overflow:hidden}.bg215g button span{background:var(--card);border-radius:6px;padding:0 .3rem}.bg215g button.on{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+  .rw215{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.35rem 0}.rw215 select{width:auto}`);
+  function card() { const u = U(); const sel = (k, opts) => `<select class="in" onchange="ui215.set({${k}:this.value})">${opts.map(([v, a, e]) => `<option value="${v}" ${String(u[k]) === String(v) ? "selected" : ""}>${T(a, e)}</option>`).join("")}</select>`;
+    const chk = (k, a, e) => `<label class="sm row" style="gap:.4rem"><input type="checkbox" ${+u[k] ? "checked" : ""} onchange="ui215.set({${k}:this.checked?1:0})"> ${T(a, e)}</label>`;
+    const rng = (k, mn, mx, st, fn) => `<input type="range" min="${mn}" max="${mx}" step="${st}" value="${u[k]}" onchange="ui215.set({${k}:+this.value})" oninput="this.nextElementSibling.textContent=${fn ? fn : "this.value"}" style="flex:1;max-width:16rem"><b class="sm">${u[k]}</b>`;
+    const pages = [["home", "الرئيسية"], ["library", "الأقسام"], ["tools", "الأدوات"], ["world", "عايز تتعلم إيه"], ["myspace", "مساحتي"], ["dashboard", "لوحتي"], ["pricing", "الأسعار"], ["mushaf", "المصحف"]];
+    const thumb = id => { const b = bgUrl(id, .55); return b ? `background-image:${b.url};background-size:${b.fit ? "contain" : Math.max(40, Math.round(b.z * .45)) + "px auto"};background-repeat:${b.fit || b.rep === "no-repeat" ? "no-repeat" : "repeat"};background-position:center` : ""; };
+    return `<div class="card" id="ui215c"><h3>⬇️ ${T("الشرايط الثلاثة في الأعلى: كيف تنزل", "The three top bars: how they open")}</h3>
+      <div class="rw215"><span class="sm">${T("تنزل عند", "Open with")}:</span>${sel("trig", [["click", "الضغط على الأيقونة فقط", "Clicking the icon"], ["hover", "مرور الماوس على الأيقونة", "Hovering the icon"], ["zone", "مرور الماوس/اللمس على منتصف حافة الهيدر", "Hovering the header middle"], ["both", "الاثنين: الأيقونة ومنتصف الحافة", "Both icon and header middle"]])}</div>
+      <div class="rw215"><span class="sm">${T("مكان الأيقونة", "Icon place")}:</span>${sel("ipos", [["center", "في المنتصف", "Center"], ["start", "بجانب الشعار", "Next to the logo"], ["end", "في الطرف الآخر", "Far side"]])}<span class="sm">${T("اللون", "Colour")}:</span>${sel("icol", [["accent", "لون الموقع", "Site colour"], ["gold", "ذهبي", "Gold"], ["purple", "بنفسجي", "Purple"], ["gray", "رمادي هادئ", "Soft grey"]])}</div>
+      <div class="rw215"><span class="sm">${T("حجم الأيقونة", "Icon size")}</span>${rng("isz", .6, 2, .1)}</div>
+      <div class="rw215"><span class="sm">${T("تأخير قبل النزول بالمرور (ms)", "Hover delay (ms)")}</span>${rng("delay", 0, 1200, 50)}</div>
+      ${chk("noicon", "إخفاء الأيقونة (الاعتماد على اللمس من المنتصف فقط)", "Hide the icon (header middle only)")}${chk("leave", "تُغلق وحدها عند إبعاد الماوس (لو نزلت بالمرور)", "Close when the mouse leaves (if opened by hover)")}${chk("keep", "تبقى مفتوحة عند فتح صفحة جديدة (الأصل: مغلقة)", "Stay open on new pages (default: closed)")}${chk("hdr3", "أيقونات التحميل والرسائل والجرس ظاهرة دائمًا بجانب اللغة", "Install, messages and bell always next to language")}
+      <p class="xs muted">${T("شكل الأيقونة نفسها تختاره من المربعات بالأعلى.", "Pick the icon shape from the tiles above.")}</p></div>
+      <div class="card"><h3>🫥 ${T("الأزرار العائمة (العرض واللغة، ✏️، 🎭، 🛠️…)", "Floating buttons")}</h3>
+      <div class="rw215">${sel("fab", [["hover", "مخفية في الحافة وتظهر بمرور الماوس", "Tucked, show on hover"], ["click", "مخفية في الحافة وتظهر بالضغط", "Tucked, show on click"], ["out", "ظاهرة دائمًا", "Always out"]])}<span class="sm">${T("الجزء الظاهر منها", "Visible part")}</span>${rng("peek", 6, 40, 2)}</div>
+      <p class="xs muted">${T("أي شخص (أنت أو الطالب) يسحب أي زر بالماوس أو بإصبعه ويضعه في أي مكان — يُحفظ لكل شخص وحده.", "Anyone can drag any floating button anywhere; saved per person.")}</p><button class="btn btn-o xs" onclick="localStorage.removeItem('pos215');location.reload()">↺ ${T("أرجع الأزرار لأماكنها الأصلية عندي", "Reset my button positions")}</button></div>
+      <div class="card"><h3>🗂️ ${T("الدرج الأيسر (الأدوات)", "Left drawer")}</h3><div class="rw215">${sel("sd", [["hover", "يظهر بمرور الماوس", "Opens on hover"], ["click", "يظهر بالضغط على حافته", "Opens on click"], ["always", "ظاهر دائمًا", "Always open"]])}</div><p class="xs muted">${T("حجمه والأسماء الصغيرة يتبعان إعدادات «حجم الشريطين الجانبيين» بالأعلى.", "Size and labels follow the side bars size above.")}</p></div>
+      <div class="card"><h3>🕌 ${T("خلفية الصفحة", "Page background")}</h3><div class="bg215g"><button class="${u.bg === "none" ? "on" : ""}" onclick="ui215.set({bg:'none'})"><span>${T("بدون", "None")}</span></button>${BG.map(([id, n]) => `<button class="${u.bg === id ? "on" : ""}" style='${thumb(id)}' onclick="ui215.set({bg:'${id}'})"><span>${esc(n)}</span></button>`).join("")}</div>
+      <div class="rw215"><span class="sm">${T("الكثافة (الوضوح) %", "Strength %")}</span>${rng("bgo", 1, 40, 1)}</div>
+      <div class="rw215"><span class="sm">${T("الحجم", "Size")}</span>${rng("bgs", .4, 4, .1)}</div>
+      ${chk("bgfix", "الخلفية ثابتة والمحتوى يتحرك فوقها", "Fixed while scrolling")}
+      <h4 style="margin:.6rem 0 .2rem">${T("خلفية مختلفة لصفحة معيّنة", "A different background for one page")}</h4>${pages.map(([r, n]) => `<div class="rw215"><span class="sm" style="min-width:8rem">${n}</span><select class="in" onchange="ui215.page('${r}',this.value)"><option value="">${T("نفس العامة", "Same as all pages")}</option><option value="none" ${(u.bgp || {})[r] === "none" ? "selected" : ""}>${T("بدون خلفية", "None")}</option>${BG.map(([id, nm]) => `<option value="${id}" ${(u.bgp || {})[r] === id ? "selected" : ""}>${esc(nm)}</option>`).join("")}</select></div>`).join("")}
+      <h4 style="margin:.6rem 0 .2rem">${T("كثافة صور الخلفية داخل الكروت والبانرات", "Strength of background images in cards and banners")}</h4><div class="rw215">${rng("cimg", 10, 100, 5)}<span class="xs muted">${T("100 = الصورة كما هي، وكلما قلّ الرقم خفتت", "100 = as is; lower = fainter")}</span></div></div>`; }
+
+  /* ======================= 8) التطبيق ======================= */
+  function apply() { const u = U(); const B = document.body; if (!B) return; B.dataset.ni215 = +u.noicon ? "1" : "0"; B.dataset.ic215 = u.icol; B.dataset.ip215 = u.ipos; B.style.setProperty("--isz215", +u.isz || 1);
+    try { bgApply(); zone(); hdr3(); drawer(); fab(); } catch (e) { console.warn(e); } }
+  new MutationObserver(() => { clearTimeout(window.__a215); window.__a215 = setTimeout(apply, 60); }).observe(document.body, { childList: true, subtree: true });
+  addEventListener("resize", () => { clearTimeout(window.__r215); window.__r215 = setTimeout(apply, 200); });
+  const _r = render; render = function () { _r.apply(this, arguments); if (state.route === "bars211" && realOwner()) { const app = document.getElementById("app"); const cs = app && app.querySelectorAll(".card"); const lastC = cs && cs[cs.length - 1]; if (lastC && !app.querySelector("#ui215c")) lastC.insertAdjacentHTML("beforebegin", card()); } apply(); };
+  const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="margin-bottom:1rem"><button class="btn btn-p" onclick="go16('bars211')">🕌 ${T("الخلفيات والشرايط والأزرار العائمة (كل الخيارات)", "Backgrounds, bars and floating buttons")}</button></div>` + _os.apply(this, arguments); };
+  setInterval(() => { try { fab(); } catch (e) {} }, 1500); setTimeout(apply, 300);
 })();
 
 // بدء التشغيل
