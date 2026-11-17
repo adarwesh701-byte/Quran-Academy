@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v227";
+const UI_VERSION = "2026-11-17-v228";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -28876,7 +28876,7 @@ Between lessons, the platform keeps you going:
   /* ======================= ربط ======================= */
   const _r = render; render = function () {
     if (state.route === "voice203") { show(voicePage()); } else if (state.route === "ui203") { show(uiPage()); } else _r.apply(this, arguments);
-    try { motion(); track(); homeMin(); bnav(); build(true); setTimeout(() => build(), 400); window.after196 && /203$/.test(state.route) && window.after196(); } catch (e) { console.warn("v203", e); }
+    try { motion(); track(); homeMin(); bnav(); build(); setTimeout(() => build(), 400); window.after196 && /203$/.test(state.route) && window.after196(); } catch (e) { console.warn("v203", e); }
   };
   const _ms = renderMySpace; renderMySpace = function () { const h = _ms.apply(this, arguments); return h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#059669" onclick="go16('ui203')"><span>✨</span><b>${T("شكل الموقع (القواعد)", "Site look")}</b></button>${staff() ? `<button class="mstile" style="--c:#7c3aed" onclick="go16('voice203')"><span>🎙️</span><b>${T("استوديو الصوت والبرومبتات", "Voice studio & prompts")}</b></button>` : ""}`); };
   const m = location.hash.match(/^#\/(voice203|ui203)/); if (m) state.route = m[1];
@@ -30250,7 +30250,7 @@ Between lessons, the platform keeps you going:
   function drawerFix() { const sd = document.getElementById("sd152"); if (!sd) return;
     const sbw = Math.max(0, innerWidth - document.documentElement.clientWidth); const r = sd.getBoundingClientRect(); document.body.style.setProperty("--sbw219", (sbw + 6) + "px"); sd.classList.toggle("lf219", r.left < innerWidth / 2);
     const bt = document.getElementById("bt216"); if (bt && own()) { bt.classList.add("in219"); if (bt.parentElement !== sd) sd.appendChild(bt); }
-    sd.querySelectorAll(".dr219").forEach(x => x.remove()); const L = DR().filter(x => x.who === "owner" ? own() : x.who === "sub" ? sub() : true);
+    const L = DR().filter(x => x.who === "owner" ? own() : x.who === "sub" ? sub() : true); const sig = JSON.stringify(L); if (sd.__s219 === sig && sd.querySelectorAll(".dr219").length === L.length) { if (own() && !sd.querySelector(".add219")) {} else return; } sd.__s219 = sig; sd.querySelectorAll(".dr219").forEach(x => x.remove());
     L.forEach(x => { const b = document.createElement("button"); b.className = "dr219"; b.title = x.n; b.innerHTML = /^(https?:|data:|\/)/.test(x.ic) ? `<img src="${esc(x.ic)}" alt=""><small>${esc(x.n)}</small>` : `${esc(x.ic)} ${esc(x.n)}`; if (x.js) b.setAttribute("onclick", x.js); sd.appendChild(b); });
     if (own() && !sd.querySelector(".add219")) { const a = document.createElement("button"); a.className = "add219"; a.title = T("ضيف أيقونة للشريط", "Add an icon"); a.textContent = "➕ " + T("أيقونة", "Icon"); a.onclick = () => go16("view219"); sd.appendChild(a); } }
 
@@ -30804,7 +30804,7 @@ Between lessons, the platform keeps you going:
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   function labels() { const sd = document.getElementById("sd152"); if (!sd) return; sd.querySelectorAll("button:not(.sdh)").forEach(b => { if (b.querySelector(".l227")) return; const t = (b.dataset.l215 || b.title || b.getAttribute("aria-label") || (b.innerText || "").replace(/^[\p{Extended_Pictographic}️‍\s]+/u, "")).replace(/\s+/g, " ").trim(); if (!t) return; const s = document.createElement("small"); s.className = "l227"; s.textContent = t.length > 12 ? t.slice(0, 11) + "…" : t; s.title = t; b.appendChild(s); }); }
   const _r = render; render = function () { _r.apply(this, arguments); try { labels(); } catch (e) {} };
-  let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { labels(); } catch (e) {} }, 150); }).observe(document.body, { childList: true, subtree: true });
+  let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { labels(); } catch (e) {} }, 150); }).observe(document.body, { childList: true });
   css(`
   html body #sd152{gap:.25rem!important;padding-block:.4rem!important;align-items:center!important}
   html body #sd152 button:not(.sdh),html body #sd152 .sp203 .it203>button:first-child,html body #sd152 #lk142 button,html body #sd152 .dr219,html body #sd152 #bt216.in219{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;width:62px!important;max-width:62px!important;min-width:62px!important;height:58px!important;min-height:58px!important;padding:4px 2px!important;margin:0!important;font-size:0!important;line-height:1!important;border-radius:14px!important;vertical-align:top!important;writing-mode:horizontal-tb!important;transform:none!important}
@@ -30820,6 +30820,67 @@ Between lessons, the platform keeps you going:
   @media (min-width:901px){html body .hdr .wrap,html body #app .hdr>div{flex-wrap:nowrap!important}html body .hdr .tools{flex-wrap:nowrap!important;gap:.3rem!important;min-width:0;overflow-x:auto;scrollbar-width:none}html body .hdr .tools>*{height:36px!important;min-height:36px!important;min-width:36px!important;padding-inline:.55rem!important;font-size:.82rem!important;flex:none}html body .hdr .tools>[data-k219=trial]{padding-inline:.9rem!important}}
   html body .hdr .tools>[data-k219=theme],html body .hdr .tools>[data-k219=theme] *{opacity:1!important;color:var(--fg)!important;font-weight:700!important;filter:none!important}
   `);
+})();
+
+/* ================= v228: لينك «المكتبة: الموسوعة الفقهية + بيان الإسلام» بيفتح النص · التفخيم والترقيق لكل حرف (والراء واللام بالمواضع) في شرح الحروف + صفحة كاملة · «شكل الفم مع الحركات» أول حاجة في الحروف والتجويد والعربي · وضع البناء مقفول لحد ما تفتحه انت · 🎬 وضع العرض للمالك (كل حاجة مفتوحة بس من غير أي أزرار تعديل — للحصص ومشاركة الشاشة) · الصفحة بتبدأ من أولها ومابتترعش · الأيقونات العايمة باينة أكتر ومابترقصش ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("tf228")) PAGES16.push("tf228");
+
+  /* ======================= 1) لينك المكتبة + شكل الفم ======================= */
+  const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments) || []; try { ds.forEach(d => { (d.tools || []).forEach(t => { if (/pdfbooks181/.test(String(t[2]))) t[2] = "go16('kutub199')"; });
+      if (["tajweed", "reading", "arabic"].includes(d.k)) { d.tools = (d.tools || []).filter(t => !/vow172|tf228/.test(String(t[2]))); d.tools.unshift(["🔠", T("التفخيم والترقيق لكل حرف", "Heavy & light letters"), "go16('tf228')", ""]); d.tools.unshift(["👄", T("شكل الفم مع الحركات", "Mouth & vowels"), "go16('vow172')", ""]); } }); } catch (e) {} return ds; };
+  function fixLinks() { document.querySelectorAll("#app [onclick*=\"pdfbooks181\"]").forEach(el => { if (own() && el.closest(".kw199")) return; el.setAttribute("onclick", "go16('kutub199')"); }); }
+
+  /* ======================= 2) التفخيم والترقيق ======================= */
+  const HEAVY = "خصضغطقظ", ITBAQ = "صضطظ";
+  const TF = ch => { if (HEAVY.includes(ch)) return ["h", ITBAQ.includes(ch) ? T("مفخّم دايمًا — وأقوى درجات التفخيم لأنه من حروف الإطباق", "Always heavy — strongest (itbaq)") : T("مفخّم دايمًا (من حروف الاستعلاء «خص ضغط قظ»)", "Always heavy (isti'la)")];
+    if (ch === "ر") return ["b", T("بيتفخّم وبيترقّق حسب موضعه — شوف قواعد الراء تحت", "Heavy or light by position — see the Ra rules")]; if (ch === "ل") return ["b", T("مرقّق دايمًا، إلا لام لفظ الجلالة «الله» بعد فتح أو ضم فبتتفخّم", "Always light, except the Lam of «Allah» after fatha/damma")]; if (ch === "ا") return ["b", T("الألف بتتبع الحرف اللي قبلها: تتفخّم بعد المفخّم وتترقّق بعد المرقّق", "Alif follows the letter before it")];
+    return ["l", T("مرقّق دايمًا (من حروف الاستفال)", "Always light (istifal)")]; };
+  const RA = { h: [["رَ / رُ", "الراء المفتوحة أو المضمومة", "«رَبِّ» — «رُزِقُوا»"], ["رْ بعد فتح أو ضم", "الراء الساكنة وقبلها فتح أو ضم", "«مَرْيَمَ» — «قُرْآن»"], ["رْ بعد كسر عارض", "الراء الساكنة وقبلها كسر عارض (همزة وصل)", "«ارْجِعُوا» — «ارْكَبُوا»"], ["رْ بعد كسر أصلي وبعدها استعلاء", "الراء الساكنة وقبلها كسر أصلي وبعدها حرف استعلاء في نفس الكلمة", "«قِرْطَاس» — «مِرْصَاد» — «فِرْقَة»"], ["الوقف: قبلها ساكن قبله فتح أو ضم", "راء موقوف عليها، قبلها ساكن (غير الياء) قبله فتح أو ضم", "«وَالْعَصْرِ» — «الْقَدْرِ»"]], l: [["رِ", "الراء المكسورة", "«رِجَال» — «الْغَارِمِينَ»"], ["رْ بعد كسر أصلي", "الراء الساكنة وقبلها كسر أصلي ومفيش بعدها حرف استعلاء", "«فِرْعَوْن» — «مِرْيَة»"], ["الوقف بعد ياء ساكنة", "راء موقوف عليها وقبلها ياء ساكنة", "«خَيْر» — «قَدِير»"], ["الوقف بعد كسر", "راء موقوف عليها وقبلها كسر، أو ساكن قبله كسر", "«مُنْهَمِر» — «الذِّكْر»"]], b: [["يجوز الوجهان", "مواضع فيها التفخيم والترقيق جايزين", "«فِرْقٍ» (الشعراء ٦٣) — «مِصْر» و«الْقِطْر» عند الوقف — «يَسْرِ» و«نُذُرِ» عند الوقف"]] };
+  const LAM = [["مفخّمة", "لام لفظ الجلالة بعد فتح أو ضم", "«قَالَ اللَّهُ» — «رُسُلُ اللَّهِ» — «اللَّهُ» في أول الكلام"], ["مرقّقة", "لام لفظ الجلالة بعد كسر", "«بِسْمِ اللَّهِ» — «الْحَمْدُ لِلَّهِ»"], ["مرقّقة دايمًا", "أي لام غير لفظ الجلالة", "«لَهُمْ» — «قُلْ» — «الصَّلَاة»"]];
+  const ruleTbl = (rows, c) => `<table class="tbl196 tf228t"><tr><th>${T("الموضع", "Position")}</th><th>${T("الشرح", "Rule")}</th><th>${T("أمثلة", "Examples")}</th></tr>${rows.map(r => `<tr class="${c}"><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table>`;
+  function tfPage() { const L = "ءابتثجحخدذرزسشصضطظعغفقكلمنهوي".split("");
+    return pageWrap("🔠", T("التفخيم والترقيق لكل حرف", "Heavy (tafkhim) & light (tarqiq) letters"), T("كل حرف مفخّم ولا مرقّق، ومواضع الراء واللام بالأمثلة", "Every letter, with the Ra and Lam rules"), `<button class="btn btn-o" onclick="back196()">↩️ ${T("رجوع", "Back")}</button> <button class="btn btn-o" onclick="go16('vow172')">👄 ${T("شكل الفم مع الحركات", "Mouth & vowels")}</button>
+      <div class="card"><div class="row" style="gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem"><span class="tfk h">${T("مفخّم دايمًا", "Always heavy")}</span><span class="tfk b">${T("حسب الموضع", "Depends")}</span><span class="tfk l">${T("مرقّق دايمًا", "Always light")}</span></div><div class="tfg228">${L.map(ch => { const [k, d] = TF(ch); return `<div class="tfc ${k}" title="${esc(d)}"><b>${ch}</b><small>${k === "h" ? T("مفخّم", "Heavy") : k === "l" ? T("مرقّق", "Light") : T("حسب الموضع", "Depends")}</small></div>`; }).join("")}</div>
+      <p class="sm" style="margin-top:.6rem">• ${T("حروف التفخيم (الاستعلاء) سبعة: «خُصَّ ضَغْطٍ قِظْ»، وأقواها حروف الإطباق: ص ض ط ظ.", "The 7 heavy letters: خص ضغط قظ; strongest: ص ض ط ظ.")}<br>• ${T("مراتب التفخيم: المفتوح وبعده ألف، ثم المفتوح، ثم المضموم، ثم الساكن، ثم المكسور (أخفّها).", "Levels: fatha+alif, fatha, damma, sukun, kasra (lightest).")}</p></div>
+      <div class="card"><h3>🔴 ${T("الراء — مواضع التفخيم", "Ra — heavy")}</h3>${ruleTbl(RA.h, "h")}<h3 style="margin-top:.8rem">🟢 ${T("الراء — مواضع الترقيق", "Ra — light")}</h3>${ruleTbl(RA.l, "l")}<h3 style="margin-top:.8rem">🟡 ${T("الراء — يجوز الوجهان", "Ra — both allowed")}</h3>${ruleTbl(RA.b, "b")}</div>
+      <div class="card"><h3>🔵 ${T("اللام", "Lam")}</h3>${ruleTbl(LAM, "")}</div>
+      <div class="card"><h3>⚪ ${T("الألف", "Alif")}</h3><p>${T("الألف مالهاش حكم لوحدها — بتتبع الحرف اللي قبلها: «قَالَ» مفخّمة لأن القاف مفخّم، و«كَانَ» مرقّقة لأن الكاف مرقّق.", "Alif follows the preceding letter: «قال» heavy, «كان» light.")}</p></div>`, 1000); }
+  function letterTf() { document.querySelectorAll("#app .ex196b").forEach(b => { if (b.querySelector(".tfx228")) return; const card = b.closest(".rdcard, .rdsp"); const big = card && card.querySelector(".rdbig"); const ch = big && [...big.textContent.trim()].find(c => /[ء-ي]/.test(c)); if (!ch) return; const base = { "أ": "ا", "إ": "ا", "آ": "ا", "ة": "ت", "ى": "ا", "ؤ": "ء", "ئ": "ء" }[ch] || ch; const [k, d] = TF(base);
+      b.insertAdjacentHTML("beforeend", `<div class="tfx228 ${k}"><b>${k === "h" ? "🔴 " + T("مفخّم", "Heavy") : k === "l" ? "🟢 " + T("مرقّق", "Light") : "🟡 " + T("حسب الموضع", "Depends")}:</b> ${esc(d)}${base === "ر" || base === "ل" ? ` <a href="#" onclick="go16('tf228');return false;">${T("المواضع بالأمثلة ←", "Positions with examples →")}</a>` : ""}</div>`); }); }
+
+  /* ======================= 3) وضع البناء مقفول لحد ما تفتحه ======================= */
+  try { localStorage.setItem("b216", "0"); if (window.B216) window.B216.on = 0; } catch (e) {}
+
+  /* ======================= 4) وضع العرض للمالك ======================= */
+  window.pr228 = () => { const v = !document.body.classList.contains("pr228"); document.body.classList.toggle("pr228", v); LSset("pr228", v); toast(v ? "🎬 " + T("وضع العرض: كل حاجة مفتوحة ومن غير أزرار تعديل — دوس 🎬 تاني ترجع", "Presentation mode") : "✏️ " + T("رجعت لوضع التعديل", "Back to editing")); };
+  function prBtn() { if (!own()) return; const t = document.querySelector("#app .hdr .tools"); if (!t || t.querySelector("#prb228")) return; const b = document.createElement("button"); b.id = "prb228"; b.className = "ibtn keep219"; b.title = T("وضع العرض (للحصص ومشاركة الشاشة)", "Presentation mode"); b.textContent = "🎬"; b.onclick = e => { e.stopPropagation(); pr228(); }; t.prepend(b); }
+  if (LS("pr228", false)) document.body.classList.add("pr228");
+
+  /* ======================= 5) الصفحة تبدأ من أولها ومابتترعش ======================= */
+  let lastK = null, user = 0, popT = 0; addEventListener("popstate", () => popT = Date.now()); ["wheel", "touchmove", "keydown"].forEach(ev => addEventListener(ev, () => user = Date.now(), { passive: true }));
+  const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+  function settle() { const k = key(); if (k === lastK) return; const first = lastK == null; lastK = k; if (Date.now() - popT < 1200) return; const start = Date.now();
+    const target = () => { let top = false; try { top = window.__top216 ? window.__top216() : false; } catch (e) {} if (top || first) return 0; const h = document.querySelector("#app .hdr, #app > header"); return h ? Math.max(0, h.getBoundingClientRect().bottom + scrollY) : 0; };
+    [140, 450, 1000].forEach(ms => setTimeout(() => { if (user > start || key() !== k) return; const y = target(); if (Math.abs(scrollY - y) > 40 && document.documentElement.scrollHeight > y + innerHeight * .5) window.scrollTo({ top: y, behavior: "instant" }); if (scrollX) window.scrollTo({ left: 0, top: scrollY, behavior: "instant" }); }, ms)); }
+
+  const _r = render; render = function () { if (state.route === "tf228") show(tfPage()); else _r.apply(this, arguments); try { fixLinks(); letterTf(); prBtn(); settle(); } catch (e) { console.warn("v228", e); } };
+  let t8; new MutationObserver(() => { clearTimeout(t8); t8 = setTimeout(() => { try { fixLinks(); letterTf(); prBtn(); } catch (e) {} }, 180); }).observe(document.body, { childList: true });
+  const m = location.hash.match(/^#\/tf228/); if (m) state.route = "tf228";
+  css(`.tfg228{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:.4rem}.tfc{border-radius:12px;padding:.4rem;text-align:center;border:2px solid}.tfc b{display:block;font-size:1.8rem;font-family:'Amiri',serif;line-height:1.4}.tfc small{font-size:.68rem;font-weight:700}
+  .tfc.h,.tfk.h,tr.h td:first-child{border-color:#dc2626;background:color-mix(in srgb,#dc2626 9%,var(--card))}.tfc.h small{color:#b91c1c}.tfc.l,.tfk.l,tr.l td:first-child{border-color:#16a34a;background:color-mix(in srgb,#16a34a 9%,var(--card))}.tfc.l small{color:#15803d}.tfc.b,.tfk.b,tr.b td:first-child{border-color:#ca8a04;background:color-mix(in srgb,#ca8a04 10%,var(--card))}.tfc.b small{color:#a16207}
+  .tfk{border:2px solid;border-radius:999px;padding:.1rem .7rem;font-size:.8rem;font-weight:700}.tf228t td{vertical-align:top;line-height:1.8}
+  .tfx228{margin-top:.5rem;padding:.4rem .6rem;border-radius:10px;border-inline-start:4px solid}.tfx228.h{border-color:#dc2626;background:color-mix(in srgb,#dc2626 7%,transparent)}.tfx228.l{border-color:#16a34a;background:color-mix(in srgb,#16a34a 7%,transparent)}.tfx228.b{border-color:#ca8a04;background:color-mix(in srgb,#ca8a04 8%,transparent)}
+  body.pr228 :is(#bt216,#un209,#dr212b,#cf213,#edbar158,#ctl113,#st220,#me223b,#sw228,.b216e,.b216h,.b216bar,.b216add,.ce204,.ft220,.ob204,.e185,.v185,.ed203,.add219,.pk204,.pk219,.ws225,.bxw199 .btn-o,.x201,#zn215,.nw203){display:none!important}body.pr228 #sd152 :is(#ai158,#pi158,#gc158,#ed158b){display:none!important}
+  #prb228{font-size:1rem}body.pr228 #prb228{background:var(--accent)!important;color:#fff!important}
+  body{--pk215:34px!important}#sd152 *,.out215,.out215 *,[class*="flt158"],[class*="flt158"] *{animation:none!important}
+  html,body{overflow-x:hidden}`);
 })();
 
 // بدء التشغيل
