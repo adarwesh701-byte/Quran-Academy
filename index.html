@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v221";
+const UI_VERSION = "2026-11-17-v222";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30512,6 +30512,17 @@ Between lessons, the platform keeps you going:
   const _r = render; render = function () { if (state.route === "log221") { const app = document.getElementById("app"); app.innerHTML = renderHeader() + logPage() + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} } else _r.apply(this, arguments); try { (setv("mq220", []) || []).forEach(c => { if (!MQ.some(x => x.id === c.id)) MQ.push(Object.assign({}, c)); }); branchesBox(); } catch (e) { console.warn("v221", e); } };
   let t1; new MutationObserver(() => { clearTimeout(t1); t1 = setTimeout(() => { try { branchesBox(); } catch (e) {} }, 160); }).observe(document.body, { childList: true });
   const m = location.hash.match(/^#\/log221/); if (m) state.route = "log221";
+})();
+
+/* ================= v222: الأدوات والكروت اللي بتودّي لخانة فاضية مابتظهرش للطالب (في الرئيسية وصفحات المسارات وأي قايمة) لحد ما يتحط فيها محتوى ================= */
+(function () {
+  const own = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const visIds = () => { const S = sectionsData(); return Array.isArray(S) ? new Set(S.map(s => s.id)) : null; };
+  const dead = js => { const m = String(js || "").match(/lib(?:Go|Open)\('([0-9a-f-]{36})'\)/); if (!m) return false; const V = visIds(); return !!(V && V.size && !V.has(m[1])); };
+  const _D = DOMAINS; DOMAINS = function () { const L = _D.apply(this, arguments) || []; if (own()) return L; try { return L.map(d => Object.assign({}, d, { tools: (d.tools || []).filter(t => !dead(t[2])) })).filter(d => (d.tools || []).length || !d.sec); } catch (e) { return L; } };
+  function sweep() { if (own()) return; document.querySelectorAll("#app [onclick*=\"libGo('\"], #app [onclick*=\"libOpen('\"]").forEach(el => { if (dead(el.getAttribute("onclick"))) el.style.display = "none"; }); }
+  const _r = render; render = function () { _r.apply(this, arguments); try { sweep(); } catch (e) {} };
+  let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { sweep(); } catch (e) {} }, 150); }).observe(document.body, { childList: true });
 })();
 
 // بدء التشغيل
