@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v223";
+const UI_VERSION = "2026-11-17-v224";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30606,6 +30606,64 @@ Between lessons, the platform keeps you going:
   const m = location.hash.match(/^#\/(fc223|pw223)/); if (m) state.route = m[1];
   css(`.sc223{display:grid;grid-template-columns:repeat(8,1fr);gap:.3rem}.sc223 label{display:flex;flex-direction:column;align-items:center;gap:.15rem}.sc223 input{text-align:center;padding:.3rem .1rem}.sc223 small{font-size:.68rem;color:var(--muted);min-height:1em}@media(max-width:600px){.sc223{grid-template-columns:repeat(4,1fr)}}
   .fcd223{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;width:100%;min-height:15rem;border:2px solid var(--line);border-radius:22px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer;padding:1.5rem;box-shadow:0 10px 28px rgba(0,0,0,.08);transition:transform .35s}.fcd223 span{font-size:1.4rem;font-weight:700;line-height:1.8}.fcd223.f{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card))}.fcd223 small{color:var(--muted)}`);
+})();
+
+/* ================= v224: الدفعة الرابعة في «كل الجديد»: 🎯 وضع التركيز في التسميع والمصحف · 🌑 مصحف ليلي (خلفية سودا وحروف دهبي) · 🗓️ التقويم الهجري والمناسبات الإسلامية الجاية · 📊 إحصائيات الزوار (جايين منين، وبيدخلوا أنهي صفحات، ومين بيسجّل) — كلهم مقفولين لحد ما تشغّلهم ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["cal224", "stats224"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const NF = () => setv("nf218", {}) || {}; const on = id => !!(NF()[id] || {}).on;
+  const QR = r => /mushaf|tajcolor|tasmee|hifz|qiraat|surah|quran|wird|mm\d|mistake/i.test(r || "");
+
+  /* ======================= 1) التركيز + المصحف الليلي ======================= */
+  window.fo224 = () => { document.body.classList.toggle("fo224"); toast(document.body.classList.contains("fo224") ? "🎯 " + T("وضع التركيز — دوس 🎯 تاني يرجّع كله", "Focus mode") : "✅"); };
+  window.dm224 = () => { const v = !LS("dm224", false); LSset("dm224", v); document.body.classList.toggle("dm224", v); };
+  function quranBtns() { const show_ = QR(state.route) && (on("focus") || on("darkm") || own()); let b = document.getElementById("qb224"); if (!show_) { b && b.remove(); document.body.classList.remove("fo224"); document.body.classList.remove("dm224"); return; } document.body.classList.toggle("dm224", on("darkm") && LS("dm224", false)); if (!b) { b = document.createElement("div"); b.id = "qb224"; document.body.appendChild(b); } b.innerHTML = `${on("focus") || own() ? `<button onclick="fo224()" title="${T("وضع التركيز", "Focus")}">🎯</button>` : ""}${on("darkm") || own() ? `<button onclick="dm224()" title="${T("مصحف ليلي", "Night mushaf")}">🌑</button>` : ""}`; }
+
+  /* ======================= 2) التقويم الهجري والمناسبات ======================= */
+  const EV = [[1, 1, "رأس السنة الهجرية", "Islamic New Year"], [1, 10, "يوم عاشوراء (صيامه سنة)", "Ashura"], [8, 15, "ليلة النصف من شعبان", "Mid-Sha'ban"], [9, 1, "أول رمضان", "Ramadan begins"], [9, 21, "بداية العشر الأواخر (تقريبًا)", "Last ten nights begin"], [10, 1, "عيد الفطر", "Eid al-Fitr"], [10, 2, "بداية صيام الست من شوال", "Six days of Shawwal"], [12, 1, "أول ذي الحجة — العشر المباركة", "Dhul-Hijjah begins"], [12, 9, "يوم عرفة (صيامه لغير الحاج)", "Day of Arafah"], [12, 10, "عيد الأضحى", "Eid al-Adha"], [12, 13, "آخر أيام التشريق", "Last day of Tashreeq"]];
+  const hij = d => { try { const p = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { day: "numeric", month: "numeric", year: "numeric" }).formatToParts(d); const g = t => +p.find(x => x.type === t).value; return { d: g("day"), m: g("month"), y: g("year") }; } catch (e) { return null; } };
+  function calPage() { const out = []; const now = new Date(); now.setHours(12, 0, 0, 0); for (let i = 0; i < 400 && out.length < 14; i++) { const d = new Date(now.getTime() + i * 864e5); const h = hij(d); if (!h) break; EV.forEach(e => { if (e[0] === h.m && e[1] === h.d) out.push([d, e, i, h]); }); }
+    const fmt = (d, o) => d.toLocaleDateString(AR() ? "ar-EG" : "en-GB", o); const hf = d => { try { return new Intl.DateTimeFormat((AR() ? "ar" : "en") + "-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric" }).format(d); } catch (e) { return ""; } };
+    return pageWrap("🗓️", T("التقويم الهجري والمناسبات", "Hijri calendar & occasions"), T("النهارده:", "Today:") + " " + hf(new Date()) + " — " + fmt(new Date(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }), `<div class="card"><p class="xs muted">${T("الحساب بتقويم أم القرى — ممكن يفرق يوم حسب رؤية الهلال في بلدك.", "Umm al-Qura calculation — may differ by a day with moon sighting.")}</p><table class="tbl196">${out.map(([d, e, i]) => `<tr><td><b>${esc(AR() ? e[2] : e[3])}</b></td><td>${esc(hf(d))}</td><td class="xs">${esc(fmt(d, { weekday: "short", day: "numeric", month: "short", year: "numeric" }))}</td><td class="xs">${i === 0 ? T("النهارده", "Today") : T("بعد ", "In ") + i + T(" يوم", " days")}</td></tr>`).join("")}</table></div>`, 800); }
+
+  /* ======================= 3) إحصائيات الزوار ======================= */
+  const sid = (() => { let s = sessionStorage.getItem("sid224"); if (!s) { s = Math.random().toString(36).slice(2, 10); sessionStorage.setItem("sid224", s); } return s; })();
+  let lastR = null; function track() { if (!on("stats") || own()) return; const r = state.route + (state.pageArg ? "/" + state.pageArg : ""); if (r === lastR) return; lastR = r; const q = new URLSearchParams(location.search); const src = q.get("utm_source") || q.get("ref") || ""; let ref = ""; try { ref = document.referrer ? new URL(document.referrer).hostname : ""; } catch (e) {} if (ref === location.hostname) ref = "";
+    if (!sessionStorage.getItem("src224")) sessionStorage.setItem("src224", src || ref || "direct");
+    try { sb.from("views224").insert({ route: r.slice(0, 80), ref: ref.slice(0, 80), src: (sessionStorage.getItem("src224") || "").slice(0, 60), guest: !logged(), sid }).then(() => {}, () => {}); } catch (e) {} }
+  function statsPage() { if (!own()) return pageWrap("🔒", "—", "", ""); const D = useData("st224", async () => (await sb.from("views224").select("at,route,src,guest,sid").gte("at", new Date(Date.now() - 30 * 864e5).toISOString()).order("at", { ascending: false }).limit(20000)).data || []);
+    if (!Array.isArray(D)) return pageWrap("📊", T("إحصائيات الزوار", "Visitor stats"), "", loadingBox());
+    const cnt = (arr, f) => { const m = {}; arr.forEach(x => { const k = f(x); m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+    const ses = {}; D.forEach(x => { const s = ses[x.sid] || (ses[x.sid] = { src: x.src, guest: true, n: 0, logged: false }); s.n++; if (!x.guest) s.logged = true; else s.guestSeen = true; });
+    const S = Object.values(ses); const conv = S.filter(s => s.guestSeen && s.logged).length; const day = cnt(D, x => x.at.slice(0, 10)).sort((a, b) => a[0].localeCompare(b[0]));
+    const bar = (L, n) => `<table class="tbl196">${L.slice(0, n).map(([k, v]) => `<tr><td>${esc(k || "—")}</td><td style="width:55%"><div style="background:var(--accent);height:10px;border-radius:6px;width:${Math.max(3, v / L[0][1] * 100)}%"></div></td><td><b>${v}</b></td></tr>`).join("")}</table>`;
+    return pageWrap("📊", T("إحصائيات الزوار", "Visitor stats"), T("آخر 30 يوم", "Last 30 days"), `<button class="btn btn-o" onclick="back196()">↩️ ${T("رجوع", "Back")}</button>
+      <div class="wg218"><div class="card"><b>👀 ${T("زيارات", "Sessions")}</b><h2>${S.length}</h2></div><div class="card"><b>📄 ${T("صفحات اتفتحت", "Page views")}</b><h2>${D.length}</h2></div><div class="card"><b>✨ ${T("زوار سجّلوا دخول", "Visitors who signed in")}</b><h2>${conv}</h2></div><div class="card"><b>🧭 ${T("متوسط الصفحات للزيارة", "Pages / session")}</b><h2>${S.length ? (D.length / S.length).toFixed(1) : 0}</h2></div></div>
+      <div class="card"><h3>📈 ${T("كل يوم", "Per day")}</h3><div class="ch224">${day.map(([d, v]) => `<div title="${d}: ${v}" style="height:${Math.max(4, v / Math.max(...day.map(x => x[1])) * 100)}%"></div>`).join("")}</div></div>
+      <div class="card"><h3>🌍 ${T("جايين منين", "Where they come from")}</h3>${bar(cnt(S, s => s.src), 15)}</div>
+      <div class="card"><h3>📄 ${T("أكتر صفحات بيدخلوها", "Top pages")}</h3>${bar(cnt(D, x => x.route), 20)}</div>
+      <div class="card"><h3>🚪 ${T("صفحات الزوار (قبل التسجيل)", "Guest pages")}</h3>${bar(cnt(D.filter(x => x.guest), x => x.route), 12)}</div>`, 1000); }
+
+  /* ======================= كل الجديد ======================= */
+  const NEW = [{ id: "focus", ic: "🎯", ar: "وضع التركيز في التسميع والمصحف", en: "Focus mode", d: "زرار 🎯 في صفحات القرآن بيخفي كل حاجة حوالين الآيات والشاشة تبقى هادية." }, { id: "darkm", ic: "🌑", ar: "مصحف ليلي", en: "Night mushaf", d: "زرار 🌑 في صفحات القرآن: خلفية سودا وحروف دهبي للقراية بالليل." }, { id: "cal", ic: "🗓️", ar: "التقويم الهجري والمناسبات", en: "Hijri calendar", go: "go16('cal224')", d: "تاريخ النهارده بالهجري، والمناسبات الجاية (رمضان، العيدين، عرفة، عاشوراء…) وفاضل عليها كام يوم." }, { id: "stats", ic: "📊", ar: "إحصائيات الزوار", en: "Visitor stats", go: "go16('stats224')", d: "لما تشغّلها بنبدأ نعدّ: الزوار جايين منين، وبيدخلوا أنهي صفحات، وكام واحد سجّل. بتشوفها انت بس، وبتتمسح بعد 90 يوم." }];
+  function hubAdd() { if (state.route !== "hub218" || !own() || document.getElementById("nw224")) return; const a = document.getElementById("nw223") || document.getElementById("nw219") || document.querySelector("#app .nfc218"); if (!a) return;
+    a.insertAdjacentHTML("beforebegin", `<div id="nw224"><h3 style="margin:.6rem 0">🆕 ${T("الدفعة الرابعة", "Fourth batch")}</h3>${NEW.map(f => { const c = NF()[f.id] || {}; return `<div class="card nfc218 ${c.on ? "" : "off"}"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><div class="row" style="gap:.6rem;align-items:center"><span style="font-size:1.6rem">${f.ic}</span><div><b>${esc(AR() ? f.ar : f.en)}</b><p class="xs muted" style="margin:.1rem 0 0;max-width:520px">${esc(f.d)}</p></div></div><div class="row" style="gap:.3rem">${f.go ? `<button class="btn btn-o xs" onclick="${f.go}">👁 ${T("افتح", "Open")}</button>` : ""}<button class="btn ${c.on ? "btn-p" : "btn-o"}" onclick="(async()=>{const n=Object.assign({},setv('nf218',{})||{});n['${f.id}']=Object.assign({},n['${f.id}']||{},{on:${!c.on}});await saveSetting16('nf218',n);render()})()">${c.on ? "✅ " + T("شغّالة", "On") : "⏸ " + T("شغّلها", "Turn on")}</button></div></div></div>`; }).join("")}</div>`); }
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); const add = NEW.filter(f => f.go && (f.id === "stats" ? own() : (own() || on(f.id)))); if (add.length) h = h.replace('<div class="msgrid">', `<div class="msgrid">${add.map(f => `<button class="mstile" style="--c:#0369a1" onclick="${f.go}"><span>${f.ic}</span><b>${esc(AR() ? f.ar : f.en)}</b></button>`).join("")}`); return h; };
+
+  const R = { cal224: calPage, stats224: statsPage };
+  const _r = render; render = function () { if (R[state.route]) show(R[state.route]()); else _r.apply(this, arguments); try { quranBtns(); hubAdd(); track(); } catch (e) { console.warn("v224", e); } };
+  const m = location.hash.match(/^#\/(cal224|stats224)/); if (m) state.route = m[1];
+  css(`#qb224{position:fixed;top:50%;inset-inline-end:.4rem;transform:translateY(-50%);z-index:900;display:flex;flex-direction:column;gap:.3rem}#qb224 button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:1.1rem;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  body.fo224 .hdr,body.fo224 header,body.fo224 footer,body.fo224 .bar185,body.fo224 .side185,body.fo224 #sd152,body.fo224 #nv180,body.fo224 .bnav,body.fo224 .crumb,body.fo224 #tbb209,body.fo224 #ct219,body.fo224 .aiw,body.fo224 #ctl113,body.fo224 .nfrow218{display:none!important}body.fo224{background:#0f172a!important}body.fo224 #app{filter:none}body.fo224 #app .sec{padding-top:1rem}
+  body.dm224 #app{background:#000!important}body.dm224 #app .card,body.dm224 #app .sec{background:#050505!important;border-color:#2a2410!important}body.dm224 #app,body.dm224 #app *:not(button):not(.btn){color:#e9c46a}body.dm224 #app [class*="tj-"]{filter:brightness(1.3)}
+  .ch224{display:flex;align-items:flex-end;gap:2px;height:140px;padding-top:.5rem}.ch224 div{flex:1;background:var(--accent);border-radius:4px 4px 0 0;min-width:3px}`);
 })();
 
 // بدء التشغيل
