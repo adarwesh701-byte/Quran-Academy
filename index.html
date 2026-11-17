@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v215";
+const UI_VERSION = "2026-11-17-v216";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -29794,7 +29794,7 @@ Between lessons, the platform keeps you going:
   document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("[onclick], a[href]"); if (el) clk = { at: Date.now(), oc: el.getAttribute("onclick") || el.getAttribute("href") || "", tx: (el.innerText || "").replace(/\s+/g, " ").trim().slice(0, 60) }; }, true);
   const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
   const logoBottom = () => { const h = document.querySelector("#app .hdr, #app > header"); if (!h) return 0; const r = h.getBoundingClientRect(); return r.height ? r.bottom + scrollY : 0; };
-  function below() { const app = document.getElementById("app"); const b = logoBottom(); if (!app || !b) return; app.style.minHeight = (innerHeight + b + 2) + "px"; scrollTopNative(b); }
+  function below() { const app = document.getElementById("app"); const b = logoBottom(); if (!app || !b) return; app.style.minHeight = (innerHeight + b + 2) + "px"; if (window.__top216 && window.__top216()) { scrollTopNative(0); return; } scrollTopNative(b); }
   const appEl = document.getElementById("app");
   if (appEl) new MutationObserver(() => { const k = key(); if (k === last) return; const prev = last; last = k;
     if (!+U().keep && isOpen() && window.tb209) { byHover = 0; tb209(); }
@@ -29879,6 +29879,122 @@ Between lessons, the platform keeps you going:
   const _r = render; render = function () { _r.apply(this, arguments); if (state.route === "bars211" && realOwner()) { const app = document.getElementById("app"); const cs = app && app.querySelectorAll(".card"); const lastC = cs && cs[cs.length - 1]; if (lastC && !app.querySelector("#ui215c")) lastC.insertAdjacentHTML("beforebegin", card()); } apply(); };
   const _os = ownerSettings; ownerSettings = function () { return `<div class="card" style="margin-bottom:1rem"><button class="btn btn-p" onclick="go16('bars211')">🕌 ${T("الخلفيات والشرايط والأزرار العائمة (كل الخيارات)", "Backgrounds, bars and floating buttons")}</button></div>` + _os.apply(this, arguments); };
   setInterval(() => { try { fab(); } catch (e) {} }, 1500); setTimeout(apply, 300);
+})();
+
+/* ================= v216: الدرج الشمال بقى شريط واحد (مش اتنين فوق بعض) واسم صغير تحت كل أيقونة · لما تنتقل لقسم تاني (مثلًا من المقامات للقرآن) الصفحة تطلع لفوق وتبان الأيقونة، وجوه نفس القسم تفتح من تحت اللوجو · «🧱 وضع البناء»: أضف أي عنصر لأي خانة، أو خانة جديدة في أي صفحة، أو صفحة جديدة كاملة زي القرآن والعربي، واملاها بأي حاجة من الموقع ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const realOwner = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const noEmoji = s => String(s || "").replace(/^[\p{Extended_Pictographic}\p{Emoji_Modifier}‍️\s]+/u, "").replace(/\s+/g, " ").trim();
+
+  /* ======================= 1) الدرج الشمال: شريط واحد + أسماء ======================= */
+  function drawer() { const d = document.getElementById("sd152"); if (!d) return;
+    d.querySelectorAll("button:not(.sdh)").forEach(b => { if (b.closest(".x201") || b.querySelector(":scope > small.l216")) return; const it = b.closest(".it203"); if (it && b !== it.querySelector("button")) return;
+      const t = b.dataset.l211 || b.dataset.l215 || noEmoji(b.title || b.innerText || b.textContent) || (b.title || "").trim(); if (!t) return; const s = document.createElement("small"); s.className = "l216"; s.textContent = t; b.appendChild(s); if (!b.title) b.title = t; }); }
+  css(`html body #sd152 .sp203,html body.b201 #sd152 .sp203.c203{max-height:none!important;overflow:visible!important;border:0!important;background:none!important;box-shadow:none!important;padding:0!important;margin:0!important;width:auto!important;display:flex!important;flex-direction:column;align-items:center;gap:.2rem}
+  html body #sd152 .sp203 .g203,html body #sd152 .sp203 details{display:contents!important}
+  html body #sd152 .sp203 .it203{margin:0!important}
+  html body #sd152 .sp203 .it203>button:first-child,html body #sd152>button:not(.sdh),html body #sd152 #lk142 button{width:calc(var(--t211,42px) + 8px)!important;max-width:calc(var(--t211,42px) + 8px)!important;height:calc(var(--t211,42px) + 14px)!important;min-height:0!important;padding:2px 0 0!important;font-size:0!important;border-radius:12px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;white-space:nowrap!important;background:var(--bg)!important;color:var(--fg)!important;border:1px solid transparent!important;box-shadow:none!important}
+  html body #sd152 button::after{display:none!important;content:none!important}
+  #sd152 small.l216{display:block;font-size:9.5px!important;font-weight:600;line-height:1.1;max-width:calc(var(--t211,42px) + 4px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;color:var(--muted)}
+  body:not(.lb211) #sd152 small.l216{display:none}
+  #nv180 button b,#nv180 button small{white-space:nowrap}`);
+
+  /* ======================= 2) قسم تاني = لفوق (الأيقونة تبان) · نفس القسم = تحت اللوجو ======================= */
+  const TOP = ["home", "library", "tools", "myspace", "dashboard", "pricing", "about", "contact", "booking", "tracks", "teachers"];
+  let SEC = null, memoK = null, memoV = false;
+  const secOf = () => state.route === "world" ? "w:" + (state.pageArg || "quran") : TOP.includes(state.route) ? "r:" + state.route : (state.route === "library" || state.libSec ? "lib:" + (state.libSec || "") : null);
+  window.__top216 = () => { const k = [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|"); if (k === memoK) return memoV; memoK = k; const s = secOf(); const prev = SEC; if (s) SEC = s; memoV = !!(prev && s && s !== prev); return memoV; };
+
+  /* ======================= 3) وضع البناء ======================= */
+  const B = window.B216 = { on: LS("b216", 0) };
+  const ORG = () => { const o = setv("org", null); const x = (o && typeof o === "object") ? JSON.parse(JSON.stringify(o)) : {}; x.d = x.d || {}; x.t = x.t || {}; x.nd = x.nd || []; x.nt = x.nt || []; return x; };
+  const saveOrg = async o => { if (window.ORG145) ORG145.draft = null; await saveSetting16("org", o); render(); };
+  const DR = () => (setv("dr216", []) || []);
+  const SL = () => (setv("sl216", []) || []);
+  function syncDoors() { try { for (let i = DOORS147.length - 1; i >= 0; i--) if (DOORS147[i].__c216) DOORS147.splice(i, 1); DR().forEach(d => DOORS147.push({ id: d.id, ic: d.ic || "📁", ar: d.ar, en: d.en || d.ar, sar: d.sar || "", sen: d.sen || d.sar || "", c: d.c || "#0f766e", doms: [], __c216: 1 })); } catch (e) {} }
+  const _ap = applySettings; applySettings = function (s) { const r = _ap.apply(this, arguments); syncDoors(); return r; }; syncDoors();
+  const title = d => { try { return orgTitle(d.t || {}, d.k); } catch (e) { return d.k; } };
+  function allItems() { const out = [], seen = new Set(); const add = (ic, t, js, from) => { if (!js || seen.has(js)) return; seen.add(js); out.push({ ic: ic || "🔗", t: noEmoji(t) || t, js, from }); };
+    try { orgRaw().forEach(d => (d.tools || []).forEach(x => add(x[0], x[1], x[2], title(d)))); } catch (e) {}
+    try { books147().forEach(b => add(b[0], b[1], b[2], T("المكتبة المشروحة", "Books"))); } catch (e) {}
+    DOORS147.forEach(o => add(o.ic, AR() ? o.ar : o.en, `go16('world','${o.id}')`, T("صفحات الأبواب", "Doors")));
+    const A = (window.A211 && A211.data) || LS("all211", null); if (A && A.items) A.items.forEach(x => { if (String(x.k).startsWith("t:")) return; const [r, ...rest] = String(x.k).split("/"); const arg = rest.join("/"); add(x.ic, x.t, r === "library" && arg ? `libOpen('${arg}')` : `go16('${r}'${arg ? `,'${arg}'` : ""})`, T("من الموقع", "Site")); });
+    return out; }
+  window.b216 = {
+    tog() { B.on = !B.on; LSset("b216", B.on ? 1 : 0); toast(B.on ? "🧱 " + T("وضع البناء: اضغط ➕ في أي مكان لتضيف", "Build mode: press ➕ anywhere to add") : T("خرجت من وضع البناء", "Build mode off")); render(); },
+    /* إضافة عنصر لخانة */
+    pick(dom) { modal(`<h3>➕ ${T("أضف عنصرًا إلى هذه الخانة", "Add an item to this box")}</h3><input class="in" id="q216" placeholder="🔍 ${T("ابحث في كل أدوات وصفحات المنصة", "Search every tool and page")}" oninput="b216.list('${dom}')" autofocus><div id="ls216" class="ls216"></div>
+      <details style="margin-top:.6rem"><summary class="sm b">🔗 ${T("رابط خارجي أو صفحة جديدة", "External link or new page")}</summary><div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.4rem"><button class="btn btn-o xs" onclick="b216.ext('${dom}')">🔗 ${T("رابط خارجي", "External link")}</button><button class="btn btn-o xs" onclick="b216.door(1,'${dom}')">📄 ${T("صفحة جديدة وأضف رابطها هنا", "New page + link here")}</button></div></details>`); b216.list(dom); },
+    list(dom) { const q = ((document.getElementById("q216") || {}).value || "").trim(); const L = allItems().filter(x => !q || (x.t + " " + x.from).includes(q)).slice(0, 160); const box = document.getElementById("ls216"); if (!box) return; box.__L = L;
+      box.innerHTML = L.map((x, i) => `<button onclick="b216.add('${dom}',${i})"><span>${esc(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.from)}</small></button>`).join("") || `<p class="muted sm">—</p>`; },
+    async add(dom, i) { const x = (document.getElementById("ls216").__L || [])[i]; if (!x) return; const O = ORG(); O.nt.push({ id: "nt216_" + Date.now().toString(36), ic: x.ic, ar: x.t, en: x.t, js: x.js, dom }); closeM(); await saveOrg(O); toast("➕ " + x.t); },
+    async ext(dom) { const u = prompt(T("الرابط (https://…)", "Link (https://…)"), "https://"); if (!u || !/^https?:\/\//.test(u)) return; const t = prompt(T("الاسم الظاهر تحت الأيقونة", "Label"), "") || u; const ic = prompt(T("أيقونة (إيموجي)", "Icon (emoji)"), "🔗") || "🔗"; const O = ORG(); O.nt.push({ id: "nt216_" + Date.now().toString(36), ic, ar: t, en: t, js: `window.open('${u.replace(/['"<>\\]/g, encodeURIComponent)}','_blank')`, dom }); closeM(); await saveOrg(O); },
+    async edit(id, lbl) { const O = ORG(); const n = O.nt.find(x => x.id === id); const cur = n || O.t[id] || {}; const t = prompt(T("الاسم الظاهر", "Label"), cur.ar || lbl || ""); if (t == null) return; const ic = prompt(T("الأيقونة (إيموجي)", "Icon (emoji)"), cur.ic || "") ; if (n) { n.ar = n.en = t; if (ic) n.ic = ic; } else { O.t[id] = Object.assign({}, O.t[id] || {}, { ar: t, en: t }, ic ? { ic } : {}); } await saveOrg(O); },
+    async hide(id, lbl) { if (!confirm(T(`إزالة «${lbl}» من هذه الخانة؟ (يمكنك التراجع)`, `Remove «${lbl}» from this box?`))) return; const O = ORG(); const i = O.nt.findIndex(x => x.id === id); if (i >= 0) O.nt.splice(i, 1); else O.t[id] = Object.assign({}, O.t[id] || {}, { hide: 1 }); await saveOrg(O); },
+    async move(id, dom, d) { let ds; try { ds = orgRaw(); } catch (e) { return; } const D = ds.find(x => x.k === dom); if (!D) return; const ids = D.tools.map(t => t.__id || String(t[2])); const i = ids.indexOf(id), j = i + d; if (i < 0 || j < 0 || j >= ids.length) return; [ids[i], ids[j]] = [ids[j], ids[i]]; const O = ORG(); ids.forEach((k, n) => { O.t[k] = Object.assign({}, O.t[k] || {}, { o: n, dom }); }); await saveOrg(O); },
+    /* خانة جديدة */
+    box(where) { modal(`<h3>🗂️ ${T("خانة جديدة", "New box")}</h3><label class="sm">${T("اسم الخانة", "Box name")}<input class="in" id="t216" placeholder="${T("مثلًا: أدوات المسلم", "e.g. Muslim tools")}"></label><label class="sm">${T("وصف قصير (اختياري)", "Short description")}<input class="in" id="s216"></label>
+      <div class="row" style="gap:.5rem;align-items:center;margin:.4rem 0"><label class="sm">${T("الأيقونة", "Icon")} <input class="in" id="i216" value="🧰" style="width:4rem;text-align:center"></label><label class="sm">${T("اللون", "Colour")} <input type="color" id="c216" value="#0f766e"></label></div>
+      ${where === "door" ? "" : `<label class="sm">${T("مكانها في الصفحة", "Where on the page")}<select class="in" id="p216"><option value="top">${T("أعلى الصفحة", "Top")}</option><option value="bottom" selected>${T("أسفل الصفحة", "Bottom")}</option>${heads().map((h, i) => `<option value="a:${i}">${T("بعد", "After")}: ${esc(h)}</option>`).join("")}</select></label>`}
+      <button class="btn btn-p" style="margin-top:.6rem" onclick="b216.boxSave('${where}')">✅ ${T("أنشئ الخانة ثم أضف لها عناصر", "Create, then add items")}</button>`); },
+    async boxSave(where) { const t = (document.getElementById("t216").value || "").trim(); if (!t) return toast(T("اكتب اسم الخانة", "Enter a name"), true); const k = "c216_" + Date.now().toString(36); const O = ORG();
+      O.nd.push({ k, ic: document.getElementById("i216").value || "📁", ar: t, en: t, sar: document.getElementById("s216").value || "", sen: document.getElementById("s216").value || "", color: document.getElementById("c216").value });
+      if (where === "door") { O.d[k] = Object.assign({}, O.d[k] || {}, { door: state.pageArg || "quran" }); closeM(); await saveOrg(O); setTimeout(() => b216.pick(k), 300); return; }
+      O.d[k] = Object.assign({}, O.d[k] || {}, { door: "__none216" }); const p = (document.getElementById("p216") || {}).value || "bottom"; const H = heads(); const S = SL().slice(); S.push({ k, route: state.route, arg: state.pageArg || "", pos: p.startsWith("a:") ? "after" : p, anchor: p.startsWith("a:") ? H[+p.slice(2)] : "" });
+      closeM(); await saveSetting16("sl216", S); await saveOrg(O); setTimeout(() => b216.pick(k), 300); },
+    async boxEdit(k) { const O = ORG(); const n = O.nd.find(x => x.k === k); const cur = n || O.d[k] || {}; const t = prompt(T("اسم الخانة", "Box name"), cur.ar || ""); if (t == null) return; const s = prompt(T("الوصف القصير", "Short description"), cur.sar || ""); const ic = prompt(T("الأيقونة", "Icon"), cur.ic || ""); const c = prompt(T("اللون (مثلًا #0f766e)", "Colour"), cur.color || "");
+      const p = { ar: t, en: t }; if (s != null) { p.sar = s; p.sen = s; } if (ic) p.ic = ic; if (c) p.color = c; if (n) Object.assign(n, p); else O.d[k] = Object.assign({}, O.d[k] || {}, p); await saveOrg(O); },
+    async boxDel(k, lbl) { if (!confirm(T(`إخفاء الخانة «${lbl}» من هنا؟ (يمكنك التراجع)`, `Hide the box «${lbl}»?`))) return; const O = ORG(); O.d[k] = Object.assign({}, O.d[k] || {}, { hide: 1 }); await saveOrg(O); },
+    /* صفحة جديدة (باب) */
+    door(link, dom) { modal(`<h3>📄 ${T("صفحة جديدة بنفس شكل القرآن والعربي", "A new page like Quran / Arabic")}</h3><label class="sm">${T("اسم الصفحة", "Page name")}<input class="in" id="dt216" placeholder="${T("مثلًا: أدوات المسلم", "e.g. Muslim tools")}"></label><label class="sm">${T("وصف قصير", "Short description")}<input class="in" id="ds216"></label>
+      <div class="row" style="gap:.5rem;align-items:center;margin:.4rem 0"><label class="sm">${T("الأيقونة", "Icon")} <input class="in" id="di216" value="🕌" style="width:4rem;text-align:center"></label><label class="sm">${T("اللون", "Colour")} <input type="color" id="dc216" value="#0f766e"></label></div>
+      <p class="xs muted">${T("ستظهر في «ماذا تريد أن تتعلم؟» في الرئيسية وفي التبويبات، وتفتح فارغة لتضيف فيها خانات وعناصر.", "It appears in the home doors and tabs, and opens empty for you to fill.")}</p><button class="btn btn-p" onclick="b216.doorSave(${link ? `'${dom}'` : "''"})">✅ ${T("أنشئ الصفحة", "Create page")}</button>`); },
+    async doorSave(dom) { const t = (document.getElementById("dt216").value || "").trim(); if (!t) return toast(T("اكتب اسم الصفحة", "Enter a name"), true); const id = "p216_" + Date.now().toString(36); const D = DR().slice(); const ic = document.getElementById("di216").value || "📁";
+      D.push({ id, ic, ar: t, en: t, sar: document.getElementById("ds216").value || "", c: document.getElementById("dc216").value }); closeM(); await saveSetting16("dr216", D); syncDoors();
+      if (dom) { const O = ORG(); O.nt.push({ id: "nt216_" + Date.now().toString(36), ic, ar: t, en: t, js: `go16('world','${id}')`, dom }); await saveOrg(O); } go16("world", id); },
+    async doorEdit(id) { const D = DR().slice(); const d = D.find(x => x.id === id); if (!d) return; const t = prompt(T("اسم الصفحة", "Page name"), d.ar); if (t == null) return; d.ar = d.en = t; const s = prompt(T("الوصف", "Description"), d.sar || ""); if (s != null) d.sar = d.sen = s; const ic = prompt(T("الأيقونة", "Icon"), d.ic); if (ic) d.ic = ic; await saveSetting16("dr216", D); syncDoors(); render(); },
+    async doorDel(id) { if (!confirm(T("حذف هذه الصفحة من الأبواب؟ (خاناتها تبقى ويمكنك التراجع)", "Remove this page from the doors?"))) return; await saveSetting16("dr216", DR().filter(x => x.id !== id)); syncDoors(); go16("home"); }
+  };
+  const heads = () => [...document.querySelectorAll("#app main h2, #app main h3, #app .wrap > h2, #app .card > h3, #app .card h3, #app section h2")].map(h => (h.innerText || "").replace(/\s+/g, " ").trim()).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).slice(0, 40);
+  function modal(html) { closeM(); const m = document.createElement("div"); m.id = "m216"; m.className = "notr"; m.innerHTML = `<div class="b"><button class="x" onclick="document.getElementById('m216').remove()">✕</button>${html}</div>`; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); setTimeout(() => { const i = m.querySelector("input"); i && i.focus(); }, 50); }
+  const closeM = () => { const m = document.getElementById("m216"); m && m.remove(); };
+  css(`#m216{position:fixed;inset:0;z-index:2147483600;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:1rem}#m216 .b{position:relative;background:var(--card);color:var(--fg);border-radius:18px;padding:1rem 1.1rem;width:min(560px,96vw);max-height:88vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}#m216 .x{position:absolute;top:.6rem;inset-inline-end:.6rem;border:0;background:var(--bg);border-radius:50%;width:2rem;height:2rem;cursor:pointer}#m216 label{display:block;margin:.35rem 0}#m216 h3{margin:.2rem 0 .6rem}
+  .ls216{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.35rem;margin-top:.5rem}.ls216 button{display:flex;flex-direction:column;align-items:center;gap:.1rem;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:.45rem .3rem;cursor:pointer;font:inherit}.ls216 button:hover{border-color:var(--accent)}.ls216 span{font-size:1.4rem}.ls216 b{font-size:.78rem;text-align:center}.ls216 small{font-size:.65rem;color:var(--muted)}
+  .b216add{border:2px dashed var(--c,var(--accent))!important;background:transparent!important;opacity:.8}.b216add:hover{opacity:1}
+  .w147t{position:relative}.b216e{position:absolute;top:-8px;inset-inline-end:-6px;display:flex;gap:2px;z-index:3}.b216e i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.7rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .b216h{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}.b216bar{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;margin:1rem auto;padding:.7rem;border:2px dashed var(--accent);border-radius:16px;max-width:1100px}
+  #bt216{position:fixed;top:50%;inset-inline-start:0;z-index:900;border:0;border-radius:0 12px 12px 0;background:#b45309;color:#fff;padding:.5rem .35rem;cursor:pointer;font:inherit;font-weight:800;font-size:.8rem;writing-mode:vertical-rl;box-shadow:0 6px 16px rgba(0,0,0,.2)}[dir=rtl] #bt216{border-radius:12px 0 0 12px}#bt216.on{background:#16a34a}`);
+
+  /* خانات في أي صفحة */
+  function cardHtml(d) { const tools = d.tools || []; return `<div class="card w147 g216" data-k216="${esc(d.k)}" style="--c:${esc(d.color || "#0f766e")}"><div class="row" style="gap:.5rem;align-items:center"><span style="font-size:1.6rem">${esc(d.ic || "📁")}</span><div><h3 style="margin:0">${esc(title(d))}</h3>${d.s && orgTitle(d.s, "") ? `<p class="xs muted" style="margin:.1rem 0 0">${esc(orgTitle(d.s, ""))}</p>` : ""}</div></div><div class="w147g">${tools.map(t => `<button class="w147t" onclick="${esc(t[2])}"><span>${esc(t[0])}</span><b>${esc(t[1])}</b></button>`).join("")}</div></div>`; }
+  function slots() { const app = document.getElementById("app"); if (!app) return; app.querySelectorAll(".g216").forEach(x => x.remove()); const S = SL().filter(s => s.route === state.route && (s.arg || "") === (state.pageArg || "")); if (!S.length) return; let ds; try { ds = DOMAINS(); } catch (e) { return; }
+    const main = app.querySelector("main") || app; const hdr = app.querySelector(".hdr, header"); const ft = app.querySelector("footer");
+    S.forEach(s => { const d = ds.find(x => x.k === s.k); if (!d) return; const html = cardHtml(d); const wrap = `<div class="wrap g216" data-k216="${esc(s.k)}" style="padding-block:.3rem">${html}</div>`;
+      if (s.pos === "after" && s.anchor) { const h = [...app.querySelectorAll("h2,h3")].find(x => (x.innerText || "").replace(/\s+/g, " ").trim() === s.anchor && !x.closest(".g216")); const host = h && (h.closest(".card, section") || h); if (host) { host.insertAdjacentHTML("afterend", host.closest(".wrap") ? html.replace('class="card', 'class="g216x card') : wrap); return; } }
+      if (s.pos === "top" && hdr) { const after = hdr.nextElementSibling; (after || hdr).insertAdjacentHTML(after ? "beforebegin" : "afterend", wrap); if (after) { /* بعد الهيدر */ } return; }
+      if (ft) ft.insertAdjacentHTML("beforebegin", wrap); else main.insertAdjacentHTML("beforeend", wrap); });
+    app.querySelectorAll(".g216x").forEach(x => { x.classList.add("g216"); x.classList.remove("g216x"); }); }
+  /* أدوات التعديل جوه الخانات */
+  function decorate() { const app = document.getElementById("app"); if (!app) return; let ds; try { ds = orgRaw(); } catch (e) { ds = []; }
+    app.querySelectorAll(".card.w147").forEach(c => { const h = c.querySelector("h3"); const nm = h ? (h.innerText || "").replace(/\s+/g, " ").trim() : ""; const k = c.dataset.k216 || (ds.find(d => noEmoji(title(d)) === noEmoji(nm) || title(d) === nm) || {}).k; const g = c.querySelector(".w147g"); if (!k || !g) return; const D = ds.find(d => d.k === k);
+      if (!c.querySelector(".b216h")) { const isNew = (ORG().nd || []).some(n => n.k === k); c.querySelector(".row") && c.querySelector(".row").insertAdjacentHTML("afterend", `<div class="b216h"><button class="btn btn-o xs" onclick="b216.boxEdit('${k}')">✏️ ${T("اسم الخانة وشكلها", "Edit box")}</button><button class="btn btn-o xs" onclick='b216.boxDel(${JSON.stringify(k)},${esc(JSON.stringify(nm))})'>🙈 ${T("إخفاء الخانة", "Hide box")}</button>${isNew ? "" : ""}</div>`); }
+      if (!g.querySelector(".b216add")) g.insertAdjacentHTML("beforeend", `<button class="w147t b216add" onclick="event.stopPropagation();b216.pick('${k}')"><span>➕</span><b>${T("أضف عنصرًا", "Add item")}</b></button>`);
+      if (D) g.querySelectorAll(".w147t:not(.b216add)").forEach(t => { if (t.querySelector(".b216e")) return; const oc = t.getAttribute("onclick") || ""; const lbl = (t.querySelector("b") || t).innerText.trim(); const tool = D.tools.find(x => String(x[2]) === oc) || D.tools.find(x => x[1] === lbl); if (!tool) return; const id = tool.__id || String(tool[2]);
+        t.insertAdjacentHTML("afterbegin", `<span class="b216e" onclick="event.stopPropagation()"><i title="${T("قبله", "Earlier")}" onclick='b216.move(${esc(JSON.stringify(id))},"${k}",-1)'>▲</i><i title="${T("بعده", "Later")}" onclick='b216.move(${esc(JSON.stringify(id))},"${k}",1)'>▼</i><i title="${T("تعديل", "Edit")}" onclick='b216.edit(${esc(JSON.stringify(id))},${esc(JSON.stringify(lbl))})'>✏️</i><i title="${T("إزالة", "Remove")}" onclick='b216.hide(${esc(JSON.stringify(id))},${esc(JSON.stringify(lbl))})'>✕</i></span>`); }); });
+    if (!app.querySelector(".b216bar")) { const isDoor = state.route === "world"; const cd = DR().find(x => x.id === state.pageArg); const ft = app.querySelector("footer"); const bar = `<div class="b216bar notr"><b class="sm" style="width:100%;text-align:center">🧱 ${T("أضف في هذه الصفحة", "Add to this page")}</b>
+      <button class="btn btn-p" onclick="b216.box('${isDoor ? "door" : "page"}')">🗂️ ${T("خانة جديدة بأيقونات", "New box with icons")}</button><button class="btn btn-o" onclick="b216.door(0)">📄 ${T("صفحة جديدة كاملة (باب)", "New full page (door)")}</button>
+      ${cd ? `<button class="btn btn-o" onclick="b216.doorEdit('${cd.id}')">✏️ ${T("اسم هذه الصفحة", "Rename this page")}</button><button class="btn btn-o" onclick="b216.doorDel('${cd.id}')">🗑️ ${T("احذف هذه الصفحة", "Delete this page")}</button>` : ""}<button class="btn btn-o" onclick="go16('org')">🗂️ ${T("منظّم الأقسام", "Organiser")}</button></div>`;
+      if (ft) ft.insertAdjacentHTML("beforebegin", bar); else app.insertAdjacentHTML("beforeend", bar); } }
+  function bt() { let b = document.getElementById("bt216"); if (!realOwner()) { b && b.remove(); return; } if (!b) { b = document.createElement("button"); b.id = "bt216"; b.onclick = () => b216.tog(); document.body.appendChild(b); } b.className = B.on ? "on" : ""; b.textContent = B.on ? "✅ " + T("إنهاء البناء", "Done") : "🧱 " + T("بناء", "Build"); b.title = T("وضع البناء: أضف خانات وصفحات وعناصر في أي مكان", "Build mode"); }
+  /* صفحة الباب الجديدة الفاضية */
+  const _rw = renderWorld147; renderWorld147 = function () { let h = _rw.apply(this, arguments); const d = DR().find(x => x.id === state.pageArg); if (d) { let ds = []; try { ds = DOMAINS().filter(x => door147Of(x) === d.id); } catch (e) {} if (!ds.length) h = h.replace(/(<div class="motabs"[\s\S]*?<\/div>)/, `$1<div class="card" style="text-align:center;padding:2rem"><p style="font-size:2.5rem;margin:0">${esc(d.ic)}</p><p class="muted">${realOwner() ? T("الصفحة جاهزة — اضغط «🧱 بناء» ثم «خانة جديدة بأيقونات» لتملأها", "Page ready — press Build, then New box") : T("قريبًا", "Coming soon")}</p></div>`); } return h; };
+  const _r = render; render = function () { _r.apply(this, arguments); try { slots(); bt(); if (B.on && realOwner()) decorate(); drawer(); } catch (e) { console.warn(e); } };
+  new MutationObserver(() => { clearTimeout(window.__d216); window.__d216 = setTimeout(() => { try { drawer(); bt(); } catch (e) {} }, 80); }).observe(document.body, { childList: true });
+  setTimeout(() => { try { drawer(); bt(); } catch (e) {} }, 800); setInterval(drawer, 2500);
 })();
 
 // بدء التشغيل
