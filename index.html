@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v226";
+const UI_VERSION = "2026-11-17-v227";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30797,6 +30797,29 @@ Between lessons, the platform keeps you going:
   const m = location.hash.match(/^#\/(fam226|sub226|mir226|vt226)/); if (m) state.route = m[1];
   css(`.mr226{display:grid;grid-template-columns:2fr 1fr;gap:.7rem;align-items:start}@media(max-width:700px){.mr226{grid-template-columns:1fr}}.mr226 video{width:100%;border-radius:18px;background:#000;transform:scaleX(-1);aspect-ratio:4/3;object-fit:cover}#mt226{text-align:center}
   .tl226{border-inline-start:3px solid var(--line);padding-inline-start:1rem;display:flex;flex-direction:column;gap:.7rem}.ti226{position:relative;display:flex;gap:.5rem}.ti226 .dot{position:absolute;inset-inline-start:calc(-1rem - 8px);top:.3rem;width:13px;height:13px;border-radius:50%;background:var(--accent)}.ti226 audio{width:100%;max-width:420px}`);
+})();
+
+/* ================= v227: الشريط الشمال: كل الأيقونات نفس المقاس وفي نفس الخط واسم صغير تحت كل واحدة (زي الشريط اليمين) · وهو مستخبي طرفه باين شوية · الشريط اليمين بيظهر على التابلت · الشريط اللي فوق لما يتفتح يفضل سطر واحد (أيقونات أصغر) · زرار «نهاري» واضح ================= */
+(function () {
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function labels() { const sd = document.getElementById("sd152"); if (!sd) return; sd.querySelectorAll("button:not(.sdh)").forEach(b => { if (b.querySelector(".l227")) return; const t = (b.dataset.l215 || b.title || b.getAttribute("aria-label") || (b.innerText || "").replace(/^[\p{Extended_Pictographic}️‍\s]+/u, "")).replace(/\s+/g, " ").trim(); if (!t) return; const s = document.createElement("small"); s.className = "l227"; s.textContent = t.length > 12 ? t.slice(0, 11) + "…" : t; s.title = t; b.appendChild(s); }); }
+  const _r = render; render = function () { _r.apply(this, arguments); try { labels(); } catch (e) {} };
+  let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { labels(); } catch (e) {} }, 150); }).observe(document.body, { childList: true, subtree: true });
+  css(`
+  html body #sd152{gap:.25rem!important;padding-block:.4rem!important;align-items:center!important}
+  html body #sd152 button:not(.sdh),html body #sd152 .sp203 .it203>button:first-child,html body #sd152 #lk142 button,html body #sd152 .dr219,html body #sd152 #bt216.in219{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;width:62px!important;max-width:62px!important;min-width:62px!important;height:58px!important;min-height:58px!important;padding:4px 2px!important;margin:0!important;font-size:0!important;line-height:1!important;border-radius:14px!important;vertical-align:top!important;writing-mode:horizontal-tb!important;transform:none!important}
+  html body #sd152 button:not(.sdh)::before{content:attr(data-ic215)!important;display:block!important;font-size:22px!important;line-height:24px!important;height:24px!important;margin:0!important;white-space:nowrap;overflow:hidden;max-width:56px;text-align:center}
+  html body #sd152 button:not(.sdh)>i{font-size:20px!important;line-height:24px!important;height:24px!important}
+  html body #sd152 button:not(.sdh)>img{width:24px!important;height:24px!important;object-fit:contain}
+  html body #sd152 button:not(.sdh)::after,html body #sd152 small.l216,html body #sd152 .dr219>small,html body #sd152 .nw203{display:none!important}
+  html body #sd152 small.l227{display:block!important;font-size:9.5px!important;font-weight:700!important;line-height:1.15!important;color:var(--muted)!important;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+  html body #sd152 #bt216.in219 small.l227{color:inherit!important}
+  html body #sd152:not(.open):not(:hover):not(:focus-within) .sdh{width:14px!important;background:color-mix(in srgb,var(--accent) 22%,var(--card))!important}
+  html body #sd152{min-width:14px}
+  @media (min-width:601px) and (max-width:900px){html body .nv180-rail,html body .nv180-side{display:flex!important}html body #nv180 button{transform:scale(.88)}}
+  @media (min-width:901px){html body .hdr .wrap,html body #app .hdr>div{flex-wrap:nowrap!important}html body .hdr .tools{flex-wrap:nowrap!important;gap:.3rem!important;min-width:0;overflow-x:auto;scrollbar-width:none}html body .hdr .tools>*{height:36px!important;min-height:36px!important;min-width:36px!important;padding-inline:.55rem!important;font-size:.82rem!important;flex:none}html body .hdr .tools>[data-k219=trial]{padding-inline:.9rem!important}}
+  html body .hdr .tools>[data-k219=theme],html body .hdr .tools>[data-k219=theme] *{opacity:1!important;color:var(--fg)!important;font-weight:700!important;filter:none!important}
+  `);
 })();
 
 // بدء التشغيل
