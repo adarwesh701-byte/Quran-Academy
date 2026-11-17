@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v218";
+const UI_VERSION = "2026-11-17-v219";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30211,6 +30211,155 @@ Between lessons, the platform keeps you going:
   body.rd218 .hdr,body.rd218 header,body.rd218 .bar185,body.rd218 .side185,body.rd218 #nv180,body.rd218 .bnav,body.rd218 footer,body.rd218 .crumb,body.rd218 #ctl113,body.rd218 #dock196,body.rd218 [id$="216"],body.rd218 .aiw,body.rd218 .nfrow218{display:none!important}body.rd218 #app .wrap{max-width:780px!important}body.rd218 #app{font-size:1.08rem;line-height:1.95}
   #rdx218{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:30000;border:0;border-radius:999px;background:#0f172a;color:#fff;padding:.5rem 1rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25)}
   #pg218{position:fixed;top:0;inset-inline-start:0;height:3px;background:var(--accent);z-index:40000;transition:width .1s;pointer-events:none}`);
+})();
+
+/* ================= v219: الإشعارات + النهار/الليل + «حصة تجريبية» (أقصر) ظاهرين برّه علطول · سهم القوائم في نص الشريط وتتحكم في مكانه · الشريط الشمال بعيد عن سهم السكرول · زرار البناء أيقونة جوه الشريط الشمال + تضيف فيه أي أيقونة من الموقع أو صورة · العرض: الصفحات الداخلية تفتح تحت اللوجو، والاستثناءات (الريفرش، الرئيسية، أيقونات الرئيسية) من الأول — وتتحكم في كله من «مساحتي» · الترتيب دايمًا: القرآن ثم التجويد ثم المقامات ثم الباقي · دفعة اقتراحات جديدة في «كل الجديد» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner"; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  const LS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const J = s => esc(JSON.stringify(s));
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["view219", "tasbih219"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const V = () => Object.assign({ mode: "under", refresh: "top", home: "top", fromHome: "top", menus: "closed", ex: {}, apos: "center", aoff: 0, keep: ["bell", "theme", "trial", "msg", "install"] }, setv("v219", {}) || {});
+  const saveV = async p => { await saveSetting16("v219", Object.assign({}, setv("v219", {}) || {}, p)); render(); };
+
+  /* ======================= 1) أزرار الهيدر اللي برّه ======================= */
+  const KIND = el => { const h = (el.innerHTML || "") + " " + (el.getAttribute("onclick") || ""); const t = (el.innerText || "").trim(); if (/fa-bell/.test(h)) return "bell"; if (/setTheme|toggleTheme|fa-moon|fa-sun/.test(h) || /^(☀️|🌙)/.test(t) || /نهاري|ليلي|Light|Dark/.test(t)) return "theme"; if (/حصة تجريبية|Trial/i.test(t)) return "trial"; if (/fa-comment/.test(h)) return "msg"; if (/fa-download|pwabtn/.test(h + el.className)) return "install"; return ""; };
+  function hdrKeep() { const K = V().keep; document.querySelectorAll("#app .hdr .tools > *").forEach(el => { const k = KIND(el); if (!k) return; el.dataset.k219 = k; el.classList.toggle("keep219", K.includes(k)); }); }
+
+  /* ======================= 2) مكان سهم القوائم ======================= */
+  function arrow() { const v = V(); const B = document.body; B.dataset.ap219 = v.apos; B.style.setProperty("--ao219", (+v.aoff || 0) + "px"); }
+
+  /* ======================= 3) الشريط الشمال بعيد عن السكرول + البناء جوه ======================= */
+  const DR = () => setv("dr219", []) || [];
+  window.dr219 = {
+    pick() { window.PK219 = 1; toast(T("🎯 لف في الموقع — دوس ➕ على أي أيقونة تضيفها للشريط الشمال", "🎯 Tap ➕ on any icon to add it to the left bar")); badges(); },
+    stop() { window.PK219 = 0; document.querySelectorAll(".pk219,.pkb219").forEach(x => x.remove()); render(); },
+    async add(it) { const L = DR().slice(); if (L.some(x => x.js === it.js)) return toast(T("موجودة", "Already there")); L.push(it); await saveSetting16("dr219", L); toast("➕ " + it.n); },
+    async img() { const n = prompt(T("اسم الأيقونة", "Icon name")); if (!n) return; const u = prompt(T("لينك صورة الأيقونة (PNG/SVG)", "Icon image URL")); if (!u) return; const js = prompt(T("تفتح إيه؟ (اكتب اسم صفحة زي tajcolor، أو سيبها فاضية وبعدين اختار من الموقع)", "Opens which page? (route)"), "") || ""; await this.add({ n, ic: u.trim(), js: js ? `go16('${js.replace(/[^a-z0-9_]/gi, "")}')` : "", who: "all" }); render(); },
+    async rm(i) { const L = DR().slice(); L.splice(i, 1); await saveSetting16("dr219", L); render(); },
+    async who(i) { const L = DR().slice(); const o = ["all", "sub", "owner"]; L[i] = Object.assign({}, L[i], { who: o[(o.indexOf(L[i].who || "all") + 1) % 3] }); await saveSetting16("dr219", L); render(); }
+  };
+  function badges() { if (!window.PK219) return; document.querySelectorAll("#app [onclick], #sd152 button").forEach(el => { if (el.__p219 || el.closest(".pk219,.pkb219,.dr219")) return; const js = el.getAttribute("onclick") || ""; if (!/go16\(|navigate\(|libGo\(|libOpen\(/.test(js)) return; el.__p219 = 1; const txt = (el.innerText || el.title || "").replace(/\s+/g, " ").trim(); if (!txt || txt.length > 70) return; const ic = (txt.match(/^\p{Extended_Pictographic}️?/u) || ["🔹"])[0]; const n = txt.replace(/^\p{Extended_Pictographic}️?\s*/u, "").slice(0, 30); const b = document.createElement("span"); b.className = "pk219"; b.textContent = "➕"; b.onclick = e => { e.preventDefault(); e.stopPropagation(); dr219.add({ n, ic, js: js.replace(/;?\s*return false;?\s*$/, ""), who: "all" }); b.textContent = "✓"; }; if (getComputedStyle(el).position === "static") el.style.position = "relative"; el.appendChild(b); });
+    if (!document.querySelector(".pkb219")) document.body.insertAdjacentHTML("beforeend", `<div class="pkb219">🎯 ${T("بتضيف للشريط الشمال", "Adding to the left bar")} <button class="btn btn-p xs" onclick="dr219.stop()">✓ ${T("خلصت", "Done")}</button></div>`); }
+  const sub = () => { try { const p = state.profile || {}; return own() || ["teacher", "admin"].includes(typeof role === "function" ? role() : "") || !!(p.metadata && (p.metadata.mine196 || p.metadata.bill196)) || !!(state.data && state.data.myPlan); } catch (e) { return false; } };
+  function drawerFix() { const sd = document.getElementById("sd152"); if (!sd) return;
+    const sbw = Math.max(0, innerWidth - document.documentElement.clientWidth); const r = sd.getBoundingClientRect(); document.body.style.setProperty("--sbw219", (sbw + 6) + "px"); sd.classList.toggle("lf219", r.left < innerWidth / 2);
+    const bt = document.getElementById("bt216"); if (bt && own()) { bt.classList.add("in219"); if (bt.parentElement !== sd) sd.appendChild(bt); }
+    sd.querySelectorAll(".dr219").forEach(x => x.remove()); const L = DR().filter(x => x.who === "owner" ? own() : x.who === "sub" ? sub() : true);
+    L.forEach(x => { const b = document.createElement("button"); b.className = "dr219"; b.title = x.n; b.innerHTML = /^(https?:|data:|\/)/.test(x.ic) ? `<img src="${esc(x.ic)}" alt=""><small>${esc(x.n)}</small>` : `${esc(x.ic)} ${esc(x.n)}`; if (x.js) b.setAttribute("onclick", x.js); sd.appendChild(b); });
+    if (own() && !sd.querySelector(".add219")) { const a = document.createElement("button"); a.className = "add219"; a.title = T("ضيف أيقونة للشريط", "Add an icon"); a.textContent = "➕ " + T("أيقونة", "Icon"); a.onclick = () => go16("view219"); sd.appendChild(a); } }
+
+  /* ======================= 4) العرض: من الأول ولا تحت اللوجو ======================= */
+  let firstK = null, prevRoute = null, memoK = null, memoV = false, boot = Date.now();
+  const routeKey = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+  window.__top216 = () => { const k = routeKey(); if (k === memoK) return memoV; const was = prevRoute; memoK = k; prevRoute = state.route; const v = V(); let top;
+    const ex = v.ex[state.route + (state.pageArg ? "/" + state.pageArg : "")] || v.ex[state.route];
+    if (ex) top = ex === "top"; else if (firstK == null && Date.now() - boot < 6000) top = v.refresh === "top"; else if (state.route === "home") top = v.home === "top"; else if (was === "home") top = v.fromHome === "top"; else top = v.mode === "top";
+    if (firstK == null) firstK = k; memoV = top; if (top && v.menus === "closed" && document.body.classList.contains("tb209-open") && window.tb209) setTimeout(() => { if (document.body.classList.contains("tb209-open")) tb209(); }, 0); return memoV; };
+
+  /* ======================= 5) الترتيب: القرآن ← التجويد ← المقامات ← الباقي ======================= */
+  const PRI = t => { t = String(t || ""); if (/^(🏠|الرئيسية|Home)|^\s*(الرئيسية|Home)\b/.test(t)) return -1; if (/تجويد|Tajweed|tajweed/.test(t)) return 1; if (/قرآن|القرآن|Quran|Qur|حفظ|تحفيظ|Hifz|إجاز|Ijaz|قراءات|Qira|مصحف|Mushaf/.test(t)) return 0; if (/مقام|Maqam|maqam|الصوت|Voice/.test(t)) return 2; return 3; };
+  const ord = arr => arr.map((x, i) => [x, i]).sort((a, b) => (PRI(a[0].t) - PRI(b[0].t)) || (a[1] - b[1])).map(x => x[0]);
+  try { const D = DOORS147.slice(); const s = ord(D.map(d => ({ d, t: d.ar + " " + d.en }))).map(x => x.d); if (!(setv("ord204", {}) || {}).doors) { DOORS147.length = 0; s.forEach(d => DOORS147.push(d)); } } catch (e) {}
+  const _D = DOMAINS; DOMAINS = function () { const L = _D.apply(this, arguments) || []; try { return ord(L.map(d => ({ d, t: ((d.t || {}).ar || "") + " " + ((d.t || {}).en || "") + " " + d.k }))).map(x => x.d); } catch (e) { return L; } };
+  function domSort() { const sel = [".dr147", ".motabs", "#nv180", "footer ul", ".ix217", ".lyb > div"]; const cont = new Set(); sel.forEach(s => document.querySelectorAll("#app " + s + ", " + s).forEach(c => cont.add(c)));
+    const k = [...document.querySelectorAll("#app h3")].find(h => /إجازات القراءات|Ijazat/.test(h.textContent)); if (k) { let c = k.parentElement; while (c && c.parentElement && c.parentElement.children.length < 3) c = c.parentElement; if (c && c.parentElement) cont.add(c.parentElement); }
+    cont.forEach(c => { if (c.__s219 || c.closest(".b216on")) return; const kids = [...c.children]; if (kids.length < 3) return; const P = kids.map(x => PRI(x.innerText || x.textContent)); if (P.filter(p => p >= 0 && p <= 2).length < 2) return; const s = kids.map((x, i) => [x, P[i], i]).sort((a, b) => (a[1] - b[1]) || (a[2] - b[2])); if (s.every((x, i) => x[0] === kids[i])) { c.__s219 = 1; return; } s.forEach(x => c.appendChild(x[0])); c.__s219 = 1; }); }
+
+  /* ======================= 6) صفحة العرض والأماكن (مساحتي) ======================= */
+  function viewPage() { if (!own()) return pageWrap("🔒", T("للمالك", "Owner only"), "", ""); const v = V();
+    const b = (k, val, l) => `<button class="btn ${v[k] === val ? "btn-p" : "btn-o"} xs" onclick="v219s({${k}:'${val}'})">${l}</button>`; const r = (t, x, d) => `<div class="row" style="justify-content:space-between;align-items:center;gap:.4rem;flex-wrap:wrap;padding:.55rem 0;border-bottom:1px solid var(--line)"><div><b>${t}</b>${d ? `<p class="xs muted" style="margin:.1rem 0 0">${d}</p>` : ""}</div><div class="row" style="gap:.3rem;flex-wrap:wrap">${x}</div></div>`;
+    const TOP = [["top", T("من أول الصفحة (اللوجو باين)", "From the top (logo visible)")], ["under", T("تحت اللوجو علطول", "Right under the logo")]];
+    const two = k => TOP.map(([val, l]) => b(k, val, l)).join("");
+    const exs = Object.entries(v.ex || {}); const routes = PAGES16.concat(["home", "library", "pricing", "booking", "dashboard", "myspace"]).filter((x, i, a) => a.indexOf(x) === i).sort();
+    const keep = [["bell", "🔔 " + T("الإشعارات", "Notifications")], ["theme", "☀️ " + T("النهار/الليل", "Light/Dark")], ["trial", "✨ " + T("حصة تجريبية", "Trial lesson")], ["msg", "💬 " + T("الرسائل", "Messages")], ["install", "⬇️ " + T("تثبيت التطبيق", "Install app")]];
+    const D = DR();
+    return pageWrap("📍", T("العرض والأماكن", "Display & placement"), T("الصفحة بتفتح منين، والسهم فين، وإيه اللي برّه في الهيدر، والشريط الشمال", "Where pages open, the arrow, header buttons and the left bar"), `<button class="btn btn-o" onclick="back196()">↩️ ${T("رجوع", "Back")}</button>
+      <div class="card"><h3>⬆️ ${T("الصفحة بتفتح منين", "Where pages open")}</h3>
+        ${r(T("العام — أي صفحة داخلية", "General — inner pages"), two("mode"))}
+        ${r(T("لما تعمل ريفرش", "On refresh"), two("refresh"))}
+        ${r(T("الصفحة الرئيسية", "Home page"), two("home"))}
+        ${r(T("لما تختار أيقونة من الرئيسية", "Opening an icon from Home"), two("fromHome"))}
+        ${r(T("سهم القوائم وقت الفتح", "Menus arrow on open"), b("menus", "closed", T("مقفول (القوائم مش نازلة)", "Closed")) + b("menus", "keep", T("زي ما سبته", "As you left it")))}
+        <h4 style="margin:.7rem 0 .3rem">✋ ${T("استثناءات انت تحطها", "Your own exceptions")}</h4>
+        <div class="row" style="gap:.3rem;flex-wrap:wrap;align-items:center"><select id="ex219r" class="in" style="width:auto">${routes.map(x => `<option>${esc(x)}</option>`).join("")}</select><select id="ex219v" class="in" style="width:auto">${TOP.map(([val, l]) => `<option value="${val}">${l}</option>`).join("")}</select><button class="btn btn-p xs" onclick="v219ex(document.getElementById('ex219r').value,document.getElementById('ex219v').value)">➕ ${T("ضيف", "Add")}</button></div>
+        ${exs.length ? `<div class="row" style="gap:.3rem;flex-wrap:wrap;margin-top:.4rem">${exs.map(([k, val]) => `<span class="ck218">${esc(k)} → ${val === "top" ? T("من الأول", "top") : T("تحت اللوجو", "under logo")} <button class="btn btn-o xs" onclick="v219ex(${J(k)},null)">✕</button></span>`).join("")}</div>` : `<p class="xs muted">${T("مفيش استثناءات", "None")}</p>`}</div>
+      <div class="card"><h3>⌄ ${T("مكان سهم القوائم", "Menus arrow position")}</h3>${r(T("المكان", "Position"), b("apos", "center", T("نص الشريط", "Centre")) + b("apos", "start", T("ناحية اللوجو", "Logo side")) + b("apos", "end", T("الناحية التانية", "Other side")))}
+        ${r(T("زحزحة يمين/شمال (بكسل)", "Nudge (px)"), `<input type="range" min="-400" max="400" step="10" value="${+v.aoff || 0}" onchange="v219s({aoff:+this.value})"> <span class="xs">${+v.aoff || 0}</span>`)}</div>
+      <div class="card"><h3>🔝 ${T("اللي يفضل ظاهر برّه في الهيدر علطول", "Always-visible header buttons")}</h3><div class="row" style="gap:.3rem;flex-wrap:wrap">${keep.map(([k, l]) => `<button class="btn ${v.keep.includes(k) ? "btn-p" : "btn-o"} xs" onclick="v219k('${k}')">${v.keep.includes(k) ? "👁" : "🙈"} ${l}</button>`).join("")}</div></div>
+      <div class="card"><h3>⬅️ ${T("أيقوناتك في الشريط الشمال", "Your icons in the left bar")}</h3><p class="xs muted">${T("تضيف أي أيقونة من الموقع أو صورة. لكل أيقونة تختار تظهر لمين: الكل / المشتركين بس / انت بس. أدواتك انت (البناء والصور…) مش بتظهر لحد غيرك.", "Add any icon or an image; choose who sees it.")}</p>
+        <div class="row" style="gap:.4rem;flex-wrap:wrap;margin:.4rem 0"><button class="btn btn-p" onclick="dr219.pick()">➕ ${T("اختار من الموقع", "Pick from the site")}</button><button class="btn btn-o" onclick="dr219.img()">🖼️ ${T("أيقونة بصورة", "Image icon")}</button></div>
+        ${D.length ? D.map((x, i) => `<div class="row" style="gap:.4rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--line)">${/^(https?:|data:|\/)/.test(x.ic) ? `<img src="${esc(x.ic)}" style="width:28px;height:28px;object-fit:contain">` : `<span style="font-size:1.3rem">${esc(x.ic)}</span>`}<b style="flex:1">${esc(x.n)}</b><button class="btn btn-o xs" onclick="dr219.who(${i})">👥 ${{ all: T("الكل", "All"), sub: T("المشتركين", "Subscribers"), owner: T("انا بس", "Me only") }[x.who || "all"]}</button><button class="btn btn-o xs" onclick="dr219.rm(${i})">✕</button></div>`).join("") : `<p class="xs muted">${T("لسه مفيش", "None yet")}</p>`}</div>`, 900); }
+  window.v219s = p => saveV(p);
+  window.v219k = k => { const K = V().keep.slice(); const i = K.indexOf(k); i >= 0 ? K.splice(i, 1) : K.push(k); saveV({ keep: K }); };
+  window.v219ex = (k, val) => { const E = Object.assign({}, V().ex || {}); if (val) E[k] = val; else delete E[k]; saveV({ ex: E }); };
+
+  /* ======================= 7) دفعة اقتراحات جديدة (في «كل الجديد» مقفولة) ======================= */
+  const NF = () => setv("nf218", {}) || {}; const on = id => !!(NF()[id] || {}).on;
+  // عداد التسبيح
+  function tasbihPage() { const D = LS("tsb219", { n: 0, t: "سبحان الله", goal: 33 }); window.tsb219 = (d, t) => { const x = LS("tsb219", D); if (t != null) { x.t = t; x.n = 0; } else x.n = d === 0 ? 0 : x.n + 1; LSset("tsb219", x); const c = document.getElementById("tsbn219"); if (c) c.textContent = x.n; if (x.n && x.n % x.goal === 0 && navigator.vibrate) navigator.vibrate(120); };
+    const Z = ["سبحان الله", "الحمد لله", "الله أكبر", "لا إله إلا الله", "أستغفر الله", "اللهم صل على محمد"];
+    return pageWrap("📿", T("عداد الأذكار", "Dhikr counter"), T("دوس على الدايرة — وبيهز كل 33", "Tap the circle — vibrates every 33"), `<div class="card" style="text-align:center"><div class="row" style="gap:.3rem;flex-wrap:wrap;justify-content:center">${Z.map(z => `<button class="btn ${D.t === z ? "btn-p" : "btn-o"} xs" onclick="tsb219(1,${J(z)});render()">${esc(z)}</button>`).join("")}</div><button class="tsb219" onclick="tsb219(1)"><span id="tsbn219">${D.n}</span><small>${esc(D.t)}</small></button><br><button class="btn btn-o" onclick="tsb219(0)">↺ ${T("صفّر", "Reset")}</button></div>`, 600); }
+  // الصفحة بتتكلم (مش للقرآن)
+  window.spk219 = () => { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } if (/mushaf|tajcolor|tasmee|qiraat|hifz|surah|quran/i.test(state.route)) return toast(T("القرآن مايتقراش بصوت آلي — اسمعه من القرّاء", "Quran is never read by a machine voice"), true); const m = document.querySelector("#app main, #app .sec .wrap") || document.getElementById("app"); const t = (m.innerText || "").replace(/﴿[^﴾]*﴾/g, "").slice(0, 4000); const u = new SpeechSynthesisUtterance(t); u.lang = AR() ? "ar-EG" : "en-US"; u.rate = .95; speechSynthesis.speak(u); toast("🔊 " + T("دوس تاني يوقف", "Tap again to stop")); };
+  // كمّل من حيث وقفت في كل صفحة
+  function cont() { if (!on("cont")) return; const k = state.route; if (!/^(home|myspace|login|signup|hub218|view219)$/.test(k)) { const h = [...document.querySelectorAll("#app h1")].find(x => !x.closest(".hdr")); if (h) LSset("last219", { r: k, a: state.pageArg || "", t: h.innerText.trim().slice(0, 40) }); }
+    const L = LS("last219", null); let p = document.getElementById("ct219"); if (!L || (L.r === k && (L.a || "") === (state.pageArg || ""))) { p && p.remove(); return; } if (!p) { p = document.createElement("button"); p.id = "ct219"; document.body.appendChild(p); } p.textContent = "⏯ " + T("كمّل: ", "Continue: ") + L.t; p.onclick = () => go16(L.r, L.a || undefined); }
+  // ثيم الليل لوحده + رمضان والعيد
+  function auto() { if (on("night") && !LS("thMan219", false)) { const h = new Date().getHours(); const want = h >= 19 || h < 6 ? "dark" : "light"; if (document.documentElement.getAttribute("data-theme") !== want) { try { setTheme(want); } catch (e) { document.documentElement.setAttribute("data-theme", want); } } }
+    let m = 0, d = 0; try { const f = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { month: "numeric", day: "numeric" }).formatToParts(new Date()); m = +f.find(x => x.type === "month").value; d = +f.find(x => x.type === "day").value; } catch (e) {}
+    const s = on("season") ? (m === 9 ? "ramadan" : (m === 10 && d <= 3) || (m === 12 && d >= 10 && d <= 13) ? "eid" : "") : ""; document.body.dataset.ss219 = s;
+    if (s && state.route === "home" && !document.getElementById("ssb219")) { const a = document.querySelector("#app .hdr"); a && a.insertAdjacentHTML("afterend", `<div id="ssb219" class="ssb219">${s === "ramadan" ? "🌙 " + T("رمضان كريم — كل عام وانتم بخير", "Ramadan Kareem") : "🎉 " + T("عيد مبارك — تقبّل الله منا ومنكم", "Eid Mubarak")}</div>`); } }
+  // وضع الصيانة
+  function maint() { const M = setv("maint219", null); if (!M || !M.on || own() || /login/.test(state.route)) return false; show(`<section class="sec"><div class="wrap" style="max-width:640px;text-align:center;padding:4rem 1rem"><div style="font-size:3rem">🛠️</div><h1>${T("بنحسّن الموقع", "We're improving the site")}</h1><p class="muted">${esc(M.msg || T("راجعين قريب جدًا إن شاء الله.", "Back very soon."))}</p></div></section>`); return true; }
+  window.mt219 = async () => { const M = setv("maint219", {}) || {}; const msg = M.on ? M.msg : prompt(T("رسالة للزوار وقت الصيانة", "Message for visitors"), M.msg || "راجعين قريب جدًا إن شاء الله."); if (!M.on && msg == null) return; await saveSetting16("maint219", { on: !M.on, msg }); toast(M.on ? "✅ " + T("الموقع رجع", "Site is back") : "🛠️ " + T("الموقع في الصيانة (انت بس اللي شايفه)", "Maintenance on (only you see the site)")); render(); };
+  // تصدير البيانات
+  window.ex219 = async () => { toast("⏳"); const { data, error } = await sb.from("profiles").select("id,display_name,real_name,email,role,created_at,country").limit(5000); if (error) return toast(error.message, true); const H = ["id", "display_name", "real_name", "email", "role", "created_at", "country"]; const csv = "﻿" + [H.join(",")].concat((data || []).map(r => H.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "itqan-users-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click(); };
+  // إضافة للكتالوج (صفحة كل الجديد)
+  const NEW = [
+    { id: "tasbih", ic: "📿", ar: "عداد الأذكار", en: "Dhikr counter", go: "go16('tasbih219')", d: "عداد تسبيح بالضغط وبيهز كل 33 (اقتراح 53)." },
+    { id: "speak", ic: "🔊", ar: "الصفحة بتتكلم", en: "Read page aloud", go: "spk219()", d: "يقرا كلام الصفحة بصوت الجهاز — القرآن مستثنى دايمًا (اقتراح 24)." },
+    { id: "cont", ic: "⏯", ar: "كمّل من حيث وقفت (في كل صفحة)", en: "Continue anywhere", go: "", d: "زرار صغير تحت في كل صفحة بيرجّعك لآخر صفحة كنت فيها (اقتراح 16). بيشتغل أو لأ — مالوش مكان.", global: 1 },
+    { id: "night", ic: "🌗", ar: "ليلي لوحده بالليل", en: "Auto night theme", go: "", d: "من 7 بالليل لـ 6 الصبح الموقع يبقى ليلي لوحده، ولو المستخدم غيّر بإيده بنسيبه (اقتراح 2).", global: 1 },
+    { id: "season", ic: "🌙", ar: "ثيم رمضان والعيد", en: "Ramadan & Eid theme", go: "", d: "في رمضان والعيدين: لون دهبي وشريط تهنئة في الرئيسية — بيشتغل لوحده بالتاريخ الهجري (اقتراح 3).", global: 1 },
+    { id: "maint", ic: "🛠️", ar: "وضع الصيانة", en: "Maintenance mode", go: "mt219()", d: "زرار يقفل الموقع على الزوار برسالة وانت بتشتغل — انت بس اللي بتشوفه (اقتراح 121).", place: ["myspace"], who: [] },
+    { id: "export", ic: "📤", ar: "تصدير المستخدمين Excel", en: "Export users (Excel)", go: "ex219()", d: "ملف CSV يفتح في Excel فيه كل المستخدمين (اقتراح 122).", place: ["myspace"], who: [] }
+  ];
+  const _hub = window.R218hub; // not used
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); if (own()) h = h.replace('<div class="msgrid">', `<div class="msgrid"><button class="mstile" style="--c:#0369a1" onclick="go16('view219')"><span>📍</span><b>${T("العرض والأماكن", "Display & placement")}</b></button>`); return h; };
+  function hubAdd() { if (state.route !== "hub218" || !own() || document.getElementById("nw219")) return; const first = document.querySelector("#app .nfc218"); if (!first) return;
+    first.insertAdjacentHTML("beforebegin", `<div id="nw219"><h3 style="margin:.6rem 0">🆕 ${T("الدفعة التانية", "Second batch")}</h3>${NEW.map(f => { const c = Object.assign({ on: false }, NF()[f.id] || {}); return `<div class="card nfc218 ${c.on ? "" : "off"}"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><div class="row" style="gap:.6rem;align-items:center"><span style="font-size:1.6rem">${f.ic}</span><div><b>${esc(AR() ? f.ar : f.en)}</b><p class="xs muted" style="margin:.1rem 0 0;max-width:520px">${esc(f.d)}</p></div></div><div class="row" style="gap:.3rem">${f.go && f.id !== "maint" && f.id !== "export" ? `<button class="btn btn-o xs" onclick="${esc(f.go)}">👁 ${T("جرّب", "Try")}</button>` : ""}${f.id === "maint" ? `<button class="btn btn-o xs" onclick="mt219()">${(setv("maint219", {}) || {}).on ? "✅ " + T("رجّع الموقع", "End maintenance") : "🛠️ " + T("شغّل الصيانة دلوقتي", "Start now")}</button>` : ""}${f.id === "export" ? `<button class="btn btn-o xs" onclick="ex219()">📤 ${T("نزّل دلوقتي", "Download now")}</button>` : ""}<button class="btn ${c.on ? "btn-p" : "btn-o"}" onclick="(async()=>{const n=Object.assign({},setv('nf218',{})||{});n['${f.id}']=Object.assign({},n['${f.id}']||{},{on:${!c.on},place:${J(f.place || ["myspace"])},who:${J(f.who || ["student", "teacher", "parent"])},name:${J(AR() ? f.ar : f.en)},ic:${J(f.ic)}});await saveSetting16('nf218',n);render()})()">${c.on ? "✅ " + T("شغّالة", "On") : "⏸ " + T("شغّلها", "Turn on")}</button></div></div></div>`; }).join("")}</div>`); }
+  const _rm = renderMySpace; renderMySpace = function () { let h = _rm.apply(this, arguments); const add = NEW.filter(f => f.go && !f.global && f.id !== "maint" && f.id !== "export" && on(f.id) && ((NF()[f.id] || {}).place || ["myspace"]).includes("myspace") && (own() || ((NF()[f.id] || {}).who || ["student", "teacher", "parent"]).includes(typeof role === "function" ? role() : "student"))); if (add.length) h = h.replace('<div class="msgrid">', `<div class="msgrid">${add.map(f => `<button class="mstile" style="--c:#0d9488" onclick="${esc(f.go)}"><span>${f.ic}</span><b>${esc(AR() ? f.ar : f.en)}</b></button>`).join("")}`); return h; };
+  try { const _st = setTheme; setTheme = function () { if (Date.now() - boot > 3000) LSset("thMan219", true); return _st.apply(this, arguments); }; } catch (e) {}
+
+  /* ======================= ربط ======================= */
+  const _r = render; render = function () {
+    if (maint()) return;
+    if (state.route === "view219") show(viewPage()); else if (state.route === "tasbih219") show(tasbihPage()); else _r.apply(this, arguments);
+    try { hdrKeep(); arrow(); drawerFix(); domSort(); hubAdd(); cont(); auto(); if (window.PK219) badges(); } catch (e) { console.warn("v219", e); }
+  };
+  const m = location.hash.match(/^#\/(view219|tasbih219)/); if (m) state.route = m[1];
+  let t9; new MutationObserver(() => { clearTimeout(t9); t9 = setTimeout(() => { try { hdrKeep(); drawerFix(); domSort(); if (window.PK219) badges(); } catch (e) {} }, 120); }).observe(document.body, { childList: true });
+  addEventListener("resize", () => { try { drawerFix(); } catch (e) {} });
+  css(`html body .hdr .tools.tc169.tc169>.keep219.keep219.keep219,html body .hdr .tools>.keep219{display:inline-flex!important}
+  #app .hdr .tools>[data-k219=trial]{padding-block:.35rem!important;min-height:0!important;height:auto!important;line-height:1.2!important;font-size:.85rem!important;align-self:center}
+  #app .hdr .tools>[data-k219=theme]{padding-block:.3rem!important;align-self:center}
+  body[data-ap219=center] #tbb209{left:calc(50% + var(--ao219,0px))!important;right:auto!important;transform:translateX(-50%)!important}
+  body[data-ap219=start] #tbb209{inset-inline-start:calc(84px + var(--ao219,0px))!important;inset-inline-end:auto!important;left:auto;transform:none!important}
+  body[data-ap219=end] #tbb209{inset-inline-end:calc(84px + var(--ao219,0px))!important;inset-inline-start:auto!important;left:auto;transform:none!important}
+  #sd152.lf219{left:var(--sbw219,14px)!important;margin-left:0!important}
+  #bt216.in219{position:static!important;writing-mode:horizontal-tb!important;transform:none!important;width:100%!important;height:auto!important;min-height:44px;border-radius:12px!important;font-size:.7rem!important;padding:.3rem .2rem!important;margin:.2rem 0!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;white-space:normal!important;line-height:1.15;box-shadow:none!important}
+  .dr219 img{width:26px;height:26px;object-fit:contain;display:block;margin:0 auto}.dr219 small{display:block;font-size:.6rem}.add219{opacity:.7;font-size:.7rem!important}
+  .pk219{position:absolute;top:-6px;inset-inline-start:-6px;z-index:30;background:#16a34a;color:#fff;border-radius:999px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:copy;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+  .pkb219{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:30000;background:#0f172a;color:#fff;border-radius:14px;padding:.5rem .8rem;display:flex;gap:.5rem;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+  .tsb219{display:flex;flex-direction:column;align-items:center;justify-content:center;width:13rem;height:13rem;border-radius:50%;margin:1.2rem auto;border:0;cursor:pointer;background:radial-gradient(circle at 30% 30%,color-mix(in srgb,var(--accent) 60%,#fff),var(--accent));color:#fff;box-shadow:0 14px 34px color-mix(in srgb,var(--accent) 40%,transparent);transition:transform .08s}.tsb219:active{transform:scale(.96)}.tsb219 span{font-size:3.4rem;font-weight:800}.tsb219 small{font-size:1rem}
+  #ct219{position:fixed;bottom:1rem;inset-inline-end:5.5rem;z-index:900;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:.4rem .9rem;font:inherit;font-size:.82rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12);max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body[data-ss219=ramadan],body[data-ss219=eid]{--accent:#b8860b}.ssb219{text-align:center;padding:.45rem;background:linear-gradient(90deg,#78350f,#b8860b,#78350f);color:#fff;font-weight:700}`);
 })();
 
 // بدء التشغيل
