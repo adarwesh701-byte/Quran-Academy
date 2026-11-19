@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v238";
+const UI_VERSION = "2026-11-17-v239";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31406,6 +31406,32 @@ Between lessons, the platform keeps you going:
   .lk238{display:flex;gap:.35rem;flex-wrap:wrap}.lk238 input{flex:1;min-width:12rem;direction:ltr}
   .pay238{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}@media(max-width:560px){.pay238{grid-template-columns:1fr}.pr238{grid-template-columns:1fr}}.pay238 button{display:flex;flex-direction:column;gap:.3rem;padding:1rem;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;font:inherit}.pay238 button:hover{border-color:var(--accent)}.pay238 span{font-size:1.3rem;font-weight:800;color:var(--accent)}
   .cta238{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;border:2px solid var(--accent)}`);
+})();
+
+/* ================= v239: صفحة كل مقام (أساسي وفرعي) — اتشالت تبويبات «الآهات» و«خمّن المقام» و«تمارين الصوت» (خمّن المقام والتمارين مكانهم «مساحتك الصوتية») · «التحويل» في المقامات الأساسية بس · «🎤 مارس المقام بصوتك» بقى تبويب بيفتح جوه نفس الصفحة ومابيوديكش مكان تاني · التبويبات أول حاجة في الصفحة ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const MAIN = new Set(["rast", "bayati", "saba", "hijaz", "nahawand", "sikah", "kurd", "ajam"]);
+  const GONE = new Set(["aah", "guess", "ex165"]);
+  if (typeof maqamOne !== "function") return;
+  const _mo = maqamOne;
+  maqamOne = function (cur) {
+    const mid = ((cur && cur.meta) || {}).maqam; const main = MAIN.has(mid);
+    if (GONE.has(state.mqTab) || (!main && state.mqTab === "mod")) state.mqTab = "info";
+    let h = _mo.apply(this, arguments);
+    h = h.replace(/<div class="motabs">([\s\S]*?)<\/div>/, (m, inner) => {
+      let x = inner.replace(/<button[^>]*onclick="state\.mqTab='(\w+)'[^"]*"[^>]*>[\s\S]*?<\/button>/g, (b, k) => (GONE.has(k) || (!main && k === "mod")) ? "" : b);
+      if (!/mqTab='vtest'/.test(x)) { const btn = `<button class="${state.mqTab === "vtest" ? "on" : ""}" onclick="state.mqTab='vtest';try{aahStop()}catch(e){};render()">🎤 ${T("مارس المقام بصوتك", "Practise with your voice")}</button>`; x = x.replace(/(<button[^>]*mqTab='info'[\s\S]*?<\/button>)/, "$1" + btn); }
+      return `<div class="motabs mt239">${x}</div>`; });
+    return h;
+  };
+  /* أي زرار «مارس المقام بصوتك» تاني بيودّي لصفحة تانية: يفتح التبويب جوه الصفحة */
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#app button, #app a"); if (!b || b.closest(".motabs")) return; if (!/مارس المقام|Practi[sc]e (the maqam )?with your voice/i.test(b.textContent || "")) return; if (!document.querySelector("#app .motabs")) return; e.preventDefault(); e.stopPropagation(); state.mqTab = "vtest"; render(); setTimeout(() => { const t = document.querySelector("#app .motabs"); t && t.scrollIntoView({ block: "start" }); }, 80); }, true);
+  /* التبويبات أول حاجة: بتتنقل فوق محتوى القسم */
+  function top() { const t = document.querySelector("#app .motabs.mt239"); if (!t || t.__t239) return; t.__t239 = 1; const card = t.parentElement; const h1 = document.querySelector("#app h1"); const host = h1 && (h1.closest(".wrap") || h1.parentElement); if (!host || host.contains(t) && host.firstElementChild === t) return; }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { top(); } catch (e) {} return o; };
+  css(`.motabs.mt239{position:sticky;top:0;z-index:5;background:var(--bg);padding:.4rem 0;flex-wrap:wrap}`);
 })();
 
 // بدء التشغيل
