@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v244";
+const UI_VERSION = "2026-11-17-v245";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31681,6 +31681,53 @@ Between lessons, the platform keeps you going:
   const _r = render; render = function () { if (R[state.route]) { if (!allowed(state.route)) { state.route = "home"; return _r.apply(this, arguments); } return show(R[state.route]()); } const o = _r.apply(this, arguments); try { hubAdd(); } catch (e) {} return o; };
   css(`.sr244{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}.sr244 .h{background:#fee2e2;color:#991b1b}.sr244 .m{background:#fef3c7;color:#92400e}.sr244 .e{background:#dcfce7;color:#166534}
   .lv244{text-align:center}.bd244{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem}.bd244>div{border:1px dashed var(--line);border-radius:14px;padding:.6rem;text-align:center;display:flex;flex-direction:column;gap:.2rem;opacity:.45;filter:grayscale(1)}.bd244>div.on{opacity:1;filter:none;border-style:solid;border-color:#f59e0b}.bd244 span{font-size:1.8rem}`);
+})();
+
+/* ================= v245: الرئيسية من غير تكرار (الصف القديم «حفظ القرآن · التجويد …» اتشال واللي كان فيه بس اتضاف للمسارات: الفصل والمسابقات وكل الأدوات) · شريط «… — الأدوات» اتشال من كل الصفحات علشان الطالب يدخل على المحتوى علطول (والمالك يرجّعه بزرار) · زرار «طفل» بقى صوت طفل فعلًا والزرار المختار بس اللي بينوّر · صفحة «كمّل بياناتك» ماعادتش بتتفرض بعد الدخول · صفحة كل مقام (أساسي وفرعي): التبويبات أول حاجة تحت الاسم، والكروت الكبيرة (مرتل/مجود/نشيد) وكروت التلاوات اتشالت من الصفحة وبقت جوه التبويبات · «مارس المقام بصوتك» تبويب واحد بس بيفتح جوه الصفحة بكل محتوى الصفحة القديمة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const barOn = () => +setv("dmbar245", 0) === 1;
+  window.dm245 = async () => { await saveSetting16("dmbar245", barOn() ? 0 : 1); render(); };
+
+  /* 1) الرئيسية */
+  function home() { if (state.route !== "home") return; const p = document.getElementById("pth241"); if (!p) return; const box = p.parentElement; if (box) box.classList.add("h245"); const sec = box && box.closest(".wrap"); sec && sec.querySelectorAll(":scope > .lyb").forEach(x => x.style.display = "none");
+    if (!p.querySelector("#more245")) p.insertAdjacentHTML("beforeend", `<div id="more245" class="tl241" style="margin-top:.6rem"><button onclick="navigate('classroom')"><span>🎥</span>${T("الفصل والحصص", "Classroom & lessons")}</button><button onclick="go16('competitions')"><span>🏆</span>${T("المسابقات", "Competitions")}</button><button onclick="go16('alltools')"><span>🧰</span>${T("كل الأدوات", "All tools")}</button></div>`); }
+
+  /* 2) شريط الأدوات في أي صفحة */
+  function toolsBar() { const bars = document.querySelectorAll("#app .dmbar"); bars.forEach(b => b.classList.toggle("off245", !barOn())); if (own() && bars.length && !document.getElementById("dmt245")) { const h = document.querySelector("#app .libhead") || document.querySelector("#app .dmbar"); h && h.insertAdjacentHTML(h.matches(".libhead") ? "beforeend" : "afterend", `<button id="dmt245" class="btn btn-o xs" onclick="dm245()">🧰 ${barOn() ? T("اخفي شريط الأدوات من كل الصفحات", "Hide the tools bar everywhere") : T("رجّع شريط الأدوات في كل الصفحات", "Show the tools bar again everywhere")}</button>`); } }
+
+  /* 3) صفحة المقام */
+  function mid() { try { const s = (sectionsData() || []).find(x => x.id === state.libSec); return s && (s.meta || {}).maqam; } catch (e) { return null; } }
+  function maqamPageFix() { const t = document.querySelector("#app .motabs.mt239"); if (!t) return; const wrap = t.parentElement; const head = wrap.querySelector(":scope > .libhead");
+    /* شيل الكروت الكبيرة وكروت التلاوات وزرار «أنهي مقام» من الصفحة */
+    [...wrap.children].forEach(c => { if (c === t || c === head) return; if (c.matches(".libgrid, .grid") || (c.matches(".row") && /which maqam|أنهي مقام|انهي مقام/i.test(c.textContent))) c.classList.add("off245"); });
+    /* كروت «عن المقام» تظهر في تبويب «عن المقام» بس */
+    wrap.querySelectorAll(":scope > .mqk86, :scope > .mqk172, :scope > .mqinfo59").forEach(c => c.classList.toggle("hid245", state.mqTab !== "info"));
+    /* التبويبات تحت الاسم علطول */
+    if (head && head.nextElementSibling !== t) head.insertAdjacentElement("afterend", t);
+    /* «مارس المقام» مرة واحدة بس */
+    t.querySelectorAll("button").forEach(b => { if (/libGo\(/.test(b.getAttribute("onclick") || "")) b.remove(); }); }
+
+  /* تبويب «مارس المقام» بيتعرض جوه الصفحة بمحتوى الصفحة القديمة كله */
+  if (typeof maqamOne === "function") { const _mo = maqamOne; maqamOne = function (cur) { if (state.mqTab !== "vtest") return _mo.apply(this, arguments); const m = ((cur && cur.meta) || {}).maqam; state.mqTab = "info"; let h = _mo.apply(this, arguments); state.mqTab = "vtest";
+    const mt = h.match(/<div class="motabs[^"]*">[\s\S]*?<\/div>/); if (!mt) return h; let tabs = mt[0].replace(/class="on"/g, 'class=""').replace(/(<button )class="[^"]*"( onclick="state\.mqTab='vtest')/, '$1class="on"$2'); let body = ""; try { body = maqamPage("vtest", m); } catch (e) { body = ""; } return tabs + `<div id="vt245">${body}</div>`; }; }
+
+  /* 4) صوت طفل: طبقة أعلى من الحريمي بحوالي 3 درجات (كان بيطلع رجالي)، والزرار المختار بس هو اللي ينوّر */
+  try { const _th = mqTonicHz; mqTonicHz = function (m) { if (state.mq && state.mq.voice === "c" && !state.mq.mine) { const v = state.mq.voice; state.mq.voice = "f"; let f; try { f = _th.apply(this, arguments); } finally { state.mq.voice = v; } return f * Math.pow(2, 3 / 12); } return _th.apply(this, arguments); }; } catch (e) {}
+  function voiceChips() { const v = (state.mq && state.mq.voice) || "m"; document.querySelectorAll("#app button.chip[onclick*=\"state.mq.voice='\"]").forEach(b => { const k = ((b.getAttribute("onclick") || "").match(/state\.mq\.voice='(\w)'/) || [])[1]; b.classList.toggle("on", !state.mq.mine && k === v); }); }
+
+  /* 5) «كمّل بياناتك» ماعادتش بتتفرض بعد الدخول — البلد بتتحدد من الجهاز، والموبايل اختياري من صفحة البروفايل */
+  try { needsComplete114 = function () { try { const p = state.auth.profile, u = state.auth.user; if (u && p && !p.country && typeof guessCountry === "function" && !state.__c245) { state.__c245 = 1; const c = guessCountry(); if (c) { p.country = c; sb.from("profiles").update({ country: c }).eq("id", u.id).then(() => {}); } } } catch (e) {} return false; }; } catch (e) {}
+
+  const run = () => { try { home(); toolsBar(); maqamPageFix(); voiceChips(); } catch (e) { console.warn("v245", e); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); run(); setTimeout(run, 60); return o; };
+  let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(run, 120); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+  css(`#app .off245,#app .hid245{display:none!important}
+  #app .h245{display:block!important}#app .h245>h2{margin-bottom:.6rem}
+  #dmt245{margin:.3rem 0 .6rem}
+  #app .motabs.mt239{margin:.4rem 0 .8rem}`);
 })();
 
 // بدء التشغيل
