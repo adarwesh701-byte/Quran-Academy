@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v234";
+const UI_VERSION = "2026-11-17-v235";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31212,6 +31212,73 @@ Between lessons, the platform keeps you going:
   #mmModal .chip.lt{font-size:1.6rem!important;min-width:2.6rem;padding:.2rem .6rem!important;line-height:1.4}
   .mk234{border:0;background:none;cursor:pointer;font-size:.9rem;margin-inline-start:-.2rem;margin-inline-end:.3rem;opacity:.75}.mk234:hover{opacity:1}
   `);
+})();
+
+/* ================= v235: ملف Notion — الدفعة 2: مقام العجم بيبدأ من الدو (اللي كان من السي هو العجم عشيران) · مصطلحات التجويد في الواجهة الإنجليزي بقت: الفرانكو + المصطلح الإنجليزي اللي اخترته + العربي (Iẓhār (clarity) · إظهار) في كل مكان حتى الأسئلة · «قرآن» جنب مرتل ومجود · العلامة المائية اتشالت من الفيديوهات · الكلام اللي فوق بعض في تبويبات الحفظ ================= */
+(function () {
+  const AR = () => state.lang === "ar";
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* 1) العجم من الدو */
+  try { const a = MQ.find(m => m.id === "ajam"); if (a) { a.tonic = 0; } } catch (e) {}
+
+  /* 2) المصطلحات: [النمط, الإنجليزي (اختيار المالك), العربي] — الأطول الأول */
+  const V = "[aāâ]", I = "[iīî]", U = "[uūû]", Q = "[ʼʾ'’ʿ`]?";
+  const G = [
+    [`Idgh${V}m (?:with(?:out)? |bi-?|bil-?|bi )?ghunn${V}h? shafaw${I}`, "merging · from lips", "إدغام شفوي"],
+    [`Ikhf${V}${Q} shafaw${I}`, "hiding · from lips", "إخفاء شفوي"],
+    [`I[zẓ]h${V}r shafaw${I}`, "clarity · from lips", "إظهار شفوي"],
+    [`Idgh${V}m with ghunn${V}h?`, "merging with ghunnah", "إدغام بغنة"],
+    [`Idgh${V}m without ghunn${V}h?`, "merging without ghunnah", "إدغام بغير غنة"],
+    [`Idgh${V}m shafaw${I}`, "merging · from lips", "إدغام شفوي"],
+    [`Madd ${Q}${V}ri[dḍ] lil-?suk${U}n`, "madd because of stop", "مد عارض للسكون"],
+    [`Madd (?:al-)?muttasil|Madd muttaṣil|Connected madd`, "connected madd", "مد متصل"],
+    [`Madd (?:al-)?munfasil|Madd munfaṣil|Separated? madd`, "separate madd", "مد منفصل"],
+    [`Madd (?:al-)?l${V}zim|Necessary madd|Obligatory madd`, "obligatory madd", "مد لازم"],
+    [`Natural madd|Madd (?:a[tṭ]-?)?[tṭ]ab${I}${Q}${I}`, "madd elongation", "مد طبيعي"],
+    [`I[zẓ]h${V}r(?: [hḥ]alq${I})?`, "clarity", "إظهار"],
+    [`Ikhf${V}${Q}`, "hiding", "إخفاء"],
+    [`Idgh${V}m`, "merging", "إدغام"],
+    [`Iql${V}b`, "switching", "إقلاب"],
+    [`Tafkh${I}m`, "heavy", "تفخيم"],
+    [`Tarq${I}q`, "light", "ترقيق"],
+    [`Isti${Q}l${V}${Q}`, "go up", "استعلاء"],
+    [`Istif${V}l`, "go down", "استفال"],
+    [`Infit${V}[hḥ]`, "opening", "انفتاح"],
+    [`I[tṭ]b${V}q`, "closing", "إطباق"],
+    [`Waqf (?:and|&|wa) (?:i|I)btid${V}${Q}`, "stopping and starting", "الوقف والابتداء"],
+    [`Hams`, "whispering", "همس"],
+    [`Jahr`, "jahr", "جهر"],
+    [`Shidd${V}h?`, "intense", "الشدة"],
+    [`Rakh${V}w${V}h?`, "weak", "الرخاوة"],
+    [`Taw${V}ssu[tṭ]|Bayniyy${V}h?`, "in between", "البينية"],
+    [`Qalqal${V}h?`, "echo", "قلقلة"],
+    [`Ghunn${V}h?`, "nasal sound", "غنة"]
+  ];
+  const B = "A-Za-zāīūẓḍṭḥ";
+  const ONE = G.map(([p, en, ar]) => [new RegExp(`^(?:${p})$`, "i"), en, ar]);
+  const RE = new RegExp(`(^|[^${B}])(${G.map(g => "(?:" + g[0] + ")").join("|")})(?![${B}])(\\s*\\([^)]{0,40}\\))?(\\s*·\\s*[\\u0600-\\u06FF])?`, "gi");
+  const SKIP = "script,style,textarea,input,select,code,pre,[contenteditable],#toast,.toast";
+  const done = new WeakMap();
+  function glossary(root) { if (AR() || !root) return; const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => { const v = n.nodeValue; if (!v || v.length > 1500 || !/[A-Za-z]/.test(v)) return 2; if (done.get(n) === v) return 2; const p = n.parentElement; if (!p || p.closest(SKIP)) return 2; return 1; } });
+    const L = []; let n; while ((n = tw.nextNode())) L.push(n);
+    L.forEach(n => { const v0 = n.nodeValue; const v = v0.replace(RE, (m, pre, term, par, tail) => { if (tail) return m; const g = ONE.find(x => x[0].test(term)); if (!g) return m; const [, en, ar] = g; if (par && par.includes(en)) return m; const keep = par && /\d/.test(par) ? par : ""; return `${pre}${term} (${en}) · ${ar}${keep}`; }); if (v !== v0) n.nodeValue = v; done.set(n, n.nodeValue); }); }
+
+  /* 3) «قرآن» جنب مرتل ومجود */
+  function quranLabel(root) { (root || document).querySelectorAll("#app button, #app .chip").forEach(b => { if (b.__q235 || b.children.length > 3) return; const t = (b.textContent || "").trim(); if (/^(\S+\s)?(مرتل|مجود|Murattal|Mujawwad)$/.test(t)) { b.__q235 = 1; const tn = [...b.childNodes].reverse().find(x => x.nodeType === 3 && x.nodeValue.trim()); if (tn) tn.nodeValue = tn.nodeValue.replace(/(مرتل|مجود)/, "قرآن $1").replace(/(Murattal|Mujawwad)/, "Quran · $1"); } }); }
+
+  /* 4) العلامة المائية في الفيديوهات اتشالت */
+  try { svWatermarkCss = function () { return ""; }; } catch (e) {}
+  try { rmWatermark = function () {}; } catch (e) {}
+
+  window.__g235 = glossary;
+  let t = 0; const app = () => document.getElementById("app");
+  const run = () => { try { glossary(app()); quranLabel(); } catch (e) { console.warn("v235", e); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); setTimeout(run, 60); return o; };
+  new MutationObserver(() => { clearTimeout(t); t = setTimeout(run, 250); }).observe(document.body, { childList: true, subtree: true });
+  css(`.rmwm,#rmWm,[class*=wmark],.svwm{display:none!important;background:none!important}
+  #app .chip,#app .tabs button,#app [class*=tabs] button{white-space:normal;line-height:1.35}
+  #app .row>.chip,#app .row>button.chip{flex:0 1 auto;min-width:0}`);
 })();
 
 // بدء التشغيل
