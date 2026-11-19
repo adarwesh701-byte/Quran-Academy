@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v240";
+const UI_VERSION = "2026-11-17-v241";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31452,6 +31452,63 @@ Between lessons, the platform keeps you going:
   addEventListener("scroll", () => close(), { passive: true });
   css(`#wp240{position:fixed;z-index:60000;width:min(360px,92vw);background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 34px rgba(0,0,0,.2);padding:.7rem .8rem;display:flex;flex-direction:column;gap:.4rem;text-align:center}
   #wp240 .x{position:absolute;top:.3rem;inset-inline-end:.4rem;border:0;background:none;cursor:pointer;color:var(--muted)}#wp240 .w{font:2.2rem/1.6 'Amiri Quran','Amiri',serif}#wp240 .ref{font-size:.8rem;color:var(--muted)}#wp240 .ay{font:1.15rem/2 'Amiri Quran','Amiri',serif;max-height:6.5rem;overflow:auto;background:var(--bg);border-radius:12px;padding:.3rem .5rem}`);
+})();
+
+/* ================= v241: الرئيسية بالمسارات (من Notion): أول ما تدخل تلاقي 5 مسارات بس — 📖 القرآن والتجويد · 📜 القراءات العشر · 🎼 المقامات · ✍️ العربية · 📚 العلوم الإسلامية — وكل مسار جواه تقسيمات كبيرة (يتفتح واحد بس في المرة) وكل أداة في مكان واحد من غير تكرار · صفحة «📜 القراءات العشر» بالقرّاء العشرة ورواتهم · صفحة «🕌 أدوات المسلم» (مواقيت الصلاة والقبلة، الأذكار، التقويم الهجري، أسماء الله الحسنى، الأربعين…) collapsed ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["qiraat10", "muslim241"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+
+  /* الأدوات من DOMAINS نفسها (عشان أي تعديل منك في المنظّم يظهر هنا) */
+  function tools() { const out = {}; try { DOMAINS().forEach(d => (d.tools || []).forEach(t => { const js = String(t[2]); const k = js + "|" + t[1]; if (!out[k]) out[k] = { ic: t[0], n: t[1], js, d: d.k, key: k }; })); } catch (e) {} return out; }
+  const pick = (all, keys) => keys.map(k => Object.values(all).find(t => (k.re ? k.re.test(t.n) : t.js.includes(k)) && (!k.d || t.d === k.d))).filter(Boolean);
+  const R = (re, d) => ({ re, d });
+  function PATHS() { const A = tools(); const used = new Set(); const grp = (name, keys, extra = []) => { const L = pick(A, keys).filter(t => !used.has(t.key)); L.forEach(t => used.add(t.key)); return [name, L.concat(extra)]; };
+    return [
+      { id: "quran", ic: "📖", t: T("القرآن والتجويد", "Quran & Tajweed"), s: T("الحفظ والمراجعة، التجويد، المصاحف", "Memorization, review, tajweed, mushafs"), c: "#0f766e", g: [
+        grp(T("الحفظ والمراجعة", "Memorization & review"), ["hzTab='today'", "hzTab='session'", "hzTab='map'", "go16('tasmee')", "go16('hifzt')", "go16('khatma')", "go16('growth')", "go16('games172')"]),
+        grp(T("التجويد", "Tajweed"), ["go16('tjb')", "go16('makharij')", "go16('tf228')", "go16('vow172')", "go16('nooraniya')", R(/صلّح أخطاء التجويد/), R(/ألعاب التجويد/), R(/رحلة التجويد/)]),
+        grp(T("المصاحف", "Mushafs"), [R(/المصحف الملوّن/, "tajweed"), R(/مصحف أخطائي/), "go16('kidsmushaf')", R(/قصة مصوّرة/)])] },
+      { id: "qiraat", ic: "📜", t: T("القراءات العشر", "The Ten Qira'at"), s: T("القرّاء العشرة ورواتهم، استماع آية بآية والفروق", "The ten readers and their narrators, ayah-by-ayah audio"), c: "#7c2d12", g: [
+        [T("القراءات", "Qira'at"), [{ ic: "📜", n: T("القرّاء العشرة ورواتهم", "The ten readers & narrators"), js: "go16('qiraat10')" }, ...pick(A, ["go16('qiraat')"]).map(t => (used.add(t.key), t))]]] },
+      { id: "maqamat", ic: "🎼", t: T("المقامات", "Maqamat"), s: T("الأساسية، الفرعية، أنشد معي، مساحتك الصوتية، النظري", "Main, branches, sing along, your voice, theory"), c: "#6d28d9", g: [
+        grp(T("المقامات", "The maqamat"), [R(/المقامات الأساسية/), R(/المقامات الفرعية/), R(/أنشد معي/), "go16('adhans')"]),
+        [T("مساحتك الصوتية", "Your voice space"), [{ ic: "🎤", n: T("مساحتك الصوتية (مداك، تمارين، خمّن واكتشف مقامك)", "Your voice space (range, exercises, guess & detect)"), js: "go16('voice242')" }, ...pick(A, ["go16('tuner')"]).map(t => (used.add(t.key), t))]],
+        grp(T("المعلومات النظرية", "Theory"), ["go16('maqamat')", "go16('tahwil')", "go16('mqc')", "go16('mqchallenge')"])] },
+      { id: "arabic", ic: "✍️", t: T("العربية", "Arabic"), s: T("الحروف من الصفر، اتكلم عربي، النحو والصرف", "Letters from zero, speak Arabic, grammar"), c: "#b45309", g: [
+        grp(T("الحروف والقراءة من الصفر", "Letters & reading from zero"), ["go16('reading')", "go16('kidsar')"]),
+        grp(T("اتكلم عربي", "Speak Arabic"), ["go16('lang','fu')", "go16('lang','eg')", "go16('lang','gu')", "go16('egyptian')"]),
+        grp(T("الفصحى والنحو والصرف", "Fusha, grammar & morphology"), ["go16('abyb')", "go16('arabiya')", "go16('fusha')", "go16('nahw')"])] },
+      { id: "sciences", ic: "📚", t: T("العلوم الإسلامية", "Islamic Sciences"), s: T("التفسير والحديث والفقه والسيرة + أدوات المسلم", "Tafsir, hadith, fiqh, seerah + Muslim tools"), c: "#1d4ed8", g: [
+        grp(T("العلوم", "Sciences"), ["go16('ilm')", R(/تفسير القرآن/), R(/الحديث الشريف/), R(/^الفقه$/), R(/السيرة النبوية/), R(/قصص الأنبياء/), "go16('alam')", "go16('kutub199')", "go16('bk','fqs')"]),
+        [T("أدوات المسلم", "Muslim tools"), [{ ic: "🕌", n: T("كل أدوات المسلم", "All Muslim tools"), js: "go16('muslim241')" }]]] }
+    ]; }
+
+  const OPEN = () => state.p241 || "";
+  window.p241 = id => { state.p241 = OPEN() === id ? "" : id; const b = document.getElementById("pth241"); if (b) b.outerHTML = paths(); };
+  function paths() { const P = PATHS(); return `<div id="pth241"><div class="lv241"><button class="chip" onclick="state.lvT=null;go16('level')">🎯 ${T("مش عارف تبدأ منين؟ حدد مستواك", "Not sure where to start? Find your level")}</button></div><div class="pg241">${P.map(p => `<div class="pc241 ${OPEN() === p.id ? "on" : ""}" style="--c:${p.c}"><button class="ph241" onclick="p241('${p.id}')"><span class="i">${p.ic}</span><span class="tx"><b>${esc(p.t)}</b><small>${esc(p.s)}</small></span><span class="ar">${OPEN() === p.id ? "−" : "+"}</span></button>${OPEN() === p.id ? `<div class="pb241">${p.g.filter(g => g[1].length).map(g => `<div class="gg241"><h4>${esc(g[0])}</h4><div class="tl241">${g[1].map(t => `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div></div>`).join("")}</div>` : ""}</div>`).join("")}</div></div>`; }
+
+  function home() { if (state.route !== "home") return; const app = document.getElementById("app"); if (!app || app.querySelector("#pth241")) return; const h = [...app.querySelectorAll("h2")].find(x => /عايز تتعلم إيه|ماذا تريد أن تتعلم|What would you like to learn/i.test(x.textContent)); if (!h) return; const box = h.parentElement; [...box.children].forEach(c => { if (c !== h) c.style.display = "none"; }); h.insertAdjacentHTML("afterend", paths()); }
+
+  /* القراءات العشر */
+  const Q10 = [["نافع المدني", "Nāfiʿ", "قالون · ورش", "Qālūn · Warsh"], ["ابن كثير المكي", "Ibn Kathīr", "البزّي · قنبل", "al-Bazzī · Qunbul"], ["أبو عمرو البصري", "Abū ʿAmr", "الدوري · السوسي", "al-Dūrī · al-Sūsī"], ["ابن عامر الشامي", "Ibn ʿĀmir", "هشام · ابن ذكوان", "Hishām · Ibn Dhakwān"], ["عاصم الكوفي", "ʿĀṣim", "شعبة · حفص", "Shuʿbah · Ḥafṣ"], ["حمزة الكوفي", "Ḥamzah", "خلف · خلّاد", "Khalaf · Khallād"], ["الكسائي الكوفي", "al-Kisāʾī", "أبو الحارث · الدوري", "Abū al-Ḥārith · al-Dūrī"], ["أبو جعفر المدني", "Abū Jaʿfar", "ابن وردان · ابن جمّاز", "Ibn Wardān · Ibn Jammāz"], ["يعقوب الحضرمي", "Yaʿqūb", "رويس · روح", "Ruways · Rawḥ"], ["خلف العاشر", "Khalaf al-ʿĀshir", "إسحاق · إدريس", "Isḥāq · Idrīs"]];
+  function qiraat() { return pageWrap("📜", T("القراءات العشر", "The Ten Qira'at"), T("القرّاء العشرة المتواترة ولكل قارئ راويان — اسمع وقارن من صفحة القراءات", "The ten mutawātir readers, each with two narrators"), `<div class="q241">${Q10.map((q, i) => `<div class="card"><b>${i + 1}. ${esc(T(q[0], q[1]))}</b><p class="sm muted" style="margin:.2rem 0">${T("الراويان", "Narrators")}: ${esc(T(q[2], q[3]))}</p></div>`).join("")}</div><button class="btn btn-p btn-lg" style="margin-top:1rem" onclick="go16('qiraat')">🎧 ${T("اسمع القراءات آية بآية والفروق", "Listen ayah by ayah & see the differences")}</button>`, 900); }
+
+  /* أدوات المسلم */
+  function muslim() { const A = tools(); const G = [[T("🕌 الصلاة", "🕌 Prayer"), ["go16('prayer')"]], [T("📿 الأذكار والدعاء", "📿 Adhkar"), ["go16('adhkar')", "go16('asma')"]], [T("📖 القرآن", "📖 Quran"), ["go16('khatma')", "go16('ayahcard')", "go16('arbaeen')"]], [T("🗓️ التقويم", "🗓️ Calendar"), []]];
+    const extra = { [T("🗓️ التقويم", "🗓️ Calendar")]: [{ ic: "🌙", n: T("التقويم الهجري", "Hijri calendar"), js: "go16('cal224')" }] };
+    return pageWrap("🕌", T("أدوات المسلم", "Muslim tools"), T("كل اللي المسلم بيحتاجه كل يوم في مكان واحد", "Everything a Muslim needs daily, in one place"), G.map(([n, k], i) => { const L = pick(A, k).concat(extra[n] || []); return L.length ? `<details class="card" ${i === 0 ? "open" : ""}><summary class="b">${esc(n)}</summary><div class="tl241" style="margin-top:.5rem">${L.map(t => `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div></details>` : ""; }).join(""), 860); }
+
+  const _r = render; render = function () { if (state.route === "qiraat10") return show(qiraat()); if (state.route === "muslim241") return show(muslim()); const o = _r.apply(this, arguments); try { home(); } catch (e) { console.warn("v241", e); } return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { home(); } catch (e) {} }, 120); }).observe(document.getElementById("app") || document.body, { childList: true });
+  css(`.lv241{text-align:center;margin:.3rem 0 .8rem}.pg241{display:grid;gap:.6rem}
+  .pc241{border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));border-radius:20px;background:var(--card);overflow:hidden;transition:box-shadow .2s}.pc241.on{box-shadow:0 10px 26px color-mix(in srgb,var(--c) 22%,transparent)}
+  .ph241{display:flex;align-items:center;gap:.8rem;width:100%;border:0;background:color-mix(in srgb,var(--c) 8%,var(--card));padding:1rem 1.1rem;cursor:pointer;color:var(--fg);font:inherit;text-align:start}.ph241 .i{font-size:2.2rem}.ph241 .tx{display:flex;flex-direction:column;flex:1}.ph241 b{font-size:1.2rem;color:var(--c)}.ph241 small{color:var(--muted);font-size:.85rem}.ph241 .ar{font-size:1.6rem;color:var(--c);font-weight:800}
+  .pb241{padding:.6rem 1rem 1rem;display:grid;gap:.7rem}.gg241 h4{margin:.2rem 0 .4rem;color:var(--c)}
+  .tl241{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.4rem}.tl241 button{display:flex;align-items:center;gap:.45rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.55rem .7rem;cursor:pointer;font:inherit;font-size:.9rem;text-align:start}.tl241 button:hover{border-color:var(--accent)}.tl241 button span{font-size:1.25rem}
+  .q241{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem}`);
 })();
 
 // بدء التشغيل
