@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v235";
+const UI_VERSION = "2026-11-17-v236";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31279,6 +31279,26 @@ Between lessons, the platform keeps you going:
   css(`.rmwm,#rmWm,[class*=wmark],.svwm{display:none!important;background:none!important}
   #app .chip,#app .tabs button,#app [class*=tabs] button{white-space:normal;line-height:1.35}
   #app .row>.chip,#app .row>button.chip{flex:0 1 auto;min-width:0}`);
+})();
+
+/* ================= v236: «تسجيل الدخول» و«حساب جديد» ظاهرين علطول جنب «حصة تجريبية» في الهيدر على الموبايل والتابلت والكمبيوتر (للزائر) ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function hdr() { const h = document.querySelector("#app .hdr"); if (!h) return; const logged = !!(state.auth && state.auth.user);
+    const trial = [...h.querySelectorAll("button.hide-sm")].find(b => /navigate\('booking'\)/.test(b.getAttribute("onclick") || ""));
+    const login = [...h.querySelectorAll("button.hide-sm")].find(b => /navigate\('login'\)/.test(b.getAttribute("onclick") || ""));
+    h.querySelectorAll("#su236").forEach(x => logged && x.remove());
+    if (logged || !trial) return;
+    if (login) { login.classList.add("keep219", "au236"); login.classList.remove("hide-sm"); if (login.previousElementSibling !== trial) trial.insertAdjacentElement("afterend", login); }
+    let su = h.querySelector("#su236"); if (!su) { su = document.createElement("button"); su.id = "su236"; su.className = "btn btn-o keep219 au236"; su.onclick = () => navigate("signup"); }
+    su.textContent = "✨ " + T("حساب جديد", "Sign up"); const after = login || trial; if (after.nextElementSibling !== su) after.insertAdjacentElement("afterend", su); }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { hdr(); } catch (e) { console.warn("v236", e); } return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { hdr(); } catch (e) {} }, 80); }).observe(document.body, { childList: true });
+  css(`#app .hdr .au236{display:inline-flex!important;white-space:nowrap}
+  #su236{border:2px solid #f59e0b!important;color:#b45309!important;background:transparent!important;font-weight:800}
+  [data-theme=dark] #su236,.dark #su236{color:#fbbf24!important}
+  @media(max-width:600px){#app .hdr .au236,#app .hdr .btn.keep219[onclick*=booking]{padding:.3rem .55rem!important;font-size:.74rem!important;min-height:0}}`);
 })();
 
 // بدء التشغيل
