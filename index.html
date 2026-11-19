@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-19-v266";
+const UI_VERSION = "2026-11-20-v270";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -32378,6 +32378,10 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
     ["v255", T("محتوى طلاب الأكاديمية (المسابقة)", "Students' showcase (contest)"), [["v255.sc", T("الصفحة والرفع والتقييم", "Page, uploads, grading")], ["v255.home", T("كارت المسابقة في الرئيسية", "Contest card on home")]]],
     ["v256", T("بيانات الاشتراك مع مدرس", "Teacher-plan details"), [["v256.pref", T("طالب/ولي أمر + معلم أو معلمة", "Student/parent + male or female teacher")]]],
     ["v258", T("عربي الأطفال — المستويات 1 لـ9", "Kids Arabic — levels 1–9"), [["v258.kids", T("المستويات والاختبار التحديدي وفتح المستوى للطالب", "Levels, placement test, unlock per student")]]],
+    ["v267", T("صفحات مصحف المدينة + باقات العيلة في اشترك", "Madinah pages + family plans"), [["v267.mushaf", T("المصحف صفحة صفحة بخط المجمع", "Page-by-page Madinah mushaf")], ["v267.family", T("باقات العيلة جوه اشترك", "Family plans in Subscribe")]]],
+    ["v268", T("الهيدر: اللوجو بس ثابت + الشريط صف واحد + الحبل", "Header: logo fixed, one-row bar, rope"), [["v268.hdr", T("الهيدر وثباته والتحكم فيه", "Header behaviour & control")]]],
+    ["v269", T("ثبات الصفحة + المصحف الملوّن + الحروف + صوت الحصري + الخط", "Steady page, tajweed mushaf, letters, Husary, font"), [["v269.steady", T("الصفحة ماترعشش لما تتحدّث", "No jumping on refresh")], ["v269.tj", T("شريط الأحكام مش فوق المصحف + تعليم اللام الشمسية والمتجانسين…", "Rules bar not over mushaf + mark more rules")], ["v269.letters", T("الحروف أكبر وبتفتح المخارج", "Bigger letters → articulation")], ["v269.husary", T("الأمثلة المركّبة بصوت الحصري للآية", "Husary for multi-word examples")], ["v269.font", T("خط موحّد والبولد للعناوين بس", "Uniform font, bold headings only")]]],
+    ["v270", T("دروس التجويد: مختصر + تفصيل + اختبار + خلص", "Tajweed lessons: brief, detail, quiz, done"), [["v270.tjx", T("الدرس الجديد", "New lesson layout")]]],
     ["v264", T("الشريط اللي فوق — صف واحد بأيقونات", "Top bar — one row with icons"), [["v264.bar", T("شريط واحد + أيقونات + مع معلمي/مع طالبي + ثابت + حجم حسب الشاشة", "One bar, icons, fixed, responsive")]]],
     ["v265", T("اختبار تحديد المستوى الجديد", "New placement test"), [["v265.place", T("10+ أسئلة متنوعة لكل مستوى · 70% يعدّي · <50% يبدأ · 50–70 يعيد", "10+ mixed questions per level with 70/50 rules")]]],
     ["v266", T("مفيش لينكات يوتيوب + كل المشايخ لكل رواية", "No YouTube links + all reciters per riwaya"), [["v266.links", T("إخفاء لينكات وفيديوهات يوتيوب", "Hide YouTube links/embeds")], ["v266.reciters", T("المشايخ من mp3quran لكل رواية", "Reciters from mp3quran per riwaya")]]],
@@ -33350,6 +33354,247 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
   const _g = go16; go16 = function (r) { if (/^qiraat/.test(r)) setTimeout(merge, 50); return _g.apply(this, arguments); };
 
   css(`.y266o{outline:2px dashed #f59e0b;outline-offset:2px}`);
+})();
+
+/* ================= v267: (1) «📖 صفحات مصحف المدينة» — المصحف صفحة صفحة (604) بخط مجمع الملك فهد نفسه (خطوط صفحات QCF المنشورة للاستخدام العام) مطابق للمطبوع سطر بسطر · بتختار الصفحة أو السورة أو الجزء، وبتقلّب بالأسهم أو بالسحب، والصوت بتاع الصفحة بصوت الحصري · زرار ليه جنب «مصحف الشمرلي» وفي الأدوات · (2) باقات العيلة جوه «اشترك» زي باقي الأقسام ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s); } };
+  window.mp267 = window.mp267 || {};
+  const P3 = n => String(n).padStart(3, "0");
+  const FONT = n => `https://raw.githubusercontent.com/mustafa0x/qpc-fonts/f93bf5f3/mushaf-woff2/QCF_P${P3(n)}.woff2`;
+  const BSML = "https://raw.githubusercontent.com/mustafa0x/qpc-fonts/f93bf5f3/mushaf-v2-woff2/QCF_BSML.woff2";
+  /* أول صفحة لكل سورة (مصحف المدينة 604) */
+  const SP = [1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,542,545,549,551,553,554,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,585,586,587,587,589,590,591,591,592,593,594,595,595,596,596,597,597,598,598,599,599,600,600,601,601,601,602,602,602,603,603,603,604,604,604];
+  const JP = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+  const fonts = {}; const cache = {};
+  async function font(n) { if (fonts[n]) return fonts[n]; fonts[n] = (async () => { const f = new FontFace("qcf" + n, `url(${FONT(n)}) format("woff2")`); await f.load(); document.fonts.add(f); return 1; })().catch(e => { delete fonts[n]; throw e; }); return fonts[n]; }
+  async function data(n) { if (cache[n]) return cache[n]; const j = await fetch(`https://api.quran.com/api/v4/verses/by_page/${n}?words=true&word_fields=code_v1,line_number,page_number&per_page=50`).then(r => r.json()); cache[n] = j.verses || []; return cache[n]; }
+  const st = () => state.mp267 = state.mp267 || { p: +(localStorage.getItem("itqan_mp267") || 1), z: 1 };
+  mp267.go = n => { const s = st(); s.p = Math.max(1, Math.min(604, +n || 1)); try { localStorage.setItem("itqan_mp267", s.p); } catch (e) {} draw(); };
+  mp267.open = n => { if (n) st().p = n; go16("mushaf267"); };
+  async function draw() { const s = st(); const box = document.getElementById("mpbox267"); if (!box) return; const n = s.p; box.innerHTML = `<div class="ld267">⏳ ${T("بيحمّل الصفحة", "Loading page")} ${n}…</div>`;
+    const lab = document.getElementById("mpn267"); if (lab) lab.value = n;
+    try { const [v] = await Promise.all([data(n), font(n)]); if (st().p !== n) return;
+      const lines = {}; v.forEach(x => (x.words || []).forEach(w => { const L = w.line_number || 0; (lines[L] = lines[L] || []).push({ c: w.code_v1, k: x.verse_key, t: w.char_type_name }); }));
+      const max = n <= 2 ? 8 : 15; let h = "";
+      for (let L = 1; L <= max; L++) { const ws = lines[L]; h += `<div class="ln267 ${ws ? "" : "em267"}">${ws ? ws.map(w => `<span class="w267" data-k="${E(w.k)}" onclick="mp267.ay('${E(w.k)}')">${w.c}</span>`).join("") : ""}</div>`; }
+      box.innerHTML = `<div class="pg267" style="font-family:qcf${n}">${h}</div><div class="ft267">${n}</div>`;
+      [n + 1, n - 1].forEach(m => { if (m >= 1 && m <= 604) { data(m).catch(() => {}); font(m).catch(() => {}); } });
+    } catch (e) { box.innerHTML = `<div class="ld267">⚠️ ${T("الصفحة ماحمّلتش — اتأكد من النت ودوس تاني", "Couldn't load — check the connection and retry")} <button class="btn btn-o" onclick="mp267.go(${n})">↻</button></div>`; } }
+  /* سماع الآية / الصفحة بصوت الحصري */
+  let au = null; const aurl = k => { const [s, a] = k.split(":").map(Number); return `https://everyayah.com/data/Husary_128kbps/${P3(s)}${P3(a)}.mp3`; };
+  mp267.ay = k => { document.querySelectorAll(".w267.on").forEach(x => x.classList.remove("on")); document.querySelectorAll(`.w267[data-k="${k}"]`).forEach(x => x.classList.add("on")); try { if (au) au.pause(); au = new Audio(aurl(k)); au.play().catch(() => {}); } catch (e) {} };
+  mp267.play = async () => { const v = await data(st().p).catch(() => []); const ks = v.map(x => x.verse_key); let i = 0; const nx = () => { if (i >= ks.length) return; const k = ks[i++]; mp267.ay(k); au.onended = nx; }; nx(); };
+  mp267.stop = () => { try { au && au.pause(); } catch (e) {} document.querySelectorAll(".w267.on").forEach(x => x.classList.remove("on")); };
+  let sx = 0; addEventListener("touchstart", e => { if (e.target.closest && e.target.closest("#mpbox267")) sx = e.touches[0].clientX; }, { passive: true });
+  addEventListener("touchend", e => { if (!sx || !(e.target.closest && e.target.closest("#mpbox267"))) return; const d = e.changedTouches[0].clientX - sx; sx = 0; if (Math.abs(d) > 60) mp267.go(st().p + (d > 0 ? 1 : -1)); }, { passive: true });
+  addEventListener("keydown", e => { if (state.route !== "mushaf267" || /input|select|textarea/i.test((e.target || {}).tagName || "")) return; if (e.key === "ArrowLeft") mp267.go(st().p + 1); if (e.key === "ArrowRight") mp267.go(st().p - 1); });
+  function page() { const s = st(); let sn = []; try { sn = SURAHS; } catch (e) {}
+    const surSel = `<select class="in" style="width:auto" onchange="mp267.go(this.value)"><option value="">${T("السورة…", "Surah…")}</option>${SP.map((p, i) => `<option value="${p}">${i + 1}. ${E((sn[i] && (sn[i].ar || sn[i][1] || sn[i].name)) || "")}</option>`).join("")}</select>`;
+    const juzSel = `<select class="in" style="width:auto" onchange="mp267.go(this.value)"><option value="">${T("الجزء…", "Juz…")}</option>${JP.map((p, i) => `<option value="${p}">${T("الجزء", "Juz")} ${i + 1}</option>`).join("")}</select>`;
+    const bar = `<div class="bar267"><button class="btn btn-o" onclick="mp267.go(state.mp267.p+1)">→ ${T("التالية", "Next")}</button><input id="mpn267" class="in" type="number" min="1" max="604" value="${s.p}" style="width:5.5rem;text-align:center" onchange="mp267.go(this.value)"><button class="btn btn-o" onclick="mp267.go(state.mp267.p-1)">${T("السابقة", "Prev")} ←</button>${surSel}${juzSel}<button class="btn btn-p" onclick="mp267.play()">▶ ${T("سمّع الصفحة (الحصري)", "Play page (Husary)")}</button><button class="btn btn-o" onclick="mp267.stop()">⏹</button><label class="xs">🔍 <input type="range" min="70" max="140" value="${Math.round(s.z * 100)}" oninput="state.mp267.z=this.value/100;document.getElementById('mpbox267').style.setProperty('--z',state.mp267.z)"></label></div>`;
+    setTimeout(draw, 0);
+    return pageWrap("📖", T("صفحات مصحف المدينة", "Madinah Mushaf pages"), T("نفس الصفحة المطبوعة سطر بسطر · دوس على أي آية تسمعها · اسحب أو استخدم الأسهم للتقليب", "Exactly as printed, line by line · tap an ayah to hear it · swipe or use arrows"), bar + `<div id="mpbox267" class="box267" style="--z:${s.z}"></div>`, 900); }
+  try { if (!PAGES16.includes("mushaf267")) PAGES16.push("mushaf267"); } catch (e) {}
+  /* الصفحة بتترسم من خلال R56 لو موجود، وإلا من هنا */
+  const _r2 = render; render = function () { if (state.route !== "mushaf267" || !FF("v267.mushaf")) { const o = _r2.apply(this, arguments); after(); return o; }
+    state.route = "alltools"; state.__mp267 = 1; let o; try { o = _r2.apply(this, arguments); } finally { state.route = "mushaf267"; state.__mp267 = 0; } after(); return o; };
+  try { const _at = renderAllTools; renderAllTools = function () { if (state.__mp267) return page(); return _at.apply(this, arguments); }; } catch (e) {}
+  function after() { try {
+    /* زرار جنب «مصحف الشمرلي» */
+    document.querySelectorAll(`#app button[onclick*="go16('pdf181','shamarly')"]`).forEach(b => { if (b.__m267) return; b.__m267 = 1; b.insertAdjacentHTML("afterend", `<button class="btn btn-o" style="padding:.1rem .5rem" onclick="mp267.open()">📖 ${T("صفحات مصحف المدينة", "Madinah pages")}</button>`); });
+    /* باقات العيلة جوه «اشترك» */
+    if (state.route === "pricing" && FF("v267.family") && !document.getElementById("fam267")) { const h = document.querySelector("#app h1, #app h2, #app section .wrap > *"); if (h) h.insertAdjacentHTML(/^H[12]$/.test(h.tagName) ? "afterend" : "beforebegin", `<div id="fam267" class="card fam267"><span>👪</span><div><b>${T("باقات العيلة", "Family plans")}</b><small>${T("اشتراك واحد لكل أفراد البيت — الأطفال والكبار، وكل واحد بحسابه وتقدّمه.", "One subscription for the whole household — each member with their own account and progress.")}</small></div><button class="btn btn-p" onclick="go16('fam226')">${T("شوف باقات العيلة", "See family plans")}</button></div>`); }
+  } catch (e) {} }
+  css(`.bar267{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:.8rem}.bar267 .btn{padding:.25rem .7rem}
+  .box267{max-width:calc(560px * var(--z,1));margin:0 auto;background:#fffbea;border:2px solid #b08d2f;border-radius:14px;padding:1.2rem 1rem .6rem;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);direction:rtl;color:#111}
+  .pg267{font-size:calc(min(4.6vw, 28px) * var(--z,1));line-height:1.9}.ln267{display:flex;justify-content:space-between;white-space:nowrap;min-height:1.9em}.ln267.em267{justify-content:center}.w267{cursor:pointer;border-radius:4px}.w267:hover{background:rgba(176,141,47,.15)}.w267.on{background:rgba(15,118,110,.18)}
+  .ft267{text-align:center;color:#8a6d1f;font-size:.85rem;margin-top:.4rem}.ld267{text-align:center;padding:3rem 1rem;color:#8a6d1f}
+  .fam267{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;border:2px solid var(--accent);margin:.6rem 0}.fam267>span{font-size:2rem}.fam267>div{flex:1;min-width:12rem}.fam267 small{display:block;color:var(--muted)}`);
+})();
+
+/* ================= v268: الهيدر (طلب المالك 19/11 بالليل) — الافتراضي: اللوجو بس هو اللي ثابت، وباقي الهيدر (الأزرار والشريط) بيطلع مع الصفحة لما تنزل · الشريط صف واحد بخط أصغر على الكمبيوتر والتابلت (من الرئيسية لآخره)، وعلى الموبايل بينزل سطرين عادي · الشريط مفرود افتراضيًا، والحبل/السهم اللي تحته بيقفله ويفتحه · المالك من زرار 📌 يختار لكل جزء (اللوجو · الأزرار · الشريط): ثابت / يطلع مع الصفحة / يختفي وانت نازل ويظهر وانت طالع، والشريط مفرود ولا مقفول افتراضيًا ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const DEF = { logo: "fixed", tools: "scroll", nav: "scroll", navOpen: true };
+  const C = () => { let c = null; try { c = setv("hdr268", null); } catch (e) {} return Object.assign({}, DEF, c || {}); };
+  const PARTS = () => [["logo", "🪶", T("اللوجو", "Logo")], ["tools", "🔘", T("الأزرار (اللغة، الشكل، البحث…)", "Buttons (language, theme, search…)")], ["nav", "🧭", T("الشريط (الرئيسية، الأدوات…)", "Bar (Home, Tools…)")]];
+  const MODES = () => [["fixed", T("ثابت", "Fixed")], ["scroll", T("يطلع مع الصفحة", "Scrolls away")], ["hide", T("يختفي وانت نازل ويظهر وانت طالع", "Hide on scroll down")]];
+  const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} };
+
+  function apply() { if (!FF("v268.hdr")) { document.body.classList.remove("h268"); return; } const hdr = document.querySelector("#app header.hdr"); if (!hdr) return; const c = C();
+    document.body.classList.add("h268"); document.body.classList.remove("fx264", "ah261");
+    /* مفرود/مقفول: اختيار الزائر بيتحفظ عنده، والافتراضي من المالك */
+    const u = LS("itqan_nav268"); const open = u == null ? c.navOpen !== false : u === "1"; document.body.classList.toggle("nc268", !open);
+    if (!hdr.querySelector("#rope268")) hdr.insertAdjacentHTML("beforeend", `<button id="rope268" class="rope268" title="${T("افتح/اقفل الشريط", "Show/hide the bar")}" onclick="hd268.tog()"><i></i><b>${open ? "⌃" : "⌄"}</b></button>${own() ? `<button class="pin268" title="${T("ثبات الهيدر", "Header behaviour")}" onclick="hd268.cfg()">📌</button>` : ""}`);
+    float(); fit(); }
+  /* الشريط صف واحد: الخط بيصغر لحد ما كله يدخل في العرض (كمبيوتر/تابلت) */
+  function fit() { const n = document.querySelector("#app header.hdr nav.nav"); if (!n || innerWidth <= 760) { if (n) { n.style.removeProperty("--nf"); n.classList.remove("wr268"); } return; } n.classList.remove("wr268", "noi268"); let f = 0.86; n.style.setProperty("--nf", f + "rem"); let g = 0; while (n.scrollWidth > n.clientWidth + 1 && f > 0.62 && g++ < 20) { f -= 0.02; n.style.setProperty("--nf", f.toFixed(2) + "rem"); } if (n.scrollWidth > n.clientWidth + 1) { n.classList.add("noi268"); f = 0.8; g = 0; n.style.setProperty("--nf", f + "rem"); while (n.scrollWidth > n.clientWidth + 1 && f > 0.6 && g++ < 20) { f -= 0.02; n.style.setProperty("--nf", f.toFixed(2) + "rem"); } } else n.classList.remove("noi268"); if (n.scrollWidth > n.clientWidth + 1) n.classList.add("wr268"); }
+  addEventListener("resize", () => { clearTimeout(fit.t); fit.t = setTimeout(fit, 120); });
+  /* النسخة العايمة: الأجزاء «الثابتة» و«اللي بتختفي» بتظهر فوق لما الهيدر الأصلي يطلع برا الشاشة */
+  function float() { const hdr = document.querySelector("#app header.hdr"); if (!hdr) return; const c = C(); let f = document.getElementById("fl268");
+    const want = PARTS().map(p => p[0]).filter(k => c[k] !== "scroll" && !(k === "nav" && document.body.classList.contains("nc268")));
+    if (!want.length) { if (f) f.remove(); return; }
+    if (!f) { f = document.createElement("div"); f.id = "fl268"; f.className = "notr"; document.body.appendChild(f); }
+    const sig = want.join(",") + "|" + state.route + "|" + state.lang; if (f.dataset.sig !== sig) { f.dataset.sig = sig; f.innerHTML = "";
+      const sel = { logo: ".logo", tools: ".tools", nav: "nav.nav" };
+      want.forEach(k => { const el = hdr.querySelector(sel[k]); if (!el) return; const cl = el.cloneNode(true); cl.removeAttribute("id"); cl.querySelectorAll("[id]").forEach(x => x.removeAttribute("id")); cl.classList.add("p268", "p268-" + k); cl.dataset.m = c[k]; f.appendChild(cl); }); }
+    onScroll(true); }
+  let ly = 0; function onScroll(force) { const f = document.getElementById("fl268"); const hdr = document.querySelector("#app header.hdr"); if (!f || !hdr) return; const y = scrollY; const past = hdr.getBoundingClientRect().bottom < 0; const down = y > ly; ly = y;
+    f.classList.toggle("on", past); f.querySelectorAll(".p268").forEach(p => { p.classList.toggle("gone", p.dataset.m === "hide" && down && !force); }); }
+  addEventListener("scroll", () => onScroll(), { passive: true });
+  window.hd268 = { tog() { const nc = !document.body.classList.contains("nc268"); document.body.classList.toggle("nc268", nc); LS("itqan_nav268", nc ? "0" : "1"); const b = document.querySelector("#rope268 b"); if (b) b.textContent = nc ? "⌄" : "⌃"; const f = document.getElementById("fl268"); if (f) f.dataset.sig = ""; float(); },
+    cfg() { const c = C(); let m = document.getElementById("cf268"); if (m) m.remove(); m = document.createElement("div"); m.id = "cf268"; m.className = "ov268 notr"; m.onclick = e => { if (e.target === m) m.remove(); };
+      m.innerHTML = `<div class="bx268"><button class="x268" onclick="this.closest('#cf268').remove()">✕</button><h3>📌 ${T("الهيدر وانت نازل في الصفحة", "Header while scrolling")}</h3>${PARTS().map(p => `<div class="r268"><b>${p[1]} ${p[2]}</b><div class="row" style="gap:.3rem;flex-wrap:wrap">${MODES().map(x => `<label class="ch268"><input type="radio" name="m268${p[0]}" value="${x[0]}" ${c[p[0]] === x[0] ? "checked" : ""}> ${x[1]}</label>`).join("")}</div></div>`).join("")}
+        <div class="r268"><b>🧭 ${T("الشريط أول ما الصفحة تفتح", "Bar when the page opens")}</b><div class="row" style="gap:.3rem"><label class="ch268"><input type="radio" name="o268" value="1" ${c.navOpen !== false ? "checked" : ""}> ${T("مفرود", "Expanded")}</label><label class="ch268"><input type="radio" name="o268" value="0" ${c.navOpen === false ? "checked" : ""}> ${T("مقفول (يتفتح بالحبل)", "Collapsed (open with the rope)")}</label></div></div>
+        <div class="row" style="gap:.5rem;margin-top:.8rem"><button class="btn btn-p" onclick="hd268.save()">💾 ${T("احفظ للكل", "Save for everyone")}</button><button class="btn btn-o" onclick="hd268.reset()">↺ ${T("الافتراضي", "Default")}</button></div><p class="xs muted">${T("الافتراضي: اللوجو بس ثابت، والباقي بيطلع مع الصفحة، والشريط مفرود.", "Default: only the logo is fixed, the rest scrolls away, the bar is expanded.")}</p></div>`; document.body.appendChild(m); },
+    async save() { const m = document.getElementById("cf268"); const v = {}; PARTS().forEach(p => { const r = m.querySelector(`input[name=m268${p[0]}]:checked`); v[p[0]] = r ? r.value : DEF[p[0]]; }); const o = m.querySelector("input[name=o268]:checked"); v.navOpen = !o || o.value === "1"; await saveSetting16("hdr268", v); try { localStorage.removeItem("itqan_nav268"); } catch (e) {} m.remove(); toast("✅"); render(); },
+    async reset() { await saveSetting16("hdr268", DEF); try { localStorage.removeItem("itqan_nav268"); } catch (e) {} const m = document.getElementById("cf268"); if (m) m.remove(); render(); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { apply(); } catch (e) { console.warn("v268", e); } return o; };
+  let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { apply(); } catch (e) {} }, 80); }).observe(document.getElementById("app") || document.body, { childList: true });
+
+  css(`
+  /* الهيدر الأصلي بيطلع مع الصفحة (مش sticky) */
+  html body.h268 #app header.hdr{position:relative!important;top:auto!important;transform:none!important}
+  body.h268 #tbb209,body.h268 #un209{display:none!important}
+  /* الشريط: صف واحد وخط أصغر على الكمبيوتر والتابلت */
+  @media (min-width:761px){
+    html body.h268.one264.one264 #app header.hdr nav.nav{flex-wrap:nowrap!important;justify-content:safe center!important;gap:0 .1rem;overflow-x:auto;scrollbar-width:none}
+    html body.h268.one264.one264 #app header.hdr nav.nav>a{font-size:var(--nf,.84rem)!important;padding:.25rem .4rem!important;gap:.2rem}
+    html body.h268.one264.one264 #app header.hdr nav.nav.wr268{flex-wrap:wrap!important}
+    html body.h268.one264.one264 #app header.hdr nav.nav.noi268>a .i264{display:none}
+    html body.h268.one264.one264 #app header.hdr nav.nav>a .i264{font-size:1em}
+  }
+  @media (max-width:760px){ html body.h268.one264.one264 #app header.hdr nav.nav>a{font-size:clamp(.54rem,2.3vw,.66rem)!important} }
+  /* مقفول */
+  html body.h268.nc268 #app header.hdr nav.nav{display:none!important}
+  .rope268{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);border:0;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;z-index:5;padding:0}
+  .rope268 i{width:2px;height:10px;background:var(--accent,#0f766e)}.rope268 b{width:22px;height:22px;border-radius:50%;background:var(--accent,#0f766e);color:#fff;font-size:.8rem;display:grid;place-items:center;line-height:1}
+  .pin268{position:absolute;bottom:4px;inset-inline-end:8px;border:1px dashed var(--line);background:var(--card);border-radius:8px;padding:0 .35rem;cursor:pointer;font-size:.85rem;z-index:5}
+  /* العايم */
+  #fl268{position:fixed;top:0;left:0;right:0;z-index:960;display:flex;flex-direction:column;align-items:stretch;pointer-events:none;transform:translateY(-110%);transition:transform .25s}
+  #fl268.on{transform:none}
+  #fl268 .p268{pointer-events:auto;transition:transform .25s,opacity .25s;background:var(--card,#fff);box-shadow:0 4px 14px -10px rgba(0,0,0,.3)}
+  #fl268 .p268.gone{transform:translateY(-120%);opacity:0;pointer-events:none}
+  #fl268 .p268-logo{align-self:flex-start;margin:.4rem;padding:.3rem .5rem;border-radius:14px;display:inline-flex;align-items:center;gap:.4rem}
+  html[dir=rtl] #fl268 .p268-logo{align-self:flex-end}
+  #fl268 .p268-logo:only-child,#fl268 .p268-logo{width:max-content}
+  #fl268 .p268-tools{display:flex;gap:.3rem;justify-content:center;flex-wrap:wrap;padding:.3rem}
+  #fl268 nav.p268-nav{display:flex!important;flex-wrap:nowrap;justify-content:center;gap:.1rem .25rem;overflow-x:auto;padding:.25rem .4rem}
+  #fl268 nav.p268-nav>a{display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap;padding:.25rem .5rem;border-radius:999px;font-size:clamp(.66rem,.9vw,.84rem);color:inherit;text-decoration:none}
+  @media (max-width:760px){#fl268 nav.p268-nav{flex-wrap:wrap}}
+  .ov268{position:fixed;inset:0;z-index:9995;background:rgba(15,23,42,.45);display:grid;place-items:center;padding:1rem}.bx268{position:relative;background:var(--card,#fff);color:var(--text,#111);border-radius:18px;padding:1.3rem;max-width:560px;width:100%}.r268{margin:.7rem 0;display:flex;flex-direction:column;gap:.3rem}.ch268{border:1px solid var(--line);border-radius:999px;padding:.2rem .6rem;font-size:.85rem;cursor:pointer}.x268{position:absolute;top:.6rem;inset-inline-end:.6rem;border:0;background:var(--line,#eee);width:30px;height:30px;border-radius:50%;cursor:pointer}`);
+})();
+
+/* ================= v269: (1) صفحة «درجات المقام» (وأي صفحة بتتحدّث لوحدها) مابقتش ترعش وتطلع وتنزل: لما الصفحة نفسها تترسم تاني، مكانك في الصفحة بيفضل زي ما هو ومن غير أنيميشن الدخول · (2) المصحف الملوّن: شريط الأحكام مابقاش لازق فوق المصحف ومغطّي عليه · وتقدر تعلّم على اللام الشمسية والمتجانسين والمتقاربين وهمزة الوصل والحروف اللي لا تُنطق (بتتلوّن لما تختارها) · (3) «حروف الكلمة» بقت أكبر، وأي حرف تدوس عليه بيفتحلك مكانه في المخارج والصفات علطول · (4) الأمثلة اللي فيها أكتر من كلمة (أحكام النون والميم واللام وعلاقات الحروف) بقت بصوت الشيخ الحصري للآية كلها مش كلمة كلمة · (5) الخط موحّد في الموقع، والبولد للعناوين والأقسام بس (حتى في الكتب) ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* ---------- 1) ثبات الصفحة لما تترسم تاني ---------- */
+  const key = () => [state.route, state.pageArg, state.libSec, state.mqTab, state.tjxD, (state.tjb || {}).c, state.fuU].join("|");
+  let lastKey = "";
+  const _r = render; render = function () { if (!FF("v269.steady")) return _r.apply(this, arguments); const k = key(); const same = k === lastKey; const y = scrollY;
+    if (same) document.documentElement.classList.add("rr269"); const o = _r.apply(this, arguments); lastKey = k;
+    if (same) { if (Math.abs(scrollY - y) > 2) window.scrollTo(0, y); requestAnimationFrame(() => { if (Math.abs(scrollY - y) > 2 && key() === k) window.scrollTo(0, y); setTimeout(() => document.documentElement.classList.remove("rr269"), 350); }); }
+    return o; };
+  css(`html.rr269 #app *{animation:none!important;transition:none!important}`);
+
+  /* ---------- 2) المصحف الملوّن ---------- */
+  const MARK = { laam_shamsiyah: ["#7c3aed", "#f3e8ff"], idgham_mutajanisayn: ["#b45309", "#fef3c7"], idgham_mutaqaribayn: ["#c2410c", "#ffedd5"], ham_wasl: ["#0369a1", "#e0f2fe"], slnt: ["#475569", "#e2e8f0"] };
+  function tj() { if (!FF("v269.tj")) return; let st = document.getElementById("st269"); if (!st) { st = document.createElement("style"); st.id = "st269"; document.head.appendChild(st); }
+    const on = new Set(state.mk269 || []); /* بتتعلّم لما تختارها بإيدك من الشريط */
+    st.textContent = Object.entries(MARK).filter(([k]) => on.has(k)).map(([k, [c, b]]) => `html body #app .tj2 .tj-${k}{color:${c}!important;background:${b}!important;border-radius:3px}html body #app .tjf157 .chip[onclick*="'${k}'"]{background:${c}!important;border-color:${c}!important;color:#fff!important}`).join(""); }
+  /* الشرايح دي بتعلّم/بتشيل العلامة لوحدها من غير ما تلخبط باقي الأحكام */
+  try { const _f = window.tjf157; if (typeof _f === "function") window.tjf157 = function (k) { if (FF("v269.tj") && MARK[k]) { const s = new Set(state.mk269 || []); s.has(k) ? s.delete(k) : s.add(k); state.mk269 = [...s]; tj(); return; } return _f.apply(this, arguments); }; } catch (e) {}
+  css(`html body #app .tjf157.in246{position:static!important;top:auto!important;box-shadow:none}
+  html body #app .tjf157 .chip[onclick*="laam_shamsiyah"],html body #app .tjf157 .chip[onclick*="idgham_mutajanisayn"],html body #app .tjf157 .chip[onclick*="idgham_mutaqaribayn"],html body #app .tjf157 .chip[onclick*="ham_wasl"],html body #app .tjf157 .chip[onclick*="'slnt'"]{opacity:1!important;filter:none!important;cursor:pointer;color:var(--text,#111)}`);
+
+  /* ---------- 3) حروف الكلمة ← المخارج والصفات ---------- */
+  const bare = s => String(s || "").replace(/[ً-ٰٟۖ-ۭ]/g, "").replace(/[ٱأإآ]/g, "ا").trim();
+  function letters() { if (!FF("v269.letters")) return; document.querySelectorAll(".tf164 > span, .tjwib .chip.lt, #mmModal .chip.lt").forEach(sp => { if (sp.__l269) return; sp.__l269 = 1; const L = bare(sp.textContent).charAt(0); if (!L) return; sp.classList.add("lt269"); sp.title = (sp.title ? sp.title + " · " : "") + T("دوس تشوف مخرجه وصفاته", "Tap for its articulation & attributes");
+      sp.addEventListener("click", ev => { ev.stopPropagation(); ev.preventDefault(); ["mmModal", "tjWI"].forEach(id => { const m = document.getElementById(id); if (m) m.remove(); }); state.mkL = L; go16("makharij"); setTimeout(() => window.scrollTo({ top: 0 }), 50); }); }); }
+  css(`.tf164{display:flex;flex-wrap:wrap;gap:.35rem;margin:.3rem 0}.tf164>span.lt269,.chip.lt.lt269{font:700 1.9rem/1.2 'Amiri',serif!important;min-width:2.6rem;text-align:center;padding:.15rem .5rem!important;border-radius:12px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;transition:transform .12s}.tf164>span.lt269:hover,.chip.lt.lt269:hover{transform:translateY(-2px);border-color:var(--accent)}.tf164>span.h{color:#b91c1c}.tf164>span.c{color:#92400e}.tf164>span.l{color:#1d4ed8}
+  #mmModal .mk234{display:none}`);
+
+  /* ---------- 4) الأحكام المركّبة بصوت الحصري للآية كلها ---------- */
+  if (typeof wbwPlay === "function") { const _w = wbwPlay; wbwPlay = function (s, a, w, n, btn) { if (!FF("v269.husary") || !(n > 1)) return _w.apply(this, arguments);
+      try { if (window.__h269 && window.__h269.btn === btn && !window.__h269.au.paused) { window.__h269.au.pause(); btn && btn.classList.remove("on"); window.__h269 = null; return; } if (window.__h269) { window.__h269.au.pause(); window.__h269.btn && window.__h269.btn.classList.remove("on"); } } catch (e) {}
+      try { wbwStop(); } catch (e) {} const au = new Audio(eaUrl("Husary_128kbps", s + ":" + a)); window.__h269 = { au, btn }; if (btn) btn.classList.add("on"); au.onended = () => { if (btn) btn.classList.remove("on"); }; au.play().catch(() => {}); }; }
+
+  /* ---------- 5) الخط موحّد + البولد للعناوين بس ---------- */
+  function font() { document.body.classList.toggle("ft269", FF("v269.font")); }
+  css(`
+  body.ft269 #app :is(p,li,td,th,label,dd,dt,blockquote,.tjbi,.tjxs p,.muted:not(.xs),.sm:not(h1,h2,h3,h4,h5,h6),.card>div:not([class]),.bk-p,.para){font-size:1rem;line-height:1.75}
+  body.ft269 #app :is(p,li,td,label,dd,blockquote,.tjbi,.tjxs p,.bk-p,.para,.fures,.muted) :is(b,strong){font-weight:inherit}
+  body.ft269 #app .tjbi>b:first-child{font-weight:inherit}
+  body.ft269 #app :is(h1,h2,h3,h4,h5,h6,.sec-title,.tjbch>h3,.tjbh,legend,summary,thead th){font-weight:800}
+  body.ft269 #app :is(.btn,.chip,.badge,.opt){font-weight:600}`);
+
+  const _r2 = render; render = function () { const o = _r2.apply(this, arguments); try { tj(); letters(); font(); } catch (e) { console.warn("v269", e); } return o; };
+  let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { letters(); } catch (e) {} }, 60); }).observe(document.body, { childList: true, subtree: true });
+  font();
+})();
+
+/* ================= v270: دروس التجويد (طلب المالك 19/11) — كل درس: الحكم باختصار الأول (من غير أسماء كتب) + الأمثلة بصوت الحصري · «📖 عرض الشرح بالتفصيل» بيفرد الشرح الكامل · تحت الدرس علطول اختبار على الحكم ده بس: سماع («اسمع وحدد الحكم») + «إيه حكم الكلمة دي؟» + أسئلة الحكم، وبعد كل إجابة شرح ليه صح أو غلط، واللي غلط فيه بيتعاد في الآخر · 70% أو أكتر ← الدرس بيتعلّم ✅ خلص (والطالب أو المالك يقدر يعلّمه بإيده) · بالإنجليزي: القرآن مابيتترجمش — اسم الحكم بالفرانكو وجنبه المصطلح بالإنجليزي ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s); } };
+  const rnd = a => a.slice().sort(() => Math.random() - .5);
+  if (typeof tjxBlock !== "function" || typeof TJX === "undefined") return;
+  window.tq270 = window.tq270 || {};
+  const SRC = /^(المصدر|المراجع|مصدر)/;
+  const first = (p, n = 170) => { const s = String(p || "").split(/(?<=[.؛])\s/)[0]; return s.length > n ? s.slice(0, n).replace(/\s\S*$/, "") + "…" : s; };
+  const DONE = () => { try { return JSON.parse(localStorage.getItem("itqan_tjx270") || "{}"); } catch (e) { return {}; } };
+  const setDone = (id, sc) => { const d = DONE(); if (sc == null) delete d[id]; else d[id] = { sc, at: Date.now() }; try { localStorage.setItem("itqan_tjx270", JSON.stringify(d)); } catch (e) {}
+    if (state.auth && state.auth.user && state.auth.profile) { const md = Object.assign({}, state.auth.profile.metadata || {}); md.tjx270 = d; state.auth.profile.metadata = md; try { sb.from("profiles").update({ metadata: md }).eq("id", state.auth.user.id).then(() => {}, () => {}); } catch (e) {} } };
+  /* اسم الحكم: بالعربي للعربي — وبالإنجليزي: الفرانكو + المصطلح الإنجليزي + العربي */
+  const nm = x => AR() ? x[2] : `${x[3]} — ${x[4]}`;
+  const allEx = () => Object.values(TJX).flatMap(v => v.ex || []);
+  function build(id) { const X = TJX[id]; const C = (typeof TJC !== "undefined" && Array.isArray(TJC)) ? TJC.find(c => c.id === id) : null; const qs = [];
+    const pool = (X.ex || []); const others = allEx().filter(e => !pool.some(p => p[2] === e[2]));
+    const opts = x => { const names = [...new Set(pool.map(e => e[2]).filter(n => n !== x[2]))]; const more = [...new Set(others.map(e => e[2]))]; const pick = rnd(names).slice(0, 3); while (pick.length < 3 && more.length) { const m = more.splice(Math.floor(Math.random() * more.length), 1)[0]; if (!pick.includes(m) && m !== x[2]) pick.push(m); } const L = rnd([x[2], ...pick]); return L.map(n => allEx().find(e => e[2] === n)); };
+    const why = x => { const r = (X.d || []).find(d => !SRC.test(d[0]) && (d[0].includes(x[2].split(" ")[0]) || String(d[1]).includes(x[2]))); return r ? first(r[1], 220) : ""; };
+    rnd(pool).forEach((x, i) => { const o = opts(x); qs.push({ k: i % 2 ? "read" : "listen", v: x[0], w: x[1], ans: o.findIndex(e => e[2] === x[2]), o, why: why(x) }); });
+    if (C && Array.isArray(C.q)) rnd(C.q).slice(0, 4).forEach(q => { const o = rnd([q[1], ...(q[2] || [])]); qs.push({ k: "mcq", t: q[0], ans: o.indexOf(q[1]), o: o.map(s => [null, null, s, "", ""]), why: "" }); });
+    return { qs: rnd(qs).slice(0, 8), n: 0, ok: 0, pick: null, again: [], end: false }; }
+  tq270.start = id => { tq270[id] = build(id); render(); };
+  tq270.play = k => { try { eaPlay(eaUrl("Husary_128kbps", k)); } catch (e) {} };
+  tq270.pick = (id, i) => { const z = tq270[id]; if (!z || z.pick != null) return; const q = z.qs[z.n]; z.pick = i; const ok = i === q.ans; if (ok) z.ok++; else if (!q.re) z.again.push(Object.assign({}, q, { re: 1 })); try { sfxSafe(ok ? "correct" : "wrong"); } catch (e) {} render(); };
+  tq270.next = id => { const z = tq270[id]; z.n++; z.pick = null; if (z.n >= z.qs.length && z.again.length) { z.base = z.base || z.qs.length; z.qs = z.qs.concat(z.again); z.again = []; }
+    if (z.n >= z.qs.length) { z.end = true; const base = z.base || z.qs.length; const sc = Math.round(Math.min(z.ok, base) / base * 100); z.sc = sc; if (sc >= 70) setDone(id, sc); } render(); };
+  tq270.mark = (id, v) => { setDone(id, v ? 100 : null); render(); };
+  function quiz(id) { const z = tq270[id];
+    if (!z) return `<div class="card q270"><h3>📝 ${T("اختبار على الدرس ده", "Quiz on this lesson")}</h3><p class="sm muted">${T("سماع وأسئلة على الحكم — 70% أو أكتر والدرس يتعلّم إنه خلص.", "Listening and questions on this rule — 70%+ marks the lesson done.")}</p><button class="btn btn-p" onclick="tq270.start('${id}')">▶ ${T("ابدأ الاختبار", "Start the quiz")}</button></div>`;
+    if (z.end) return `<div class="card q270 r270"><div style="font-size:2.4rem">${z.sc >= 70 ? "🎉" : "💪"}</div><h3>${z.sc}%</h3><p>${z.sc >= 70 ? T("ممتاز! الدرس اتعلّم إنه خلص ✅", "Great! Lesson marked done ✅") : T("محتاج 70% — راجع الحكم وجرّب تاني.", "You need 70% — review and try again.")}</p><button class="btn btn-o" onclick="tq270.start('${id}')">🔁 ${T("أسئلة تانية", "New questions")}</button></div>`;
+    const q = z.qs[z.n]; const shown = z.pick != null; const label = o => AR() || !o[3] ? E(o[2]) : `${E(o[3])} <small class="muted">— ${E(o[4] || "")}</small> <span class="notr" lang="ar">(${E(o[2])})</span>`;
+    const head = q.k === "listen" ? `<p class="b">🎧 ${T("اسمع وحدد الحكم", "Listen and name the rule")}</p><button class="btn btn-o" onclick="tq270.play('${q.v}')">🔊 ${T("اسمع الآية", "Play the ayah")}</button><p class="w270 notr" lang="ar">«${E(q.w)}»</p>` : q.k === "read" ? `<p class="b">${T("إيه حكم الكلمة دي؟", "What is the rule here?")}</p><p class="w270 notr" lang="ar">«${E(q.w)}»</p><button class="btn btn-o xs" onclick="tq270.play('${q.v}')">🔊</button>` : `<p class="b notr" lang="ar">${E(q.t)}</p>`;
+    return `<div class="card q270"><div class="row" style="justify-content:space-between"><b>📝 ${T("اختبار الدرس", "Lesson quiz")}</b><span class="xs muted">${z.n + 1} / ${z.qs.length}${q.re ? " · 🔁" : ""}</span></div>${head}
+      <div class="o270">${q.o.map((o, i) => `<button class="opt ${shown ? (i === q.ans ? "ok" : z.pick === i ? "bad" : "") : ""}" ${shown ? "disabled" : ""} onclick="tq270.pick('${id}',${i})">${label(o)}</button>`).join("")}</div>
+      ${shown ? `<div class="fures ${z.pick === q.ans ? "ok" : ""}">${z.pick === q.ans ? "✅ " + T("صح!", "Correct!") : "❌ " + T("الصح:", "Correct:") + " <b>" + label(q.o[q.ans]) + "</b>"}${q.why ? `<div class="sm" style="margin-top:.3rem">💡 ${E(q.why)}</div>` : ""}</div><div style="text-align:center;margin-top:.5rem"><button class="btn btn-p" onclick="tq270.next('${id}')">${T("التالي ←", "Next →")}</button></div>` : ""}</div>`; }
+
+  const _b = tjxBlock; tjxBlock = function (id) { if (!FF("v270.tjx")) return _b.apply(this, arguments); const X = TJX[id]; if (!X) return _b.apply(this, arguments); const open = state.tjxD === id; const d = DONE()[id];
+    const rows = (X.d || []).filter(r => !SRC.test(r[0]));
+    const sum = `<div class="card s270"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><h3 style="margin:0">📌 ${T("الحكم باختصار", "The rule in brief")}</h3>${d ? `<span class="badge ok270">✅ ${T("خلص", "Done")} ${d.sc < 100 ? d.sc + "%" : ""}</span>` : ""}</div>
+      <ul class="l270">${rows.slice(0, 4).map(r => `<li><b>${E(r[0])}:</b> ${E(first(r[1]))}</li>`).join("")}</ul>
+      <div class="ex270">${(X.ex || []).map(x => `<button class="tjw" onclick="tq270.play('${x[0]}')" title="${T("بصوت الشيخ الحصري", "Recited by Sheikh Al-Husary")}"><span class="notr" lang="ar">${E(x[1])}</span> 🔊<small>${AR() ? E(x[2]) : `${E(x[3])} — ${E(x[4])}`}</small></button>`).join("")}</div>
+      <button class="btn ${open ? "btn-o" : "btn-p"}" style="margin-top:.6rem" onclick="state.tjxD=state.tjxD==='${id}'?null:'${id}';render()">${open ? "▲ " + T("إخفاء الشرح", "Hide the explanation") : "📖 " + T("عرض الشرح بالتفصيل", "Show the full explanation")}</button></div>`;
+    let det = ""; if (open) { let h = _b.apply(this, arguments); const m = h.match(/<div class="tjxdb">([\s\S]*)$/); let inner = m ? m[1] : ""; inner = inner.replace(/<p class="xs muted">📖[\s\S]*?<\/p>/g, "").replace(/<section class="tjxs"[^>]*><h4>(المصدر|المراجع)<\/h4>[\s\S]*?<\/section>/g, "");
+      det = `<div class="card d270">${rows.slice(4).map(r => `<section class="tjxs"><h4>${E(r[0])}</h4><p>${E(r[1])}</p></section>`).join("")}${inner}</div>`; }
+    const mark = `<div class="mk270"><label class="row" style="gap:.4rem;align-items:center"><input type="checkbox" ${d ? "checked" : ""} onchange="tq270.mark('${id}',this.checked)"> ${T("✓ خلّصت الدرس ده", "✓ I finished this lesson")}</label></div>`;
+    return sum + det + quiz(id) + mark; };
+  css(`.s270 .l270{margin:.5rem 0;padding-inline-start:1.1rem;line-height:1.8}.ex270{display:flex;flex-wrap:wrap;gap:.35rem}.ex270 .tjw small{display:block;font-size:.72rem;color:var(--muted)}
+  .ok270{background:#dcfce7;color:#166534}.q270 .o270{display:grid;gap:.4rem;margin-top:.5rem}.q270 .opt{text-align:start}.q270 .opt.ok{border-color:#16a34a;background:#dcfce7}.q270 .opt.bad{border-color:#dc2626;background:#fee2e2}
+  .w270{font:1.8rem/1.6 'Amiri',serif;text-align:center;margin:.4rem 0}.r270{text-align:center}.mk270{margin:.4rem 0 1rem;padding:.6rem .8rem;border:1px dashed var(--line);border-radius:12px}`);
 })();
 
 // بدء التشغيل
