@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v232";
+const UI_VERSION = "2026-11-17-v233";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31050,6 +31050,96 @@ Between lessons, the platform keeps you going:
   .pb232{height:12px;border-radius:999px;background:var(--bg);overflow:hidden}.pb232 i{display:block;height:100%;background:var(--accent);transition:width .3s}
   .ch232{font-size:.72rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
   #up230{display:none!important}`);
+})();
+
+/* ================= v233: الدفعة السابعة (القرآن أولًا): 📖 الورد اليومي بتذكير · 🗓️ خطة ختمة بتاريخ · 🧩 كمّل الآية (من المصحف نفسه، مفيش ذكاء اصطناعي) · 🔥 السلسلة بيوم حماية كل أسبوع + 🎯 هدف الأسبوع — كلهم مقفولين لحد ما تفتحهم من «كل الجديد» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const PG = ["wird233", "khatma233", "kamil233", "streak233"]; PG.forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const NF = () => setv("nf218", {}) || {}; const on = id => !!(NF()[id] || {}).on;
+  const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const dayN = s => Math.floor(new Date(s + "T12:00:00").getTime() / 864e5);
+  /* تخزين: على الجهاز + في البروفايل لو داخل (يتنقل معاه لأي جهاز) */
+  const K = "my233";
+  const MY = () => { let o = {}; try { o = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {} const p = (state.auth && state.auth.profile && state.auth.profile.metadata && state.auth.profile.metadata.my233) || null; if (p && (p.t || 0) > (o.t || 0)) o = p; return o; };
+  let syncT = null;
+  const SAVE = o => { o.t = Date.now(); try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {} if (logged() && state.auth.profile) { clearTimeout(syncT); syncT = setTimeout(async () => { try { const md = Object.assign({}, state.auth.profile.metadata || {}, { my233: o }); state.auth.profile.metadata = md; await sb.from("profiles").update({ metadata: md }).eq("id", state.auth.user.id); } catch (e) {} }, 800); } };
+  /* أي إنجاز (ورد، ختمة، كمّل الآية) بيحسب يوم في السلسلة */
+  function tick(kind) { const o = MY(); o.days = o.days || {}; const d = today(); o.days[d] = Object.assign(o.days[d] || {}, { [kind]: (o.days[d] && o.days[d][kind] || 0) + 1 }); SAVE(o); }
+  function streak() { const o = MY(); const D = o.days || {}; const fz = o.freeze || {}; let n = 0, d = dayN(today()); if (!D[today()]) d--; for (; ; d--) { const s = new Date(d * 864e5 + 432e5).toISOString().slice(0, 10); if (D[s]) { n++; continue; } if (fz[s]) continue; break; } return n; }
+
+  /* ===== 1) الورد اليومي ===== */
+  window.wird233 = {
+    set() { const g = id => (document.getElementById(id) || {}).value; const o = MY(); o.wird = { pages: Math.max(1, Math.min(60, +g("wd_p") || 2)), start: Math.max(1, Math.min(604, +g("wd_s") || 1)), time: g("wd_t") || "20:00", at: (o.wird && o.wird.at) || Math.max(1, Math.min(604, +g("wd_s") || 1)) }; SAVE(o); this.remind(); render(); },
+    done() { const o = MY(); if (!o.wird) return; o.wird.at = ((o.wird.at - 1 + o.wird.pages) % 604) + 1; o.wird.last = today(); SAVE(o); tick("wird"); toast("✅ " + T("ورد النهارده خلص — بارك الله فيك", "Today's wird done")); render(); },
+    async remind() { try { if (!("Notification" in window)) return; if (Notification.permission === "default") await Notification.requestPermission(); } catch (e) {} },
+    open() { const o = MY(); if (!o.wird) return; try { state.mushafPage = o.wird.at; } catch (e) {} navigate("quran"); }
+  };
+  /* تذكير: لو الصفحة مفتوحة ووصل الميعاد ولسه الورد ماخلصش */
+  setInterval(() => { try { const o = MY(); if (!on("wird") || !o.wird || o.wird.last === today() || o.wird.notified === today()) return; const [h, m] = (o.wird.time || "20:00").split(":").map(Number); const n = new Date(); if (n.getHours() * 60 + n.getMinutes() < h * 60 + m) return; o.wird.notified = today(); SAVE(o); const msg = T(`ورد النهارده: ${o.wird.pages} صفحة من صفحة ${o.wird.at}`, `Today's wird: ${o.wird.pages} pages from page ${o.wird.at}`); toast("📖 " + msg); if ("Notification" in window && Notification.permission === "granted") new Notification(T("أكاديمية إتقان", "Itqan Academy"), { body: msg, icon: "/icons/icon-192.png" }); } catch (e) {} }, 60000);
+  function wirdPage() { const o = MY(); const w = o.wird; const doneToday = w && w.last === today();
+    const form = `<div class="card"><h3>⚙️ ${T("ظبّط وردك", "Set your wird")}</h3><div class="g218"><label class="sm">${T("كام صفحة في اليوم؟", "Pages per day")}<input id="wd_p" type="number" min="1" max="60" class="in" value="${w ? w.pages : 2}"></label><label class="sm">${T("تبدأ من صفحة", "Start page")}<input id="wd_s" type="number" min="1" max="604" class="in" value="${w ? w.at : 1}"></label><label class="sm">${T("ميعاد التذكير", "Reminder time")}<input id="wd_t" type="time" class="in" value="${w ? w.time : "20:00"}"></label></div><button class="btn btn-p" style="margin-top:.5rem" onclick="wird233.set()">💾 ${T("احفظ", "Save")}</button><p class="xs muted">${T("التذكير بيوصل وانت فاتح الموقع أو التطبيق. لو الإشعارات مسموحة بيظهر كإشعار.", "Reminders show while the site/app is open.")}</p></div>`;
+    const card = w ? `<div class="card wd233 ${doneToday ? "ok" : ""}"><div style="font-size:2.6rem">${doneToday ? "✅" : "📖"}</div><h2>${doneToday ? T("خلّصت ورد النهارده", "Today's wird is done") : T(`وردك النهارده: ${w.pages} صفحة`, `Today: ${w.pages} pages`)}</h2><p class="muted">${T("من صفحة", "From page")} <b>${doneToday ? ((w.at - 1 - w.pages + 604) % 604) + 1 : w.at}</b> ${T("لحد", "to")} <b>${Math.min(604, (doneToday ? ((w.at - 1 - w.pages + 604) % 604) + 1 : w.at) + w.pages - 1)}</b></p><div class="pb233"><i style="width:${Math.round(((w.at - 1) / 604) * 100)}%"></i></div><small class="muted">${T("وصلت", "Progress")} ${Math.round(((w.at - 1) / 604) * 100)}% ${T("من المصحف", "of the mushaf")}</small><div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-o" onclick="wird233.open()">📖 ${T("افتح المصحف", "Open mushaf")}</button>${doneToday ? "" : `<button class="btn btn-p" onclick="wird233.done()">✅ ${T("خلّصت الورد", "Mark done")}</button>`}</div></div>` : "";
+    return pageWrap("📖", T("الورد اليومي", "Daily wird"), T("كام صفحة كل يوم، وتذكير في الميعاد اللي تختاره، والموقع فاكر وصلت لفين", "A few pages daily, with a reminder"), card + form, 760); }
+
+  /* ===== 2) خطة الختمة ===== */
+  window.khatma233 = {
+    set() { const g = id => (document.getElementById(id) || {}).value; const from = Math.max(1, Math.min(604, +g("kh_f") || 1)); const end = g("kh_e"); if (!end || dayN(end) <= dayN(today())) return toast(T("اختار تاريخ بعد النهارده", "Pick a future date"), true); const o = MY(); o.kh = { from, end, start: today(), done: {} }; SAVE(o); render(); },
+    tog(d) { const o = MY(); if (!o.kh) return; o.kh.done = o.kh.done || {}; o.kh.done[d] = !o.kh.done[d]; SAVE(o); if (o.kh.done[d]) tick("khatma"); render(); },
+    reset() { if (!confirm(T("تبدأ خطة جديدة؟", "Start a new plan?"))) return; const o = MY(); delete o.kh; SAVE(o); render(); }
+  };
+  function plan(kh) { const days = dayN(kh.end) - dayN(kh.start) + 1; const pages = 604 - kh.from + 1; const per = pages / days; const L = []; let p = kh.from; for (let i = 0; i < days; i++) { const a = Math.round(p), b = Math.min(604, Math.round(kh.from + per * (i + 1)) - 1); const d = new Date((dayN(kh.start) + i) * 864e5 + 432e5).toISOString().slice(0, 10); L.push({ d, a, b: Math.max(a, b) }); p = b + 1; } return { L, per }; }
+  function khPage() { const o = MY(); const kh = o.kh;
+    if (!kh) { const def = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10); return pageWrap("🗓️", T("خطة ختمة", "Khatma plan"), T("اختار هتختم إمتى، والموقع يقسّم لك الصفحات على الأيام", "Pick a finish date — we split the pages per day"), `<div class="card"><div class="g218"><label class="sm">${T("هتبدأ من صفحة", "Start from page")}<input id="kh_f" type="number" min="1" max="604" value="1" class="in"></label><label class="sm">${T("عايز تختم يوم", "Finish by")}<input id="kh_e" type="date" class="in" value="${def}"></label></div><button class="btn btn-p" style="margin-top:.5rem" onclick="khatma233.set()">🗓️ ${T("اعمل الخطة", "Make the plan")}</button></div>`, 760); }
+    const { L, per } = plan(kh); const nDone = L.filter(x => kh.done && kh.done[x.d]).length; const t = today();
+    const late = L.filter(x => dayN(x.d) < dayN(t) && !(kh.done && kh.done[x.d])).length;
+    return pageWrap("🗓️", T("خطة ختمة", "Khatma plan"), T(`حوالي ${per.toFixed(1)} صفحة كل يوم لحد ${kh.end}`, `About ${per.toFixed(1)} pages a day until ${kh.end}`), `<div class="card"><div class="pb233"><i style="width:${Math.round(nDone / L.length * 100)}%"></i></div><p class="sm">${nDone}/${L.length} ${T("يوم", "days")}${late ? ` · <b style="color:#dc2626">${late} ${T("يوم متأخر", "days behind")}</b>` : ""}</p><div class="kh233">${L.map(x => `<button class="${kh.done && kh.done[x.d] ? "ok" : ""} ${x.d === t ? "now" : ""}" onclick="khatma233.tog('${x.d}')"><small>${x.d.slice(5)}</small><b>${x.a}${x.b > x.a ? "–" + x.b : ""}</b></button>`).join("")}</div><button class="btn btn-o xs" style="margin-top:.6rem" onclick="khatma233.reset()">🔄 ${T("خطة جديدة", "New plan")}</button></div>`, 900); }
+
+  /* ===== 3) كمّل الآية — النص من المصحف (api.quran.com) ===== */
+  const KQ = { s: 18, v: null, q: null, ok: 0, n: 0, ans: null };
+  async function verses(s) { const k = "kv233:" + s; if (KQ[k]) return KQ[k]; const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=text_uthmani&per_page=300`); const j = await r.json(); KQ[k] = (j.verses || []).map(v => String(v.text_uthmani || "").trim()).filter(Boolean); return KQ[k]; }
+  const words = t => t.split(/\s+/).filter(Boolean);
+  window.kamil233 = {
+    async load(s) { if (KQ.busy) return; KQ.busy = 1; KQ.s = +s || KQ.s; KQ.v = null; KQ.q = null; render(); try { KQ.v = await verses(KQ.s); } catch (e) { KQ.v = []; } KQ.busy = 0; this.next(); },
+    next() { const V = (KQ.v || []).filter(v => words(v).length >= 4); if (V.length < 4) { KQ.q = null; render(); return; } const pick = V[Math.floor(Math.random() * V.length)]; const w = words(pick); const cut = Math.max(2, Math.floor(w.length / 2)); const right = w.slice(cut).join(" "); const others = V.filter(v => v !== pick).sort(() => Math.random() - .5).slice(0, 3).map(v => { const x = words(v); return x.slice(Math.max(2, Math.floor(x.length / 2))).join(" "); }); KQ.q = { head: w.slice(0, cut).join(" "), right, opts: [right, ...others].sort(() => Math.random() - .5) }; KQ.ans = null; render(); },
+    pick(i) { if (!KQ.q || KQ.ans != null) return; KQ.ans = i; KQ.n++; if (KQ.q.opts[i] === KQ.q.right) { KQ.ok++; tick("kamil"); } render(); }
+  };
+  function kamilPage() { if (KQ.v == null && !KQ.busy) { setTimeout(() => kamil233.load(KQ.s), 30); }
+    const sel = `<select class="in" style="width:auto" onchange="kamil233.load(this.value)">${(typeof SURAHS !== "undefined" ? SURAHS : []).map((n, i) => `<option value="${i + 1}" ${i + 1 === KQ.s ? "selected" : ""}>${i + 1}. ${esc(n)}</option>`).join("")}</select>`;
+    const q = KQ.q; const body = KQ.v == null ? loadingBox() : !q ? `<div class="card muted">${T("السورة دي قصيرة — اختار سورة أطول", "Pick a longer surah")}</div>` : `<div class="card kq233"><p class="xs muted">${T("كمّل الآية:", "Complete the ayah:")}</p><div class="kqh">${esc(q.head)} …</div><div class="kqo">${q.opts.map((o, i) => `<button class="${KQ.ans == null ? "" : o === q.right ? "ok" : i === KQ.ans ? "no" : ""}" onclick="kamil233.pick(${i})">${esc(o)}</button>`).join("")}</div>${KQ.ans != null ? `<button class="btn btn-p" onclick="kamil233.next()">➡️ ${T("اللي بعدها", "Next")}</button>` : ""}<p class="xs muted" style="margin-top:.5rem">${T("النتيجة", "Score")}: ${KQ.ok}/${KQ.n}</p></div>`;
+    return pageWrap("🧩", T("كمّل الآية", "Complete the ayah"), T("أول الآية قدامك، اختار تكملتها الصح — بيثبّت الحفظ ويفرّق بين المتشابهات", "Pick the right continuation"), `<div class="row" style="gap:.4rem;align-items:center;margin-bottom:.6rem">${T("السورة", "Surah")} ${sel}</div>${body}`, 820); }
+
+  /* ===== 4) السلسلة + هدف الأسبوع ===== */
+  window.streak233 = {
+    freeze() { const o = MY(); o.freeze = o.freeze || {}; const wk = Math.floor(dayN(today()) / 7); if (Object.keys(o.freeze).some(d => Math.floor(dayN(d) / 7) === wk)) return toast(T("استخدمت يوم الحماية بتاع الأسبوع ده", "Freeze already used this week"), true); const y = new Date((dayN(today()) - 1) * 864e5 + 432e5).toISOString().slice(0, 10); o.freeze[y] = 1; SAVE(o); toast("🛡️ " + T("امبارح اتحسب يوم حماية — سلسلتك محفوظة", "Yesterday protected")); render(); },
+    goal() { const n = prompt(T("هدفك الأسبوع ده كام يوم إنجاز؟ (1–7)", "Weekly goal (days 1–7)"), (MY().goal || 5)); if (!n) return; const o = MY(); o.goal = Math.max(1, Math.min(7, +n || 5)); SAVE(o); render(); }
+  };
+  function streakPage() { const o = MY(); const D = o.days || {}; const s = streak(); const wk0 = dayN(today()) - ((new Date().getDay() + 1) % 7); /* الأسبوع بيبدأ السبت */
+    const week = [...Array(7)].map((_, i) => { const d = new Date((wk0 + i) * 864e5 + 432e5).toISOString().slice(0, 10); return { d, on: !!D[d], fz: !!(o.freeze || {})[d] }; }); const got = week.filter(x => x.on).length; const goal = o.goal || 5;
+    const nm = AR() ? ["سبت", "حد", "اتنين", "تلات", "أربع", "خميس", "جمعة"] : ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+    return pageWrap("🔥", T("سلسلتي", "My streak"), T("أي ورد أو ختمة أو «كمّل الآية» بيحسب يوم. ليك يوم حماية واحد كل أسبوع لو فاتك يوم.", "Any wird, khatma day or quiz counts. One freeze day per week."), `<div class="card wd233"><div style="font-size:3rem">🔥</div><h2>${s} ${T("يوم ورا بعض", "day streak")}</h2><div class="wk233">${week.map((x, i) => `<span class="${x.on ? "on" : x.fz ? "fz" : ""}"><small>${nm[i]}</small>${x.on ? "✅" : x.fz ? "🛡️" : "·"}</span>`).join("")}</div><p class="sm">🎯 ${T("هدف الأسبوع", "Weekly goal")}: <b>${got}/${goal}</b> ${got >= goal ? "🏆" : ""}</p><div class="pb233"><i style="width:${Math.min(100, Math.round(got / goal * 100))}%"></i></div><div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-o" onclick="streak233.goal()">🎯 ${T("غيّر الهدف", "Change goal")}</button><button class="btn btn-o" onclick="streak233.freeze()">🛡️ ${T("احمي امبارح", "Protect yesterday")}</button></div></div>`, 720); }
+
+  /* ===== كل الجديد + مساحتي ===== */
+  const NEW = [{ id: "wird", ic: "📖", ar: "الورد اليومي", en: "Daily wird", go: "go16('wird233')", d: "الطالب يختار كام صفحة في اليوم ومن أي صفحة وميعاد التذكير. الموقع فاكر وصل لفين وبيفكّره في الميعاد." },
+    { id: "khatma", ic: "🗓️", ar: "خطة ختمة", en: "Khatma plan", go: "go16('khatma233')", d: "يختار تاريخ الختمة، والموقع يقسّم الصفحات على الأيام ويعلّم على اللي خلص ويقول لو متأخر." },
+    { id: "kamil", ic: "🧩", ar: "كمّل الآية", en: "Complete the ayah", go: "go16('kamil233')", d: "أول الآية من المصحف و٤ اختيارات للتكملة من نفس السورة — بيثبّت الحفظ ويفرّق المتشابه. النص من المصحف مش من الذكاء الاصطناعي." },
+    { id: "streak", ic: "🔥", ar: "السلسلة وهدف الأسبوع", en: "Streak & weekly goal", go: "go16('streak233')", d: "أيام الإنجاز ورا بعض، ويوم حماية واحد كل أسبوع، وهدف أسبوعي الطالب بيحدده." }];
+  function hubAdd() { if (state.route !== "hub218" || !own() || document.getElementById("nw233")) return; const a = document.getElementById("nw226") || document.getElementById("nw225") || document.querySelector("#app .nfc218"); if (!a) return;
+    a.insertAdjacentHTML("beforebegin", `<div id="nw233"><h3 style="margin:.6rem 0">🆕 ${T("الدفعة السابعة — القرآن والحفظ", "Seventh batch — Quran & memorization")}</h3>${NEW.map(f => { const c = NF()[f.id] || {}; return `<div class="card nfc218 ${c.on ? "" : "off"}"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><div class="row" style="gap:.6rem;align-items:center"><span style="font-size:1.6rem">${f.ic}</span><div><b>${esc(AR() ? f.ar : f.en)}</b><p class="xs muted" style="margin:.1rem 0 0;max-width:520px">${esc(f.d)}</p></div></div><div class="row" style="gap:.3rem"><button class="btn btn-o xs" onclick="${f.go}">👁 ${T("افتح", "Open")}</button><button class="btn ${c.on ? "btn-p" : "btn-o"}" onclick="(async()=>{const n=Object.assign({},setv('nf218',{})||{});n['${f.id}']=Object.assign({},n['${f.id}']||{},{on:${!c.on}});await saveSetting16('nf218',n);render()})()">${c.on ? "✅ " + T("شغّالة", "On") : "⏸ " + T("شغّلها", "Turn on")}</button></div></div></div>`; }).join("")}</div>`); }
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); const add = NEW.filter(f => own() || on(f.id)); if (add.length) h = h.replace('<div class="msgrid">', `<div class="msgrid">${add.map(f => `<button class="mstile" style="--c:#0f766e" onclick="${f.go}"><span>${f.ic}</span><b>${esc(AR() ? f.ar : f.en)}</b></button>`).join("")}`); return h; };
+  /* الصفحات دي للزوار والطلاب بتفتح بس لو المالك شغّلها */
+  const allowed = r => own() || on({ wird233: "wird", khatma233: "khatma", kamil233: "kamil", streak233: "streak" }[r]);
+  const R = { wird233: wirdPage, khatma233: khPage, kamil233: kamilPage, streak233: streakPage };
+  const _r = render; render = function () { if (R[state.route]) { if (!allowed(state.route)) { state.route = "home"; return _r.apply(this, arguments); } show(R[state.route]()); } else _r.apply(this, arguments); try { hubAdd(); } catch (e) { console.warn("v233", e); } };
+  const m = location.hash.match(/^#\/(wird233|khatma233|kamil233|streak233)/); if (m) state.route = m[1];
+  css(`.wd233{text-align:center}.wd233.ok{border:2px solid #16a34a}.pb233{height:12px;border-radius:999px;background:var(--bg);overflow:hidden;margin:.5rem 0}.pb233 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .kh233{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.35rem}.kh233 button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:12px;padding:.35rem;display:flex;flex-direction:column;align-items:center;cursor:pointer;font:inherit}.kh233 button.ok{background:color-mix(in srgb,#16a34a 18%,var(--card));border-color:#16a34a}.kh233 button.now{outline:2px solid var(--accent)}
+  .kqh{font:1.6rem/2.2 'Amiri',serif;text-align:center;margin:.4rem 0 .8rem}.kqo{display:grid;gap:.4rem;margin-bottom:.6rem}.kqo button{font:1.25rem/1.9 'Amiri',serif;text-align:center;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.4rem .7rem;cursor:pointer}.kqo button.ok{background:color-mix(in srgb,#16a34a 20%,var(--card));border-color:#16a34a}.kqo button.no{background:color-mix(in srgb,#dc2626 18%,var(--card));border-color:#dc2626}
+  .wk233{display:flex;justify-content:center;gap:.3rem;margin:.6rem 0;flex-wrap:wrap}.wk233 span{display:flex;flex-direction:column;align-items:center;min-width:42px;padding:.3rem;border-radius:12px;border:1px solid var(--line)}.wk233 span.on{background:color-mix(in srgb,#f59e0b 22%,var(--card));border-color:#f59e0b}.wk233 span.fz{background:color-mix(in srgb,#3b82f6 15%,var(--card))}`);
 })();
 
 // بدء التشغيل
