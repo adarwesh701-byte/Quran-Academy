@@ -114,7 +114,7 @@
   const _r = render; render = function () { if (state.route === "life249" || state.route === "muslim241") return show(lifePage()); const o = _r.apply(this, arguments); try { home(); maqamPageFix(); kidsEn(); noSrc(); } catch (e) { console.warn("v249", e); } return o; };
   let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { home(); maqamPageFix(); kidsEn(); if (state.route === "home") { const p = document.getElementById("pth241"); p && arabicFix(p); } } catch (e) {} }, 140); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: false });
   /* لما مسار من الخمسة يتفتح، نصلّح العربي */
-  const _p241 = window.p241; if (typeof _p241 === "function") window.p241 = function () { const r = _p241.apply(this, arguments); try { const p = document.getElementById("pth241"); p && arabicFix(p); } catch (e) {} return r; };
+  const _p241 = window.p241; if (typeof _p241 === "function") window.p241 = function () { const r = _p241.apply(this, arguments); try { home(); } catch (e) {} return r; };
   /* «كل الأدوات» في أي مكان تاني بقت «حياة المسلم» */
   const _go = go16; go16 = function (r, a) { if (r === "muslim241") r = "life249"; return _go.call(this, r, a); };
 
