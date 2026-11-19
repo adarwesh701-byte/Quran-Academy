@@ -11,6 +11,9 @@
   /* نفس المفاتيح اللي المسارات الخمسة بتستخدمها (v241) — عشان نعرف الأداة اللي مش موجودة في أي مسار */
   const USED = ["hzTab='today'", "hzTab='session'", "hzTab='map'", "go16('tasmee')", "go16('hifzt')", "go16('khatma')", "go16('growth')", "go16('games172')", "go16('tjb')", "go16('makharij')", "go16('tf228')", "go16('vow172')", "go16('nooraniya')", "go16('kidsmushaf')", "go16('qiraat')", "go16('adhans')", "go16('tuner')", "go16('maqamat')", "go16('tahwil')", "go16('mqc')", "go16('mqchallenge')", "go16('reading')", "go16('kidsar')", "go16('lang','fu')", "go16('lang','eg')", "go16('lang','gu')", "go16('egyptian')", "go16('abyb')", "go16('arabiya')", "go16('fusha')", "go16('nahw')", "go16('ilm')", "go16('alam')", "go16('kutub199')", "go16('bk','fqs')", "go16('voice242')", "go16('qiraat10')", "go16('muslim241')", "go16('alltools')", "go16('competitions')", "navigate('classroom')", "navigate('booking')", "go16('grp238')", "go16('wb243')", "go16('wb249')"];
   const USEDRE = [/صلّح أخطاء التجويد/, /ألعاب التجويد/, /رحلة التجويد/, /المصحف الملوّن/, /مصحف أخطائي/, /قصة مصوّرة/, /المقامات الأساسية/, /المقامات الفرعية/, /أنشد معي/, /تفسير القرآن/, /الحديث الشريف/, /^الفقه$/, /السيرة النبوية/, /قصص الأنبياء/, /Colou?red mushaf/i, /Main maqamat/i, /Branch maqamat/i, /Sing along|Chant with/i];
+  /* أدوات كانت مش في أي مسار ولها مكان طبيعي — بتتحط في التقسيمة الصح جوه المسار */
+  const MAP = [["libGo('72d76e51", /المعلومات النظرية|Theory/], ["go16('maqam-game')", /مساحتك الصوتية|Your voice space/], ["libGo('7eb9cec7", /^العلوم$|^Sciences$/], ["libGo('d5142f20", /^العلوم$|^Sciences$/], ["libGo('6e27f3e6", /^العلوم$|^Sciences$/], ["libGo('53c9bdc4", /اتكلم عربي|Speak Arabic/], ["libGo('64bff2a0", /اتكلم عربي|Speak Arabic/], ["libGo('efab5231", /اتكلم عربي|Speak Arabic/], ["libGo('c5785fc2", /اتكلم عربي|Speak Arabic/]];
+  MAP.forEach(m => USED.push(m[0]));
   const isUsed = t => USED.some(k => t.js.includes(k)) || USEDRE.some(r => r.test(t.n));
   const find = (A, k) => A.find(t => t.js.includes(k));
   const WB = () => ({ ic: "🖍️", n: T("الوايت بورد", "Whiteboard"), js: typeof window.wb249 === "object" ? "go16('wb249')" : "go16('wb243')" });
@@ -24,12 +27,12 @@
       g(T("🕌 الصلاة", "🕌 Prayer"), ["go16('prayer')"]),
       g(T("📿 الأذكار والدعاء", "📿 Adhkar & du'a"), ["go16('adhkar')", "go16('asma')"]),
       g(T("📖 مع القرآن كل يوم", "📖 Daily with the Quran"), ["go16('ayahcard')", "go16('arbaeen')", "go16('khatma')"]),
-      g(T("🗓️ التقويم والوقت", "🗓️ Calendar & time"), ["go16('cal224')"], typeof PAGES16 !== "undefined" && PAGES16.includes("clk251") ? [CLK()] : []),
+      g(T("🗓️ التقويم والوقت", "🗓️ Calendar & time"), [], [{ ic: "🌙", n: T("التقويم الهجري", "Hijri calendar"), js: "go16('cal224')" }].concat(typeof PAGES16 !== "undefined" && PAGES16.includes("clk251") ? [CLK()] : [])),
       [T("🖍️ الوايت بورد", "🖍️ Whiteboard"), [WB()]],
       [T("🧰 أدوات تانية", "🧰 More tools"), other]
     ].filter(x => x[1].length); }
   /* إعدادات المالك: {g:[[اسم, [js...]]...]} — لو مفيش يبقى الافتراضي */
-  function lifeGroups() { const cfg = setv("life249", null); if (!cfg || !Array.isArray(cfg.g)) return lifeDefault(); const A = tools().concat([WB(), CLK()]); return cfg.g.map(([n, list]) => [n, (list || []).map(js => A.find(t => t.js === js)).filter(Boolean)]).filter(x => x[1].length || own()); }
+  function lifeGroups() { const cfg = setv("life249", null); if (!cfg || !Array.isArray(cfg.g)) return lifeDefault(); const A = tools().concat([WB(), CLK(), { ic: "🌙", n: T("التقويم الهجري", "Hijri calendar"), js: "go16('cal224')" }]); return cfg.g.map(([n, list]) => [n, (list || []).map(js => A.find(t => t.js === js)).filter(Boolean)]).filter(x => x[1].length || own()); }
   async function lifeSave(g) { await saveSetting16("life249", { g: g.map(([n, L]) => [n, L.map(t => t.js)]) }); toast("✅"); render(); }
   window.life249 = {
     edit() { state.lifeEd = !state.lifeEd; render(); },
@@ -37,13 +40,13 @@
     gmv(gi, d) { const G = lifeGroups(); const j = gi + d; if (j < 0 || j >= G.length) return; [G[gi], G[j]] = [G[j], G[gi]]; lifeSave(G); },
     to(gi, i, gj) { const G = lifeGroups(); const [t] = G[gi][1].splice(i, 1); G[+gj][1].push(t); lifeSave(G); },
     del(gi, i) { const G = lifeGroups(); G[gi][1].splice(i, 1); lifeSave(G); },
-    add(gi, js) { if (!js) return; const G = lifeGroups(); const t = tools().concat([WB(), CLK()]).find(x => x.js === js); if (t && !G[gi][1].some(x => x.js === js)) G[gi][1].push(t); lifeSave(G); },
+    add(gi, js) { if (!js) return; const G = lifeGroups(); const t = tools().concat([WB(), CLK(), { ic: "🌙", n: T("التقويم الهجري", "Hijri calendar"), js: "go16('cal224')" }]).find(x => x.js === js); if (t && !G[gi][1].some(x => x.js === js)) G[gi][1].push(t); lifeSave(G); },
     ren(gi) { const G = lifeGroups(); const n = prompt(T("اسم الفولدر", "Folder name"), G[gi][0]); if (!n) return; G[gi][0] = n; lifeSave(G); },
     newg() { const n = prompt(T("اسم الفولدر الجديد", "New folder name")); if (!n) return; const G = lifeGroups(); G.push([n, []]); lifeSave(G); },
     delg(gi) { const G = lifeGroups(); if (G[gi][1].length && !confirm(T("الفولدر فيه أدوات — تشيله؟ (الأدوات نفسها مش هتتمسح من الموقع)", "Remove this folder? (tools stay on the site)"))) return; G.splice(gi, 1); lifeSave(G); },
     reset() { if (!confirm(T("ترجع للترتيب الافتراضي؟", "Back to default?"))) return; saveSetting16("life249", null).then(() => render()); }
   };
-  function lifePage() { const G = lifeGroups(); const ed = own() && state.lifeEd; const A = tools().concat([WB(), CLK()]);
+  function lifePage() { const G = lifeGroups(); const ed = own() && state.lifeEd; const A = tools().concat([WB(), CLK(), { ic: "🌙", n: T("التقويم الهجري", "Hijri calendar"), js: "go16('cal224')" }]);
     const head = own() ? `<div class="row" style="gap:.35rem;flex-wrap:wrap;margin-bottom:.6rem"><button class="btn ${ed ? "btn-p" : "btn-o"} xs" onclick="life249.edit()">🗂️ ${ed ? T("خلصت الترتيب", "Done") : T("رتّب زي الفولدرات (للمالك)", "Arrange like folders (owner)")}</button>${ed ? `<button class="btn btn-o xs" onclick="life249.newg()">➕ ${T("فولدر جديد", "New folder")}</button><button class="btn btn-o xs" onclick="life249.reset()">↺ ${T("الافتراضي", "Default")}</button>` : ""}</div>` : "";
     const body = G.map(([n, L], gi) => `<details class="card lf249" ${gi === 0 || ed ? "open" : ""}><summary class="b">${esc(n)} <small class="muted">(${L.length})</small>${ed ? `<span class="lfa"><button onclick="event.preventDefault();life249.gmv(${gi},-1)">▲</button><button onclick="event.preventDefault();life249.gmv(${gi},1)">▼</button><button onclick="event.preventDefault();life249.ren(${gi})">✏️</button><button onclick="event.preventDefault();life249.delg(${gi})">🗑️</button></span>` : ""}</summary>
       <div class="tl241" style="margin-top:.5rem">${L.map((t, i) => ed ? `<div class="lfi"><span>${t.ic}</span><b>${esc(t.n)}</b><span class="lfa"><button onclick="life249.mv(${gi},${i},-1)" title="↑">▲</button><button onclick="life249.mv(${gi},${i},1)" title="↓">▼</button><select onchange="life249.to(${gi},${i},this.value)" title="${T("انقل لفولدر", "Move to folder")}"><option value="">↪️</option>${G.map((g, j) => j === gi ? "" : `<option value="${j}">${esc(g[0])}</option>`).join("")}</select><button onclick="life249.del(${gi},${i})" title="${T("شيلها من هنا", "Remove from here")}">✕</button></span></div>` : `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div>
@@ -67,7 +70,8 @@
   function home() { if (state.route !== "home") return; const p = document.getElementById("pth241"); if (!p) return; const m = document.getElementById("more245"); if (m) m.style.display = "none"; if (!document.getElementById("px249")) { const pg = p.querySelector(".pg241"); (pg || p).insertAdjacentHTML("afterend", pathsHtml()); } arabicFix(p); }
 
   /* ---------- العربي في المسار ---------- */
-  function arabicFix(root) { const card = [...root.querySelectorAll(".gg241")]; if (!card.length) return; const speak = card.find(g => /اتكلم عربي|Speak Arabic/.test(g.querySelector("h4") && g.querySelector("h4").textContent)); const fus = root.querySelector(".tl241 button[onclick*=\"go16('fusha')\"]"); if (speak && fus && !speak.contains(fus)) speak.querySelector(".tl241").appendChild(fus); }
+  function arabicFix(root) { const card = [...root.querySelectorAll(".gg241")]; if (!card.length) return;
+    try { const A = tools(); MAP.forEach(([k, re]) => { const t = find(A, k); if (!t) return; const g = card.find(x => re.test(((x.querySelector("h4") || {}).textContent || "").trim())); if (!g || g.querySelector(`button[data-k249="${k}"]`)) return; g.querySelector(".tl241").insertAdjacentHTML("beforeend", `<button data-k249="${esc(k)}" onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`); }); } catch (e) {} const speak = card.find(g => /اتكلم عربي|Speak Arabic/.test(g.querySelector("h4") && g.querySelector("h4").textContent)); const fus = root.querySelector(".tl241 button[onclick*=\"go16('fusha')\"]"); if (speak && fus && !speak.contains(fus)) speak.querySelector(".tl241").appendChild(fus); }
   const hasBook = () => { try { const ix = (abybIndex() || [[]])[0]; return Array.isArray(ix) ? ix.length > 0 : !!(ix && Object.keys(ix).length); } catch (e) { return false; } };
   const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { ds.forEach(d => { if (!d.tools) return;
       d.tools = d.tools.filter(t => { const js = String(t[2]);
