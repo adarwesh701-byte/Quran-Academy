@@ -94,6 +94,9 @@
     if (k === "mq_branch") { wrap.querySelectorAll(":scope > .mt179c").forEach(x => x.style.display = "none"); return; }
     if (k !== "maqam" || !tabs) return; wrap.classList.add("mq249"); if (state.mqHead249) wrap.classList.add("hd249"); else wrap.classList.remove("hd249");
     if (!wrap.querySelector("#mh249")) { const par = secOf(s.parent_id); tabs.insertAdjacentHTML("beforebegin", `<div id="mh249"><button class="btn btn-o xs" onclick="libGo('${par ? par.id : ""}')">${AR() ? "→" : "←"} ${esc(ttl(par) || T("المقامات", "Maqamat"))}</button><b class="notr">${esc(ttl(s))}</b>${own() ? `<button class="btn btn-o xs" onclick="state.mqHead249=!state.mqHead249;render()" title="${T("أدوات القسم (للمالك)", "Section tools (owner)")}">⚙️</button>` : ""}</div>`); }
+    const mh = wrap.querySelector("#mh249"); if (mh && mh.nextElementSibling !== tabs) tabs.before(mh);
+    /* نص الأذان/الابتهال تحت الصوت بزرار «عرض» */
+    wrap.querySelectorAll(".adhan59:not([data-f249])").forEach(c => { c.dataset.f249 = 1; c.classList.add("cl249"); const h = c.firstElementChild; if (h) h.insertAdjacentHTML("afterend", `<button class="btn btn-o xs" onclick="this.closest('.adhan59').classList.toggle('cl249');this.textContent=this.closest('.adhan59').classList.contains('cl249')?'📜 ${T("عرض الكلمات", "Show the words")}':'✕ ${T("اخفي", "Hide")}'">📜 ${T("عرض الكلمات", "Show the words")}</button>`); });
     if (!wrap.querySelector("#rb249")) tabs.insertAdjacentHTML("afterend", `<div id="rb249" class="card"><b>🎙️ ${T("سجّل نفسك واسمع", "Record yourself & listen")}</b><button class="btn btn-p xs" data-a="rec">🎙️ ${T("سجّل", "Record")}</button><span class="rbo"></span></div>`);
     if (state.mqTab === "nasheed") adhansIn(wrap, s.meta.maqam); }
   /* الأذانات جوه تبويب الابتهال */
@@ -134,5 +137,6 @@
   @media(max-width:700px){.mq249 .rc59{grid-template-columns:1fr auto}.mq249 .rc59>audio{grid-column:1/-1}.mq249 .rc59 .sp197{grid-column:2;grid-row:1}}
   .lf249 summary{display:flex;align-items:center;gap:.4rem}.lf249 .lfa{margin-inline-start:auto;display:inline-flex;gap:.2rem}.lf249 .lfa button,.lf249 .lfa select{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:.05rem .35rem;cursor:pointer;font-size:.8rem}
   .lfi{display:flex;align-items:center;gap:.4rem;border:1px dashed var(--accent);border-radius:12px;padding:.4rem .5rem}.lfi b{font-size:.85rem;flex:1}
+  .adhan59.cl249>*:not(:first-child):not(button){display:none!important}
   .ken249{font-weight:500;color:var(--muted);font-size:.78em}`);
 })();
