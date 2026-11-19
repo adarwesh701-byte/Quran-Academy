@@ -1,5 +1,7 @@
 /* ================= v249: ملف Notion «project» (الدفعة 1) — الرئيسية: «الفصل والحصص» و«المسابقات» و«حياة المسلم» بقوا مسارات زي اللي فوق بنفس التقسيمة · «حياة المسلم» (كانت «كل الأدوات») فيها أدوات المسلم + كل أداة مش موجودة في أي مسار + الوايت بورد، والمالك يختار اللي جواها ويرتّبها زي الفولدرات · صفحة كل مقام (أساسي أو فرعي): الشريط اللي فوق والهيدر اتشالوا وبتدخل على التبويبات علطول، والفروع اتشالت من الأساسي (ليها قسم «المقامات الفرعية» لوحده: تدوس على الكرد تتفتح فروعه) · «الأذانات» اتشالت من المسار واتحطت في تبويب «نشيد وابتهال» جوه كل مقام · التلاوات في المرتل/المجود بقت قايمة منظمة صغيرة · شريط «🎙️ سجّل نفسك واسمع» في كل تبويبات المقام · العربي: «العربية الفصحى» (من غير «وحدات») في «اتكلم عربي»، «منهج متكامل العربية الفصحى» واحد بس ومخفي عن غيرك لحد ما ترفع الكتاب، «العامية المصرية» من غير «مواقف»، وأسماء الوحدات بالعربي + معناها بالإنجليزي ================= */
+window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; return o[k] !== false; } catch (e) { return true; } });
 (function () {
+  const FF = k => { try { return typeof window.ff254 === "function" ? window.ff254(k) : true; } catch (e) { return true; } };
   const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
@@ -68,7 +70,7 @@
   const OPEN = () => state.p249 || "";
   window.p249 = id => { state.p249 = OPEN() === id ? "" : id; const b = document.getElementById("px249"); if (b) b.outerHTML = pathsHtml(); };
   function pathsHtml() { return `<div id="px249" class="pg241" style="margin-top:.6rem">${extraPaths().map(p => `<div class="pc241 ${OPEN() === p.id ? "on" : ""}" style="--c:${p.c}"><button class="ph241" onclick="p249('${p.id}')"><span class="i">${p.ic}</span><span class="tx"><b>${esc(p.t)}</b><small>${esc(p.s)}</small></span><span class="ar">${OPEN() === p.id ? "−" : "+"}</span></button>${OPEN() === p.id ? `<div class="pb241">${p.g.filter(g => g[1].length).map(g => `<div class="gg241"><h4>${esc(g[0])}</h4><div class="tl241">${g[1].map(t => `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div></div>`).join("")}</div>` : ""}</div>`).join("")}</div>`; }
-  function home() { if (state.route !== "home") return; const p = document.getElementById("pth241"); if (!p) return; const m = document.getElementById("more245"); if (m) m.style.display = "none"; if (!document.getElementById("px249")) { const pg = p.querySelector(".pg241"); (pg || p).insertAdjacentHTML("afterend", pathsHtml()); } arabicFix(p); }
+  function home() { if (state.route !== "home" || !FF("v249.paths")) return; const p = document.getElementById("pth241"); if (!p) return; const m = document.getElementById("more245"); if (m) m.style.display = "none"; if (!document.getElementById("px249")) { const pg = p.querySelector(".pg241"); (pg || p).insertAdjacentHTML("afterend", pathsHtml()); } arabicFix(p); }
 
   /* ---------- العربي في المسار ---------- */
   function arabicFix(root) { const card = [...root.querySelectorAll(".gg241")]; if (!card.length) return;
@@ -76,7 +78,7 @@
       if (mq && !mq.querySelector(".gg241[data-g249]")) { const L = ["libGo('4513c7ff", "libGo('7e2ec901", "libGo('27c0d098"].map(k => find(A, k)).filter(Boolean).filter(t => !mq.querySelector(`.tl241 button[onclick="${t.js.replace(/"/g, "&quot;")}"]`)); const pb = mq.querySelector(".pb241"); if (L.length && pb) pb.insertAdjacentHTML("afterbegin", `<div class="gg241" data-g249="1"><h4>${T("المقامات", "The maqamat")}</h4><div class="tl241">${L.map(t => `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div></div>`); }
       MAP.forEach(([k, re]) => { const t = find(A, k); if (!t) return; const g = card.find(x => re.test(((x.querySelector("h4") || {}).textContent || "").trim())); if (!g || g.querySelector(`button[data-k249="${k}"]`)) return; g.querySelector(".tl241").insertAdjacentHTML("beforeend", `<button data-k249="${esc(k)}" onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`); }); } catch (e) {} const speak = card.find(g => /اتكلم عربي|Speak Arabic/.test(g.querySelector("h4") && g.querySelector("h4").textContent)); const fus = root.querySelector(".tl241 button[onclick*=\"go16('fusha')\"]"); if (speak && fus && !speak.contains(fus)) speak.querySelector(".tl241").appendChild(fus); }
   const hasBook = () => { try { const ix = (abybIndex() || [[]])[0]; return Array.isArray(ix) ? ix.length > 0 : !!(ix && Object.keys(ix).length); } catch (e) { return false; } };
-  const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { ds.forEach(d => { if (!d.tools) return;
+  const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); if (!FF("v249.arabic")) return ds; try { ds.forEach(d => { if (!d.tools) return;
       d.tools = d.tools.filter(t => { const js = String(t[2]);
         if (js.includes("go16('adhans')")) return false; /* الأذانات بقت جوه تبويب الابتهال في كل مقام */
         if (js.includes("go16('arabiya')")) return false; /* اتدمجت في المنهج المتكامل */
@@ -90,14 +92,14 @@
   /* ---------- صفحة المقام ---------- */
   const secOf = id => { try { return (sectionsData() || []).find(s => s.id === id); } catch (e) { return null; } };
   const ttl = s => { const t = s && s.title; return typeof t === "object" ? (AR() ? t.ar : t.en || t.ar) : (t || ""); };
-  function maqamPageFix() { if (state.route !== "library" || !state.libSec) return; const s = secOf(state.libSec); const k = s && s.meta && s.meta.kind; const tabs = document.querySelector("#app .motabs"); const wrap = (tabs && tabs.parentElement) || (document.querySelector("#app .libhead") || {}).parentElement; if (!wrap) return;
+  function maqamPageFix() { if (state.route !== "library" || !state.libSec || !FF("v249.maqam")) return; const s = secOf(state.libSec); const k = s && s.meta && s.meta.kind; const tabs = document.querySelector("#app .motabs"); const wrap = (tabs && tabs.parentElement) || (document.querySelector("#app .libhead") || {}).parentElement; if (!wrap) return;
     if (k === "mq_branch") { wrap.querySelectorAll(":scope > .mt179c").forEach(x => x.style.display = "none"); return; }
     if (k !== "maqam" || !tabs) return; wrap.classList.add("mq249"); if (state.mqHead249) wrap.classList.add("hd249"); else wrap.classList.remove("hd249");
     if (!wrap.querySelector("#mh249")) { const par = secOf(s.parent_id); tabs.insertAdjacentHTML("beforebegin", `<div id="mh249"><button class="btn btn-o xs" onclick="libGo('${par ? par.id : ""}')">${AR() ? "→" : "←"} ${esc(ttl(par) || T("المقامات", "Maqamat"))}</button><b class="notr">${esc(ttl(s))}</b>${own() ? `<button class="btn btn-o xs" onclick="state.mqHead249=!state.mqHead249;render()" title="${T("أدوات القسم (للمالك)", "Section tools (owner)")}">⚙️</button>` : ""}</div>`); }
     /* نص الأذان/الابتهال تحت الصوت بزرار «عرض» */
     wrap.querySelectorAll(".adhan59:not([data-f249])").forEach(c => { c.dataset.f249 = 1; c.classList.add("cl249"); const h = c.firstElementChild; if (h) h.insertAdjacentHTML("afterend", `<button class="btn btn-o xs" onclick="this.closest('.adhan59').classList.toggle('cl249');this.textContent=this.closest('.adhan59').classList.contains('cl249')?'📜 ${T("عرض الكلمات", "Show the words")}':'✕ ${T("اخفي", "Hide")}'">📜 ${T("عرض الكلمات", "Show the words")}</button>`); });
     if (!wrap.querySelector("#rb249")) tabs.insertAdjacentHTML("afterend", `<div id="rb249" class="card"><b>🎙️ ${T("سجّل نفسك واسمع", "Record yourself & listen")}</b><button class="btn btn-p xs" data-a="rec">🎙️ ${T("سجّل", "Record")}</button><span class="rbo"></span></div>`);
-    if (state.mqTab === "nasheed") adhansIn(wrap, s.meta.maqam); }
+    if (state.mqTab === "nasheed" && FF("v249.adhan")) adhansIn(wrap, s.meta.maqam); }
   /* الأذانات جوه تبويب الابتهال */
   function adhansIn(wrap, m) { if (wrap.querySelector("#ad249") || typeof adhList !== "function") return; const xs = adhList(); if (!Array.isArray(xs)) return; const L = xs.filter(c => c.maqam === m);
     if (!L.length && !own()) return; const el = document.createElement("div"); el.id = "ad249"; el.className = "card"; el.innerHTML = `<h3>📢 ${T("الأذان على المقام ده", "Adhan in this maqam")}</h3>${L.length ? `<div class="rcgrid59">${L.map(c => { try { return recCard59(c, m); } catch (e) { return ""; } }).join("")}</div>` : `<p class="sm muted">${T("لسه مفيش أذان على المقام ده.", "No adhan in this maqam yet.")}</p>`}${own() ? `<button class="btn btn-o xs" style="margin-top:.4rem" onclick="go16('adhans')">📢 ${T("كل الأذانات + أضف أذان (للمالك)", "All adhans + add (owner)")}</button>` : ""}`;
@@ -112,11 +114,11 @@
 
   /* ---------- أسماء وحدات الأطفال بالإنجليزي جنب العربي ---------- */
   const KAEN = { "التَّحِيَّةُ وَالتَّعَارُفُ": "Greetings", "الْخُضْرَوَاتُ": "Vegetables", "الْمُوَاصَلَاتُ": "Transport", "الْمِهَنُ": "Jobs", "أَيَّامُ الْأُسْبُوعِ": "Days of the week", "الْحَوَاسُّ الْخَمْسُ": "The five senses", "فِي الْحَدِيقَةِ": "In the garden", "فِي الْمَطْبَخِ": "In the kitchen" };
-  function kidsEn() { if (AR()) return; document.querySelectorAll("#app button b, #app .nhcard b").forEach(b => { if (b.dataset.en249) return; const t = (b.textContent || "").replace(/^\d+\.\s*/, "").trim(); const en = KAEN[t]; if (en) { b.dataset.en249 = 1; b.insertAdjacentHTML("beforeend", ` <small class="ken249">— ${en}</small>`); } }); }
+  function kidsEn() { if (AR() || !FF("v249.kids")) return; document.querySelectorAll("#app button b, #app .nhcard b").forEach(b => { if (b.dataset.en249) return; const t = (b.textContent || "").replace(/^\d+\.\s*/, "").trim(); const en = KAEN[t]; if (en) { b.dataset.en249 = 1; b.insertAdjacentHTML("beforeend", ` <small class="ken249">— ${en}</small>`); } }); }
   /* ملاحظة «المحتوى مكتوب…» تحت الوحدات اتشالت (من غير مصادر) */
   function noSrc() { document.querySelectorAll("#app p.xs.muted").forEach(p => { if (/المحتوى مكتوب خصيصًا|Content written for the academy|Levels 2 and 3 are coming|المستوى التاني والتالت جايين/.test(p.textContent)) p.remove(); }); }
 
-  const _r = render; render = function () { if (state.route === "life249" || state.route === "muslim241") return show(lifePage()); const o = _r.apply(this, arguments); try { home(); maqamPageFix(); kidsEn(); noSrc(); } catch (e) { console.warn("v249", e); } return o; };
+  const _r = render; render = function () { if ((state.route === "life249" || state.route === "muslim241") && FF("v249.life")) return show(lifePage()); const o = _r.apply(this, arguments); try { home(); maqamPageFix(); kidsEn(); noSrc(); } catch (e) { console.warn("v249", e); } return o; };
   let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { home(); maqamPageFix(); kidsEn(); if (state.route === "home") { const p = document.getElementById("pth241"); p && arabicFix(p); } } catch (e) {} }, 140); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: false });
   /* لما مسار من الخمسة يتفتح، نصلّح العربي */
   const _p241 = window.p241; if (typeof _p241 === "function") window.p241 = function () { const r = _p241.apply(this, arguments); try { home(); } catch (e) {} return r; };

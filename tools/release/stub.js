@@ -1,0 +1,7 @@
+(function(){
+  function Q(){ const p = Promise.resolve({data:[],error:null,count:0}); const q = new Proxy(function(){}, { get(t,k){ if(k==='then') return p.then.bind(p); if(k==='catch') return p.catch.bind(p); if(k==='single'||k==='maybeSingle') return ()=>Promise.resolve({data:null,error:null}); return ()=>q; }, apply(){ return q; } }); return q; }
+  const auth = { getSession: async()=>({data:{session:null}}), getUser: async()=>({data:{user:null}}), onAuthStateChange(){ return {data:{subscription:{unsubscribe(){}}}}; }, signOut: async()=>({}), signInWithPassword: async()=>({data:{},error:null}), signUp: async()=>({data:{},error:null}), signInWithOAuth: async()=>({data:{},error:null}), resetPasswordForEmail: async()=>({}), updateUser: async()=>({data:{},error:null}), verifyOtp: async()=>({data:{},error:null}), resend: async()=>({}), mfa:{listFactors:async()=>({data:{all:[]}}),getAuthenticatorAssuranceLevel:async()=>({data:{}})} };
+  const storage = { from(){ return { upload: async()=>({data:{},error:null}), getPublicUrl:(p)=>({data:{publicUrl:'https://x/'+p}}), createSignedUrl: async()=>({data:{signedUrl:'#'},error:null}), list: async()=>({data:[],error:null}) }; } };
+  const client = { from: ()=>Q(), rpc: ()=>Q(), auth, storage, channel(){ const c={on(){return c;},subscribe(){return c;},unsubscribe(){},send(){}}; return c; }, removeChannel(){}, functions:{ invoke: async()=>({data:null,error:null}) } };
+  window.supabase = { createClient: ()=>client };
+})();

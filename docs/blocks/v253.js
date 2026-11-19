@@ -1,5 +1,6 @@
 /* ================= v253: من مقارنة موقع itqan.academy — حاجات عندهم مش عندنا، اتضافت في الرئيسية (مقفولة لحد ما المالك يشغّلها ويعدّل كلامها): أرقام الأكاديمية (إجازات · دورات · طلاب · معلمين — المالك بيكتب الأرقام الحقيقية) · «لو مااتبسطتش من أول حصة تجريبية، خد تانية مع معلم تاني» · برامج: للستات مع معلمات، للأطفال، كورس رمضان المكثف، خصم العيلة · أسئلة شائعة (المالك يضيف ويعدّل) ================= */
 (function () {
+  const FF = k => { try { return typeof window.ff254 === "function" ? window.ff254(k) : true; } catch (e) { return true; } };
   const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
@@ -12,7 +13,7 @@
       if (kind === "faq") { const q = prompt(T("السؤال (فاضي = امسحه)", "Question (empty = delete)"), i < c.faq.length ? c.faq[i][0] : ""); if (q === null) return; if (!q.trim()) c.faq.splice(i, 1); else { const a = prompt(T("الإجابة", "Answer"), i < c.faq.length ? c.faq[i][1] : ""); if (a === null) return; c.faq[i] = [q.trim(), a.trim()]; } }
       if (kind === "prog") { const n = prompt(T("اسم البرنامج (فاضي = امسحه)", "Program name (empty = delete)"), c.progs[i] ? c.progs[i][1] : ""); if (n === null) return; if (!n.trim()) c.progs.splice(i, 1); else c.progs[i] = [c.progs[i] ? c.progs[i][0] : "⭐", n.trim(), c.progs[i] ? c.progs[i][2] : "booking"]; }
       await saveSetting16("itq253", c); render(); } };
-  function block() { if (state.route !== "home") return; const c = C(); if (!c.on && !own()) return; const anchor = document.getElementById("in251") || document.getElementById("px249") || document.getElementById("pth241"); if (!anchor || document.getElementById("iq253")) return; const ed = own();
+  function block() { if (state.route !== "home" || !FF("v253.itq")) return; const c = C(); if (!c.on && !own()) return; const anchor = document.getElementById("in251") || document.getElementById("px249") || document.getElementById("pth241"); if (!anchor || document.getElementById("iq253")) return; const ed = own();
     const stats = c.stats.filter(s => s[2] || ed); const go = r => r === "pricing" ? "navigate('pricing')" : r === "booking" ? "navigate('booking')" : `go16('${r}')`;
     anchor.insertAdjacentHTML("afterend", `<div id="iq253" class="${c.on ? "" : "off253"}">${ed ? `<div class="own253"><b>${c.on ? "✅ " + T("ظاهر للكل", "Visible to everyone") : "🔒 " + T("مقفول — انت بس اللي شايفه", "Off — only you see this")}</b><button class="btn btn-o xs" onclick="itq253.set('on',${!c.on})">${c.on ? T("اقفله", "Turn off") : T("شغّله للكل", "Turn on for everyone")}</button><span class="xs muted">${T("دوس ✏️ على أي حاجة تعدّل كلامها", "Tap ✏️ to edit any text")}</span></div>` : ""}
       ${stats.length ? `<div class="st253">${stats.map((s, i) => `<div class="card"><span>${s[0]}</span><b>${esc(s[2] || "—")}</b><small>${esc(s[1])}</small>${ed ? `<button class="e" onclick="itq253.edit('stat',${c.stats.indexOf(s)})">✏️</button>` : ""}</div>`).join("")}</div>` : ""}

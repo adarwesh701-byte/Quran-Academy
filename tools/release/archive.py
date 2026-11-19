@@ -8,7 +8,7 @@ open(f'{root}/archive/v{n}.html','w',encoding='utf-8').write(s)
 L=json.load(open(f'{root}/archive/list.json',encoding='utf-8'))
 L=[x for x in L if x['v']!=f'v{n}']
 L.insert(0,{'v':f'v{n}','ui':ver,'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'msg':re.sub(r'^v\d+:\s*','',msg)[:220]})
-KEEP=10
+KEEP=3
 keep=L[:KEEP]
 for x in L[KEEP:]:
     f=f"{root}/archive/{x['v']}.html"
