@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v233";
+const UI_VERSION = "2026-11-17-v234";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31140,6 +31140,78 @@ Between lessons, the platform keeps you going:
   .kh233{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.35rem}.kh233 button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:12px;padding:.35rem;display:flex;flex-direction:column;align-items:center;cursor:pointer;font:inherit}.kh233 button.ok{background:color-mix(in srgb,#16a34a 18%,var(--card));border-color:#16a34a}.kh233 button.now{outline:2px solid var(--accent)}
   .kqh{font:1.6rem/2.2 'Amiri',serif;text-align:center;margin:.4rem 0 .8rem}.kqo{display:grid;gap:.4rem;margin-bottom:.6rem}.kqo button{font:1.25rem/1.9 'Amiri',serif;text-align:center;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.4rem .7rem;cursor:pointer}.kqo button.ok{background:color-mix(in srgb,#16a34a 20%,var(--card));border-color:#16a34a}.kqo button.no{background:color-mix(in srgb,#dc2626 18%,var(--card));border-color:#dc2626}
   .wk233{display:flex;justify-content:center;gap:.3rem;margin:.6rem 0;flex-wrap:wrap}.wk233 span{display:flex;flex-direction:column;align-items:center;min-width:42px;padding:.3rem;border-radius:12px;border:1px solid var(--line)}.wk233 span.on{background:color-mix(in srgb,#f59e0b 22%,var(--card));border-color:#f59e0b}.wk233 span.fz{background:color-mix(in srgb,#3b82f6 15%,var(--card))}`);
+})();
+
+/* ================= v234: ملف Notion — الدفعة 1 (أخطاء): «حفظ» الأخطاء على المصحف بقى بيحفظ فعلًا · قايمة الأسماء والإيميلات اللي كانت بتطلع في خانة القارئ (اقتراحات المتصفح) اتقفلت · اختيار المسار في الحجز ماعادش حروف فوق بعض · أسماء الباقات السنوية بالعربي بدل pack4_25_y · صفحة الأسعار: اتشال «طلاب الشيخ المباشرين» و«تكلّم عربي» و«اشتراكات المدارس» وشريط الجنيه وتحويل العملة (كل واحد بعملة بلده) · التسجيل أقصر (من غير عملة ووسائل دفع) · مفيش «أكّد إيميلك» · الصفحات اللي للمالك بس ماعادتش بتظهر لحد تاني · أدوات التعديل في الهيدر بتظهر في وضع البناء بس · شريط «دوس على أي حاجة ترتّبها» اتشال · الجرس بيتصفّر أول ما تفتحه · صوت واحد بس يشتغل في نفس الوقت والتسجيل بيوقف أي صوت · شباك الخطأ: نسخة واحدة من «الكلمة/الآية»، حروف أكبر، ودوسة على الحرف تفتح مخرجه، ومن غير الأسهم ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner"; } catch (e) { return false; } };
+  const building = () => !!(window.B216 && window.B216.on);
+
+  /* 1) أي onclick اتكتب فيه &quot; بالغلط (زي زرار «حفظ» الخطأ) بيتصلّح قبل ما يشتغل */
+  document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("[onclick*='&quot;'],[onclick*='&#39;'],[onclick*='&amp;']"); if (!el) return; el.setAttribute("onclick", el.getAttribute("onclick").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&")); }, true);
+
+  /* 2) اقتراحات المتصفح (أسامي وإيميلات محفوظة) مقفولة في كل الخانات غير الدخول والتسجيل */
+  function noAuto(root) { if (/^(login|signup|reset|profile)$/.test(state.route || "")) return; (root || document).querySelectorAll("#app input:not([type=password]):not([type=email]):not([autocomplete=off]), #app textarea:not([autocomplete=off]), body > div input:not([type=password]):not([type=email]):not([autocomplete=off])").forEach(i => { if (i.closest("form[data-auth]")) return; i.setAttribute("autocomplete", "off"); }); }
+
+  /* 3) أسماء الباقات: pack4_25_y ← «٤ حصص شهريًا · سنوي» */
+  try { const _pt = planText; planText = function (p) { const r = _pt.apply(this, arguments); try { const id = String((p && (p.base || p.id)) || ""); const t = typeof r === "string" ? r : (r && r.t) || ""; const m = id.match(/^(pack|maq)(\d+)(_25)?(_y)?$/); if (!m || !(m[3] || m[4]) && !/^(pack|maq)\d/.test(t)) return r; const base = _pt.call(this, Object.assign({}, p, { id: m[1] + m[2], base: m[1] + m[2], minutes: 0 })); let nm = (typeof base === "string" ? base : base.t) || ""; if (/^(pack|maq)\d/.test(nm)) nm = m[1] === "maq" ? T(`مقامات · ${m[2]} حصص`, `Maqamat · ${m[2]} lessons`) : T(`${m[2]} حصص في الشهر`, `${m[2]} lessons a month`); nm += (m[4] ? T(" · اشتراك سنوي (12 شهر)", " · yearly (12 months)") : "") + (p.minutes && !p.isTrial ? ` · ${p.minutes} ${L("minShort")}` : ""); return typeof r === "string" ? nm : Object.assign({}, r, { t: nm }); } catch (e) { return r; } }; } catch (e) {}
+
+  /* 4) العملة: كل واحد بيشوف بعملة بلده بس (من غير اختيار) */
+  try { curSelector = function () { return ""; }; } catch (e) {}
+
+  /* 5) صفحة الأسعار */
+  function pricing() { if (state.route !== "pricing") return; const app = document.getElementById("app"); if (!app) return;
+    app.querySelectorAll(".pk152 li").forEach(li => { if (/طلاب الشيخ المباشرين|Sheikh's own students/.test(li.textContent)) li.remove(); });
+    const ul = app.querySelector(".pk152 ul"); if (ul && !ul.__g234) { ul.__g234 = 1; const lis = ul.querySelectorAll("li"); if (lis[0]) lis[0].innerHTML = T("🎁 أول ما تشترك في أي باقة حصص: <b>أسبوع كامل مجانًا</b> على كل محتوى الموقع.", "🎁 Subscribe to any lesson package: <b>one full week free</b> on all site content."); if (lis[1]) lis[1].innerHTML = T("بعد الأسبوع المجاني: <b>خصم 50%</b> على كل محتوى الموقع طول ما اشتراكك في الحصص شغال.", "After the free week: <b>50% off</b> all site content for as long as your lesson package is active."); }
+    /* «اشتراكات محتوى الموقع» أول حاجة في تبويب المحتوى */
+    const sp = [...app.querySelectorAll("h2,h3")].find(h => /اشتراكات محتوى الموقع|Site content subscriptions/.test(h.textContent)); const box = sp && (sp.closest(".card") || sp.parentElement); const tabs = app.querySelector(".ptabs, [class*=ptab]"); if (box && tabs && !box.__f234) { box.__f234 = 1; const after = tabs.closest(".row,.ptabs") || tabs; after.parentNode.insertBefore(box, after.nextSibling); }
+    app.querySelectorAll("button").forEach(b => { if (/(كلّ?م عربي|Speak Arabic)/.test(b.textContent) && !b.getAttribute("onclick") && b.textContent.trim().length < 20) b.style.display = "none"; }); }
+
+  /* 6) الصفحات اللي للمالك بس: غير المالك يرجع الرئيسية علطول، واللينكات ليها تختفي */
+  const OWN = new Set(["org", "org200", "studio", "acl", "hub218", "sub226", "nf218", "log221", "audit221", "stats224", "fin225"]);
+  try { JSON.parse(localStorage.getItem("own234") || "[]").forEach(r => OWN.add(r)); } catch (e) {}
+  function lockPages() { if (own()) return; const app = document.getElementById("app"); if (!app) return;
+    const main = [...app.querySelectorAll(".card")].find(c => /^🔒\s*(للأونر|للمالك|Owner only|owner only)/.test((c.textContent || "").trim()) && (c.textContent || "").trim().length < 60);
+    if (main && state.route && state.route !== "home") { OWN.add(state.route); try { localStorage.setItem("own234", JSON.stringify([...OWN])); } catch (e) {} setTimeout(() => navigate("home"), 0); return; }
+    app.querySelectorAll("[onclick]").forEach(el => { const oc = el.getAttribute("onclick") || ""; const m = oc.match(/go16\('([a-z0-9]+)'/) || oc.match(/navigate\('([a-z0-9]+)'/); if (m && OWN.has(m[1])) { const box = el.closest("li") || el; box.style.display = "none"; } }); }
+
+  /* 7) أدوات التعديل في الهيدر (الاستوديو، الصلاحيات، وضع الأصوات، المحاكي، رتّب) في وضع البناء بس */
+  function hdrTools() { document.querySelectorAll("#app .hdr .ibtn").forEach(b => { const oc = (b.getAttribute("onclick") || "") + (b.title || ""); if (/go16\('studio'\)|go16\('acl'\)|vMode84|'sim'|uiEdit/.test(oc)) b.classList.add("ed234"); }); document.body.classList.toggle("bo234", building()); }
+
+  /* 8) الجرس: أول ما يتفتح كل الإشعارات تتعلّم مقروءة */
+  let wasOpen = false; function bell() { const o = !!(state.notif && state.notif.open); if (o && !wasOpen) setTimeout(() => { try { markAllRead(); } catch (e) {} }, 300); wasOpen = o; }
+
+  /* 9) صوت واحد في نفس الوقت، والتسجيل بيوقف أي صوت شغّال (أصوات النظام القصيرة مستثناة) */
+  const MEDIA = new Set(); const _play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () { MEDIA.add(this); const me = this; const short = isFinite(me.duration) && me.duration > 0 && me.duration < 2.5; if (!short && !me.dataset.sys) MEDIA.forEach(m => { if (m !== me && !m.paused && !m.dataset.sys && !(isFinite(m.duration) && m.duration < 2.5)) { try { m.pause(); } catch (e) {} } }); return _play.apply(this, arguments); };
+  try { const _st = MediaRecorder.prototype.start; MediaRecorder.prototype.start = function () { MEDIA.forEach(m => { if (!m.paused && !m.dataset.sys) { try { m.pause(); } catch (e) {} } }); document.querySelectorAll("audio,video").forEach(m => { if (!m.paused) { try { m.pause(); } catch (e) {} } }); try { speechSynthesis.cancel(); } catch (e) {} return _st.apply(this, arguments); }; } catch (e) {}
+
+  /* 10) شباك الخطأ على الكلمة */
+  new MutationObserver(() => { const m = document.getElementById("mmModal"); if (!m || m.__m234) return; m.__m234 = 1;
+    m.querySelectorAll("button[onclick^='wSay158'],button[onclick^='aSay158']").forEach(b => b.style.display = "none");
+    m.querySelectorAll(".chip.lt").forEach(b => { const L1 = b.textContent.trim(); const a = document.createElement("button"); a.type = "button"; a.className = "mk234"; a.title = T("مخرج الحرف وصفاته", "Articulation"); a.textContent = "👄"; a.onclick = ev => { ev.stopPropagation(); m.remove(); state.mkL = L1; go16("makharij"); }; b.insertAdjacentElement("afterend", a); }); }).observe(document.body, { childList: true });
+
+  /* 11) نافذة «سجّل مجانًا»: من غير فيسبوك */
+  try { const _gl = window.gl164; if (typeof _gl === "function") window.gl164 = function () { const r = _gl.apply(this, arguments); document.querySelectorAll(".gl164 p.sm").forEach(p => { p.textContent = T("التسجيل بياخد دقيقة (أو بضغطة واحدة بجوجل) ويفتحلك محتوى مجاني في كل مسار + حصة تجريبية.", "Signing up takes a minute (or one tap with Google) and unlocks free content in every track + a trial lesson."); }); return r; }; } catch (e) {}
+
+  /* 12) التسجيل أقصر: العملة بتتحدد من البلد، ووسائل الدفع تتسأل بعدين عند الدفع */
+  function signup() { if (state.route !== "signup") return; const cur = document.getElementById("au_cur"); if (cur) { const box = cur.closest("div"); if (box) box.style.display = "none"; } const pp = document.getElementById("pp_box"); if (pp) { const box = pp.closest("div").parentElement; if (box && box.querySelector("#pp_box")) box.style.display = "none"; } }
+
+  const run = () => { try { noAuto(); pricing(); lockPages(); hdrTools(); bell(); signup(); } catch (e) { console.warn("v234", e); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); run(); return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { noAuto(); hdrTools(); pricing(); } catch (e) {} }, 150); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+  css(`
+  .trchips{flex-wrap:wrap!important;gap:.4rem!important}.trchips button{flex:0 1 auto!important;white-space:normal!important;min-width:0;writing-mode:horizontal-tb!important}
+  #eg191,.orgcta,.orgcta+*:empty{display:none!important}section.sec:has(> .wrap > .orgcta:only-child){display:none!important}
+  .embar{display:none!important}
+  body:not(.bo234) .hdr .ed234{display:none!important}
+  #bar206{display:none!important}
+  #mmModal .nav195,.nav195{display:none!important}
+  #mmModal .chip.lt{font-size:1.6rem!important;min-width:2.6rem;padding:.2rem .6rem!important;line-height:1.4}
+  .mk234{border:0;background:none;cursor:pointer;font-size:.9rem;margin-inline-start:-.2rem;margin-inline-end:.3rem;opacity:.75}.mk234:hover{opacity:1}
+  `);
 })();
 
 // بدء التشغيل
