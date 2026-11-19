@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v243";
+const UI_VERSION = "2026-11-17-v244";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31634,6 +31634,53 @@ Between lessons, the platform keeps you going:
   .tb243{display:flex;gap:.25rem;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:3;background:var(--card);padding:.25rem 0}.tb243 button{min-width:2.3rem;height:2.3rem;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer;font-size:1.05rem;color:var(--fg)}.tb243 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.tb243 .cl{min-width:1.6rem;width:1.6rem;height:1.6rem;border-radius:50%}.tb243 .cl.on{outline:3px solid var(--accent);outline-offset:2px}.tb243 .sep{width:1px;height:1.6rem;background:var(--line);margin:0 .2rem}
   .bgs243{display:flex;gap:.25rem;flex-wrap:wrap;margin:.35rem 0}.bgs243 button{border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;font-size:.75rem;cursor:pointer}.bgs243 button.on{outline:2px solid var(--accent)}
   .cv243{position:relative;width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line)}.cv243 canvas{position:absolute;inset:0;width:100%}#wbc243{position:relative;touch-action:none;cursor:crosshair}`);
+})();
+
+/* ================= v244: الدفعة التامنة (مقفولة لحد ما تفتحها من «كل الجديد»): 🔁 مراجعة متباعدة للمحفوظ بالسورة (زي Anki — سهلة/متوسطة/صعبة بتحدد المراجعة الجاية) · ⭐ النقاط والمستويات والشارات (من الورد والختمة وكمّل الآية والمراجعة) ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["srs244", "pts244"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const NF = () => setv("nf218", {}) || {}; const on = id => !!(NF()[id] || {}).on;
+  const day = () => Math.floor(Date.now() / 864e5);
+  const K = "srs244"; const MY = () => { let o = {}; try { o = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {} const p = state.auth && state.auth.profile && state.auth.profile.metadata && state.auth.profile.metadata.srs244; if (p && (p.t || 0) > (o.t || 0)) o = p; o.s = o.s || {}; o.log = o.log || {}; return o; };
+  let st = null; const SAVE = o => { o.t = Date.now(); try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {} if (logged() && state.auth.profile) { clearTimeout(st); st = setTimeout(async () => { try { const md = Object.assign({}, state.auth.profile.metadata || {}, { srs244: o }); state.auth.profile.metadata = md; await sb.from("profiles").update({ metadata: md }).eq("id", state.auth.user.id); } catch (e) {} }, 800); } };
+
+  /* ===== مراجعة متباعدة (SM-2 مبسّط) ===== */
+  window.srs244 = {
+    add() { const v = +(document.getElementById("sr_add") || {}).value; if (!v) return; const o = MY(); if (!o.s[v]) o.s[v] = { iv: 1, ef: 2.5, due: day(), n: 0 }; SAVE(o); render(); },
+    del(s) { const o = MY(); delete o.s[s]; SAVE(o); render(); },
+    rate(s, q) { const o = MY(); const c = o.s[s]; if (!c) return; if (q === 0) { c.iv = 1; c.n = 0; c.ef = Math.max(1.3, c.ef - .2); } else { c.n++; c.iv = c.n === 1 ? (q === 2 ? 3 : 1) : c.n === 2 ? (q === 2 ? 7 : 3) : Math.round(c.iv * (q === 2 ? c.ef + .15 : c.ef - .15)); c.ef = Math.max(1.3, c.ef + (q === 2 ? .1 : q === 1 ? 0 : -.2)); } c.due = day() + c.iv; o.log[day()] = (o.log[day()] || 0) + 1; SAVE(o); render(); }
+  };
+  function srsPage() { const o = MY(); const L = Object.entries(o.s).map(([s, c]) => ({ s: +s, ...c })); const due = L.filter(x => x.due <= day()).sort((a, b) => a.due - b.due); const later = L.filter(x => x.due > day()).sort((a, b) => a.due - b.due); const nm = s => (typeof SURAHS !== "undefined" && SURAHS[s - 1]) || s;
+    return pageWrap("🔁", T("مراجعة المحفوظ", "Review what you memorised"), T("زي Anki: بعد ما تراجع السورة قول كانت سهلة ولا صعبة، والموقع يحدد إمتى تراجعها تاني — الصعب بيتكرر أكتر", "Like Anki: rate each surah after reviewing and we schedule the next review"), `
+      <div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><span class="sm">➕ ${T("ضيف سورة حافظها", "Add a surah you know")}</span><select id="sr_add" class="in" style="width:auto">${(typeof SURAHS !== "undefined" ? SURAHS : []).map((n, i) => `<option value="${i + 1}">${i + 1}. ${esc(n)}</option>`).join("")}</select><button class="btn btn-p" onclick="srs244.add()">${T("ضيف", "Add")}</button></div></div>
+      <div class="card"><h3>📌 ${T("مطلوب مراجعتها النهارده", "Due today")} (${due.length})</h3>${due.length ? due.map(x => `<div class="sr244"><b>${esc(String(nm(x.s)))}</b><div class="row" style="gap:.3rem"><button class="btn xs h" onclick="srs244.rate(${x.s},0)">😣 ${T("صعبة", "Hard")}</button><button class="btn xs m" onclick="srs244.rate(${x.s},1)">🙂 ${T("متوسطة", "OK")}</button><button class="btn xs e" onclick="srs244.rate(${x.s},2)">😄 ${T("سهلة", "Easy")}</button></div></div>`).join("") : `<p class="sm muted">${T("مفيش مراجعة النهارده 🎉", "Nothing due today 🎉")}</p>`}</div>
+      ${later.length ? `<details class="card"><summary class="b">📅 ${T("الجاي", "Coming up")} (${later.length})</summary>${later.map(x => `<div class="kv"><span>${esc(String(nm(x.s)))}</span><span class="xs muted">${T("بعد", "in")} ${x.due - day()} ${T("يوم", "days")} <button class="btn btn-o xs" onclick="srs244.del(${x.s})">✕</button></span></div>`).join("")}</details>` : ""}`, 760); }
+
+  /* ===== النقاط والمستويات والشارات ===== */
+  function points() { let a = {}; try { a = JSON.parse(localStorage.getItem("my233") || "{}"); } catch (e) {} const days = a.days || {}; let p = 0; Object.values(days).forEach(d => { p += (d.wird || 0) * 10 + (d.khatma || 0) * 10 + (d.kamil || 0) * 2; }); const r = MY(); Object.values(r.log || {}).forEach(n => p += n * 5); const streak = (() => { let n = 0, d = day(); const has = k => { const s = new Date(k * 864e5 + 432e5).toISOString().slice(0, 10); return !!days[s]; }; if (!has(d)) d--; while (has(d)) { n++; d--; } return n; })();
+    return { p, streak, nDays: Object.keys(days).length, kamil: Object.values(days).reduce((s, d) => s + (d.kamil || 0), 0), srs: Object.keys(r.s || {}).length }; }
+  const LV = [[0, "🌱", "مبتدئ", "Beginner"], [100, "🌿", "مجتهد", "Diligent"], [300, "🌳", "مثابر", "Persistent"], [700, "⭐", "متقن", "Proficient"], [1500, "🏅", "حافظ مجتهد", "Dedicated hafiz"], [3000, "👑", "إتقان", "Itqan"]];
+  const BD = [["streak7", "🔥", "7 أيام ورا بعض", "7-day streak", s => s.streak >= 7], ["streak30", "🌙", "30 يوم ورا بعض", "30-day streak", s => s.streak >= 30], ["kamil50", "🧩", "50 إجابة صح في كمّل الآية", "50 correct ayah completions", s => s.kamil >= 50], ["srs5", "🔁", "5 سور في المراجعة", "5 surahs in review", s => s.srs >= 5], ["srs30", "📖", "30 سورة في المراجعة", "30 surahs in review", s => s.srs >= 30], ["days20", "📅", "20 يوم إنجاز", "20 active days", s => s.nDays >= 20]];
+  function ptsPage() { const s = points(); const i = LV.filter(l => s.p >= l[0]).length - 1; const cur = LV[i], nxt = LV[i + 1]; const pct = nxt ? Math.round((s.p - cur[0]) / (nxt[0] - cur[0]) * 100) : 100;
+    return pageWrap("⭐", T("نقاطي ومستواي", "My points & level"), T("كل ورد أو ختمة أو مراجعة أو «كمّل الآية» بيزوّد نقاطك", "Every wird, khatma, review or ayah quiz adds points"), `<div class="card lv244"><div style="font-size:3rem">${cur[1]}</div><h2>${esc(T(cur[2], cur[3]))}</h2><p><b style="font-size:1.6rem">${s.p}</b> ${T("نقطة", "points")}</p>${nxt ? `<div class="pb233"><i style="width:${pct}%"></i></div><small class="muted">${T("فاضل", "")} ${nxt[0] - s.p} ${T("نقطة للمستوى الجاي", "points to the next level")}: ${nxt[1]} ${esc(T(nxt[2], nxt[3]))}</small>` : ""}</div>
+      <div class="card"><h3>🏅 ${T("الشارات", "Badges")}</h3><div class="bd244">${BD.map(b => `<div class="${b[4](s) ? "on" : ""}"><span>${b[1]}</span><small>${esc(T(b[2], b[3]))}</small></div>`).join("")}</div></div>
+      <p class="xs muted" style="text-align:center">${T("النقاط: ورد/يوم ختمة = 10 · مراجعة سورة = 5 · كمّل الآية صح = 2", "Points: wird/khatma day = 10 · surah review = 5 · correct ayah = 2")}</p>`, 720); }
+
+  const NEW = [{ id: "srs", ic: "🔁", ar: "مراجعة المحفوظ (زي Anki)", en: "Spaced review", go: "go16('srs244')", d: "الطالب يضيف السور اللي حافظها، وكل يوم يطلعله المطلوب مراجعته، وبعد المراجعة يقول سهلة/متوسطة/صعبة والموقع يحدد المراجعة الجاية." },
+    { id: "points", ic: "⭐", ar: "النقاط والمستويات والشارات", en: "Points, levels & badges", go: "go16('pts244')", d: "نقاط على كل إنجاز، 6 مستويات من «مبتدئ» لـ«إتقان»، وشارات زي 7 أيام ورا بعض و30 سورة في المراجعة." }];
+  function hubAdd() { if (state.route !== "hub218" || !own() || document.getElementById("nw244")) return; const a = document.getElementById("nw233") || document.querySelector("#app .nfc218"); if (!a) return;
+    a.insertAdjacentHTML("beforebegin", `<div id="nw244"><h3 style="margin:.6rem 0">🆕 ${T("الدفعة التامنة — التحفيز والمراجعة", "Eighth batch — motivation & review")}</h3>${NEW.map(f => { const c = NF()[f.id] || {}; return `<div class="card nfc218 ${c.on ? "" : "off"}"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><div class="row" style="gap:.6rem;align-items:center"><span style="font-size:1.6rem">${f.ic}</span><div><b>${esc(AR() ? f.ar : f.en)}</b><p class="xs muted" style="margin:.1rem 0 0;max-width:520px">${esc(f.d)}</p></div></div><div class="row" style="gap:.3rem"><button class="btn btn-o xs" onclick="${f.go}">👁 ${T("افتح", "Open")}</button><button class="btn ${c.on ? "btn-p" : "btn-o"}" onclick="(async()=>{const n=Object.assign({},setv('nf218',{})||{});n['${f.id}']=Object.assign({},n['${f.id}']||{},{on:${!c.on}});await saveSetting16('nf218',n);render()})()">${c.on ? "✅ " + T("شغّالة", "On") : "⏸ " + T("شغّلها", "Turn on")}</button></div></div></div>`; }).join("")}</div>`); }
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); const add = NEW.filter(f => own() || on(f.id)); if (add.length) h = h.replace('<div class="msgrid">', `<div class="msgrid">${add.map(f => `<button class="mstile" style="--c:#b45309" onclick="${f.go}"><span>${f.ic}</span><b>${esc(AR() ? f.ar : f.en)}</b></button>`).join("")}`); return h; };
+  const allowed = r => own() || on({ srs244: "srs", pts244: "points" }[r]);
+  const R = { srs244: srsPage, pts244: ptsPage };
+  const _r = render; render = function () { if (R[state.route]) { if (!allowed(state.route)) { state.route = "home"; return _r.apply(this, arguments); } return show(R[state.route]()); } const o = _r.apply(this, arguments); try { hubAdd(); } catch (e) {} return o; };
+  css(`.sr244{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}.sr244 .h{background:#fee2e2;color:#991b1b}.sr244 .m{background:#fef3c7;color:#92400e}.sr244 .e{background:#dcfce7;color:#166534}
+  .lv244{text-align:center}.bd244{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem}.bd244>div{border:1px dashed var(--line);border-radius:14px;padding:.6rem;text-align:center;display:flex;flex-direction:column;gap:.2rem;opacity:.45;filter:grayscale(1)}.bd244>div.on{opacity:1;filter:none;border-style:solid;border-color:#f59e0b}.bd244 span{font-size:1.8rem}`);
 })();
 
 // بدء التشغيل
