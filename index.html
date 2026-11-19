@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v246";
+const UI_VERSION = "2026-11-17-v247";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31753,6 +31753,24 @@ Between lessons, the platform keeps you going:
   css(`.off246{display:none!important}
   .tjf157.in246{position:sticky;top:0;z-index:4;margin:.4rem 0 .6rem}
   .gs246{display:flex;flex-direction:column;gap:.3rem;width:100%;margin:.3rem 0}.g246{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}.g246>b{font-size:.78rem;min-width:9rem;color:var(--muted)}`);
+})();
+
+/* ================= v247: المُوالِف (صور Notion 17 و18) — جنب رقم كل درجة اسمها بالإنجليزي (Do · Re · Mi♭ …) حسب قرار المقام، وفي الناحية التانية الأوكتاف بتاعها (قرار القرار · القرار · الجواب · جواب الجواب) ================= */
+(function () {
+  const AR = () => state.lang === "ar";
+  if (typeof tnDrawLadder !== "function") return;
+  const OCT = [[-1, "قرار القرار", "Low"], [0, "القرار", "Qarar"], [1, "الجواب", "Jawab"], [2, "جواب الجواب", "2nd jawab"]];
+  const _d = tnDrawLadder;
+  tnDrawLadder = function () { _d.apply(this, arguments); try {
+    const cv = document.getElementById("tn_cv"); if (!cv) return; const ctx = cv.getContext("2d"); const W = cv.width, H = cv.height;
+    const sc = MAQAM_SCALES[TN.maqam] || MAQAM_SCALES.bayati, lo = -700, hi = 3000, y = c => H - 16 - (c - lo) / (hi - lo) * (H - 32);
+    const m = (typeof MQ !== "undefined" && MQ.find(x => x.id === TN.maqam)) || null; const n = sc.length - 1;
+    ctx.font = "bold 12px Tajawal, sans-serif";
+    OCT.forEach(([o, a, e]) => sc.forEach((v, i) => { if (i === n) return; const c = v + o * 1200; if (c < lo || c > hi) return; const yy = y(c);
+      let nm = ""; try { nm = m && typeof degSolf === "function" ? degSolf(m, o * n + i, m.tonic || 0).replace(/[↑↓]+/g, "") : ""; } catch (err) {}
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--card") || "#fff"; ctx.fillRect(0, yy - 9, 39, 14); ctx.fillStyle = i === 0 ? "#059669" : "#475569"; ctx.textAlign = "left"; ctx.fillText(`${i + 1} ${nm}`, 2, yy + 4);
+      ctx.textAlign = "right"; ctx.fillStyle = i === 0 ? "#059669" : "#94a3b8"; ctx.fillText(`${nm}${i === 0 ? " · " + (AR() ? a : e) : ""}`, W - 6, yy + 4); }));
+  } catch (e) {} };
 })();
 
 // بدء التشغيل
