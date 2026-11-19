@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v230";
+const UI_VERSION = "2026-11-17-v240";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30943,6 +30943,515 @@ Between lessons, the platform keeps you going:
   body.np230 #eg191,body.np230 #app [onclick*="navigate('pricing')"],body.np230 .bnav [onclick*="pricing"]{display:none!important}
   #up230{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:50000;width:min(460px,92vw);background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:.7rem .9rem;box-shadow:0 12px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;gap:.3rem}.pb230{height:12px;border-radius:999px;background:var(--bg);overflow:hidden}.pb230 i{display:block;height:100%;background:var(--accent);transition:width .3s}
   `);
+})();
+
+/* ================= v231: نهاية الرعشة — المحتوى بيظهر مرة واحدة بعد ما كل التعديلات تخلص (بدل 280ms ثابتة) · أول فتح للموقع مابيبانش غير بعد ما الدخول يتأكد · «خليني مكاني» بيقف أول ما تحرّك الصفحة بإيدك (ماعادش بيشدّ السكرول) · شريط «إيه اللي يهمك» ماعادش بيظهر ويختفي في الرئيسية · سكرول أخف على التابلت والموبايل ================= */
+(function () {
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const B = document.body, app = () => document.getElementById("app");
+  const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+
+  /* 1) الستارة الذكية: تفضل لحد ما مفيش أي تغيير في الصفحة لمدة 140ms (أقصى حاجة 900ms) */
+  let quietT = null, capT = null, mo = null;
+  function lift(cls) { clearTimeout(quietT); clearTimeout(capT); mo && mo.disconnect(); mo = null; B.classList.remove(cls); }
+  function veil(cls, cap) {
+    B.classList.add(cls); clearTimeout(capT); capT = setTimeout(() => lift(cls), cap);
+    const arm = () => { clearTimeout(quietT); quietT = setTimeout(() => { if (cls === "bt231" && !(state.auth && state.auth.ready)) return arm(); lift(cls); }, 140); };
+    mo && mo.disconnect(); const a = app(); if (a) { mo = new MutationObserver(arm); mo.observe(a, { childList: true, subtree: true }); } arm();
+  }
+  /* أول فتح: الموقع كله مستخبي لحد ما الدخول يتأكد والتعديلات تخلص (أقصى حاجة 1.6 ثانية) */
+  B.dataset.r231 = state.route || "home"; veil("bt231", 1600);
+  let last = key();
+  const _r = render; render = function () { const k = key(); const out = _r.apply(this, arguments); B.classList.remove("ld229"); /* الستارة القديمة الثابتة اتلغت */ B.dataset.r231 = state.route || ""; if (k !== last) { last = k; if (!B.classList.contains("bt231")) veil("ld231", 900); } return out; };
+
+  /* 2) «خليني مكاني» (v214) بيقف أول ما المستخدم يحرّك الصفحة بنفسه */
+  const stop = () => { try { window.__k214off && window.__k214off(); } catch (e) {} };
+  ["wheel", "touchmove", "keydown"].forEach(ev => addEventListener(ev, stop, { passive: true, capture: true }));
+
+  css(`
+  body.bt231 #app{opacity:0!important;transition:none!important}
+  body.ld231 #app>*:not(.hdr):not(header):not(.bar185):not(.dombar):not(.unav){opacity:0!important;transition:none!important}
+  #app{transition:opacity .16s ease}
+  body[data-r231=home] #int200{display:none!important} /* شريط «إيه اللي يهمك» كان بيظهر ويختفي في الرئيسية فيزقّ الصفحة 280px */
+  @media (pointer:coarse){
+    body,html body{background-attachment:scroll!important}
+    html body .hdr,html body header,html body .bar185,html body .dombar,html body .unav,html body .bnav,html body .footer,html body footer{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+    html body *{scroll-behavior:auto!important}
+    #app img{content-visibility:auto}
+  }
+  `);
+})();
+
+/* ================= v232: رفع «العربية بين يديك» بقى مضمون — بيقبل أي اسم ملف (U01 / Unit 1 / الوحدة ١ / 1.pptx) · بيقول سبب أي خطأ بالظبط · بيعيد المحاولة ٣ مرات لو النت قطع · بيكمّل من مكان ما وقف (مابيرفعش اللي اترفع تاني) · الملفات الأكبر من 49 ميجا بيتخطاها وبيقولك · شريط نسبة % · لوحة «وصل لفين» بتوريك كل وحدة اترفعت ================= */
+(function () {
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const AR_D = s => String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  const LV = { "الأول": 1, "الاول": 1, "الثاني": 2, "الثانى": 2, "الثالث": 3, "الرابع": 4 };
+  const MAX = 49 * 1024 * 1024;
+  function lvOf(path) { const p = AR_D(path); const m = p.match(/(الأول|الاول|الثاني|الثانى|الثالث|الرابع)/); if (m) return LV[m[1]]; const n = p.match(/(?:level|lvl|book|L|مستوى|المستوى|كتاب)\s*[_\- ]?\s*([1-4])(?!\d)/i); return n ? +n[1] : (ABYB.lv || 1); }
+  function unitOf(name) { const s = AR_D(name.replace(/\.pptx$/i, "")); const m = s.match(/(?:^|[^a-z])U(?:nit)?\s*[_\- ]?\s*(\d{1,2})(?!\d)/i) || s.match(/الوحد[ةه]\s*[_\- ]?\s*(\d{1,2})/) || s.match(/(?:^|\D)(\d{1,2})(?!\d)/); const u = m ? +m[1] : 0; return u >= 1 && u <= 30 ? u : 0; }
+  async function retry(fn, n = 3) { let e; for (let i = 0; i < n; i++) { try { const r = await fn(); if (r && r.error) throw r.error; return r; } catch (x) { e = x; await new Promise(r => setTimeout(r, 1500 * (i + 1))); } } throw e; }
+  async function have(base) { try { const { data } = await sb.storage.from("academy_public").list("arabiya/" + base, { limit: 1000 }); return new Set((data || []).map(x => x.name)); } catch (e) { return new Set(); } }
+
+  let bar = null;
+  const paint = (pct, line, sub) => { if (!bar) { bar = document.createElement("div"); bar.id = "up232"; document.body.appendChild(bar); } bar.innerHTML = `<div class="row" style="justify-content:space-between;gap:.5rem"><b>📤 رفع «العربية بين يديك»</b><b>${pct}%</b></div><div class="pb232"><i style="width:${pct}%"></i></div><small>${esc(line || "")}</small><small class="muted">${esc(sub || "سيب الصفحة مفتوحة لحد ما يوصل 100%")}</small>`; };
+
+  window.abybUpload = abybUpload = async function (files) {
+    const all = [...(files || [])]; const F = all.filter(f => /\.pptx$/i.test(f.name) && !/^~\$/.test(f.name));
+    const log = document.getElementById("abybLog"); const say_ = m => { if (log) { log.insertAdjacentHTML("beforeend", `<div>${esc(m)}</div>`); log.scrollTop = 1e9; } };
+    if (!F.length) { const bad = all.filter(f => /\.ppt$/i.test(f.name)).length; return toast(bad ? "الملفات دي .ppt قديمة — افتحها في PowerPoint واحفظها .pptx الأول" : "مالقيتش ملفات .pptx في اللي اخترته", true); }
+    try { await abyLoadZip(); } catch (e) { return toast("مكتبة فتح الملفات ماحمّلتش — اتأكد من النت وجرّب تاني", true); }
+    let wl = null; try { wl = await navigator.wakeLock.request("screen"); } catch (e) {}
+    const leave = e => { e.preventDefault(); e.returnValue = ""; }; addEventListener("beforeunload", leave);
+    const idx = (((abybIndex() || [[]])[0]) || []).slice(); const tot = F.length; let done = 0, okU = 0, errU = 0, skipped = [];
+    const prog = JSON.parse(localStorage.getItem("abyb232") || "{}");
+    try {
+      for (const f of F) {
+        const path = f.webkitRelativePath || f.name; const lv = lvOf(path); const unit = unitOf(f.name);
+        if (!unit) { say_(`⏭️ ${f.name}: مش عارف رقم الوحدة من الاسم — سمّيه U01.pptx مثلًا`); done++; errU++; continue; }
+        const tag = `${ABY_N[lv]} — الوحدة ${unit}`; paint(Math.round(done / tot * 100), `📂 ${tag}: بيفتح الملف (${(f.size / 1048576).toFixed(0)} ميجا)…`); say_(`📂 ${tag}: بيفتح الملف…`);
+        let P; try { P = await abybParse(f); } catch (e) { say_(`❌ ${f.name}: الملف مش بيتفتح كـ pptx (${e && e.message || e}). لو محمي بكلمة سر أو تالف افتحه واحفظه تاني.`); done++; errU++; continue; }
+        if (!P.slides.length) { say_(`⚠️ ${tag}: مفيش ولا صفحة كتاب أو صوت في الملف ده`); done++; errU++; continue; }
+        const base = abybKey(lv, unit); const ex = await have(base); let k = 0, fail = 0; const N = P.media.length;
+        for (const m of P.media) {
+          k++; const sub = `${tag} · ${k}/${N}`; paint(Math.round((done + k / Math.max(1, N)) / tot * 100), `⬆️ ${sub}`);
+          if (ex.has(m)) continue;
+          const fz = P.z.file("ppt/media/" + m); if (!fz) continue; const blob = await fz.async("blob");
+          if (blob.size > MAX) { skipped.push(`${tag}: ${m} (${(blob.size / 1048576).toFixed(0)} ميجا)`); say_(`⚠️ ${m} أكبر من 49 ميجا — اتخطّيته`); continue; }
+          const ext = m.split(".").pop().toLowerCase(); const type = { mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", wma: "audio/x-ms-wma", mp4: "video/mp4", m4v: "video/mp4", png: "image/png", gif: "image/gif", webp: "image/webp" }[ext] || "image/jpeg";
+          try { await retry(() => sb.storage.from("academy_public").upload(`arabiya/${base}/${m}`, blob, { contentType: type, upsert: true })); } catch (e) { fail++; say_(`⚠️ ${m}: ${e && e.message || e}`); }
+          if (k % 10 === 0) say_(`   ⬆️ ${k}/${N}`);
+        }
+        const J = { lv, unit, title: P.title, W: P.W, H: P.H, slides: P.slides };
+        try { await retry(() => sb.storage.from("academy_public").upload(`arabiya/${base}.json`, new Blob([JSON.stringify(J)], { type: "application/json" }), { contentType: "application/json", upsert: true })); } catch (e) { say_(`❌ ${tag}: ماقدرتش أحفظ فهرس الوحدة (${e && e.message || e})`); done++; errU++; continue; }
+        const ls = [...new Set(P.slides.map(s => s.lesson).filter(Boolean))]; const o = { lv, unit, title: P.title, lessons: ls, slides: P.slides.length, ans: P.slides.reduce((s, x) => s + x.boxes.length, 0), aud: P.slides.reduce((s, x) => s + x.aud.length, 0), at: new Date().toISOString(), miss: fail };
+        const i = idx.findIndex(x => x.lv === lv && x.unit === unit); if (i >= 0) idx[i] = o; else idx.push(o);
+        idx.sort((a, b) => a.lv - b.lv || a.unit - b.unit);
+        try { await retry(() => sb.storage.from("academy_public").upload("arabiya/book/index.json", new Blob([JSON.stringify(idx)], { type: "application/json" }), { contentType: "application/json", upsert: true })); } catch (e) { say_("⚠️ الفهرس العام: " + (e && e.message || e)); }
+        prog[`${lv}-${unit}`] = o.at; localStorage.setItem("abyb232", JSON.stringify(prog));
+        done++; okU++; say_(`✅ ${tag} «${P.title || ""}»: ${o.slides} صفحة · ${o.ans} إجابة · ${o.aud} صوت${fail ? ` · ${fail} ملف ماترفعش (ارفع الوحدة تاني وهيكمّل الناقص بس)` : ""}`);
+        paint(Math.round(done / tot * 100), `✅ ${tag}`);
+      }
+    } finally {
+      removeEventListener("beforeunload", leave); try { wl && wl.release(); } catch (e) {}
+      paint(100, `خلص: ${okU} وحدة اترفعت${errU ? ` · ${errU} فيها مشكلة (التفاصيل في السجل)` : ""}`, skipped.length ? `اتخطّى ${skipped.length} ملف كبير: ${skipped.slice(0, 3).join("، ")}` : "تقدر تقفل الصفحة دلوقتي");
+      setTimeout(() => { bar && bar.remove(); bar = null; }, 15000);
+      delete state.data["abyb:index"]; state.abybBust = Date.now(); toast(errU ? `خلص مع ${errU} مشكلة — بص على السجل` : "✅ خلص الرفع"); render();
+    }
+  };
+
+  /* لوحة «وصل لفين» للمالك فوق الرفع */
+  const _bb = abybBody; abybBody = function () { const h = _bb.apply(this, arguments); if (!(realRole() === "owner" && !state.preview)) return h; const ix = abybIndex(); const all = Array.isArray(ix) ? (ix[0] || []) : null; if (!all) return h;
+    const row = n => { const u = all.filter(o => o.lv === n); return `<div class="row" style="gap:.25rem;flex-wrap:wrap;align-items:center"><b class="xs" style="min-width:5.5rem">📗 ${ABY_N[n]}</b>${u.length ? u.map(o => `<span class="ch232" title="${o.slides} صفحة · ${o.aud} صوت">U${String(o.unit).padStart(2, "0")}${o.miss ? " ⚠️" : ""}</span>`).join("") : `<span class="xs muted">لسه مفيش</span>`}</div>`; };
+    const st = `<div class="card" id="st232" style="margin-bottom:.6rem"><b>📊 وصل لفين؟</b> <span class="xs muted">${all.length} وحدة مرفوعة من الأربع مستويات</span><div style="display:grid;gap:.3rem;margin-top:.4rem">${[1, 2, 3, 4].map(row).join("")}</div></div>`;
+    return st + h; };
+
+  css(`#up232{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:50001;width:min(480px,92vw);background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:.7rem .9rem;box-shadow:0 12px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;gap:.3rem}
+  .pb232{height:12px;border-radius:999px;background:var(--bg);overflow:hidden}.pb232 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .ch232{font-size:.72rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+  #up230{display:none!important}`);
+})();
+
+/* ================= v233: الدفعة السابعة (القرآن أولًا): 📖 الورد اليومي بتذكير · 🗓️ خطة ختمة بتاريخ · 🧩 كمّل الآية (من المصحف نفسه، مفيش ذكاء اصطناعي) · 🔥 السلسلة بيوم حماية كل أسبوع + 🎯 هدف الأسبوع — كلهم مقفولين لحد ما تفتحهم من «كل الجديد» ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return _role25() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  const PG = ["wird233", "khatma233", "kamil233", "streak233"]; PG.forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const NF = () => setv("nf218", {}) || {}; const on = id => !!(NF()[id] || {}).on;
+  const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const dayN = s => Math.floor(new Date(s + "T12:00:00").getTime() / 864e5);
+  /* تخزين: على الجهاز + في البروفايل لو داخل (يتنقل معاه لأي جهاز) */
+  const K = "my233";
+  const MY = () => { let o = {}; try { o = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {} const p = (state.auth && state.auth.profile && state.auth.profile.metadata && state.auth.profile.metadata.my233) || null; if (p && (p.t || 0) > (o.t || 0)) o = p; return o; };
+  let syncT = null;
+  const SAVE = o => { o.t = Date.now(); try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {} if (logged() && state.auth.profile) { clearTimeout(syncT); syncT = setTimeout(async () => { try { const md = Object.assign({}, state.auth.profile.metadata || {}, { my233: o }); state.auth.profile.metadata = md; await sb.from("profiles").update({ metadata: md }).eq("id", state.auth.user.id); } catch (e) {} }, 800); } };
+  /* أي إنجاز (ورد، ختمة، كمّل الآية) بيحسب يوم في السلسلة */
+  function tick(kind) { const o = MY(); o.days = o.days || {}; const d = today(); o.days[d] = Object.assign(o.days[d] || {}, { [kind]: (o.days[d] && o.days[d][kind] || 0) + 1 }); SAVE(o); }
+  function streak() { const o = MY(); const D = o.days || {}; const fz = o.freeze || {}; let n = 0, d = dayN(today()); if (!D[today()]) d--; for (; ; d--) { const s = new Date(d * 864e5 + 432e5).toISOString().slice(0, 10); if (D[s]) { n++; continue; } if (fz[s]) continue; break; } return n; }
+
+  /* ===== 1) الورد اليومي ===== */
+  window.wird233 = {
+    set() { const g = id => (document.getElementById(id) || {}).value; const o = MY(); o.wird = { pages: Math.max(1, Math.min(60, +g("wd_p") || 2)), start: Math.max(1, Math.min(604, +g("wd_s") || 1)), time: g("wd_t") || "20:00", at: (o.wird && o.wird.at) || Math.max(1, Math.min(604, +g("wd_s") || 1)) }; SAVE(o); this.remind(); render(); },
+    done() { const o = MY(); if (!o.wird) return; o.wird.at = ((o.wird.at - 1 + o.wird.pages) % 604) + 1; o.wird.last = today(); SAVE(o); tick("wird"); toast("✅ " + T("ورد النهارده خلص — بارك الله فيك", "Today's wird done")); render(); },
+    async remind() { try { if (!("Notification" in window)) return; if (Notification.permission === "default") await Notification.requestPermission(); } catch (e) {} },
+    open() { const o = MY(); if (!o.wird) return; try { state.mushafPage = o.wird.at; } catch (e) {} navigate("quran"); }
+  };
+  /* تذكير: لو الصفحة مفتوحة ووصل الميعاد ولسه الورد ماخلصش */
+  setInterval(() => { try { const o = MY(); if (!on("wird") || !o.wird || o.wird.last === today() || o.wird.notified === today()) return; const [h, m] = (o.wird.time || "20:00").split(":").map(Number); const n = new Date(); if (n.getHours() * 60 + n.getMinutes() < h * 60 + m) return; o.wird.notified = today(); SAVE(o); const msg = T(`ورد النهارده: ${o.wird.pages} صفحة من صفحة ${o.wird.at}`, `Today's wird: ${o.wird.pages} pages from page ${o.wird.at}`); toast("📖 " + msg); if ("Notification" in window && Notification.permission === "granted") new Notification(T("أكاديمية إتقان", "Itqan Academy"), { body: msg, icon: "/icons/icon-192.png" }); } catch (e) {} }, 60000);
+  function wirdPage() { const o = MY(); const w = o.wird; const doneToday = w && w.last === today();
+    const form = `<div class="card"><h3>⚙️ ${T("ظبّط وردك", "Set your wird")}</h3><div class="g218"><label class="sm">${T("كام صفحة في اليوم؟", "Pages per day")}<input id="wd_p" type="number" min="1" max="60" class="in" value="${w ? w.pages : 2}"></label><label class="sm">${T("تبدأ من صفحة", "Start page")}<input id="wd_s" type="number" min="1" max="604" class="in" value="${w ? w.at : 1}"></label><label class="sm">${T("ميعاد التذكير", "Reminder time")}<input id="wd_t" type="time" class="in" value="${w ? w.time : "20:00"}"></label></div><button class="btn btn-p" style="margin-top:.5rem" onclick="wird233.set()">💾 ${T("احفظ", "Save")}</button><p class="xs muted">${T("التذكير بيوصل وانت فاتح الموقع أو التطبيق. لو الإشعارات مسموحة بيظهر كإشعار.", "Reminders show while the site/app is open.")}</p></div>`;
+    const card = w ? `<div class="card wd233 ${doneToday ? "ok" : ""}"><div style="font-size:2.6rem">${doneToday ? "✅" : "📖"}</div><h2>${doneToday ? T("خلّصت ورد النهارده", "Today's wird is done") : T(`وردك النهارده: ${w.pages} صفحة`, `Today: ${w.pages} pages`)}</h2><p class="muted">${T("من صفحة", "From page")} <b>${doneToday ? ((w.at - 1 - w.pages + 604) % 604) + 1 : w.at}</b> ${T("لحد", "to")} <b>${Math.min(604, (doneToday ? ((w.at - 1 - w.pages + 604) % 604) + 1 : w.at) + w.pages - 1)}</b></p><div class="pb233"><i style="width:${Math.round(((w.at - 1) / 604) * 100)}%"></i></div><small class="muted">${T("وصلت", "Progress")} ${Math.round(((w.at - 1) / 604) * 100)}% ${T("من المصحف", "of the mushaf")}</small><div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-o" onclick="wird233.open()">📖 ${T("افتح المصحف", "Open mushaf")}</button>${doneToday ? "" : `<button class="btn btn-p" onclick="wird233.done()">✅ ${T("خلّصت الورد", "Mark done")}</button>`}</div></div>` : "";
+    return pageWrap("📖", T("الورد اليومي", "Daily wird"), T("كام صفحة كل يوم، وتذكير في الميعاد اللي تختاره، والموقع فاكر وصلت لفين", "A few pages daily, with a reminder"), card + form, 760); }
+
+  /* ===== 2) خطة الختمة ===== */
+  window.khatma233 = {
+    set() { const g = id => (document.getElementById(id) || {}).value; const from = Math.max(1, Math.min(604, +g("kh_f") || 1)); const end = g("kh_e"); if (!end || dayN(end) <= dayN(today())) return toast(T("اختار تاريخ بعد النهارده", "Pick a future date"), true); const o = MY(); o.kh = { from, end, start: today(), done: {} }; SAVE(o); render(); },
+    tog(d) { const o = MY(); if (!o.kh) return; o.kh.done = o.kh.done || {}; o.kh.done[d] = !o.kh.done[d]; SAVE(o); if (o.kh.done[d]) tick("khatma"); render(); },
+    reset() { if (!confirm(T("تبدأ خطة جديدة؟", "Start a new plan?"))) return; const o = MY(); delete o.kh; SAVE(o); render(); }
+  };
+  function plan(kh) { const days = dayN(kh.end) - dayN(kh.start) + 1; const pages = 604 - kh.from + 1; const per = pages / days; const L = []; let p = kh.from; for (let i = 0; i < days; i++) { const a = Math.round(p), b = Math.min(604, Math.round(kh.from + per * (i + 1)) - 1); const d = new Date((dayN(kh.start) + i) * 864e5 + 432e5).toISOString().slice(0, 10); L.push({ d, a, b: Math.max(a, b) }); p = b + 1; } return { L, per }; }
+  function khPage() { const o = MY(); const kh = o.kh;
+    if (!kh) { const def = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10); return pageWrap("🗓️", T("خطة ختمة", "Khatma plan"), T("اختار هتختم إمتى، والموقع يقسّم لك الصفحات على الأيام", "Pick a finish date — we split the pages per day"), `<div class="card"><div class="g218"><label class="sm">${T("هتبدأ من صفحة", "Start from page")}<input id="kh_f" type="number" min="1" max="604" value="1" class="in"></label><label class="sm">${T("عايز تختم يوم", "Finish by")}<input id="kh_e" type="date" class="in" value="${def}"></label></div><button class="btn btn-p" style="margin-top:.5rem" onclick="khatma233.set()">🗓️ ${T("اعمل الخطة", "Make the plan")}</button></div>`, 760); }
+    const { L, per } = plan(kh); const nDone = L.filter(x => kh.done && kh.done[x.d]).length; const t = today();
+    const late = L.filter(x => dayN(x.d) < dayN(t) && !(kh.done && kh.done[x.d])).length;
+    return pageWrap("🗓️", T("خطة ختمة", "Khatma plan"), T(`حوالي ${per.toFixed(1)} صفحة كل يوم لحد ${kh.end}`, `About ${per.toFixed(1)} pages a day until ${kh.end}`), `<div class="card"><div class="pb233"><i style="width:${Math.round(nDone / L.length * 100)}%"></i></div><p class="sm">${nDone}/${L.length} ${T("يوم", "days")}${late ? ` · <b style="color:#dc2626">${late} ${T("يوم متأخر", "days behind")}</b>` : ""}</p><div class="kh233">${L.map(x => `<button class="${kh.done && kh.done[x.d] ? "ok" : ""} ${x.d === t ? "now" : ""}" onclick="khatma233.tog('${x.d}')"><small>${x.d.slice(5)}</small><b>${x.a}${x.b > x.a ? "–" + x.b : ""}</b></button>`).join("")}</div><button class="btn btn-o xs" style="margin-top:.6rem" onclick="khatma233.reset()">🔄 ${T("خطة جديدة", "New plan")}</button></div>`, 900); }
+
+  /* ===== 3) كمّل الآية — النص من المصحف (api.quran.com) ===== */
+  const KQ = { s: 18, v: null, q: null, ok: 0, n: 0, ans: null };
+  async function verses(s) { const k = "kv233:" + s; if (KQ[k]) return KQ[k]; const r = await fetch(`https://api.quran.com/api/v4/verses/by_chapter/${s}?fields=text_uthmani&per_page=300`); const j = await r.json(); KQ[k] = (j.verses || []).map(v => String(v.text_uthmani || "").trim()).filter(Boolean); return KQ[k]; }
+  const words = t => t.split(/\s+/).filter(Boolean);
+  window.kamil233 = {
+    async load(s) { if (KQ.busy) return; KQ.busy = 1; KQ.s = +s || KQ.s; KQ.v = null; KQ.q = null; render(); try { KQ.v = await verses(KQ.s); } catch (e) { KQ.v = []; } KQ.busy = 0; this.next(); },
+    next() { const V = (KQ.v || []).filter(v => words(v).length >= 4); if (V.length < 4) { KQ.q = null; render(); return; } const pick = V[Math.floor(Math.random() * V.length)]; const w = words(pick); const cut = Math.max(2, Math.floor(w.length / 2)); const right = w.slice(cut).join(" "); const others = V.filter(v => v !== pick).sort(() => Math.random() - .5).slice(0, 3).map(v => { const x = words(v); return x.slice(Math.max(2, Math.floor(x.length / 2))).join(" "); }); KQ.q = { head: w.slice(0, cut).join(" "), right, opts: [right, ...others].sort(() => Math.random() - .5) }; KQ.ans = null; render(); },
+    pick(i) { if (!KQ.q || KQ.ans != null) return; KQ.ans = i; KQ.n++; if (KQ.q.opts[i] === KQ.q.right) { KQ.ok++; tick("kamil"); } render(); }
+  };
+  function kamilPage() { if (KQ.v == null && !KQ.busy) { setTimeout(() => kamil233.load(KQ.s), 30); }
+    const sel = `<select class="in" style="width:auto" onchange="kamil233.load(this.value)">${(typeof SURAHS !== "undefined" ? SURAHS : []).map((n, i) => `<option value="${i + 1}" ${i + 1 === KQ.s ? "selected" : ""}>${i + 1}. ${esc(n)}</option>`).join("")}</select>`;
+    const q = KQ.q; const body = KQ.v == null ? loadingBox() : !q ? `<div class="card muted">${T("السورة دي قصيرة — اختار سورة أطول", "Pick a longer surah")}</div>` : `<div class="card kq233"><p class="xs muted">${T("كمّل الآية:", "Complete the ayah:")}</p><div class="kqh">${esc(q.head)} …</div><div class="kqo">${q.opts.map((o, i) => `<button class="${KQ.ans == null ? "" : o === q.right ? "ok" : i === KQ.ans ? "no" : ""}" onclick="kamil233.pick(${i})">${esc(o)}</button>`).join("")}</div>${KQ.ans != null ? `<button class="btn btn-p" onclick="kamil233.next()">➡️ ${T("اللي بعدها", "Next")}</button>` : ""}<p class="xs muted" style="margin-top:.5rem">${T("النتيجة", "Score")}: ${KQ.ok}/${KQ.n}</p></div>`;
+    return pageWrap("🧩", T("كمّل الآية", "Complete the ayah"), T("أول الآية قدامك، اختار تكملتها الصح — بيثبّت الحفظ ويفرّق بين المتشابهات", "Pick the right continuation"), `<div class="row" style="gap:.4rem;align-items:center;margin-bottom:.6rem">${T("السورة", "Surah")} ${sel}</div>${body}`, 820); }
+
+  /* ===== 4) السلسلة + هدف الأسبوع ===== */
+  window.streak233 = {
+    freeze() { const o = MY(); o.freeze = o.freeze || {}; const wk = Math.floor(dayN(today()) / 7); if (Object.keys(o.freeze).some(d => Math.floor(dayN(d) / 7) === wk)) return toast(T("استخدمت يوم الحماية بتاع الأسبوع ده", "Freeze already used this week"), true); const y = new Date((dayN(today()) - 1) * 864e5 + 432e5).toISOString().slice(0, 10); o.freeze[y] = 1; SAVE(o); toast("🛡️ " + T("امبارح اتحسب يوم حماية — سلسلتك محفوظة", "Yesterday protected")); render(); },
+    goal() { const n = prompt(T("هدفك الأسبوع ده كام يوم إنجاز؟ (1–7)", "Weekly goal (days 1–7)"), (MY().goal || 5)); if (!n) return; const o = MY(); o.goal = Math.max(1, Math.min(7, +n || 5)); SAVE(o); render(); }
+  };
+  function streakPage() { const o = MY(); const D = o.days || {}; const s = streak(); const wk0 = dayN(today()) - ((new Date().getDay() + 1) % 7); /* الأسبوع بيبدأ السبت */
+    const week = [...Array(7)].map((_, i) => { const d = new Date((wk0 + i) * 864e5 + 432e5).toISOString().slice(0, 10); return { d, on: !!D[d], fz: !!(o.freeze || {})[d] }; }); const got = week.filter(x => x.on).length; const goal = o.goal || 5;
+    const nm = AR() ? ["سبت", "حد", "اتنين", "تلات", "أربع", "خميس", "جمعة"] : ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+    return pageWrap("🔥", T("سلسلتي", "My streak"), T("أي ورد أو ختمة أو «كمّل الآية» بيحسب يوم. ليك يوم حماية واحد كل أسبوع لو فاتك يوم.", "Any wird, khatma day or quiz counts. One freeze day per week."), `<div class="card wd233"><div style="font-size:3rem">🔥</div><h2>${s} ${T("يوم ورا بعض", "day streak")}</h2><div class="wk233">${week.map((x, i) => `<span class="${x.on ? "on" : x.fz ? "fz" : ""}"><small>${nm[i]}</small>${x.on ? "✅" : x.fz ? "🛡️" : "·"}</span>`).join("")}</div><p class="sm">🎯 ${T("هدف الأسبوع", "Weekly goal")}: <b>${got}/${goal}</b> ${got >= goal ? "🏆" : ""}</p><div class="pb233"><i style="width:${Math.min(100, Math.round(got / goal * 100))}%"></i></div><div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-o" onclick="streak233.goal()">🎯 ${T("غيّر الهدف", "Change goal")}</button><button class="btn btn-o" onclick="streak233.freeze()">🛡️ ${T("احمي امبارح", "Protect yesterday")}</button></div></div>`, 720); }
+
+  /* ===== كل الجديد + مساحتي ===== */
+  const NEW = [{ id: "wird", ic: "📖", ar: "الورد اليومي", en: "Daily wird", go: "go16('wird233')", d: "الطالب يختار كام صفحة في اليوم ومن أي صفحة وميعاد التذكير. الموقع فاكر وصل لفين وبيفكّره في الميعاد." },
+    { id: "khatma", ic: "🗓️", ar: "خطة ختمة", en: "Khatma plan", go: "go16('khatma233')", d: "يختار تاريخ الختمة، والموقع يقسّم الصفحات على الأيام ويعلّم على اللي خلص ويقول لو متأخر." },
+    { id: "kamil", ic: "🧩", ar: "كمّل الآية", en: "Complete the ayah", go: "go16('kamil233')", d: "أول الآية من المصحف و٤ اختيارات للتكملة من نفس السورة — بيثبّت الحفظ ويفرّق المتشابه. النص من المصحف مش من الذكاء الاصطناعي." },
+    { id: "streak", ic: "🔥", ar: "السلسلة وهدف الأسبوع", en: "Streak & weekly goal", go: "go16('streak233')", d: "أيام الإنجاز ورا بعض، ويوم حماية واحد كل أسبوع، وهدف أسبوعي الطالب بيحدده." }];
+  function hubAdd() { if (state.route !== "hub218" || !own() || document.getElementById("nw233")) return; const a = document.getElementById("nw226") || document.getElementById("nw225") || document.querySelector("#app .nfc218"); if (!a) return;
+    a.insertAdjacentHTML("beforebegin", `<div id="nw233"><h3 style="margin:.6rem 0">🆕 ${T("الدفعة السابعة — القرآن والحفظ", "Seventh batch — Quran & memorization")}</h3>${NEW.map(f => { const c = NF()[f.id] || {}; return `<div class="card nfc218 ${c.on ? "" : "off"}"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><div class="row" style="gap:.6rem;align-items:center"><span style="font-size:1.6rem">${f.ic}</span><div><b>${esc(AR() ? f.ar : f.en)}</b><p class="xs muted" style="margin:.1rem 0 0;max-width:520px">${esc(f.d)}</p></div></div><div class="row" style="gap:.3rem"><button class="btn btn-o xs" onclick="${f.go}">👁 ${T("افتح", "Open")}</button><button class="btn ${c.on ? "btn-p" : "btn-o"}" onclick="(async()=>{const n=Object.assign({},setv('nf218',{})||{});n['${f.id}']=Object.assign({},n['${f.id}']||{},{on:${!c.on}});await saveSetting16('nf218',n);render()})()">${c.on ? "✅ " + T("شغّالة", "On") : "⏸ " + T("شغّلها", "Turn on")}</button></div></div></div>`; }).join("")}</div>`); }
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); const add = NEW.filter(f => own() || on(f.id)); if (add.length) h = h.replace('<div class="msgrid">', `<div class="msgrid">${add.map(f => `<button class="mstile" style="--c:#0f766e" onclick="${f.go}"><span>${f.ic}</span><b>${esc(AR() ? f.ar : f.en)}</b></button>`).join("")}`); return h; };
+  /* الصفحات دي للزوار والطلاب بتفتح بس لو المالك شغّلها */
+  const allowed = r => own() || on({ wird233: "wird", khatma233: "khatma", kamil233: "kamil", streak233: "streak" }[r]);
+  const R = { wird233: wirdPage, khatma233: khPage, kamil233: kamilPage, streak233: streakPage };
+  const _r = render; render = function () { if (R[state.route]) { if (!allowed(state.route)) { state.route = "home"; return _r.apply(this, arguments); } show(R[state.route]()); } else _r.apply(this, arguments); try { hubAdd(); } catch (e) { console.warn("v233", e); } };
+  const m = location.hash.match(/^#\/(wird233|khatma233|kamil233|streak233)/); if (m) state.route = m[1];
+  css(`.wd233{text-align:center}.wd233.ok{border:2px solid #16a34a}.pb233{height:12px;border-radius:999px;background:var(--bg);overflow:hidden;margin:.5rem 0}.pb233 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .kh233{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.35rem}.kh233 button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:12px;padding:.35rem;display:flex;flex-direction:column;align-items:center;cursor:pointer;font:inherit}.kh233 button.ok{background:color-mix(in srgb,#16a34a 18%,var(--card));border-color:#16a34a}.kh233 button.now{outline:2px solid var(--accent)}
+  .kqh{font:1.6rem/2.2 'Amiri',serif;text-align:center;margin:.4rem 0 .8rem}.kqo{display:grid;gap:.4rem;margin-bottom:.6rem}.kqo button{font:1.25rem/1.9 'Amiri',serif;text-align:center;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.4rem .7rem;cursor:pointer}.kqo button.ok{background:color-mix(in srgb,#16a34a 20%,var(--card));border-color:#16a34a}.kqo button.no{background:color-mix(in srgb,#dc2626 18%,var(--card));border-color:#dc2626}
+  .wk233{display:flex;justify-content:center;gap:.3rem;margin:.6rem 0;flex-wrap:wrap}.wk233 span{display:flex;flex-direction:column;align-items:center;min-width:42px;padding:.3rem;border-radius:12px;border:1px solid var(--line)}.wk233 span.on{background:color-mix(in srgb,#f59e0b 22%,var(--card));border-color:#f59e0b}.wk233 span.fz{background:color-mix(in srgb,#3b82f6 15%,var(--card))}`);
+})();
+
+/* ================= v234: ملف Notion — الدفعة 1 (أخطاء): «حفظ» الأخطاء على المصحف بقى بيحفظ فعلًا · قايمة الأسماء والإيميلات اللي كانت بتطلع في خانة القارئ (اقتراحات المتصفح) اتقفلت · اختيار المسار في الحجز ماعادش حروف فوق بعض · أسماء الباقات السنوية بالعربي بدل pack4_25_y · صفحة الأسعار: اتشال «طلاب الشيخ المباشرين» و«تكلّم عربي» و«اشتراكات المدارس» وشريط الجنيه وتحويل العملة (كل واحد بعملة بلده) · التسجيل أقصر (من غير عملة ووسائل دفع) · مفيش «أكّد إيميلك» · الصفحات اللي للمالك بس ماعادتش بتظهر لحد تاني · أدوات التعديل في الهيدر بتظهر في وضع البناء بس · شريط «دوس على أي حاجة ترتّبها» اتشال · الجرس بيتصفّر أول ما تفتحه · صوت واحد بس يشتغل في نفس الوقت والتسجيل بيوقف أي صوت · شباك الخطأ: نسخة واحدة من «الكلمة/الآية»، حروف أكبر، ودوسة على الحرف تفتح مخرجه، ومن غير الأسهم ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner"; } catch (e) { return false; } };
+  const building = () => !!(window.B216 && window.B216.on);
+
+  /* 1) أي onclick اتكتب فيه &quot; بالغلط (زي زرار «حفظ» الخطأ) بيتصلّح قبل ما يشتغل */
+  document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("[onclick*='&quot;'],[onclick*='&#39;'],[onclick*='&amp;']"); if (!el) return; el.setAttribute("onclick", el.getAttribute("onclick").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&")); }, true);
+
+  /* 2) اقتراحات المتصفح (أسامي وإيميلات محفوظة) مقفولة في كل الخانات غير الدخول والتسجيل */
+  function noAuto(root) { if (/^(login|signup|reset|profile)$/.test(state.route || "")) return; (root || document).querySelectorAll("#app input:not([type=password]):not([type=email]):not([autocomplete=off]), #app textarea:not([autocomplete=off]), body > div input:not([type=password]):not([type=email]):not([autocomplete=off])").forEach(i => { if (i.closest("form[data-auth]")) return; i.setAttribute("autocomplete", "off"); }); }
+
+  /* 3) أسماء الباقات: pack4_25_y ← «٤ حصص شهريًا · سنوي» */
+  try { const _pt = planText; planText = function (p) { const r = _pt.apply(this, arguments); try { const id = String((p && (p.base || p.id)) || ""); const t = typeof r === "string" ? r : (r && r.t) || ""; const m = id.match(/^(pack|maq)(\d+)(_25)?(_y)?$/); if (!m || !(m[3] || m[4]) && !/^(pack|maq)\d/.test(t)) return r; const base = _pt.call(this, Object.assign({}, p, { id: m[1] + m[2], base: m[1] + m[2], minutes: 0 })); let nm = (typeof base === "string" ? base : base.t) || ""; if (/^(pack|maq)\d/.test(nm)) nm = m[1] === "maq" ? T(`مقامات · ${m[2]} حصص`, `Maqamat · ${m[2]} lessons`) : T(`${m[2]} حصص في الشهر`, `${m[2]} lessons a month`); nm += (m[4] ? T(" · اشتراك سنوي (12 شهر)", " · yearly (12 months)") : "") + (p.minutes && !p.isTrial ? ` · ${p.minutes} ${L("minShort")}` : ""); return typeof r === "string" ? nm : Object.assign({}, r, { t: nm }); } catch (e) { return r; } }; } catch (e) {}
+
+  /* 4) العملة: كل واحد بيشوف بعملة بلده بس (من غير اختيار) */
+  try { curSelector = function () { return ""; }; } catch (e) {}
+
+  /* 5) صفحة الأسعار */
+  function pricing() { if (state.route !== "pricing") return; const app = document.getElementById("app"); if (!app) return;
+    app.querySelectorAll(".pk152 li").forEach(li => { if (/طلاب الشيخ المباشرين|Sheikh's own students/.test(li.textContent)) li.remove(); });
+    const ul = app.querySelector(".pk152 ul"); if (ul && !ul.__g234) { ul.__g234 = 1; const lis = ul.querySelectorAll("li"); if (lis[0]) lis[0].innerHTML = T("🎁 أول ما تشترك في أي باقة حصص: <b>أسبوع كامل مجانًا</b> على كل محتوى الموقع.", "🎁 Subscribe to any lesson package: <b>one full week free</b> on all site content."); if (lis[1]) lis[1].innerHTML = T("بعد الأسبوع المجاني: <b>خصم 50%</b> على كل محتوى الموقع طول ما اشتراكك في الحصص شغال.", "After the free week: <b>50% off</b> all site content for as long as your lesson package is active."); }
+    /* «اشتراكات محتوى الموقع» أول حاجة في تبويب المحتوى */
+    const sp = [...app.querySelectorAll("h2,h3")].find(h => /اشتراكات محتوى الموقع|Site content subscriptions/.test(h.textContent)); const box = sp && (sp.closest(".card") || sp.parentElement); const tabs = app.querySelector(".ptabs, [class*=ptab]"); if (box && tabs && !box.__f234) { box.__f234 = 1; const after = tabs.closest(".row,.ptabs") || tabs; after.parentNode.insertBefore(box, after.nextSibling); }
+    app.querySelectorAll("button").forEach(b => { if (/(كلّ?م عربي|Speak Arabic)/.test(b.textContent) && !b.getAttribute("onclick") && b.textContent.trim().length < 20) b.style.display = "none"; }); }
+
+  /* 6) الصفحات اللي للمالك بس: غير المالك يرجع الرئيسية علطول، واللينكات ليها تختفي */
+  const OWN = new Set(["org", "org200", "studio", "acl", "hub218", "sub226", "nf218", "log221", "audit221", "stats224", "fin225"]);
+  try { JSON.parse(localStorage.getItem("own234") || "[]").forEach(r => OWN.add(r)); } catch (e) {}
+  function lockPages() { if (own()) return; const app = document.getElementById("app"); if (!app) return;
+    const main = [...app.querySelectorAll(".card")].find(c => /^🔒\s*(للأونر|للمالك|Owner only|owner only)/.test((c.textContent || "").trim()) && (c.textContent || "").trim().length < 60);
+    if (main && state.route && state.route !== "home") { OWN.add(state.route); try { localStorage.setItem("own234", JSON.stringify([...OWN])); } catch (e) {} setTimeout(() => navigate("home"), 0); return; }
+    app.querySelectorAll("[onclick]").forEach(el => { const oc = el.getAttribute("onclick") || ""; const m = oc.match(/go16\('([a-z0-9]+)'/) || oc.match(/navigate\('([a-z0-9]+)'/); if (m && OWN.has(m[1])) { const box = el.closest("li") || el; box.style.display = "none"; } }); }
+
+  /* 7) أدوات التعديل في الهيدر (الاستوديو، الصلاحيات، وضع الأصوات، المحاكي، رتّب) في وضع البناء بس */
+  function hdrTools() { document.querySelectorAll("#app .hdr .ibtn").forEach(b => { const oc = (b.getAttribute("onclick") || "") + (b.title || ""); if (/go16\('studio'\)|go16\('acl'\)|vMode84|'sim'|uiEdit/.test(oc)) b.classList.add("ed234"); }); document.body.classList.toggle("bo234", building()); }
+
+  /* 8) الجرس: أول ما يتفتح كل الإشعارات تتعلّم مقروءة */
+  let wasOpen = false; function bell() { const o = !!(state.notif && state.notif.open); if (o && !wasOpen) setTimeout(() => { try { markAllRead(); } catch (e) {} }, 300); wasOpen = o; }
+
+  /* 9) صوت واحد في نفس الوقت، والتسجيل بيوقف أي صوت شغّال (أصوات النظام القصيرة مستثناة) */
+  const MEDIA = new Set(); const _play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () { MEDIA.add(this); const me = this; const short = isFinite(me.duration) && me.duration > 0 && me.duration < 2.5; if (!short && !me.dataset.sys) MEDIA.forEach(m => { if (m !== me && !m.paused && !m.dataset.sys && !(isFinite(m.duration) && m.duration < 2.5)) { try { m.pause(); } catch (e) {} } }); return _play.apply(this, arguments); };
+  try { const _st = MediaRecorder.prototype.start; MediaRecorder.prototype.start = function () { MEDIA.forEach(m => { if (!m.paused && !m.dataset.sys) { try { m.pause(); } catch (e) {} } }); document.querySelectorAll("audio,video").forEach(m => { if (!m.paused) { try { m.pause(); } catch (e) {} } }); try { speechSynthesis.cancel(); } catch (e) {} return _st.apply(this, arguments); }; } catch (e) {}
+
+  /* 10) شباك الخطأ على الكلمة */
+  new MutationObserver(() => { const m = document.getElementById("mmModal"); if (!m || m.__m234) return; m.__m234 = 1;
+    m.querySelectorAll("button[onclick^='wSay158'],button[onclick^='aSay158']").forEach(b => b.style.display = "none");
+    m.querySelectorAll(".chip.lt").forEach(b => { const L1 = b.textContent.trim(); const a = document.createElement("button"); a.type = "button"; a.className = "mk234"; a.title = T("مخرج الحرف وصفاته", "Articulation"); a.textContent = "👄"; a.onclick = ev => { ev.stopPropagation(); m.remove(); state.mkL = L1; go16("makharij"); }; b.insertAdjacentElement("afterend", a); }); }).observe(document.body, { childList: true });
+
+  /* 11) نافذة «سجّل مجانًا»: من غير فيسبوك */
+  try { const _gl = window.gl164; if (typeof _gl === "function") window.gl164 = function () { const r = _gl.apply(this, arguments); document.querySelectorAll(".gl164 p.sm").forEach(p => { p.textContent = T("التسجيل بياخد دقيقة (أو بضغطة واحدة بجوجل) ويفتحلك محتوى مجاني في كل مسار + حصة تجريبية.", "Signing up takes a minute (or one tap with Google) and unlocks free content in every track + a trial lesson."); }); return r; }; } catch (e) {}
+
+  /* 12) التسجيل أقصر: العملة بتتحدد من البلد، ووسائل الدفع تتسأل بعدين عند الدفع */
+  function signup() { if (state.route !== "signup") return; const cur = document.getElementById("au_cur"); if (cur) { const box = cur.closest("div"); if (box) box.style.display = "none"; } const pp = document.getElementById("pp_box"); if (pp) { const box = pp.closest("div").parentElement; if (box && box.querySelector("#pp_box")) box.style.display = "none"; } }
+
+  const run = () => { try { noAuto(); pricing(); lockPages(); hdrTools(); bell(); signup(); } catch (e) { console.warn("v234", e); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); run(); return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { noAuto(); hdrTools(); pricing(); } catch (e) {} }, 150); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+  css(`
+  .trchips{flex-wrap:wrap!important;gap:.4rem!important}.trchips button{flex:0 1 auto!important;white-space:normal!important;min-width:0;writing-mode:horizontal-tb!important}
+  #eg191,.orgcta,.orgcta+*:empty{display:none!important}section.sec:has(> .wrap > .orgcta:only-child){display:none!important}
+  .embar{display:none!important}
+  body:not(.bo234) .hdr .ed234{display:none!important}
+  #bar206{display:none!important}
+  #mmModal .nav195,.nav195{display:none!important}
+  #mmModal .chip.lt{font-size:1.6rem!important;min-width:2.6rem;padding:.2rem .6rem!important;line-height:1.4}
+  .mk234{border:0;background:none;cursor:pointer;font-size:.9rem;margin-inline-start:-.2rem;margin-inline-end:.3rem;opacity:.75}.mk234:hover{opacity:1}
+  `);
+})();
+
+/* ================= v235: ملف Notion — الدفعة 2: مقام العجم بيبدأ من الدو (اللي كان من السي هو العجم عشيران) · مصطلحات التجويد في الواجهة الإنجليزي بقت: الفرانكو + المصطلح الإنجليزي اللي اخترته + العربي (Iẓhār (clarity) · إظهار) في كل مكان حتى الأسئلة · «قرآن» جنب مرتل ومجود · العلامة المائية اتشالت من الفيديوهات · الكلام اللي فوق بعض في تبويبات الحفظ ================= */
+(function () {
+  const AR = () => state.lang === "ar";
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* 1) العجم من الدو */
+  try { const a = MQ.find(m => m.id === "ajam"); if (a) { a.tonic = 0; } } catch (e) {}
+
+  /* 2) المصطلحات: [النمط, الإنجليزي (اختيار المالك), العربي] — الأطول الأول */
+  const V = "[aāâ]", I = "[iīî]", U = "[uūû]", Q = "[ʼʾ'’ʿ`]?";
+  const G = [
+    [`Idgh${V}m (?:with(?:out)? |bi-?|bil-?|bi )?ghunn${V}h? shafaw${I}`, "merging · from lips", "إدغام شفوي"],
+    [`Ikhf${V}${Q} shafaw${I}`, "hiding · from lips", "إخفاء شفوي"],
+    [`I[zẓ]h${V}r shafaw${I}`, "clarity · from lips", "إظهار شفوي"],
+    [`Idgh${V}m with ghunn${V}h?`, "merging with ghunnah", "إدغام بغنة"],
+    [`Idgh${V}m without ghunn${V}h?`, "merging without ghunnah", "إدغام بغير غنة"],
+    [`Idgh${V}m shafaw${I}`, "merging · from lips", "إدغام شفوي"],
+    [`Madd ${Q}${V}ri[dḍ] lil-?suk${U}n`, "madd because of stop", "مد عارض للسكون"],
+    [`Madd (?:al-)?muttasil|Madd muttaṣil|Connected madd`, "connected madd", "مد متصل"],
+    [`Madd (?:al-)?munfasil|Madd munfaṣil|Separated? madd`, "separate madd", "مد منفصل"],
+    [`Madd (?:al-)?l${V}zim|Necessary madd|Obligatory madd`, "obligatory madd", "مد لازم"],
+    [`Natural madd|Madd (?:a[tṭ]-?)?[tṭ]ab${I}${Q}${I}`, "madd elongation", "مد طبيعي"],
+    [`I[zẓ]h${V}r(?: [hḥ]alq${I})?`, "clarity", "إظهار"],
+    [`Ikhf${V}${Q}`, "hiding", "إخفاء"],
+    [`Idgh${V}m`, "merging", "إدغام"],
+    [`Iql${V}b`, "switching", "إقلاب"],
+    [`Tafkh${I}m`, "heavy", "تفخيم"],
+    [`Tarq${I}q`, "light", "ترقيق"],
+    [`Isti${Q}l${V}${Q}`, "go up", "استعلاء"],
+    [`Istif${V}l`, "go down", "استفال"],
+    [`Infit${V}[hḥ]`, "opening", "انفتاح"],
+    [`I[tṭ]b${V}q`, "closing", "إطباق"],
+    [`Waqf (?:and|&|wa) (?:i|I)btid${V}${Q}`, "stopping and starting", "الوقف والابتداء"],
+    [`Hams`, "whispering", "همس"],
+    [`Jahr`, "jahr", "جهر"],
+    [`Shidd${V}h?`, "intense", "الشدة"],
+    [`Rakh${V}w${V}h?`, "weak", "الرخاوة"],
+    [`Taw${V}ssu[tṭ]|Bayniyy${V}h?`, "in between", "البينية"],
+    [`Qalqal${V}h?`, "echo", "قلقلة"],
+    [`Ghunn${V}h?`, "nasal sound", "غنة"]
+  ];
+  const B = "A-Za-zāīūẓḍṭḥ";
+  const ONE = G.map(([p, en, ar]) => [new RegExp(`^(?:${p})$`, "i"), en, ar]);
+  const RE = new RegExp(`(^|[^${B}])(${G.map(g => "(?:" + g[0] + ")").join("|")})(?![${B}])(\\s*\\([^)]{0,40}\\))?(\\s*·\\s*[\\u0600-\\u06FF])?`, "gi");
+  const SKIP = "script,style,textarea,input,select,code,pre,[contenteditable],#toast,.toast";
+  const done = new WeakMap();
+  function glossary(root) { if (AR() || !root) return; const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => { const v = n.nodeValue; if (!v || v.length > 1500 || !/[A-Za-z]/.test(v)) return 2; if (done.get(n) === v) return 2; const p = n.parentElement; if (!p || p.closest(SKIP)) return 2; return 1; } });
+    const L = []; let n; while ((n = tw.nextNode())) L.push(n);
+    L.forEach(n => { const v0 = n.nodeValue; const v = v0.replace(RE, (m, pre, term, par, tail) => { if (tail) return m; const g = ONE.find(x => x[0].test(term)); if (!g) return m; const [, en, ar] = g; if (par && par.includes(en)) return m; const keep = par && /\d/.test(par) ? par : ""; return `${pre}${term} (${en}) · ${ar}${keep}`; }); if (v !== v0) n.nodeValue = v; done.set(n, n.nodeValue); }); }
+
+  /* 3) «قرآن» جنب مرتل ومجود */
+  function quranLabel(root) { (root || document).querySelectorAll("#app button, #app .chip").forEach(b => { if (b.__q235 || b.children.length > 3) return; const t = (b.textContent || "").trim(); if (/^(\S+\s)?(مرتل|مجود|Murattal|Mujawwad)$/.test(t)) { b.__q235 = 1; const tn = [...b.childNodes].reverse().find(x => x.nodeType === 3 && x.nodeValue.trim()); if (tn) tn.nodeValue = tn.nodeValue.replace(/(مرتل|مجود)/, "قرآن $1").replace(/(Murattal|Mujawwad)/, "Quran · $1"); } }); }
+
+  /* 4) العلامة المائية في الفيديوهات اتشالت */
+  try { svWatermarkCss = function () { return ""; }; } catch (e) {}
+  try { rmWatermark = function () {}; } catch (e) {}
+
+  window.__g235 = glossary;
+  let t = 0; const app = () => document.getElementById("app");
+  const run = () => { try { glossary(app()); quranLabel(); } catch (e) { console.warn("v235", e); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); setTimeout(run, 60); return o; };
+  new MutationObserver(() => { clearTimeout(t); t = setTimeout(run, 250); }).observe(document.body, { childList: true, subtree: true });
+  css(`.rmwm,#rmWm,[class*=wmark],.svwm{display:none!important;background:none!important}
+  #app .chip,#app .tabs button,#app [class*=tabs] button{white-space:normal;line-height:1.35}
+  #app .row>.chip,#app .row>button.chip{flex:0 1 auto;min-width:0}`);
+})();
+
+/* ================= v236: «تسجيل الدخول» و«حساب جديد» ظاهرين علطول جنب «حصة تجريبية» في الهيدر على الموبايل والتابلت والكمبيوتر (للزائر) ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function hdr() { const h = document.querySelector("#app .hdr"); if (!h) return; const logged = !!(state.auth && state.auth.user);
+    const trial = [...h.querySelectorAll("button.hide-sm")].find(b => /navigate\('booking'\)/.test(b.getAttribute("onclick") || ""));
+    const login = [...h.querySelectorAll("button.hide-sm")].find(b => /navigate\('login'\)/.test(b.getAttribute("onclick") || ""));
+    h.querySelectorAll("#su236").forEach(x => logged && x.remove());
+    if (logged || !trial) return;
+    if (login) { login.classList.add("keep219", "au236"); login.classList.remove("hide-sm"); if (login.previousElementSibling !== trial) trial.insertAdjacentElement("afterend", login); }
+    let su = h.querySelector("#su236"); if (!su) { su = document.createElement("button"); su.id = "su236"; su.className = "btn btn-o keep219 au236"; su.onclick = () => navigate("signup"); }
+    su.textContent = "✨ " + T("حساب جديد", "Sign up"); const after = login || trial; if (after.nextElementSibling !== su) after.insertAdjacentElement("afterend", su); }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { hdr(); } catch (e) { console.warn("v236", e); } return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { hdr(); } catch (e) {} }, 80); }).observe(document.body, { childList: true });
+  css(`#app .hdr .au236{display:inline-flex!important;white-space:nowrap}
+  #su236{border:2px solid #f59e0b!important;color:#b45309!important;background:transparent!important;font-weight:800}
+  [data-theme=dark] #su236,.dark #su236{color:#fbbf24!important}
+  @media(max-width:600px){#app .hdr .au236,#app .hdr .btn.keep219[onclick*=booking]{padding:.3rem .55rem!important;font-size:.74rem!important;min-height:0}}`);
+})();
+
+/* ================= v237: الترجمة التلقائية ماعادتش بتحط رسالة «MYMEMORY WARNING…» مكان الكلام لما الخدمة المجانية تخلص — بترجع للنص الأصلي، والنسخ الغلط اللي اتحفظت على الأجهزة بتتمسح ================= */
+(function () {
+  const BAD = /MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID LANGUAGE PAIR|PLEASE SELECT TWO DISTINCT LANGUAGES|YOU USED ALL AVAILABLE FREE TRANSLATIONS/i;
+  try { const _g = gtx; gtx = async function () { const r = await _g.apply(this, arguments); if (BAD.test(String(r || ""))) throw new Error("translate quota"); return r; }; } catch (e) {}
+  /* تنظيف الكاش على الجهاز */
+  function scrub(store) { try { for (let i = store.length - 1; i >= 0; i--) { const k = store.key(i); const v = store.getItem(k); if (!v || !BAD.test(v)) continue; try { const o = JSON.parse(v); const clean = x => { if (x && typeof x === "object") { for (const kk of Object.keys(x)) { if (typeof x[kk] === "string" && BAD.test(x[kk])) delete x[kk]; else clean(x[kk]); } } }; clean(o); store.setItem(k, JSON.stringify(o)); } catch (e) { store.removeItem(k); } } } catch (e) {} }
+  scrub(localStorage); scrub(sessionStorage);
+  /* لو اتعرضت قبل كده على الصفحة: ترجع للعربي الأصلي لحد ما الترجمة تشتغل */
+  const ORIG = new WeakMap();
+  function fix() { const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => BAD.test(n.nodeValue || "") ? 1 : 2 }); const L = []; let n; while ((n = tw.nextNode())) L.push(n); L.forEach(n => { const p = n.parentElement; const t = p && (p.getAttribute("data-ar") || p.getAttribute("title")); n.nodeValue = t && !BAD.test(t) ? t : ""; if (p && !n.nodeValue && p.closest("button")) { const b = p.closest("button"); if (/للمعلمين|teach/i.test(b.getAttribute("onclick") || "") || b.textContent.includes("👨‍🏫")) b.querySelectorAll("span").forEach(s => { if (!s.textContent.trim()) s.textContent = state.lang === "ar" ? "للمعلمين والأكاديميات" : "For teachers & academies"; }); } }); }
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(fix, 120); }).observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
+
+/* ================= v238: 👥 الحصة الجماعية (من Notion): سعر ثابت للجروب كله = ضعف الحصة الفردية (50 د) وبيتقسم على العدد — كل ما الجروب يكبر الفرد يدفع أقل · لحد 5 أفراد: حصة 50 د أو حصتين · أكتر من 5 (لحد 10): حصتين بس · لينك دعوة للأصحاب · لما يكمل اللي عمل الجروب يختار: واحد يدفع للكل ولا كل واحد يدفع نصيبه · المالك بيغيّر النسبة والسعر ويشوف كل الجروبات ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("grp238")) PAGES16.push("grp238");
+  const NF = () => setv("nf218", {}) || {}; const enabled = () => own() || !(NF().group238 && NF().group238.on === false);
+
+  /* السعر */
+  const CFG = () => Object.assign({ mult: 2, single: 0 }, setv("grp238", {}) || {});
+  function singleUSD() { const c = CFG(); if (+c.single > 0) return +c.single; try { const P = setv("plans", []) || []; const p = P.find(x => x.id === "pack4") || P.find(x => /^pack\d+$/.test(x.id)); if (p && p.price && p.lessons) return p.price / p.lessons; } catch (e) {} return 15; }
+  const totalUSD = sessions => Math.round(singleUSD() * CFG().mult * sessions * 100) / 100;
+  function fmt(usd) { try { const f = typeof myFactor === "function" ? myFactor() : 1; const v = usd * f; const to = displayCur(); const c = convert(v, "USD", to); return c == null ? money(v, "USD") : fmtCur(c, to); } catch (e) { return "$" + usd; } }
+
+  /* اللينك */
+  try { const m = location.search.match(/[?&]g=([A-Za-z0-9]{4,8})/); if (m) { localStorage.setItem("grp238", m[1].toUpperCase()); state.route = "grp238"; } } catch (e) {}
+  const code = () => state.grp238c || (localStorage.getItem("grp238") || "");
+  const link = c => `${location.origin}${location.pathname}?g=${c}#/grp238`;
+
+  const S = { size: 3, sessions: 1, track: "tajweed", note: "", g: null, busy: 0, mine: null, all: null };
+  async function load() { const c = code(); if (!c || !logged()) return; const { data, error } = await sb.rpc("grp238_get", { p_code: c }); S.g = error ? { err: error.message } : (data || { err: "not_found" }); render(); }
+  async function loadMine() { if (!logged()) return; const q = sb.from("grp238").select("code,size,sessions,status,members,created_at,owner_id,pay,track,total_usd").order("created_at", { ascending: false }).limit(own() ? 100 : 20); const { data } = await q; S.mine = data || []; render(); }
+
+  window.grp238 = {
+    set(k, v) { S[k] = v; if (k === "size" && +v > 5) S.sessions = 2; render(); },
+    async create() { if (!logged()) { localStorage.setItem("after238", "1"); return navigate("signup"); } if (S.busy) return; S.busy = 1; const tot = totalUSD(S.sessions); const { data, error } = await sb.rpc("grp238_create", { p_size: +S.size, p_sessions: +S.sessions, p_track: S.track, p_note: S.note, p_total: tot }); S.busy = 0; if (error) return toast(error.message, true); localStorage.setItem("grp238", data); state.grp238c = data; S.g = null; S.mine = null; load(); },
+    open(c) { state.grp238c = c; localStorage.setItem("grp238", c); S.g = null; render(); load(); },
+    async join() { if (!logged()) return navigate("signup"); const { data, error } = await sb.rpc("grp238_join", { p_code: code() }); if (error) return toast(/full/.test(error.message) ? T("الجروب اكتمل خلاص", "This group is already full") : error.message, true); S.g = data; toast("✅ " + T("انضميت للجروب", "You joined the group")); render(); },
+    async leave() { if (!confirm(T("تخرج من الجروب؟", "Leave this group?"))) return; await sb.rpc("grp238_leave", { p_code: code() }); localStorage.removeItem("grp238"); state.grp238c = ""; S.g = null; render(); },
+    async pay(p) { const { data, error } = await sb.rpc("grp238_setpay", { p_code: code(), p_pay: p }); if (error) return toast(error.message, true); S.g = data; render(); },
+    copy() { const l = link(code()); try { navigator.clipboard.writeText(l); toast("✅ " + T("اتنسخ اللينك", "Link copied")); } catch (e) { prompt("", l); } },
+    wa() { const g = S.g || {}; const msg = T(`تعالى ننضم لحصة جماعية في أكاديمية إتقان (${g.size} أفراد) — السعر بيتقسم علينا: `, `Join our group lesson at Itqan Academy (${g.size} people) — we split the price: `) + link(code()); open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank"); },
+    newOne() { localStorage.removeItem("grp238"); state.grp238c = ""; S.g = null; render(); },
+    async cfg() { const c = CFG(); const m = prompt(T("سعر الجروب = كام ضعف الحصة الفردية 50 د؟", "Group price = how many times a single 50-min lesson?"), c.mult); if (m == null) return; const s = prompt(T("سعر الحصة الفردية 50 د بالدولار (فاضي = من باقة 4 حصص)", "Single 50-min lesson price in USD (empty = from the 4-lesson pack)"), c.single || ""); if (s == null) return; await saveSetting16("grp238", { mult: +m || 2, single: +s || 0 }); render(); },
+    async status(c, st) { const { error } = await sb.from("grp238").update({ status: st }).eq("code", c); if (error) return toast(error.message, true); S.mine = null; loadMine(); }
+  };
+
+  const TR = [["quran", "📖", "حفظ القرآن", "Quran memorization"], ["tajweed", "🕌", "التجويد", "Tajweed"], ["maqamat", "🎼", "المقامات", "Maqamat"], ["qiraat", "📜", "القراءات", "Qira'at"], ["arabic", "✍️", "العربي", "Arabic"], ["islamic", "📚", "العلوم الإسلامية", "Islamic sciences"]];
+  const trName = k => { const t = TR.find(x => x[0] === k); return t ? t[1] + " " + (AR() ? t[2] : t[3]) : k || ""; };
+  const steps = n => `<div class="st238">${[T("اختار العدد", "Pick size"), T("ادعي أصحابك", "Invite friends"), T("اختاروا الدفع", "Choose payment"), T("نحدد الميعاد", "We schedule")].map((x, i) => `<span class="${i < n ? "ok" : i === n ? "on" : ""}"><b>${i + 1}</b>${x}</span>`).join("")}</div>`;
+
+  function createView() { const sz = +S.size, ses = sz > 5 ? 2 : +S.sessions; const tot = totalUSD(ses); const per = tot / sz; const single = singleUSD();
+    return `${steps(0)}<div class="card"><h3>👥 ${T("كام واحد في الجروب؟", "How many people?")}</h3><div class="sz238">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${n === sz ? "on" : ""}" onclick="grp238.set('size',${n})">${n}</button>`).join("")}</div>
+      <h3 style="margin-top:1rem">⏱️ ${T("مدة الحصة", "Lesson length")}</h3><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="chip ${ses === 1 ? "on" : ""}" ${sz > 5 ? "disabled" : ""} onclick="grp238.set('sessions',1)">${T("حصة واحدة 50 دقيقة", "One 50-min lesson")}</button><button class="chip ${ses === 2 ? "on" : ""}" onclick="grp238.set('sessions',2)">${T("حصتين (50 + 50 دقيقة)", "Two lessons (50 + 50 min)")}</button></div>${sz > 5 ? `<p class="xs muted">${T("أكتر من 5 أفراد لازم حصتين علشان كل واحد ياخد وقته.", "More than 5 people needs two lessons so everyone gets a turn.")}</p>` : ""}
+      <h3 style="margin-top:1rem">🎯 ${T("المسار", "Track")}</h3><div class="row" style="gap:.4rem;flex-wrap:wrap">${TR.map(t => `<button class="chip ${S.track === t[0] ? "on" : ""}" onclick="grp238.set('track','${t[0]}')">${t[1]} ${AR() ? t[2] : t[3]}</button>`).join("")}</div>
+      <label class="sm" style="display:block;margin-top:.8rem">${T("ملاحظة (اختياري): المستوى، الأعمار، المواعيد المناسبة", "Note (optional): level, ages, good times")}<textarea class="in" rows="2" oninput="S238note(this.value)">${esc(S.note)}</textarea></label></div>
+      <div class="card pr238"><div><small class="muted">${T("سعر الجروب كله (ثابت)", "Whole-group price (fixed)")}</small><b>${fmt(tot)}</b><small class="muted">${ses === 2 ? T("حصتين", "2 lessons") : T("حصة 50 د", "one 50-min lesson")}</small></div><div class="eq">÷ ${sz}</div><div class="per"><small class="muted">${T("على كل واحد", "Each person pays")}</small><b>${fmt(per)}</b><small class="ok">${T(`أقل من الحصة الفردية (${fmt(single * ses)})`, `Less than a private lesson (${fmt(single * ses)})`)}</small></div></div>
+      <p class="xs muted" style="text-align:center">💡 ${T("كل ما الجروب يكبر، نصيب كل واحد يقل.", "The bigger the group, the less each person pays.")}</p>
+      <button class="btn btn-p btn-lg btn-full" onclick="grp238.create()">✨ ${T("أنشئ الجروب وخد لينك الدعوة", "Create the group & get the invite link")}</button>`; }
+
+  function groupView() { const g = S.g; if (!g) { setTimeout(load, 10); return loadingBox(); } if (g.err) return `<div class="card">⚠️ ${T("اللينك ده مش شغال أو الجروب اتلغى.", "This link isn't valid or the group was cancelled.")} <button class="btn btn-o xs" onclick="grp238.newOne()">${T("اعمل جروب جديد", "Create a new group")}</button></div>`;
+    const n = g.count || 0, full = n >= g.size; const tot = +g.total_usd || totalUSD(g.sessions); const per = tot / g.size; const stp = !full ? 1 : g.status === "paying" || g.status === "paid" ? 3 : 2;
+    let body = `${steps(stp)}<div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>👥 ${T("جروب", "Group")} ${esc(g.code)} · ${esc(trName(g.track))}</h3><span class="badge">${n}/${g.size}</span></div><div class="pb238"><i style="width:${Math.round(n / g.size * 100)}%"></i></div>
+      <div class="mb238">${[...Array(g.size)].map((_, i) => `<span class="${i < n ? "on" : ""}">${i < n ? "👤 " + esc((g.names || [])[i] || "—") : "＋"}</span>`).join("")}</div>
+      <p class="sm">${g.sessions === 2 ? T("حصتين (50 + 50 د)", "Two lessons (50 + 50 min)") : T("حصة 50 د", "One 50-min lesson")} · ${T("سعر الجروب", "Group price")} <b>${fmt(tot)}</b> · ${T("على كل واحد", "each")} <b>${fmt(per)}</b></p>${g.note ? `<p class="xs muted">📝 ${esc(g.note)}</p>` : ""}</div>`;
+    if (!g.joined) return body + (full ? `<div class="card">${T("الجروب ده اكتمل.", "This group is full.")}</div>` : `<button class="btn btn-p btn-lg btn-full" onclick="grp238.join()">🤝 ${T("انضم للجروب", "Join the group")}</button>`);
+    if (!full) body += `<div class="card"><h3>📨 ${T("ادعي أصحابك", "Invite your friends")}</h3><p class="sm muted">${T(`فاضل ${g.size - n} — ابعتلهم اللينك ده، أول ما يدخلوا ويضغطوا «انضم» بيتضافوا هنا.`, `${g.size - n} spots left — send them this link.`)}</p><div class="lk238"><input class="in" readonly value="${esc(link(g.code))}" onclick="this.select()"><button class="btn btn-p" onclick="grp238.copy()">📋 ${T("انسخ", "Copy")}</button><button class="btn btn-o" onclick="grp238.wa()">💬 WhatsApp</button></div></div>`;
+    else if (g.is_owner && g.status === "full") body += `<div class="card"><h3>💳 ${T("الجروب اكتمل! هتدفعوا إزاي؟", "The group is full! How will you pay?")}</h3><div class="pay238"><button onclick="grp238.pay('one')"><b>🙋 ${T("أنا هدفع للكل", "I'll pay for everyone")}</b><span>${fmt(tot)}</span></button><button onclick="grp238.pay('each')"><b>👥 ${T("كل واحد يدفع نصيبه", "Everyone pays their share")}</b><span>${fmt(per)} ${T("للفرد", "each")}</span></button></div></div>`;
+    else if (g.status === "full") body += `<div class="card">⏳ ${T("الجروب اكتمل — مستنيين اللي عمل الجروب يختار طريقة الدفع.", "Group is full — waiting for the organiser to choose how to pay.")}</div>`;
+    if (g.status === "paying" || g.status === "paid" || g.status === "scheduled") { const mine = g.pay === "one" ? (g.is_owner ? tot : 0) : per;
+      body += `<div class="card"><h3>✅ ${g.pay === "one" ? T("اللي عمل الجروب هيدفع للكل", "The organiser pays for everyone") : T("كل واحد هيدفع نصيبه", "Everyone pays their share")}</h3>${mine ? `<p>${T("المطلوب منك", "Your amount")}: <b style="font-size:1.3rem">${fmt(mine)}</b></p><p class="sm muted">${T("الأكاديمية هتتواصل معاكم تأكد الميعاد وتبعت بيانات الدفع (InstaPay · Vodafone Cash · PayPal). الحصة بتتحجز بعد الدفع.", "The academy will contact you to confirm the time and send payment details (InstaPay · Vodafone Cash · PayPal).")}</p>` : `<p class="sm">${T("مش مطلوب منك تدفع حاجة — اللي عمل الجروب هيدفع.", "Nothing to pay — the organiser is paying.")}</p>`}<p class="sm">${T("الحالة", "Status")}: <b>${esc(g.status === "paid" ? T("اتدفع", "Paid") : g.status === "scheduled" ? T("الميعاد اتحدد", "Scheduled") : T("مستني الدفع", "Awaiting payment"))}</b></p></div>`; }
+    body += `<div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem">${!g.is_owner && (g.status === "open" || g.status === "full") ? `<button class="btn btn-o xs" onclick="grp238.leave()">🚪 ${T("اخرج من الجروب", "Leave group")}</button>` : ""}<button class="btn btn-o xs" onclick="grp238.newOne()">➕ ${T("جروب جديد", "New group")}</button></div>`;
+    return body; }
+
+  function ownerView() { if (!own()) return ""; if (S.mine == null) { setTimeout(loadMine, 10); return ""; } const c = CFG();
+    const st = ["open", "full", "paying", "paid", "scheduled", "cancelled"]; const nm = { open: T("مفتوح", "Open"), full: T("اكتمل", "Full"), paying: T("مستني الدفع", "Awaiting payment"), paid: T("اتدفع", "Paid"), scheduled: T("اتحدد", "Scheduled"), cancelled: T("اتلغى", "Cancelled") };
+    return `<details class="card" style="margin-top:1rem"><summary class="b">🔒 ${T("للمالك: كل الجروبات والإعدادات", "Owner: all groups & settings")} (${S.mine.length})</summary><p class="sm">${T("سعر الجروب", "Group price")} = <b>${c.mult}×</b> ${T("الحصة الفردية", "a single lesson")} (${fmt(singleUSD())}) <button class="btn btn-o xs" onclick="grp238.cfg()">✏️ ${T("غيّر", "Change")}</button></p>
+      <table class="tbl196">${S.mine.map(g => `<tr><td><a href="#" onclick="grp238.open('${g.code}');return false">${g.code}</a></td><td>${(g.members || []).length}/${g.size}</td><td>${g.sessions === 2 ? "2×50" : "50"}</td><td>${esc(trName(g.track))}</td><td>${g.pay === "one" ? T("واحد للكل", "One pays") : T("كل واحد", "Each")}</td><td><select class="in" style="width:auto" onchange="grp238.status('${g.code}',this.value)">${st.map(s => `<option value="${s}" ${s === g.status ? "selected" : ""}>${nm[s]}</option>`).join("")}</select></td></tr>`).join("") || `<tr><td class="muted">${T("لسه مفيش", "None yet")}</td></tr>`}</table></details>`; }
+
+  function page() { if (!enabled()) { state.route = "home"; return null; } const c = code();
+    const head = pageWrap("👥", T("حصة جماعية", "Group lesson"), T("سعر واحد ثابت للجروب كله وبيتقسم عليكم — كل ما تزيدوا كل واحد يدفع أقل", "One fixed price for the whole group, split between you — more people, less each"), `${c && logged() ? groupView() : createView()}${ownerView()}`, 820);
+    return head; }
+  window.S238note = v => { S.note = v; };
+
+  /* لينكات للحصة الجماعية من صفحة الأسعار والرئيسية */
+  function hooks() { const app = document.getElementById("app"); if (!app || !enabled()) return;
+    if (state.route === "pricing" && !app.querySelector("#cta238")) { const tb = app.querySelector(".ptabs"); const h = [...app.querySelectorAll("h2,h3")].find(x => /👥/.test(x.textContent)); const at = tb || (h && (h.closest(".card,section") || h)); if (at) at.insertAdjacentHTML(tb ? "afterend" : "beforebegin", `<div id="cta238" class="card cta238"><div><b>👥 ${T("أنشئ حصة جماعية مع أصحابك", "Create a group lesson with friends")}</b><p class="sm muted">${T("سعر ثابت للجروب وبيتقسم عليكم — لحد 10 أفراد، ولينك دعوة بدوسة.", "Fixed group price split between you — up to 10 people, invite link in one tap.")}</p></div><button class="btn btn-p" onclick="go16('grp238')">✨ ${T("ابدأ", "Start")}</button></div>`); }
+    app.querySelectorAll("a[href*='wa.me']").forEach(a => { if (a.__g238 || !/friends|أصحاب|group/i.test(decodeURIComponent(a.href))) return; a.__g238 = 1; a.insertAdjacentHTML("beforebegin", `<button class="btn btn-p" onclick="go16('grp238')">👥 ${T("أنشئ حصة جماعية", "Create a group lesson")}</button> `); }); }
+
+  const _r = render; render = function () { if (state.route === "grp238") { const b = page(); if (b) { show(b); return; } } const o = _r.apply(this, arguments); try { hooks(); } catch (e) { console.warn("v238", e); } return o; };
+  /* بعد التسجيل يرجع يكمّل الجروب */
+  setInterval(() => { try { if (logged() && localStorage.getItem("after238")) { localStorage.removeItem("after238"); go16("grp238"); } if (logged() && code() && state.route !== "grp238" && /[?&]g=/.test(location.search)) { history.replaceState(null, "", location.pathname + "#/grp238"); go16("grp238"); } } catch (e) {} }, 1500);
+  css(`.st238{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin-bottom:.8rem}.st238 span{display:flex;align-items:center;gap:.3rem;font-size:.8rem;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--line);color:var(--muted)}.st238 b{display:inline-grid;place-items:center;width:1.3rem;height:1.3rem;border-radius:50%;background:var(--line);color:var(--fg);font-size:.7rem}.st238 .on{border-color:var(--accent);color:var(--fg);font-weight:700}.st238 .on b,.st238 .ok b{background:var(--accent);color:#fff}.st238 .ok{color:var(--accent)}
+  .sz238{display:flex;gap:.35rem;flex-wrap:wrap}.sz238 button{width:3rem;height:3rem;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:800 1.1rem inherit;cursor:pointer}.sz238 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .pr238{display:grid;grid-template-columns:1fr auto 1fr;gap:.6rem;align-items:center;text-align:center}.pr238>div{display:flex;flex-direction:column;gap:.15rem}.pr238 b{font-size:1.5rem}.pr238 .per b{color:var(--accent);font-size:1.8rem}.pr238 .eq{font-size:1.3rem;font-weight:800;color:var(--muted)}.pr238 .ok{color:#16a34a;font-size:.75rem}
+  .pb238{height:10px;border-radius:999px;background:var(--bg);overflow:hidden;margin:.5rem 0}.pb238 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .mb238{display:flex;gap:.35rem;flex-wrap:wrap;margin:.4rem 0}.mb238 span{padding:.3rem .6rem;border-radius:999px;border:1px dashed var(--line);font-size:.8rem;color:var(--muted)}.mb238 span.on{border-style:solid;border-color:var(--accent);color:var(--fg)}
+  .lk238{display:flex;gap:.35rem;flex-wrap:wrap}.lk238 input{flex:1;min-width:12rem;direction:ltr}
+  .pay238{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}@media(max-width:560px){.pay238{grid-template-columns:1fr}.pr238{grid-template-columns:1fr}}.pay238 button{display:flex;flex-direction:column;gap:.3rem;padding:1rem;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;font:inherit}.pay238 button:hover{border-color:var(--accent)}.pay238 span{font-size:1.3rem;font-weight:800;color:var(--accent)}
+  .cta238{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;border:2px solid var(--accent)}`);
+})();
+
+/* ================= v239: صفحة كل مقام (أساسي وفرعي) — اتشالت تبويبات «الآهات» و«خمّن المقام» و«تمارين الصوت» (خمّن المقام والتمارين مكانهم «مساحتك الصوتية») · «التحويل» في المقامات الأساسية بس · «🎤 مارس المقام بصوتك» بقى تبويب بيفتح جوه نفس الصفحة ومابيوديكش مكان تاني · التبويبات أول حاجة في الصفحة ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const MAIN = new Set(["rast", "bayati", "saba", "hijaz", "nahawand", "sikah", "kurd", "ajam"]);
+  const GONE = new Set(["aah", "guess", "ex165"]);
+  if (typeof maqamOne !== "function") return;
+  const _mo = maqamOne;
+  maqamOne = function (cur) {
+    const mid = ((cur && cur.meta) || {}).maqam; const main = MAIN.has(mid);
+    if (GONE.has(state.mqTab) || (!main && state.mqTab === "mod")) state.mqTab = "info";
+    let h = _mo.apply(this, arguments);
+    h = h.replace(/<div class="motabs">([\s\S]*?)<\/div>/, (m, inner) => {
+      let x = inner.replace(/<button[^>]*onclick="state\.mqTab='(\w+)'[^"]*"[^>]*>[\s\S]*?<\/button>/g, (b, k) => (GONE.has(k) || (!main && k === "mod")) ? "" : b);
+      if (!/mqTab='vtest'/.test(x)) { const btn = `<button class="${state.mqTab === "vtest" ? "on" : ""}" onclick="state.mqTab='vtest';try{aahStop()}catch(e){};render()">🎤 ${T("مارس المقام بصوتك", "Practise with your voice")}</button>`; x = x.replace(/(<button[^>]*mqTab='info'[\s\S]*?<\/button>)/, "$1" + btn); }
+      return `<div class="motabs mt239">${x}</div>`; });
+    return h;
+  };
+  /* أي زرار «مارس المقام بصوتك» تاني بيودّي لصفحة تانية: يفتح التبويب جوه الصفحة */
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#app button, #app a"); if (!b || b.closest(".motabs")) return; if (!/مارس المقام|Practi[sc]e (the maqam )?with your voice/i.test(b.textContent || "")) return; if (!document.querySelector("#app .motabs")) return; e.preventDefault(); e.stopPropagation(); state.mqTab = "vtest"; render(); setTimeout(() => { const t = document.querySelector("#app .motabs"); t && t.scrollIntoView({ block: "start" }); }, 80); }, true);
+  /* التبويبات أول حاجة: بتتنقل فوق محتوى القسم */
+  function top() { const t = document.querySelector("#app .motabs.mt239"); if (!t || t.__t239) return; t.__t239 = 1; const card = t.parentElement; const h1 = document.querySelector("#app h1"); const host = h1 && (h1.closest(".wrap") || h1.parentElement); if (!host || host.contains(t) && host.firstElementChild === t) return; }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { top(); } catch (e) {} return o; };
+  css(`.motabs.mt239{position:sticky;top:0;z-index:5;background:var(--bg);padding:.4rem 0;flex-wrap:wrap}`);
+})();
+
+/* ================= v240: المصحف الملوّن — ضغطة واحدة على الكلمة = كارت صغير فيه الكلمة والآية (🔊 الكلمة · 🎧 الآية بصوت الحصري) · كليك يمين أو دبل كليك على الكلمة = شريط الأخطاء (للمعلم والطالب) ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  let pop = null; const close = () => { pop && pop.remove(); pop = null; };
+  function info(w) { close(); const vk = w.dataset.v || ""; const [s, a] = vk.split(":").map(Number); const i = +w.dataset.i || 0; const word = (w.innerText || "").trim();
+    let ayah = ""; try { const ay = w.closest(".ay") || document.getElementById("tay_" + a); if (ay) ayah = ay.innerText.replace(/\s+/g, " ").trim().slice(0, 400); } catch (e) {}
+    const sn = (typeof SURAHS !== "undefined" && SURAHS[s - 1]) || s;
+    pop = document.createElement("div"); pop.id = "wp240"; pop.innerHTML = `<button class="x" title="✕">✕</button><div class="w notr" lang="ar">${esc(word)}</div><div class="ref">${T("سورة", "Surah")} ${esc(String(sn))} · ${T("آية", "Ayah")} ${a || ""}</div>${ayah ? `<div class="ay notr" lang="ar">${esc(ayah)}</div>` : ""}<div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:center"><button class="btn btn-o" data-p="w">🔊 ${T("الكلمة", "Word")}</button><button class="btn btn-o" data-p="a">🎧 ${T("الآية (الحصري)", "Ayah (Husary)")}</button><button class="btn btn-o" data-p="m">✏️ ${T("علّم خطأ", "Mark a mistake")}</button></div><small class="muted">${T("كليك يمين أو دبل كليك على الكلمة = شريط الأخطاء علطول", "Right-click or double-click a word = mistakes bar")}</small>`;
+    document.body.appendChild(pop); const r = w.getBoundingClientRect(); const top = r.bottom + 8 + pop.offsetHeight > innerHeight ? r.top - pop.offsetHeight - 8 : r.bottom + 8; pop.style.top = Math.max(8, top) + "px"; pop.style.left = Math.min(innerWidth - pop.offsetWidth - 8, Math.max(8, r.left + r.width / 2 - pop.offsetWidth / 2)) + "px";
+    pop.onclick = e => { const b = e.target.closest("button"); if (!b) return; if (b.classList.contains("x")) return close(); try { if (b.dataset.p === "w") play196(wbwUrl(s, a, i + 1)); if (b.dataset.p === "a") play196(eaUrl("Husary_128kbps", vk)); if (b.dataset.p === "m") { close(); mmOpen(vk, i, word); } } catch (err) { console.warn(err); } }; }
+  const W = e => e.target.closest && e.target.closest(".tj2 .w[data-v]");
+  addEventListener("click", e => { const w = W(e); if (!w) { if (pop && !e.target.closest("#wp240")) close(); return; } if (e.detail > 1) return; e.preventDefault(); e.stopImmediatePropagation(); clearTimeout(w.__t240); w.__t240 = setTimeout(() => info(w), 230); }, true);
+  const mistake = e => { const w = W(e); if (!w) return; e.preventDefault(); e.stopImmediatePropagation(); clearTimeout(w.__t240); close(); try { mmOpen(w.dataset.v, +w.dataset.i, (w.innerText || "").trim()); } catch (err) {} };
+  addEventListener("dblclick", mistake, true); addEventListener("contextmenu", mistake, true);
+  addEventListener("scroll", () => close(), { passive: true });
+  css(`#wp240{position:fixed;z-index:60000;width:min(360px,92vw);background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 34px rgba(0,0,0,.2);padding:.7rem .8rem;display:flex;flex-direction:column;gap:.4rem;text-align:center}
+  #wp240 .x{position:absolute;top:.3rem;inset-inline-end:.4rem;border:0;background:none;cursor:pointer;color:var(--muted)}#wp240 .w{font:2.2rem/1.6 'Amiri Quran','Amiri',serif}#wp240 .ref{font-size:.8rem;color:var(--muted)}#wp240 .ay{font:1.15rem/2 'Amiri Quran','Amiri',serif;max-height:6.5rem;overflow:auto;background:var(--bg);border-radius:12px;padding:.3rem .5rem}`);
 })();
 
 // بدء التشغيل
