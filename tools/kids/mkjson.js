@@ -1,0 +1,3 @@
+const n=process.argv[2];const s=require('fs').readFileSync('/home/claude/v254.js','utf8'); const a=s.indexOf('const FR ='); const b=s.indexOf('window.franco254'); eval(s.slice(a,b)); const F0=franco; const fx=t=>F0(t).replace(/\b(bi|li|fa|wa|ka)al([A-Za-z])\2/g,'$1$2-$2').replace(/\b(bi|li|fa|wa|ka)al(?=[A-Za-z0-9])/g,'$1l-');
+const U=require('/home/claude/data/kids'+n+'.js'); const out=U.map(([t,ic,W,D,G])=>[t,ic,W.map(([ar,en,em])=>[ar,franco(ar),en,em]),D.map(([w,ar,en])=>[w,ar,franco(ar),en]),G]);
+require('fs').writeFileSync('/home/claude/data/kids'+n+'.json',JSON.stringify(out)); console.log(n,out.length,out[0][3][1][2]);
