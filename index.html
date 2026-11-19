@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-19-v259";
+const UI_VERSION = "2026-11-19-v263";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -32378,6 +32378,10 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
     ["v255", T("محتوى طلاب الأكاديمية (المسابقة)", "Students' showcase (contest)"), [["v255.sc", T("الصفحة والرفع والتقييم", "Page, uploads, grading")], ["v255.home", T("كارت المسابقة في الرئيسية", "Contest card on home")]]],
     ["v256", T("بيانات الاشتراك مع مدرس", "Teacher-plan details"), [["v256.pref", T("طالب/ولي أمر + معلم أو معلمة", "Student/parent + male or female teacher")]]],
     ["v258", T("عربي الأطفال — المستويات 1 لـ9", "Kids Arabic — levels 1–9"), [["v258.kids", T("المستويات والاختبار التحديدي وفتح المستوى للطالب", "Levels, placement test, unlock per student")]]],
+    ["v260", T("قسم الأدوات الجديد + رحلتي مع معلمي", "New Tools + My journey"), [["v260.tools", T("صفحة الأدوات الجديدة والتحكم الكامل والقفل (مفتوح/سجّل الأول/مدفوع)", "New tools page, full control & access")], ["v260.myspace", T("«مساحتي» للمالك بس + «رحلتي مع معلمي/مع طلابي»", "My space owner-only + My journey")]]],
+    ["v261", T("الشريط اللي فوق ولوحة التحكم", "Top bar & control panel"), [["v261.top", T("شريط لوحتي فوق + ترتيب الشريط", "Dashboard links in top bar + arrange")], ["v261.panel", T("لوحة التحكم (الملف + الإعدادات)", "Control panel (profile + settings)")]]],
+    ["v262", T("المقامات والقراءات (بنود صغيرة)", "Maqamat & qiraat (small items)"), [["v262.tuner", T("المُوالف: B2/C4 + خط صوت ناعم", "Tuner: letter names + smooth trace")], ["v262.ladder", T("سلم المقام بمسافات متناسبة + أوكتاف فوق/تحت", "Proportional ladder + octaves")], ["v262.qiraat", T("القراءات قسم واحد + شيل مصحف الروايات نص وصوت", "Qiraat single section")], ["v262.links", T("العلوم الإسلامية جوه المنهج والنحو", "Links in ilm & nahw")]]],
+    ["v263", T("الفتح بالتايمر والساعة المجانية", "Timed access & free hour"), [["v263.timer", T("فتح بمدة يبدأ بالتفعيل + تايمر", "Timed access from activation + timer")], ["v263.free", T("الساعة المجانية الشهرية في «احصل على اشتراك مجاني»", "Monthly free hour")]]],
     ["v259", T("العامية المصرية تفضل بالعامية", "Egyptian Arabic stays colloquial"), [["v259.eg", T("صفحة العامية واختبار مستواها مايتحوّلوش للفصحى", "Egyptian page & its level test are not converted to Fusha")]]],
     ["v257", T("Notion التالت — أول دفعة", "Notion #3 — batch 1"), [["v257.bar", T("الشريط التاني ولوحتي من غير الحاجات اللي اتشالت", "Second bar & dashboard strip cleanup")], ["v257.home", T("ترتيب الرئيسية (أهلاً بك فوق، والتحدي تحت الأقسام)", "Home order (welcome on top, challenge below)")], ["v257.mouth", T("شيل «شكل الفم مع الحركات»", "Remove «Mouth shapes»")]]]
   ];
@@ -32660,6 +32664,442 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
   /* لازم يشتغل قبل v208: v208 بيستنى requestAnimationFrame، واحنا بنعلّم العناصر فورًا */
   new MutationObserver(ms => { const added = []; ms.forEach(m => m.addedNodes.forEach(n => added.push(n))); try { apply(added); } catch (e) {} }).observe(document.body, { childList: true, subtree: true });
   const _r = render; render = function () { const o = _r.apply(this, arguments); try { apply(); } catch (e) {} return o; };
+})();
+
+/* ================= v260: قسم «الأدوات» الجديد (Notion 3) — نفس شكل «مساحتي» · الترتيب: المقامات «للقرآن والإنشاد» ← تكلّم عربي ← القراءات العشر ← الأذكار ← … · كل أداة: مفتوحة / «سجّل الأول» (تظهر للزائر وبيقفلها بـ X ويكمّل) / «مدفوع — اشترك في محتوى المنصة» · تحكم كامل للمالك: أقسام، أسماء، أيقونات، ترتيب، نقل، 7 طرق عرض بمعاينة، طريقة الفتح · «مساحتي» للمالك بس + زرار «⬆️ ارفعها للأدوات» على كل حاجة فيها · الطالب: «🧭 رحلتي مع معلمي» والمعلم: «👨‍🏫 مع طلابي» (فيها كل حاجة بين المعلم والطالب) ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const R = () => { try { return role(); } catch (e) { return null; } };
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); } };
+  const J = v => E(JSON.stringify(v));
+
+  /* ---------- الأدوات (الافتراضي بالترتيب اللي في Notion) ---------- */
+  /* go: لينك (#/…) أو كود JS · rt: الصفحات اللي الأداة بتغطيها (عشان القفل) · acc: الافتراضي */
+  const kind = k => `t260.kind('${k}')`;
+  const DEF = [
+    ["maqam", "🎼", "تعلّم المقامات الصوتية — للقرآن والإنشاد", "Vocal maqamat — for Quran & nasheed", "سلالم وآهات لكل مقام · المُوالف · التحويل", "#/d/maqamat", ["d/maqamat", "tuner", "tahwil", "mqchallenge"], "paid", "#b45309"],
+    ["arabic", "🗣️", "تكلّم عربي", "Speak Arabic", "الفصحى والعامية المصرية وعربي الأطفال وكل أقسام العربي", "#/lang", ["lang", "fusha", "egyptian", "kidsar", "arabiya"], "paid", "#0d9488"],
+    ["qiraat", "📜", "القراءات العشر", "The ten Qira'at", "القراء ورواتهم — مفتوحة كاملة", "#/qiraat", ["qiraat", "qiraat10"], "open", "#7c3aed"],
+    ["adhkar", "📿", "الأذكار", "Adhkar", "الصباح والمساء والنوم والصلاة", "#/adhkar", ["adhkar"], "login", "#15803d"],
+    ["tasmee", "🎤", "سمّع من غير مصحف", "Recite without a mushaf", "اقرا بصوتك والموقع يصحّحلك", "#/tasmee", ["tasmee"], "login", "#db2777"],
+    ["ilm", "🎓", "منهج العلوم الشرعية", "Islamic sciences curriculum", "عقيدة وفقه وحديث وسيرة — وفيه قسم العلوم الإسلامية كامل", "#/ilm", ["ilm"], "login", "#0369a1"],
+    ["nahw", "📐", "النحو والصرف والبلاغة من الصفر للقمة", "Grammar, morphology & rhetoric", "من أول حرف لحد البلاغة", "#/nahw", ["nahw"], "login", "#9333ea"],
+    ["tajcolor", "🖍️", "المصحف الملوّن بأحكام التجويد", "Colour-coded tajweed mushaf", "كل حكم بلونه", kind("tajcolor"), [], "login", "#dc2626"],
+    ["makharij", "👄", "مخارج الحروف وصفاتها", "Articulation points", "مخطط لكل حرف بالصوت", "#/makharij", ["makharij"], "login", "#ea580c"],
+    ["matn", "📜", "تحفة الأطفال والجزرية", "Tuhfat al-Atfal & Jazariyyah", "المتن بيت بيت بالصوت", "#/matn", ["matn"], "login", "#a16207"],
+    ["hifz", "📖", "خطط حفظ ذكية", "Smart memorisation plans", "ورد جديد + مراجعة متباعدة", "#/hifz", ["hifz"], "login", "#16a34a"],
+    ["listen", "🎬", "استمع للقرآن مع فيديو", "Listen with video", "كل القرّاء والآية بتظهر وهي بتتقري", kind("surah_gallery"), [], "login", "#0891b2"],
+    ["prophets", "🌿", "قصص الأنبياء والسيرة", "Prophets & Seerah", "كل نبي وكل حدث", kind("prophets"), [], "login", "#15803d"],
+    ["stories", "🎨", "قصص مصوّرة", "Illustrated stories", "قصص قصيرة للأحكام والسور", "#/stories", ["stories"], "login", "#e11d48"],
+    ["khatma", "🤝", "ختمة العيلة", "Family khatma", "قسّموا الختمة على بعض", "#/khatma", ["khatma"], "login", "#0d9488"],
+    ["arbaeen", "📗", "الأربعون النووية", "The Forty Hadith", "الحديث وشرحه بالصوت", "#/arbaeen", ["arbaeen"], "login", "#166534"],
+    ["asma", "✨", "أسماء الله الحسنى", "The 99 Names", "الاسم ومعناه وبطاقات", "#/asma", ["asma"], "login", "#ca8a04"],
+    ["ayahcard", "🖼️", "اعمل كارت آية وشاركه", "Make & share an ayah card", "اختار الآية والخلفية", "#/ayahcard", ["ayahcard"], "login", "#4f46e5"],
+    ["prayer", "🕌", "مواقيت الصلاة", "Prayer times", "حسب مكانك وبتوقيتك", "#/prayer", ["prayer"], "login", "#0f766e"],
+    ["placement", "🧭", "اعرف مستواك", "Find your level", "اختبار تحديد مستوى", "#/placement", ["placement", "level"], "login", "#2563eb"],
+    ["alam", "👥", "أعلام الإسلام", "Great figures of Islam", "الصحابة والصحابيات وآل البيت", "#/alam", ["alam"], "login", "#7c2d12"],
+    ["maqamgame", "🎧", "خمّن المقام", "Guess the maqam", "اسمع تلاوة وخمّن المقام", "#/maqam-game", ["maqam-game"], "paid", "#b45309"],
+    ["wb", "🖍️", "السبورة (الوايت بورد)", "Whiteboard", "لوحة لانهائية — مجانية للكل", "go16('wb243')", [], "open", "#2563eb"],
+    ["books", "📚", "الكتب التفاعلية", "Interactive books", "", "go16('books192')", ["books192"], "login", "#0e7490"],
+    ["kutub", "🖼️", "الكتب المصوّرة", "Illustrated books", "", "go16('kutub199')", ["kutub199"], "login", "#9d174d"]
+  ].map(a => ({ id: a[0], ic: a[1], ar: a[2], en: a[3], d: a[4], go: a[5], rt: a[6], acc: a[7], c: a[8] }));
+  /* حاجات تانية ممكن المالك يضيفها (من الأدوات القديمة ومن «مساحتي») — مش بتتمسح، بس مش ظاهرة لحد ما يضيفها */
+  const MORE = [["level", "🎯", "حدد مستواك في كل قسم", "#/level"], ["tjb", "📘", "التجويد المفصّل", "#/tjb"], ["reading", "🔤", "تعلّم القراءة من الصفر", "#/reading"], ["tahwil", "🔀", "التحويل من مقام لمقام", "#/tahwil"], ["mqchallenge", "🏆", "تحدّي المقام", "#/mqchallenge"], ["fusha", "📗", "العربية الفصحى", "#/fusha"], ["egyptian", "🇪🇬", "العامية المصرية", "#/egyptian"], ["kidsmushaf", "🧒", "المصحف المعلّم للأطفال", "#/kidsmushaf"], ["kidsar", "🧒", "عربي للأطفال", "#/kidsar"], ["tuner", "🎙️", "المُوالف: صوتك على المقام", "#/tuner"], ["tjjourney", "🧭", "رحلة التجويد خطوة بخطوة", "#/d/tajweed"], ["tafsir", "📚", "تفسير بلغتك", "#/library"], ["nooraniya", "🔤", "القاعدة النورانية", "#/nooraniya"], ["arabiya", "📗", "العربية الفصحى — المنهج المتكامل", "#/arabiya"],
+    ["srs", "🔁", "مراجعة المحفوظ (مثل Anki)", "go16('srs244')"], ["pts", "⭐", "النقاط والمستويات والشارات", "go16('pts244')"], ["wird", "📖", "الورد اليومي", "go16('wird233')"], ["khatmaplan", "🗓️", "خطة ختمة", "go16('khatma233')"], ["kamil", "🧩", "كمّل الآية", "go16('kamil233')"], ["streak", "🔥", "السلسلة وهدف الأسبوع", "go16('streak233')"], ["mirror", "🪞", "المرآة", "go16('mir226')"], ["vt", "📈", "صوتي على خط زمني", "go16('vt226')"], ["hijri", "🗓️", "التقويم الهجري والمناسبات", "go16('cal224')"], ["fc", "🃏", "بطاقات المراجعة", "go16('fc223')"], ["games", "🎮", "ألعاب التعلّم", "go16('games172')"], ["competitions", "🏆", "المسابقات", "go16('competitions')"], ["showcase", "🌟", "محتوى طلاب الأكاديمية", "go16('sc255')"], ["life", "🕋", "حياة المسلم", "go16('life249')"], ["muslim", "🧭", "أدوات المسلم", "go16('muslim241')"]
+  ].map(a => ({ id: a[0], ic: a[1], ar: a[2], en: a[2], d: "", go: a[3], rt: [], acc: "login", c: "#475569" }));
+  const ALL = () => { const m = {}; DEF.concat(MORE).forEach(x => m[x.id] = x); const cu = (cfg().custom || {}); Object.keys(cu).forEach(k => m[k] = Object.assign({ id: k, rt: [], acc: "login", c: "#475569", d: "" }, cu[k])); return m; };
+
+  /* ---------- الإعداد: site_settings.tools260 ---------- */
+  const VIEWS = () => [["tiles", "🔲", T("مربعات (زي مساحتي)", "Tiles (like My space)")], ["cards", "🗂️", T("كروت بوصف", "Cards with description")], ["big", "🖼️", T("كروت كبيرة ملونة", "Big coloured banners")], ["icons", "📱", T("أيقونات زي الموبايل", "Phone-style icons")], ["list", "📋", T("قايمة", "List")], ["carousel", "🎠", T("شريط بيتسحب بالعرض", "Swipe carousel")], ["chips", "💊", T("أزرار صغيرة", "Compact chips")]];
+  const defCfg = () => ({ groups: [{ id: "g1", name: T("الأدوات", "Tools"), icon: "🧰", view: "tiles", open: "same", items: DEF.map(x => x.id) }], acc: {}, custom: {}, intro: "" });
+  function cfg() { let c = null; try { c = setv("tools260", null); } catch (e) {} if (!c || !Array.isArray(c.groups)) c = defCfg(); return c; }
+  const accOf = (id, c) => { c = c || cfg(); const a = (c.acc || {})[id]; if (a) return a; const t = ALL()[id]; return t ? t.acc : "login"; };
+  const nm = t => t ? (AR() ? t.ar : (t.en || t.ar)) : "";
+
+  /* ---------- مين معاه اشتراك المحتوى ---------- */
+  function paidOK(id) { try { const r = R(); if (realRole() === "owner" || r === "owner" || r === "teacher") return true; } catch (e) {} if (!state.auth || !state.auth.user) return false;
+    try { if (libFull()) return true; } catch (e) {} try { if (id === "maqam" || id === "maqamgame") { if (mqPremium()) return true; } } catch (e) {}
+    try { const now = Date.now(); return myAccess().some(a => (!a.expires_at || new Date(a.expires_at).getTime() > now) && (a.scope === "all" || a.scope === "feature:" + id || a.scope === "feature:tools")); } catch (e) { return false; } }
+  const subGo = "t260.sub()";
+
+  /* ---------- فتح أداة ---------- */
+  const go = (t, how) => { if (!t) return; const g = t.go || ""; if (how === "tab" && g[0] === "#") { window.open(location.pathname + g, "_blank"); return; } if (g[0] === "#") { location.hash = g; return; } try { (0, eval)(g); } catch (e) { console.warn("t260 go", e); } };
+  window.t260 = window.t260 || {};
+  /* الزائر مابيشوفش الأسعار (إعداد hp230) — فبيسجّل الأول وبعدها بيروح على اشتراك المحتوى */
+  t260.sub = () => { state.ptab = "content"; if (!state.auth.user) { try { lsSet("itqan_after_hash", "#/pricing"); } catch (e) {} navigate("signup"); return; } navigate("pricing"); };
+  t260.open = (id, how) => { const t = ALL()[id]; if (!t) return; const a = accOf(id); if (a === "paid" && !paidOK(id)) { state.t260pw = id; go16("tools260pw", id); return; } go(t, how); };
+  t260.kind = k => { const s = (() => { try { return sectionsData(); } catch (e) { return null; } })(); let x = null;
+    if (Array.isArray(s)) { if (k === "prophets") { try { x = islChild(["قصص الأنبياء"]); } catch (e) {} } else x = s.find(y => (y.meta || {}).kind === k && y.is_visible !== false); }
+    if (x) { try { libGo(x.id); return; } catch (e) {} try { libOpen(x.id); return; } catch (e) {} }
+    location.hash = k === "tajcolor" ? "#/d/tajweed" : "#/library"; };
+
+  /* ---------- العرض ---------- */
+  function tileHtml(t, g, preview) { const a = accOf(t.id); const lock = a === "paid" && !paidOK(t.id); const badge = a === "paid" ? `<i class="b260 p">${lock ? "🔒 " : ""}${T("مدفوع", "Paid")}</i>` : a === "open" && !state.auth.user ? `<i class="b260 o">${T("مجاني", "Free")}</i>` : "";
+    const on = preview ? "" : `onclick="t260.open('${t.id}','${g.open || "same"}');return false;"`; const d = (t.d || "");
+    switch (g.view) {
+      case "cards": return `<a href="#" class="c260" style="--c:${t.c}" ${on}><span>${t.ic}</span><b>${E(nm(t))}</b>${d ? `<small>${E(d)}</small>` : ""}${badge}</a>`;
+      case "big": return `<a href="#" class="bg260" style="--c:${t.c}" ${on}><span>${t.ic}</span><div><b>${E(nm(t))}</b>${d ? `<small>${E(d)}</small>` : ""}</div>${badge}</a>`;
+      case "icons": return `<a href="#" class="ic260" style="--c:${t.c}" ${on}><span>${t.ic}</span><b>${E(nm(t))}</b>${a === "paid" ? `<i class="dot260">🔒</i>` : ""}</a>`;
+      case "list": return `<a href="#" class="li260" style="--c:${t.c}" ${on}><span>${t.ic}</span><b>${E(nm(t))}</b><small>${E(d)}</small>${badge}<em>›</em></a>`;
+      case "chips": return `<a href="#" class="ch260" style="--c:${t.c}" ${on}>${t.ic} ${E(nm(t))}${a === "paid" ? " 🔒" : ""}</a>`;
+      case "carousel": return `<a href="#" class="ca260" style="--c:${t.c}" ${on}><span>${t.ic}</span><b>${E(nm(t))}</b>${badge}</a>`;
+      default: return `<a href="#" class="mstile t260" style="--c:${t.c}" ${on}><span>${t.ic}</span><b>${E(nm(t))}</b>${badge}</a>`; } }
+  function groupHtml(g, preview) { const M = ALL(); const its = (g.items || []).map(id => M[id]).filter(Boolean); const wrap = { tiles: "msgrid", cards: "g260 cards", big: "g260 big", icons: "g260 icons", list: "g260 list", carousel: "g260 carousel", chips: "g260 chips" }[g.view] || "msgrid";
+    return `<div class="grp260" data-g="${E(g.id)}">${cfg().groups.length > 1 || preview ? `<h2 class="gh260">${E(g.icon || "")} ${E(g.name || "")}</h2>` : ""}<div class="${wrap}">${its.map(t => tileHtml(t, g, preview)).join("") || `<div class="muted sm">${T("القسم ده فاضي", "This group is empty")}</div>`}</div></div>`; }
+  function page() { const c = state.t260d && own() ? state.t260d : cfg();
+    const top = own() ? `<div class="row" style="gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">${state.t260d ? "" : `<button class="btn btn-p" onclick="t260.edit()">✏️ ${T("تحكم كامل في الأدوات", "Full control of tools")}</button>`}<button class="btn btn-o" onclick="go16('myspace')">🏠 ${T("مساحتي (أفكارك)", "My space (your ideas)")}</button></div>` : "";
+    const intro = c.intro ? `<p class="muted" style="white-space:pre-line">${E(c.intro)}</p>` : "";
+    const body = state.t260d && own() ? editor(c) : c.groups.map(g => groupHtml(g)).join("");
+    return pageWrap("🧰", T("الأدوات", "Tools"), T("كل أدوات المنصة في مكان واحد", "All platform tools in one place"), top + intro + body, 1150); }
+
+  /* ---------- المحرر (للمالك) — بيشتغل على نسخة، ومافيش حاجة بتتحفظ غير لما تدوس «احفظ» ---------- */
+  t260.edit = () => { state.t260d = JSON.parse(JSON.stringify(cfg())); render(); };
+  t260.cancel = () => { state.t260d = null; render(); };
+  t260.save = async () => { const d = state.t260d; if (!d) return; await saveSetting16("tools260", d); state.t260d = null; toast("✅ " + T("اتحفظ", "Saved")); render(); };
+  t260.reset = () => { if (!confirm(T("ترجّع الأدوات للترتيب الأصلي؟ (الأدوات اللي ضفتها من مساحتك هتفضل في القايمة تقدر ترجّعها)", "Reset to the default layout?"))) return; const k = state.t260d.custom; state.t260d = defCfg(); state.t260d.custom = k || {}; render(); };
+  const D = () => state.t260d; const G = gid => D().groups.find(g => g.id === gid);
+  t260.gset = (gid, k, v) => { const g = G(gid); if (g) g[k] = v; render(); };
+  t260.gmove = (gid, dir) => { const a = D().groups; const i = a.findIndex(g => g.id === gid); const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; render(); };
+  t260.gdel = gid => { const g = G(gid); if (!g) return; if ((g.items || []).length && !confirm(T("تشيل القسم؟ الأدوات اللي جواه هتتنقل لأول قسم.", "Delete group? Its tools move to the first group."))) return; D().groups = D().groups.filter(x => x.id !== gid); if (!D().groups.length) D().groups.push({ id: "g" + Date.now(), name: T("الأدوات", "Tools"), icon: "🧰", view: "tiles", open: "same", items: [] }); D().groups[0].items = D().groups[0].items.concat(g.items || []); render(); };
+  t260.gadd = () => { const n = prompt(T("اسم القسم الجديد", "New group name")); if (!n) return; D().groups.push({ id: "g" + Date.now(), name: n, icon: "📁", view: "tiles", open: "same", items: [] }); render(); };
+  t260.imove = (gid, id, dir) => { const g = G(gid); const a = g.items; const i = a.indexOf(id); const j = i + dir; if (i < 0 || j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; render(); };
+  t260.ito = (gid, id, to) => { const g = G(gid), h = G(to); if (!g || !h || g === h) return; g.items = g.items.filter(x => x !== id); h.items.push(id); render(); };
+  t260.idel = (gid, id) => { const g = G(gid); g.items = g.items.filter(x => x !== id); render(); };
+  t260.iadd = (gid, id) => { if (!id) return; const g = G(gid); D().groups.forEach(x => x.items = x.items.filter(y => y !== id)); g.items.push(id); render(); };
+  t260.acc = (id, v) => { D().acc = D().acc || {}; D().acc[id] = v; render(); };
+  t260.iren = id => { const t = ALL()[id]; const n = prompt(T("الاسم", "Name"), nm(t)); if (n == null) return; const ic = prompt(T("الأيقونة (إيموجي)", "Icon (emoji)"), t.ic); D().custom = D().custom || {}; D().custom[id] = Object.assign({}, t, D().custom[id] || {}, { ar: n || t.ar, en: n || t.en, ic: ic || t.ic }); render(); };
+  t260.link = gid => { const n = prompt(T("اسم الأداة", "Tool name")); if (!n) return; const u = prompt(T("اللينك (مثلاً #/hifz أو https://…)", "Link (#/hifz or https://…)")); if (!u) return; const ic = prompt(T("أيقونة (إيموجي)", "Icon (emoji)"), "⭐") || "⭐"; const id = "c" + Date.now(); D().custom = D().custom || {}; D().custom[id] = { ar: n, en: n, ic, go: /^https?:/.test(u) ? `window.open(${JSON.stringify(u)},'_blank')` : u, c: "#475569", acc: "login", d: "" }; G(gid).items.push(id); render(); };
+  function editor(c) { const M = ALL(); const used = new Set(c.groups.flatMap(g => g.items));
+    const avail = Object.values(M).filter(t => !used.has(t.id));
+    const accSel = id => { const a = accOf(id, c); return `<select class="in s260" onchange="t260.acc('${id}',this.value)"><option value="open" ${a === "open" ? "selected" : ""}>🔓 ${T("مفتوحة للكل", "Open")}</option><option value="login" ${a === "login" ? "selected" : ""}>📝 ${T("سجّل الأول", "Sign up first")}</option><option value="paid" ${a === "paid" ? "selected" : ""}>💳 ${T("مدفوع — اشترك", "Paid — subscribe")}</option></select>`; };
+    const groups = c.groups.map((g, gi) => `<div class="card ed260"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><input class="in" style="width:4rem;text-align:center" value="${E(g.icon || "")}" onchange="t260.gset('${g.id}','icon',this.value)" title="${T("الأيقونة", "Icon")}"><input class="in" style="flex:1;min-width:10rem" value="${E(g.name || "")}" onchange="t260.gset('${g.id}','name',this.value)"><button class="btn btn-o" onclick="t260.gmove('${g.id}',-1)" ${gi ? "" : "disabled"}>▲</button><button class="btn btn-o" onclick="t260.gmove('${g.id}',1)" ${gi < c.groups.length - 1 ? "" : "disabled"}>▼</button><button class="btn btn-o" onclick="t260.gdel('${g.id}')">🗑️</button></div>
+      <div class="xs muted" style="margin:.5rem 0 .2rem">${T("طريقة العرض (دوس وشوف المعاينة تحت)", "View (click to preview below)")}</div><div class="row" style="gap:.3rem;flex-wrap:wrap">${VIEWS().map(v => `<button class="btn ${g.view === v[0] ? "btn-p" : "btn-o"} vw260" onclick="t260.gset('${g.id}','view','${v[0]}')">${v[1]} ${v[2]}</button>`).join("")}</div>
+      <div class="row xs" style="gap:.4rem;align-items:center;margin-top:.4rem">${T("الأداة بتتفتح:", "Tools open:")} <select class="in s260" onchange="t260.gset('${g.id}','open',this.value)"><option value="same" ${g.open !== "tab" ? "selected" : ""}>${T("في نفس الصفحة", "In the same page")}</option><option value="tab" ${g.open === "tab" ? "selected" : ""}>${T("في تاب جديد", "In a new tab")}</option></select></div>
+      <div class="pv260"><div class="xs muted">👁️ ${T("معاينة", "Preview")}</div>${groupHtml(g, true)}</div>
+      <div class="its260">${g.items.map((id, i) => { const t = M[id]; if (!t) return ""; return `<div class="it260"><span>${t.ic}</span><b>${E(nm(t))}</b>${accSel(id)}<select class="in s260" onchange="t260.ito('${g.id}','${id}',this.value)"><option value="">${T("انقل لـ…", "Move to…")}</option>${c.groups.filter(x => x.id !== g.id).map(x => `<option value="${x.id}">${E(x.icon || "")} ${E(x.name)}</option>`).join("")}</select><button class="btn btn-o" onclick="t260.imove('${g.id}','${id}',-1)" ${i ? "" : "disabled"}>▲</button><button class="btn btn-o" onclick="t260.imove('${g.id}','${id}',1)" ${i < g.items.length - 1 ? "" : "disabled"}>▼</button><button class="btn btn-o" title="${T("الاسم والأيقونة", "Name & icon")}" onclick="t260.iren('${id}')">✏️</button><button class="btn btn-o" title="${T("شيلها من الأدوات", "Remove")}" onclick="t260.idel('${g.id}','${id}')">✕</button></div>`; }).join("")}</div>
+      <div class="row" style="gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><select class="in" style="flex:1;min-width:12rem" onchange="t260.iadd('${g.id}',this.value)"><option value="">➕ ${T("ضيف أداة هنا (من الأدوات ومن مساحتك)…", "Add a tool here…")}</option>${avail.map(t => `<option value="${t.id}">${t.ic} ${E(nm(t))}</option>`).join("")}</select><button class="btn btn-o" onclick="t260.link('${g.id}')">🔗 ${T("لينك مخصص", "Custom link")}</button></div></div>`).join("");
+    return `<div class="card" style="border:2px solid var(--accent);position:sticky;top:.5rem;z-index:5;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"><b>✏️ ${T("بتعدّل الأدوات — الطلاب والزوار مش هيشوفوا حاجة لحد ما تحفظ", "Editing tools — nothing changes for others until you save")}</b><span style="flex:1"></span><button class="btn btn-p" onclick="t260.save()">💾 ${T("احفظ", "Save")}</button><button class="btn btn-o" onclick="t260.cancel()">${T("إلغاء", "Cancel")}</button><button class="btn btn-o" onclick="t260.reset()">↺ ${T("الترتيب الأصلي", "Default")}</button></div>
+      <div class="card"><label class="l">${T("كلمة فوق الأدوات (اختياري)", "Text above the tools (optional)")}</label><textarea class="in" rows="2" onchange="state.t260d.intro=this.value">${E(c.intro || "")}</textarea></div>${groups}<button class="btn btn-p" onclick="t260.gadd()">➕ ${T("إنشاء قسم جديد", "Create a new group")}</button>
+      <div class="card xs muted" style="margin-top:.8rem">🔓 ${T("مفتوحة: أي حد يدخل علطول", "Open: anyone goes straight in")} · 📝 ${T("سجّل الأول: الزائر يشوف رسالة التسجيل وبيقفلها بـ X ويكمّل", "Sign up first: visitors see a sign-up box they can close with X")} · 💳 ${T("مدفوع: «محتوى مدفوع — اشترك في محتوى المنصة» + لينك الاشتراك", "Paid: «Paid content — subscribe» + link")}</div>`; }
+
+  /* ---------- صفحة «محتوى مدفوع» ---------- */
+  function paywall(id) { const t = ALL()[id] || {}; return pageWrap(t.ic || "🔒", nm(t) || T("محتوى مدفوع", "Paid content"), "", `<div class="card pw260"><div style="font-size:3rem">🔒</div><h2>${T("محتوى مدفوع", "Paid content")}</h2><p class="muted">${T("الجزء ده للمشتركين في محتوى المنصة.", "This part is for platform-content subscribers.")}</p><button class="btn btn-p" style="font-size:1.1rem" onclick="${subGo}">⭐ ${T("اشترك في محتوى المنصة من هنا", "Subscribe to the platform content")}</button>${!state.auth.user ? `<p class="xs muted" style="margin-top:.6rem">${T("معاك اشتراك؟", "Already subscribed?")} <a href="#" onclick="lsSet('itqan_after_hash','#/alltools');navigate('login');return false;">${T("سجّل دخول", "Sign in")}</a></p>` : ""}<div style="margin-top:.8rem"><button class="btn btn-o" onclick="go16('alltools')">🧰 ${T("رجوع للأدوات", "Back to tools")}</button></div></div>`, 700); }
+
+  /* ---------- القفل على الصفحات نفسها (لو حد دخل من لينك مباشر) ---------- */
+  const curKey = () => (state.route || "") + (state.pageArg ? "/" + state.pageArg : "");
+  function toolOfRoute() { const k = curKey(), r = state.route; const M = ALL(); const used = cfg().groups.flatMap(g => g.items); for (const id of used) { const t = M[id]; if (t && (t.rt || []).some(x => x === k || x === r)) return t; } return null; }
+  let lastLR = "";
+  function loginNag(t) { if (state.auth.user || document.getElementById("lg260")) return; const k = curKey(); if (k === lastLR) return; lastLR = k;
+    const m = document.createElement("div"); m.id = "lg260"; m.className = "notr"; m.innerHTML = `<div class="lgbox260"><button class="x260" onclick="document.getElementById('lg260').remove()" aria-label="close">✕</button><div style="font-size:2.4rem">${t.ic}</div><h3>${T("سجّل الأول عشان تحفظ تقدّمك", "Sign up first to save your progress")}</h3><p class="sm muted">${T("الحساب مجاني وبياخد 30 ثانية — أو اقفل الرسالة دي وكمّل تتفرج.", "Free account in 30 seconds — or close this and keep browsing.")}</p><div class="row" style="gap:.5rem;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="lsSet('itqan_after_hash','#/${E(k)}');navigate('signup')">✨ ${T("حساب جديد", "Create account")}</button><button class="btn btn-o" onclick="lsSet('itqan_after_hash','#/${E(k)}');navigate('login')">${T("تسجيل الدخول", "Sign in")}</button></div></div>`;
+    m.addEventListener("click", e => { if (e.target === m) m.remove(); }); document.body.appendChild(m); }
+  /* كل الصفحات دي بتترسم من خلال «alltools» عشان كل التعديلات اللي على الشرايط تفضل شغالة */
+  try { const _ra = renderAllTools; renderAllTools = function () { if (!FF("v260.tools")) return _ra.apply(this, arguments); const x = state.__t260; if (x && x.k === "pw") return paywall(x.id); if (x && x.k === "trip") return trip(); return page(); }; } catch (e) { console.warn("v260 renderAllTools", e); }
+  const _r = render; render = function () {
+    let x = null;
+    if (FF("v260.tools")) {
+      if (state.route === "tools") state.route = "alltools";
+      if (state.route === "myspace" && state.auth.user && !own() && FF("v260.myspace")) { state.route = "trip260"; try { history.replaceState(null, "", "#/trip260"); } catch (e) {} }
+      if (state.route === "tools260pw") x = { k: "pw", id: state.pageArg || state.t260pw };
+      else if (state.route === "trip260" && FF("v260.myspace")) x = { k: "trip" };
+      else { const t = toolOfRoute(); if (t && accOf(t.id) === "paid" && !paidOK(t.id)) x = { k: "pw", id: t.id }; }
+    }
+    if (!x) { const o = _r.apply(this, arguments); after(); return o; }
+    const real = state.route; state.__t260 = x; state.route = "alltools"; let o; try { o = _r.apply(this, arguments); } finally { state.route = real; state.__t260 = null; } after(); return o; };
+  function after() { try { if (!FF("v260.tools")) return; const t = toolOfRoute(); if (t && accOf(t.id) === "login") setTimeout(() => loginNag(t), 400); else if (!t) lastLR = ""; myspaceUp(); rowFix(); } catch (e) { console.warn("v260", e); } }
+  ["alltools", "tools260pw", "trip260"].forEach(p => { try { if (!PAGES16.includes(p)) PAGES16.push(p); } catch (e) {} });
+
+  /* الزائر: قفل الزوار القديم (guestlock164) مايقفلش الأدوات المفتوحة و«سجّل الأول» — بيشوفها، وبتظهرله رسالة التسجيل */
+  function guestOK() { if (!FF("v260.tools")) return false; const r = state.route, k = curKey(); if (r === "alltools" || r === "tools260pw") return true; const M = ALL(); const c = cfg();
+    for (const id of c.groups.flatMap(g => g.items)) { const t = M[id]; if (!t || accOf(id, c) === "paid") continue; if ((t.rt || []).some(x => x === k || x === r)) return true;
+      if (r === "library" && state.libSec && /t260\.kind\('([a-z_]+)'\)/.test(t.go || "")) { const kk = RegExp.$1; try { const s = sectionsData(); if (Array.isArray(s)) { const x = kk === "prophets" ? islChild(["قصص الأنبياء"]) : s.find(y => (y.meta || {}).kind === kk); if (x && x.id === state.libSec) return true; } } catch (e) {} } }
+    return false; }
+  try { const _sv = setv; setv = function (k) { if (k === "guestlock164" && guestOK()) return false; return _sv.apply(this, arguments); }; } catch (e) { console.warn("v260 setv", e); }
+
+  /* القراءات العشر مفتوحة كاملة للي يدخل */
+  try { const _lf = libFull; libFull = function () { if (FF("v260.tools") && ["qiraat", "qiraat10"].includes(state.route) && accOf("qiraat") === "open") return true; return _lf.apply(this, arguments); }; } catch (e) {}
+
+  /* ---------- «مساحتي» للمالك: زرار ⬆️ على كل حاجة يرفعها للأدوات ---------- */
+  function myspaceUp() { if (state.route !== "myspace" || !own() || !FF("v260.myspace")) return; const g = document.querySelector("#app .msgrid"); if (!g || g.__u260) return; g.__u260 = 1;
+    const hd = document.createElement("div"); hd.className = "card sm"; hd.id = "msh260"; hd.innerHTML = `🏠 <b>${T("مساحتي — ليك انت بس", "My space — only you")}</b> · ${T("دوس ⬆️ على أي حاجة عشان ترفعها للأدوات عند الطلاب والزوار.", "Press ⬆️ on anything to publish it to everyone's Tools.")} <button class="btn btn-o" style="padding:.1rem .6rem" onclick="go16('alltools')">🧰 ${T("افتح الأدوات", "Open tools")}</button>`; g.parentElement.insertBefore(hd, g);
+    const used = new Set(cfg().groups.flatMap(x => x.items).map(id => (ALL()[id] || {}).go));
+    g.querySelectorAll(".mstile").forEach(b => { const on = b.getAttribute("onclick") || ""; if (!on) return; const up = document.createElement("i"); up.className = "up260" + (used.has(on) ? " on" : ""); up.textContent = used.has(on) ? "✓" : "⬆️"; up.title = T("ارفعها للأدوات", "Publish to Tools"); up.onclick = e => { e.stopPropagation(); e.preventDefault(); t260.up(b); }; b.style.position = "relative"; b.appendChild(up); }); }
+  t260.up = async b => { const on = b.getAttribute("onclick") || ""; const ic = (b.querySelector("span") || {}).textContent || "⭐"; const name = ((b.querySelector("b") || {}).textContent || "").trim(); const c = JSON.parse(JSON.stringify(cfg()));
+    const ex = Object.values(ALL()).find(t => t.go === on); if (ex && c.groups.some(g => g.items.includes(ex.id))) return toast(T("موجودة في الأدوات بالفعل ✓", "Already in Tools ✓"));
+    let gi = 0; if (c.groups.length > 1) { const a = prompt(T("في أنهي قسم؟ اكتب الرقم:\n", "Which group? number:\n") + c.groups.map((g, i) => (i + 1) + ") " + g.name).join("\n"), "1"); if (a == null) return; gi = Math.max(0, Math.min(c.groups.length - 1, (+a || 1) - 1)); }
+    const id = ex ? ex.id : "m" + Date.now(); if (!ex) { c.custom = c.custom || {}; c.custom[id] = { ar: name, en: name, ic, go: on, c: getComputedStyle(b).getPropertyValue("--c") || "#475569", acc: "login", d: "" }; }
+    c.groups[gi].items.push(id); await saveSetting16("tools260", c); toast("⬆️ " + T("اترفعت للأدوات", "Published to Tools")); b.querySelector(".up260").textContent = "✓"; };
+
+  /* ---------- «رحلتي مع معلمي» (طالب/ولي أمر) و«مع طلابي» (معلم) ---------- */
+  const it = (ic, t, go, c) => `<button class="mstile" style="--c:${c}" onclick="${go}"><span>${ic}</span><b>${E(t)}</b></button>`;
+  function tripItems(rl) { const dash = t => `state.dash.tab='${t}';navigate('dashboard')`;
+    if (rl === "teacher") return [it("📅", T("الجدول والكاليندر", "Calendar"), dash("calendar"), "#0d9488"), it("🎥", T("الفصل والحصص", "Classroom"), "navigate('classroom')", "#2563eb"), it("👨‍🎓", T("طلابي", "My students"), dash("mystudents"), "#15803d"), it("📂", T("ملفات طلابي", "Students' files"), "go16('sfile')", "#0ea5e9"), it("📝", T("الواجبات", "Homework"), dash("homework"), "#7c3aed"), it("👨‍🏫", T("لوحة المعلم (الحصص والواجبات)", "Teacher board"), "go16('tch196')", "#0369a1"), it("🖍️", T("الوايت بورد", "Whiteboard"), "go16('wb243')", "#2563eb"), it("👥", T("اجتماع جماعي (رابط)", "Group meeting link"), "meetCreate()", "#9333ea"), it("🕒", T("مواعيدي المتاحة", "My availability"), dash("schedule"), "#0891b2"), it("💰", T("أرباحي", "Earnings"), dash("dues"), "#a16207"), it("🏆", T("المسابقات", "Competitions"), "go16('competitions')", "#b45309"), it("💬", T("الرسائل", "Messages"), dash("messages"), "#475569")];
+    return [it("📅", T("الحصص والجدول", "Lessons & schedule"), dash("lessons"), "#0d9488"), it("🎥", T("الفصل", "Classroom"), "navigate('classroom')", "#2563eb"), it("🧑‍🏫", T("مع معلمي", "With my teacher"), "go16('me196')", "#0369a1"), it("📝", T("الواجبات", "Homework"), dash("homework"), "#7c3aed"), it("🎤", T("التسميع", "Recite from memory"), "go16('tasmee')", "#db2777"), it("🎓", T("شهادتي", "My certificates"), dash("mycerts"), "#a16207"), it("🗺️", T("رحلتي", "My journey"), "go16('journey172')", "#15803d"), it("🏅", T("إنجازاتي", "Achievements"), "go16('badges172')", "#ca8a04"), it("📂", T("ملفي ومتابعتي", "My file & progress"), "go16('sfile')", "#0ea5e9"), it("🖍️", T("الوايت بورد", "Whiteboard"), "go16('wb243')", "#2563eb"), it("💳", T("الاشتراكات والدفع", "Billing"), dash("billing"), "#0891b2"), it("💬", T("الرسائل", "Messages"), dash("messages"), "#475569")]; }
+  function trip() { if (!state.auth.user) return pageWrap("🧭", T("رحلتي مع معلمي", "My journey with my teacher"), "", needLogin("trip260"));
+    const rl = own() ? (state.trip260 || "student") : R(); const tch = rl === "teacher";
+    const sw = own() ? `<div class="row" style="gap:.4rem;margin-bottom:.8rem"><span class="xs muted">${T("عاين كـ:", "Preview as:")}</span><button class="btn ${!tch ? "btn-p" : "btn-o"}" onclick="state.trip260='student';render()">🧑‍🎓 ${T("طالب", "Student")}</button><button class="btn ${tch ? "btn-p" : "btn-o"}" onclick="state.trip260='teacher';render()">👨‍🏫 ${T("معلم", "Teacher")}</button></div>` : "";
+    let tc = ""; try { if (!tch) tc = `<div style="margin-top:1rem">${teacherCard(true)}</div>`; } catch (e) {}
+    return pageWrap(tch ? "👨‍🏫" : "🧭", tch ? T("مع طلابي", "With my students") : T("رحلتي مع معلمي", "My journey with my teacher"), tch ? T("الجداول والحصص والطلاب وملفاتهم والواجبات — كل حاجة بينك وبين طلابك", "Schedule, lessons, students, files and homework") : T("الحصص والواجبات والشهادات والتسميع وإنجازاتك — كل حاجة بينك وبين معلمك", "Lessons, homework, certificates, recitation and achievements"), sw + `<div class="msgrid">${tripItems(rl).join("")}</div>` + tc); }
+
+  /* ---------- شريط لوحتي: «مساحتي» للمالك بس · الطالب «رحلتي مع معلمي» · المعلم «مع طلابي» · الرسائل اتشالت ---------- */
+  function rowFix() { if (!FF("v260.myspace")) return; const my = document.querySelector('#app .unav a[onclick^="go16(\'myspace\')"]'); const row = my && my.parentElement; if (!row || row.__r260) return; row.__r260 = 1; if (own()) return; const tch = R() === "teacher";
+    my.setAttribute("onclick", "go16('trip260');return false;"); my.textContent = tch ? T("👨‍🏫 مع طلابي", "👨‍🏫 With my students") : T("🧭 رحلتي مع معلمي", "🧭 My journey");
+    [...row.querySelectorAll("a")].forEach(a => { const s = a.getAttribute("onclick") || ""; if (a !== my && /dash\.tab='(lessons|messages|calendar|mystudents|dues|schedule)'/.test(s)) a.remove(); }); }
+
+  css(`.b260{position:absolute;top:.35rem;inset-inline-end:.35rem;font-style:normal;font-size:.68rem;font-weight:800;padding:.08rem .45rem;border-radius:999px;background:#fef3c7;color:#92400e}.b260.o{background:#dcfce7;color:#166534}
+  .t260,.c260,.ca260{position:relative}.gh260{font-size:1.15rem;margin:1.1rem 0 .5rem}
+  .g260.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.7rem}.c260{position:relative;display:flex;flex-direction:column;gap:.25rem;padding:1rem;border-radius:16px;border:1px solid var(--line);background:var(--card,#fff);text-decoration:none;color:inherit;border-top:4px solid var(--c);transition:transform .15s,box-shadow .15s}.c260:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.08)}.c260 span{font-size:1.8rem}.c260 small{color:var(--muted);font-size:.8rem}
+  .g260.big{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:.8rem}.bg260{position:relative;display:flex;gap:.9rem;align-items:center;padding:1.2rem;border-radius:20px;color:#fff;text-decoration:none;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 60%,#000));min-height:110px;box-shadow:0 6px 18px rgba(0,0,0,.12)}.bg260 span{font-size:2.6rem}.bg260 b{font-size:1.1rem;display:block}.bg260 small{opacity:.9;font-size:.82rem}.bg260 .b260{background:rgba(255,255,255,.9)}
+  .g260.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:1rem .5rem}.ic260{position:relative;display:flex;flex-direction:column;align-items:center;gap:.35rem;text-decoration:none;color:inherit;text-align:center}.ic260 span{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:2rem;background:linear-gradient(145deg,var(--c),color-mix(in srgb,var(--c) 55%,#000));box-shadow:0 4px 12px rgba(0,0,0,.18)}.ic260 b{font-size:.74rem;line-height:1.2}.dot260{position:absolute;top:-4px;inset-inline-end:14px;font-style:normal;font-size:.8rem}
+  .g260.list{display:flex;flex-direction:column;gap:.35rem}.li260{position:relative;display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border-radius:12px;border:1px solid var(--line);background:var(--card,#fff);text-decoration:none;color:inherit;border-inline-start:4px solid var(--c)}.li260 span{font-size:1.4rem}.li260 small{color:var(--muted);flex:1;font-size:.8rem}.li260 .b260{position:static}.li260 em{font-style:normal;color:var(--muted)}
+  .g260.carousel{display:flex;gap:.7rem;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:.5rem}.ca260{flex:0 0 170px;scroll-snap-align:start;display:flex;flex-direction:column;gap:.5rem;align-items:center;justify-content:center;text-align:center;height:150px;border-radius:18px;text-decoration:none;color:#fff;background:linear-gradient(160deg,var(--c),color-mix(in srgb,var(--c) 55%,#000))}.ca260 span{font-size:2.4rem}.ca260 .b260{background:rgba(255,255,255,.9)}
+  .g260.chips{display:flex;flex-wrap:wrap;gap:.4rem}.ch260{padding:.4rem .85rem;border-radius:999px;border:1.5px solid var(--c);color:inherit;text-decoration:none;font-weight:700;font-size:.88rem}.ch260:hover{background:var(--c);color:#fff}
+  .ed260{margin:.8rem 0}.pv260{margin:.7rem 0;padding:.7rem;border:2px dashed var(--line);border-radius:14px;max-height:340px;overflow:auto}.pv260 .gh260{margin-top:.2rem}.its260{display:flex;flex-direction:column;gap:.3rem}.it260{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;padding:.35rem .5rem;border:1px solid var(--line);border-radius:10px}.it260 b{flex:1;min-width:9rem;font-size:.9rem}.it260 .btn{padding:.12rem .5rem}.s260{width:auto;padding:.2rem .4rem;font-size:.8rem}.vw260{padding:.2rem .6rem;font-size:.8rem}
+  .pw260{text-align:center;padding:2rem 1rem}.pw260 h2{margin:.4rem 0}
+  #lg260{position:fixed;inset:0;z-index:9990;background:rgba(15,23,42,.5);display:grid;place-items:center;padding:1rem;animation:f260 .2s}.lgbox260{position:relative;background:var(--card,#fff);color:var(--text,#111);border-radius:20px;padding:1.6rem 1.3rem 1.3rem;max-width:400px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3)}.lgbox260 h3{margin:.3rem 0}.x260{position:absolute;top:.5rem;inset-inline-end:.6rem;border:0;background:var(--line,#eee);width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer}@keyframes f260{from{opacity:0}to{opacity:1}}
+  .up260{position:absolute;top:.25rem;inset-inline-start:.25rem;font-style:normal;font-size:.8rem;background:#fff;border:1px solid var(--line);border-radius:8px;padding:0 .3rem;cursor:pointer;z-index:2}.up260.on{background:#dcfce7}`);
+})();
+
+/* ================= v261: (1) شريط لوحتي بقى فوق جنب «الرئيسية» — والمالك يرتّب الشريط اللي فوق ويغيّر الأسماء والأيقونات ويخفي أي حاجة ويختار الشريط يفضل ظاهر أو يختفي مع النزول · (2) «⚙️ لوحة التحكم» = الملف + الإعدادات في مكان واحد للكل: شريط جانبي (يمين بالعربي/شمال بالإنجليزي) وكل جزء بيتفرد زي الورقة: الملف والاسم الظاهر والدولة، اللغة، الخط وحجمه، شكل الموقع، وسائل الدفع، الحجوزات، الإشعارات، المكان (لمواقيت الصلاة) — والمالك يختار إيه يظهر للطلاب والمعلمين ويضيف خانات ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const R = () => { try { return role(); } catch (e) { return null; } };
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s); } };
+  const J = v => E(JSON.stringify(v));
+  window.cp261 = window.cp261 || {};
+
+  /* ======================= (1) الشريط اللي فوق ======================= */
+  const keyOf = a => (a.getAttribute("onclick") || a.getAttribute("href") || "").replace(/;?\s*return false;?\s*$/, "").trim();
+  const TOP = () => { let c = null; try { c = setv("top261", null); } catch (e) {} return Object.assign({ order: [], ren: {}, ic: {}, hide: {}, mode: "fixed" }, c || {}); };
+  /* الحجوزات اتنقلت للوحة التحكم — فمخفية من الشريط افتراضيًا */
+  const DEF_HIDE = { "state.dash.tab='bookings';navigate('dashboard')": true };
+  function topBar() { if (!FF("v261.top")) return; const nav = document.querySelector("header.hdr nav.nav"); if (!nav || nav.__t261) return; nav.__t261 = 1;
+    const un = document.querySelector("#app .unav"); const c = TOP();
+    if (un && state.auth.user) { [...un.querySelectorAll("a")].forEach(a => { const b = a.cloneNode(true); b.classList.add("u261"); b.removeAttribute("aria-current"); const k = keyOf(b); if (/navigate\('profile'\)/.test(k)) { b.setAttribute("onclick", "cp261.open();return false;"); b.innerHTML = "⚙️ " + T("لوحة التحكم", "Control panel"); } nav.appendChild(b); }); un.style.display = "none"; }
+    if (state.auth.user && !nav.querySelector('[onclick^="cp261.open"]')) nav.insertAdjacentHTML("beforeend", `<a href="#" class="u261" onclick="cp261.open();return false;">⚙️ ${T("لوحة التحكم", "Control panel")}</a>`);
+    const links = [...nav.querySelectorAll(":scope > a")];
+    links.forEach(a => { const k = keyOf(a); a.dataset.k261 = k; const hid = c.hide[k] != null ? c.hide[k] : DEF_HIDE[k]; if (hid && !(own() && state.t261e)) a.style.display = "none";
+      if (c.ren[k] || c.ic[k]) { const txt = c.ren[k] || (a.innerText || "").replace(/^[^\p{L}\p{N}]+/u, "").trim(); a.textContent = (c.ic[k] ? c.ic[k] + " " : "") + txt; } });
+    if (c.order.length) { const pos = k => { const i = c.order.indexOf(k); return i < 0 ? 999 : i; }; links.slice().sort((x, y) => pos(x.dataset.k261) - pos(y.dataset.k261)).forEach(a => nav.appendChild(a)); }
+    if (own()) nav.insertAdjacentHTML("beforeend", `<button class="ed261" title="${T("رتّب الشريط اللي فوق", "Arrange the top bar")}" onclick="cp261.top()">✏️</button>`);
+    document.body.classList.toggle("ah261", c.mode === "auto"); }
+  /* يختفي مع النزول ويظهر مع الطلوع (لو المالك اختار كده) */
+  let ly = 0; addEventListener("scroll", () => { if (!document.body.classList.contains("ah261")) return; const y = scrollY; const h = document.querySelector("header.hdr"); if (h) h.classList.toggle("hid261", y > ly && y > 120); ly = y; }, { passive: true });
+  cp261.top = () => { const nav = document.querySelector("header.hdr nav.nav"); if (!nav) return; const c = TOP(); const items = [...nav.querySelectorAll(":scope > a")].map(a => ({ k: a.dataset.k261 || keyOf(a), t: (a.innerText || "").trim() }));
+    state.t261 = { c: JSON.parse(JSON.stringify(c)), items }; drawTop(); };
+  function drawTop() { const s = state.t261; if (!s) return; let m = document.getElementById("tb261"); if (!m) { m = document.createElement("div"); m.id = "tb261"; m.className = "ov261 notr"; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); }
+    const c = s.c; const ord = s.items.slice().sort((x, y) => { const a = c.order.indexOf(x.k), b = c.order.indexOf(y.k); return (a < 0 ? 999 : a) - (b < 0 ? 999 : b); }); s.items = ord;
+    m.innerHTML = `<div class="box261"><button class="x261" onclick="document.getElementById('tb261').remove()">✕</button><h3>✏️ ${T("الشريط اللي فوق", "Top bar")}</h3><p class="xs muted">${T("رتّب، غيّر الاسم والأيقونة، أو اخفي أي حاجة. التغيير بيتطبق على الكل لما تحفظ.", "Reorder, rename, change icons or hide. Applies to everyone after saving.")}</p>
+      ${ord.map((x, i) => { const hid = c.hide[x.k] != null ? c.hide[x.k] : DEF_HIDE[x.k]; return `<div class="r261 ${hid ? "off" : ""}"><input class="in" style="width:3.2rem;text-align:center" placeholder="🙂" value="${E(c.ic[x.k] || "")}" onchange="state.t261.c.ic[${J(x.k)}]=this.value"><input class="in" style="flex:1" value="${E(c.ren[x.k] || x.t)}" onchange="state.t261.c.ren[${J(x.k)}]=this.value"><button class="btn btn-o" onclick="cp261.mv(${i},-1)" ${i ? "" : "disabled"}>▲</button><button class="btn btn-o" onclick="cp261.mv(${i},1)" ${i < ord.length - 1 ? "" : "disabled"}>▼</button><button class="btn btn-o" title="${T("إظهار/إخفاء", "Show/hide")}" onclick="state.t261.c.hide[${J(x.k)}]=${!hid};cp261.draw()">${hid ? "🙈" : "👁️"}</button></div>`; }).join("")}
+      <div class="row" style="gap:.5rem;align-items:center;margin:.7rem 0;flex-wrap:wrap"><b class="sm">${T("الشريط:", "Bar:")}</b><label class="sm"><input type="radio" name="m261" ${c.mode !== "auto" ? "checked" : ""} onchange="state.t261.c.mode='fixed'"> ${T("يفضل ظاهر دايمًا", "Always visible")}</label><label class="sm"><input type="radio" name="m261" ${c.mode === "auto" ? "checked" : ""} onchange="state.t261.c.mode='auto'"> ${T("يختفي وانت نازل ويرجع وانت طالع", "Hide on scroll down")}</label></div>
+      <div class="row" style="gap:.5rem"><button class="btn btn-p" onclick="cp261.saveTop()">💾 ${T("احفظ", "Save")}</button><button class="btn btn-o" onclick="state.t261.c={order:[],ren:{},ic:{},hide:{},mode:'fixed'};cp261.draw()">↺ ${T("الأصلي", "Default")}</button></div></div>`; }
+  cp261.draw = drawTop;
+  cp261.mv = (i, d) => { const s = state.t261; const a = s.items.map(x => x.k); const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; s.c.order = a; drawTop(); };
+  cp261.saveTop = async () => { const s = state.t261; if (!s.c.order.length) s.c.order = s.items.map(x => x.k); await saveSetting16("top261", s.c); document.getElementById("tb261").remove(); state.t261 = null; toast("✅"); render(); };
+
+  /* ======================= (2) لوحة التحكم ======================= */
+  const PC = () => { let c = null; try { c = setv("panel261", null); } catch (e) {} return Object.assign({ hide: { student: {}, teacher: {}, parent: {} }, extra: [] }, c || {}); };
+  const meta = () => (state.auth.profile && state.auth.profile.metadata) || {};
+  async function saveMeta(patch) { const uid = state.auth.user.id; let m = {}; try { const { data } = await sb.from("profiles").select("metadata").eq("id", uid).single(); m = (data && data.metadata) || {}; } catch (e) {} m = Object.assign({}, m, patch); const { error } = await sb.from("profiles").update({ metadata: m }).eq("id", uid); if (error) { toast(error.message, true); return false; } if (state.auth.profile) state.auth.profile.metadata = m; return true; }
+  const FONTS = () => [["", T("الافتراضي", "Default")], ["Tajawal", "Tajawal"], ["Cairo", "Cairo"], ["Almarai", "Almarai"], ["Amiri", T("أميري (نسخ)", "Amiri")], ["Noto Naskh Arabic", "Noto Naskh"], ["Readex Pro", "Readex Pro"]];
+  const LSG = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
+  const LSS = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+  function applyLook() { const fz = +LSG("itqan_fz261", 0); const ff = LSG("itqan_ff261", ""); let st = document.getElementById("st261"); if (!st) { st = document.createElement("style"); st.id = "st261"; document.head.appendChild(st); }
+    if (ff && !document.getElementById("gf261-" + ff.replace(/\s/g, ""))) { const l = document.createElement("link"); l.id = "gf261-" + ff.replace(/\s/g, ""); l.rel = "stylesheet"; l.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(ff) + ":wght@400;700&display=swap"; document.head.appendChild(l); }
+    st.textContent = (fz ? `html{font-size:calc(18.9px * var(--fz,1) * ${1 + fz / 10})!important}@media(max-width:760px){html{font-size:calc(17.6px * var(--fz,1) * ${1 + fz / 10})!important}}` : "") + (ff ? `body,body *:not(i):not(.fa-solid):not(.fa-regular):not(.fa-brands):not([class*=quran]):not(.ayah):not(.mushaf *){font-family:"${ff}",system-ui,sans-serif!important}` : ""); }
+  applyLook();
+  cp261.fz = v => { LSS("itqan_fz261", +v ? String(v) : null); applyLook(); };
+  cp261.ff = v => { LSS("itqan_ff261", v || null); applyLook(); cp261.draw2(); };
+  cp261.name = async () => { const v = (document.getElementById("nm261") || {}).value || ""; if (!v.trim()) return; const { error } = await sb.from("profiles").update({ display_name: v.trim() }).eq("id", state.auth.user.id); if (error) return toast(error.message, true); if (state.auth.profile) state.auth.profile.display_name = v.trim(); toast("✅"); };
+  cp261.country = async v => { const { error } = await sb.from("profiles").update({ country: v }).eq("id", state.auth.user.id); if (error) { if (await saveMeta({ country261: v })) toast("✅"); return; } if (state.auth.profile) state.auth.profile.country = v; toast("✅"); };
+  cp261.geo = () => { if (!navigator.geolocation) return toast(T("الجهاز مش بيدعم تحديد المكان", "Location not supported"), true); navigator.geolocation.getCurrentPosition(p => { const g = { lat: +p.coords.latitude.toFixed(3), lng: +p.coords.longitude.toFixed(3), at: Date.now() }; LSS("itqan_geo261", JSON.stringify(g)); try { window.dispatchEvent(new CustomEvent("itqan-geo", { detail: g })); } catch (e) {} toast("📍 " + T("اتحدد مكانك — مواقيت الصلاة والجداول هتمشي عليه", "Location set for prayer times & schedules")); cp261.draw2(); }, () => toast(T("محتاج تسمح للموقع بالمكان من المتصفح", "Please allow location access"), true), { timeout: 10000 }); };
+  cp261.notif = async () => { try { const r = await Notification.requestPermission(); toast(r === "granted" ? "🔔 ✅" : T("الإشعارات مقفولة من المتصفح", "Notifications are blocked in the browser")); } catch (e) {} cp261.draw2(); };
+  cp261.x = async (id, v) => { const x = Object.assign({}, meta().x261 || {}); x[id] = v; if (await saveMeta({ x261: x })) toast("✅"); };
+  cp261.go = js => { document.getElementById("cp261") && document.getElementById("cp261").remove(); try { (0, eval)(js); } catch (e) {} };
+  cp261.tg = id => { state.cp261o = state.cp261o === id ? null : id; cp261.draw2(); };
+  /* المالك: إيه يظهر لمين + خانات زيادة */
+  cp261.hide = async (rl, id, on) => { const c = PC(); c.hide[rl] = c.hide[rl] || {}; if (on) delete c.hide[rl][id]; else c.hide[rl][id] = true; await saveSetting16("panel261", c); cp261.draw2(); };
+  cp261.addX = async () => { const l = prompt(T("اسم الخانة (مثلاً: اسم ولي الأمر، المدرسة…)", "Field label")); if (!l) return; const c = PC(); c.extra = (c.extra || []).concat([{ id: "f" + Date.now(), label: l, who: ["student", "teacher", "parent"] }]); await saveSetting16("panel261", c); cp261.draw2(); };
+  cp261.delX = async id => { const c = PC(); c.extra = (c.extra || []).filter(x => x.id !== id); await saveSetting16("panel261", c); cp261.draw2(); };
+
+  function secs() { const p = state.auth.profile || {}; const rl = R(); const dash = t => `state.dash.tab='${t}';navigate('dashboard')`;
+    const fz = +LSG("itqan_fz261", 0); const ff = LSG("itqan_ff261", ""); const g = (() => { try { return JSON.parse(LSG("itqan_geo261", "null")); } catch (e) { return null; } })();
+    let cs = ""; try { cs = countrySelect("ct261", p.country || meta().country261 || guessCountry(), "cp261.country(this.value)"); } catch (e) { cs = `<input class="in" id="ct261" value="${E(p.country || "")}" onchange="cp261.country(this.value)">`; }
+    const ex = (PC().extra || []).filter(x => own() || (x.who || []).includes(rl));
+    return [
+      ["me", "👤", T("الملف", "Profile"), `<label class="l">${T("الاسم الظاهر", "Display name")}</label><div class="row" style="gap:.4rem"><input class="in" id="nm261" value="${E(p.display_name || p.real_name || "")}"><button class="btn btn-p" onclick="cp261.name()">${T("احفظ", "Save")}</button></div><label class="l" style="margin-top:.5rem">${T("الدولة", "Country")}</label>${cs}${ex.map(x => `<label class="l" style="margin-top:.5rem">${E(x.label)}</label><input class="in" value="${E((meta().x261 || {})[x.id] || "")}" onchange="cp261.x('${x.id}',this.value)">`).join("")}<button class="btn btn-o" style="margin-top:.6rem" onclick="cp261.go(&quot;navigate('profile')&quot;)">📝 ${T("الملف الكامل (النبذة، المؤهلات، اللغات…)", "Full profile")}</button>`],
+      ["lang", "🌐", T("اللغة", "Language"), `<button class="btn btn-o" onclick="cp261.go('langModal()')">🌐 ${T("غيّر لغة الموقع", "Change site language")} (${E((state.lang || "").toUpperCase())})</button>`],
+      ["font", "🔤", T("الخط وحجمه", "Font & size"), `<label class="l">${T("حجم الخط", "Font size")}: <b>${fz > 0 ? "+" : ""}${fz * 10}%</b></label><input type="range" min="-2" max="5" step="1" value="${fz}" oninput="cp261.fz(this.value);this.previousElementSibling.querySelector('b').textContent=(this.value>0?'+':'')+this.value*10+'%'" style="width:100%"><label class="l" style="margin-top:.5rem">${T("نوع الخط", "Font")}</label><div class="row" style="gap:.3rem;flex-wrap:wrap">${FONTS().map(f => `<button class="btn ${ff === f[0] ? "btn-p" : "btn-o"}" style="font-family:'${f[0] || "inherit"}';padding:.25rem .6rem" onclick="cp261.ff('${f[0]}')">${E(f[1])}</button>`).join("")}</div><p class="xs muted">${T("خط المصحف مابيتغيّرش.", "The mushaf font never changes.")}</p>`],
+      ["look", "🎨", T("شكل الموقع", "Appearance"), `<div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn ${state.theme !== "dark" ? "btn-p" : "btn-o"}" onclick="setTheme('light');cp261.draw2()">☀️ ${T("نهاري", "Light")}</button><button class="btn ${state.theme === "dark" ? "btn-p" : "btn-o"}" onclick="setTheme('dark');cp261.draw2()">🌙 ${T("ليلي", "Dark")}</button><button class="btn btn-o" onclick="cp261.go(&quot;go16('design218')&quot;)">🎨 ${T("اختار تصميمك", "Choose a design")}</button>${own() ? `<button class="btn btn-o" onclick="cp261.go(&quot;go16('look217')&quot;)">🌓 ${T("الشكل والألوان (للكل)", "Site look (everyone)")}</button>` : ""}</div>`],
+      ["pay", "💳", T("وسائل الدفع والاشتراكات", "Payments & subscriptions"), `<p class="sm muted">${T("وسائل الدفع: InstaPay وVodafone Cash وPayPal. لما الدفع الأونلاين يشتغل، الكارت بيتحفظ عند بوابة الدفع نفسها — احنا مابنخزّنش أرقام كروت.", "Methods: InstaPay, Vodafone Cash, PayPal. Cards are saved by the payment gateway itself — we never store card numbers.")}</p><div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-o" onclick="cp261.go(&quot;${dash("billing")}&quot;)">🧾 ${T("اشتراكاتي ومدفوعاتي", "My billing")}</button><button class="btn btn-p" onclick="cp261.go(&quot;navigate('pricing')&quot;)">⭐ ${T("اشترك", "Subscribe")}</button></div>`],
+      ["book", "📅", T("الحجوزات", "Bookings"), `<div class="row" style="gap:.4rem;flex-wrap:wrap">${own() ? `<button class="btn btn-o" onclick="cp261.go(&quot;${dash("bookings")}&quot;)">📋 ${T("الحجوزات التجريبية", "Trial bookings")}</button><button class="btn btn-o" onclick="cp261.go(&quot;${dash("requests")}&quot;)">📨 ${T("الطلبات", "Requests")}</button>` : rl === "teacher" ? `<button class="btn btn-o" onclick="cp261.go(&quot;${dash("calendar")}&quot;)">📅 ${T("الكاليندر", "Calendar")}</button><button class="btn btn-o" onclick="cp261.go(&quot;${dash("schedule")}&quot;)">🕒 ${T("مواعيدي المتاحة", "Availability")}</button>` : `<button class="btn btn-o" onclick="cp261.go(&quot;${dash("lessons")}&quot;)">📅 ${T("حصصي وحجوزاتي", "My lessons & bookings")}</button>`}<button class="btn btn-o" onclick="cp261.go(&quot;navigate('booking')&quot;)">✨ ${T("احجز حصة تجريبية", "Book a trial")}</button></div>`],
+      ["notif", "🔔", T("الإشعارات", "Notifications"), `<p class="sm">${T("إشعارات المتصفح:", "Browser notifications:")} <b>${typeof Notification === "undefined" ? "—" : Notification.permission === "granted" ? T("شغالة ✅", "On ✅") : Notification.permission === "denied" ? T("مقفولة من المتصفح", "Blocked") : T("مش متفعّلة", "Off")}</b></p><div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn btn-o" onclick="cp261.notif()">🔔 ${T("فعّل الإشعارات", "Enable")}</button><button class="btn btn-o" onclick="cp261.go(&quot;state.notif=state.notif||{};state.notif.open=true;render()&quot;)">📬 ${T("افتح الإشعارات", "Open notifications")}</button><button class="btn btn-o" onclick="cp261.go(&quot;${dash("messages")}&quot;)">💬 ${T("الرسائل", "Messages")}</button></div>`],
+      ["geo", "📍", T("مكاني (مواقيت الصلاة والجداول)", "My location (prayer times)"), `<p class="sm">${g ? T("مكانك متحدد ✅", "Location set ✅") + ` <span class="xs muted">(${g.lat}, ${g.lng})</span>` : T("الموقع هياخد مكانك الحالي عشان مواقيت الصلاة والجداول تمشي بتوقيتك في أي حتة.", "Use your current location for prayer times & schedules.")}</p><button class="btn btn-o" onclick="cp261.geo()">📍 ${T("استخدم مكاني الحالي", "Use my current location")}</button>`],
+      ...(own() ? [["site", "🛠️", T("إعدادات الموقع (للمالك)", "Site settings (owner)"), `<div class="row" style="gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem"><button class="btn btn-o" onclick="cp261.go(&quot;state.og='settings';${dash("settings")}&quot;)">⚙️ ${T("كل إعدادات الموقع", "All site settings")}</button><button class="btn btn-o" onclick="cp261.go(&quot;go16('ver254')&quot;)">🧩 ${T("النسخ والتعديلات", "Versions & changes")}</button><button class="btn btn-o" onclick="cp261.go(&quot;${dash("overview")}&quot;)">📊 ${T("نظرة عامة", "Overview")}</button></div>
+        <b class="sm">${T("إيه يظهر في لوحة التحكم لكل نوع:", "What each role sees here:")}</b><table class="tb261"><tr><th></th><th>🧑‍🎓</th><th>👨‍🏫</th><th>👪</th></tr>${["me", "lang", "font", "look", "pay", "book", "notif", "geo"].map(id => `<tr><td>${E(({ me: T("الملف", "Profile"), lang: T("اللغة", "Language"), font: T("الخط", "Font"), look: T("الشكل", "Look"), pay: T("الدفع", "Payments"), book: T("الحجوزات", "Bookings"), notif: T("الإشعارات", "Notifications"), geo: T("المكان", "Location") })[id])}</td>${["student", "teacher", "parent"].map(rl2 => `<td><input type="checkbox" ${(PC().hide[rl2] || {})[id] ? "" : "checked"} onchange="cp261.hide('${rl2}','${id}',this.checked)"></td>`).join("")}</tr>`).join("")}</table>
+        <b class="sm">${T("خانات زيادة في الملف:", "Extra profile fields:")}</b>${(PC().extra || []).map(x => `<div class="row sm" style="gap:.4rem;align-items:center">• ${E(x.label)} <button class="btn btn-o" style="padding:0 .4rem" onclick="cp261.delX('${x.id}')">✕</button></div>`).join("")}<button class="btn btn-o" style="margin-top:.4rem" onclick="cp261.addX()">➕ ${T("ضيف خانة", "Add a field")}</button>`]] : [])
+    ].filter(s => own() || !(PC().hide[rl] || {})[s[0]]); }
+  cp261.draw2 = () => { const m = document.getElementById("cp261"); if (!m) return; const o = state.cp261o; const p = state.auth.profile || {};
+    m.querySelector(".pn261").innerHTML = `<div class="hd261"><div class="av261">${E(((p.display_name || p.real_name || "?") + "").trim().charAt(0))}</div><div><b>${E(p.display_name || p.real_name || "")}</b><div class="xs muted">${E({ owner: T("المالك", "Owner"), teacher: T("معلم", "Teacher"), student: T("طالب", "Student"), parent: T("ولي أمر", "Parent") }[R()] || "")}</div></div><button class="x261" onclick="document.getElementById('cp261').remove()">✕</button></div>
+      <h3 style="margin:.4rem 0 .6rem">⚙️ ${T("لوحة التحكم", "Control panel")}</h3>${secs().map(s => `<div class="sc261 ${o === s[0] ? "op" : ""}"><button class="sh261" onclick="cp261.tg('${s[0]}')"><span>${s[1]}</span><b>${s[2]}</b><em>${o === s[0] ? "▾" : AR() ? "◂" : "▸"}</em></button><div class="sb261"><div class="si261">${o === s[0] ? s[3] : ""}</div></div></div>`).join("")}
+      <button class="btn btn-o" style="margin-top:1rem;width:100%" onclick="cp261.go('doLogout()')">🚪 ${T("تسجيل الخروج", "Sign out")}</button>`; };
+  cp261.open = () => { if (!state.auth.user) { navigate("login"); return; } let m = document.getElementById("cp261"); if (m) m.remove(); m = document.createElement("div"); m.id = "cp261"; m.className = "notr"; m.dataset.side = AR() ? "r" : "l"; m.dir = AR() ? "rtl" : "ltr"; m.innerHTML = `<div class="pn261"></div>`; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); state.cp261o = state.cp261o || "me"; cp261.draw2(); };
+  addEventListener("keydown", e => { if (e.key === "Escape") { const m = document.getElementById("cp261"); if (m) m.remove(); } });
+  /* صفحة «ملفي» القديمة لسه موجودة — وفوقها زرار يفتح لوحة التحكم */
+  function onProfile() { if (state.route !== "profile" || !FF("v261.panel")) return; const app = document.getElementById("app"); const h = app && app.querySelector("h1"); if (!h || app.querySelector("#pb261")) return; h.insertAdjacentHTML("afterend", `<button id="pb261" class="btn btn-p" style="margin:.4rem 0" onclick="cp261.open()">⚙️ ${T("افتح لوحة التحكم (الملف + الإعدادات)", "Open the control panel")}</button>`); }
+
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { topBar(); onProfile(); } catch (e) { console.warn("v261", e); } return o; };
+  let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { topBar(); } catch (e) {} }, 120); }).observe(document.getElementById("app") || document.body, { childList: true });
+
+  css(`header.hdr nav.nav .u261{font-weight:700}.ed261{border:1px dashed var(--line);background:transparent;border-radius:8px;padding:.1rem .45rem;cursor:pointer;font-size:.85rem}
+  body.ah261 header.hdr{transition:transform .25s}body.ah261 header.hdr.hid261{transform:translateY(-110%)}
+  .ov261{position:fixed;inset:0;z-index:9995;background:rgba(15,23,42,.45);display:grid;place-items:center;padding:1rem}.box261{position:relative;background:var(--card,#fff);color:var(--text,#111);border-radius:18px;padding:1.3rem;max-width:560px;width:100%;max-height:88vh;overflow:auto}.r261{display:flex;gap:.3rem;align-items:center;margin:.3rem 0}.r261.off{opacity:.5}.r261 .btn{padding:.15rem .5rem}
+  .x261{position:absolute;top:.6rem;inset-inline-end:.6rem;border:0;background:var(--line,#eee);width:32px;height:32px;border-radius:50%;cursor:pointer}
+  #cp261{position:fixed;inset:0;z-index:9994;background:rgba(15,23,42,.35);animation:fd261 .2s}.pn261{position:absolute;top:0;bottom:0;left:0;width:min(400px,92vw);background:var(--card,#fff);color:var(--text,#111);box-shadow:0 0 40px rgba(0,0,0,.25);padding:1rem 1rem 2rem;overflow:auto;animation:sl261 .28s ease-out}
+  #cp261[data-side=r] .pn261{left:auto;right:0;animation-name:sr261}@keyframes sl261{from{transform:translateX(-100%)}to{transform:none}}@keyframes sr261{from{transform:translateX(100%)}to{transform:none}}@keyframes fd261{from{opacity:0}to{opacity:1}}
+  .hd261{position:relative;display:flex;gap:.7rem;align-items:center;padding-bottom:.7rem;border-bottom:1px solid var(--line)}.av261{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.3rem;color:#fff;background:linear-gradient(135deg,var(--accent,#0f766e),#7c3aed)}.hd261 .x261{top:0}
+  .sc261{border:1px solid var(--line);border-radius:14px;margin:.45rem 0;overflow:hidden;background:var(--bg,#fafafa)}.sh261{width:100%;display:flex;gap:.6rem;align-items:center;padding:.7rem .8rem;border:0;background:transparent;cursor:pointer;color:inherit;font:inherit;text-align:start}.sh261 span{font-size:1.25rem}.sh261 b{flex:1}.sh261 em{font-style:normal;color:var(--muted)}
+  .sb261{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}.sc261.op .sb261{grid-template-rows:1fr}.si261{overflow:hidden;padding:0 .8rem;transform-origin:top;transform:perspective(600px) rotateX(-70deg);opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s}.sc261.op .si261{transform:none;opacity:1;padding:.2rem .8rem .9rem}
+  .tb261{width:100%;border-collapse:collapse;margin:.4rem 0 .8rem;font-size:.82rem}.tb261 td,.tb261 th{border-bottom:1px solid var(--line);padding:.2rem;text-align:center}.tb261 td:first-child{text-align:start}`);
+})();
+
+/* ================= v262: Notion 3 (بنود صغيرة) — المُوالف: جنب Re/Mi/Fa الدرجة بالحروف (B2 · C4 …) في الناحية التانية + خط الصوت بقى ناعم ومظبوط (من غير القفزات والخطوط الواقفة) · سلم المقام: المسافات بقت بنسبة البعد (التون ضعف النص تون) + زرار «أوكتاف فوق/تحت» يعرض أوكتافين جنب بعض + الزراير بالعرض · «القراءات العشر» في الرئيسية بقت قسم واحد بيفتح علطول · «مصحف الروايات نص وصوت» اتشال (فاضل «المقارنة مع حفص») · منهج العلوم الشرعية فيه قسم العلوم الإسلامية كامل · النحو من الصفر للقمة فيه قسم النحو والصرف والبلاغة ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+
+  /* ---------- 1) اسم الدرجة بالحروف (C4، B2…) — ربع التون بيتكتب ½♭ ---------- */
+  const LET = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
+  function sci(f) { if (!(f > 0)) return ""; const x = 12 * Math.log2(f / 440) + 57; const q = Math.round(x * 2) / 2; const base = Math.floor(q); const half = q - base === .5;
+    if (!half) return LET[((base % 12) + 12) % 12] + Math.floor(base / 12); const up = base + 1; const nm = LET[((up % 12) + 12) % 12]; return (nm.length === 1 ? nm + "½♭" : LET[((base % 12) + 12) % 12] + "½♯") + Math.floor(up / 12); }
+  window.sci262 = sci;
+
+  /* ---------- 2) المُوالف ---------- */
+  if (typeof tnDrawLadder === "function") {
+    const _d = tnDrawLadder;
+    tnDrawLadder = function () {
+      if (!FF("v262.tuner")) return _d.apply(this, arguments);
+      try { smooth(); } catch (e) {}
+      const cv = document.getElementById("tn_cv"); const ctx = cv && cv.getContext("2d"); if (!ctx) return _d.apply(this, arguments);
+      const W = cv.width, H = cv.height, lo = -700, hi = 3000; const toC = yy => lo + (H - 16 - yy) / (H - 32) * (hi - lo);
+      const ft = ctx.fillText; ctx.fillText = function (txt, x, y) { try { if (this.textAlign === "right" && Math.abs(x - (W - 6)) < 1 && TN.tonic > 0) { const c = Math.round(toC(y - 4) / 50) * 50; const parts = String(txt).split(" · "); txt = sci(TN.tonic * Math.pow(2, c / 1200)) + (parts[1] ? " · " + parts[1] : ""); } } catch (e) {} return ft.call(this, txt, x, y); };
+      try { return _d.apply(this, arguments); } finally { ctx.fillText = ft; } };
+    /* القفزات: أي نقطة بعيدة عن اللي قبلها بأوكتاف تقريبًا بتترجع لنفس الأوكتاف، والقفزة الكبيرة بتقطع الخط، وبعدها متوسط 5 نقط */
+    function smooth() { const h = TN.hist; if (!Array.isArray(h) || !h.length) return; let i0 = Math.max(1, (TN.__s262 || 0)); if (i0 > h.length) i0 = 1;
+      for (let i = i0; i < h.length; i++) { const p = h[i - 1], c = h[i]; if (!c || c[1] == null || !p || p[1] == null) continue; let d = c[1] - p[1];
+        if (Math.abs(Math.abs(d) - 1200) < 250) { c[1] -= Math.sign(d) * 1200; d = c[1] - p[1]; }
+        if (Math.abs(d) > 380) { const n = h[i + 1]; if (!n || n[1] == null || Math.abs(n[1] - c[1]) > 200) c[1] = null; } }
+      for (let i = Math.max(2, i0); i < h.length - 2; i++) { const w = [h[i - 2], h[i - 1], h[i], h[i + 1], h[i + 2]].map(x => x && x[1]).filter(v => v != null); if (h[i][1] != null && w.length >= 3) { w.sort((a, b) => a - b); h[i][1] = w[Math.floor(w.length / 2)]; } }
+      TN.__s262 = Math.max(1, h.length - 3); }
+  }
+
+  /* ---------- 3) سلم المقام: مسافات بنسبة البعد + أوكتاف فوق/تحت ---------- */
+  if (typeof mqDegPage === "function" && typeof degList === "function") {
+    const _dl = degList; degList = function (m, a, b) { if (state.__mqd262 && FF("v262.ladder")) { const st = state.mqd || {}; a = a - (st.lo262 || 0); } return _dl.call(this, m, a, b); };
+    const _p = mqDegPage; mqDegPage = function (mid) { if (!FF("v262.ladder")) return _p.apply(this, arguments); state.__mqd262 = 1; let h; try { h = _p.apply(this, arguments); } finally { state.__mqd262 = 0; }
+      const st = state.mqd || {}; const up = st.oct || 1, dn = st.lo262 || 0;
+      const bar = `<div class="oc262"><button class="btn btn-o" onclick="state.mqd.lo262=${dn ? 0 : 1};render()">${dn ? "➖" : "➕"} ${T("أوكتاف تحت (قرار القرار)", "Octave below")}</button><span class="xs muted">${T("المعروض:", "Showing:")} <b>${up + dn}</b> ${T("أوكتاف", "octave(s)")}</span><button class="btn btn-o" onclick="state.mqd.oct=${up >= 2 ? 1 : 2};render()">${up >= 2 ? "➖" : "➕"} ${T("أوكتاف فوق (الجواب)", "Octave above")}</button></div>`;
+      return h.replace('<div class="mqd-lad">', bar + `<div class="mqd-lad p262 ${up + dn > 1 ? "two262" : ""}">`); };
+    /* المسافة بين كل درجتين بنسبة البعد بالسنت (التون 200 = ضعف النص تون 100) */
+    const fixIv = () => { if (!FF("v262.ladder")) return; const L = document.querySelector(".mqd-lad.p262"); if (!L || L.__p262) return; L.__p262 = 1; const st = state.mqd || {}; const m = (typeof MQ !== "undefined") && MQ.find(x => x.id === st.mid); if (!m) return;
+      state.__mqd262 = 1; let degs; try { degs = degList(m, 0, (st.oct || 1) - 1); } finally { state.__mqd262 = 0; }
+      const iv = degs.slice(0, -1).map((d, i) => mqDeg(m, degs[i + 1]) - mqDeg(m, d)); L.querySelectorAll(".mqd-iv").forEach((s, i) => { const c = iv[i] || 200; s.style.flex = `0 0 ${Math.round(c * .26)}px`; s.dataset.c262 = c; }); };
+    window.fixIv262 = fixIv;
+    const _r = render; render = function () { const o = _r.apply(this, arguments); try { fixIv(); } catch (e) {} return o; };
+    css(`.oc262{display:flex;gap:.5rem;align-items:center;justify-content:center;flex-wrap:nowrap;margin:.4rem 0;overflow-x:auto}.oc262 .btn{padding:.2rem .7rem;font-size:.82rem;white-space:nowrap}
+    .mqd-lad.p262{gap:0;overflow-x:auto;justify-content:safe center}.mqd-lad.p262 .mqd-iv{min-width:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:clip;margin:0;padding:.05rem 0;font-size:.6rem;background:linear-gradient(var(--line),var(--line)) center/100% 2px no-repeat,var(--bg);border-radius:999px}
+    .mqd-lad.p262.two262 .mqd-n{min-width:46px;padding:.3rem .1rem}.mqd-lad.p262.two262 .mqd-n b{font-size:.85rem}.mqd-lad.p262.two262 .mqd-iv{font-size:.55rem}
+    .mqd .row{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:thin}.mqd .row>.btn{white-space:nowrap;flex:none}`);
+  }
+
+  /* ---------- 4) «القراءات العشر» في الرئيسية = قسم واحد بيفتح علطول ---------- */
+  try { const _p = window.p241; if (typeof _p === "function") window.p241 = p241 = function (id) { if (id === "qiraat" && FF("v262.qiraat")) { go16("qiraat"); return; } return _p.apply(this, arguments); }; } catch (e) {}
+
+  /* ---------- 5) صفحة القراءات: شيل «مصحف الروايات (نص وصوت)» ---------- */
+  function qiraatTabs() { if (!FF("v262.qiraat") || state.route !== "qiraat") return; document.querySelectorAll("#app button, #app a").forEach(b => { if (/مصحف الروايات \(نص وصوت\)|Riwayat mushaf \(text/.test(b.textContent || "") && !b.__q262) { b.__q262 = 1; b.style.display = "none"; if (b.classList.contains("btn-p") || b.getAttribute("aria-selected") === "true") { const nx = [...b.parentElement.children].find(x => /المقارنة مع حفص|compar/i.test(x.textContent || "")); if (nx && !nx.__qc262) { nx.__qc262 = 1; setTimeout(() => nx.click(), 0); } } } }); }
+
+  /* ---------- 6) منهج العلوم الشرعية فيه «العلوم الإسلامية» كامل · النحو فيه «النحو والصرف والبلاغة» ---------- */
+  function links() { if (!FF("v262.links")) return; const app = document.getElementById("app"); if (!app) return; const h = app.querySelector("h1"); if (!h) return;
+    const secs = (() => { try { return sectionsData(); } catch (e) { return null; } })();
+    if (state.route === "ilm" && !app.querySelector("#il262")) { let id = null; try { id = ISL_ROOT; } catch (e) {} if (id) h.parentElement.insertBefore(Object.assign(document.createElement("div"), { id: "il262", className: "card lk262", innerHTML: `<span>📚</span><div><b>${T("قسم العلوم الإسلامية كامل", "The full Islamic sciences section")}</b><small>${T("التفسير، الحديث، الفقه، السيرة، قصص الأنبياء، علوم القرآن والحديث، والآداب", "Tafsir, hadith, fiqh, seerah, prophets, Quran & hadith sciences, manners")}</small></div><button class="btn btn-p" onclick="libGo('${id}')">${T("افتح", "Open")}</button>` }), h.nextSibling); }
+    if (state.route === "nahw" && !app.querySelector("#nh262") && Array.isArray(secs)) { const x = secs.find(s => s.is_visible !== false && /نحو|صرف|بلاغ/.test(((s.title || {}).ar || "")) && !/الآجرومية/.test(((s.title || {}).ar || ""))); if (x) h.parentElement.insertBefore(Object.assign(document.createElement("div"), { id: "nh262", className: "card lk262", innerHTML: `<span>📐</span><div><b>${T("قسم النحو والصرف والبلاغة", "Grammar, morphology & rhetoric section")}</b><small>${(x.title || {}).ar || ""}</small></div><button class="btn btn-p" onclick="libGo('${x.id}')">${T("افتح", "Open")}</button>` }), h.nextSibling); } }
+
+  const _r2 = render; render = function () { const o = _r2.apply(this, arguments); try { qiraatTabs(); links(); } catch (e) { console.warn("v262", e); } return o; };
+  let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => { try { qiraatTabs(); } catch (e) {} }, 150); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+  css(`.lk262{display:flex;gap:.8rem;align-items:center;border:2px solid var(--accent);margin:.6rem 0}.lk262>span{font-size:2rem}.lk262>div{flex:1}.lk262 small{display:block;color:var(--muted);font-size:.8rem}`);
+})();
+
+/* ================= v263: «افتح محتوى» بمدة: دقايق/ساعات/أيام/أسابيع/شهور/مدى الحياة + العدد، والوقت بيبدأ لما الطالب يدوس «تفعيل» (مش من وقت ما المالك فتحه) · تايمر تنازلي للطالب، والمالك يغيّر مكانه (فوق/تحت، يمين/شمال) · الساعة المجانية كل شهر: ساعة كاملة لكل المحتوى بتبدأ لما الطالب يدوس، وعدّاد للفتحة المجانية الجاية — كله في «احصل على اشتراك مجاني» ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s); } };
+  window.tm263 = window.tm263 || {};
+  const UNITS = () => [["min", T("دقايق", "minutes"), 1], ["hour", T("ساعات", "hours"), 60], ["day", T("أيام", "days"), 1440], ["week", T("أسابيع", "weeks"), 10080], ["month", T("شهور", "months"), 43200], ["life", T("مدى الحياة", "lifetime"), 0]];
+
+  /* ---------- 1) المالك: المدة + «يبدأ لما الطالب يفعّل» جوه «افتح محتوى» ---------- */
+  if (typeof ownerOpenFor === "function") {
+    const _f = ownerOpenFor; ownerOpenFor = function () { let h = _f.apply(this, arguments); if (!FF("v263.timer")) return h; const d = state.oa || {}; const t = d.tm263 = Object.assign({ on: true, u: "day", n: 30, act: true }, d.tm263 || {});
+      const row = `<div class="tm263r"><label class="sm"><input type="checkbox" ${t.on ? "checked" : ""} onchange="state.oa.tm263.on=this.checked;render()"> ⏱️ <b>${T("المدة بالتفصيل", "Exact duration")}</b></label>${t.on ? `<input class="in" type="number" min="1" style="width:5rem" value="${t.u === "life" ? "" : t.n}" ${t.u === "life" ? "disabled" : ""} onchange="state.oa.tm263.n=Math.max(1,+this.value||1)"><select class="in" style="width:auto" onchange="state.oa.tm263.u=this.value;render()">${UNITS().map(u => `<option value="${u[0]}" ${t.u === u[0] ? "selected" : ""}>${u[1]}</option>`).join("")}</select><label class="sm"><input type="checkbox" ${t.act ? "checked" : ""} onchange="state.oa.tm263.act=this.checked"> ${T("الوقت يبدأ لما الطالب يدوس «تفعيل»", "Time starts when the student presses «Activate»")}</label>` : ""}</div>`;
+      const i = h.lastIndexOf('<button class="btn btn-p" onclick="ownerOpenGo()"'); return i < 0 ? h + row : h.slice(0, i) + row + h.slice(i); };
+  }
+  if (typeof ownerOpenGo === "function") {
+    const _g = ownerOpenGo; ownerOpenGo = async function () { const d = state.oa || {}; const t = d.tm263; if (!FF("v263.timer") || !t || !t.on) return _g.apply(this, arguments);
+      const uids = (d.uids && d.uids.length ? d.uids : d.uid ? [d.uid] : []); if (!uids.length) return toast(T("اختار طالب", "Pick a student"), true);
+      const sel = Object.entries(d.sel || {}).filter(([, on]) => on).map(([k]) => k); if (!sel.length) return toast(T("اختار اللي هيتفتح", "Pick what to open"), true);
+      const u = UNITS().find(x => x[0] === t.u) || UNITS()[2]; const mins = u[2] ? u[2] * Math.max(1, +t.n || 1) : 0;
+      for (const uid of uids) for (const k of sel) { const scope = k === "all" ? "all" : k.startsWith("s:") ? "section" : "feature:" + k; const r = await sb.rpc("owner_grant_timed", { p_user: uid, p_scope: scope, p_section: k.startsWith("s:") ? k.slice(2) : null, p_minutes: mins, p_pending: !!t.act }); if (r.error) return toast(r.error.message, true); }
+      toast("✅ " + T(`اتفتح لـ ${uids.length} طالب`, `Opened for ${uids.length}`) + (t.act ? " — " + T("مستني الطالب يفعّل", "waiting for activation") : "")); };
+  }
+
+  /* ---------- 2) الطالب: «تفعيل» + التايمر ---------- */
+  const mine = () => { if (!state.auth.user) return []; try { const a = myAccess(); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+  const pend = () => mine().filter(a => a.pending);
+  const running = () => { const now = Date.now(); return mine().filter(a => !a.pending && a.duration_minutes && a.expires_at && new Date(a.expires_at).getTime() > now).sort((x, y) => new Date(x.expires_at) - new Date(y.expires_at)); };
+  const scopeName = a => a.scope === "all" ? T("كل محتوى الموقع", "All site content") : a.scope === "section" ? (() => { try { const s = (sectionsData() || []).find(x => x.id === a.section_id); return s ? secTitle(s) : T("قسم", "A section"); } catch (e) { return T("قسم", "A section"); } })() : String(a.scope || "").replace(/^feature:/, "");
+  const durName = m => { if (!m) return T("مدى الحياة", "lifetime"); const u = UNITS().filter(x => x[2]).reverse().find(x => m % x[2] === 0) || UNITS()[0]; return `${m / u[2]} ${u[1]}`; };
+  tm263.act = async id => { const r = await sb.rpc("activate_access", { p_id: id }); if (r.error) return toast(r.error.message, true); try { invalidate("myAccess"); } catch (e) {} toast("🎉 " + T("اتفعّل! التايمر شغال", "Activated! Timer running")); render(); };
+  function banner() { if (!FF("v263.timer") || !state.auth.user || own()) return; const p = pend(); const app = document.getElementById("app"); if (!app) return; let b = document.getElementById("ac263"); if (!p.length) { if (b) b.remove(); return; } if (b) return;
+    b = document.createElement("div"); b.id = "ac263"; b.className = "wrap"; b.innerHTML = p.map(a => `<div class="card ac263"><span>🎁</span><div><b>${T("اتفتحلك", "Opened for you")}: ${E(scopeName(a))}</b><small>${T("المدة", "Duration")}: ${E(durName(a.duration_minutes))} — ${T("الوقت هيبدأ من لحظة ما تدوس «تفعيل»", "time starts when you press «Activate»")}</small></div><button class="btn btn-p" onclick="tm263.act('${a.id}')">▶ ${T("تفعيل", "Activate")}</button></div>`).join("");
+    const hdr = app.querySelector("header.hdr"); if (hdr) hdr.insertAdjacentElement("afterend", b); else app.prepend(b); }
+  const POS = () => { let p = null; try { p = setv("tmpos263", null); } catch (e) {} return p || "bl"; };
+  const fmt = ms => { const s = Math.max(0, Math.floor(ms / 1000)); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (d ? d + T("ي ", "d ") : "") + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(x).padStart(2, "0"); };
+  function chip() { if (!FF("v263.timer")) return; const r = running()[0]; let c = document.getElementById("tm263"); if (!r || own() && !state.preview) { if (c) c.remove(); return; }
+    if (!c) { c = document.createElement("div"); c.id = "tm263"; c.className = "notr"; document.body.appendChild(c); } c.dataset.p = POS(); const left = new Date(r.expires_at).getTime() - Date.now(); const tot = (r.duration_minutes || 1) * 60000;
+    c.innerHTML = `<b>⏳ ${fmt(left)}</b><small>${E(scopeName(r))}</small><i style="width:${Math.max(0, Math.min(100, left / tot * 100))}%"></i>`; if (left <= 0) { try { invalidate("myAccess"); } catch (e) {} render(); } }
+  setInterval(() => { try { chip(); } catch (e) {} }, 1000);
+  /* مكان التايمر — المالك يختاره */
+  tm263.pos = async v => { await saveSetting16("tmpos263", v); toast("✅"); render(); };
+  function posCard() { if (!own() || !FF("v263.timer")) return ""; const p = POS(); const o = [["tl", T("فوق يمين", "Top right")], ["tr", T("فوق شمال", "Top left")], ["bl", T("تحت يمين", "Bottom right")], ["br", T("تحت شمال", "Bottom left")], ["bc", T("تحت في النص", "Bottom centre")]];
+    return `<div class="card" style="margin:.6rem 0"><b>⏳ ${T("مكان تايمر المحتوى المفتوح عند الطالب", "Where students see the access timer")}</b><div class="row" style="gap:.3rem;flex-wrap:wrap;margin-top:.4rem">${o.map(x => `<button class="btn ${p === x[0] ? "btn-p" : "btn-o"}" onclick="tm263.pos('${x[0]}')">${x[1]}</button>`).join("")}</div></div>`; }
+
+  /* ---------- 3) الساعة المجانية الشهرية ---------- */
+  if (typeof fpActive === "function") { const _fa = fpActive; fpActive = function () { const a = _fa.apply(this, arguments); if (a && a.kind === "month" && !a.section) a.kind = "hour"; return a; }; }
+  tm263.month = async () => { const { error } = await sb.rpc("free_pass_start", { p_kind: "month", p_section: null }); if (error) return toast(error.message, true); try { invalidate("fpS"); } catch (e) {} toast("🎉 " + T("ساعتك المجانية بدأت — كل المحتوى مفتوح ساعة", "Your free hour started — everything is open for an hour")); render(); };
+  function freeCard() { if (!state.auth.user || !FF("v263.free")) return `<div class="card fr263"><span>🎁</span><div><b>${T("ساعة مجانية كل شهر لكل حد", "A free hour every month for everyone")}</b><small>${T("سجّل مجانًا وخد ساعة كاملة تفتح فيها كل المحتوى المدفوع — والوقت بيبدأ لما انت تدوس.", "Sign up free and get a full hour of all paid content — the clock starts when you press.")}</small></div><button class="btn btn-p" onclick="navigate('signup')">✨ ${T("سجّل", "Sign up")}</button></div>`;
+    let s = null; try { s = fpS(); } catch (e) {} let a = null; try { a = fpActive(); } catch (e) {}
+    if (a) return `<div class="card fr263 on"><span>⏳</span><div><b>${T("ساعتك المجانية شغالة", "Your free hour is running")}</b><small id="fl263">${fmt(a.ends - Date.now())}</small></div></div>`;
+    if (!s) return `<div class="card fr263"><span>🎁</span><div><b>${T("الساعة المجانية الشهرية", "Monthly free hour")}</b><small>${T("للطلاب", "For students")}</small></div></div>`;
+    if (!s.hour_used) return `<div class="card fr263"><span>🎁</span><div><b>${T("ساعتك المجانية الأولى مستنياك", "Your first free hour is waiting")}</b><small>${T("الوقت بيبدأ لما تدوس — وكل المحتوى المدفوع بيتفتح ساعة كاملة", "Starts when you press — all paid content opens for an hour")}</small></div><button class="btn btn-p" onclick="fpStart('hour')">▶ ${T("ابدأ ساعتي", "Start my hour")}</button></div>`;
+    if (s.month_available) return `<div class="card fr263"><span>🎁</span><div><b>${T("فتحة الشهر جاهزة", "This month's free opening is ready")}</b><small>${T("اختار: ساعة كاملة لكل المحتوى، أو نص ساعة لقسم واحد", "Pick: one hour of everything, or half an hour of one section")}</small></div><button class="btn btn-p" onclick="tm263.month()">▶ ${T("ساعة لكل المحتوى", "One hour, everything")}</button><button class="btn btn-o" onclick="fpModal('month')">${T("نص ساعة لقسم", "Half hour, one section")}</button></div>`;
+    const nx = s.next_month ? new Date(s.next_month).getTime() : 0; return `<div class="card fr263"><span>📅</span><div><b>${T("الفتحة المجانية الجاية بعد", "Next free opening in")}</b><small class="cd263" data-t="${nx}">${nx ? fmt(nx - Date.now()) : "—"}</small></div></div>`; }
+  setInterval(() => { document.querySelectorAll(".cd263").forEach(e => { const t = +e.dataset.t; if (t) e.textContent = fmt(t - Date.now()); }); const f = document.getElementById("fl263"); if (f) { try { const a = fpActive(); if (a) f.textContent = fmt(a.ends - Date.now()); } catch (e) {} } }, 1000);
+  /* «احصل على اشتراك مجاني» (invite): قسم الساعة المجانية + التايمر فوق */
+  function onInvite() { if (state.route !== "invite" || !FF("v263.free")) return; const app = document.getElementById("app"); const h = app && app.querySelector("h1"); if (!h || app.querySelector("#fr263")) return; const box = document.createElement("div"); box.id = "fr263"; box.innerHTML = `<h2 class="fh263">⏳ ${T("الساعة المجانية والفتح بالتايمر", "Free hour & timed access")}</h2>${freeCard()}${pend().map(a => `<div class="card ac263"><span>🎁</span><div><b>${E(scopeName(a))}</b><small>${E(durName(a.duration_minutes))}</small></div><button class="btn btn-p" onclick="tm263.act('${a.id}')">▶ ${T("تفعيل", "Activate")}</button></div>`).join("")}${running().map(a => `<div class="card ac263 on"><span>⏳</span><div><b>${E(scopeName(a))}</b><small class="cd263" data-t="${new Date(a.expires_at).getTime()}"></small></div></div>`).join("")}${posCard()}<h2 class="fh263">🤝 ${T("ادعي أصحابك واكسب", "Invite friends & earn")}</h2>`; h.insertAdjacentElement("afterend", box); }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { banner(); onInvite(); chip(); } catch (e) { console.warn("v263", e); } return o; };
+
+  css(`.tm263r{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.5rem 0;padding:.5rem;border:1px dashed var(--accent);border-radius:10px}
+  .ac263,.fr263{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;border:2px solid var(--accent);margin:.5rem 0;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 8%,transparent),transparent)}.ac263>span,.fr263>span{font-size:2rem}.ac263>div,.fr263>div{flex:1;min-width:12rem}.ac263 small,.fr263 small{display:block;color:var(--muted)}.fr263 .cd263,#fl263{font-size:1.5rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;direction:ltr;text-align:start}.fh263{font-size:1.1rem;margin:1rem 0 .3rem}
+  #tm263{position:fixed;z-index:9980;background:#0f172a;color:#fff;border-radius:14px;padding:.45rem .8rem .55rem;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;min-width:120px;overflow:hidden}#tm263 b{font-variant-numeric:tabular-nums;font-size:1.05rem;direction:ltr}#tm263 small{font-size:.68rem;opacity:.8;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#tm263 i{position:absolute;bottom:0;left:0;height:3px;background:#22c55e}
+  #tm263[data-p=tl]{top:5rem;right:1rem}#tm263[data-p=tr]{top:5rem;left:1rem}#tm263[data-p=bl]{bottom:5.5rem;right:1rem}#tm263[data-p=br]{bottom:5.5rem;left:1rem}#tm263[data-p=bc]{bottom:1rem;left:50%;transform:translateX(-50%)}`);
 })();
 
 // بدء التشغيل
