@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v236";
+const UI_VERSION = "2026-11-17-v246";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31299,6 +31299,460 @@ Between lessons, the platform keeps you going:
   #su236{border:2px solid #f59e0b!important;color:#b45309!important;background:transparent!important;font-weight:800}
   [data-theme=dark] #su236,.dark #su236{color:#fbbf24!important}
   @media(max-width:600px){#app .hdr .au236,#app .hdr .btn.keep219[onclick*=booking]{padding:.3rem .55rem!important;font-size:.74rem!important;min-height:0}}`);
+})();
+
+/* ================= v237: الترجمة التلقائية ماعادتش بتحط رسالة «MYMEMORY WARNING…» مكان الكلام لما الخدمة المجانية تخلص — بترجع للنص الأصلي، والنسخ الغلط اللي اتحفظت على الأجهزة بتتمسح ================= */
+(function () {
+  const BAD = /MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID LANGUAGE PAIR|PLEASE SELECT TWO DISTINCT LANGUAGES|YOU USED ALL AVAILABLE FREE TRANSLATIONS/i;
+  try { const _g = gtx; gtx = async function () { const r = await _g.apply(this, arguments); if (BAD.test(String(r || ""))) throw new Error("translate quota"); return r; }; } catch (e) {}
+  /* تنظيف الكاش على الجهاز */
+  function scrub(store) { try { for (let i = store.length - 1; i >= 0; i--) { const k = store.key(i); const v = store.getItem(k); if (!v || !BAD.test(v)) continue; try { const o = JSON.parse(v); const clean = x => { if (x && typeof x === "object") { for (const kk of Object.keys(x)) { if (typeof x[kk] === "string" && BAD.test(x[kk])) delete x[kk]; else clean(x[kk]); } } }; clean(o); store.setItem(k, JSON.stringify(o)); } catch (e) { store.removeItem(k); } } } catch (e) {} }
+  scrub(localStorage); scrub(sessionStorage);
+  /* لو اتعرضت قبل كده على الصفحة: ترجع للعربي الأصلي لحد ما الترجمة تشتغل */
+  const ORIG = new WeakMap();
+  function fix() { const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => BAD.test(n.nodeValue || "") ? 1 : 2 }); const L = []; let n; while ((n = tw.nextNode())) L.push(n); L.forEach(n => { const p = n.parentElement; const t = p && (p.getAttribute("data-ar") || p.getAttribute("title")); n.nodeValue = t && !BAD.test(t) ? t : ""; if (p && !n.nodeValue && p.closest("button")) { const b = p.closest("button"); if (/للمعلمين|teach/i.test(b.getAttribute("onclick") || "") || b.textContent.includes("👨‍🏫")) b.querySelectorAll("span").forEach(s => { if (!s.textContent.trim()) s.textContent = state.lang === "ar" ? "للمعلمين والأكاديميات" : "For teachers & academies"; }); } }); }
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(fix, 120); }).observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
+
+/* ================= v238: 👥 الحصة الجماعية (من Notion): سعر ثابت للجروب كله = ضعف الحصة الفردية (50 د) وبيتقسم على العدد — كل ما الجروب يكبر الفرد يدفع أقل · لحد 5 أفراد: حصة 50 د أو حصتين · أكتر من 5 (لحد 10): حصتين بس · لينك دعوة للأصحاب · لما يكمل اللي عمل الجروب يختار: واحد يدفع للكل ولا كل واحد يدفع نصيبه · المالك بيغيّر النسبة والسعر ويشوف كل الجروبات ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("grp238")) PAGES16.push("grp238");
+  const NF = () => setv("nf218", {}) || {}; const enabled = () => own() || !(NF().group238 && NF().group238.on === false);
+
+  /* السعر */
+  const CFG = () => Object.assign({ mult: 2, single: 0 }, setv("grp238", {}) || {});
+  function singleUSD() { const c = CFG(); if (+c.single > 0) return +c.single; try { const P = setv("plans", []) || []; const p = P.find(x => x.id === "pack4") || P.find(x => /^pack\d+$/.test(x.id)); if (p && p.price && p.lessons) return p.price / p.lessons; } catch (e) {} return 15; }
+  const totalUSD = sessions => Math.round(singleUSD() * CFG().mult * sessions * 100) / 100;
+  function fmt(usd) { try { const f = typeof myFactor === "function" ? myFactor() : 1; const v = usd * f; const to = displayCur(); const c = convert(v, "USD", to); return c == null ? money(v, "USD") : fmtCur(c, to); } catch (e) { return "$" + usd; } }
+
+  /* اللينك */
+  try { const m = location.search.match(/[?&]g=([A-Za-z0-9]{4,8})/); if (m) { localStorage.setItem("grp238", m[1].toUpperCase()); state.route = "grp238"; } } catch (e) {}
+  const code = () => state.grp238c || (localStorage.getItem("grp238") || "");
+  const link = c => `${location.origin}${location.pathname}?g=${c}#/grp238`;
+
+  const S = { size: 3, sessions: 1, track: "tajweed", note: "", g: null, busy: 0, mine: null, all: null };
+  async function load() { const c = code(); if (!c || !logged()) return; const { data, error } = await sb.rpc("grp238_get", { p_code: c }); S.g = error ? { err: error.message } : (data || { err: "not_found" }); render(); }
+  async function loadMine() { if (!logged()) return; const q = sb.from("grp238").select("code,size,sessions,status,members,created_at,owner_id,pay,track,total_usd").order("created_at", { ascending: false }).limit(own() ? 100 : 20); const { data } = await q; S.mine = data || []; render(); }
+
+  window.grp238 = {
+    set(k, v) { S[k] = v; if (k === "size" && +v > 5) S.sessions = 2; render(); },
+    async create() { if (!logged()) { localStorage.setItem("after238", "1"); return navigate("signup"); } if (S.busy) return; S.busy = 1; const tot = totalUSD(S.sessions); const { data, error } = await sb.rpc("grp238_create", { p_size: +S.size, p_sessions: +S.sessions, p_track: S.track, p_note: S.note, p_total: tot }); S.busy = 0; if (error) return toast(error.message, true); localStorage.setItem("grp238", data); state.grp238c = data; S.g = null; S.mine = null; load(); },
+    open(c) { state.grp238c = c; localStorage.setItem("grp238", c); S.g = null; render(); load(); },
+    async join() { if (!logged()) return navigate("signup"); const { data, error } = await sb.rpc("grp238_join", { p_code: code() }); if (error) return toast(/full/.test(error.message) ? T("الجروب اكتمل خلاص", "This group is already full") : error.message, true); S.g = data; toast("✅ " + T("انضميت للجروب", "You joined the group")); render(); },
+    async leave() { if (!confirm(T("تخرج من الجروب؟", "Leave this group?"))) return; await sb.rpc("grp238_leave", { p_code: code() }); localStorage.removeItem("grp238"); state.grp238c = ""; S.g = null; render(); },
+    async pay(p) { const { data, error } = await sb.rpc("grp238_setpay", { p_code: code(), p_pay: p }); if (error) return toast(error.message, true); S.g = data; render(); },
+    copy() { const l = link(code()); try { navigator.clipboard.writeText(l); toast("✅ " + T("اتنسخ اللينك", "Link copied")); } catch (e) { prompt("", l); } },
+    wa() { const g = S.g || {}; const msg = T(`تعالى ننضم لحصة جماعية في أكاديمية إتقان (${g.size} أفراد) — السعر بيتقسم علينا: `, `Join our group lesson at Itqan Academy (${g.size} people) — we split the price: `) + link(code()); open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank"); },
+    newOne() { localStorage.removeItem("grp238"); state.grp238c = ""; S.g = null; render(); },
+    async cfg() { const c = CFG(); const m = prompt(T("سعر الجروب = كام ضعف الحصة الفردية 50 د؟", "Group price = how many times a single 50-min lesson?"), c.mult); if (m == null) return; const s = prompt(T("سعر الحصة الفردية 50 د بالدولار (فاضي = من باقة 4 حصص)", "Single 50-min lesson price in USD (empty = from the 4-lesson pack)"), c.single || ""); if (s == null) return; await saveSetting16("grp238", { mult: +m || 2, single: +s || 0 }); render(); },
+    async status(c, st) { const { error } = await sb.from("grp238").update({ status: st }).eq("code", c); if (error) return toast(error.message, true); S.mine = null; loadMine(); }
+  };
+
+  const TR = [["quran", "📖", "حفظ القرآن", "Quran memorization"], ["tajweed", "🕌", "التجويد", "Tajweed"], ["maqamat", "🎼", "المقامات", "Maqamat"], ["qiraat", "📜", "القراءات", "Qira'at"], ["arabic", "✍️", "العربي", "Arabic"], ["islamic", "📚", "العلوم الإسلامية", "Islamic sciences"]];
+  const trName = k => { const t = TR.find(x => x[0] === k); return t ? t[1] + " " + (AR() ? t[2] : t[3]) : k || ""; };
+  const steps = n => `<div class="st238">${[T("اختار العدد", "Pick size"), T("ادعي أصحابك", "Invite friends"), T("اختاروا الدفع", "Choose payment"), T("نحدد الميعاد", "We schedule")].map((x, i) => `<span class="${i < n ? "ok" : i === n ? "on" : ""}"><b>${i + 1}</b>${x}</span>`).join("")}</div>`;
+
+  function createView() { const sz = +S.size, ses = sz > 5 ? 2 : +S.sessions; const tot = totalUSD(ses); const per = tot / sz; const single = singleUSD();
+    return `${steps(0)}<div class="card"><h3>👥 ${T("كام واحد في الجروب؟", "How many people?")}</h3><div class="sz238">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${n === sz ? "on" : ""}" onclick="grp238.set('size',${n})">${n}</button>`).join("")}</div>
+      <h3 style="margin-top:1rem">⏱️ ${T("مدة الحصة", "Lesson length")}</h3><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="chip ${ses === 1 ? "on" : ""}" ${sz > 5 ? "disabled" : ""} onclick="grp238.set('sessions',1)">${T("حصة واحدة 50 دقيقة", "One 50-min lesson")}</button><button class="chip ${ses === 2 ? "on" : ""}" onclick="grp238.set('sessions',2)">${T("حصتين (50 + 50 دقيقة)", "Two lessons (50 + 50 min)")}</button></div>${sz > 5 ? `<p class="xs muted">${T("أكتر من 5 أفراد لازم حصتين علشان كل واحد ياخد وقته.", "More than 5 people needs two lessons so everyone gets a turn.")}</p>` : ""}
+      <h3 style="margin-top:1rem">🎯 ${T("المسار", "Track")}</h3><div class="row" style="gap:.4rem;flex-wrap:wrap">${TR.map(t => `<button class="chip ${S.track === t[0] ? "on" : ""}" onclick="grp238.set('track','${t[0]}')">${t[1]} ${AR() ? t[2] : t[3]}</button>`).join("")}</div>
+      <label class="sm" style="display:block;margin-top:.8rem">${T("ملاحظة (اختياري): المستوى، الأعمار، المواعيد المناسبة", "Note (optional): level, ages, good times")}<textarea class="in" rows="2" oninput="S238note(this.value)">${esc(S.note)}</textarea></label></div>
+      <div class="card pr238"><div><small class="muted">${T("سعر الجروب كله (ثابت)", "Whole-group price (fixed)")}</small><b>${fmt(tot)}</b><small class="muted">${ses === 2 ? T("حصتين", "2 lessons") : T("حصة 50 د", "one 50-min lesson")}</small></div><div class="eq">÷ ${sz}</div><div class="per"><small class="muted">${T("على كل واحد", "Each person pays")}</small><b>${fmt(per)}</b><small class="ok">${T(`أقل من الحصة الفردية (${fmt(single * ses)})`, `Less than a private lesson (${fmt(single * ses)})`)}</small></div></div>
+      <p class="xs muted" style="text-align:center">💡 ${T("كل ما الجروب يكبر، نصيب كل واحد يقل.", "The bigger the group, the less each person pays.")}</p>
+      <button class="btn btn-p btn-lg btn-full" onclick="grp238.create()">✨ ${T("أنشئ الجروب وخد لينك الدعوة", "Create the group & get the invite link")}</button>`; }
+
+  function groupView() { const g = S.g; if (!g) { setTimeout(load, 10); return loadingBox(); } if (g.err) return `<div class="card">⚠️ ${T("اللينك ده مش شغال أو الجروب اتلغى.", "This link isn't valid or the group was cancelled.")} <button class="btn btn-o xs" onclick="grp238.newOne()">${T("اعمل جروب جديد", "Create a new group")}</button></div>`;
+    const n = g.count || 0, full = n >= g.size; const tot = +g.total_usd || totalUSD(g.sessions); const per = tot / g.size; const stp = !full ? 1 : g.status === "paying" || g.status === "paid" ? 3 : 2;
+    let body = `${steps(stp)}<div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>👥 ${T("جروب", "Group")} ${esc(g.code)} · ${esc(trName(g.track))}</h3><span class="badge">${n}/${g.size}</span></div><div class="pb238"><i style="width:${Math.round(n / g.size * 100)}%"></i></div>
+      <div class="mb238">${[...Array(g.size)].map((_, i) => `<span class="${i < n ? "on" : ""}">${i < n ? "👤 " + esc((g.names || [])[i] || "—") : "＋"}</span>`).join("")}</div>
+      <p class="sm">${g.sessions === 2 ? T("حصتين (50 + 50 د)", "Two lessons (50 + 50 min)") : T("حصة 50 د", "One 50-min lesson")} · ${T("سعر الجروب", "Group price")} <b>${fmt(tot)}</b> · ${T("على كل واحد", "each")} <b>${fmt(per)}</b></p>${g.note ? `<p class="xs muted">📝 ${esc(g.note)}</p>` : ""}</div>`;
+    if (!g.joined) return body + (full ? `<div class="card">${T("الجروب ده اكتمل.", "This group is full.")}</div>` : `<button class="btn btn-p btn-lg btn-full" onclick="grp238.join()">🤝 ${T("انضم للجروب", "Join the group")}</button>`);
+    if (!full) body += `<div class="card"><h3>📨 ${T("ادعي أصحابك", "Invite your friends")}</h3><p class="sm muted">${T(`فاضل ${g.size - n} — ابعتلهم اللينك ده، أول ما يدخلوا ويضغطوا «انضم» بيتضافوا هنا.`, `${g.size - n} spots left — send them this link.`)}</p><div class="lk238"><input class="in" readonly value="${esc(link(g.code))}" onclick="this.select()"><button class="btn btn-p" onclick="grp238.copy()">📋 ${T("انسخ", "Copy")}</button><button class="btn btn-o" onclick="grp238.wa()">💬 WhatsApp</button></div></div>`;
+    else if (g.is_owner && g.status === "full") body += `<div class="card"><h3>💳 ${T("الجروب اكتمل! هتدفعوا إزاي؟", "The group is full! How will you pay?")}</h3><div class="pay238"><button onclick="grp238.pay('one')"><b>🙋 ${T("أنا هدفع للكل", "I'll pay for everyone")}</b><span>${fmt(tot)}</span></button><button onclick="grp238.pay('each')"><b>👥 ${T("كل واحد يدفع نصيبه", "Everyone pays their share")}</b><span>${fmt(per)} ${T("للفرد", "each")}</span></button></div></div>`;
+    else if (g.status === "full") body += `<div class="card">⏳ ${T("الجروب اكتمل — مستنيين اللي عمل الجروب يختار طريقة الدفع.", "Group is full — waiting for the organiser to choose how to pay.")}</div>`;
+    if (g.status === "paying" || g.status === "paid" || g.status === "scheduled") { const mine = g.pay === "one" ? (g.is_owner ? tot : 0) : per;
+      body += `<div class="card"><h3>✅ ${g.pay === "one" ? T("اللي عمل الجروب هيدفع للكل", "The organiser pays for everyone") : T("كل واحد هيدفع نصيبه", "Everyone pays their share")}</h3>${mine ? `<p>${T("المطلوب منك", "Your amount")}: <b style="font-size:1.3rem">${fmt(mine)}</b></p><p class="sm muted">${T("الأكاديمية هتتواصل معاكم تأكد الميعاد وتبعت بيانات الدفع (InstaPay · Vodafone Cash · PayPal). الحصة بتتحجز بعد الدفع.", "The academy will contact you to confirm the time and send payment details (InstaPay · Vodafone Cash · PayPal).")}</p>` : `<p class="sm">${T("مش مطلوب منك تدفع حاجة — اللي عمل الجروب هيدفع.", "Nothing to pay — the organiser is paying.")}</p>`}<p class="sm">${T("الحالة", "Status")}: <b>${esc(g.status === "paid" ? T("اتدفع", "Paid") : g.status === "scheduled" ? T("الميعاد اتحدد", "Scheduled") : T("مستني الدفع", "Awaiting payment"))}</b></p></div>`; }
+    body += `<div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem">${!g.is_owner && (g.status === "open" || g.status === "full") ? `<button class="btn btn-o xs" onclick="grp238.leave()">🚪 ${T("اخرج من الجروب", "Leave group")}</button>` : ""}<button class="btn btn-o xs" onclick="grp238.newOne()">➕ ${T("جروب جديد", "New group")}</button></div>`;
+    return body; }
+
+  function ownerView() { if (!own()) return ""; if (S.mine == null) { setTimeout(loadMine, 10); return ""; } const c = CFG();
+    const st = ["open", "full", "paying", "paid", "scheduled", "cancelled"]; const nm = { open: T("مفتوح", "Open"), full: T("اكتمل", "Full"), paying: T("مستني الدفع", "Awaiting payment"), paid: T("اتدفع", "Paid"), scheduled: T("اتحدد", "Scheduled"), cancelled: T("اتلغى", "Cancelled") };
+    return `<details class="card" style="margin-top:1rem"><summary class="b">🔒 ${T("للمالك: كل الجروبات والإعدادات", "Owner: all groups & settings")} (${S.mine.length})</summary><p class="sm">${T("سعر الجروب", "Group price")} = <b>${c.mult}×</b> ${T("الحصة الفردية", "a single lesson")} (${fmt(singleUSD())}) <button class="btn btn-o xs" onclick="grp238.cfg()">✏️ ${T("غيّر", "Change")}</button></p>
+      <table class="tbl196">${S.mine.map(g => `<tr><td><a href="#" onclick="grp238.open('${g.code}');return false">${g.code}</a></td><td>${(g.members || []).length}/${g.size}</td><td>${g.sessions === 2 ? "2×50" : "50"}</td><td>${esc(trName(g.track))}</td><td>${g.pay === "one" ? T("واحد للكل", "One pays") : T("كل واحد", "Each")}</td><td><select class="in" style="width:auto" onchange="grp238.status('${g.code}',this.value)">${st.map(s => `<option value="${s}" ${s === g.status ? "selected" : ""}>${nm[s]}</option>`).join("")}</select></td></tr>`).join("") || `<tr><td class="muted">${T("لسه مفيش", "None yet")}</td></tr>`}</table></details>`; }
+
+  function page() { if (!enabled()) { state.route = "home"; return null; } const c = code();
+    const head = pageWrap("👥", T("حصة جماعية", "Group lesson"), T("سعر واحد ثابت للجروب كله وبيتقسم عليكم — كل ما تزيدوا كل واحد يدفع أقل", "One fixed price for the whole group, split between you — more people, less each"), `${c && logged() ? groupView() : createView()}${ownerView()}`, 820);
+    return head; }
+  window.S238note = v => { S.note = v; };
+
+  /* لينكات للحصة الجماعية من صفحة الأسعار والرئيسية */
+  function hooks() { const app = document.getElementById("app"); if (!app || !enabled()) return;
+    if (state.route === "pricing" && !app.querySelector("#cta238")) { const tb = app.querySelector(".ptabs"); const h = [...app.querySelectorAll("h2,h3")].find(x => /👥/.test(x.textContent)); const at = tb || (h && (h.closest(".card,section") || h)); if (at) at.insertAdjacentHTML(tb ? "afterend" : "beforebegin", `<div id="cta238" class="card cta238"><div><b>👥 ${T("أنشئ حصة جماعية مع أصحابك", "Create a group lesson with friends")}</b><p class="sm muted">${T("سعر ثابت للجروب وبيتقسم عليكم — لحد 10 أفراد، ولينك دعوة بدوسة.", "Fixed group price split between you — up to 10 people, invite link in one tap.")}</p></div><button class="btn btn-p" onclick="go16('grp238')">✨ ${T("ابدأ", "Start")}</button></div>`); }
+    app.querySelectorAll("a[href*='wa.me']").forEach(a => { if (a.__g238 || !/friends|أصحاب|group/i.test(decodeURIComponent(a.href))) return; a.__g238 = 1; a.insertAdjacentHTML("beforebegin", `<button class="btn btn-p" onclick="go16('grp238')">👥 ${T("أنشئ حصة جماعية", "Create a group lesson")}</button> `); }); }
+
+  const _r = render; render = function () { if (state.route === "grp238") { const b = page(); if (b) { show(b); return; } } const o = _r.apply(this, arguments); try { hooks(); } catch (e) { console.warn("v238", e); } return o; };
+  /* بعد التسجيل يرجع يكمّل الجروب */
+  setInterval(() => { try { if (logged() && localStorage.getItem("after238")) { localStorage.removeItem("after238"); go16("grp238"); } if (logged() && code() && state.route !== "grp238" && /[?&]g=/.test(location.search)) { history.replaceState(null, "", location.pathname + "#/grp238"); go16("grp238"); } } catch (e) {} }, 1500);
+  css(`.st238{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin-bottom:.8rem}.st238 span{display:flex;align-items:center;gap:.3rem;font-size:.8rem;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--line);color:var(--muted)}.st238 b{display:inline-grid;place-items:center;width:1.3rem;height:1.3rem;border-radius:50%;background:var(--line);color:var(--fg);font-size:.7rem}.st238 .on{border-color:var(--accent);color:var(--fg);font-weight:700}.st238 .on b,.st238 .ok b{background:var(--accent);color:#fff}.st238 .ok{color:var(--accent)}
+  .sz238{display:flex;gap:.35rem;flex-wrap:wrap}.sz238 button{width:3rem;height:3rem;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:800 1.1rem inherit;cursor:pointer}.sz238 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .pr238{display:grid;grid-template-columns:1fr auto 1fr;gap:.6rem;align-items:center;text-align:center}.pr238>div{display:flex;flex-direction:column;gap:.15rem}.pr238 b{font-size:1.5rem}.pr238 .per b{color:var(--accent);font-size:1.8rem}.pr238 .eq{font-size:1.3rem;font-weight:800;color:var(--muted)}.pr238 .ok{color:#16a34a;font-size:.75rem}
+  .pb238{height:10px;border-radius:999px;background:var(--bg);overflow:hidden;margin:.5rem 0}.pb238 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .mb238{display:flex;gap:.35rem;flex-wrap:wrap;margin:.4rem 0}.mb238 span{padding:.3rem .6rem;border-radius:999px;border:1px dashed var(--line);font-size:.8rem;color:var(--muted)}.mb238 span.on{border-style:solid;border-color:var(--accent);color:var(--fg)}
+  .lk238{display:flex;gap:.35rem;flex-wrap:wrap}.lk238 input{flex:1;min-width:12rem;direction:ltr}
+  .pay238{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}@media(max-width:560px){.pay238{grid-template-columns:1fr}.pr238{grid-template-columns:1fr}}.pay238 button{display:flex;flex-direction:column;gap:.3rem;padding:1rem;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;font:inherit}.pay238 button:hover{border-color:var(--accent)}.pay238 span{font-size:1.3rem;font-weight:800;color:var(--accent)}
+  .cta238{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;border:2px solid var(--accent)}`);
+})();
+
+/* ================= v239: صفحة كل مقام (أساسي وفرعي) — اتشالت تبويبات «الآهات» و«خمّن المقام» و«تمارين الصوت» (خمّن المقام والتمارين مكانهم «مساحتك الصوتية») · «التحويل» في المقامات الأساسية بس · «🎤 مارس المقام بصوتك» بقى تبويب بيفتح جوه نفس الصفحة ومابيوديكش مكان تاني · التبويبات أول حاجة في الصفحة ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const MAIN = new Set(["rast", "bayati", "saba", "hijaz", "nahawand", "sikah", "kurd", "ajam"]);
+  const GONE = new Set(["aah", "guess", "ex165"]);
+  if (typeof maqamOne !== "function") return;
+  const _mo = maqamOne;
+  maqamOne = function (cur) {
+    const mid = ((cur && cur.meta) || {}).maqam; const main = MAIN.has(mid);
+    if (GONE.has(state.mqTab) || (!main && state.mqTab === "mod")) state.mqTab = "info";
+    let h = _mo.apply(this, arguments);
+    h = h.replace(/<div class="motabs">([\s\S]*?)<\/div>/, (m, inner) => {
+      let x = inner.replace(/<button[^>]*onclick="state\.mqTab='(\w+)'[^"]*"[^>]*>[\s\S]*?<\/button>/g, (b, k) => (GONE.has(k) || (!main && k === "mod")) ? "" : b);
+      if (!/mqTab='vtest'/.test(x)) { const btn = `<button class="${state.mqTab === "vtest" ? "on" : ""}" onclick="state.mqTab='vtest';try{aahStop()}catch(e){};render()">🎤 ${T("مارس المقام بصوتك", "Practise with your voice")}</button>`; x = x.replace(/(<button[^>]*mqTab='info'[\s\S]*?<\/button>)/, "$1" + btn); }
+      return `<div class="motabs mt239">${x}</div>`; });
+    return h;
+  };
+  /* أي زرار «مارس المقام بصوتك» تاني بيودّي لصفحة تانية: يفتح التبويب جوه الصفحة */
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#app button, #app a"); if (!b || b.closest(".motabs")) return; if (!/مارس المقام|Practi[sc]e (the maqam )?with your voice/i.test(b.textContent || "")) return; if (!document.querySelector("#app .motabs")) return; e.preventDefault(); e.stopPropagation(); state.mqTab = "vtest"; render(); setTimeout(() => { const t = document.querySelector("#app .motabs"); t && t.scrollIntoView({ block: "start" }); }, 80); }, true);
+  /* التبويبات أول حاجة: بتتنقل فوق محتوى القسم */
+  function top() { const t = document.querySelector("#app .motabs.mt239"); if (!t || t.__t239) return; t.__t239 = 1; const card = t.parentElement; const h1 = document.querySelector("#app h1"); const host = h1 && (h1.closest(".wrap") || h1.parentElement); if (!host || host.contains(t) && host.firstElementChild === t) return; }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { top(); } catch (e) {} return o; };
+  css(`.motabs.mt239{position:sticky;top:0;z-index:5;background:var(--bg);padding:.4rem 0;flex-wrap:wrap}`);
+})();
+
+/* ================= v240: المصحف الملوّن — ضغطة واحدة على الكلمة = كارت صغير فيه الكلمة والآية (🔊 الكلمة · 🎧 الآية بصوت الحصري) · كليك يمين أو دبل كليك على الكلمة = شريط الأخطاء (للمعلم والطالب) ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  let pop = null; const close = () => { pop && pop.remove(); pop = null; };
+  function info(w) { close(); const vk = w.dataset.v || ""; const [s, a] = vk.split(":").map(Number); const i = +w.dataset.i || 0; const word = (w.innerText || "").trim();
+    let ayah = ""; try { const ay = w.closest(".ay") || document.getElementById("tay_" + a); if (ay) ayah = ay.innerText.replace(/\s+/g, " ").trim().slice(0, 400); } catch (e) {}
+    const sn = (typeof SURAHS !== "undefined" && SURAHS[s - 1]) || s;
+    pop = document.createElement("div"); pop.id = "wp240"; pop.innerHTML = `<button class="x" title="✕">✕</button><div class="w notr" lang="ar">${esc(word)}</div><div class="ref">${T("سورة", "Surah")} ${esc(String(sn))} · ${T("آية", "Ayah")} ${a || ""}</div>${ayah ? `<div class="ay notr" lang="ar">${esc(ayah)}</div>` : ""}<div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:center"><button class="btn btn-o" data-p="w">🔊 ${T("الكلمة", "Word")}</button><button class="btn btn-o" data-p="a">🎧 ${T("الآية (الحصري)", "Ayah (Husary)")}</button><button class="btn btn-o" data-p="m">✏️ ${T("علّم خطأ", "Mark a mistake")}</button></div><small class="muted">${T("كليك يمين أو دبل كليك على الكلمة = شريط الأخطاء علطول", "Right-click or double-click a word = mistakes bar")}</small>`;
+    document.body.appendChild(pop); const r = w.getBoundingClientRect(); const top = r.bottom + 8 + pop.offsetHeight > innerHeight ? r.top - pop.offsetHeight - 8 : r.bottom + 8; pop.style.top = Math.max(8, top) + "px"; pop.style.left = Math.min(innerWidth - pop.offsetWidth - 8, Math.max(8, r.left + r.width / 2 - pop.offsetWidth / 2)) + "px";
+    pop.onclick = e => { const b = e.target.closest("button"); if (!b) return; if (b.classList.contains("x")) return close(); try { if (b.dataset.p === "w") play196(wbwUrl(s, a, i + 1)); if (b.dataset.p === "a") play196(eaUrl("Husary_128kbps", vk)); if (b.dataset.p === "m") { close(); mmOpen(vk, i, word); } } catch (err) { console.warn(err); } }; }
+  const W = e => e.target.closest && e.target.closest(".tj2 .w[data-v]");
+  addEventListener("click", e => { const w = W(e); if (!w) { if (pop && !e.target.closest("#wp240")) close(); return; } if (e.detail > 1) return; e.preventDefault(); e.stopImmediatePropagation(); clearTimeout(w.__t240); w.__t240 = setTimeout(() => info(w), 230); }, true);
+  const mistake = e => { const w = W(e); if (!w) return; e.preventDefault(); e.stopImmediatePropagation(); clearTimeout(w.__t240); close(); try { mmOpen(w.dataset.v, +w.dataset.i, (w.innerText || "").trim()); } catch (err) {} };
+  addEventListener("dblclick", mistake, true); addEventListener("contextmenu", mistake, true);
+  addEventListener("scroll", () => close(), { passive: true });
+  css(`#wp240{position:fixed;z-index:60000;width:min(360px,92vw);background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 34px rgba(0,0,0,.2);padding:.7rem .8rem;display:flex;flex-direction:column;gap:.4rem;text-align:center}
+  #wp240 .x{position:absolute;top:.3rem;inset-inline-end:.4rem;border:0;background:none;cursor:pointer;color:var(--muted)}#wp240 .w{font:2.2rem/1.6 'Amiri Quran','Amiri',serif}#wp240 .ref{font-size:.8rem;color:var(--muted)}#wp240 .ay{font:1.15rem/2 'Amiri Quran','Amiri',serif;max-height:6.5rem;overflow:auto;background:var(--bg);border-radius:12px;padding:.3rem .5rem}`);
+})();
+
+/* ================= v241: الرئيسية بالمسارات (من Notion): أول ما تدخل تلاقي 5 مسارات بس — 📖 القرآن والتجويد · 📜 القراءات العشر · 🎼 المقامات · ✍️ العربية · 📚 العلوم الإسلامية — وكل مسار جواه تقسيمات كبيرة (يتفتح واحد بس في المرة) وكل أداة في مكان واحد من غير تكرار · صفحة «📜 القراءات العشر» بالقرّاء العشرة ورواتهم · صفحة «🕌 أدوات المسلم» (مواقيت الصلاة والقبلة، الأذكار، التقويم الهجري، أسماء الله الحسنى، الأربعين…) collapsed ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["qiraat10", "muslim241"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+
+  /* الأدوات من DOMAINS نفسها (عشان أي تعديل منك في المنظّم يظهر هنا) */
+  function tools() { const out = {}; try { DOMAINS().forEach(d => (d.tools || []).forEach(t => { const js = String(t[2]); const k = js + "|" + t[1]; if (!out[k]) out[k] = { ic: t[0], n: t[1], js, d: d.k, key: k }; })); } catch (e) {} return out; }
+  const pick = (all, keys) => keys.map(k => Object.values(all).find(t => (k.re ? k.re.test(t.n) : t.js.includes(k)) && (!k.d || t.d === k.d))).filter(Boolean);
+  const R = (re, d) => ({ re, d });
+  function PATHS() { const A = tools(); const used = new Set(); const grp = (name, keys, extra = []) => { const L = pick(A, keys).filter(t => !used.has(t.key)); L.forEach(t => used.add(t.key)); return [name, L.concat(extra)]; };
+    return [
+      { id: "quran", ic: "📖", t: T("القرآن والتجويد", "Quran & Tajweed"), s: T("الحفظ والمراجعة، التجويد، المصاحف", "Memorization, review, tajweed, mushafs"), c: "#0f766e", g: [
+        grp(T("الحفظ والمراجعة", "Memorization & review"), ["hzTab='today'", "hzTab='session'", "hzTab='map'", "go16('tasmee')", "go16('hifzt')", "go16('khatma')", "go16('growth')", "go16('games172')"]),
+        grp(T("التجويد", "Tajweed"), ["go16('tjb')", "go16('makharij')", "go16('tf228')", "go16('vow172')", "go16('nooraniya')", R(/صلّح أخطاء التجويد/), R(/ألعاب التجويد/), R(/رحلة التجويد/)]),
+        grp(T("المصاحف", "Mushafs"), [R(/المصحف الملوّن/, "tajweed"), R(/مصحف أخطائي/), "go16('kidsmushaf')", R(/قصة مصوّرة/)])] },
+      { id: "qiraat", ic: "📜", t: T("القراءات العشر", "The Ten Qira'at"), s: T("القرّاء العشرة ورواتهم، استماع آية بآية والفروق", "The ten readers and their narrators, ayah-by-ayah audio"), c: "#7c2d12", g: [
+        [T("القراءات", "Qira'at"), [{ ic: "📜", n: T("القرّاء العشرة ورواتهم", "The ten readers & narrators"), js: "go16('qiraat10')" }, ...pick(A, ["go16('qiraat')"]).map(t => (used.add(t.key), t))]]] },
+      { id: "maqamat", ic: "🎼", t: T("المقامات", "Maqamat"), s: T("الأساسية، الفرعية، أنشد معي، مساحتك الصوتية، النظري", "Main, branches, sing along, your voice, theory"), c: "#6d28d9", g: [
+        grp(T("المقامات", "The maqamat"), [R(/المقامات الأساسية/), R(/المقامات الفرعية/), R(/أنشد معي/), "go16('adhans')"]),
+        [T("مساحتك الصوتية", "Your voice space"), [{ ic: "🎤", n: T("مساحتك الصوتية (مداك، تمارين، خمّن واكتشف مقامك)", "Your voice space (range, exercises, guess & detect)"), js: "go16('voice242')" }, ...pick(A, ["go16('tuner')"]).map(t => (used.add(t.key), t))]],
+        grp(T("المعلومات النظرية", "Theory"), ["go16('maqamat')", "go16('tahwil')", "go16('mqc')", "go16('mqchallenge')"])] },
+      { id: "arabic", ic: "✍️", t: T("العربية", "Arabic"), s: T("الحروف من الصفر، اتكلم عربي، النحو والصرف", "Letters from zero, speak Arabic, grammar"), c: "#b45309", g: [
+        grp(T("الحروف والقراءة من الصفر", "Letters & reading from zero"), ["go16('reading')", "go16('kidsar')"]),
+        grp(T("اتكلم عربي", "Speak Arabic"), ["go16('lang','fu')", "go16('lang','eg')", "go16('lang','gu')", "go16('egyptian')"]),
+        grp(T("الفصحى والنحو والصرف", "Fusha, grammar & morphology"), ["go16('abyb')", "go16('arabiya')", "go16('fusha')", "go16('nahw')"])] },
+      { id: "sciences", ic: "📚", t: T("العلوم الإسلامية", "Islamic Sciences"), s: T("التفسير والحديث والفقه والسيرة + أدوات المسلم", "Tafsir, hadith, fiqh, seerah + Muslim tools"), c: "#1d4ed8", g: [
+        grp(T("العلوم", "Sciences"), ["go16('ilm')", R(/تفسير القرآن/), R(/الحديث الشريف/), R(/^الفقه$/), R(/السيرة النبوية/), R(/قصص الأنبياء/), "go16('alam')", "go16('kutub199')", "go16('bk','fqs')"]),
+        [T("أدوات المسلم", "Muslim tools"), [{ ic: "🕌", n: T("كل أدوات المسلم", "All Muslim tools"), js: "go16('muslim241')" }]]] }
+    ]; }
+
+  const OPEN = () => state.p241 || "";
+  window.p241 = id => { state.p241 = OPEN() === id ? "" : id; const b = document.getElementById("pth241"); if (b) b.outerHTML = paths(); };
+  function paths() { const P = PATHS(); return `<div id="pth241"><div class="lv241"><button class="chip" onclick="state.lvT=null;go16('level')">🎯 ${T("مش عارف تبدأ منين؟ حدد مستواك", "Not sure where to start? Find your level")}</button></div><div class="pg241">${P.map(p => `<div class="pc241 ${OPEN() === p.id ? "on" : ""}" style="--c:${p.c}"><button class="ph241" onclick="p241('${p.id}')"><span class="i">${p.ic}</span><span class="tx"><b>${esc(p.t)}</b><small>${esc(p.s)}</small></span><span class="ar">${OPEN() === p.id ? "−" : "+"}</span></button>${OPEN() === p.id ? `<div class="pb241">${p.g.filter(g => g[1].length).map(g => `<div class="gg241"><h4>${esc(g[0])}</h4><div class="tl241">${g[1].map(t => `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div></div>`).join("")}</div>` : ""}</div>`).join("")}</div></div>`; }
+
+  function home() { if (state.route !== "home") return; const app = document.getElementById("app"); if (!app || app.querySelector("#pth241")) return; const h = [...app.querySelectorAll("h2")].find(x => /عايز تتعلم إيه|ماذا تريد أن تتعلم|What would you like to learn/i.test(x.textContent)); if (!h) return; const box = h.parentElement; [...box.children].forEach(c => { if (c !== h) c.style.display = "none"; }); h.insertAdjacentHTML("afterend", paths()); }
+
+  /* القراءات العشر */
+  const Q10 = [["نافع المدني", "Nāfiʿ", "قالون · ورش", "Qālūn · Warsh"], ["ابن كثير المكي", "Ibn Kathīr", "البزّي · قنبل", "al-Bazzī · Qunbul"], ["أبو عمرو البصري", "Abū ʿAmr", "الدوري · السوسي", "al-Dūrī · al-Sūsī"], ["ابن عامر الشامي", "Ibn ʿĀmir", "هشام · ابن ذكوان", "Hishām · Ibn Dhakwān"], ["عاصم الكوفي", "ʿĀṣim", "شعبة · حفص", "Shuʿbah · Ḥafṣ"], ["حمزة الكوفي", "Ḥamzah", "خلف · خلّاد", "Khalaf · Khallād"], ["الكسائي الكوفي", "al-Kisāʾī", "أبو الحارث · الدوري", "Abū al-Ḥārith · al-Dūrī"], ["أبو جعفر المدني", "Abū Jaʿfar", "ابن وردان · ابن جمّاز", "Ibn Wardān · Ibn Jammāz"], ["يعقوب الحضرمي", "Yaʿqūb", "رويس · روح", "Ruways · Rawḥ"], ["خلف العاشر", "Khalaf al-ʿĀshir", "إسحاق · إدريس", "Isḥāq · Idrīs"]];
+  function qiraat() { return pageWrap("📜", T("القراءات العشر", "The Ten Qira'at"), T("القرّاء العشرة المتواترة ولكل قارئ راويان — اسمع وقارن من صفحة القراءات", "The ten mutawātir readers, each with two narrators"), `<div class="q241">${Q10.map((q, i) => `<div class="card"><b>${i + 1}. ${esc(T(q[0], q[1]))}</b><p class="sm muted" style="margin:.2rem 0">${T("الراويان", "Narrators")}: ${esc(T(q[2], q[3]))}</p></div>`).join("")}</div><button class="btn btn-p btn-lg" style="margin-top:1rem" onclick="go16('qiraat')">🎧 ${T("اسمع القراءات آية بآية والفروق", "Listen ayah by ayah & see the differences")}</button>`, 900); }
+
+  /* أدوات المسلم */
+  function muslim() { const A = tools(); const G = [[T("🕌 الصلاة", "🕌 Prayer"), ["go16('prayer')"]], [T("📿 الأذكار والدعاء", "📿 Adhkar"), ["go16('adhkar')", "go16('asma')"]], [T("📖 القرآن", "📖 Quran"), ["go16('khatma')", "go16('ayahcard')", "go16('arbaeen')"]], [T("🗓️ التقويم", "🗓️ Calendar"), []]];
+    const extra = { [T("🗓️ التقويم", "🗓️ Calendar")]: [{ ic: "🌙", n: T("التقويم الهجري", "Hijri calendar"), js: "go16('cal224')" }] };
+    return pageWrap("🕌", T("أدوات المسلم", "Muslim tools"), T("كل اللي المسلم بيحتاجه كل يوم في مكان واحد", "Everything a Muslim needs daily, in one place"), G.map(([n, k], i) => { const L = pick(A, k).concat(extra[n] || []); return L.length ? `<details class="card" ${i === 0 ? "open" : ""}><summary class="b">${esc(n)}</summary><div class="tl241" style="margin-top:.5rem">${L.map(t => `<button onclick="${esc(t.js)}"><span>${t.ic}</span>${esc(t.n)}</button>`).join("")}</div></details>` : ""; }).join(""), 860); }
+
+  const _r = render; render = function () { if (state.route === "qiraat10") return show(qiraat()); if (state.route === "muslim241") return show(muslim()); const o = _r.apply(this, arguments); try { home(); } catch (e) { console.warn("v241", e); } return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { home(); } catch (e) {} }, 120); }).observe(document.getElementById("app") || document.body, { childList: true });
+  css(`.lv241{text-align:center;margin:.3rem 0 .8rem}.pg241{display:grid;gap:.6rem}
+  .pc241{border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));border-radius:20px;background:var(--card);overflow:hidden;transition:box-shadow .2s}.pc241.on{box-shadow:0 10px 26px color-mix(in srgb,var(--c) 22%,transparent)}
+  .ph241{display:flex;align-items:center;gap:.8rem;width:100%;border:0;background:color-mix(in srgb,var(--c) 8%,var(--card));padding:1rem 1.1rem;cursor:pointer;color:var(--fg);font:inherit;text-align:start}.ph241 .i{font-size:2.2rem}.ph241 .tx{display:flex;flex-direction:column;flex:1}.ph241 b{font-size:1.2rem;color:var(--c)}.ph241 small{color:var(--muted);font-size:.85rem}.ph241 .ar{font-size:1.6rem;color:var(--c);font-weight:800}
+  .pb241{padding:.6rem 1rem 1rem;display:grid;gap:.7rem}.gg241 h4{margin:.2rem 0 .4rem;color:var(--c)}
+  .tl241{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.4rem}.tl241 button{display:flex;align-items:center;gap:.45rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:14px;padding:.55rem .7rem;cursor:pointer;font:inherit;font-size:.9rem;text-align:start}.tl241 button:hover{border-color:var(--accent)}.tl241 button span{font-size:1.25rem}
+  .q241{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem}`);
+})();
+
+/* ================= v242: 🎤 «مساحتك الصوتية» (من Notion) — 1) مداك الصوتي: أوطى وأعلى نغمة بتتحفظ في حسابك (والمالك بيشوف مدى كل طالب) ونوع صوتك وأنسب قرار ليك · 2) تمارين الصوت والنفس بعدّاد · 3) خمّن المقام · 4) اكتشف المقام اللي بتقرأ بيه: سجّل أو ارفع ملف والموقع يقارن النغمات بسلالم كل المقامات (الأساسية والفرعية) ويقولك الأقرب، ولو فيه خلط يقولك المقامات اللي ظهرت — اقتراح تقريبي، وتقدر تبعته لمعلمك · 5) للمالك بس: حلّل تلاوة شيخ (قارئ + سورة + من آية لآية) واقتراح المقام مايتنشرش لحد ما انت تكتب الكلمة الأخيرة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("voice242")) PAGES16.push("voice242");
+  const V = state.v242 = state.v242 || { tab: "range", res: null, busy: 0, tags: null, students: null };
+
+  /* ===== 1) المدى ===== */
+  function vtype(lo, hi) { const n = f => 12 * Math.log2(f / 440) + 57; const a = n(lo), b = n(hi); const mid = (a + b) / 2; const T2 = [[40, T("باص (رجالي عميق)", "Bass")], [45, T("باريتون (رجالي متوسط)", "Baritone")], [50, T("تينور (رجالي عالي)", "Tenor")], [55, T("ألتو (حريمي/طفل عميق)", "Alto")], [60, T("ميتزو (حريمي متوسط)", "Mezzo")], [99, T("سوبرانو (حريمي/طفل عالي)", "Soprano")]]; return T2.find(x => mid < x[0])[1]; }
+  function rangeView() { const p = (state.auth && state.auth.profile) || {}; const lo = +p.voice_low, hi = +p.voice_high; const ok = lo > 0 && hi > lo; const st = state.mqv || {};
+    const semis = ok ? Math.round(12 * Math.log2(hi / lo)) : 0; const q = ok && typeof myQarar === "function" ? myQarar() : null;
+    return `<div class="card"><h3>🎤 ${T("مداك الصوتي", "Your vocal range")}</h3><p class="sm muted">${T("اعمل أوطى «آه» مريحة ليك 3 ثواني، وبعدين أعلى «آه» مريحة. الموقع بيحسب مساحة صوتك ويحفظها في حسابك.", "Hold your lowest comfortable 'aah' for 3 s, then your highest. Saved to your account.")}</p>
+      <div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn btn-p" ${st.busy ? "disabled" : ""} onclick="vrRecord('low')">⬇️ ${st.busy === "low" ? T("بسمعك…", "Listening…") : T("سجّل أوطى نغمة", "Record lowest")}</button><button class="btn btn-p" ${st.busy ? "disabled" : ""} onclick="vrRecord('high')">⬆️ ${st.busy === "high" ? T("بسمعك…", "Listening…") : T("سجّل أعلى نغمة", "Record highest")}</button></div>
+      ${ok ? `<div class="rg242"><div><small>${T("أوطى نغمة", "Lowest")}</small><b>${hzNote(lo)}</b><span>${lo} Hz</span></div><div><small>${T("أعلى نغمة", "Highest")}</small><b>${hzNote(hi)}</b><span>${hi} Hz</span></div><div><small>${T("المساحة", "Range")}</small><b>${semis}</b><span>${T("نص تون", "semitones")} (${(semis / 12).toFixed(1)} ${T("أوكتاف", "oct")})</span></div><div><small>${T("نوع صوتك تقريبًا", "Voice type (approx.)")}</small><b style="font-size:1rem">${vtype(lo, hi)}</b></div>${q ? `<div><small>${T("أنسب قرار ليك", "Best tonic for you")}</small><b>${hzNote(q)}</b><span>${Math.round(q)} Hz</span></div>` : ""}</div>
+      <p class="sm">${semis >= 19 ? T("✅ مساحتك تكفي القرار والجواب في كل المقامات.", "✅ Your range covers qarar and jawab in all maqamat.") : semis >= 12 ? T("👍 مساحتك تكفي القرار وأغلب الجواب — التمارين هتوسّعها.", "👍 Enough for qarar and most of the jawab — exercises will widen it.") : T("💪 مساحتك لسه صغيرة — ابدأ بتمارين المدى كل يوم.", "💪 Still narrow — start daily range exercises.")}</p>` : `<p class="sm muted">${T("لسه ماسجّلتش.", "Not recorded yet.")}</p>`}</div>${own() ? studentsView() : ""}`; }
+  function studentsView() { if (V.students == null) { V.students = []; sb.from("profiles").select("display_name,real_name,voice_low,voice_high").not("voice_low", "is", null).limit(300).then(r => { V.students = r.data || []; render(); }); }
+    return `<details class="card"><summary class="b">🔒 ${T("للمالك: مدى صوت كل طالب", "Owner: every student's range")} (${V.students.length})</summary><table class="tbl196">${V.students.filter(s => s.voice_high).map(s => `<tr><td>${esc(s.display_name || s.real_name || "—")}</td><td>${hzNote(+s.voice_low)} → ${hzNote(+s.voice_high)}</td><td>${Math.round(12 * Math.log2(s.voice_high / s.voice_low))} ${T("نص تون", "st")}</td><td>${vtype(+s.voice_low, +s.voice_high)}</td></tr>`).join("")}</table></details>`; }
+
+  /* ===== 2) التمارين ===== */
+  const EX = [[T("🌬️ النفس", "🌬️ Breath"), [[T("شهيق 4 ثواني من الأنف · احبس 4 · زفير 8 من البق", "In 4 s (nose) · hold 4 · out 8 s (mouth)"), 60], [T("زفير طويل على «سسسس» بثبات — حاول تزوّد المدة كل يوم", "Long steady 'sssss' — add a second every day"), 30], [T("نفس من البطن: إيدك على بطنك وهي اللي تطلع مع الشهيق مش الكتف", "Belly breathing: hand on belly, shoulders still"), 60]]],
+    [T("🎵 تسخين الصوت", "🎵 Warm-up"), [[T("همهمة «ممم» على نغمة مريحة", "Hum 'mmm' on a comfortable note"), 45], [T("رعشة الشفايف «برررر» من تحت لفوق وراجع", "Lip trills 'brrrr' up and down"), 45], [T("«آه» من أوطى نغمة لأعلى نغمة ببطء (سلّم)", "Slow 'aah' siren from lowest to highest"), 45]]],
+    [T("🎼 المدى والثبات", "🎼 Range & stability"), [[T("ثبّت «آه» على قرارك 10 ثواني والمُوالف مفتوح", "Hold your tonic 10 s with the tuner open"), 30], [T("اطلع درجة درجة في سلّم مقام ونزل", "Step up and down a maqam scale"), 60], [T("الجواب: نفس الجملة أوكتاف لفوق من غير زعيق", "Jawab: same phrase an octave up, no shouting"), 45]]]];
+  window.ex242 = (b, s) => { clearInterval(window.__ex242); let n = s; b.textContent = "⏱️ " + n; window.__ex242 = setInterval(() => { n--; b.textContent = n > 0 ? "⏱️ " + n : "✅"; if (n <= 0) clearInterval(window.__ex242); }, 1000); };
+  const exView = () => `<div class="card"><h3>🏋️ ${T("تمارين الصوت والنفس", "Voice & breath exercises")}</h3><p class="sm muted">${T("حوالي 15 دقيقة كل يوم أحسن من ساعتين مرة في الأسبوع.", "15 minutes daily beats two hours once a week.")}</p>${EX.map((g, i) => `<details ${i === 0 ? "open" : ""}><summary class="b">${g[0]}</summary>${g[1].map(x => `<div class="kv" style="align-items:center"><span class="sm">${esc(x[0])}</span><button class="btn btn-o" style="padding:.2rem .6rem" onclick="ex242(this,${x[1]})">⏱️ ${x[1]}${T("ث", "s")}</button></div>`).join("")}</details>`).join("")}<button class="btn btn-o" style="margin-top:.5rem" onclick="go16('tuner')">🎤 ${T("افتح المُوالف", "Open the tuner")}</button></div>`;
+
+  /* ===== 4) اكتشاف المقام ===== */
+  function allMaqams() { let L = []; try { L = MQ.slice(); } catch (e) {} try { (setv("mq220", []) || []).forEach(m => { if (m && m.id && m.sc && !L.find(x => x.id === m.id)) L.push(m); }); } catch (e) {} return L.filter(m => Array.isArray(m.sc) && m.sc.length >= 5); }
+  function analyse(freqs) { const f = freqs.filter(x => x > 60 && x < 1200); if (f.length < 40) return { err: T("الصوت مش واضح كفاية — سجّل تاني في مكان هادي وأطول شوية.", "Not enough clear pitch — record again, quieter and longer.") };
+    /* القرار = أكتر نغمة مستقرة في آخر التسجيل (القفلة) */
+    const cents = x => 1200 * Math.log2(x / 110); const tail = f.slice(-Math.max(20, Math.floor(f.length * .2))).map(cents); const hist = {}; tail.forEach(c => { const k = Math.round(c / 25); hist[k] = (hist[k] || 0) + 1; }); const tk = +Object.entries(hist).sort((a, b) => b[1] - a[1])[0][0]; const tonic = tk * 25;
+    const H = new Array(48).fill(0); f.forEach(x => { const r = ((cents(x) - tonic) % 1200 + 1200) % 1200; H[Math.round(r / 25) % 48]++; }); const tot = H.reduce((a, b) => a + b, 0);
+    const res = allMaqams().map(m => { const deg = m.sc.slice(0, -1).map(c => ((c % 1200) + 1200) % 1200); let hit = 0, miss = 0; H.forEach((w, i) => { const c = i * 25; const d = Math.min(...deg.map(x => Math.min(Math.abs(c - x), 1200 - Math.abs(c - x)))); if (d <= 35) hit += w * (1 - d / 70); else if (d >= 60) miss += w; }); return { m, score: Math.max(0, (hit - miss * .6) / tot) }; }).sort((a, b) => b.score - a.score);
+    const top = res.slice(0, 4); const mx = top[0].score || 1; top.forEach(r => r.pct = Math.round(r.score / mx * 100));
+    const tHz = 110 * Math.pow(2, tonic / 1200); const near = top.filter(x => x.pct >= 90); const fam = near.filter(x => x.m.fam === top[0].m.fam && x !== top[0]); const mix = near.some(x => x.m.fam !== top[0].m.fam);
+    return { top, tonic: tHz, mix, fam, n: f.length }; }
+  async function pitchOf(buf, sr) { const out = []; const w = 2048, hop = 1024; const fr = new Float32Array(w); for (let i = 0; i + w < buf.length; i += hop) { fr.set(buf.subarray(i, i + w)); let e = 0; for (let j = 0; j < w; j++) e += fr[j] * fr[j]; if (Math.sqrt(e / w) < .01) continue; const p = tnPitch(fr, sr); if (p > 0) out.push(p); } return out; }
+  async function fromBlob(blob) { const ac = new (window.AudioContext || window.webkitAudioContext)(); const ab = await ac.decodeAudioData(await blob.arrayBuffer()); const d = ab.getChannelData(0); const f = await pitchOf(d, ab.sampleRate); ac.close(); return f; }
+  let rec = null;
+  window.dt242 = {
+    async rec() { if (rec) { rec.stop(); return; } try { const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); const ch = []; rec = new MediaRecorder(s); rec.ondataavailable = e => ch.push(e.data); rec.onstop = async () => { s.getTracks().forEach(t => t.stop()); rec = null; V.blob = new Blob(ch, { type: ch[0] && ch[0].type || "audio/webm" }); V.busy = 1; render(); try { V.res = analyse(await fromBlob(V.blob)); } catch (e) { V.res = { err: e.message }; } V.busy = 0; render(); }; rec.start(); V.busy = 2; render(); setTimeout(() => rec && rec.stop(), 30000); } catch (e) { toast(T("اسمح للمايك", "Allow the microphone"), true); } },
+    async file(f) { if (!f) return; V.blob = f; V.busy = 1; render(); try { V.res = analyse(await fromBlob(f)); } catch (e) { V.res = { err: T("مش قادر أقرأ الملف ده", "Can't read this file") }; } V.busy = 0; render(); },
+    async send() { if (!logged() || !V.blob) return navigate("login"); const path = `u-${state.auth.user.id}/maqam-${Date.now()}.webm`; const { error } = await sb.storage.from("voice").upload(path, V.blob, { contentType: V.blob.type || "audio/webm" }); toast(error ? error.message : "✅ " + T("اتحفظ في تسجيلاتك — معلمك يقدر يسمعه ويقولك المقام بالظبط", "Saved to your recordings — your teacher can listen and confirm"), !!error); },
+    async sheikh() { const g = id => (document.getElementById(id) || {}).value; const r = g("sh_r"), s = +g("sh_s"), a = +g("sh_a"), b = +g("sh_b") || a; if (!r || !s || !a) return toast(T("اختار القارئ والسورة والآيات", "Pick reciter, surah and ayat"), true); V.busy = 1; V.res = null; V.src = { r, s, a, b }; render(); let all = []; try { for (let i = a; i <= Math.min(b, a + 14); i++) { const u = `https://everyayah.com/data/${r}/${String(s).padStart(3, "0")}${String(i).padStart(3, "0")}.mp3`; const bl = await (await fetch(u)).blob(); all = all.concat(await fromBlob(bl)); } V.res = analyse(all); } catch (e) { V.res = { err: T("مش قادر أجيب الصوت من everyayah — جرّب قارئ تاني أو ارفع الملف", "Couldn't fetch the audio — try another reciter or upload the file") }; } V.busy = 0; render(); },
+    async tag() { const fin = (document.getElementById("sh_fin") || {}).value || ""; if (!fin || !V.src) return toast(T("اكتب المقام النهائي", "Write the final maqam"), true); const L = (setv("mqtag242", []) || []).slice(); L.unshift(Object.assign({}, V.src, { final: fin, ai: V.res && V.res.top ? V.res.top.slice(0, 3).map(x => x.m.id) : [], at: new Date().toISOString() })); await saveSetting16("mqtag242", L.slice(0, 500)); toast("✅ " + T("اتحفظ عندك (مش منشور)", "Saved (not published)")); render(); }
+  };
+  const RECS = [["Husary_128kbps", "الحصري (مرتل)"], ["Husary_Mujawwad_64kbps", "الحصري (مجود)"], ["Minshawy_Murattal_128kbps", "المنشاوي (مرتل)"], ["Minshawy_Mujawwad_192kbps", "المنشاوي (مجود)"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط (مرتل)"], ["Abdul_Basit_Mujawwad_128kbps", "عبد الباسط (مجود)"], ["Mustafa_Ismail_48kbps", "مصطفى إسماعيل"], ["Alafasy_128kbps", "مشاري العفاسي"], ["Muhammad_Ayyoub_128kbps", "محمد أيوب"], ["Maher_AlMuaiqly_64kbps", "ماهر المعيقلي"], ["Abdurrahmaan_As-Sudais_192kbps", "السديس"], ["Hudhaify_128kbps", "الحذيفي"], ["Muhammad_Jibreel_128kbps", "محمد جبريل"], ["Nasser_Alqatami_128kbps", "ناصر القطامي"]];
+  function resView() { const r = V.res; if (V.busy === 2) return `<p class="sm">🔴 ${T("بسجّل… اقرأ آية أو اتنين (لحد 30 ثانية) ودوس تاني للإيقاف", "Recording… read an ayah or two (up to 30 s), tap again to stop")}</p>`; if (V.busy) return loadingBox(); if (!r) return ""; if (r.err) return `<div class="card">⚠️ ${esc(r.err)}</div>`;
+    return `<div class="card dt242"><h3>🎯 ${T("الأقرب", "Closest match")}: ${esc(AR() ? r.top[0].m.ar : r.top[0].m.en)}</h3>${r.fam && r.fam.length ? `<p class="sm">🌿 ${T("نفس العيلة", "Same family")}: <b>${[r.top[0]].concat(r.fam).map(x => esc(AR() ? x.m.ar : x.m.en)).join(" · ")}</b> — ${T("الفرع بيبان في الجواب، اقرأ لحد الجواب علشان يتحدد.", "the branch shows in the upper register — recite up to the jawab to tell them apart.")}</p>` : ""}${r.mix ? `<p class="sm">🔀 ${T("فيه خلط — المقامات اللي ظهرت", "Mixed — maqamat heard")}: <b>${r.top.filter(x => x.pct >= 90 && x.m.fam !== r.top[0].m.fam).concat([r.top[0]]).map(x => esc(AR() ? x.m.ar : x.m.en)).join(" + ")}</b></p>` : ""}${r.top.map(x => `<div class="bar242"><span>${esc(AR() ? x.m.ar : x.m.en)}</span><i style="width:${x.pct}%"></i><b>${x.pct}%</b></div>`).join("")}<p class="xs muted">${T("القرار التقريبي", "Approx. tonic")}: ${hzNote(r.tonic)} · ${T("اقتراح تقريبي من النغمات — المعلم هو اللي يأكد. أرباع التون بتختلف بين القرّاء.", "An approximate suggestion — a teacher confirms.")}</p>${V.blob && logged() ? `<button class="btn btn-o" onclick="dt242.send()">📤 ${T("ابعته لمعلمي لإجابة أدق", "Send to my teacher")}</button>` : ""}</div>`; }
+  function detectView() { return `<div class="card"><h3>🔍 ${T("اكتشف المقام اللي بتقرأ بيه", "Detect the maqam you recite in")}</h3><p class="sm muted">${T("سجّل تلاوتك (أو ارفع ملف صوت لأي قارئ) والموقع يقارن النغمات بسلالم كل المقامات الأساسية والفرعية.", "Record yourself (or upload any recitation) and we compare it with every maqam scale.")}</p><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="btn btn-p" onclick="dt242.rec()">${V.busy === 2 ? "⏹️ " + T("وقّف وحلّل", "Stop & analyse") : "🎙️ " + T("سجّل تلاوتي", "Record me")}</button><label class="btn btn-o">📁 ${T("ارفع ملف صوت", "Upload audio")}<input type="file" hidden accept="audio/*,video/*" onchange="dt242.file(this.files[0])"></label></div></div>${resView()}
+    ${own() ? `<details class="card" ${V.src ? "open" : ""}><summary class="b">🔒 ${T("للمالك: اقتراح مقام لتلاوة شيخ", "Owner: suggest the maqam of a sheikh's recitation")}</summary><div class="g218" style="margin-top:.5rem"><label class="sm">${T("القارئ", "Reciter")}<select id="sh_r" class="in">${RECS.map(x => `<option value="${x[0]}" ${V.src && V.src.r === x[0] ? "selected" : ""}>${x[1]}</option>`).join("")}</select></label><label class="sm">${T("السورة", "Surah")}<select id="sh_s" class="in">${(typeof SURAHS !== "undefined" ? SURAHS : []).map((n, i) => `<option value="${i + 1}" ${V.src && V.src.s === i + 1 ? "selected" : ""}>${i + 1}. ${esc(n)}</option>`).join("")}</select></label><label class="sm">${T("من آية", "From ayah")}<input id="sh_a" type="number" min="1" class="in" value="${V.src ? V.src.a : 1}"></label><label class="sm">${T("لآية", "To ayah")}<input id="sh_b" type="number" min="1" class="in" value="${V.src ? V.src.b : 3}"></label></div><button class="btn btn-p" style="margin-top:.5rem" onclick="dt242.sheikh()">🎧 ${T("حلّل واقترح", "Analyse & suggest")}</button>
+      ${V.src && V.res && !V.res.err ? `<div class="row" style="gap:.4rem;margin-top:.6rem;flex-wrap:wrap;align-items:center"><span class="sm">✍️ ${T("الكلمة الأخيرة ليك — المقام النهائي:", "Your final word — maqam:")}</span><input id="sh_fin" class="in" style="width:auto" list="mq242l" value="${esc(AR() ? V.res.top[0].m.ar : V.res.top[0].m.en)}"><datalist id="mq242l">${allMaqams().map(m => `<option value="${esc(m.ar)}">`).join("")}</datalist><button class="btn btn-p" onclick="dt242.tag()">💾 ${T("احفظ (مش منشور)", "Save (unpublished)")}</button></div>` : ""}
+      ${(setv("mqtag242", []) || []).length ? `<table class="tbl196" style="margin-top:.6rem">${(setv("mqtag242", []) || []).slice(0, 30).map(t => `<tr><td>${esc((RECS.find(x => x[0] === t.r) || [, t.r])[1])}</td><td>${esc((typeof SURAHS !== "undefined" && SURAHS[t.s - 1]) || t.s)} ${t.a}–${t.b}</td><td><b>${esc(t.final)}</b></td><td class="xs muted">${T("اقتراح", "AI")}: ${esc((t.ai || []).join("، "))}</td></tr>`).join("")}</table>` : ""}</details>` : ""}`; }
+
+  function page() { const tabs = [["range", "🎤 " + T("مداك الصوتي", "Your range")], ["ex", "🏋️ " + T("تمارين الصوت والنفس", "Voice & breath")], ["guess", "🎧 " + T("خمّن المقام", "Guess the maqam")], ["detect", "🔍 " + T("اكتشف مقامك", "Detect your maqam")]];
+    const body = V.tab === "ex" ? exView() : V.tab === "detect" ? detectView() : V.tab === "guess" ? `<div class="card" style="text-align:center"><p>${T("اسمع آهة واختار مقامها — بيقوّي ودنك.", "Hear an aah and pick its maqam — trains your ear.")}</p><button class="btn btn-p btn-lg" onclick="go16('maqam-game')">🎧 ${T("ابدأ خمّن المقام", "Start the game")}</button></div>` : (logged() ? rangeView() : `<div class="card">${T("سجّل دخولك علشان مداك يتحفظ.", "Log in to save your range.")} <button class="btn btn-p" onclick="navigate('login')">${T("دخول", "Log in")}</button></div>`);
+    return pageWrap("🎤", T("مساحتك الصوتية", "Your voice space"), T("اعرف صوتك، درّبه، وخمّن واكتشف المقام", "Know your voice, train it, and recognise maqamat"), `<div class="motabs">${tabs.map(([k, n]) => `<button class="${V.tab === k ? "on" : ""}" onclick="state.v242.tab='${k}';render()">${n}</button>`).join("")}</div>${body}`, 860); }
+
+  const _r = render; render = function () { if (state.route === "voice242") return show(page()); return _r.apply(this, arguments); };
+  css(`.rg242{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin:.7rem 0}.rg242>div{border:1px solid var(--line);border-radius:14px;padding:.5rem;text-align:center;display:flex;flex-direction:column}.rg242 b{font-size:1.4rem;color:var(--accent)}.rg242 small,.rg242 span{font-size:.75rem;color:var(--muted)}
+  .bar242{display:grid;grid-template-columns:7rem 1fr 3rem;gap:.5rem;align-items:center;margin:.25rem 0}.bar242 i{display:block;height:12px;border-radius:999px;background:var(--accent)}.bar242 b{font-size:.85rem}`);
+})();
+
+/* ================= v243: 🖍️ وايت بورد مستقلة (من Notion) — برّه الفصل خالص، تشتغل وانت فاتح أي تطبيق تاني (شير الشاشة) · قلم وقلم تظليل وممحاة وخط وسهم ومستطيل ودايرة ونص · ألوان وسُمك · تراجع/إعادة · 8 خلفيات (أبيض، مربعات، سطور، سبورة سودا، خضرا، كريمي، نقط، نوتة موسيقية) · 🎼 «ارسم المقامات»: سلالم المقامات جنب بعض بمسافاتها الحقيقية (1، ¾، ½…) وأسماء الدرجات علشان توضّح التحويل من فين لفين · حفظ صورة PNG · ملء الشاشة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("wb243")) PAGES16.push("wb243");
+  const BG = [["white", T("أبيض", "White"), "#ffffff", ""], ["grid", T("مربعات", "Grid"), "#ffffff", "grid"], ["lines", T("سطور", "Lines"), "#fffdf7", "lines"], ["dots", T("نقط", "Dots"), "#ffffff", "dots"], ["staff", T("نوتة موسيقية", "Music staff"), "#ffffff", "staff"], ["cream", T("كريمي", "Cream"), "#fbf6e9", ""], ["green", T("سبورة خضرا", "Green board"), "#1f4d3a", ""], ["black", T("سبورة سودا", "Blackboard"), "#1e1e1e", ""]];
+  const W = { tool: "pen", color: "#dc2626", size: 4, bg: "grid", items: [], redo: [], cur: null, text: null };
+  const COLORS = ["#111827", "#dc2626", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#ffffff", "#fde047"];
+  let cv, ctx, bgc;
+  function drawBg() { const b = BG.find(x => x[0] === W.bg) || BG[0]; const c = bgc.getContext("2d"); c.fillStyle = b[2]; c.fillRect(0, 0, bgc.width, bgc.height); const dark = /green|black/.test(W.bg); c.strokeStyle = dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.09)"; c.fillStyle = c.strokeStyle; c.lineWidth = 1;
+    if (b[3] === "grid") { for (let x = 0; x < bgc.width; x += 32) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, bgc.height); c.stroke(); } for (let y = 0; y < bgc.height; y += 32) { c.beginPath(); c.moveTo(0, y); c.lineTo(bgc.width, y); c.stroke(); } }
+    if (b[3] === "lines") for (let y = 48; y < bgc.height; y += 36) { c.beginPath(); c.moveTo(0, y); c.lineTo(bgc.width, y); c.stroke(); }
+    if (b[3] === "dots") for (let x = 16; x < bgc.width; x += 28) for (let y = 16; y < bgc.height; y += 28) { c.beginPath(); c.arc(x, y, 1.4, 0, 7); c.fill(); }
+    if (b[3] === "staff") for (let s = 60; s < bgc.height - 60; s += 120) for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(20, s + i * 12); c.lineTo(bgc.width - 20, s + i * 12); c.stroke(); } }
+  function drawItem(c, it) { c.save(); c.strokeStyle = it.color; c.fillStyle = it.color; c.lineWidth = it.size; c.lineCap = "round"; c.lineJoin = "round"; if (it.t === "hl") { c.globalAlpha = .35; c.lineWidth = it.size * 5; } if (it.t === "eraser") { c.globalCompositeOperation = "destination-out"; c.lineWidth = it.size * 5; }
+    if (it.t === "pen" || it.t === "hl" || it.t === "eraser") { c.beginPath(); it.p.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.stroke(); }
+    else if (it.t === "line" || it.t === "arrow") { const [a, b] = [it.p[0], it.p[it.p.length - 1]]; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); if (it.t === "arrow") { const an = Math.atan2(b[1] - a[1], b[0] - a[0]), L = 10 + it.size * 3; c.beginPath(); c.moveTo(b[0], b[1]); c.lineTo(b[0] - L * Math.cos(an - .45), b[1] - L * Math.sin(an - .45)); c.lineTo(b[0] - L * Math.cos(an + .45), b[1] - L * Math.sin(an + .45)); c.closePath(); c.fill(); } }
+    else if (it.t === "rect") { const [a, b] = [it.p[0], it.p[it.p.length - 1]]; c.strokeRect(a[0], a[1], b[0] - a[0], b[1] - a[1]); }
+    else if (it.t === "circle") { const [a, b] = [it.p[0], it.p[it.p.length - 1]]; c.beginPath(); c.ellipse((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.abs(b[0] - a[0]) / 2, Math.abs(b[1] - a[1]) / 2, 0, 0, 7); c.stroke(); }
+    else if (it.t === "text") { c.font = `700 ${12 + it.size * 4}px "IBM Plex Sans Arabic", sans-serif`; c.textBaseline = "top"; c.fillText(it.s, it.p[0][0], it.p[0][1]); }
+    else if (it.t === "img") { if (it.el && it.el.complete) c.drawImage(it.el, it.p[0][0], it.p[0][1]); }
+    c.restore(); }
+  function redraw() { if (!ctx) return; ctx.clearRect(0, 0, cv.width, cv.height); W.items.forEach(it => drawItem(ctx, it)); if (W.cur) drawItem(ctx, W.cur); }
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+  function setup() { cv = document.getElementById("wbc243"); bgc = document.getElementById("wbb243"); if (!cv || cv.__ok) return; cv.__ok = 1; const box = cv.parentElement; const w = box.clientWidth, h = Math.max(480, Math.round(innerHeight * .72)); [cv, bgc].forEach(c => { c.width = w * 1.5; c.height = h * 1.5; c.style.height = h + "px"; }); ctx = cv.getContext("2d"); drawBg(); redraw();
+    cv.onpointerdown = e => { cv.setPointerCapture(e.pointerId); const p = pos(e); if (W.tool === "text") { const s = prompt(T("اكتب النص", "Type the text")); if (s) { W.items.push({ t: "text", s, p: [p], color: W.color, size: W.size }); W.redo = []; redraw(); } return; } W.cur = { t: W.tool, p: [p], color: W.color, size: W.size }; };
+    cv.onpointermove = e => { if (!W.cur) return; const p = pos(e); if (/pen|hl|eraser/.test(W.cur.t)) W.cur.p.push(p); else W.cur.p[1] = p; redraw(); };
+    cv.onpointerup = () => { if (W.cur && W.cur.p.length > 1) { W.items.push(W.cur); W.redo = []; } W.cur = null; redraw(); }; }
+
+  /* 🎼 ارسم المقامات */
+  function ladder(ids) { let MQs = []; try { MQs = MQ.concat((setv("mq220", []) || []).filter(m => m && m.sc)); } catch (e) {} const L = ids.map(id => MQs.find(m => m.id === id)).filter(Boolean); if (!L.length) return; const c = document.createElement("canvas"); const colW = 170, H = 620, top = 40, bot = 40; c.width = colW * L.length + 40; c.height = H; const x = c.getContext("2d"); const NN = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si", "Do"];
+    const y = cents => H - bot - (cents + 300) / 1800 * (H - top - bot);
+    L.forEach((m, k) => { const x0 = 30 + k * colW; const tonic = m.tonic || 0; x.fillStyle = "#111827"; x.font = "800 18px 'IBM Plex Sans Arabic',sans-serif"; x.textAlign = "center"; x.fillText(`${m.ar} · ${m.en || ""}`, x0 + 55, 24);
+      for (let i = 0; i < m.sc.length - 1; i++) { const a = tonic + m.sc[i], b = tonic + m.sc[i + 1]; const ya = y(a), yb = y(b); x.fillStyle = i < 3 ? "rgba(253,224,71,.45)" : "rgba(147,197,253,.35)"; x.strokeStyle = "#7c2d12"; x.lineWidth = 2; x.fillRect(x0, yb, 110, ya - yb); x.strokeRect(x0, yb, 110, ya - yb); const step = (m.sc[i + 1] - m.sc[i]) / 200; x.fillStyle = "#991b1b"; x.font = "700 15px sans-serif"; x.fillText(String(+step.toFixed(2)), x0 + 55, (ya + yb) / 2 + 5); }
+      m.sc.forEach((c0, i) => { const ab = tonic + c0; const yy = y(ab); const deg = Math.round(((ab % 1200) + 1200) % 1200 / 1200 * 12); const nm = ["Do", "Do♯", "Re", "Mi♭", "Mi", "Fa", "Fa♯", "Sol", "La♭", "La", "Si♭", "Si"][deg % 12]; const q = Math.abs((((ab % 100) + 100) % 100) - 50) < 30 ? "½♭" : ""; x.fillStyle = "#111827"; x.font = "700 13px sans-serif"; x.textAlign = "left"; x.fillText((q ? nm.replace("♭", "") + q : nm), x0 + 116, yy + 4); x.textAlign = "center"; });
+      x.strokeStyle = "#111827"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(x0 - 8, y(tonic)); x.lineTo(x0 + 118, y(tonic)); x.stroke(); });
+    const img = new Image(); img.onload = () => { W.items.push({ t: "img", el: img, p: [[40, 40]] }); W.redo = []; redraw(); }; img.src = c.toDataURL(); }
+  window.wb243 = { tool(t) { W.tool = t; render(); }, color(c) { W.color = c; render(); }, size(s) { W.size = +s; }, bg(b) { W.bg = b; render(); },
+    undo() { if (W.items.length) W.redo.push(W.items.pop()); redraw(); }, redoIt() { if (W.redo.length) W.items.push(W.redo.pop()); redraw(); }, clear() { if (W.items.length && !confirm(T("تمسح السبورة كلها؟", "Clear the board?"))) return; W.items = []; W.redo = []; redraw(); },
+    save() { const o = document.createElement("canvas"); o.width = cv.width; o.height = cv.height; const c = o.getContext("2d"); c.drawImage(bgc, 0, 0); c.drawImage(cv, 0, 0); const a = document.createElement("a"); a.download = "itqan-board.png"; a.href = o.toDataURL("image/png"); a.click(); },
+    full() { const b = document.getElementById("wbx243"); try { document.fullscreenElement ? document.exitFullscreen() : b.requestFullscreen(); } catch (e) {} },
+    maqam() { const sel = [...document.querySelectorAll(".mq243 input:checked")].map(i => i.value); if (!sel.length) return toast(T("اختار مقام أو أكتر", "Pick one or more maqamat"), true); ladder(sel.slice(0, 5)); } };
+  function page() { const tools = [["pen", "✏️", T("قلم", "Pen")], ["hl", "🖍️", T("تظليل", "Highlighter")], ["eraser", "🧽", T("ممحاة", "Eraser")], ["line", "📏", T("خط", "Line")], ["arrow", "➡️", T("سهم", "Arrow")], ["rect", "▭", T("مستطيل", "Rectangle")], ["circle", "◯", T("دايرة", "Circle")], ["text", "🔤", T("نص", "Text")]];
+    let MQs = []; try { MQs = MQ.concat((setv("mq220", []) || []).filter(m => m && m.sc)); } catch (e) {}
+    setTimeout(setup, 30);
+    return pageWrap("🖍️", T("الوايت بورد", "Whiteboard"), T("سبورة مستقلة — افتحها وشير الشاشة في أي تطبيق، وارسم المقامات والتحويل للطالب", "A standalone board — share your screen in any app and draw maqamat for your student"), `<div id="wbx243" class="wbx243"><div class="tb243">${tools.map(t => `<button class="${W.tool === t[0] ? "on" : ""}" title="${t[2]}" onclick="wb243.tool('${t[0]}')">${t[1]}</button>`).join("")}<span class="sep"></span>${COLORS.map(c => `<button class="cl ${W.color === c ? "on" : ""}" style="background:${c}" onclick="wb243.color('${c}')"></button>`).join("")}<input type="range" min="1" max="12" value="${W.size}" oninput="wb243.size(this.value)" title="${T("السُمك", "Size")}"><span class="sep"></span><button onclick="wb243.undo()" title="${T("تراجع", "Undo")}">↶</button><button onclick="wb243.redoIt()" title="${T("إعادة", "Redo")}">↷</button><button onclick="wb243.clear()" title="${T("امسح الكل", "Clear")}">🗑️</button><button onclick="wb243.save()" title="${T("احفظ صورة", "Save PNG")}">💾</button><button onclick="wb243.full()" title="${T("ملء الشاشة", "Full screen")}">⛶</button></div>
+      <div class="bgs243">${BG.map(b => `<button class="${W.bg === b[0] ? "on" : ""}" style="background:${b[2]};color:${/green|black/.test(b[0]) ? "#fff" : "#111"}" onclick="wb243.bg('${b[0]}')">${b[1]}</button>`).join("")}</div>
+      <div class="cv243"><canvas id="wbb243"></canvas><canvas id="wbc243"></canvas></div></div>
+      <details class="card mq243"><summary class="b">🎼 ${T("ارسم المقامات (سلالم بمسافاتها الحقيقية جنب بعض)", "Draw maqamat (real-interval ladders side by side)")}</summary><p class="xs muted">${T("اختار لحد 5 مقامات — هتترسم على السبورة وتقدر ترسم فوقها أسهم التحويل.", "Pick up to 5 — they're drawn on the board so you can add transition arrows.")}</p><div class="row" style="gap:.3rem;flex-wrap:wrap">${MQs.map(m => `<label class="chip"><input type="checkbox" value="${m.id}"> ${esc(AR() ? m.ar : m.en || m.ar)}</label>`).join("")}</div><button class="btn btn-p" style="margin-top:.5rem" onclick="wb243.maqam()">🎼 ${T("ارسمهم على السبورة", "Draw them on the board")}</button></details>`, 1200); }
+  const _r = render; render = function () { if (state.route === "wb243") { const keep = cv && document.contains(cv); show(page()); return; } return _r.apply(this, arguments); };
+  /* زرار في الفصل والمقامات */
+  function hooks() { const app = document.getElementById("app"); if (!app || app.querySelector("#go243")) return; if (!/classroom|maqamat|tools|myspace/.test(state.route || "")) return; const h = app.querySelector("h1, h2"); if (h) h.insertAdjacentHTML("afterend", `<button id="go243" class="btn btn-o xs" onclick="go16('wb243')">🖍️ ${T("الوايت بورد", "Whiteboard")}</button>`); }
+  const _r2 = render; render = function () { const o = _r2.apply(this, arguments); try { hooks(); } catch (e) {} return o; };
+  css(`.wbx243{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:.5rem}.wbx243:fullscreen{padding:.6rem;overflow:auto}
+  .tb243{display:flex;gap:.25rem;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:3;background:var(--card);padding:.25rem 0}.tb243 button{min-width:2.3rem;height:2.3rem;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer;font-size:1.05rem;color:var(--fg)}.tb243 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.tb243 .cl{min-width:1.6rem;width:1.6rem;height:1.6rem;border-radius:50%}.tb243 .cl.on{outline:3px solid var(--accent);outline-offset:2px}.tb243 .sep{width:1px;height:1.6rem;background:var(--line);margin:0 .2rem}
+  .bgs243{display:flex;gap:.25rem;flex-wrap:wrap;margin:.35rem 0}.bgs243 button{border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;font-size:.75rem;cursor:pointer}.bgs243 button.on{outline:2px solid var(--accent)}
+  .cv243{position:relative;width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line)}.cv243 canvas{position:absolute;inset:0;width:100%}#wbc243{position:relative;touch-action:none;cursor:crosshair}`);
+})();
+
+/* ================= v244: الدفعة التامنة (مقفولة لحد ما تفتحها من «كل الجديد»): 🔁 مراجعة متباعدة للمحفوظ بالسورة (زي Anki — سهلة/متوسطة/صعبة بتحدد المراجعة الجاية) · ⭐ النقاط والمستويات والشارات (من الورد والختمة وكمّل الآية والمراجعة) ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  ["srs244", "pts244"].forEach(p => { if (!PAGES16.includes(p)) PAGES16.push(p); });
+  const NF = () => setv("nf218", {}) || {}; const on = id => !!(NF()[id] || {}).on;
+  const day = () => Math.floor(Date.now() / 864e5);
+  const K = "srs244"; const MY = () => { let o = {}; try { o = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {} const p = state.auth && state.auth.profile && state.auth.profile.metadata && state.auth.profile.metadata.srs244; if (p && (p.t || 0) > (o.t || 0)) o = p; o.s = o.s || {}; o.log = o.log || {}; return o; };
+  let st = null; const SAVE = o => { o.t = Date.now(); try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {} if (logged() && state.auth.profile) { clearTimeout(st); st = setTimeout(async () => { try { const md = Object.assign({}, state.auth.profile.metadata || {}, { srs244: o }); state.auth.profile.metadata = md; await sb.from("profiles").update({ metadata: md }).eq("id", state.auth.user.id); } catch (e) {} }, 800); } };
+
+  /* ===== مراجعة متباعدة (SM-2 مبسّط) ===== */
+  window.srs244 = {
+    add() { const v = +(document.getElementById("sr_add") || {}).value; if (!v) return; const o = MY(); if (!o.s[v]) o.s[v] = { iv: 1, ef: 2.5, due: day(), n: 0 }; SAVE(o); render(); },
+    del(s) { const o = MY(); delete o.s[s]; SAVE(o); render(); },
+    rate(s, q) { const o = MY(); const c = o.s[s]; if (!c) return; if (q === 0) { c.iv = 1; c.n = 0; c.ef = Math.max(1.3, c.ef - .2); } else { c.n++; c.iv = c.n === 1 ? (q === 2 ? 3 : 1) : c.n === 2 ? (q === 2 ? 7 : 3) : Math.round(c.iv * (q === 2 ? c.ef + .15 : c.ef - .15)); c.ef = Math.max(1.3, c.ef + (q === 2 ? .1 : q === 1 ? 0 : -.2)); } c.due = day() + c.iv; o.log[day()] = (o.log[day()] || 0) + 1; SAVE(o); render(); }
+  };
+  function srsPage() { const o = MY(); const L = Object.entries(o.s).map(([s, c]) => ({ s: +s, ...c })); const due = L.filter(x => x.due <= day()).sort((a, b) => a.due - b.due); const later = L.filter(x => x.due > day()).sort((a, b) => a.due - b.due); const nm = s => (typeof SURAHS !== "undefined" && SURAHS[s - 1]) || s;
+    return pageWrap("🔁", T("مراجعة المحفوظ", "Review what you memorised"), T("زي Anki: بعد ما تراجع السورة قول كانت سهلة ولا صعبة، والموقع يحدد إمتى تراجعها تاني — الصعب بيتكرر أكتر", "Like Anki: rate each surah after reviewing and we schedule the next review"), `
+      <div class="card"><div class="row" style="gap:.4rem;flex-wrap:wrap;align-items:center"><span class="sm">➕ ${T("ضيف سورة حافظها", "Add a surah you know")}</span><select id="sr_add" class="in" style="width:auto">${(typeof SURAHS !== "undefined" ? SURAHS : []).map((n, i) => `<option value="${i + 1}">${i + 1}. ${esc(n)}</option>`).join("")}</select><button class="btn btn-p" onclick="srs244.add()">${T("ضيف", "Add")}</button></div></div>
+      <div class="card"><h3>📌 ${T("مطلوب مراجعتها النهارده", "Due today")} (${due.length})</h3>${due.length ? due.map(x => `<div class="sr244"><b>${esc(String(nm(x.s)))}</b><div class="row" style="gap:.3rem"><button class="btn xs h" onclick="srs244.rate(${x.s},0)">😣 ${T("صعبة", "Hard")}</button><button class="btn xs m" onclick="srs244.rate(${x.s},1)">🙂 ${T("متوسطة", "OK")}</button><button class="btn xs e" onclick="srs244.rate(${x.s},2)">😄 ${T("سهلة", "Easy")}</button></div></div>`).join("") : `<p class="sm muted">${T("مفيش مراجعة النهارده 🎉", "Nothing due today 🎉")}</p>`}</div>
+      ${later.length ? `<details class="card"><summary class="b">📅 ${T("الجاي", "Coming up")} (${later.length})</summary>${later.map(x => `<div class="kv"><span>${esc(String(nm(x.s)))}</span><span class="xs muted">${T("بعد", "in")} ${x.due - day()} ${T("يوم", "days")} <button class="btn btn-o xs" onclick="srs244.del(${x.s})">✕</button></span></div>`).join("")}</details>` : ""}`, 760); }
+
+  /* ===== النقاط والمستويات والشارات ===== */
+  function points() { let a = {}; try { a = JSON.parse(localStorage.getItem("my233") || "{}"); } catch (e) {} const days = a.days || {}; let p = 0; Object.values(days).forEach(d => { p += (d.wird || 0) * 10 + (d.khatma || 0) * 10 + (d.kamil || 0) * 2; }); const r = MY(); Object.values(r.log || {}).forEach(n => p += n * 5); const streak = (() => { let n = 0, d = day(); const has = k => { const s = new Date(k * 864e5 + 432e5).toISOString().slice(0, 10); return !!days[s]; }; if (!has(d)) d--; while (has(d)) { n++; d--; } return n; })();
+    return { p, streak, nDays: Object.keys(days).length, kamil: Object.values(days).reduce((s, d) => s + (d.kamil || 0), 0), srs: Object.keys(r.s || {}).length }; }
+  const LV = [[0, "🌱", "مبتدئ", "Beginner"], [100, "🌿", "مجتهد", "Diligent"], [300, "🌳", "مثابر", "Persistent"], [700, "⭐", "متقن", "Proficient"], [1500, "🏅", "حافظ مجتهد", "Dedicated hafiz"], [3000, "👑", "إتقان", "Itqan"]];
+  const BD = [["streak7", "🔥", "7 أيام ورا بعض", "7-day streak", s => s.streak >= 7], ["streak30", "🌙", "30 يوم ورا بعض", "30-day streak", s => s.streak >= 30], ["kamil50", "🧩", "50 إجابة صح في كمّل الآية", "50 correct ayah completions", s => s.kamil >= 50], ["srs5", "🔁", "5 سور في المراجعة", "5 surahs in review", s => s.srs >= 5], ["srs30", "📖", "30 سورة في المراجعة", "30 surahs in review", s => s.srs >= 30], ["days20", "📅", "20 يوم إنجاز", "20 active days", s => s.nDays >= 20]];
+  function ptsPage() { const s = points(); const i = LV.filter(l => s.p >= l[0]).length - 1; const cur = LV[i], nxt = LV[i + 1]; const pct = nxt ? Math.round((s.p - cur[0]) / (nxt[0] - cur[0]) * 100) : 100;
+    return pageWrap("⭐", T("نقاطي ومستواي", "My points & level"), T("كل ورد أو ختمة أو مراجعة أو «كمّل الآية» بيزوّد نقاطك", "Every wird, khatma, review or ayah quiz adds points"), `<div class="card lv244"><div style="font-size:3rem">${cur[1]}</div><h2>${esc(T(cur[2], cur[3]))}</h2><p><b style="font-size:1.6rem">${s.p}</b> ${T("نقطة", "points")}</p>${nxt ? `<div class="pb233"><i style="width:${pct}%"></i></div><small class="muted">${T("فاضل", "")} ${nxt[0] - s.p} ${T("نقطة للمستوى الجاي", "points to the next level")}: ${nxt[1]} ${esc(T(nxt[2], nxt[3]))}</small>` : ""}</div>
+      <div class="card"><h3>🏅 ${T("الشارات", "Badges")}</h3><div class="bd244">${BD.map(b => `<div class="${b[4](s) ? "on" : ""}"><span>${b[1]}</span><small>${esc(T(b[2], b[3]))}</small></div>`).join("")}</div></div>
+      <p class="xs muted" style="text-align:center">${T("النقاط: ورد/يوم ختمة = 10 · مراجعة سورة = 5 · كمّل الآية صح = 2", "Points: wird/khatma day = 10 · surah review = 5 · correct ayah = 2")}</p>`, 720); }
+
+  const NEW = [{ id: "srs", ic: "🔁", ar: "مراجعة المحفوظ (زي Anki)", en: "Spaced review", go: "go16('srs244')", d: "الطالب يضيف السور اللي حافظها، وكل يوم يطلعله المطلوب مراجعته، وبعد المراجعة يقول سهلة/متوسطة/صعبة والموقع يحدد المراجعة الجاية." },
+    { id: "points", ic: "⭐", ar: "النقاط والمستويات والشارات", en: "Points, levels & badges", go: "go16('pts244')", d: "نقاط على كل إنجاز، 6 مستويات من «مبتدئ» لـ«إتقان»، وشارات زي 7 أيام ورا بعض و30 سورة في المراجعة." }];
+  function hubAdd() { if (state.route !== "hub218" || !own() || document.getElementById("nw244")) return; const a = document.getElementById("nw233") || document.querySelector("#app .nfc218"); if (!a) return;
+    a.insertAdjacentHTML("beforebegin", `<div id="nw244"><h3 style="margin:.6rem 0">🆕 ${T("الدفعة التامنة — التحفيز والمراجعة", "Eighth batch — motivation & review")}</h3>${NEW.map(f => { const c = NF()[f.id] || {}; return `<div class="card nfc218 ${c.on ? "" : "off"}"><div class="row" style="justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><div class="row" style="gap:.6rem;align-items:center"><span style="font-size:1.6rem">${f.ic}</span><div><b>${esc(AR() ? f.ar : f.en)}</b><p class="xs muted" style="margin:.1rem 0 0;max-width:520px">${esc(f.d)}</p></div></div><div class="row" style="gap:.3rem"><button class="btn btn-o xs" onclick="${f.go}">👁 ${T("افتح", "Open")}</button><button class="btn ${c.on ? "btn-p" : "btn-o"}" onclick="(async()=>{const n=Object.assign({},setv('nf218',{})||{});n['${f.id}']=Object.assign({},n['${f.id}']||{},{on:${!c.on}});await saveSetting16('nf218',n);render()})()">${c.on ? "✅ " + T("شغّالة", "On") : "⏸ " + T("شغّلها", "Turn on")}</button></div></div></div>`; }).join("")}</div>`); }
+  const _ms = renderMySpace; renderMySpace = function () { let h = _ms.apply(this, arguments); const add = NEW.filter(f => own() || on(f.id)); if (add.length) h = h.replace('<div class="msgrid">', `<div class="msgrid">${add.map(f => `<button class="mstile" style="--c:#b45309" onclick="${f.go}"><span>${f.ic}</span><b>${esc(AR() ? f.ar : f.en)}</b></button>`).join("")}`); return h; };
+  const allowed = r => own() || on({ srs244: "srs", pts244: "points" }[r]);
+  const R = { srs244: srsPage, pts244: ptsPage };
+  const _r = render; render = function () { if (R[state.route]) { if (!allowed(state.route)) { state.route = "home"; return _r.apply(this, arguments); } return show(R[state.route]()); } const o = _r.apply(this, arguments); try { hubAdd(); } catch (e) {} return o; };
+  css(`.sr244{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}.sr244 .h{background:#fee2e2;color:#991b1b}.sr244 .m{background:#fef3c7;color:#92400e}.sr244 .e{background:#dcfce7;color:#166534}
+  .lv244{text-align:center}.bd244{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem}.bd244>div{border:1px dashed var(--line);border-radius:14px;padding:.6rem;text-align:center;display:flex;flex-direction:column;gap:.2rem;opacity:.45;filter:grayscale(1)}.bd244>div.on{opacity:1;filter:none;border-style:solid;border-color:#f59e0b}.bd244 span{font-size:1.8rem}`);
+})();
+
+/* ================= v245: الرئيسية من غير تكرار (الصف القديم «حفظ القرآن · التجويد …» اتشال واللي كان فيه بس اتضاف للمسارات: الفصل والمسابقات وكل الأدوات) · شريط «… — الأدوات» اتشال من كل الصفحات علشان الطالب يدخل على المحتوى علطول (والمالك يرجّعه بزرار) · زرار «طفل» بقى صوت طفل فعلًا والزرار المختار بس اللي بينوّر · صفحة «كمّل بياناتك» ماعادتش بتتفرض بعد الدخول · صفحة كل مقام (أساسي وفرعي): التبويبات أول حاجة تحت الاسم، والكروت الكبيرة (مرتل/مجود/نشيد) وكروت التلاوات اتشالت من الصفحة وبقت جوه التبويبات · «مارس المقام بصوتك» تبويب واحد بس بيفتح جوه الصفحة بكل محتوى الصفحة القديمة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const barOn = () => +setv("dmbar245", 0) === 1;
+  window.dm245 = async () => { await saveSetting16("dmbar245", barOn() ? 0 : 1); render(); };
+
+  /* 1) الرئيسية */
+  function home() { if (state.route !== "home") return; const p = document.getElementById("pth241"); if (!p) return; const box = p.parentElement; if (box) box.classList.add("h245"); const sec = box && box.closest(".wrap"); sec && sec.querySelectorAll(":scope > .lyb").forEach(x => x.style.display = "none");
+    if (!p.querySelector("#more245")) p.insertAdjacentHTML("beforeend", `<div id="more245" class="tl241" style="margin-top:.6rem"><button onclick="navigate('classroom')"><span>🎥</span>${T("الفصل والحصص", "Classroom & lessons")}</button><button onclick="go16('competitions')"><span>🏆</span>${T("المسابقات", "Competitions")}</button><button onclick="go16('alltools')"><span>🧰</span>${T("كل الأدوات", "All tools")}</button></div>`); }
+
+  /* 2) شريط الأدوات في أي صفحة */
+  function toolsBar() { const bars = document.querySelectorAll("#app .dmbar"); bars.forEach(b => b.classList.toggle("off245", !barOn())); if (own() && bars.length && !document.getElementById("dmt245")) { const h = document.querySelector("#app .libhead") || document.querySelector("#app .dmbar"); h && h.insertAdjacentHTML(h.matches(".libhead") ? "beforeend" : "afterend", `<button id="dmt245" class="btn btn-o xs" onclick="dm245()">🧰 ${barOn() ? T("اخفي شريط الأدوات من كل الصفحات", "Hide the tools bar everywhere") : T("رجّع شريط الأدوات في كل الصفحات", "Show the tools bar again everywhere")}</button>`); } }
+
+  /* 3) صفحة المقام */
+  function mid() { try { const s = (sectionsData() || []).find(x => x.id === state.libSec); return s && (s.meta || {}).maqam; } catch (e) { return null; } }
+  function maqamPageFix() { const t = document.querySelector("#app .motabs.mt239"); if (!t) return; const wrap = t.parentElement; const head = wrap.querySelector(":scope > .libhead");
+    /* شيل الكروت الكبيرة وكروت التلاوات وزرار «أنهي مقام» من الصفحة */
+    [...wrap.children].forEach(c => { if (c === t || c === head) return; if (c.matches(".libgrid, .grid") || (c.matches(".row") && /which maqam|أنهي مقام|انهي مقام/i.test(c.textContent))) c.classList.add("off245"); });
+    /* كروت «عن المقام» تظهر في تبويب «عن المقام» بس */
+    wrap.querySelectorAll(":scope > .mqk86, :scope > .mqk172, :scope > .mqinfo59").forEach(c => c.classList.toggle("hid245", state.mqTab !== "info"));
+    /* التبويبات تحت الاسم علطول */
+    if (head && head.nextElementSibling !== t) head.insertAdjacentElement("afterend", t);
+    /* «مارس المقام» مرة واحدة بس */
+    t.querySelectorAll("button").forEach(b => { if (/libGo\(/.test(b.getAttribute("onclick") || "")) b.remove(); }); }
+
+  /* تبويب «مارس المقام» بيتعرض جوه الصفحة بمحتوى الصفحة القديمة كله */
+  if (typeof maqamOne === "function") { const _mo = maqamOne; maqamOne = function (cur) { if (state.mqTab !== "vtest") return _mo.apply(this, arguments); const m = ((cur && cur.meta) || {}).maqam; state.mqTab = "info"; let h = _mo.apply(this, arguments); state.mqTab = "vtest";
+    const mt = h.match(/<div class="motabs[^"]*">[\s\S]*?<\/div>/); if (!mt) return h; let tabs = mt[0].replace(/class="on"/g, 'class=""').replace(/(<button )class="[^"]*"( onclick="state\.mqTab='vtest')/, '$1class="on"$2'); let body = ""; try { body = maqamPage("vtest", m); } catch (e) { body = ""; } return tabs + `<div id="vt245">${body}</div>`; }; }
+
+  /* 4) صوت طفل: طبقة أعلى من الحريمي بحوالي 3 درجات (كان بيطلع رجالي)، والزرار المختار بس هو اللي ينوّر */
+  try { const _th = mqTonicHz; mqTonicHz = function (m) { if (state.mq && state.mq.voice === "c" && !state.mq.mine) { const v = state.mq.voice; state.mq.voice = "f"; let f; try { f = _th.apply(this, arguments); } finally { state.mq.voice = v; } return f * Math.pow(2, 3 / 12); } return _th.apply(this, arguments); }; } catch (e) {}
+  function voiceChips() { const v = (state.mq && state.mq.voice) || "m"; document.querySelectorAll("#app button.chip[onclick*=\"state.mq.voice='\"]").forEach(b => { const k = ((b.getAttribute("onclick") || "").match(/state\.mq\.voice='(\w)'/) || [])[1]; b.classList.toggle("on", !state.mq.mine && k === v); }); }
+
+  /* 5) «كمّل بياناتك» ماعادتش بتتفرض بعد الدخول — البلد بتتحدد من الجهاز، والموبايل اختياري من صفحة البروفايل */
+  try { needsComplete114 = function () { try { const p = state.auth.profile, u = state.auth.user; if (u && p && !p.country && typeof guessCountry === "function" && !state.__c245) { state.__c245 = 1; const c = guessCountry(); if (c) { p.country = c; sb.from("profiles").update({ country: c }).eq("id", u.id).then(() => {}); } } } catch (e) {} return false; }; } catch (e) {}
+
+  const run = () => { try { home(); toolsBar(); maqamPageFix(); voiceChips(); } catch (e) { console.warn("v245", e); } };
+  const _r = render; render = function () { const o = _r.apply(this, arguments); run(); setTimeout(run, 60); return o; };
+  let t0 = 0; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(run, 120); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+  css(`#app .off245,#app .hid245{display:none!important}
+  #app .h245{display:block!important}#app .h245>h2{margin-bottom:.6rem}
+  #dmt245{margin:.3rem 0 .6rem}
+  #app .motabs.mt239{margin:.4rem 0 .8rem}`);
+})();
+
+/* ================= v246: المصحف الملوّن (صور Notion 14 · 15 · 16 · 26) — شريط الأحكام بقى فوق المصحف علطول (مش فوق الصفحة)، ومتقسّم بالأبواب: النون الساكنة والتنوين · الميم الساكنة · الغنة · المدود · القلقلة · اللامات · الإدغام · حروف لا تُنطق · الشريط اللي تحت (دليل الألوان) اتشال · شباك الخطأ: الجدول المختصر اتشال، و«اختار الحكم بالتفصيل» مفتوح للكل ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const G = [[T("النون الساكنة والتنوين", "Nūn sākinah & tanwīn"), ["izhar", "idgham_ghunnah", "idgham_wo_ghunnah", "iqlab", "ikhafa"]], [T("الميم الساكنة", "Mīm sākinah"), ["izhar_shafawi", "idgham_shafawi", "ikhafa_shafawi"]], [T("الغنة", "Ghunnah"), ["ghunnah"]], [T("المدود", "Madd"), ["madda_normal", "madda_permissible", "madda_obligatory", "madda_necessary"]], [T("القلقلة", "Qalqalah"), ["qalaqah"]], [T("اللامات", "Lām rules"), ["lam_qamari", "laam_shamsiyah"]], [T("الإدغام", "Idghām"), ["idgham_mutajanisayn", "idgham_mutaqaribayn"]], [T("حروف لا تُنطق", "Silent letters"), ["ham_wasl", "slnt"]]];
+  const keyOf = c => c.dataset.k195 || ((c.getAttribute("onclick") || "").match(/tjf157\('(\w+)'\)/) || [])[1];
+  function fix() {
+    const bar = document.querySelector("#app .tjf157"); const tj = document.querySelector("#app .tj2");
+    if (bar && tj && bar.nextElementSibling !== tj) { tj.parentElement.insertBefore(bar, tj); bar.classList.add("in246"); }
+    if (bar && !bar.querySelector(".g246")) { const chips = [...bar.querySelectorAll(":scope > .chip")]; if (chips.length) { const first = chips[0]; const box = document.createElement("div"); box.className = "gs246"; const used = new Set();
+      G.forEach(([name, ks]) => { const L = ks.map(k => chips.find(c => keyOf(c) === k)).filter(Boolean); if (!L.length) return; const g = document.createElement("div"); g.className = "g246"; g.innerHTML = `<b>${name}</b>`; L.forEach(c => { used.add(c); g.appendChild(c); }); box.appendChild(g); });
+      const rest = chips.filter(c => !used.has(c)); if (rest.length) { const g = document.createElement("div"); g.className = "g246"; g.innerHTML = `<b>${T("أخرى", "Other")}</b>`; rest.forEach(c => g.appendChild(c)); box.appendChild(g); }
+      const view = [...bar.children].find(x => /📖/.test(x.textContent) && x.tagName === "SPAN"); view ? bar.insertBefore(box, view) : bar.appendChild(box); } }
+    /* الشريط اللي تحت: دليل الألوان */
+    document.querySelectorAll("#app .card > .row").forEach(r => { const s = r.querySelectorAll(":scope > span.badge"); if (s.length > 4 && [...s].every(x => /^●/.test(x.textContent.trim()))) r.classList.add("off246"); });
+    /* شباك الخطأ */
+    const m = document.getElementById("mmModal"); if (m && !m.__f246) { m.__f246 = 1; m.querySelectorAll(".mmkinds").forEach(x => x.classList.add("off246")); m.querySelectorAll("details.dt165").forEach(d => d.open = true); }
+  }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { fix(); } catch (e) { console.warn("v246", e); } return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { fix(); } catch (e) {} }, 100); }).observe(document.body, { childList: true, subtree: true });
+  css(`.off246{display:none!important}
+  .tjf157.in246{position:sticky;top:0;z-index:4;margin:.4rem 0 .6rem}
+  .gs246{display:flex;flex-direction:column;gap:.3rem;width:100%;margin:.3rem 0}.g246{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}.g246>b{font-size:.78rem;min-width:9rem;color:var(--muted)}`);
 })();
 
 // بدء التشغيل

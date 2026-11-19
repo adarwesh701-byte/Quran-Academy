@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v245";
+const UI_VERSION = "2026-11-17-v246";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31728,6 +31728,31 @@ Between lessons, the platform keeps you going:
   #app .h245{display:block!important}#app .h245>h2{margin-bottom:.6rem}
   #dmt245{margin:.3rem 0 .6rem}
   #app .motabs.mt239{margin:.4rem 0 .8rem}`);
+})();
+
+/* ================= v246: المصحف الملوّن (صور Notion 14 · 15 · 16 · 26) — شريط الأحكام بقى فوق المصحف علطول (مش فوق الصفحة)، ومتقسّم بالأبواب: النون الساكنة والتنوين · الميم الساكنة · الغنة · المدود · القلقلة · اللامات · الإدغام · حروف لا تُنطق · الشريط اللي تحت (دليل الألوان) اتشال · شباك الخطأ: الجدول المختصر اتشال، و«اختار الحكم بالتفصيل» مفتوح للكل ================= */
+(function () {
+  const T = (a, e) => state.lang === "ar" ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const G = [[T("النون الساكنة والتنوين", "Nūn sākinah & tanwīn"), ["izhar", "idgham_ghunnah", "idgham_wo_ghunnah", "iqlab", "ikhafa"]], [T("الميم الساكنة", "Mīm sākinah"), ["izhar_shafawi", "idgham_shafawi", "ikhafa_shafawi"]], [T("الغنة", "Ghunnah"), ["ghunnah"]], [T("المدود", "Madd"), ["madda_normal", "madda_permissible", "madda_obligatory", "madda_necessary"]], [T("القلقلة", "Qalqalah"), ["qalaqah"]], [T("اللامات", "Lām rules"), ["lam_qamari", "laam_shamsiyah"]], [T("الإدغام", "Idghām"), ["idgham_mutajanisayn", "idgham_mutaqaribayn"]], [T("حروف لا تُنطق", "Silent letters"), ["ham_wasl", "slnt"]]];
+  const keyOf = c => c.dataset.k195 || ((c.getAttribute("onclick") || "").match(/tjf157\('(\w+)'\)/) || [])[1];
+  function fix() {
+    const bar = document.querySelector("#app .tjf157"); const tj = document.querySelector("#app .tj2");
+    if (bar && tj && bar.nextElementSibling !== tj) { tj.parentElement.insertBefore(bar, tj); bar.classList.add("in246"); }
+    if (bar && !bar.querySelector(".g246")) { const chips = [...bar.querySelectorAll(":scope > .chip")]; if (chips.length) { const first = chips[0]; const box = document.createElement("div"); box.className = "gs246"; const used = new Set();
+      G.forEach(([name, ks]) => { const L = ks.map(k => chips.find(c => keyOf(c) === k)).filter(Boolean); if (!L.length) return; const g = document.createElement("div"); g.className = "g246"; g.innerHTML = `<b>${name}</b>`; L.forEach(c => { used.add(c); g.appendChild(c); }); box.appendChild(g); });
+      const rest = chips.filter(c => !used.has(c)); if (rest.length) { const g = document.createElement("div"); g.className = "g246"; g.innerHTML = `<b>${T("أخرى", "Other")}</b>`; rest.forEach(c => g.appendChild(c)); box.appendChild(g); }
+      const view = [...bar.children].find(x => /📖/.test(x.textContent) && x.tagName === "SPAN"); view ? bar.insertBefore(box, view) : bar.appendChild(box); } }
+    /* الشريط اللي تحت: دليل الألوان */
+    document.querySelectorAll("#app .card > .row").forEach(r => { const s = r.querySelectorAll(":scope > span.badge"); if (s.length > 4 && [...s].every(x => /^●/.test(x.textContent.trim()))) r.classList.add("off246"); });
+    /* شباك الخطأ */
+    const m = document.getElementById("mmModal"); if (m && !m.__f246) { m.__f246 = 1; m.querySelectorAll(".mmkinds").forEach(x => x.classList.add("off246")); m.querySelectorAll("details.dt165").forEach(d => d.open = true); }
+  }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { fix(); } catch (e) { console.warn("v246", e); } return o; };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { fix(); } catch (e) {} }, 100); }).observe(document.body, { childList: true, subtree: true });
+  css(`.off246{display:none!important}
+  .tjf157.in246{position:sticky;top:0;z-index:4;margin:.4rem 0 .6rem}
+  .gs246{display:flex;flex-direction:column;gap:.3rem;width:100%;margin:.3rem 0}.g246{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}.g246>b{font-size:.78rem;min-width:9rem;color:var(--muted)}`);
 })();
 
 // بدء التشغيل
