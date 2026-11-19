@@ -20,8 +20,8 @@
   /* ---------- أسئلة الوحدة ---------- */
   fuEx = function (i) { const L = fuD(); const u = L[i]; if (!u) return; const qs = [];
     const otherW = rnd(L.filter((x, k) => k !== i).flatMap(x => x[2])); const sameW = u[2];
-    const distW = (ans, n = 3) => { const used = new Set([normAr(ans)]); const out = []; for (const w of otherW) { const k = normAr(w[0]); if (used.has(k) || sameW.some(x => normAr(x[0]) === k)) continue; used.add(k); out.push(w[0]); if (out.length >= n) break; } return out; };
-    const distM = (ans, n = 3) => { const used = new Set([enNorm(ans)]); const out = []; for (const w of rnd(L.flatMap(x => x[2]))) { const k = enNorm(w[2]); if (!k || used.has(k) || enOk(w[2], ans) || enOk(ans, w[2])) continue; used.add(k); out.push(w[2]); if (out.length >= n) break; } return out; };
+    const distW = (ans, n = 3) => { const used = new Set([normAr(ans)]); const out = []; for (const w of rnd(otherW)) { const k = normAr(w[0]); if (/[\/…]/.test(w[0]) || used.has(k) || sameW.some(x => normAr(x[0]) === k)) continue; used.add(k); out.push(w[0]); if (out.length >= n) break; } return out; };
+    const distM = (ans, n = 3) => { const used = new Set([enNorm(ans)]); const out = []; for (const w of rnd(L.flatMap(x => x[2]))) { const k = enNorm(w[2]); if (!k || /[\/…]/.test(w[2]) || used.has(k) || enOk(w[2], ans) || enOk(ans, w[2])) continue; used.add(k); out.push(w[2]); if (out.length >= n) break; } return out; };
     rnd(u[2]).slice(0, 3).forEach(w => qs.push({ k: "listen2", say: w[0], ans: w[0], ansM: w[2], opts: rnd([w[0], ...distW(w[0])]), optsM: rnd([w[2], ...distM(w[2])]) }));
     rnd(u[2]).slice(0, 2).forEach(w => qs.push({ k: "mean2", word: w[0], fr: w[1], ans: w[2], opts: rnd([w[2], ...distM(w[2])]) }));
     rnd(u[3] || []).slice(0, 2).forEach(l => { const ws = String(l[1]).replace(/[.؟?!،,«»]/g, "").split(/\s+/).filter(x => normAr(x).length > 2); if (!ws.length) return; const g = ws[Math.floor(Math.random() * ws.length)]; qs.push({ k: "gap2", line: l[1], blank: String(l[1]).replace(g, "_____"), en: l[3], ans: g, opts: rnd([g, ...distW(g)]) }); });
