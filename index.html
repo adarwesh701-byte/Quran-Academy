@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v231";
+const UI_VERSION = "2026-11-17-v232";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30980,6 +30980,76 @@ Between lessons, the platform keeps you going:
     #app img{content-visibility:auto}
   }
   `);
+})();
+
+/* ================= v232: رفع «العربية بين يديك» بقى مضمون — بيقبل أي اسم ملف (U01 / Unit 1 / الوحدة ١ / 1.pptx) · بيقول سبب أي خطأ بالظبط · بيعيد المحاولة ٣ مرات لو النت قطع · بيكمّل من مكان ما وقف (مابيرفعش اللي اترفع تاني) · الملفات الأكبر من 49 ميجا بيتخطاها وبيقولك · شريط نسبة % · لوحة «وصل لفين» بتوريك كل وحدة اترفعت ================= */
+(function () {
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const AR_D = s => String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  const LV = { "الأول": 1, "الاول": 1, "الثاني": 2, "الثانى": 2, "الثالث": 3, "الرابع": 4 };
+  const MAX = 49 * 1024 * 1024;
+  function lvOf(path) { const p = AR_D(path); const m = p.match(/(الأول|الاول|الثاني|الثانى|الثالث|الرابع)/); if (m) return LV[m[1]]; const n = p.match(/(?:level|lvl|book|L|مستوى|المستوى|كتاب)\s*[_\- ]?\s*([1-4])(?!\d)/i); return n ? +n[1] : (ABYB.lv || 1); }
+  function unitOf(name) { const s = AR_D(name.replace(/\.pptx$/i, "")); const m = s.match(/(?:^|[^a-z])U(?:nit)?\s*[_\- ]?\s*(\d{1,2})(?!\d)/i) || s.match(/الوحد[ةه]\s*[_\- ]?\s*(\d{1,2})/) || s.match(/(?:^|\D)(\d{1,2})(?!\d)/); const u = m ? +m[1] : 0; return u >= 1 && u <= 30 ? u : 0; }
+  async function retry(fn, n = 3) { let e; for (let i = 0; i < n; i++) { try { const r = await fn(); if (r && r.error) throw r.error; return r; } catch (x) { e = x; await new Promise(r => setTimeout(r, 1500 * (i + 1))); } } throw e; }
+  async function have(base) { try { const { data } = await sb.storage.from("academy_public").list("arabiya/" + base, { limit: 1000 }); return new Set((data || []).map(x => x.name)); } catch (e) { return new Set(); } }
+
+  let bar = null;
+  const paint = (pct, line, sub) => { if (!bar) { bar = document.createElement("div"); bar.id = "up232"; document.body.appendChild(bar); } bar.innerHTML = `<div class="row" style="justify-content:space-between;gap:.5rem"><b>📤 رفع «العربية بين يديك»</b><b>${pct}%</b></div><div class="pb232"><i style="width:${pct}%"></i></div><small>${esc(line || "")}</small><small class="muted">${esc(sub || "سيب الصفحة مفتوحة لحد ما يوصل 100%")}</small>`; };
+
+  window.abybUpload = abybUpload = async function (files) {
+    const all = [...(files || [])]; const F = all.filter(f => /\.pptx$/i.test(f.name) && !/^~\$/.test(f.name));
+    const log = document.getElementById("abybLog"); const say_ = m => { if (log) { log.insertAdjacentHTML("beforeend", `<div>${esc(m)}</div>`); log.scrollTop = 1e9; } };
+    if (!F.length) { const bad = all.filter(f => /\.ppt$/i.test(f.name)).length; return toast(bad ? "الملفات دي .ppt قديمة — افتحها في PowerPoint واحفظها .pptx الأول" : "مالقيتش ملفات .pptx في اللي اخترته", true); }
+    try { await abyLoadZip(); } catch (e) { return toast("مكتبة فتح الملفات ماحمّلتش — اتأكد من النت وجرّب تاني", true); }
+    let wl = null; try { wl = await navigator.wakeLock.request("screen"); } catch (e) {}
+    const leave = e => { e.preventDefault(); e.returnValue = ""; }; addEventListener("beforeunload", leave);
+    const idx = (((abybIndex() || [[]])[0]) || []).slice(); const tot = F.length; let done = 0, okU = 0, errU = 0, skipped = [];
+    const prog = JSON.parse(localStorage.getItem("abyb232") || "{}");
+    try {
+      for (const f of F) {
+        const path = f.webkitRelativePath || f.name; const lv = lvOf(path); const unit = unitOf(f.name);
+        if (!unit) { say_(`⏭️ ${f.name}: مش عارف رقم الوحدة من الاسم — سمّيه U01.pptx مثلًا`); done++; errU++; continue; }
+        const tag = `${ABY_N[lv]} — الوحدة ${unit}`; paint(Math.round(done / tot * 100), `📂 ${tag}: بيفتح الملف (${(f.size / 1048576).toFixed(0)} ميجا)…`); say_(`📂 ${tag}: بيفتح الملف…`);
+        let P; try { P = await abybParse(f); } catch (e) { say_(`❌ ${f.name}: الملف مش بيتفتح كـ pptx (${e && e.message || e}). لو محمي بكلمة سر أو تالف افتحه واحفظه تاني.`); done++; errU++; continue; }
+        if (!P.slides.length) { say_(`⚠️ ${tag}: مفيش ولا صفحة كتاب أو صوت في الملف ده`); done++; errU++; continue; }
+        const base = abybKey(lv, unit); const ex = await have(base); let k = 0, fail = 0; const N = P.media.length;
+        for (const m of P.media) {
+          k++; const sub = `${tag} · ${k}/${N}`; paint(Math.round((done + k / Math.max(1, N)) / tot * 100), `⬆️ ${sub}`);
+          if (ex.has(m)) continue;
+          const fz = P.z.file("ppt/media/" + m); if (!fz) continue; const blob = await fz.async("blob");
+          if (blob.size > MAX) { skipped.push(`${tag}: ${m} (${(blob.size / 1048576).toFixed(0)} ميجا)`); say_(`⚠️ ${m} أكبر من 49 ميجا — اتخطّيته`); continue; }
+          const ext = m.split(".").pop().toLowerCase(); const type = { mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", wma: "audio/x-ms-wma", mp4: "video/mp4", m4v: "video/mp4", png: "image/png", gif: "image/gif", webp: "image/webp" }[ext] || "image/jpeg";
+          try { await retry(() => sb.storage.from("academy_public").upload(`arabiya/${base}/${m}`, blob, { contentType: type, upsert: true })); } catch (e) { fail++; say_(`⚠️ ${m}: ${e && e.message || e}`); }
+          if (k % 10 === 0) say_(`   ⬆️ ${k}/${N}`);
+        }
+        const J = { lv, unit, title: P.title, W: P.W, H: P.H, slides: P.slides };
+        try { await retry(() => sb.storage.from("academy_public").upload(`arabiya/${base}.json`, new Blob([JSON.stringify(J)], { type: "application/json" }), { contentType: "application/json", upsert: true })); } catch (e) { say_(`❌ ${tag}: ماقدرتش أحفظ فهرس الوحدة (${e && e.message || e})`); done++; errU++; continue; }
+        const ls = [...new Set(P.slides.map(s => s.lesson).filter(Boolean))]; const o = { lv, unit, title: P.title, lessons: ls, slides: P.slides.length, ans: P.slides.reduce((s, x) => s + x.boxes.length, 0), aud: P.slides.reduce((s, x) => s + x.aud.length, 0), at: new Date().toISOString(), miss: fail };
+        const i = idx.findIndex(x => x.lv === lv && x.unit === unit); if (i >= 0) idx[i] = o; else idx.push(o);
+        idx.sort((a, b) => a.lv - b.lv || a.unit - b.unit);
+        try { await retry(() => sb.storage.from("academy_public").upload("arabiya/book/index.json", new Blob([JSON.stringify(idx)], { type: "application/json" }), { contentType: "application/json", upsert: true })); } catch (e) { say_("⚠️ الفهرس العام: " + (e && e.message || e)); }
+        prog[`${lv}-${unit}`] = o.at; localStorage.setItem("abyb232", JSON.stringify(prog));
+        done++; okU++; say_(`✅ ${tag} «${P.title || ""}»: ${o.slides} صفحة · ${o.ans} إجابة · ${o.aud} صوت${fail ? ` · ${fail} ملف ماترفعش (ارفع الوحدة تاني وهيكمّل الناقص بس)` : ""}`);
+        paint(Math.round(done / tot * 100), `✅ ${tag}`);
+      }
+    } finally {
+      removeEventListener("beforeunload", leave); try { wl && wl.release(); } catch (e) {}
+      paint(100, `خلص: ${okU} وحدة اترفعت${errU ? ` · ${errU} فيها مشكلة (التفاصيل في السجل)` : ""}`, skipped.length ? `اتخطّى ${skipped.length} ملف كبير: ${skipped.slice(0, 3).join("، ")}` : "تقدر تقفل الصفحة دلوقتي");
+      setTimeout(() => { bar && bar.remove(); bar = null; }, 15000);
+      delete state.data["abyb:index"]; state.abybBust = Date.now(); toast(errU ? `خلص مع ${errU} مشكلة — بص على السجل` : "✅ خلص الرفع"); render();
+    }
+  };
+
+  /* لوحة «وصل لفين» للمالك فوق الرفع */
+  const _bb = abybBody; abybBody = function () { const h = _bb.apply(this, arguments); if (!(realRole() === "owner" && !state.preview)) return h; const ix = abybIndex(); const all = Array.isArray(ix) ? (ix[0] || []) : null; if (!all) return h;
+    const row = n => { const u = all.filter(o => o.lv === n); return `<div class="row" style="gap:.25rem;flex-wrap:wrap;align-items:center"><b class="xs" style="min-width:5.5rem">📗 ${ABY_N[n]}</b>${u.length ? u.map(o => `<span class="ch232" title="${o.slides} صفحة · ${o.aud} صوت">U${String(o.unit).padStart(2, "0")}${o.miss ? " ⚠️" : ""}</span>`).join("") : `<span class="xs muted">لسه مفيش</span>`}</div>`; };
+    const st = `<div class="card" id="st232" style="margin-bottom:.6rem"><b>📊 وصل لفين؟</b> <span class="xs muted">${all.length} وحدة مرفوعة من الأربع مستويات</span><div style="display:grid;gap:.3rem;margin-top:.4rem">${[1, 2, 3, 4].map(row).join("")}</div></div>`;
+    return st + h; };
+
+  css(`#up232{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:50001;width:min(480px,92vw);background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:.7rem .9rem;box-shadow:0 12px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;gap:.3rem}
+  .pb232{height:12px;border-radius:999px;background:var(--bg);overflow:hidden}.pb232 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .ch232{font-size:.72rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+  #up230{display:none!important}`);
 })();
 
 // بدء التشغيل
