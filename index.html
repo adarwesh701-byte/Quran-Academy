@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v237";
+const UI_VERSION = "2026-11-17-v238";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31312,6 +31312,100 @@ Between lessons, the platform keeps you going:
   const ORIG = new WeakMap();
   function fix() { const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => BAD.test(n.nodeValue || "") ? 1 : 2 }); const L = []; let n; while ((n = tw.nextNode())) L.push(n); L.forEach(n => { const p = n.parentElement; const t = p && (p.getAttribute("data-ar") || p.getAttribute("title")); n.nodeValue = t && !BAD.test(t) ? t : ""; if (p && !n.nodeValue && p.closest("button")) { const b = p.closest("button"); if (/للمعلمين|teach/i.test(b.getAttribute("onclick") || "") || b.textContent.includes("👨‍🏫")) b.querySelectorAll("span").forEach(s => { if (!s.textContent.trim()) s.textContent = state.lang === "ar" ? "للمعلمين والأكاديميات" : "For teachers & academies"; }); } }); }
   let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(fix, 120); }).observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
+
+/* ================= v238: 👥 الحصة الجماعية (من Notion): سعر ثابت للجروب كله = ضعف الحصة الفردية (50 د) وبيتقسم على العدد — كل ما الجروب يكبر الفرد يدفع أقل · لحد 5 أفراد: حصة 50 د أو حصتين · أكتر من 5 (لحد 10): حصتين بس · لينك دعوة للأصحاب · لما يكمل اللي عمل الجروب يختار: واحد يدفع للكل ولا كل واحد يدفع نصيبه · المالك بيغيّر النسبة والسعر ويشوف كل الجروبات ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const own = () => { try { return realRole() === "owner" && !state.preview; } catch (e) { return false; } };
+  const logged = () => !!(state.auth && state.auth.user);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("grp238")) PAGES16.push("grp238");
+  const NF = () => setv("nf218", {}) || {}; const enabled = () => own() || !(NF().group238 && NF().group238.on === false);
+
+  /* السعر */
+  const CFG = () => Object.assign({ mult: 2, single: 0 }, setv("grp238", {}) || {});
+  function singleUSD() { const c = CFG(); if (+c.single > 0) return +c.single; try { const P = setv("plans", []) || []; const p = P.find(x => x.id === "pack4") || P.find(x => /^pack\d+$/.test(x.id)); if (p && p.price && p.lessons) return p.price / p.lessons; } catch (e) {} return 15; }
+  const totalUSD = sessions => Math.round(singleUSD() * CFG().mult * sessions * 100) / 100;
+  function fmt(usd) { try { const f = typeof myFactor === "function" ? myFactor() : 1; const v = usd * f; const to = displayCur(); const c = convert(v, "USD", to); return c == null ? money(v, "USD") : fmtCur(c, to); } catch (e) { return "$" + usd; } }
+
+  /* اللينك */
+  try { const m = location.search.match(/[?&]g=([A-Za-z0-9]{4,8})/); if (m) { localStorage.setItem("grp238", m[1].toUpperCase()); state.route = "grp238"; } } catch (e) {}
+  const code = () => state.grp238c || (localStorage.getItem("grp238") || "");
+  const link = c => `${location.origin}${location.pathname}?g=${c}#/grp238`;
+
+  const S = { size: 3, sessions: 1, track: "tajweed", note: "", g: null, busy: 0, mine: null, all: null };
+  async function load() { const c = code(); if (!c || !logged()) return; const { data, error } = await sb.rpc("grp238_get", { p_code: c }); S.g = error ? { err: error.message } : (data || { err: "not_found" }); render(); }
+  async function loadMine() { if (!logged()) return; const q = sb.from("grp238").select("code,size,sessions,status,members,created_at,owner_id,pay,track,total_usd").order("created_at", { ascending: false }).limit(own() ? 100 : 20); const { data } = await q; S.mine = data || []; render(); }
+
+  window.grp238 = {
+    set(k, v) { S[k] = v; if (k === "size" && +v > 5) S.sessions = 2; render(); },
+    async create() { if (!logged()) { localStorage.setItem("after238", "1"); return navigate("signup"); } if (S.busy) return; S.busy = 1; const tot = totalUSD(S.sessions); const { data, error } = await sb.rpc("grp238_create", { p_size: +S.size, p_sessions: +S.sessions, p_track: S.track, p_note: S.note, p_total: tot }); S.busy = 0; if (error) return toast(error.message, true); localStorage.setItem("grp238", data); state.grp238c = data; S.g = null; S.mine = null; load(); },
+    open(c) { state.grp238c = c; localStorage.setItem("grp238", c); S.g = null; render(); load(); },
+    async join() { if (!logged()) return navigate("signup"); const { data, error } = await sb.rpc("grp238_join", { p_code: code() }); if (error) return toast(/full/.test(error.message) ? T("الجروب اكتمل خلاص", "This group is already full") : error.message, true); S.g = data; toast("✅ " + T("انضميت للجروب", "You joined the group")); render(); },
+    async leave() { if (!confirm(T("تخرج من الجروب؟", "Leave this group?"))) return; await sb.rpc("grp238_leave", { p_code: code() }); localStorage.removeItem("grp238"); state.grp238c = ""; S.g = null; render(); },
+    async pay(p) { const { data, error } = await sb.rpc("grp238_setpay", { p_code: code(), p_pay: p }); if (error) return toast(error.message, true); S.g = data; render(); },
+    copy() { const l = link(code()); try { navigator.clipboard.writeText(l); toast("✅ " + T("اتنسخ اللينك", "Link copied")); } catch (e) { prompt("", l); } },
+    wa() { const g = S.g || {}; const msg = T(`تعالى ننضم لحصة جماعية في أكاديمية إتقان (${g.size} أفراد) — السعر بيتقسم علينا: `, `Join our group lesson at Itqan Academy (${g.size} people) — we split the price: `) + link(code()); open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank"); },
+    newOne() { localStorage.removeItem("grp238"); state.grp238c = ""; S.g = null; render(); },
+    async cfg() { const c = CFG(); const m = prompt(T("سعر الجروب = كام ضعف الحصة الفردية 50 د؟", "Group price = how many times a single 50-min lesson?"), c.mult); if (m == null) return; const s = prompt(T("سعر الحصة الفردية 50 د بالدولار (فاضي = من باقة 4 حصص)", "Single 50-min lesson price in USD (empty = from the 4-lesson pack)"), c.single || ""); if (s == null) return; await saveSetting16("grp238", { mult: +m || 2, single: +s || 0 }); render(); },
+    async status(c, st) { const { error } = await sb.from("grp238").update({ status: st }).eq("code", c); if (error) return toast(error.message, true); S.mine = null; loadMine(); }
+  };
+
+  const TR = [["quran", "📖", "حفظ القرآن", "Quran memorization"], ["tajweed", "🕌", "التجويد", "Tajweed"], ["maqamat", "🎼", "المقامات", "Maqamat"], ["qiraat", "📜", "القراءات", "Qira'at"], ["arabic", "✍️", "العربي", "Arabic"], ["islamic", "📚", "العلوم الإسلامية", "Islamic sciences"]];
+  const trName = k => { const t = TR.find(x => x[0] === k); return t ? t[1] + " " + (AR() ? t[2] : t[3]) : k || ""; };
+  const steps = n => `<div class="st238">${[T("اختار العدد", "Pick size"), T("ادعي أصحابك", "Invite friends"), T("اختاروا الدفع", "Choose payment"), T("نحدد الميعاد", "We schedule")].map((x, i) => `<span class="${i < n ? "ok" : i === n ? "on" : ""}"><b>${i + 1}</b>${x}</span>`).join("")}</div>`;
+
+  function createView() { const sz = +S.size, ses = sz > 5 ? 2 : +S.sessions; const tot = totalUSD(ses); const per = tot / sz; const single = singleUSD();
+    return `${steps(0)}<div class="card"><h3>👥 ${T("كام واحد في الجروب؟", "How many people?")}</h3><div class="sz238">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${n === sz ? "on" : ""}" onclick="grp238.set('size',${n})">${n}</button>`).join("")}</div>
+      <h3 style="margin-top:1rem">⏱️ ${T("مدة الحصة", "Lesson length")}</h3><div class="row" style="gap:.5rem;flex-wrap:wrap"><button class="chip ${ses === 1 ? "on" : ""}" ${sz > 5 ? "disabled" : ""} onclick="grp238.set('sessions',1)">${T("حصة واحدة 50 دقيقة", "One 50-min lesson")}</button><button class="chip ${ses === 2 ? "on" : ""}" onclick="grp238.set('sessions',2)">${T("حصتين (50 + 50 دقيقة)", "Two lessons (50 + 50 min)")}</button></div>${sz > 5 ? `<p class="xs muted">${T("أكتر من 5 أفراد لازم حصتين علشان كل واحد ياخد وقته.", "More than 5 people needs two lessons so everyone gets a turn.")}</p>` : ""}
+      <h3 style="margin-top:1rem">🎯 ${T("المسار", "Track")}</h3><div class="row" style="gap:.4rem;flex-wrap:wrap">${TR.map(t => `<button class="chip ${S.track === t[0] ? "on" : ""}" onclick="grp238.set('track','${t[0]}')">${t[1]} ${AR() ? t[2] : t[3]}</button>`).join("")}</div>
+      <label class="sm" style="display:block;margin-top:.8rem">${T("ملاحظة (اختياري): المستوى، الأعمار، المواعيد المناسبة", "Note (optional): level, ages, good times")}<textarea class="in" rows="2" oninput="S238note(this.value)">${esc(S.note)}</textarea></label></div>
+      <div class="card pr238"><div><small class="muted">${T("سعر الجروب كله (ثابت)", "Whole-group price (fixed)")}</small><b>${fmt(tot)}</b><small class="muted">${ses === 2 ? T("حصتين", "2 lessons") : T("حصة 50 د", "one 50-min lesson")}</small></div><div class="eq">÷ ${sz}</div><div class="per"><small class="muted">${T("على كل واحد", "Each person pays")}</small><b>${fmt(per)}</b><small class="ok">${T(`أقل من الحصة الفردية (${fmt(single * ses)})`, `Less than a private lesson (${fmt(single * ses)})`)}</small></div></div>
+      <p class="xs muted" style="text-align:center">💡 ${T("كل ما الجروب يكبر، نصيب كل واحد يقل.", "The bigger the group, the less each person pays.")}</p>
+      <button class="btn btn-p btn-lg btn-full" onclick="grp238.create()">✨ ${T("أنشئ الجروب وخد لينك الدعوة", "Create the group & get the invite link")}</button>`; }
+
+  function groupView() { const g = S.g; if (!g) { setTimeout(load, 10); return loadingBox(); } if (g.err) return `<div class="card">⚠️ ${T("اللينك ده مش شغال أو الجروب اتلغى.", "This link isn't valid or the group was cancelled.")} <button class="btn btn-o xs" onclick="grp238.newOne()">${T("اعمل جروب جديد", "Create a new group")}</button></div>`;
+    const n = g.count || 0, full = n >= g.size; const tot = +g.total_usd || totalUSD(g.sessions); const per = tot / g.size; const stp = !full ? 1 : g.status === "paying" || g.status === "paid" ? 3 : 2;
+    let body = `${steps(stp)}<div class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem"><h3>👥 ${T("جروب", "Group")} ${esc(g.code)} · ${esc(trName(g.track))}</h3><span class="badge">${n}/${g.size}</span></div><div class="pb238"><i style="width:${Math.round(n / g.size * 100)}%"></i></div>
+      <div class="mb238">${[...Array(g.size)].map((_, i) => `<span class="${i < n ? "on" : ""}">${i < n ? "👤 " + esc((g.names || [])[i] || "—") : "＋"}</span>`).join("")}</div>
+      <p class="sm">${g.sessions === 2 ? T("حصتين (50 + 50 د)", "Two lessons (50 + 50 min)") : T("حصة 50 د", "One 50-min lesson")} · ${T("سعر الجروب", "Group price")} <b>${fmt(tot)}</b> · ${T("على كل واحد", "each")} <b>${fmt(per)}</b></p>${g.note ? `<p class="xs muted">📝 ${esc(g.note)}</p>` : ""}</div>`;
+    if (!g.joined) return body + (full ? `<div class="card">${T("الجروب ده اكتمل.", "This group is full.")}</div>` : `<button class="btn btn-p btn-lg btn-full" onclick="grp238.join()">🤝 ${T("انضم للجروب", "Join the group")}</button>`);
+    if (!full) body += `<div class="card"><h3>📨 ${T("ادعي أصحابك", "Invite your friends")}</h3><p class="sm muted">${T(`فاضل ${g.size - n} — ابعتلهم اللينك ده، أول ما يدخلوا ويضغطوا «انضم» بيتضافوا هنا.`, `${g.size - n} spots left — send them this link.`)}</p><div class="lk238"><input class="in" readonly value="${esc(link(g.code))}" onclick="this.select()"><button class="btn btn-p" onclick="grp238.copy()">📋 ${T("انسخ", "Copy")}</button><button class="btn btn-o" onclick="grp238.wa()">💬 WhatsApp</button></div></div>`;
+    else if (g.is_owner && g.status === "full") body += `<div class="card"><h3>💳 ${T("الجروب اكتمل! هتدفعوا إزاي؟", "The group is full! How will you pay?")}</h3><div class="pay238"><button onclick="grp238.pay('one')"><b>🙋 ${T("أنا هدفع للكل", "I'll pay for everyone")}</b><span>${fmt(tot)}</span></button><button onclick="grp238.pay('each')"><b>👥 ${T("كل واحد يدفع نصيبه", "Everyone pays their share")}</b><span>${fmt(per)} ${T("للفرد", "each")}</span></button></div></div>`;
+    else if (g.status === "full") body += `<div class="card">⏳ ${T("الجروب اكتمل — مستنيين اللي عمل الجروب يختار طريقة الدفع.", "Group is full — waiting for the organiser to choose how to pay.")}</div>`;
+    if (g.status === "paying" || g.status === "paid" || g.status === "scheduled") { const mine = g.pay === "one" ? (g.is_owner ? tot : 0) : per;
+      body += `<div class="card"><h3>✅ ${g.pay === "one" ? T("اللي عمل الجروب هيدفع للكل", "The organiser pays for everyone") : T("كل واحد هيدفع نصيبه", "Everyone pays their share")}</h3>${mine ? `<p>${T("المطلوب منك", "Your amount")}: <b style="font-size:1.3rem">${fmt(mine)}</b></p><p class="sm muted">${T("الأكاديمية هتتواصل معاكم تأكد الميعاد وتبعت بيانات الدفع (InstaPay · Vodafone Cash · PayPal). الحصة بتتحجز بعد الدفع.", "The academy will contact you to confirm the time and send payment details (InstaPay · Vodafone Cash · PayPal).")}</p>` : `<p class="sm">${T("مش مطلوب منك تدفع حاجة — اللي عمل الجروب هيدفع.", "Nothing to pay — the organiser is paying.")}</p>`}<p class="sm">${T("الحالة", "Status")}: <b>${esc(g.status === "paid" ? T("اتدفع", "Paid") : g.status === "scheduled" ? T("الميعاد اتحدد", "Scheduled") : T("مستني الدفع", "Awaiting payment"))}</b></p></div>`; }
+    body += `<div class="row" style="gap:.4rem;justify-content:center;margin-top:.6rem">${!g.is_owner && (g.status === "open" || g.status === "full") ? `<button class="btn btn-o xs" onclick="grp238.leave()">🚪 ${T("اخرج من الجروب", "Leave group")}</button>` : ""}<button class="btn btn-o xs" onclick="grp238.newOne()">➕ ${T("جروب جديد", "New group")}</button></div>`;
+    return body; }
+
+  function ownerView() { if (!own()) return ""; if (S.mine == null) { setTimeout(loadMine, 10); return ""; } const c = CFG();
+    const st = ["open", "full", "paying", "paid", "scheduled", "cancelled"]; const nm = { open: T("مفتوح", "Open"), full: T("اكتمل", "Full"), paying: T("مستني الدفع", "Awaiting payment"), paid: T("اتدفع", "Paid"), scheduled: T("اتحدد", "Scheduled"), cancelled: T("اتلغى", "Cancelled") };
+    return `<details class="card" style="margin-top:1rem"><summary class="b">🔒 ${T("للمالك: كل الجروبات والإعدادات", "Owner: all groups & settings")} (${S.mine.length})</summary><p class="sm">${T("سعر الجروب", "Group price")} = <b>${c.mult}×</b> ${T("الحصة الفردية", "a single lesson")} (${fmt(singleUSD())}) <button class="btn btn-o xs" onclick="grp238.cfg()">✏️ ${T("غيّر", "Change")}</button></p>
+      <table class="tbl196">${S.mine.map(g => `<tr><td><a href="#" onclick="grp238.open('${g.code}');return false">${g.code}</a></td><td>${(g.members || []).length}/${g.size}</td><td>${g.sessions === 2 ? "2×50" : "50"}</td><td>${esc(trName(g.track))}</td><td>${g.pay === "one" ? T("واحد للكل", "One pays") : T("كل واحد", "Each")}</td><td><select class="in" style="width:auto" onchange="grp238.status('${g.code}',this.value)">${st.map(s => `<option value="${s}" ${s === g.status ? "selected" : ""}>${nm[s]}</option>`).join("")}</select></td></tr>`).join("") || `<tr><td class="muted">${T("لسه مفيش", "None yet")}</td></tr>`}</table></details>`; }
+
+  function page() { if (!enabled()) { state.route = "home"; return null; } const c = code();
+    const head = pageWrap("👥", T("حصة جماعية", "Group lesson"), T("سعر واحد ثابت للجروب كله وبيتقسم عليكم — كل ما تزيدوا كل واحد يدفع أقل", "One fixed price for the whole group, split between you — more people, less each"), `${c && logged() ? groupView() : createView()}${ownerView()}`, 820);
+    return head; }
+  window.S238note = v => { S.note = v; };
+
+  /* لينكات للحصة الجماعية من صفحة الأسعار والرئيسية */
+  function hooks() { const app = document.getElementById("app"); if (!app || !enabled()) return;
+    if (state.route === "pricing" && !app.querySelector("#cta238")) { const tb = app.querySelector(".ptabs"); const h = [...app.querySelectorAll("h2,h3")].find(x => /👥/.test(x.textContent)); const at = tb || (h && (h.closest(".card,section") || h)); if (at) at.insertAdjacentHTML(tb ? "afterend" : "beforebegin", `<div id="cta238" class="card cta238"><div><b>👥 ${T("أنشئ حصة جماعية مع أصحابك", "Create a group lesson with friends")}</b><p class="sm muted">${T("سعر ثابت للجروب وبيتقسم عليكم — لحد 10 أفراد، ولينك دعوة بدوسة.", "Fixed group price split between you — up to 10 people, invite link in one tap.")}</p></div><button class="btn btn-p" onclick="go16('grp238')">✨ ${T("ابدأ", "Start")}</button></div>`); }
+    app.querySelectorAll("a[href*='wa.me']").forEach(a => { if (a.__g238 || !/friends|أصحاب|group/i.test(decodeURIComponent(a.href))) return; a.__g238 = 1; a.insertAdjacentHTML("beforebegin", `<button class="btn btn-p" onclick="go16('grp238')">👥 ${T("أنشئ حصة جماعية", "Create a group lesson")}</button> `); }); }
+
+  const _r = render; render = function () { if (state.route === "grp238") { const b = page(); if (b) { show(b); return; } } const o = _r.apply(this, arguments); try { hooks(); } catch (e) { console.warn("v238", e); } return o; };
+  /* بعد التسجيل يرجع يكمّل الجروب */
+  setInterval(() => { try { if (logged() && localStorage.getItem("after238")) { localStorage.removeItem("after238"); go16("grp238"); } if (logged() && code() && state.route !== "grp238" && /[?&]g=/.test(location.search)) { history.replaceState(null, "", location.pathname + "#/grp238"); go16("grp238"); } } catch (e) {} }, 1500);
+  css(`.st238{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin-bottom:.8rem}.st238 span{display:flex;align-items:center;gap:.3rem;font-size:.8rem;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--line);color:var(--muted)}.st238 b{display:inline-grid;place-items:center;width:1.3rem;height:1.3rem;border-radius:50%;background:var(--line);color:var(--fg);font-size:.7rem}.st238 .on{border-color:var(--accent);color:var(--fg);font-weight:700}.st238 .on b,.st238 .ok b{background:var(--accent);color:#fff}.st238 .ok{color:var(--accent)}
+  .sz238{display:flex;gap:.35rem;flex-wrap:wrap}.sz238 button{width:3rem;height:3rem;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:800 1.1rem inherit;cursor:pointer}.sz238 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .pr238{display:grid;grid-template-columns:1fr auto 1fr;gap:.6rem;align-items:center;text-align:center}.pr238>div{display:flex;flex-direction:column;gap:.15rem}.pr238 b{font-size:1.5rem}.pr238 .per b{color:var(--accent);font-size:1.8rem}.pr238 .eq{font-size:1.3rem;font-weight:800;color:var(--muted)}.pr238 .ok{color:#16a34a;font-size:.75rem}
+  .pb238{height:10px;border-radius:999px;background:var(--bg);overflow:hidden;margin:.5rem 0}.pb238 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .mb238{display:flex;gap:.35rem;flex-wrap:wrap;margin:.4rem 0}.mb238 span{padding:.3rem .6rem;border-radius:999px;border:1px dashed var(--line);font-size:.8rem;color:var(--muted)}.mb238 span.on{border-style:solid;border-color:var(--accent);color:var(--fg)}
+  .lk238{display:flex;gap:.35rem;flex-wrap:wrap}.lk238 input{flex:1;min-width:12rem;direction:ltr}
+  .pay238{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}@media(max-width:560px){.pay238{grid-template-columns:1fr}.pr238{grid-template-columns:1fr}}.pay238 button{display:flex;flex-direction:column;gap:.3rem;padding:1rem;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;font:inherit}.pay238 button:hover{border-color:var(--accent)}.pay238 span{font-size:1.3rem;font-weight:800;color:var(--accent)}
+  .cta238{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;border:2px solid var(--accent)}`);
 })();
 
 // بدء التشغيل
