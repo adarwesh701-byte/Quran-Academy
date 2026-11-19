@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v230";
+const UI_VERSION = "2026-11-17-v231";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -30942,6 +30942,43 @@ Between lessons, the platform keeps you going:
   #ct171,#ct219,#bk177{display:none!important}body:not(.bo230) #un209{display:none!important}
   body.np230 #eg191,body.np230 #app [onclick*="navigate('pricing')"],body.np230 .bnav [onclick*="pricing"]{display:none!important}
   #up230{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:50000;width:min(460px,92vw);background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:.7rem .9rem;box-shadow:0 12px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;gap:.3rem}.pb230{height:12px;border-radius:999px;background:var(--bg);overflow:hidden}.pb230 i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  `);
+})();
+
+/* ================= v231: نهاية الرعشة — المحتوى بيظهر مرة واحدة بعد ما كل التعديلات تخلص (بدل 280ms ثابتة) · أول فتح للموقع مابيبانش غير بعد ما الدخول يتأكد · «خليني مكاني» بيقف أول ما تحرّك الصفحة بإيدك (ماعادش بيشدّ السكرول) · شريط «إيه اللي يهمك» ماعادش بيظهر ويختفي في الرئيسية · سكرول أخف على التابلت والموبايل ================= */
+(function () {
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const B = document.body, app = () => document.getElementById("app");
+  const key = () => [state.route, state.pageArg || "", state.libSec || "", state.libItem || "", state.contentId || ""].join("|");
+
+  /* 1) الستارة الذكية: تفضل لحد ما مفيش أي تغيير في الصفحة لمدة 140ms (أقصى حاجة 900ms) */
+  let quietT = null, capT = null, mo = null;
+  function lift(cls) { clearTimeout(quietT); clearTimeout(capT); mo && mo.disconnect(); mo = null; B.classList.remove(cls); }
+  function veil(cls, cap) {
+    B.classList.add(cls); clearTimeout(capT); capT = setTimeout(() => lift(cls), cap);
+    const arm = () => { clearTimeout(quietT); quietT = setTimeout(() => { if (cls === "bt231" && !(state.auth && state.auth.ready)) return arm(); lift(cls); }, 140); };
+    mo && mo.disconnect(); const a = app(); if (a) { mo = new MutationObserver(arm); mo.observe(a, { childList: true, subtree: true }); } arm();
+  }
+  /* أول فتح: الموقع كله مستخبي لحد ما الدخول يتأكد والتعديلات تخلص (أقصى حاجة 1.6 ثانية) */
+  B.dataset.r231 = state.route || "home"; veil("bt231", 1600);
+  let last = key();
+  const _r = render; render = function () { const k = key(); const out = _r.apply(this, arguments); B.classList.remove("ld229"); /* الستارة القديمة الثابتة اتلغت */ B.dataset.r231 = state.route || ""; if (k !== last) { last = k; if (!B.classList.contains("bt231")) veil("ld231", 900); } return out; };
+
+  /* 2) «خليني مكاني» (v214) بيقف أول ما المستخدم يحرّك الصفحة بنفسه */
+  const stop = () => { try { window.__k214off && window.__k214off(); } catch (e) {} };
+  ["wheel", "touchmove", "keydown"].forEach(ev => addEventListener(ev, stop, { passive: true, capture: true }));
+
+  css(`
+  body.bt231 #app{opacity:0!important;transition:none!important}
+  body.ld231 #app>*:not(.hdr):not(header):not(.bar185):not(.dombar):not(.unav){opacity:0!important;transition:none!important}
+  #app{transition:opacity .16s ease}
+  body[data-r231=home] #int200{display:none!important} /* شريط «إيه اللي يهمك» كان بيظهر ويختفي في الرئيسية فيزقّ الصفحة 280px */
+  @media (pointer:coarse){
+    body,html body{background-attachment:scroll!important}
+    html body .hdr,html body header,html body .bar185,html body .dombar,html body .unav,html body .bnav,html body .footer,html body footer{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+    html body *{scroll-behavior:auto!important}
+    #app img{content-visibility:auto}
+  }
   `);
 })();
 
