@@ -1,0 +1,892 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>My Projrccct</title><meta name="data-notion-page-icon" content="🚟"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%9A%9F%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+	/* Paint a complete callout box on every PDF page fragment. */
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+/*
+ * Toggles and callouts hold arbitrary content, so they can easily be taller
+ * than a page. They must stay breakable: avoiding breaks inside them makes
+ * Chromium push the whole block onto the next page, which leaves the previous
+ * page mostly empty before every long toggle.
+ */
+details,
+aside {
+	margin: 1.25em 0;
+}
+
+/* Keep a toggle's title on the same page as the start of its content. */
+summary {
+	page-break-after: avoid;
+	break-after: avoid;
+}
+
+/*
+ * Toggle headings render as <h1/h2/h3 style="display:inline-block"> inside
+ * <summary>. Without this reset, the heading's margin-top pushes it below the
+ * ::marker (▼), so the triangle and the title appear on separate lines.
+ */
+summary h1,
+summary h2,
+summary h3,
+summary h4 {
+	margin-top: 0;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="418cea6a-e158-80a4-9284-ebfbee6410ef" class="page sans" data-notion-page-icon="🚟"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🚟"></span></div><h1 class="page-title" dir="auto">My Projrccct</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="41bcea6a-e158-8065-acae-dab14b34f440" class="" dir="auto">اعملي تذكير بالتجديد علي جوجل كاليندر بتاعي</p><p id="41bcea6a-e158-8070-8207-f267b776b792" class="" dir="auto">اديني كمان صلاحية اغير المحتوي الموجود في صفحة تسحيل الدخول<br/>لما بضغط هنا يجييلي تسجيل الدخول علطول للايميل<br/>ليه بيحولني لصفحة انشاء حساب<br/>حتي لما المعلم يضغط عندي حساب او المشترك يضغط عندي حساب يدخله صفحة تسجيل الدخول<br/>فيها سحل بجوجل<br/>سجل بفسيبوك<br/>والبريد الالكتروني<br/>وكلمة المرور</p><p id="41bcea6a-e158-805a-9229-c1dcf9a951c9" class="" dir="auto">خلي لون تسجيل الدخول مختلف خالص عشان يبان للناس .. سواء دارك او لايت<br/>شيل كلمة بدون تأكيد الايميل دي في سجل بجوجل شيل دا كمان</p><p id="41bcea6a-e158-8027-9dec-c7c9f39da16f" class="" dir="auto">شيل الاسعار من صقحة الزاير دي وانا لسه ماسجبتش الدخول</p><p id="41bcea6a-e158-8088-a7bb-cd92752024ae" class="" dir="auto">شيل كمل من حيث وقفت دي<br/>وتراجع دي كمان وانا بتنقل بين الصفحات<br/>كمان رجوع لمكانك شيلها</p><p id="41bcea6a-e158-807b-aa81-c17e89f4daea" class="" dir="auto">اديني اكسيس كامل اتحكم في الصفحات دي<br/>اتحكم في كل شئ حرفيا في الاكاديميية</p><p id="41bcea6a-e158-80ea-a1b2-da1e4766201a" class="" dir="auto">وانا برفع كتاب زي العربية بين يديك دا .. خلي فيه تحميل ويظهر وصل كام في المية .. عشان مش شايف حاجة ولا شايف اصلالتحميل وصل لفين ..لما بس رفرشت الموقع ومارضاش يرفرش</p><p id="41bcea6a-e158-80a2-9204-ec93f75613da" class="" dir="auto">انا مش عارف اوصل هو وصل لفين اصلا دلوقتي فقولي انت بقي</p><p id="41bcea6a-e158-8062-b037-d9df4f812daa" class="" dir="auto">
+</p><p id="41bcea6a-e158-80fc-89c6-f8914bade540" class="" dir="auto">الصوره دي عاوز احط زيها اختيارات ليا في المخارج و الحركات تكون واقعيه و متحركة دي دي </p><p id="41bcea6a-e158-8021-987f-e05254c7b314" class="" dir="auto">حطلي اختار منها كأوبشم كمان حط في التصميمات ايه الحاجه اللي اتعدلت في كل فيرجن .. مع اوبشن اني احذف حاجه معينه بس من الحاجات من الموقع .. يعني اسير الفيرجن بس احذف حاجه معينه </p><figure id="41bcea6a-e158-8021-9057-c2fb8e9e7dbb" class="image" data-notion-image="My%20Projrccct/1000209790.png" dir="ltr"><a href="My%20Projrccct/1000209790.png"><img style="width:375px" src="My%20Projrccct/1000209790.png"/></a></figure><p id="41bcea6a-e158-8016-a4a9-d494623a8787" class="" dir="auto">
+</p><p id="41bcea6a-e158-8091-b68e-dbf27a35ae1a" class="" dir="auto">لما ببحث حاجة ولدخا عليها اللينك بيكون علط</p><p id="41bcea6a-e158-80f3-aa43-f80c0b5f72a2" class="" dir="auto">كمان انا عملت azure بس east us<br/>معرفتش اعمل europe<br/>بس مش عارف احطه ازاي في الموقع وهيشغل الاصوات كلها بعد اد ايه</p><p id="41bcea6a-e158-8052-ae52-d48265410754" class="" dir="auto">حرفيا كل اصوات .. ولو فيه اصوات حروف برضه حطها</p><p id="41bcea6a-e158-8045-a7d4-d6eadc0ebb25" class="" dir="auto">
+</p><p id="41bcea6a-e158-8090-ad1e-d2de468a9cf8" class="" dir="auto">
+</p><p id="41bcea6a-e158-8089-9c95-c10dec619dcc" class="" dir="auto">لسه برضه الموقع بيرعش <br/></p><figure id="41bcea6a-e158-80f8-b458-ca2cb7219356" class="image" data-notion-image="My%20Projrccct/image.png" dir="ltr"><a href="My%20Projrccct/image.png"><img style="width:108.98863983154297px" src="My%20Projrccct/image.png"/></a></figure><p id="41bcea6a-e158-8080-99aa-fc1a6f8d0128" class="" dir="auto">الايقونات دي فوق السهم علطول .. يبهملو ع بهض</p><p id="41bcea6a-e158-80ff-94fd-c725d745f62b" class="" dir="auto">
+</p><figure id="41bcea6a-e158-80ff-8fd9-cbedb6f0bcf4" class="image" data-notion-image="My%20Projrccct/image%201.png" dir="ltr"><a href="My%20Projrccct/image%201.png"><img style="width:703.9091186523438px" src="My%20Projrccct/image%201.png"/></a></figure><p id="41bcea6a-e158-80de-bcf2-c1b3b0fb282d" class="" dir="auto">
+</p><p id="41bcea6a-e158-8070-a4ba-e3168b96643e" class="" dir="auto">لما امد الشريط دا يظهر ممدود هناك اول الصفحة مش ناحية اليميني في كل اللغات كدا .. يتعمل بعدي عن اللوجو </p><figure id="41bcea6a-e158-80d9-a6f2-eb2707477ca4" class="image" data-notion-image="My%20Projrccct/image%202.png" dir="ltr"><a href="My%20Projrccct/image%202.png"><img style="width:703.9886474609375px" src="My%20Projrccct/image%202.png"/></a></figure><p id="41bcea6a-e158-80be-a8d4-c1a83d7556d0" class="" dir="auto">
+</p><p id="41bcea6a-e158-80ee-9078-e85c10830df1" class="" dir="auto">ايقونة استكشاف الكلام دي مش تظهرها الا لو اخترت في الاعدادت اظهاراها </p><figure id="41bcea6a-e158-8025-a08f-c6ad753b1268" class="image" data-notion-image="My%20Projrccct/image%203.png" dir="ltr"><a href="My%20Projrccct/image%203.png"><img style="width:228.9886474609375px" src="My%20Projrccct/image%203.png"/></a></figure><p id="41bcea6a-e158-80dc-973a-dc43c146bb98" class="" dir="auto">الشريط دا خليه مخفي وانا اطلعه بزرار اضغط عليه</p><p id="41bcea6a-e158-804b-b545-d7b968a1f24a" class="" dir="auto">
+</p><p id="41bcea6a-e158-806b-8b6b-d579fe2d0fbc" class="" dir="auto">حتي بعد مافعلت azure لسه برضه ماترفعش الاصوات في الموقع <br/></p><p id="41bcea6a-e158-806e-b4c6-ff3bad247efb" class="" dir="auto">ال scrolling بل طئ ع التابلت جدا </p><p id="41bcea6a-e158-8073-9e9f-c0325740f4dd" class="" dir="auto">
+</p><p id="41bcea6a-e158-8025-b3fa-da83c623e321" class="" dir="auto">شيل التسجيل بالفيسبوك</p><p id="41bcea6a-e158-806b-becf-ebc9e214ddef" class="" dir="auto">
+</p><p id="41bcea6a-e158-80ec-a3f6-cbb033b35481" class="" dir="auto">الزراير دي مش شغالة</p><figure id="41bcea6a-e158-802c-af92-e665a4c0a574" class="image" data-notion-image="My%20Projrccct/image%204.png" dir="ltr"><a href="My%20Projrccct/image%204.png"><img style="width:603.102294921875px" src="My%20Projrccct/image%204.png"/></a></figure><p id="41bcea6a-e158-8020-a439-fd3d1c432247" class="" dir="auto">
+</p><p id="41bcea6a-e158-80e7-920a-d77f04ac66f0" class="" dir="auto">دا مش يختفي مع الشريط اللي فوق</p><figure id="41bcea6a-e158-80e0-973c-fe1090ac4a8a" class="image" data-notion-image="My%20Projrccct/image%205.png" dir="ltr"><a href="My%20Projrccct/image%205.png"><img style="width:603.1363525390625px" src="My%20Projrccct/image%205.png"/></a></figure><p id="41bcea6a-e158-8090-96e4-ee933ae2b9ea" class="" dir="auto">
+</p><p id="41bcea6a-e158-80f2-8dea-d811ecf3b6bd" class="" dir="auto">في التعديلات والنسه الاحتياطية اليومية ضيف زرار ارجاع لحد وقت ايمته ومنين لفين</p><p id="41bcea6a-e158-80a2-9c5a-cafc46f1448e" class="" dir="auto">
+</p><p id="41bcea6a-e158-8023-a3d6-fb3dd065eba2" class="" dir="auto">
+</p><p id="41bcea6a-e158-80cb-8505-dc3e82e558fc" class="" dir="auto">فيه اقسام في مساحتي في التعجيل علي الموقع وحاجات زي كدا ظاهره للطالب<br/>ماتظهرش للطالب اي حاجة عن كدا </p><p id="41bcea6a-e158-80dc-9861-f4fe7044b882" class="" dir="auto">
+</p><p id="41bcea6a-e158-80df-b9fb-dc62d82ffa40" class="" dir="auto">لسه الصوتيات في الموقغ</p><p id="41bcea6a-e158-8042-bbf0-c115214dfda8" class="" dir="auto">
+</p><p id="41bcea6a-e158-80e9-9394-e6259b2bab60" class="" dir="auto">العربية بين يديك </p><p id="41bcea6a-e158-8004-8172-e5f256f89ab7" class="" dir="auto">
+</p><p id="41bcea6a-e158-8065-a686-e8c19234d225" class="" dir="auto">
+</p><p id="41bcea6a-e158-80f5-8f91-e7fb6f2479be" class="" dir="auto">وانا بسحل صوت طالب الاعلي والاقل ..خليني اعرف احفظ الطالب بصوتي <br/>مع امكانية اني كأونر بس .. انزل الاهات وابعتها للطالب </p><p id="41bcea6a-e158-8025-835a-ef35de23a06a" class="" dir="auto">
+</p><p id="41bcea6a-e158-80e3-a5b0-f34760147229" class="" dir="auto">شيل العلامات المائية اللي في الفيديوهات اللي في الموقع <br/>بتبوظ شكل الفيديو <br/><br/></p><figure id="41bcea6a-e158-8065-b02b-dd91074f16b3" class="image" data-notion-image="My%20Projrccct/image%206.png" dir="ltr"><a href="My%20Projrccct/image%206.png"><img style="width:603.1704711914062px" src="My%20Projrccct/image%206.png"/></a></figure><p id="41bcea6a-e158-805a-bea4-db9e7901ac51" class="" dir="auto">الصفحة دي هنحط فيها كل الادوات الاسلامية طبعا بشكل collapsed <br/><br/><br/>انت بوظت الدنيا.. حطيت جوا المقامت الاساسية المقامات افرعية <br/><br/>انا اقصد <br/>الداخل لصفحة المقامات <br/>يشوف <br/><br/>المقامات الاساسية ..هقولك التفاصيل اتحت <br/>المقامات الفرعية <br/>انشد معي<br/>مساحتك الصوتية —- جواها معلومات كل شخص الصوتية  السستم يقرأ دا ويحدد ايه مساحته الصوتية وكل حاجة عنه وتتحفظ و تترفع ليا عن طريق انه يقرأ و يسجل اقل طبقة واعلي طبقة .. و فيه المناسب ليه وحاجات كتير  -  تمارين للصوت والنفس -  خمن المقام - و جواها صفحة اني اقوله مقام معين وهو يقرأ بيه او يبدأ يقرأ والنظام يلقط المقام دا مع رفع الصوت منه عشان لو انت غلطت انا اشوف  ي مقام دا<br/>.. 3 حاجات لكدا .. <br/>المعلومات النظرية عن المقامات<br/><br/>مع امكانية .. في الادوات الخاصة بيا بس .. اني ارفع اي واحده في اي صفحة من دول او الصفحة الرئيسة </p><p id="41bcea6a-e158-8058-99b6-d3b79fd042ec" class="" dir="auto">
+</p><p id="41bcea6a-e158-807d-8a6b-d24338a3e790" class="" dir="auto">شيل دي من كل الصفحات المقامات اساسية او قرعية <br/>ومن كل الاقتراحات .. ماتجيبش اقتراحات ليا في اي صفحة زي دي لباقي الاقسام .. مش عاوز الصفحات دي </p><figure id="41bcea6a-e158-8068-a94b-d692bf3523bb" class="image" data-notion-image="My%20Projrccct/image%207.png" dir="ltr"><a href="My%20Projrccct/image%207.png"><img style="width:603.1591186523438px" src="My%20Projrccct/image%207.png"/></a></figure><figure id="41bcea6a-e158-80e1-908b-e60150e8c645" class="image" data-notion-image="My%20Projrccct/image%208.png" dir="ltr"><a href="My%20Projrccct/image%208.png"><img style="width:603.1591186523438px" src="My%20Projrccct/image%208.png"/></a></figure><p id="41bcea6a-e158-807a-80b2-ff23b46ac9b8" class="" dir="auto">شيل برضه الصفحة دي من كل المقامات الاساسية والفرعية ونكتفي بدي بس </p><figure id="41bcea6a-e158-80e2-920c-e2b46cb3878e" class="image" data-notion-image="My%20Projrccct/image%209.png" dir="ltr"><a href="My%20Projrccct/image%209.png"><img style="width:603.1591186523438px" src="My%20Projrccct/image%209.png"/></a></figure><p id="41bcea6a-e158-80f4-b7dd-d972592af203" class="" dir="auto">الشريط دا فيه مشكلة <br/>اولا مارس المقام في مكان تاني خالص .. عاوزها تتفتح جوا المكان دا بس مارس المقام للمقام دا بس .. زي باقي الايقونات .. مرتل ومجود وكدا </p><figure id="41bcea6a-e158-8006-9691-f64429bf579c" class="image" data-notion-image="My%20Projrccct/image%2010.png" dir="ltr"><a href="My%20Projrccct/image%2010.png"><img style="width:603.102294921875px" src="My%20Projrccct/image%2010.png"/></a></figure><p id="41bcea6a-e158-804c-b3aa-c8bfc0e9ffe0" class="" dir="auto">لما بطلع منها بيجيلي دا - مش عاوز كدا ..عاوزها ترجع علي المكان داا لالي انا جاي منه .. او تفتحها ايقونة جوا الصفحة ..زي expansion تحت .. خلي دا default ةاديني اختيارات اني ممكن افتحها في صفحة تانية من العدادات </p><p id="41bcea6a-e158-8037-8e63-fa7a9d8dd2b5" class="" dir="auto">شيل خمن المقام وتمارين صوتية  من الشريط دا في كل المفامات <br/>هما الاتنين موجوديم كدا كدا في الصفحة الخارجية تحت قسم مساحتك الصوتيى<br/><br/>كمان شيل الاهات من كل الاقسام كدا <br/>كل دا ينطبق علي اي صفحة مقام اساسي او فرعي <br/>والباقي كله يتساب زي ما وضحت .. <br/>كل المقامات اساسية وفرعية يحصل التعديل دا كله عليها .. <br/><br/>شيل قسم التحويل من المقامات الفرعية بس .. بس يتاب في الاساسية </p><figure id="41bcea6a-e158-8053-b8b7-f3c9f183457e" class="image" data-notion-image="My%20Projrccct/image%2011.png" dir="ltr"><a href="My%20Projrccct/image%2011.png"><img style="width:603.1136474609375px" src="My%20Projrccct/image%2011.png"/></a></figure><p id="41bcea6a-e158-800f-81b2-c3bc0161dda4" class="" dir="auto">
+</p><p id="41bcea6a-e158-80a2-8c69-f0c5c17e2430" class="" dir="auto">الدرجات دي <br/>فوقها اعلي واقل طبقة عشان تيجي لصوت الشخص نفسه .. طبعا كل اللي اقوله كدا يطبق في كل المقامات </p><figure id="41bcea6a-e158-80b0-af69-d1e13e155b59" class="image" data-notion-image="My%20Projrccct/image%2012.png" dir="ltr"><a href="My%20Projrccct/image%2012.png"><img style="width:599.977294921875px" src="My%20Projrccct/image%2012.png"/></a></figure><p id="41bcea6a-e158-80aa-826f-de476f133a57" class="" dir="auto">
+</p><p id="41bcea6a-e158-80e9-bef8-c2441435f9cb" class="" dir="auto">الحاجات اللي زي دي او اي حاجه تشمل علي التعديل اني اعدل حاجه او اضيف حاجه ماتظهرليش الا اما  اعمل وضع التعديل <br/>لكن طول مانا قافل وضع التعديل ماتظهرش الحاجات دي - كذلك اي حاجة للتعديل او  الاضافة او كدا </p><figure id="41bcea6a-e158-8090-94fb-f304392e9db9" class="image" data-notion-image="My%20Projrccct/image%2013.png" dir="ltr"><a href="My%20Projrccct/image%2013.png"><img style="width:603.1136474609375px" src="My%20Projrccct/image%2013.png"/></a></figure><p id="41bcea6a-e158-80bf-899c-e26ddf011cdc" class="" dir="auto">
+</p><p id="41bcea6a-e158-8031-8226-d127d755fd0a" class="" dir="auto">الحاجات اللي قلتلك حطهالي انا بس حط كل حاجة في ثسمها <br/>زي مثلا تمارين البيانو والحاجات دي الخاصة بالمقامات .. حطها في قسم المقامات قسم خارجي اسمه للمالك فقط <br/>كل الحاجات كدا .. اي حاجة ليا انا بس وهكذا </p><p id="41bcea6a-e158-80fd-8355-f1c5ddbd42cc" class="" dir="auto">
+</p><p id="41bcea6a-e158-80e2-96e9-d578d6dc5bcb" class="" dir="auto">محتوي الوحدات الباقية من العربية بين يديك مش كامل المستويات المتقدمة اخره المستوي التاني بس <br/>كمله في القسم بتاع ال units <br/>كمان للغات غير العربي .. خليه يخبي الانجليزي او الترجمة اللي تجت الا لو عملت expansion  تظهر وترجع تاني وحدها</p><p id="41bcea6a-e158-80d9-a689-e29cbbb1f50d" class="" dir="auto">
+</p><p id="41bcea6a-e158-809a-9c78-c1792bff9377" class="" dir="auto">خليها متلغوش عليها الانجليزي متلغوش عليه .. وانا افتح كلمة كلمة بحد اما يتفتح بشكل كامل .. </p><p id="41bcea6a-e158-8010-9469-fc6a3eeb9856" class="" dir="auto">
+</p><p id="41bcea6a-e158-8046-8716-c42b6a927d4f" class="" dir="auto">كمان المحادثات قصيرة اوي <br/>وكمية المحادثات قليلة اوي <br/>عاوز كا حاجة كتيير <br/>الاف المحادثات والمحادثة كبيرة جدا .. تكمل مواقف كبيرة وكاملة باالتفصيل </p><p id="41bcea6a-e158-8013-96d7-d43cabc4b173" class="" dir="auto">كمان المحتوي مش موجود اصلا . . انت مالف محادثات من دماغك <br/><br/>كمان زود كل باقي المحتوي </p><p id="41bcea6a-e158-8023-acc3-c896601457f4" class="" dir="auto">كمان في ال flashcard حط الفرانكو مع العربي مش مع الانجليزي <br/>كمان ..ساعات يظهر عربي وهات الانجليزي او العكس <br/>كمان خلي السيستم .. يحدد الصعوبة .. هو الطالب يحدد تحت الصعوبة .. عشان تتكرر تاني كتير ولا لا .. حسب الصعوبة <br/>زي انكي كدا </p><p id="41bcea6a-e158-80e0-b76d-df5e5e8d0ce2" class="" dir="auto">كمان في فسم العربي لما اعمل محادثة ..ممكن القط صوت السيستم بحيث اسجل صوت الطالب كمان</p><p id="41bcea6a-e158-809d-bf24-c7650c3b18e7" class="" dir="auto"> </p><p id="41bcea6a-e158-80d3-86d9-e9a79b2550ca" class="" dir="auto">برضه المحادثات اللي نخلصها يجي صح عليها انها خلصت عشان مانكررش تاني<br/>وكل واحده يجي رسالة للطالب انها خلصت وشهادة <br/><br/>كمان كل طالب اختار اسمه من فوق القسم افتح محادثاته او من صفحة الطالب نفسه <br/><br/>كمان عندك في قسم العربي <br/>الفاضي شيله .. في اتنين العربية بين يديك شيل واحد مثلا <br/>وهكذا<br/><br/></p><figure id="41bcea6a-e158-80ad-a96c-f4f2e04972d1" class="image" data-notion-image="My%20Projrccct/image%2014.png" dir="ltr"><a href="My%20Projrccct/image%2014.png"><img style="width:567.1591186523438px" src="My%20Projrccct/image%2014.png"/></a></figure><p id="41bcea6a-e158-80cd-a129-fcdf08041bca" class="" dir="auto">نزل دا فوق المصحف علطلو<br/><br/></p><figure id="41bcea6a-e158-8064-8d3b-e5cb9089c632" class="image" data-notion-image="My%20Projrccct/image%2015.png" dir="ltr"><a href="My%20Projrccct/image%2015.png"><img style="width:567.1591186523438px" src="My%20Projrccct/image%2015.png"/></a></figure><p id="41bcea6a-e158-8003-8c3d-d6735c5b3b5d" class="" dir="auto">شيل الجدول دا لاني مش لازم اختاره والحفظ واقف لو انا ماخترتوش </p><figure id="41bcea6a-e158-8004-8e34-f65e08511ac1" class="image" data-notion-image="My%20Projrccct/image%2016.png" dir="ltr"><a href="My%20Projrccct/image%2016.png"><img style="width:567.1704711914062px" src="My%20Projrccct/image%2016.png"/></a></figure><p id="41bcea6a-e158-8061-8a88-dc69e921d3a2" class="" dir="auto">افتح دا ان الطالب يشتغل عليه وكدا </p><figure id="41bcea6a-e158-8099-a34f-f2c77dbc2085" class="image" data-notion-image="My%20Projrccct/image%2017.png" dir="ltr"><a href="My%20Projrccct/image%2017.png"><img style="width:439.9545593261719px" src="My%20Projrccct/image%2017.png"/></a></figure><figure id="41bcea6a-e158-80b7-8801-fa3925667ad5" class="image" data-notion-image="My%20Projrccct/image%2018.png" dir="ltr"><a href="My%20Projrccct/image%2018.png"><img style="width:555.9886474609375px" src="My%20Projrccct/image%2018.png"/></a></figure><p id="41bcea6a-e158-802f-8408-e76ccb4e6d07" class="" dir="auto">اكتب الدرجات بالانجليزي علي دا .. مع الناحية التانية كتابة الاوكتاف </p><p id="41bcea6a-e158-802a-ae69-d0d3d20d718e" class="" dir="auto">
+</p><p id="41bcea6a-e158-80a8-a245-eb175475c67d" class="" dir="auto">
+</p><p id="41bcea6a-e158-8008-a725-f537ca652a6e" class="" dir="auto">لما اضغط انا او الطالب يضغط تسجيل في اي حته في الموقع لو فيه صوت شغال يقف الصوت دا <br/>كمان لو تسجيل شغال وشغلت اي تسحيل او صوت تاني داخل الموقع الصوت دا يقف <br/>ماعدا اصوات السيستم نفسه والاصوات العارضه</p><p id="41bcea6a-e158-80d4-a4c6-f63bc3c40f5b" class="" dir="auto">
+</p><p id="41bcea6a-e158-80cb-b86f-cd32a626f521" class="" dir="auto">حط قسم كبير اسمه قراءات عشر في الاقسام جنب التجويج والقران و كدا </p><p id="41bcea6a-e158-806b-96e5-d30b8fa88f37" class="" dir="auto">
+</p><p id="41bcea6a-e158-8001-b666-ede4e14721f1" class="" dir="auto">حطلي وايت بورد كاملة بكل مجاميعه و ناعمه ومتناغمة علي الموقع في اقسم الفصل وكدا .. مش اللي في الكلاسروم نفسه ..برا خالص ..بحيث لو فاتح علي تطبيق تاني اشغلها <br/>فيها كل حجاه واتحترافيه وصتميم جذاب وخليني اختار تصميم من افتراحات كتير </p><p id="41bcea6a-e158-80bc-ade7-e9ca1a7665f5" class="" dir="auto">
+</p><p id="41bcea6a-e158-801a-a28e-cd0163994ce3" class="" dir="auto">
+</p><p id="41bcea6a-e158-80e5-948c-e381419bf861" class="" dir="auto">كمان اديني اني ارسم المقامات واغير في الطبقات علي الكلاسروم والوايت بوررد او قسم لكد بحيث اني اعرف ارسم وابين للطالب المقامات والتحويل منين وكدا <br/>هوريك مثلا رسمة .. انا عاوز ادوات تساعدني في دا بشكل احترافي </p><p id="41bcea6a-e158-80c0-8944-cfeece0e45e7" class="" dir="auto">زي دي ..بالتالي مش عارف اعملها مثلا .. ساعدني في دا </p><p id="41bcea6a-e158-807a-a46c-fd7a0e91eca3" class="" dir="auto">
+</p><figure id="41bcea6a-e158-8018-a15b-d0d97e09f0e5" class="image" data-notion-image="My%20Projrccct/image%2019.png" dir="ltr"><a href="My%20Projrccct/image%2019.png"><img style="width:567.1704711914062px" src="My%20Projrccct/image%2019.png"/></a></figure><figure id="41bcea6a-e158-80cf-b0e3-d28af7507bcf" class="link-to-page"><a href="My%20Projrccct/Meeting%20@Tuesday%2041bcea6ae15880cfb0e3d28af7507bcf.html" data-notion-page-id="41bcea6a-e158-80cf-b0e3-d28af7507bcf" data-notion-space-id="d8088b82-701f-4238-918e-b9e7652fc8a9"><img class="icon notion-static-icon" src="https://app.notion.com/icons/calendar_gray.svg"/>Meeting @Tuesday</a></figure><div class="transcription"><div style="border-bottom:0.05em solid;border-bottom-color:rgba(42, 28, 0, 0.07)">Notes<br/></div><p id="41bcea6a-e158-80bf-be72-e27cf2a2d238" class="" dir="auto">
+</p></div><p id="41bcea6a-e158-8009-854e-ccfa13761c7b" class="" dir="auto">كمان لو فيه اكتر من اوبشن للمقام اكتر من جواب في السلم .. حطلي اختار منهم عشان يجيب السلم بكل الخيارات<br/><br/>كمان نفس لامقامتا الاساسية حط في المقامات الفرعية <br/>السلم والحاجات دي زي الفرعية <br/>واي اوردر يجي للفرعي والاساسي زي بعض<br/><br/><br/>كمان في الرئيسية في  الاول بعد ماادخل علطول فيه يكون فيه مسارات .. <br/>مثلا <br/>المقامات - القران والتجويد - القراءات العشر - العربية - العلوم الاسلامية <br/><br/>حط كل واحد تقسيمات كبيررة للي جواه بس <br/>يعني مش كل حاجة اول مادخل الاقي كل حاجة <br/>قسمهالي وجوا التقسيمة تقسيمات .. بحيث الطالب مايتوهش لما يدخل<br/>التصميم زي ماهو <br/>بس اديني كأني صلاحيات من كل صفحة ادوس زرار اني اشيل القسم او الايقونة او كل دا .. بدون لغبطة <br/>او انقلها مكان تاني بالتفصيل مثلا<br/>انقلها في المرتل اللي في المقام الفلاني .. او انقلها في المحتوي العربي في حته معينه فيه .. كمثال ..بمعني كل صفحة ادوس زرار كاني داخل الكمبيوتر <br/>بدل الزرار العبط الي انت حاططهالي دي <br/>كمان لما ادوس زرار معين يختفي الزرار عشان مش كل شوية يحركلي الحاجة <br/><br/>كمان احركه بحرية كاملة ..او اشيله ..كمان احدد اكتر من حاجة اشيلها مع بعض ..تتشال تتشال خالص وتتحط في السلة .. ماتكونش موجدة مش زي الهبل ..<br/>كمان وانا بحرك الحاجة ارسم الصفحة عشان احرك بالارقام — كمان اختار يطبق ليا بس ولا للناس كلها .. لو هو فعلا زرار عند الناس كلها </p><p id="41bcea6a-e158-808d-9b23-cc07b526f913" class="" dir="auto">كمان اضغط ضغطة معينه اعدل الكلام <br/><br/>الموقوع متوهني كل شئ اختار حاجه من حاجه وحاجه من حاجه تانيه <br/>كل شغل او وظيقة اداة واحده وواضحة وسلسلة للشغل دا <br/></p><p id="41bcea6a-e158-8013-9d01-d715d8b71e3c" class="" dir="auto">زي فولدرات الكمبيوتر كدا بالضبط <br/>كل شئ بتحكم فيه واحركه براحتي <br/>كمان متقسمه صح <br/><br/>مثلا العربي .. <br/>دخلت لقيت .. التعلم من الحروف .. فيها جزء لما يخلصه في الاخر يتعلم عليها صح .. وينقل للتاني ..<br/><br/>اتكلم عربي <br/>فيها جزء في فصحي - مصري - خليجي بس <br/><br/><br/>كمان في قسم العربي نفسه .. النحو والصرف والبلاغة  من الصفر </p><p id="41bcea6a-e158-802d-b3aa-d863f6b80128" class="" dir="auto">في كل قسم كل الادوات الخاصة بيه وماتتكررش تاني في اي مكان في الموقع <br/><br/>يعني مثلا المحتويات وتقسيماتها موجودة في 4 اختيارات ليه ايه العبط دا <br/>مكان واحد بس للمحتويات <br/>مكان للدورات <br/>مكان للخط والاسعار كلها سواء المنصة او المدرسين <br/><br/>وهكذا .. ومادام الزرار موجود في قسم داخلي ماتطلعوش برا في الرئيسية <br/>عاوز الرئيسة الحاجات الاساسية فعلا اللي انا او المشترك محتاجها وبس .. <br/>مثلا فيه قسم اعدادان ماتحطش برا اي حاجه من القسم في الايقونات برا الا لما اختار لاي ايقونة <br/>يعني الايقونات تككون زاي ..<br/>مساحتي - الاعدادات - الرئيسية “ نحط فيها الايقونات الكبيرة اللي هتجذب الناس “ + مرحبا بكم في الاكاديمية وأتقن القران والحاجات دي “ وتحت شوية الايقونات اللي فوق بس معرورضة بشكل جميل - زي مسارات التعلم و بروفايلي و دورات الاكاديمية - الاشتراك - الجدول - ادوات المسلم <br/><br/>يبقي كدا في الايقونات دي <br/>الرئيسية - بروفايلي - الي هي مساحتي -  دورات الاكاديمة - المحتوي التعليمي للاكاديمية  - <br/>كمان اتحكم زي مانا اتحكم في كل صفحة العرض لتاعها فين بالضبط <br/>وزي مانا اتحكم في اللي يطلع فوق واللي ينزل تحت .. ولضيف ايقونات واضيف صفحة بيضا او شكل دايري .. او كدا يعني مع كل الاضافات زي كانفا واكسيل وكدا ومبرامج تعديل الصور<br/><br/><br/><br/>كمان ممكن اختار قسم معين احطله تصميم معين من التصميات كانه مختلف <br/>لاني عاوز احطه كانه اكتر من موقع جوا الموقع <br/><br/>يعني مثلا تصممي دولينجو هنا<br/>وابل هنا وهكذا</p><p id="41bcea6a-e158-8082-a4d9-de9c0ef9d482" class="" dir="auto">
+</p><p id="41bcea6a-e158-8030-9ba2-e94b2bda5e4a" class="" dir="auto">دا موجود برضه في الاكاديمية بالاقسام الجديدة الي قلنا عليها  مش شرط نفس المحتوي الموجود .. زي ماقلتلك في النحتوي .. بس دي موجودة او الفكرة دي موجودة في الصقفحة الرئيسة بحيث الطالب يدخل يعرف الموجود علطول واللي بيميزنا ويدخل علطول بدون الحاجة للدخول لحاجةمعينة <br/>تتعرض زي ماهي معروضة في صفحتها - اقصد <br/>نفس الشكل اللي تتعرض بيه زي الشكل الي لو دخلت بالضبط علي صفحة محتوي الاكاديمية التعليمي .. بحيث اللي يشوفه مايحسش انه حاجه تانية ويتلغبط <br/></p><figure id="41bcea6a-e158-8089-8abd-d09fffdefc83" class="image" data-notion-image="My%20Projrccct/image%2020.png" dir="ltr"><a href="My%20Projrccct/image%2020.png"><img style="width:384.1590881347656px" src="My%20Projrccct/image%2020.png"/></a></figure><p id="41bcea6a-e158-80d5-9954-ffa49c6a587a" class="" dir="auto"><br/>كمان اديني اوبشن اشيل حاجاه ايقونات واحط ايقونات .. لو المحتوي هيتسمح بشكل كامل او معجش هيكون موجود قولي انه اخر نسخه منه هنا بو حذفته هيتحذف خالص <br/><br/>كمان اعرف اضيف ايقومنات واحط واحطها بشكل معين وكدا <br/>واشوف ايه اللي هيتحط جواها وكدا — بحيث اعرف اتحكم في الجزء دا لو فيه اخطاء وكدا <br/>كاني بعمل فولد عل الكمبيوتر واجط براحتي جواه .. وبرسم المكان والشكل وكل شئ </p><p id="41bcea6a-e158-80ba-8adf-ff16d98b95b2" class="" dir="auto">كمان ادوات المسلم دا قسم موجود بس فوق كدا فيه الحاجات الجميلة المجانية اللي انا حاططها زي القبله والمصحف شمرلي او مدينة عليهم القراء ومواقيت الصلاة مع اذانات جواها كل الاذانات .. هو يختار يفعله يشتغل ولا لا في الخلفية <br/>والاذكار و المتابعه اليومية والحاجات دي اللي المسلمين بينزلوها مخصوص <br/>كمان لو فيه اي حاجة اضافية هتزودها عليهم .. اي اداة للمسلم موودة هنا <br/>و نظمها بشكل ممتاز <br/><br/>كمان اديني صلاحيات في الصفخة نفسها اخليها تظهر لمين واشيلها واحطها مكام تاني ..  اكررها ولا انقلها .. حسب الحاجة اللي عاوز اكررها او لا في اماكن تاني <br/><br/>كمان زي الموبايلات كدا ..مابتدي تعمل حاجه الحاجات في الصفحة الرئيسة بشكل جذاب وجميل بحيث موجودة فوث في الصقخة الرئيسية<br/><br/>زي مانت عامل مثلا قيام الليل <br/>اديني اوبشن اختار اي اداة اعملها كدا واديني خيارات تصمميات جذابه <br/>تصمميات من كل الاماكن ومن التصميمات اللي في الموثع نفسه زي دولينجو لما بيعملو كدا بيحطوها ازاي زكداا<br/><br/><br/>الحاجات اللي انت حاططهالي في الاعدادات ولا حاجه فيهم شغاله <br/>يعني مثلا جيبت azure  وحطيت المفتاح بتاعه ومشتغلش برضه نزل ومفيش حاجه اشتغلت <br/>كذلك العربية بين يديك </p><p id="41ccea6a-e158-80b3-bf60-fce57019807e" class="" dir="auto">
+</p><p id="41ccea6a-e158-80a6-8d86-d3a14dc38e00" class="" dir="auto">ضيف كمان في خانة مساحتي قبل مااحتار الآية دي للشيخ انهي مقام مرتل و لا مجود .. مساعدتك انتي </p><p id="41ccea6a-e158-80f0-8afb-df179a2d5476" class="" dir="auto">ساعدني في اني اعرف دا مقام ايه </p><p id="41ccea6a-e158-807d-a21a-e427a6ebce96" class="" dir="auto">يعني اسمع انت الصوت و حسب الهمهمات اللي عندك قولي هو مقام ايه </p><p id="41ccea6a-e158-8033-ae6a-ec386f4cb6a4" class="" dir="auto">يعني اقتراح كدا و انا اشوف اذا كان صحيح ولا لا و بعدين انشره </p><p id="41ccea6a-e158-8025-ac5f-f606ebcbf5b4" class="" dir="auto">يعني مثلا فرضا الكهف لمشاري ٤-٩ انت حطيتها علىي الأمهات و ال scales طلعت مقام الكرد </p><p id="41ccea6a-e158-80a4-a7de-c410920b55c9" class="" dir="auto">انت فعلا اقترح أنه كرد .. وانا اشوف صح ولا لا </p><p id="41ccea6a-e158-8018-8a22-c6806e7ebcd4" class="" dir="auto">كمان في خمن المقام .. ضيف جنبها اكتشف المقام الذي تقرأ به </p><p id="41ccea6a-e158-8026-a376-ffe3ff344b91" class="" dir="auto">و الطالب يقرأ و يسجل صوته وانت تقوله هو بيقرأ بمقام </p><p id="41ccea6a-e158-8022-817b-d70b58dd6ea4" class="" dir="auto">و لو mix حتي قوله المقامات mix ايه وايه و كدا </p><p id="41ccea6a-e158-80b3-9351-e7dc7f8099ed" class="" dir="auto">مع إضافة أنه رفع الصوت للمعلم الحصول على إجابة أدق من ذلك </p><p id="41ccea6a-e158-809c-b845-e7582387c84f" class="" dir="auto">
+</p><p id="41ccea6a-e158-80a6-8e98-cea916ff408b" class="" dir="auto">في قسم العربي ..وانا بعمل محادثة افتراضية بين الشخص و حد تاني </p><p id="41ccea6a-e158-80c5-aa6b-e8d6e0707d8f" class="" dir="auto">مثلا انت A و السيستم B </p><p id="41ccea6a-e158-808f-9271-c17d3725e010" class="" dir="auto">و B لسه شغاله بيجيب اني اسجل ليه كمان بيفضل مستني وقت بعد مااسجل و احفظ التسجيل على ما يكمل</p><p id="41ccea6a-e158-8011-aa89-f54cee57c297" class="" dir="auto">ظبط الأوقات بحيث تبان حقيقي<br/></p><p id="41ccea6a-e158-80b3-a85f-da04f9e9df96" class="" dir="auto">ضيف محادثات كتيير اوي </p><p id="41ccea6a-e158-80dd-8c4a-f991cd280389" class="" dir="auto">
+</p><p id="41ccea6a-e158-8085-80a4-fcef90d1944a" class="" dir="auto">ماتنساش العربية بين يديك اعمل في ايه </p><p id="41ccea6a-e158-80a4-b7c3-c878e4b7cd90" class="" dir="auto">
+</p><p id="41ccea6a-e158-80a9-a556-c4b6f3a9d3a5" class="" dir="auto">ضيفلي شريط في صفحات الموقع كدا لما اشغل وضع التعديل او التطوير للموقع<br/>فيه كل حاجه اعدلها في الصفحة واعاين كل تغيير قدامي قبل ماضغط نشر و نشر دي للطلاب كمان ولا لا <br/>خيار اني اعمل كدا<br/>زي مثلا اللون .. كل حاجة اختار لونها بشكل منفصل <br/>يعني مثلا انا في وضع التطوير <br/>اختار من القايمة دي مثلا تعديل اللون .. واختار حته لوحدها اعدل لونها هي بس .. وفي وضع الايت والدارك وكل شئ<br/>واعاين قبل مااطبق الحاجة <br/><br/>كمان التصميم والشكل وازاي الايقونة تفتح ..يعني كل اللي موجود في الاعدادات الداخليه بس في شريط مش يظهر الا في وضع المطور كدا <br/><br/><br/></p><figure id="41ccea6a-e158-806a-bf6c-fd2872b90c02" class="image" data-notion-image="My%20Projrccct/__2026-11-17_041529.png" dir="ltr"><a href="My%20Projrccct/__2026-11-17_041529.png"><img style="width:84.98863983154297px" src="My%20Projrccct/__2026-11-17_041529.png"/></a></figure><p id="41ccea6a-e158-80b2-ac8f-ca8f15bc73f5" class="" dir="auto">الشريط دا مش عارف اختفي ليه .. كمان عاوز كل الشرايط الجانبية تطلع نفس لاتصميم دا <br/>ايقونة بسيطة تحتها الكلمة بخط بسيط .. ايقونة صغيرة ..ماتطلعش برا الحيز .. نفس التصميم دا بالظبط <br/>كل الايقونات .. ولو عاوز انشئ ايقونة جديدة اديني اعمل كدا من الشريط دا <br/><br/>كمان اختار مكان الشريط ..يطلع يمين ولا شمال فوق ولا تحت .. ويطلع ازاي <br/>وهكذا <br/>اي ايقونة اضغط عليها اعرف اتحكم فيها بشكل كامل .. وراعي .. انه اعرف اشوف لانك حاططلي في التعديل .. اني اخفي الحاجة .. مش شغال <br/><br/>الشريط اللي قلتلك عليه دا مش يظهر الا في وضع المطور</p><p id="41ccea6a-e158-80ce-bd57-df5fb92f66d6" class="" dir="auto">
+</p><figure id="41ccea6a-e158-8066-a859-fed64ce5d503" class="image" data-notion-image="My%20Projrccct/image%2021.png" dir="ltr"><a href="My%20Projrccct/image%2021.png"><img style="width:383.9659118652344px" src="My%20Projrccct/image%2021.png"/></a></figure><p id="41ccea6a-e158-807e-8760-cf1de626e810" class="" dir="auto">شيل الشريط دا <br/><br/>كمان فيه مشكلة .. اي حاجة في المحتوي اعرف اتحكم فيها <br/>يعني مثلا انت المفروض مديني صلاحية اني اتحكم في كل حاجة <br/>ماعرفتش اتحكم في الشريط دا .. في اي شئ <br/><br/>اديني كل حاجة خيارات كتير<br/>المهم ديتي الاعاداادات الداخليه من التصميم وكل شئ <br/>شريط كامل اعرف اتحكم منه في كل صفحة واعاين بدل ماطبق وارجع اشوف وارجع اغير تاني <br/>عاوز كاني انا جرافيك ديزانير واديني كل الادوات اللي تخليني ابدع بشكل كريتيف <br/><br/></p><figure id="41ccea6a-e158-80b9-86c8-d59a04f1bf06" class="image" data-notion-image="My%20Projrccct/image%2022.png" dir="ltr"><a href="My%20Projrccct/image%2022.png"><img style="width:126.98863983154297px" src="My%20Projrccct/image%2022.png"/></a></figure><p id="41ccea6a-e158-8041-94f0-faecb6ef0990" class="" dir="auto">كمان اديني صلاحية اني اختار اني لما اضفط علي شريط يفتح صفحة جديدة واتحكم في عرضها <br/>ولا wxpansion ولا يفتح الصفحة جوا الصفحة دي ولا كدا <br/><br/></p><figure id="41ccea6a-e158-805e-8b85-cb341c36a457" class="image" data-notion-image="My%20Projrccct/image%2023.png" dir="ltr"><a href="My%20Projrccct/image%2023.png"><img style="width:703.977294921875px" src="My%20Projrccct/image%2023.png"/></a></figure><p id="41ccea6a-e158-8094-b806-d5683fbee90e" class="" dir="auto">مش عارف اضغط كليك يمين علي ايقونات دي <br/>واختار بالماوس بتاعي والخيارات العامة لل explore اني مثلا اختار افتح صفحة جديدة .. او افتحه اهنا او الخيارات التانية .. مش شغال كليك يمين عليه يعني </p><p id="41ccea6a-e158-80e3-90f3-e55789bc38f2" class="" dir="auto"><br/>كمان لما اضفط علي الايقونة دي .. يفتح الصفحة يطريقة ازاي<br/>يعني مثلا انت عامل الصفحات الرئيسة كلها لما افتح منها يقتح زي الايفون ..و الباقي لا <br/>اديني صلاحية اني اعدل الباقي واختار حاجه مختلفه .. معا امكانية زرار اني اخلي التطبيق دا لكل الموقع و لا للصفحة دي بس .. والصفحات الداخليه منها ولا الرئيسية دي بس وهكذا<br/><br/>في المشايخ زود كل باقي المشايخ المتاحين مش دول بس <br/>مع امكانية اني اكتب اسم الشيخ عربي او انجليزي <br/>كدا كدا اسم الشيخ مكتوب عربي وانجليزي ومرتل ولا مجود وكدا<br/><br/>اعملي صفحة ليا انا في مساحتي فيها كل القراء الموجودين علي الموقع .. وانا اسمع واحدد مثلا من اية كذا لكذا للشيخ مقام كذا وتترفع في المقام الخاص بيه مرتل او مجود حسب مانا اختار<br/>الصفحة دي في مساحتي انا بس انا اللي هعمل فيها مع امكانية اني ارفعها لمعلم او طالب معين يعمل معايا ويساعدني <br/><br/>مثلا هشغل مشاري وهسمع انا <br/>مثلا اية 3 - 6 سورة الكهف كرد <br/>تديني خيارات لكدا حتي المقامات الفرعية <br/>مثلا كرد او سوزناك او غيره .. بعدين مرتل ولا مجود بعدين الاية من كام لكام <br/>تقطع الاية بشكل اوتوماتيكي <br/>وتتسمي باسم مثلا الكهف 3-6 مشاري - كرد مرتل<br/>وتتحط في فايل المرتل في الكرد اللي هو تحت .. طبعا احنا اتفقنا تحذف الفايلات الكبيرة اللي فوق <br/>لا هو معروض في نفس الصفحة واختار ايقون بس ..ويجيلي الايقونة دي نفس الصقحة <br/>مثلا انا حطيت مشاري اكتر من تلاوة .. يتجمع تحت اسم مشاري في الصفحة دي .. collapsed اضغط علي اسم الشيخ يتعرض تلاواته <br/><br/>ماتكتبش فايل للشيخ االا اما ارفعله علي الاقل تلاوة <br/>يعني مايكونش شريط مثلا للمنشاوي وهو مش فيه حاجه له<br/>بالتالي مش يتحط اصلا جزء باسم المنشاوي الا لما ارفع مقطع له في المقام .. مع امكانية اني اعدل فيه .. واني حد يبعتلي تصلحيات لاي معلومة في الموقع .. يعني يكتب ابلاغ عن خطأ ويختار ويكتب الخطأ دا <br/><br/><br/><br/>كمان حط خانة  الاذان والابتهالات والاناشيد في صفحة كل مقام صغيره .. جنب الايقونات الصغيره اللي تحت .. اللي موجودة بس <br/><br/>كمان لما اعمل تغيير في صفحة وفيه صفحات تانيه نفس الفكرة فيه خيار اني اطبق علي كل اللي زيها <br/>مثلا المقامات الاساسية والفرعية نفس الحاجاه .. لو غيرت او شيلت حاجه من حاجه يديني خيار اني اطبق علي كل اللي زيها</p><p id="41ccea6a-e158-80c0-9420-df6e28aa1b77" class="" dir="auto"> </p><p id="41ccea6a-e158-8061-9c9b-d5cb0bfcfab6" class="" dir="auto">
+</p><p id="41ccea6a-e158-8058-acd5-daa4affa3dd3" class="" dir="auto">كمان لما افتح ايقونة الاشعارات الي فوق حتي لو ماقرأتش الاشعارات الرقم يروح <br/>زي الفيسس كدا <br/>اي حاجة زي كدا نا عاوزك تعمل الحاجة سلسة كدا زي المواقع الكبيرة <br/>شوف الحاجات اللي مش فيها سلاسة وظبطها زي المواقع الكبيرة اوي زي دي .. يكون كل حاجه سلسة واضافات كريتيف ممتازة <br/><br/>اتفقنا طبعا كل دا يتشال من كل المقامات </p><p id="41ccea6a-e158-80d8-95b4-e0b284721105" class="" dir="auto">ويتحط المحتوي تحت</p><figure id="41ccea6a-e158-8093-8221-f68033567d14" class="image" data-notion-image="My%20Projrccct/image%2024.png" dir="ltr"><a href="My%20Projrccct/image%2024.png"><img style="width:703.9886474609375px" src="My%20Projrccct/image%2024.png"/></a></figure><p id="41ccea6a-e158-80fb-a525-d0a44592dd04" class="" dir="auto">المحتوي يتحط في دا بس .. ودي تطلع فوق اول مااطلع اشوفها <br/>لو فيه محتوي من الزراير المحذوفة مش موجود .. حطه زي اللي تحت ..<br/>وكل اللي تجت دا يفتح في نفس الصقحة مايفتحش صفحة جديدة <br/>ادوس عليه يتفتح في الصفحة نفسها او يتعرض فيها <br/>لان مارس المقام بصوتك دي بتفتح صفحة تانيه خالص وباجي ارجع حتي مش بترجعني نفس النقطة <br/><br/>كمان ماتكررش المحتوي .. المعلومة في حته واحده بس ..هنا او هنا او هنا .. تحت الاسم المناسب ..مش الاقي كل ايقونة متكررة ولا مرة الا لو اخترت اني احط حاجه انا بايدي<br/><br/></p><figure id="41ccea6a-e158-8084-9285-e813e05f3ed3" class="image" data-notion-image="My%20Projrccct/image%2025.png" dir="ltr"><a href="My%20Projrccct/image%2025.png"><img style="width:703.977294921875px" src="My%20Projrccct/image%2025.png"/></a></figure><p id="41ccea6a-e158-8012-b8fa-ea892bff69e4" class="" dir="auto">
+</p><p id="41ccea6a-e158-8012-a1cc-d2ceadd46fca" class="" dir="auto">ززود فكرة التطبيق علي الكل دي .. سواء الكل الشبيه اللي نفس القسم .. زي اللي نفس قسم المقامات <br/><br/>كمات التطبيق علي كل الموقع <br/>زود دا ,, وماتحفظش الا اما اعاين الاول .. واشوف باقي الصاحات اتطبق ولا لا بعدين ادوس انا حفظ</p><p id="41ccea6a-e158-803b-afd6-d65af5d70637" class="" dir="auto">
+</p><p id="41ccea6a-e158-806f-95a8-cb77abfd47f7" class="" dir="auto">
+</p><p id="41ccea6a-e158-8054-8615-ee4e92458e8e" class="" dir="auto">التطبيق طبعا عبقري <br/>اول شئ عاوز اني ارفعه علي جوجل بلاي وهدغع كام والموضوع هيحتاج وقت اد ايه ؟<br/>كمان العدد عليه هيبقي كتير في الاخر ومشتركين ممكن في اول شهر اكتر من 1000 بعدين ممكن يوصل اولوفات <br/><br/>فممكن تقولي اعمل ايه عشان الموقع مايقعش زي باقي المواقع اللي بتقع علطول كدا اول مالعدد يزيد بالاخص لو كلاسروم <br/>كمان الهاكرز خصوصا انه هيكون عليه فلوس. .<br/>عاوزك انت تشتغل تحميلي كل دا حرفيا ..حماية كاملة فايل كامل لكل المشاكل دي <br/>حتي مشاكل الدفع وكل شئ <br/><br/><br/>كمان زرار azure والزرارات اللي انت حاططها في الصفحة دي معظمها مش شغال فظبطهالي لو سمحت</p><p id="41ccea6a-e158-80bb-9f02-d92d2bb7b673" class="" dir="auto">
+</p><p id="41ccea6a-e158-80f8-b616-ccf95799638e" class="" dir="auto">دا خلاص الفنش النهائي <br/>قولي كل حاجة مقترحه حرفيا .. من A to Z كل حاجه حرفيا كل كل حاجة <br/><br/></p><p id="41ccea6a-e158-8058-b1a1-c1591c4711d9" class="" dir="auto">كمان انا رفعتلك ملفات العربية بين يدي اولادنا .. اعمله ملف محترم <br/><br/>حاليا معظم الحاجات ممتازة ماعدا مناهج العربي المتكاملة<br/>حاجة مثلا زي العربية بين يدي اولادنا دا كل الوحدات لو خلصت هيخلي الطفل يعمل محادثة عربي كويس<br/>كذلك العربية بين يديك <br/>فعاوز اظبطهم صح ..أنا لما برفع العربية بين يديك بيقول رسالة زي انه خطأ في استخلاص الصوت من الباور بوينت <br/><br/>العربي وحش جدا للاسف .. العرض كويس لكن المحتوي زي الزفت ..يعتبر مفيش محتوي <br/><br/>كمان قلتلك اي حاجه مفيش فيهافايلات او عناصر ماتظهرش لخد غيري ..لأما يتحط فيها حاجه خليها تظهر ماشي<br/><br/></p><p id="41ccea6a-e158-80f6-a28f-eef9db2371b4" class="" dir="auto">كمان في الاخر فكرني اني ابعت ل AGENT AI تاني يراجع وراك يشوف فين المشاكل <br/>وانت كمان راجع كل الشغل عشان مايطلعش وراك حاجة غلط </p><p id="41ccea6a-e158-804e-a341-c0f9bd010090" class="" dir="auto">
+</p><p id="41ccea6a-e158-8045-b3e3-d029d89e3832" class="" dir="auto">
+</p><p id="41ccea6a-e158-80f3-ad27-f1c2c9d5545d" class="" dir="auto"> ضيف كمان كل الاحكام هنا مش دا بس .. كمان فيه احكام مش عارف اعلم عليها </p><figure id="41ccea6a-e158-80f0-8458-c8555b060e78" class="image" data-notion-image="My%20Projrccct/image%2026.png" dir="ltr"><a href="My%20Projrccct/image%2026.png"><img style="width:704px" src="My%20Projrccct/image%2026.png"/></a></figure><p id="41ccea6a-e158-8086-8d58-fd44ecaca1d7" class="" dir="auto">
+</p><p id="41ccea6a-e158-8005-9a88-e798db0d650c" class="" dir="auto">كمان قلتتل نزل الشريط اللي فوق دا تحت خالص فوق المصحف مباشر<br/>وشيل الشريط اللي تحت دا <br/>هو شريط واحد اللي بعلم فيه وخلاص بس ضيف فيه كل حاجه في ابواب التجويد .. ورتبه حسب الاحكام ..يعني احكام</p><p id="41ccea6a-e158-8055-9815-e2603e539e8d" class="" dir="auto">
+</p><p id="41ccea6a-e158-801f-9840-c903d42af639" class="" dir="auto">
+</p><p id="41ccea6a-e158-8010-afd3-eb1ac8e880d5" class="" dir="auto">شيل الشريط دا واكتفي باللي فوق وخلاص التفصيلي بتاع الابواب كاملة </p><figure id="41ccea6a-e158-80cb-81d2-eba5c34c3230" class="image" data-notion-image="My%20Projrccct/image%2027.png" dir="ltr"><a href="My%20Projrccct/image%2027.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2027.png"/></a></figure><figure id="41ccea6a-e158-804a-94ab-ccbd69658d56" class="image" data-notion-image="My%20Projrccct/image%2028.png" dir="ltr"><a href="My%20Projrccct/image%2028.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2028.png"/></a></figure><p id="41ccea6a-e158-80e9-8a92-e13b8fa348d0" class="" dir="auto">رتب دا صح .. مانت حاطط نسختين من ayah word &gt;&gt; واكتفي باللي فوق بس <br/>letters ,, heavy and light &gt;&gt; خلي الحروف اكبر شوية زي قبل كدا <br/>وكمان اضفط علي كل حررف يدخلني في صفحته في المخارج والصفات زي قبل كدا فيه صفحة المخارج ..تخت الصفات زود التفهيم والترقيق<br/><br/>كمان وانا بختار الاخطاء وبضغط علي زرار حفظ مش بيحفظ ليه ؟<br/>سيب دا طبعا وانا اعمله extendening زي كدا <br/>بس ماتخليهوش في الصفحة دي .. كليك يمين علي الكلمة وضعطتين ورا بعض علي الكلمة في اشاشة يطلع شريط الاخطاء دا <br/>اذا كليك شمال - او ضغطة واحدة  علي الكلمة يظهر الكلمة والاية واالشريط اللي فوق دا <br/><br/>وكليك يمين او ضغطتين يزهر علي شريط الاخطاء اللي اختار منه او الطالب يختار خطأه مع hاضافات وكدا .. واديني خيارات اتحكم ايه اللي يتعرض وازاي </p><figure id="41ccea6a-e158-8073-a57c-eefc0340f029" class="image" data-notion-image="My%20Projrccct/image%2029.png" dir="ltr"><a href="My%20Projrccct/image%2029.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2029.png"/></a></figure><figure id="41ccea6a-e158-80fc-959d-dd732187c87f" class="image" data-notion-image="My%20Projrccct/2dcf827a-1c35-4bff-92d7-5c1207e4ba45.png" dir="ltr"><a href="My%20Projrccct/2dcf827a-1c35-4bff-92d7-5c1207e4ba45.png"><img style="width:211.1340206185567px" src="My%20Projrccct/2dcf827a-1c35-4bff-92d7-5c1207e4ba45.png"/></a></figure><p id="41ccea6a-e158-8036-b4a5-fc9751e9d0a5" class="" dir="auto">شيل الاسهم دي كمان </p><p id="41ccea6a-e158-8090-81a8-ff0648eb8262" class="" dir="auto">بين كمان سهم في المخارج .. يوضح الهمس والجهر .. الجهر الهواء مثلا وقف عند الاحبالا الصوتيه واهتزت زي مانت عملت <br/>الهمس .. لا بتعدي .. مع ملاحظة الكاف والتاء هتعدي اول مال block بتاع الشدة يفتح <br/><br/>كمان لو حروف من نفس المكان .. ماتحطهمش نفس الدرجة من الفتجة<br/>يعمي انت مثلا حاطط اليا والجيم ولشين نفس المكان .. لا فيه تحت ونص وفوق وقافل ولا مش قافل <br/>كل حاجه هبالتقصيل <br/><br/>حط زرار هنا واي ريكورد الطالب يعمله ارسل للمعلم وبيتحط في الهوم وورك</p><figure id="41ccea6a-e158-8082-a655-ea8d83d203de" class="image" data-notion-image="My%20Projrccct/image%2030.png" dir="ltr"><a href="My%20Projrccct/image%2030.png"><img style="width:703.977294921875px" src="My%20Projrccct/image%2030.png"/></a></figure><p id="41ccea6a-e158-809c-8e6a-efe492f40316" class="" dir="auto">
+</p><p id="41ccea6a-e158-8051-8def-d9b2b358dca8" class="" dir="auto">
+</p><p id="41ccea6a-e158-8049-b307-de43dccef030" class="" dir="auto">كمان في الجزء دا خليني اختار القارئ لو متاح <br/>يعني يجيبلي الخيارات المتاح بس للقارئ مش كل القراء <br/>انت عامله اوتوماتيك عبدالرششيد صوفي </p><figure id="41ccea6a-e158-809a-8491-d96a334dcf96" class="image" data-notion-image="My%20Projrccct/image%2031.png" dir="ltr"><a href="My%20Projrccct/image%2031.png"><img style="width:343.9886474609375px" src="My%20Projrccct/image%2031.png"/></a></figure><p id="41ccea6a-e158-8039-b58c-f34c7fe0214a" class="" dir="auto">
+</p><p id="41ccea6a-e158-8033-b907-e2839372c868" class="" dir="auto">مقام العجم بيبدأ من الدو مش ال si <br/>دا العجم هشيرات <br/></p><figure id="41ccea6a-e158-801d-9531-dae0a6e25481" class="image" data-notion-image="My%20Projrccct/image%2032.png" dir="ltr"><a href="My%20Projrccct/image%2032.png"><img style="width:703.9204711914062px" src="My%20Projrccct/image%2032.png"/></a></figure><p id="41ccea6a-e158-800d-b0b2-dabb9584c457" class="" dir="auto">
+</p><p id="41ccea6a-e158-8012-a59e-f51a53f45326" class="" dir="auto">خلي الطلوه يطلع وينزل زي التاني ..يعني رجع تاني مايفضلش فوق <br/><br/></p><figure id="41ccea6a-e158-8003-b054-f136ce304c95" class="image" data-notion-image="My%20Projrccct/image%2033.png" dir="ltr"><a href="My%20Projrccct/image%2033.png"><img style="width:488.9659118652344px" src="My%20Projrccct/image%2033.png"/></a></figure><p id="41ccea6a-e158-8045-b03a-c6415ae078d0" class="" dir="auto">اكتب في دي قران جنب مرتل ومجود </p><figure id="41ccea6a-e158-80e4-963e-ef4f0ce403a3" class="image" data-notion-image="My%20Projrccct/image%2034.png" dir="ltr"><a href="My%20Projrccct/image%2034.png"><img style="width:368.9545593261719px" src="My%20Projrccct/image%2034.png"/></a></figure><p id="41ccea6a-e158-808e-8fa3-fba934461e94" class="" dir="auto">برضه الاذان لما انشره او ابتهال او اية من القران - اي حاجة صوتيةف ي المقامات  .. خلي الكلام بتاعها تحتها <br/>اضغط علي عرض عشان يبان عرض .. لكن مايتعرض وحده <br/>بحيث وهو بيقرأ الحاجة ويقلد وكدا <br/><br/>كمان ضيف كلمات قصايد واناشيد في انشد معي وكدا <br/><br/>ضيف زرار فوق اول مالطالب يسجل يجيلة ايقونة كدا .. خد ساعة هدية كل محتوي الموقع مجاني <br/>لما يضغط انه ياخد الهدية .. يجي تايمر بالوقت المتبقي فوق كدا <br/><br/>كمان كل شهر ادي لكل واحد ساعه كمان كل شهر .. خلي فيه تايمر .. للهدية المجانية الجاية <br/>شهر من انتهاء اخر هدية <br/>الهدية ماتتفتحش الا ااما يضفط عليها وكدا فتح وكدا لما يفتح يبدا تايمر الساعه </p><p id="41ccea6a-e158-80ce-b87a-ee8b34d50591" class="" dir="auto">
+</p><p id="41ccea6a-e158-8042-af3d-d7d10329c19a" class="" dir="auto">
+</p><p id="41ccea6a-e158-8014-acb7-d658b4c30b24" class="" dir="auto">كمان </p><p id="41ccea6a-e158-80d8-879b-f14d6e31cc0c" class="" dir="auto">اكبت هنا فيه صوت وحط علامة الصوت <br/>لانه هو الوحيد اللي فيه صوت فيهم <br/><br/>لو فيه اكتر من كتاب في القايمة وانا اختار منهم ايديني انا طريقة اختيار .. يعني اختارو يتعرضو ازاي وكدا </p><figure id="41ccea6a-e158-8010-baf1-c8baeacbf101" class="image" data-notion-image="My%20Projrccct/image%2035.png" dir="ltr"><a href="My%20Projrccct/image%2035.png"><img style="width:358.9545593261719px" src="My%20Projrccct/image%2035.png"/></a></figure><p id="41ccea6a-e158-80ea-b09b-f4208a4cc866" class="" dir="auto">
+</p><p id="41ccea6a-e158-8088-86c3-c4eb4a442534" class="" dir="auto">حروف الحلق ما تحركش فيها اللسان ..ضيف اي فكرة تانيه لتحريك الجزء بتاعها مش اللسان نفسه حسب مكان الحرف فين </p><p id="41ccea6a-e158-8068-8a09-f0428785abee" class="" dir="auto">
+</p><p id="41ccea6a-e158-800b-b123-ce997189bcb8" class="" dir="auto"><div class="indented"><p id="41ccea6a-e158-80d5-8146-f546254ba2fe" class="" dir="auto">حطلي في قسم مساحتي وانا بشوف شيخ معين مثلا احدد هو مقام ايه <br/>مثلا اخترت مشاري الكهف .. وحددت ايات معينه .. انت تساعدني يعني قارن الصوت بالاهات الموجودة لكل المقامات والسلم وكدا .. وقولي اقتراحك هو مقام ايه .. بس ماتنشرش .. انا هقول الكلمة الاخيرة .. <br/>حتي مش الاساسي بس .. الفرعي كمان .. <br/>يعني قارن النغمة بكل شئ .. وقولي انت دا مقام ايه <br/>وانا هكتب في الاخر .. اذا كان زي امانت قلت ولا حاجة تانيه انا هكتبها <br/><br/>كمان حط جنب خمن المقام .. قسم مقامك الذي تقرأ بيه <br/>يسمع صوت الطالب او الشيخ و يحدد دا مقام ايه بنفس الفكر <br/>ولاحظ انه ساعات بيكون فيه mixing اكتب برضه انه فيه ميكسنج وتكتب المقامات المشاهدة </p><p id="41ccea6a-e158-8038-b75d-d527b0d29fb9" class="" dir="auto">
+</p></div></p><p id="41ccea6a-e158-8051-84bd-dc963e0fa930" class="" dir="auto">
+</p><p id="41ccea6a-e158-8022-90ad-cb876cb29b41" class="" dir="auto">كمان المحادثات العربي فيها مشكلة</p><p id="41ccea6a-e158-80f2-ac7d-cacb059efebf" class="" dir="auto">
+</p><p id="41ccea6a-e158-806a-ac1c-ef7f675f479f" class="" dir="auto">حط هنا صوت الحصري برضه علي الحاجات دي عشان نطق الكلمة مش بيربط الكلمات ببعضها</p><figure id="41ccea6a-e158-809c-a43b-e6df2da15eb8" class="image" data-notion-image="My%20Projrccct/image%2036.png" dir="ltr"><a href="My%20Projrccct/image%2036.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2036.png"/></a></figure><p id="41ccea6a-e158-80bd-bf37-c8ce224ad763" class="" dir="auto">الصوت اللي هنا ماتخليش azure يقرأ عاوز الحصري + الكلمة وبس الافي الااحكام اللي ليها علاقة بكلمتين .. يعني مثلا احكام الميم والنون واللام .. ماتحطش فيهم الكلمة دي .. الحصري وبس .. لان الكلمة مخصصة للكلمة الواحد هتلغبطه <br/><br/><br/>عشان azure بيبوظ الدنيا <br/>ازور يقرأ عربي بس محتوي العربي .. مايقرأش قران ولا احكام ولا كتاب </p><figure id="41ccea6a-e158-80d2-ad6e-f430b8c30466" class="image" data-notion-image="My%20Projrccct/image%2037.png" dir="ltr"><a href="My%20Projrccct/image%2037.png"><img style="width:475.15911865234375px" src="My%20Projrccct/image%2037.png"/></a></figure><p id="41ccea6a-e158-8006-a3f3-e704bbe8be9e" class="" dir="auto">هنا مثلا انت ليه هنا محدد علي كل عاوز الكلمتين بس بتوع الحكم ..كله كدا</p><figure id="41ccea6a-e158-800a-b6f2-e06b6046c568" class="image" data-notion-image="My%20Projrccct/__2026-11-18_165629.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_165629.png"><img style="width:369.9886474609375px" src="My%20Projrccct/__2026-11-18_165629.png"/></a></figure><p id="41ccea6a-e158-8068-b0a9-dc955626990a" class="" dir="auto">كمان عاوزك تكتب المصطلخ بالانجليزي جنب الفرانكو </p><p id="41ccea6a-e158-808d-8f89-d7a1ba511c47" class="" dir="auto">
+</p><p id="41ccea6a-e158-80dd-b3ab-d7bf47bb265e" class="" dir="auto">
+</p><p id="41ccea6a-e158-80d5-9379-f6b4bf4057ab" class="" dir="auto">
+</p><p id="41ccea6a-e158-8039-baf4-f564268ade85" class="" dir="auto">لما يغلط اشرحله الحكم تحتها بالتفصيل ليه غلط وكمان حتي لو حل صح اشرحله ليه صح <br/>لو غلط في سوال كررهوله تاني .. خلي التايمر متحكم فيه قبل الاختبار .. نختار وقت التايمر هكتبلك اسماء الاحكام حسب انا مسميها ايه <br/><br/>اظهار .. clarity <br/>اخفاء hiding </p><p id="41ccea6a-e158-80d1-b76f-c9992866b192" class="" dir="auto">ادغام merging with ghunnah or withour </p><p id="41ccea6a-e158-80aa-8635-dfe29fc22fad" class="" dir="auto">اقلاب switching <br/>heavy مفخم<br/>light مرقق<br/>go up استعلاء<br/>go down استفال<br/>opening انفتاح<br/>closing اطباق<br/><br/>from lips شفوي <br/>madd elongation مد<br/>madd because of stop مد عارض للسكون<br/>connected madd مد متصل<br/>sperate madd مد منفصل<br/>obligatory madd مد لازم<br/>stopping and starting الوقف والابتداء<br/>hams &amp; jar - whispring for hams همس وجهر <br/>intense ^ week ^ in between الشدة والرخاوة والبينية <br/><br/>بالتالي عاوزك الالفاظ دي تجيبها وتحطها جنب الفرانكو بتاع الاسم <br/>اي حاجات من دي او المصطلحات كلها كلها حرفيا .. حتي جوا الاسئلة حط مادام هتكتب الكلمة اكتب لازق فيها المهني بالانجليزي .. او هات المعني من كتب التجويد الانجليزي اللي موجوده علي الموقع .. هات المحتوي منها ..ماتترجمهاش انت <br/>في كل حته فيها اللفظ دا اعمل كدا </p><figure id="41ccea6a-e158-8055-9518-cfa39f7d49fb" class="image" data-notion-image="My%20Projrccct/image%2038.png" dir="ltr"><a href="My%20Projrccct/image%2038.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2038.png"/></a></figure><p id="41ccea6a-e158-80db-ab6a-dd1f13f4129f" class="" dir="auto">كبر الايقونات شوية واعملها عرض محترم زي extending كدا .. ولما افتح واحد تاني دا يتقفل <br/>واديني خيارات للعرض لكل حاجة زي كدا <br/></p><figure id="41ccea6a-e158-809d-a652-e2dbc5d40cae" class="image" data-notion-image="My%20Projrccct/image%2039.png" dir="ltr"><a href="My%20Projrccct/image%2039.png"><img style="width:703.9659423828125px" src="My%20Projrccct/image%2039.png"/></a></figure><p id="41ccea6a-e158-80a9-9751-d837a85f7377" class="" dir="auto">
+</p><p id="41ccea6a-e158-8065-8356-f494f18d9262" class="" dir="auto">الصفخات بترعش كدا لما برفرش او لما ادخل علي صفحة جديدة وانا بنزل تحت او بطلع فوق بالاخص .. اول ماافتح الصفحة او افتخ صفحة جديدة</p><p id="41ccea6a-e158-8084-adcd-e399815f888f" class="" dir="auto"><br/>كمان اعمل صفحة في مساحتي كل شوية تجيبلي اقتراحات لحاجات اعملها في الموقع سواء تصميمات او غيره وحاجات كتير </p><p id="41ccea6a-e158-80c1-9aaf-d124662bcfe2" class="" dir="auto">
+</p><p id="41ccea6a-e158-8006-be7b-ceb964c0cf72" class="" dir="auto">دول مش شغالين </p><figure id="41ccea6a-e158-8044-8807-eb0789e1e4e8" class="image" data-notion-image="My%20Projrccct/image%2040.png" dir="ltr"><a href="My%20Projrccct/image%2040.png"><img style="width:310.9886474609375px" src="My%20Projrccct/image%2040.png"/></a></figure><p id="41ccea6a-e158-8024-8b72-ed7732c21d08" class="" dir="auto">
+</p><p id="41ccea6a-e158-80db-9f2e-cc74be75cbc6" class="" dir="auto">انت حاططلي في مساحة اني اشوف القارئ والمقام وكدا <br/>مش القراء يسطا دول اسامي الطلبة <br/></p><figure id="41ccea6a-e158-802b-aa08-ea086b4d463e" class="image" data-notion-image="My%20Projrccct/image%2041.png" dir="ltr"><a href="My%20Projrccct/image%2041.png"><img style="width:435.9886474609375px" src="My%20Projrccct/image%2041.png"/></a></figure><p id="41ccea6a-e158-806e-9105-c8cd4f4ab6b3" class="" dir="auto">
+</p><p id="41ccea6a-e158-8055-afda-f484c2edcd92" class="" dir="auto">رجع زرار العرض واللغة تاني بس في الجنب خالص <br/>مع التحكم فيه زي باقي الايقونات يطلع ازاي وازاي يظهر وكدا <br/></p><figure id="41ccea6a-e158-8026-9faf-d41cb56793fc" class="image" data-notion-image="My%20Projrccct/__2026-11-17_041529%201.png" dir="ltr"><a href="My%20Projrccct/__2026-11-17_041529%201.png"><img style="width:84.98863983154297px" src="My%20Projrccct/__2026-11-17_041529%201.png"/></a></figure><p id="41ccea6a-e158-80a0-9448-d35ebf17ab46" class="" dir="auto">كمان رجع دا تاني .. + زي ماتفقنا اتحكم في طريقة عرضه ويطلع منين وازاي وفين <br/>فوق تحت يمين شمال فين بالضبط<br/>واي شريط ايقونات يطلع كدا بالطريقة دي</p><p id="41ccea6a-e158-80fc-b07c-ff66436810a7" class="" dir="auto">
+</p><p id="41ccea6a-e158-80f3-9f93-eadf2803c956" class="" dir="auto">عامله صوت زن وخلاص عاوزها الموسيقي بتاعت كل نشيد .. اقصد الخلفيه بتاعته الصوتية <br/>زي طلع البدر علينا وغيره ..مش موسيقي همهات صوتيه <br/>واناشيد مشاري وكل الاناشيد الاسلامةي </p><figure id="41ccea6a-e158-80ad-961c-e2da12ea8080" class="image" data-notion-image="My%20Projrccct/image%2042.png" dir="ltr"><a href="My%20Projrccct/image%2042.png"><img style="width:703.95458984375px" src="My%20Projrccct/image%2042.png"/></a></figure><p id="41ccea6a-e158-80be-a9b1-cc1c8a0dcbea" class="" dir="auto">
+</p><p id="41ccea6a-e158-8069-82a0-dbeaee851b8a" class="" dir="auto">اقترح عليا ادوات كتييير تساعد الطلاب في الحفظ سواء التجزيد او حفظ ايات معينه من القران بحيث لما يخرج من الحصة يكون حفظ بنسبة 80% <br/>ادوات تخلي العملية ممتعه وفيه ادرينالين والطالب مركز وبيحفظ كويس .. وبيفضل الحفظ فترة طويلة <br/><br/>اقترح عليا 20 اداة لكدا<br/>سواء قران او عربي او مقامات يفضل حافظ التون او تجويد او معلومات اسلاميك <br/>كل شئ ادوات نفسية تخلي العملية ممتعه جدا لكل الاعمار .. وقولي كل حاجه مناسبة لمين .. والعملية effective <br/><br/>عشان نخلي الطلاب معانا دايما </p><p id="41ccea6a-e158-8089-bdf5-ce3502540608" class="" dir="auto">كل دا في مساحتي .. مع امكانية اني ارفع اي حاجة للطلاب في ايم مكان <br/>واني ارفع اي حاجة في ال classroom <br/><br/>اديني اوبشنز في فتح المحتوي كل الخيارات .. مثلا <br/>دقايق <br/>ساعات <br/>ايام <br/>أسابيع <br/>شهور <br/><br/>وجنبها العدد اللي اختاره<br/><br/><br/>كمان صفحة التسجيل اللي في الاول وحشه اوي او حتي تسجيل الدخول كله علي بعضه ممكن تظبطها ي باشا </p><p id="41ccea6a-e158-80cd-998f-e62cbb119ad1" class="" dir="auto">
+</p><p id="41ccea6a-e158-8062-8367-c9fff11862d6" class="" dir="auto">دي مثلا حد بيحاول يدخل كدا <br/></p><figure id="41ccea6a-e158-80c9-82da-d7a2075deff9" class="image" data-notion-image="My%20Projrccct/image%2043.png" dir="ltr"><a href="My%20Projrccct/image%2043.png"><img style="width:404.9886474609375px" src="My%20Projrccct/image%2043.png"/></a></figure><p id="41ccea6a-e158-8046-afda-cb1ad0a70e77" class="" dir="auto">شيل التسجيل بالفيس مثلا <br/></p><figure id="41ccea6a-e158-8064-9838-fc3ebf6b0e3b" class="image" data-notion-image="My%20Projrccct/image%2044.png" dir="ltr"><a href="My%20Projrccct/image%2044.png"><img style="width:554.9886474609375px" src="My%20Projrccct/image%2044.png"/></a></figure><p id="41ccea6a-e158-80b2-85a4-dd1937e4747a" class="" dir="auto">لغة الصفحة تبان زي لغة السيستم بتاع الطالب .. لغة التطبيق يعني <br/><br/><br/>شيل كلمة no vonfirmation دي بس خليها نفس ال  cncept انه مادام دخل مش شرط يأكدا<br/>الرابط بتاع sign up with google يدخل علي جوجل ويختار جيميله ونبدأ علطول <br/>ويكمل تسجيل بقي المعومات بتاعته <br/><br/>كمان زرار log in بيرجع تاني ل sign up <br/>عاوز صفحة ل log in - واخده ل sign up <br/>وفي الاتنين ممكن ادخل بجوجل مياشرة عادي بدون مايففتكر كلمة السرو كدا زي باقي المواقع <br/><br/>ظبطها نفس باقي المواقع sign up - log in ظبط الدنيا بليز <br/>الطالب لو لقي صعوبة في التسجيل هيخلع <br/>عاوز كل شئ سلس من فضلك</p><p id="41ccea6a-e158-8005-a984-db96ba7eede9" class="" dir="auto">لما يعمل log in خلاص يدخل مش هتجيبله تاني صفحة انه يكتب معلوماته ماهو كدا كدا كاتبها مرة <br/><br/>اي طالب يدخل اعرضله التسجيل او تسجيل الدهول زي مانت عامل كدا <br/>لو هو دخل قبل كدا كتير وارقام محفوظة اظهر علطول صفحة ال log in طبعا مع امكانية انه يحفظ معلومات دخوله زي باقي التطبيقات<br/><br/>اقترح حاجات كريتيف تخليها سهله جدا وكل الازرار مضبوظخ <br/>عاوز حاجات مش موجودة في حته تخليهم ينبهرو بصفحة الدخول دي <br/>لانها اول صفحة الانسان بيشوفها <br/>وكل حاجه سلسلة  تصميمات جذابه وكدا <br/><br/>كمان </p><p id="41ccea6a-e158-80fb-af84-e2d768e5cc88" class="" dir="auto">
+</p><p id="41ccea6a-e158-8032-95c2-ec0d8b6656f2" class="" dir="auto">غلطة </p><figure id="41ccea6a-e158-801a-821c-c76d385a3bc9" class="image" data-notion-image="My%20Projrccct/WhatsApp_Image_2026-11-18_at_8.13.22_PM.jpeg" dir="ltr"><a href="My%20Projrccct/WhatsApp_Image_2026-11-18_at_8.13.22_PM.jpeg"><img style="width:475.17047119140625px" src="My%20Projrccct/WhatsApp_Image_2026-11-18_at_8.13.22_PM.jpeg"/></a></figure><p id="41ccea6a-e158-802d-982a-d7eb07b4275a" class="" dir="auto">
+</p><p id="41ccea6a-e158-806e-923e-f2e05050e276" class="" dir="auto">
+</p><p id="41ccea6a-e158-8018-922f-d8975e856b60" class="" dir="auto">كمان قولي اقتراحات ادوات كنير في المقامات تفيد الطالب تخليه يجيب المقام صح في القران .. انا مليش دعوه بالانشاد <br/><br/>كمان ضيف ليا انا صفحات ومساحات كتييرة للانشاد والاغاني في مساحتي .. تعلم المقامات في الاعغاني والانشاد .. كل الطرق الممكنة <br/>انا متعلم كل المقامات بس في القران عاوز اطبق دا في المقام <br/><br/>كذلك في الحفظ زي ماقلنا <br/>كل الجديد ضيفه علي مساحتي مع امكانية اني احطه في ال classroom  او يزهر للطالب وفي اي قسم <br/><br/>كمان داوات لتعليم العربية لشكل فعال دا .. سوا عربي قصحي او خليجي <br/><br/>كمان حط اقترحات كتيييير اوي للتنظيم في صفحة التنظيم في مساحتي ..اختار منها اختيارات كتييير للتنظيم <br/><br/>مع فكرة انك تحط انت احسن واحد انت شايفه طبقه <br/>وبعدين انا اعرف اعدل فيه .. واعرف اغير كل حاجة</p><p id="41ccea6a-e158-8053-ba05-cefb59aa2bd6" class="" dir="auto"><br/><br/>كل اللي طلبته منك اشتغل عليه as one order <br/>اللي محتاج تساله خلص اللي مش محتاج اسئلة الاول </p><p id="41ccea6a-e158-80de-8191-f6a44b5606a6" class="" dir="auto">
+</p><p id="41ccea6a-e158-808e-9042-dd4ea18e844c" class="" dir="auto">
+</p><p id="41ccea6a-e158-8097-aa9f-c335d8f2fdb4" class="" dir="auto">بالنسبة للتطبيق علي الفون والتابلت وكدا <br/>دا تقييمات الطلبة <br/>ظبط دا ي عم انت </p><p id="41ccea6a-e158-80f2-919c-f5d9693453ff" class="" dir="auto">أيوة وحاسه بردو تقيل</p><p id="41ccea6a-e158-80bd-b10f-e8e08420284e" class="" dir="auto">يعني لما أضغط علي حاجة بياخد وقت عقبال ما يدخل فيها</p><p id="41ccea6a-e158-80ac-8a7f-c29ac18c6236" class="" dir="auto">تقيل في السكرول يعني</p><p id="41ccea6a-e158-80e2-ae14-de0e293e3f73" class="" dir="auto">أنا عامة لما بتعامل مع تطبيقات بحب إني أسجل بطريقة سهلة</p><p id="41ccea6a-e158-80d9-840d-c0ac2028dc70" class="" dir="auto">يعني رقم الموبايل مثلا بس ويبعت كود تأكيد عليه</p><p id="41ccea6a-e158-80ce-8e00-fafb9feae81e" class="" dir="auto">بحس حوارات الجيميل بتكون كتير</p><p id="41ccea6a-e158-8060-af45-d100c3966bdd" class="" dir="auto">
+</p><p id="41ccea6a-e158-8025-adce-f953683c3681" class="" dir="auto">لو فيه امكانية اني احط التسجيل يتربط بالفون يعني برقم الفون او الجيميل الاتنين يعني دا اودا <br/>قولي اعمل ايه</p><p id="41ccea6a-e158-80fe-b6a7-c362036c7ef2" class="" dir="auto">
+</p><p id="41ccea6a-e158-800a-9393-ee1b249939b5" class="" dir="auto">مش عاوز اي اخطاء من دي تاني زي التصميم وكدا وان الكتابه فوق بعض كدا</p><p id="41ccea6a-e158-8049-833f-ef56134d4ad9" class="" dir="auto">
+</p><figure id="41ccea6a-e158-80e4-b198-d11d2bea42a2" class="image" data-notion-image="My%20Projrccct/image%2045.png" dir="ltr"><a href="My%20Projrccct/image%2045.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2045.png"/></a></figure><p id="41ccea6a-e158-80a0-ab03-f34c47d90029" class="" dir="auto">
+</p><p id="41ccea6a-e158-8036-ba4f-ccac593ee238" class="" dir="auto">الصفحة دي اول مافتحها بتكون كدا القوايم كدا او السهم كدا ..بعدين يظهر طبيهي بعدين</p><figure id="41ccea6a-e158-80da-8b75-dba8e0ddeea2" class="image" data-notion-image="My%20Projrccct/image%2046.png" dir="ltr"><a href="My%20Projrccct/image%2046.png"><img style="width:703.977294921875px" src="My%20Projrccct/image%2046.png"/></a></figure><p id="41ccea6a-e158-8065-8bc4-eb2f6f4c13c4" class="" dir="auto">
+</p><p id="41ccea6a-e158-8004-a8c9-f6f3e1c40cf3" class="" dir="auto">دا لما اجي اسجل في التطبيق اللي علي اللاب او الموبايل</p><p id="41ccea6a-e158-8019-8528-e19433b00172" class="" dir="auto">التعرّف على الصوت محتاج إنترنت<br/><br/>ظبط التطبيق بحيث يكون زي الويب بالضبط في كل شئ .. مفيش اختلافات .. انه كله يفتح<br/><br/>دي بأصحاب بتنطق ربك ازاي <br/>ظبط النطق علي كل الموقع .. راجع علي كل النطق تاني مع صاحبه ولا ايه <br/>كمان خانة السماعه دي خليها هناك جنب الحصري<br/>واكتب فيها الكلمة <br/>كمان طل حاجة متلغبةط في الصفحة دي ظبطها .. الاحكام تتكتب زي باقي الاحكام قبل كدا <br/>زي ماقلتلك اي احكام بالانجليزي فرانكو - المصطلخ بالانجليزي <br/></p><figure id="41ccea6a-e158-80c9-a8ee-e55673513817" class="image" data-notion-image="My%20Projrccct/image%2047.png" dir="ltr"><a href="My%20Projrccct/image%2047.png"><img style="width:424.9886474609375px" src="My%20Projrccct/image%2047.png"/></a></figure><p id="41ccea6a-e158-8084-8678-ff873b2590ce" class="" dir="auto">
+</p><p id="41ccea6a-e158-80b3-877a-f3568a4508c5" class="" dir="auto">
+</p><p id="41ccea6a-e158-8082-9d84-d68afb92074b" class="" dir="auto">ظبط كتابة الصفحة دي بتاعت الاشتراك  السنوي الكلام مش متظبط <br/></p><figure id="41ccea6a-e158-8027-b49a-e3d90e38b737" class="image" data-notion-image="My%20Projrccct/image%2048.png" dir="ltr"><a href="My%20Projrccct/image%2048.png"><img style="width:703.9886474609375px" src="My%20Projrccct/image%2048.png"/></a></figure><p id="41ccea6a-e158-8068-8a3b-eeb38f4e9faf" class="" dir="auto">في اشتراك المحتوي خلي دي تظهر في الاول بعدين كمل عليها</p><p id="41ccea6a-e158-80ea-8bec-db9810be40e7" class="" dir="auto">الباقي</p><p id="41ccea6a-e158-8059-9eee-f4d3ea07b9e1" class="" dir="auto">
+</p><figure id="41ccea6a-e158-8055-a0b1-da64e82d7890" class="image" data-notion-image="My%20Projrccct/image%2049.png" dir="ltr"><a href="My%20Projrccct/image%2049.png"><img style="width:703.9886474609375px" src="My%20Projrccct/image%2049.png"/></a></figure><p id="41ccea6a-e158-80cb-9e10-f50be3642740" class="" dir="auto"><br/>شيل القسم دا من الاشتراك <br/></p><figure id="41ccea6a-e158-80f2-96dd-df2b97c97d9d" class="image" data-notion-image="My%20Projrccct/image%2050.png" dir="ltr"><a href="My%20Projrccct/image%2050.png"><img style="width:425.9659118652344px" src="My%20Projrccct/image%2050.png"/></a></figure><p id="41ccea6a-e158-8089-8c26-f1327a24df88" class="" dir="auto">
+</p><p id="41ccea6a-e158-80c0-9e39-cb2f7353175d" class="" dir="auto">الاشتراك هيديله اسبوع مجاني وبعدها خصم .. مش اسبوع اشتراك <br/>ظبط الكلا في دي<br/>ظبطها تكون مفهومه صح </p><figure id="41ccea6a-e158-805b-9e21-e016c228ffa8" class="image" data-notion-image="My%20Projrccct/image%2051.png" dir="ltr"><a href="My%20Projrccct/image%2051.png"><img style="width:703.95458984375px" src="My%20Projrccct/image%2051.png"/></a></figure><p id="41ccea6a-e158-800c-8ec0-db69333cf1b0" class="" dir="auto">شيل بتاعت طلاب الشيخ المباشرين دي خالص </p><p id="41ccea6a-e158-80fc-ae6f-c9831ffac9b8" class="" dir="auto">
+</p><p id="41ccea6a-e158-8068-8ab5-fb282ad2e56a" class="" dir="auto">
+</p><p id="41ccea6a-e158-80cf-b2e4-e1180824a1a7" class="" dir="auto">شيل دي </p><figure id="41ccea6a-e158-80d3-809c-f9cf50519750" class="image" data-notion-image="My%20Projrccct/image%2052.png" dir="ltr"><a href="My%20Projrccct/image%2052.png"><img style="width:703.875px" src="My%20Projrccct/image%2052.png"/></a></figure><p id="41ccea6a-e158-80d0-bf6b-e9dc979c7db4" class="" dir="auto">
+</p><p id="41ccea6a-e158-8068-b207-cf1a823ed786" class="" dir="auto">
+</p><p id="41ccea6a-e158-8041-a9f9-ea394a3edfa8" class="" dir="auto">حط اسعار الحصة الجماعية <br/>50 دقيقه ضعف سعر الفردية 50 دقيقه .. واربطهخا علي كدا<br/>مثلا لو الفردية ب 15 .. الجماعية ب 30 <br/>اي حد يدخل يكتب انشاء حصة جماعية مكونة من 10 أشخاص بحد أقصي .. </p><p id="41ccea6a-e158-800e-a75b-d113776f82ed" class="" dir="auto">انا هدخل مثلا .. اكتب طلب حصة جماعية <br/>كتابة معلومات عليها انها اقل من الفردية و كدا .. وليها سعر ثابت لكل الحصة - لكل الجروب ب 30 دولار فقط كمثال <br/>كل مالجروب يزيد يقل فلوس الفرد<br/>وسعرها مثلا زي ماقلنا محدد ..<br/>هو كدا مكتوب 30 دولار .. انشاء حصة جماعية بعدين يعمل لينك لدعوة الاصدقاء الي هينضمو للحصة ,.. اول مالجروب يكمل اللي هما عاوزينه .. العدد بحد اقصي 5افراد للحصة ال 50 دقيقه و10 افراد للحصتين الحصة 50 دقيقه .. وطبعا السعر يتضاعف حسب الحصة 50 ولا حصتين <br/><br/>هو براحته يختار العدد بس مش اكتر من 10<br/>والفلوس هتتقسم عليهم ال10 او حسب العدد .. المهم لو 5 بس .. يختارو حصة 50 او عادي حصتين <br/>لكن اكتر من 5 لازم حصتين مش حصة 50 بس <br/>اصحابه ينضمو للينك لحد مايخلص العدد كمل .. يختار بقي الدفع .. واحد فقط يدفع للكل .. او كل واحد يدفع لوحده ..اللي عمل اللينك يختار دا<br/><br/>كل دا خطوات مرتبه ورا بعض في انسيابية بحيث الصفحات ورا بعضها ويشتركو علطول <br/>لو فيه اضافات زودها .. طبعا كل دا قابل للتعديل .. سواء العدد او السعر او اي شئ من دا <br/><br/><br/></p><p id="41ccea6a-e158-8029-b532-d7f4ae54df46" class="" dir="auto">
+</p><p id="41ccea6a-e158-8020-a6cd-fa3d5a203eea" class="" dir="auto">شيل دي</p><figure id="41ccea6a-e158-8092-8f2a-dc1ce5cfa0bd" class="image" data-notion-image="My%20Projrccct/image%2053.png" dir="ltr"><a href="My%20Projrccct/image%2053.png"><img style="width:475.1363830566406px" src="My%20Projrccct/image%2053.png"/></a></figure><p id="41ccea6a-e158-80cd-835c-e1ec449f6a4a" class="" dir="auto">
+</p><p id="41ccea6a-e158-8092-82c4-cbb87437f400" class="" dir="auto">انت عبيط <br/>تظر حاجه زي كدا للطلبة </p><p id="41ccea6a-e158-8033-ba18-eb7b269787ec" class="" dir="auto">ماتظهرش اي حاجة للاونر فقط دي <br/>لو  حاجة موجودة زي دي ..احذفها خالص مش تظهر الصفحو كلها</p><p id="41ccea6a-e158-80e6-b612-ecfa7cc73891" class="" dir="auto"><br/></p><figure id="41ccea6a-e158-80e6-966b-cc441cd439bc" class="image" data-notion-image="My%20Projrccct/image%2054.png" dir="ltr"><a href="My%20Projrccct/image%2054.png"><img style="width:475.17047119140625px" src="My%20Projrccct/image%2054.png"/></a></figure><p id="41ccea6a-e158-8080-ad29-d726d3a889ee" class="" dir="auto">
+</p><p id="41ccea6a-e158-8051-bd1a-ea1aed0e8d27" class="" dir="auto">الصفات خليها بالعربي الفرانكو -والمصطلح بالانجليزي من كتب التجويد</p><p id="41ccea6a-e158-8061-b1ca-cc07e8f1adb9" class="" dir="auto">ماتترجمش من دماغك المصطلحات من الكتب بتاعت التجويد <br/>والمحتوي منها .. ا</p><figure id="41ccea6a-e158-80f4-bb95-f789cee02461" class="image" data-notion-image="My%20Projrccct/__2026-11-18_211039.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_211039.png"><img style="width:1161px" src="My%20Projrccct/__2026-11-18_211039.png"/></a></figure><p id="41ccea6a-e158-807e-be6b-dbba55090163" class="" dir="auto">شيل دا كل واحد يتعرض السعر حسب بلده وعملة بلده بس <br/></p><figure id="41ccea6a-e158-8044-9880-e5fd097c8ebb" class="image" data-notion-image="My%20Projrccct/__2026-11-18_211754.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_211754.png"><img style="width:475.125px" src="My%20Projrccct/__2026-11-18_211754.png"/></a></figure><p id="41ccea6a-e158-802a-87ec-d65594c80c22" class="" dir="auto">
+</p><p id="41ccea6a-e158-8023-8aff-c25d949175a0" class="" dir="auto">
+</p><p id="41ccea6a-e158-8044-b14e-d7ae208236e2" class="" dir="auto">خليني اختار من هنا صوت السيستم ولا صوت المايكروغون .. عشان بيشغل اللي مختاره قبل كدا ..انا لسه هطلع فوق<br/>كل حاجة لوحدها كدا عشان تكون اسهل <br/></p><p id="41ccea6a-e158-8084-8226-f605266947db" class="" dir="auto">
+</p><figure id="41ccea6a-e158-8016-8bb3-fd49af4f669f" class="image" data-notion-image="My%20Projrccct/__2026-11-18_211314.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_211314.png"><img style="width:475.17047119140625px" src="My%20Projrccct/__2026-11-18_211314.png"/></a></figure><p id="41ccea6a-e158-803f-aa42-d389465baefc" class="" dir="auto">خلي الامثلة تحت مع كل حكم .. مش مجمعه فوق كدا بصوتها <br/>لا تنزل تحت مع المكان بتعها بنفس القواعد .. لو القاعده علاقتها كلمة واحده .. خلاص النطق الكلمة بس <br/>لو اكتر من كلمة لنفس الحكم زي احكام النون والميم وكدا .. يقرا الكلمتين مع بعض </p><figure id="41ccea6a-e158-800c-a8d4-f77f1a28e992" class="image" data-notion-image="My%20Projrccct/__2026-11-18_211211.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_211211.png"><img style="width:1128px" src="My%20Projrccct/__2026-11-18_211211.png"/></a></figure><p id="41ccea6a-e158-8086-8b37-d23a131eec5e" class="" dir="auto">اكتب الكلام هنا عربي جنب الفرانكو مش فرانكو بس <br/></p><figure id="41ccea6a-e158-80de-b595-d76eaaad9bbe" class="image" data-notion-image="My%20Projrccct/__2026-11-18_210923.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_210923.png"><img style="width:1150px" src="My%20Projrccct/__2026-11-18_210923.png"/></a></figure><p id="41ccea6a-e158-80e0-9f8a-e9b320ca0fa3" class="" dir="auto">هنا اعرض اول صفحة ندخل عليها هي الحوار مش الكلمات <br/>ثم الجرامر <br/>ثم الكلامات ثم الفلاشكارد <br/>مع اضافة في الفلاشكارد .. كاردز للقواعد برضع عشان نحفظها </p><p id="41ccea6a-e158-80be-983d-c945d30d04e3" class="" dir="auto">شيل دا </p><figure id="41ccea6a-e158-8012-ac72-de4d193b7552" class="image" data-notion-image="My%20Projrccct/__2026-11-18_210128.png" dir="ltr"><a href="My%20Projrccct/__2026-11-18_210128.png"><img style="width:1845px" src="My%20Projrccct/__2026-11-18_210128.png"/></a></figure></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

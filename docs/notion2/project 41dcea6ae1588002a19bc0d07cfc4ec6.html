@@ -1,0 +1,829 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>project</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+	/* Paint a complete callout box on every PDF page fragment. */
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+/*
+ * Toggles and callouts hold arbitrary content, so they can easily be taller
+ * than a page. They must stay breakable: avoiding breaks inside them makes
+ * Chromium push the whole block onto the next page, which leaves the previous
+ * page mostly empty before every long toggle.
+ */
+details,
+aside {
+	margin: 1.25em 0;
+}
+
+/* Keep a toggle's title on the same page as the start of its content. */
+summary {
+	page-break-after: avoid;
+	break-after: avoid;
+}
+
+/*
+ * Toggle headings render as <h1/h2/h3 style="display:inline-block"> inside
+ * <summary>. Without this reset, the heading's margin-top pushes it below the
+ * ::marker (▼), so the triangle and the title appear on separate lines.
+ */
+summary h1,
+summary h2,
+summary h3,
+summary h4 {
+	margin-top: 0;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="41dcea6a-e158-8002-a19b-c0d07cfc4ec6" class="page sans"><header><h1 class="page-title" dir="auto">project</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="41dcea6a-e158-8026-b80a-f83ac74da1de" class="" dir="auto">
+</p><p id="41dcea6a-e158-804a-88ee-ea53aebdd92e" class="" dir="auto">كمان اديني اشوف ايه اللي يتعرض وايه اللي لا للطالب بالتفصيل.. حتي الايقونات الصغيره ..اخفي حاجه حاجه<br/>واعمل تطبيق علي الكل بحيث تتطبق علي كل الصفحات اللي شبهها</p><p id="41dcea6a-e158-80a5-ae17-ef87d614588c" class="" dir="auto">زي صفحات المقامات التانيه وهكذا</p><p id="41dcea6a-e158-8028-8fd1-cd78f72a895f" class="" dir="auto">حط في دي الادوات اللي مش موجودة في اي قسم .. </p><p id="41dcea6a-e158-806b-aa41-dad3dab3d893" class="" dir="auto">خلينا انا  اختر من الموقع ايه اللي جواها من بين كل الادوات ..َضيفلي اوبشن زي ماقلتلك اعرف ارتب كل فولدر كاني برتب</p><p id="41dcea6a-e158-805f-a025-f9977ec0551c" class="" dir="auto">حط فيها بشكل افتراضي كل الادوات المسلم اللي مش موجودة في حته تانية<br/>وخلي اسمها ادوات المسلم </p><figure id="41dcea6a-e158-8088-80ca-c5408691b67a" class="image" data-notion-image="project/image.png" dir="ltr"><a href="project/image.png"><img style="width:269.9659118652344px" src="project/image.png"/></a></figure><p id="41dcea6a-e158-80b9-8ce4-fc1636f63af7" class="" dir="auto">شيل دي خليا في ثسم الابتهالات اللي داخل كل مقاما</p><figure id="41dcea6a-e158-8040-bad6-ce5de2042397" class="image" data-notion-image="project/image%201.png" dir="ltr"><a href="project/image%201.png"><img style="width:300.9886474609375px" src="project/image%201.png"/></a></figure><p id="41dcea6a-e158-80ab-a68d-d0f71d0f5061" class="" dir="auto">في القسم دا </p><p id="41dcea6a-e158-8045-8d7a-eb3f4ca19025" class="" dir="auto">
+</p><p id="41dcea6a-e158-80a1-822e-dc71aed33fbe" class="" dir="auto">ماتحطش المقامت الفرعية في الاساسي.. <br/>هي ليها قسم لوحده اسمه فرعي..وكل مقام اساسي هناك تحته المقامات الفرعية <br/>يعني انا اضغط كرد .. يتعرض الفرعي بتاعي <br/>ادخل علي كل مقام .. يجبلي صفحة كاملة زي الصفحة بتاعت كل مقام <br/>فيها كل الخيارات <br/><br/>كمان الشريط اللي فوق دا يتشال .. والهيدر بتاعت مقام الكرد .. عاوز علطول ندخل علي الجزء اللي انا محتاجه اللي هو الشريط اللي تحت .. بتاع عن المقام والحاجات دي وكدا </p><figure id="41dcea6a-e158-80e4-b989-d74ee126d568" class="image" data-notion-image="project/image%202.png" dir="ltr"><a href="project/image%202.png"><img style="width:703.9886474609375px" src="project/image%202.png"/></a></figure><p id="41dcea6a-e158-8062-9d90-c49b9a337374" class="" dir="auto">مش مدي اوبشن اني اسجل ليه <br/>بس اني اسمع صوت السيستم .. <br/>كل الاقسام يكون فيها تسجيل وفيها سماع صوت </p><figure id="41dcea6a-e158-8038-9044-cf89047dd858" class="image" data-notion-image="project/image%203.png" dir="ltr"><a href="project/image%203.png"><img style="width:703.8977661132812px" src="project/image%203.png"/></a></figure><p id="41dcea6a-e158-8037-8ca6-d7eb28bd1c37" class="" dir="auto">
+</p><p id="41dcea6a-e158-803c-8dfc-c1e910e55333" class="" dir="auto">الأقسام والأدوات دا حطه فيه الأوبشنز اللي تحت <br/>اللي ه</p><p id="41dcea6a-e158-8097-bf15-eaeb79639f2c" class="" dir="auto">
+</p><p id="41dcea6a-e158-805b-a892-ce387d6fc873" class="" dir="auto">
+</p><p id="41dcea6a-e158-8057-b447-d8e1094776c5" class="" dir="auto">حك الفصل والحصص والمسابقات وأدوات المسلم زي اللي فوق كدا <br/>أدوات المسلم قلت فيها الادوات اللي مش في اي حته في الموقع <br/>كمان حط في  الفصل والحصص وأدوات المسلم <br/>خليها باسم حياة المسلم .. وحط في الفصل والحصص وحياة المسلم .. الوايت بورد <br/><br/>اللي اقولك حطه في حاجة .. حطه بنفس التقسيمة بتاعت الحاجة الأصلية <br/></p><figure id="41dcea6a-e158-8088-b7e3-c519646b8e4c" class="image" data-notion-image="project/image%204.png" dir="ltr"><a href="project/image%204.png"><img style="width:475.17047119140625px" src="project/image%204.png"/></a></figure><p id="41dcea6a-e158-8084-9051-de82d16f11d9" class="" dir="auto">رتب دي بشكل منظم .. بدل مايعرض كل دا.. خليه معروض بشكل الصفحة تكون صغيره .. لانها لغبطة كدا .. اعرضهم بشكل منظم انت وظبط الدنيا </p><figure id="41dcea6a-e158-8023-872a-e5f77d43da4b" class="image" data-notion-image="project/__2026-11-19_110318.png" dir="ltr"><a href="project/__2026-11-19_110318.png"><img style="width:703.977294921875px" src="project/__2026-11-19_110318.png"/></a></figure><p id="41dcea6a-e158-800f-af7d-c484a43ea5bb" class="" dir="auto">
+</p><p id="41dcea6a-e158-805b-a6d2-f65c71b40185" class="" dir="auto">كمان فيه صفحات بتفتح في مكان تاني خالص<br/>عاوز كل صفحة تفتح جوا صفحتها .. ماتفتحش في صفحة تانية .. لا هي موجودة وانا بعرضها جو الصفحة نفسها كexpand </p><p id="41dcea6a-e158-8023-9b92-e43e512a4e41" class="" dir="auto">
+</p><p id="41dcea6a-e158-80df-bb9c-de5a23e4565c" class="" dir="auto">حط في الوايت بورد انها شبه بتاعت مايكروسوفت واحسن <br/>الصفحة تكون بتتحرك لفوق وتحت مش ثابته مكانها <br/>كمان في الاخر فكرة اني اعمل كل اللي كتبته pdf او صور ب full الجودة بتاعتها <br/>وارفعها علي الموقع في اي قسم حابه .. او ارفعها بطالب معين .. او لصفحة الطلاب عامة <br/>فيه صفحة خاصة اني ارفع محتوي لكل الطلاب .. واحدد طلاب ايه <br/>يعني مثلا طلاب المقامات بس .. طلاب كذا بس .. او كل الطلاب <br/><br/>كمان طالب بعينه <br/>كمان يكون موجود في ادوات الطالب .. حطه برضه في صفحة المعلم .. الطالب يدخل يكتب حاجه وبعدين يرفع لملمعلم او ينزله عنده<br/><br/>كمان في صفحة الطالب عند المعلم وصفحة المعلم عند الطالب <br/>بحيث في ثانية ادخل وافتح الوايت بورد واكتب حاجة وارفعهاله <br/><br/>حطها نفس بتاعت مايكروسوفت بالضبط<br/>واحسن منها .. الاهم انهاماتكونش ليها حدود في حته معينه <br/>في الاخر وانا بنزلها pdf  يجيلي المساحة بس اللي انا عامل فيها.. لو طويلة تتقسم صفحات وكدا<br/>قلتلك ماتكتبش مصادر تحت لا من مايكروسوفت ولا مصدر انه مقامات كذا ولا اكلمة من كدا<br/><br/>ماتكتبش اي حاجة كن دي </p><p id="41dcea6a-e158-8003-9fa9-c5f68c96e7db" class="" dir="auto">
+</p><p id="41dcea6a-e158-806b-9941-e5d56a4eb97c" class="" dir="auto">عري للاطفال - العربية الفصحي وحدات = سميها باسم العربية الفصحي .. شيبل وحدات دي …. حطهم في تكلم عربي <br/>العربية الفصحي الكتاب التفاعلي دا و العربية الفصحي المنهج المتكامل ..دول حاجه واحدة .. خليهم منهج متكامل العربية الفصحي .. وماتخليش اليقونة تظهر لاي حد غري علي ماارفع العربية بين يديك فيها .. لماا بحاول ارفع العربية بين يديك ..بيعمل علامة صفرا انه مش بيقرأ المحتوي وكدا .. ولا بيسمع الصوت ظبط دا <br/><br/>كمان الصوت اللي في الكتاب يتعرض مواكب للموقع والكلمة بالضبط<br/>لان هو مثلا ريكورد كامل للمحادقة كلها او السوال كامل<br/>لا قطعه حسب الجملة او الكلمة المودودة .. وخليه يمشي بنفس ترتيب الكتاب .. انا مثلا المستوي الاول .. دخلت الوحدة الاولي فيه .. يمشي بنفس التريتب .. المحادثة .. بعدها صفحة صفحة زي الكتاب ..بس بشكل تفاعلي .. مش كله يتعرض مرة واحدة .. المعروض للطالب جزء بسيط بحيث يعرف يرطز فيه مش ثفحة كاملة<br/><br/>كمان العربي للاطفال مش فيه الا المستوي الاول بس <br/>حط تحت كل المستويات زي الكتاب بتاع العربية يبن يدي اولادنا .. انا رافعه قبل كدا .. بنفس فكرة العربية بين يديك .. مش كله موجود وانا اختار<br/>لا انا امشي خطوة خطوة شبخ الكتاب بالضبط<br/>وماتكتبش مصادر قلتلك <br/></p><p id="41dcea6a-e158-8004-b0f7-c939d77efe91" class="" dir="auto">كمان شيل كلمة مواقف من العربية المصرية دي <br/>كمان انا رافعلك كتب كتير فيها .. انت حاطط المعلومات من كتاب واحد بس من اللي رفعتهم .. زود .. وبرضه يكون بنفس الاسلوب اللي قلته .. <br/>مثلا المحادثة الاول .. بنفس العرض ..في الاول .. اشوف بس الكلام واقرأ ناا<br/>بعدين اسمع بس .. بعدين تفاعلي ..أنا ارد وكدا <br/><br/>بعدين ناخد ادوات نجقظ الكلام دا واختبارات و العاب <br/>بعدين قاعدة وادواتها و تحفظهالنا واختبارات والعاب<br/><br/>في نهاية كل وحدة يكون فيه امتحان علي الوحدة كاملة <br/>ومايتفتحش كله .. لا يتفتج مستوي مستوي .. وحته حته ونكمل عليها <br/>بس في الاول عادي اعمل اختباار واحدد المستوي .. وافتح كل اللي قبل مستوايا دا .. وابدأ من عند مستوايا <br/><br/>ظبط الشكل دا كله بحيث كله يكون بشكل تفاعلي مش ملغبط وانا اختار زي مانا عاوز وكدا <br/>لا كل حاجه مترتبه وانا بس لالي اقدر افتح اي مستوي لاي طالب من صفحتي عند صفحة الطالب في صفحتي .. اقدر افتحله اي حاجه .. كذلك المعلم بتاعه مش شرط انا <br/>مستويات كتيير ومحادثات كتير<br/>وكل محادثة كبيرة .. زي المصادر بالضبط .. ماتنقصش حاجة من كل المصادر .. انت بس بترتبها باسلو بتفاعلي وبتزود هليخا مش بتنقص من اي محتوي <br/><br/>كل حاجة كريتيف .. كل حاجة تقربيا قربت تخلص .. العربي اللي سسئ كدا <br/>ظبط الدنيا بليز في العربي بالذات <br/>بشكل تفاعلي وكدا كل حاجة .. ونفس الكلام اللي في الكتب وكدا <br/><br/>ماتشيلش الموجود حاليا .. لانه كويس ..ابني عليه بالتعديلات دي <br/><br/><br/><br/></p><figure id="41dcea6a-e158-804c-b449-c9fe7117f309" class="image" data-notion-image="project/image%205.png" dir="ltr"><a href="project/image%205.png"><img style="width:703.9886474609375px" src="project/image%205.png"/></a></figure><p id="41dcea6a-e158-8070-8834-ccf3e41661b7" class="" dir="auto">
+</p><p id="41dcea6a-e158-806b-8623-e5236cd539d2" class="" dir="auto">
+</p><p id="41dcea6a-e158-805f-b805-d515b20cdcc7" class="" dir="auto">لما برجع ورا من اي صفحة يرجعني لمكاني<br/>يعني مثلا نا داخل صفحة العربية للاطفال. .دخلت ورجعت ..يرجع نفس الشكل اللي كان مفتوح قبل ماادخل .. اللي هو العربية مفتوحه والصفحة عليها ..بنفس الشكل </p><p id="41dcea6a-e158-8013-8cdb-cce8e934be9f" class="" dir="auto">كمان كل v تخلصه ..انا اقدر اعدل جواه هو .. اشيل حاجة ورجعها لاصلها واحط حاجة .. مش البتاع كله <br/>وبرضه ممكن اختار الكل ارجعه للنسخه قبلها مثلا </p><p id="41dcea6a-e158-8057-b129-e02df87c0674" class="" dir="auto">
+</p><p id="41dcea6a-e158-805c-9909-e68fbbfc7abc" class="" dir="auto">
+</p><p id="41dcea6a-e158-800e-ba51-e29d3dcc6029" class="" dir="auto">انا رفعتلك الصرف التعليمي والنحو التعليمي والبلاغة <br/>وانت حاطط بس فصول بسيطة من الكتب ..انا عاوز الكتب كاملة ي عم انت <br/>وكذلك البلاغة . . مش فصول بسيطة <br/>وحط الجزء دا بس برضه في علوم اسلامية <br/><br/><br/>كمان لو الكتاب اتعمل كلام علي الموقع وفريكل واخد مساحة وخلاص .. والكتاب خلص .. شيلها من فيركل .. خلاص مادام خلصت </p><p id="41dcea6a-e158-803b-b597-d92b2396e467" class="" dir="auto">
+</p><p id="41dcea6a-e158-80fd-8237-c899ac80ce78" class="" dir="auto">ماترفعش لينكات يوتيوب <br/>هات الصوت والحاجه نفسها حطها في الموقع <br/>هبعتلك كل الاناشيد اللي عندي طلع منها الهمهمات بتاعتها او الموسيقي بتاعتها يعني حطها في قسم انشد معي .. خليني بعدين اعرف اعملها تبويب داخلي ..لكل مقام الاناشيد بتاعته تحته <br/><br/>الصوت دا هتعمل فيه حاجتين .. طلع منه الخليفيه المسويفيه زي موقع mosis كدا .. وكمان الكلمات بتاعته <br/>وخليع يتعرض زي موقع غني معي كدا .. <br/>اللي هو الكلام مكتوب ومتحدد الجزء اللي اقوله .. واكمل بعده وكدا <br/><br/>كمان حط الاداة دي في مساحتي انا بس<br/>اني ارفع النشيد يكتشف منه الموسيفي بتاعته والكلمات بعدين ادوس رفع .. يترفع بنفس الفكرة في المكان دا بتاع انشد معي ..<br/><br/>بص خلي اسلو العرض زي مانت عامل .. اني اختار النشيد <br/>من فوق ماتحطش تبويبات انه مقام كذا وكذا .. انا ممكن اعدل بس اسم النشيد واكتب جنبه كرد او نهاوند او كدا</p><p id="41dcea6a-e158-8027-b88f-e4da42c0f2ab" class="" dir="auto">مثلا مكتوب <br/>أنا العبد الذي كسب الذنوبا <br/>تكون هي باينه اكتر او متحددة كلمة كلمة وانا ماشي عليها <br/>وفي الخلفية الموسيقي بتاعتها وكدا .. <br/>هبعتلك اناشيد كتير اعملها انت كدا <br/>بس اديني ابوشن في سماحتي اني اي نشيد ارفعه يعمل كدا وبعدين ارفعه يتحط زي اخواته</p><p id="41dcea6a-e158-806e-a77c-d3cbf4afd76e" class="" dir="auto">
+</p><p id="41dcea6a-e158-8002-a8be-fe550ca72f9f" class="" dir="auto">زود كمان جمب التقزيم لشهري .. تقويم ميلادي .. جنبه هجري <br/>والساعه دلوقتي بوقت الطالب <br/>اديني برضه اني اختار شكل الساعه ازاي ,وتصميم التقويم ويبانو ازاي جنب بعض وفين بالضبط تصميمات واشكال كتير يكون ديناميك طدا وجميل</p><p id="41dcea6a-e158-80b5-a3c3-fe1fe578fb21" class="" dir="auto">
+</p><p id="41dcea6a-e158-80d7-8d6a-f38edd33b387" class="" dir="auto">نسخة الموبايل والتابلت مش متعدلة اوي <br/><br/>اديني مساحة كدا جوا الموقع ..اني اختار النسخه بتاعت كل حاجة فيهم بتتعرض ازاي <br/>واعدل عليها بنسختها .. بعيدا عن الموقع<br/><br/>يعني التعديل يتغير عليها هي بس ..او لو اخترت يتغير علي نسخه تانيه تمام <br/>يعني في جزء اني اغير علي النسخة دي او تقولي غير علي دي كمان </p><p id="41dcea6a-e158-802d-8d66-c54ed3061f00" class="" dir="auto">
+</p><p id="41dcea6a-e158-8078-829c-eb9ae9e5f58c" class="" dir="auto">شيل القسم دا من العربية .. خليني انا في العدادات احط الاصوات اللي تظهر للكل<br/>فيه صوت طفل وصوت نساء وصوت رجل <br/><br/>لما بضغط علي الاصوات دي ..بيقرأ مرحبا كيف حالك <br/>مش بيخلي المحادثة تحت تتقرأ بالصوت دا </p><figure id="41dcea6a-e158-808a-9f61-e09b4152368d" class="image" data-notion-image="project/image%206.png" dir="ltr"><a href="project/image%206.png"><img style="width:703.9318237304688px" src="project/image%206.png"/></a></figure><p id="41dcea6a-e158-80b5-aa9c-da39c6ba48d8" class="" dir="auto">
+</p><p id="41dcea6a-e158-8022-88f5-e5109912fcc7" class="" dir="auto"><a href="https://itqan.academy/">https://itqan.academy/</a><br/>خش علي الموقع دا وقولي ايه الحاجات الناقصه عندي فيه ..وايه الحلو عندهم مش عندي <br/>ضيف كل شئ <br/>في مساحتي انا وانا هرفع اللي محتاجه في اي وقت </p><p id="41dcea6a-e158-80ee-9d04-c6708e4956b3" class="" dir="auto">
+</p><p id="41dcea6a-e158-80a0-b682-e8241695af7e" class="" dir="auto">لما حد يعنل sign up يدخل علطول علي confirm enail  بعدها وتديله الخيار زي ماقلتلك ..اول مايعمل confirm يدخل علطول بدون مايختاج انه يعمل log in </p><p id="41dcea6a-e158-80e8-8a43-e1e6f2d699e0" class="" dir="auto">
+</p><p id="41dcea6a-e158-806f-9c7c-c92f3b747526" class="" dir="auto">هنا كمان لما يسجل بصوته يفتح ال next مباشر بدون مايضغط عليها <br/>ويقرأ وحده</p><figure id="41dcea6a-e158-80b4-9a83-d869393bb05e" class="image" data-notion-image="project/image%207.png" dir="ltr"><a href="project/image%207.png"><img style="width:475.15911865234375px" src="project/image%207.png"/></a></figure><p id="41dcea6a-e158-80d4-b632-f27cc7dcc4ce" class="" dir="auto">
+</p><p id="41dcea6a-e158-8089-a07a-e99c3de84277" class="" dir="auto">كمان مايتعملش انه completed علي االموقع الا لو هو اجتاز الاختبار 70% الاختبار مش بس اختيارات …فيه كل الاختبارات زي الكتب اللي رفعتها سواء العربية بين يديك او بين يدي اولادنا او كتب العامية المصرية </p><p id="41dcea6a-e158-80b7-ae77-d46e210d08aa" class="" dir="auto">
+</p><p id="41dcea6a-e158-80d7-a91c-c19ba94fa520" class="" dir="auto">قلتلك هنا .. حط الفرانكو مع العربي مش مع الانجليزي</p><figure id="41dcea6a-e158-80b1-82f7-c6a6898aadbe" class="image" data-notion-image="project/image%208.png" dir="ltr"><a href="project/image%208.png"><img style="width:475.17047119140625px" src="project/image%208.png"/></a></figure><p id="41dcea6a-e158-8045-9b70-db5df3ab09db" class="" dir="auto">
+</p><p id="41dcea6a-e158-807a-86a2-c29fbbfc4bb7" class="" dir="auto">حط الاختيارات علي كل اختبار عشوائية مش بالتريبت عشان مايكونش حافظ التريتب ويتوقع الجاي <br/><br/><br/>حط هنا قسم يكتب بخط أيده مش بالكيبورد .. وخلي الكيبورد يكتشف هو كتب ايه بالعربي<br/>اكتشاف الكتابة يكون عربي مش انجليزي<br/>متحطش كتابة بالكيبورد .. الكتابه يكون بالماوس او بالصباع او القلم بايده هو علي الكلام .. <br/>واكتشف الكتابة .. زود المستشعرات عشان انت عارف انه مش native  فكتابته مش هتكون صح .. <br/></p><figure id="41dcea6a-e158-8099-8d38-efafb6a964dc" class="image" data-notion-image="project/image%209.png" dir="ltr"><a href="project/image%209.png"><img style="width:475.15911865234375px" src="project/image%209.png"/></a></figure><p id="41dcea6a-e158-80ff-9b69-dc2cdac9e366" class="" dir="auto">
+</p><p id="41dcea6a-e158-8034-911c-fde92853cbb4" class="" dir="auto">كمان لما يكتب كتابة حقيقية .. وتتكتب في الشريط بتاع الكتابة لافعليه .. خليه يعرف يعدل عليها عادي بعد كدا من الكيبورد الاصلي .. <br/><br/>كمان فيه رفع للمعلم في القسم دا <br/><br/>خلي برضضه في الاختبارات انه يتكلم والسيستم يكتشف كلامه ويقوله .. يعني مثلا اكتب الكلمة بالانجليزي او جملة بالانجليزي .. وخليه يقول يقولها ازاي بالعربي ..وهو يسجل وانت تكتشف الكلام صح ولا لا .. حسب انت حاطط لنفسك الكلمة بالعربي او الجملة وحط لنفسك خيارت كتير للترجمه يعني مش حاجة واحده بس .. جوا السسيتم بتاعك ..بحيث ممكن </p><p id="41dcea6a-e158-8085-ab8b-d03f5ac19e18" class="" dir="auto">الترتيب هنا غلط ..شوف الجملة مش مكتوبة صح .. تتكتب من اليمين للشمال زي العربي .. الحملة الاصلية تتحط  عادي بالانجليزي شمال يمين .. بس العربي .. يتكتب من اليمين للشمال </p><figure id="41dcea6a-e158-80ce-8980-c7fd7ad15e33" class="image" data-notion-image="project/image%2010.png" dir="ltr"><a href="project/image%2010.png"><img style="width:515.9886474609375px" src="project/image%2010.png"/></a></figure><figure id="41dcea6a-e158-8026-aa30-c6045ffe65ba" class="image" data-notion-image="project/image%2011.png" dir="ltr"><a href="project/image%2011.png"><img style="width:511.9886474609375px" src="project/image%2011.png"/></a></figure><p id="41dcea6a-e158-8097-a4a1-c09e030da562" class="" dir="auto">مثلا .. يكتب مثلا قسم .. يكتب فيه زي ماقلنا بخط الايد <br/>وقسم تحت يكتب المعني بالانجليزي قبل ما يضغط صح <br/>الكتابة بالانجليزي عادي اختيار كيبورد او خط ايد <br/>زود المستشعرات هنا </p><figure id="41dcea6a-e158-80c6-80df-f0f06577504f" class="image" data-notion-image="project/image%2012.png" dir="ltr"><a href="project/image%2012.png"><img style="width:524.9886474609375px" src="project/image%2012.png"/></a></figure><p id="41dcea6a-e158-8041-85e6-db214a7938b8" class="" dir="auto">
+</p><p id="41dcea6a-e158-806b-aa5e-cd8666d10f70" class="" dir="auto">كمان فيه لاج في الصوت لما اضغط علي الصوت </p><p id="41dcea6a-e158-807e-8ff4-e81934666fd5" class="" dir="auto">خليه ياخد وقته في النطق في المحادثة لما يقف خالص وقف الريكورد ..مادام لسه بيتكلم ماتوقفش الكلام .<br/><br/>زود المستشعرات برضه للترجمات كتير<br/>يعني مثلا <br/><br/>اذهب امشي .. نفس معني go <br/>اقصد في الاسئلة المفتوحه حط خيارات كتير <br/><br/>كمان بص السوال دا مثلا .. مش منطقي .. انت حاطط اختيارت كلها تنفع .. كمان بص انت كاتب ازاي العربي من الشمال لليمين زي الانجليزي ..لا عاوزك تكتبه بالعربي عادي من اليمين للشمال .. الجملة الاصلية سيبها من الشمال .. العربي مكتوب فيها من اليميين للشمال <br/>حط بس خيار واحد ينفع والباقي مينفعش </p><figure id="41dcea6a-e158-803c-95bd-cc7a8a0019a0" class="image" data-notion-image="project/image%2013.png" dir="ltr"><a href="project/image%2013.png"><img style="width:489.9545593261719px" src="project/image%2013.png"/></a></figure><p id="41dcea6a-e158-806c-9433-f64647214e2a" class="" dir="auto">
+</p><p id="41dcea6a-e158-80db-a79e-e911fec6a9ce" class="" dir="auto">كمان اسئلة انه يسمع الصوت .. يكون في اختيار فوق للسماع في الاختيارات <br/>وفيه اختيار تحت للمعني بالانجليزي .. كل واحده عليها درجو</p><p id="41dcea6a-e158-80c5-8961-f5fb454bee1e" class="" dir="auto">السوال دا مثلا الولد انا سامعه بينطقه صح .. وانت بتقوله غلط <br/>عشان المستشعرات قليلة ومفيش مجال واسع للاجابات ..فيه مجال واسع للاجابات مادام في نطاق الصحيح </p><figure id="41dcea6a-e158-8038-9727-c1a824de1779" class="image" data-notion-image="project/image%2014.png" dir="ltr"><a href="project/image%2014.png"><img style="width:495.977294921875px" src="project/image%2014.png"/></a></figure><p id="41dcea6a-e158-808a-ad00-f559da522999" class="" dir="auto">
+</p><p id="41dcea6a-e158-80bd-9d77-e3e76725843a" class="" dir="auto">المقروض دا سوال .. انه يتكلم ..انت مديله خيار يسمع هنا ليه .. لا يتكلم بس ..مفيش سماع هنا </p><figure id="41dcea6a-e158-8097-ba94-dc81bd445801" class="image" data-notion-image="project/image%2015.png" dir="ltr"><a href="project/image%2015.png"><img style="width:489.9886474609375px" src="project/image%2015.png"/></a></figure><figure id="41dcea6a-e158-80e6-bdfb-e4af2eed3b8f" class="image" data-notion-image="project/image%2016.png" dir="ltr"><a href="project/image%2016.png"><img style="width:518.9886474609375px" src="project/image%2016.png"/></a></figure><p id="41dcea6a-e158-80ef-a764-c1f9664d2bf8" class="" dir="auto">شوف فيه حاجاات هنا مكتوبة عربي ..المفروض دي صفحة انجليزي … لو الطالب فاتح صفحة تانيه غير عربي..حط الكلمة العربي ..وجنبها المعني انجليزي</p><p id="41dcea6a-e158-8037-81cf-e1f1eb5a771a" class="" dir="auto">
+</p><p id="41dcea6a-e158-80ac-b15d-d2ae03ff4355" class="" dir="auto">
+</p><p id="41dcea6a-e158-80f3-85af-f86237082b4b" class="" dir="auto">كمان الاسئلة اللي مفيش فيها خيار .. حط مدي واسع عندك في تقبل الاجابات المختلفه مادام في نطاق الصحيح <br/>الكلمة تحتمل اكتر من معني ..ترتيب الجملة يحتمل اكتر من ترتيب ,,مش شرط الاجابة بس الي عندك<br/></p><p id="41dcea6a-e158-80c6-98aa-f36bfbe32528" class="" dir="auto">كمان فيه مدي واسع للنطق والسماع والكلام دا <br/>الخيارات حط خيارات تكون كلها ماتنفعش اجابة صح .. واحده بس اللي تنفع صح <br/>ألباقي كله علط</p><p id="41dcea6a-e158-8042-9555-d088d56ced26" class="" dir="auto">
+</p><p id="41dcea6a-e158-805a-9f23-fb5a85f60e30" class="" dir="auto">كل التعديلات دي راجع كل افسام العربي قسم قسم وضيفها عليه ..حتي الجديد اللي لسه هيتضاف يتحط بنفس الفكرة دي <br/><br/>وزي ماقلتلك زود اسئلة وحاجات تانيه كتيير جدا <br/>انا هنا مثلا فتحت الاشعار انه طالب دخل ..افتحله المحتوي<br/>المقروض يدخلني علي صفحة الطالب ..و ايميله متحدد مش لسه هفضل ادور فين ايميله <br/>بعديم انا اخترت مثلا ايميل طالب..يتحدد تحت اوتاتيكي<br/><br/>كمان اديني اوبشن اني اختار عدد طلاب فنس الوقت واطبق عليهم نفس الفكرة <br/>كمان قلتلك ضيفلي اني احدد ففلان مثلا قريب..اشيل اي علامة فيها فلوس من الموقع اي سعر ..عشان الحسد </p><figure id="41dcea6a-e158-8058-9973-ffff192717f2" class="image" data-notion-image="project/image%2017.png" dir="ltr"><a href="project/image%2017.png"><img style="width:703.977294921875px" src="project/image%2017.png"/></a></figure><p id="41dcea6a-e158-8042-a7b6-ffba56202131" class="" dir="auto">قلل الخيارات شوية كمان .. مش يكون قسم كامل متحدد انا ممكن اختار القسم كامل او اضغط علي القسم يعممل تمدد وانا اختار من جواه محتوي محدد كمان من جوا المحتوي محدد محتوي محدد اكتر وهكذا<br/>بحيث مش يتمدد ..انا في الاساس مختار الكل ..[عدين امدد براحتي نفس اللي في الاقسام <br/><br/>او اختيار الكل مباشر </p><p id="41dcea6a-e158-80ac-b604-f2f984a36a36" class="" dir="auto">
+</p><p id="41dcea6a-e158-804e-a987-f14c8cc82fc4" class="" dir="auto">حط  الواجهة دي تحت الاقسام مباشرة في الصفحة الرئيسية </p><figure id="41dcea6a-e158-8020-84d5-e91944e45c1e" class="image" data-notion-image="project/image%2018.png" dir="ltr"><a href="project/image%2018.png"><img style="width:703.9659423828125px" src="project/image%2018.png"/></a></figure><figure id="41dcea6a-e158-8054-acd5-dddc2dd88a2a" class="image" data-notion-image="project/image%2019.png" dir="ltr"><a href="project/image%2019.png"><img style="width:703.9659423828125px" src="project/image%2019.png"/></a></figure><p id="41dcea6a-e158-80ea-9bc5-c77068a6763d" class="" dir="auto">
+</p><p id="41dcea6a-e158-80d5-af0a-e7a7f9e863a7" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
