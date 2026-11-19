@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v236";
+const UI_VERSION = "2026-11-17-v237";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31299,6 +31299,19 @@ Between lessons, the platform keeps you going:
   #su236{border:2px solid #f59e0b!important;color:#b45309!important;background:transparent!important;font-weight:800}
   [data-theme=dark] #su236,.dark #su236{color:#fbbf24!important}
   @media(max-width:600px){#app .hdr .au236,#app .hdr .btn.keep219[onclick*=booking]{padding:.3rem .55rem!important;font-size:.74rem!important;min-height:0}}`);
+})();
+
+/* ================= v237: الترجمة التلقائية ماعادتش بتحط رسالة «MYMEMORY WARNING…» مكان الكلام لما الخدمة المجانية تخلص — بترجع للنص الأصلي، والنسخ الغلط اللي اتحفظت على الأجهزة بتتمسح ================= */
+(function () {
+  const BAD = /MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID LANGUAGE PAIR|PLEASE SELECT TWO DISTINCT LANGUAGES|YOU USED ALL AVAILABLE FREE TRANSLATIONS/i;
+  try { const _g = gtx; gtx = async function () { const r = await _g.apply(this, arguments); if (BAD.test(String(r || ""))) throw new Error("translate quota"); return r; }; } catch (e) {}
+  /* تنظيف الكاش على الجهاز */
+  function scrub(store) { try { for (let i = store.length - 1; i >= 0; i--) { const k = store.key(i); const v = store.getItem(k); if (!v || !BAD.test(v)) continue; try { const o = JSON.parse(v); const clean = x => { if (x && typeof x === "object") { for (const kk of Object.keys(x)) { if (typeof x[kk] === "string" && BAD.test(x[kk])) delete x[kk]; else clean(x[kk]); } } }; clean(o); store.setItem(k, JSON.stringify(o)); } catch (e) { store.removeItem(k); } } } catch (e) {} }
+  scrub(localStorage); scrub(sessionStorage);
+  /* لو اتعرضت قبل كده على الصفحة: ترجع للعربي الأصلي لحد ما الترجمة تشتغل */
+  const ORIG = new WeakMap();
+  function fix() { const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => BAD.test(n.nodeValue || "") ? 1 : 2 }); const L = []; let n; while ((n = tw.nextNode())) L.push(n); L.forEach(n => { const p = n.parentElement; const t = p && (p.getAttribute("data-ar") || p.getAttribute("title")); n.nodeValue = t && !BAD.test(t) ? t : ""; if (p && !n.nodeValue && p.closest("button")) { const b = p.closest("button"); if (/للمعلمين|teach/i.test(b.getAttribute("onclick") || "") || b.textContent.includes("👨‍🏫")) b.querySelectorAll("span").forEach(s => { if (!s.textContent.trim()) s.textContent = state.lang === "ar" ? "للمعلمين والأكاديميات" : "For teachers & academies"; }); } }); }
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(fix, 120); }).observe(document.body, { childList: true, subtree: true, characterData: true });
 })();
 
 // بدء التشغيل
