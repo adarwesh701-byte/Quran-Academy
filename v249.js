@@ -127,12 +127,13 @@
   .mq249>.crumb,.mq249>.stitle,.mq249>.ssub,.mq249>.libcrumb,.mq249>.libhead,.mq249>.dmbar{display:none!important}.mq249.hd249>.libhead{display:block!important}
   .mq249{display:flex;flex-direction:column}#mh249{order:-1}
   #mh249{display:flex;align-items:center;gap:.5rem;margin:.2rem 0 .5rem}#mh249 b{font-size:1.15rem;flex:1}
-  #rb249{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem .8rem;margin:.5rem 0}#rb249 .rbo{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}#rb249 audio{height:34px;max-width:260px}#rb249 button.on{background:#dc2626;border-color:#dc2626}
+  #rb249{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.3rem .7rem!important;margin:.4rem 0;font-size:.9rem}#rb249 .rbo{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}#rb249 audio{height:34px;max-width:260px}#rb249 button.on{background:#dc2626;border-color:#dc2626}
   .mq249 .rcgrid59{display:flex!important;flex-direction:column;gap:.35rem}
   .mq249 .rc59{display:grid!important;grid-template-columns:minmax(150px,1.1fr) minmax(220px,2fr) auto;grid-auto-flow:row dense;align-items:center;gap:.25rem .6rem;padding:.45rem .7rem!important;border-radius:14px;min-height:0!important}
   .mq249 .rc59>b{grid-column:1;font-size:.95rem}.mq249 .rc59>audio{grid-column:2;height:34px}.mq249 .rc59 .rc59m{display:none}
   .mq249 .rc59 .sp197{grid-column:3;display:flex;gap:2px}.mq249 .rc59 .sp197 button{font-size:.68rem;padding:.05rem .3rem}
-  .mq249 .rc59 .ao185b,.mq249 .rc59 .im83{grid-column:1/-1;justify-self:start;font-size:.78rem!important;padding:.15rem .6rem!important;margin:0!important;width:auto!important}
+  .mq249 .rc59 .ao185b{grid-column:1}.mq249 .rc59 .im83{grid-column:2}
+  .mq249 .rc59 .ao185b,.mq249 .rc59 .im83{justify-self:start;font-size:.78rem!important;padding:.15rem .6rem!important;margin:0!important;width:auto!important}
   .mq249 .rc59 .rc76a{grid-column:3;justify-self:end}.mq249 .rc59 .rc76a button{padding:.1rem .35rem;font-size:.75rem}
   @media(max-width:700px){.mq249 .rc59{grid-template-columns:1fr auto}.mq249 .rc59>audio{grid-column:1/-1}.mq249 .rc59 .sp197{grid-column:2;grid-row:1}}
   .lf249 summary{display:flex;align-items:center;gap:.4rem}.lf249 .lfa{margin-inline-start:auto;display:inline-flex;gap:.2rem}.lf249 .lfa button,.lf249 .lfa select{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:.05rem .35rem;cursor:pointer;font-size:.8rem}
