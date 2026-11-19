@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-17-v242";
+const UI_VERSION = "2026-11-17-v243";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31574,6 +31574,66 @@ Between lessons, the platform keeps you going:
   const _r = render; render = function () { if (state.route === "voice242") return show(page()); return _r.apply(this, arguments); };
   css(`.rg242{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin:.7rem 0}.rg242>div{border:1px solid var(--line);border-radius:14px;padding:.5rem;text-align:center;display:flex;flex-direction:column}.rg242 b{font-size:1.4rem;color:var(--accent)}.rg242 small,.rg242 span{font-size:.75rem;color:var(--muted)}
   .bar242{display:grid;grid-template-columns:7rem 1fr 3rem;gap:.5rem;align-items:center;margin:.25rem 0}.bar242 i{display:block;height:12px;border-radius:999px;background:var(--accent)}.bar242 b{font-size:.85rem}`);
+})();
+
+/* ================= v243: 🖍️ وايت بورد مستقلة (من Notion) — برّه الفصل خالص، تشتغل وانت فاتح أي تطبيق تاني (شير الشاشة) · قلم وقلم تظليل وممحاة وخط وسهم ومستطيل ودايرة ونص · ألوان وسُمك · تراجع/إعادة · 8 خلفيات (أبيض، مربعات، سطور، سبورة سودا، خضرا، كريمي، نقط، نوتة موسيقية) · 🎼 «ارسم المقامات»: سلالم المقامات جنب بعض بمسافاتها الحقيقية (1، ¾، ½…) وأسماء الدرجات علشان توضّح التحويل من فين لفين · حفظ صورة PNG · ملء الشاشة ================= */
+(function () {
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  function show(body) { const app = document.getElementById("app"); if (!app) return; app.innerHTML = renderHeader() + body + renderFooter() + renderAIWidget(); try { applyOv(app); edBar(); uilApply(); uilBar(); } catch (e) {} }
+  if (!PAGES16.includes("wb243")) PAGES16.push("wb243");
+  const BG = [["white", T("أبيض", "White"), "#ffffff", ""], ["grid", T("مربعات", "Grid"), "#ffffff", "grid"], ["lines", T("سطور", "Lines"), "#fffdf7", "lines"], ["dots", T("نقط", "Dots"), "#ffffff", "dots"], ["staff", T("نوتة موسيقية", "Music staff"), "#ffffff", "staff"], ["cream", T("كريمي", "Cream"), "#fbf6e9", ""], ["green", T("سبورة خضرا", "Green board"), "#1f4d3a", ""], ["black", T("سبورة سودا", "Blackboard"), "#1e1e1e", ""]];
+  const W = { tool: "pen", color: "#dc2626", size: 4, bg: "grid", items: [], redo: [], cur: null, text: null };
+  const COLORS = ["#111827", "#dc2626", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#ffffff", "#fde047"];
+  let cv, ctx, bgc;
+  function drawBg() { const b = BG.find(x => x[0] === W.bg) || BG[0]; const c = bgc.getContext("2d"); c.fillStyle = b[2]; c.fillRect(0, 0, bgc.width, bgc.height); const dark = /green|black/.test(W.bg); c.strokeStyle = dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.09)"; c.fillStyle = c.strokeStyle; c.lineWidth = 1;
+    if (b[3] === "grid") { for (let x = 0; x < bgc.width; x += 32) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, bgc.height); c.stroke(); } for (let y = 0; y < bgc.height; y += 32) { c.beginPath(); c.moveTo(0, y); c.lineTo(bgc.width, y); c.stroke(); } }
+    if (b[3] === "lines") for (let y = 48; y < bgc.height; y += 36) { c.beginPath(); c.moveTo(0, y); c.lineTo(bgc.width, y); c.stroke(); }
+    if (b[3] === "dots") for (let x = 16; x < bgc.width; x += 28) for (let y = 16; y < bgc.height; y += 28) { c.beginPath(); c.arc(x, y, 1.4, 0, 7); c.fill(); }
+    if (b[3] === "staff") for (let s = 60; s < bgc.height - 60; s += 120) for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(20, s + i * 12); c.lineTo(bgc.width - 20, s + i * 12); c.stroke(); } }
+  function drawItem(c, it) { c.save(); c.strokeStyle = it.color; c.fillStyle = it.color; c.lineWidth = it.size; c.lineCap = "round"; c.lineJoin = "round"; if (it.t === "hl") { c.globalAlpha = .35; c.lineWidth = it.size * 5; } if (it.t === "eraser") { c.globalCompositeOperation = "destination-out"; c.lineWidth = it.size * 5; }
+    if (it.t === "pen" || it.t === "hl" || it.t === "eraser") { c.beginPath(); it.p.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.stroke(); }
+    else if (it.t === "line" || it.t === "arrow") { const [a, b] = [it.p[0], it.p[it.p.length - 1]]; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); if (it.t === "arrow") { const an = Math.atan2(b[1] - a[1], b[0] - a[0]), L = 10 + it.size * 3; c.beginPath(); c.moveTo(b[0], b[1]); c.lineTo(b[0] - L * Math.cos(an - .45), b[1] - L * Math.sin(an - .45)); c.lineTo(b[0] - L * Math.cos(an + .45), b[1] - L * Math.sin(an + .45)); c.closePath(); c.fill(); } }
+    else if (it.t === "rect") { const [a, b] = [it.p[0], it.p[it.p.length - 1]]; c.strokeRect(a[0], a[1], b[0] - a[0], b[1] - a[1]); }
+    else if (it.t === "circle") { const [a, b] = [it.p[0], it.p[it.p.length - 1]]; c.beginPath(); c.ellipse((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.abs(b[0] - a[0]) / 2, Math.abs(b[1] - a[1]) / 2, 0, 0, 7); c.stroke(); }
+    else if (it.t === "text") { c.font = `700 ${12 + it.size * 4}px "IBM Plex Sans Arabic", sans-serif`; c.textBaseline = "top"; c.fillText(it.s, it.p[0][0], it.p[0][1]); }
+    else if (it.t === "img") { if (it.el && it.el.complete) c.drawImage(it.el, it.p[0][0], it.p[0][1]); }
+    c.restore(); }
+  function redraw() { if (!ctx) return; ctx.clearRect(0, 0, cv.width, cv.height); W.items.forEach(it => drawItem(ctx, it)); if (W.cur) drawItem(ctx, W.cur); }
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+  function setup() { cv = document.getElementById("wbc243"); bgc = document.getElementById("wbb243"); if (!cv || cv.__ok) return; cv.__ok = 1; const box = cv.parentElement; const w = box.clientWidth, h = Math.max(480, Math.round(innerHeight * .72)); [cv, bgc].forEach(c => { c.width = w * 1.5; c.height = h * 1.5; c.style.height = h + "px"; }); ctx = cv.getContext("2d"); drawBg(); redraw();
+    cv.onpointerdown = e => { cv.setPointerCapture(e.pointerId); const p = pos(e); if (W.tool === "text") { const s = prompt(T("اكتب النص", "Type the text")); if (s) { W.items.push({ t: "text", s, p: [p], color: W.color, size: W.size }); W.redo = []; redraw(); } return; } W.cur = { t: W.tool, p: [p], color: W.color, size: W.size }; };
+    cv.onpointermove = e => { if (!W.cur) return; const p = pos(e); if (/pen|hl|eraser/.test(W.cur.t)) W.cur.p.push(p); else W.cur.p[1] = p; redraw(); };
+    cv.onpointerup = () => { if (W.cur && W.cur.p.length > 1) { W.items.push(W.cur); W.redo = []; } W.cur = null; redraw(); }; }
+
+  /* 🎼 ارسم المقامات */
+  function ladder(ids) { let MQs = []; try { MQs = MQ.concat((setv("mq220", []) || []).filter(m => m && m.sc)); } catch (e) {} const L = ids.map(id => MQs.find(m => m.id === id)).filter(Boolean); if (!L.length) return; const c = document.createElement("canvas"); const colW = 170, H = 620, top = 40, bot = 40; c.width = colW * L.length + 40; c.height = H; const x = c.getContext("2d"); const NN = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si", "Do"];
+    const y = cents => H - bot - (cents + 300) / 1800 * (H - top - bot);
+    L.forEach((m, k) => { const x0 = 30 + k * colW; const tonic = m.tonic || 0; x.fillStyle = "#111827"; x.font = "800 18px 'IBM Plex Sans Arabic',sans-serif"; x.textAlign = "center"; x.fillText(`${m.ar} · ${m.en || ""}`, x0 + 55, 24);
+      for (let i = 0; i < m.sc.length - 1; i++) { const a = tonic + m.sc[i], b = tonic + m.sc[i + 1]; const ya = y(a), yb = y(b); x.fillStyle = i < 3 ? "rgba(253,224,71,.45)" : "rgba(147,197,253,.35)"; x.strokeStyle = "#7c2d12"; x.lineWidth = 2; x.fillRect(x0, yb, 110, ya - yb); x.strokeRect(x0, yb, 110, ya - yb); const step = (m.sc[i + 1] - m.sc[i]) / 200; x.fillStyle = "#991b1b"; x.font = "700 15px sans-serif"; x.fillText(String(+step.toFixed(2)), x0 + 55, (ya + yb) / 2 + 5); }
+      m.sc.forEach((c0, i) => { const ab = tonic + c0; const yy = y(ab); const deg = Math.round(((ab % 1200) + 1200) % 1200 / 1200 * 12); const nm = ["Do", "Do♯", "Re", "Mi♭", "Mi", "Fa", "Fa♯", "Sol", "La♭", "La", "Si♭", "Si"][deg % 12]; const q = Math.abs((((ab % 100) + 100) % 100) - 50) < 30 ? "½♭" : ""; x.fillStyle = "#111827"; x.font = "700 13px sans-serif"; x.textAlign = "left"; x.fillText((q ? nm.replace("♭", "") + q : nm), x0 + 116, yy + 4); x.textAlign = "center"; });
+      x.strokeStyle = "#111827"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(x0 - 8, y(tonic)); x.lineTo(x0 + 118, y(tonic)); x.stroke(); });
+    const img = new Image(); img.onload = () => { W.items.push({ t: "img", el: img, p: [[40, 40]] }); W.redo = []; redraw(); }; img.src = c.toDataURL(); }
+  window.wb243 = { tool(t) { W.tool = t; render(); }, color(c) { W.color = c; render(); }, size(s) { W.size = +s; }, bg(b) { W.bg = b; render(); },
+    undo() { if (W.items.length) W.redo.push(W.items.pop()); redraw(); }, redoIt() { if (W.redo.length) W.items.push(W.redo.pop()); redraw(); }, clear() { if (W.items.length && !confirm(T("تمسح السبورة كلها؟", "Clear the board?"))) return; W.items = []; W.redo = []; redraw(); },
+    save() { const o = document.createElement("canvas"); o.width = cv.width; o.height = cv.height; const c = o.getContext("2d"); c.drawImage(bgc, 0, 0); c.drawImage(cv, 0, 0); const a = document.createElement("a"); a.download = "itqan-board.png"; a.href = o.toDataURL("image/png"); a.click(); },
+    full() { const b = document.getElementById("wbx243"); try { document.fullscreenElement ? document.exitFullscreen() : b.requestFullscreen(); } catch (e) {} },
+    maqam() { const sel = [...document.querySelectorAll(".mq243 input:checked")].map(i => i.value); if (!sel.length) return toast(T("اختار مقام أو أكتر", "Pick one or more maqamat"), true); ladder(sel.slice(0, 5)); } };
+  function page() { const tools = [["pen", "✏️", T("قلم", "Pen")], ["hl", "🖍️", T("تظليل", "Highlighter")], ["eraser", "🧽", T("ممحاة", "Eraser")], ["line", "📏", T("خط", "Line")], ["arrow", "➡️", T("سهم", "Arrow")], ["rect", "▭", T("مستطيل", "Rectangle")], ["circle", "◯", T("دايرة", "Circle")], ["text", "🔤", T("نص", "Text")]];
+    let MQs = []; try { MQs = MQ.concat((setv("mq220", []) || []).filter(m => m && m.sc)); } catch (e) {}
+    setTimeout(setup, 30);
+    return pageWrap("🖍️", T("الوايت بورد", "Whiteboard"), T("سبورة مستقلة — افتحها وشير الشاشة في أي تطبيق، وارسم المقامات والتحويل للطالب", "A standalone board — share your screen in any app and draw maqamat for your student"), `<div id="wbx243" class="wbx243"><div class="tb243">${tools.map(t => `<button class="${W.tool === t[0] ? "on" : ""}" title="${t[2]}" onclick="wb243.tool('${t[0]}')">${t[1]}</button>`).join("")}<span class="sep"></span>${COLORS.map(c => `<button class="cl ${W.color === c ? "on" : ""}" style="background:${c}" onclick="wb243.color('${c}')"></button>`).join("")}<input type="range" min="1" max="12" value="${W.size}" oninput="wb243.size(this.value)" title="${T("السُمك", "Size")}"><span class="sep"></span><button onclick="wb243.undo()" title="${T("تراجع", "Undo")}">↶</button><button onclick="wb243.redoIt()" title="${T("إعادة", "Redo")}">↷</button><button onclick="wb243.clear()" title="${T("امسح الكل", "Clear")}">🗑️</button><button onclick="wb243.save()" title="${T("احفظ صورة", "Save PNG")}">💾</button><button onclick="wb243.full()" title="${T("ملء الشاشة", "Full screen")}">⛶</button></div>
+      <div class="bgs243">${BG.map(b => `<button class="${W.bg === b[0] ? "on" : ""}" style="background:${b[2]};color:${/green|black/.test(b[0]) ? "#fff" : "#111"}" onclick="wb243.bg('${b[0]}')">${b[1]}</button>`).join("")}</div>
+      <div class="cv243"><canvas id="wbb243"></canvas><canvas id="wbc243"></canvas></div></div>
+      <details class="card mq243"><summary class="b">🎼 ${T("ارسم المقامات (سلالم بمسافاتها الحقيقية جنب بعض)", "Draw maqamat (real-interval ladders side by side)")}</summary><p class="xs muted">${T("اختار لحد 5 مقامات — هتترسم على السبورة وتقدر ترسم فوقها أسهم التحويل.", "Pick up to 5 — they're drawn on the board so you can add transition arrows.")}</p><div class="row" style="gap:.3rem;flex-wrap:wrap">${MQs.map(m => `<label class="chip"><input type="checkbox" value="${m.id}"> ${esc(AR() ? m.ar : m.en || m.ar)}</label>`).join("")}</div><button class="btn btn-p" style="margin-top:.5rem" onclick="wb243.maqam()">🎼 ${T("ارسمهم على السبورة", "Draw them on the board")}</button></details>`, 1200); }
+  const _r = render; render = function () { if (state.route === "wb243") { const keep = cv && document.contains(cv); show(page()); return; } return _r.apply(this, arguments); };
+  /* زرار في الفصل والمقامات */
+  function hooks() { const app = document.getElementById("app"); if (!app || app.querySelector("#go243")) return; if (!/classroom|maqamat|tools|myspace/.test(state.route || "")) return; const h = app.querySelector("h1, h2"); if (h) h.insertAdjacentHTML("afterend", `<button id="go243" class="btn btn-o xs" onclick="go16('wb243')">🖍️ ${T("الوايت بورد", "Whiteboard")}</button>`); }
+  const _r2 = render; render = function () { const o = _r2.apply(this, arguments); try { hooks(); } catch (e) {} return o; };
+  css(`.wbx243{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:.5rem}.wbx243:fullscreen{padding:.6rem;overflow:auto}
+  .tb243{display:flex;gap:.25rem;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:3;background:var(--card);padding:.25rem 0}.tb243 button{min-width:2.3rem;height:2.3rem;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer;font-size:1.05rem;color:var(--fg)}.tb243 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.tb243 .cl{min-width:1.6rem;width:1.6rem;height:1.6rem;border-radius:50%}.tb243 .cl.on{outline:3px solid var(--accent);outline-offset:2px}.tb243 .sep{width:1px;height:1.6rem;background:var(--line);margin:0 .2rem}
+  .bgs243{display:flex;gap:.25rem;flex-wrap:wrap;margin:.35rem 0}.bgs243 button{border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;font-size:.75rem;cursor:pointer}.bgs243 button.on{outline:2px solid var(--accent)}
+  .cv243{position:relative;width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line)}.cv243 canvas{position:absolute;inset:0;width:100%}#wbc243{position:relative;touch-action:none;cursor:crosshair}`);
 })();
 
 // بدء التشغيل
