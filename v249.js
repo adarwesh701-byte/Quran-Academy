@@ -94,7 +94,6 @@
     if (k === "mq_branch") { wrap.querySelectorAll(":scope > .mt179c").forEach(x => x.style.display = "none"); return; }
     if (k !== "maqam" || !tabs) return; wrap.classList.add("mq249"); if (state.mqHead249) wrap.classList.add("hd249"); else wrap.classList.remove("hd249");
     if (!wrap.querySelector("#mh249")) { const par = secOf(s.parent_id); tabs.insertAdjacentHTML("beforebegin", `<div id="mh249"><button class="btn btn-o xs" onclick="libGo('${par ? par.id : ""}')">${AR() ? "→" : "←"} ${esc(ttl(par) || T("المقامات", "Maqamat"))}</button><b class="notr">${esc(ttl(s))}</b>${own() ? `<button class="btn btn-o xs" onclick="state.mqHead249=!state.mqHead249;render()" title="${T("أدوات القسم (للمالك)", "Section tools (owner)")}">⚙️</button>` : ""}</div>`); }
-    const mh = wrap.querySelector("#mh249"); if (mh && mh.nextElementSibling !== tabs) tabs.before(mh);
     /* نص الأذان/الابتهال تحت الصوت بزرار «عرض» */
     wrap.querySelectorAll(".adhan59:not([data-f249])").forEach(c => { c.dataset.f249 = 1; c.classList.add("cl249"); const h = c.firstElementChild; if (h) h.insertAdjacentHTML("afterend", `<button class="btn btn-o xs" onclick="this.closest('.adhan59').classList.toggle('cl249');this.textContent=this.closest('.adhan59').classList.contains('cl249')?'📜 ${T("عرض الكلمات", "Show the words")}':'✕ ${T("اخفي", "Hide")}'">📜 ${T("عرض الكلمات", "Show the words")}</button>`); });
     if (!wrap.querySelector("#rb249")) tabs.insertAdjacentHTML("afterend", `<div id="rb249" class="card"><b>🎙️ ${T("سجّل نفسك واسمع", "Record yourself & listen")}</b><button class="btn btn-p xs" data-a="rec">🎙️ ${T("سجّل", "Record")}</button><span class="rbo"></span></div>`);
@@ -126,6 +125,7 @@
 
   css(`#more245{display:none!important}
   .mq249>.crumb,.mq249>.stitle,.mq249>.ssub,.mq249>.libcrumb,.mq249>.libhead,.mq249>.dmbar{display:none!important}.mq249.hd249>.libhead{display:block!important}
+  .mq249{display:flex;flex-direction:column}#mh249{order:-1}
   #mh249{display:flex;align-items:center;gap:.5rem;margin:.2rem 0 .5rem}#mh249 b{font-size:1.15rem;flex:1}
   #rb249{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem .8rem;margin:.5rem 0}#rb249 .rbo{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}#rb249 audio{height:34px;max-width:260px}#rb249 button.on{background:#dc2626;border-color:#dc2626}
   .mq249 .rcgrid59{display:flex!important;flex-direction:column;gap:.35rem}
