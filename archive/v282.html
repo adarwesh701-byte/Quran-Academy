@@ -3236,7 +3236,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-20-v279";
+const UI_VERSION = "2026-11-20-v282";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -31950,10 +31950,10 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
   /* ---------- مقارنة متسامحة ---------- */
   const lev = (a, b) => { const m = a.length, n = b.length; if (!m || !n) return Math.max(m, n); let p = Array.from({ length: n + 1 }, (_, j) => j); for (let i = 1; i <= m; i++) { const c = [i]; for (let j = 1; j <= n; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; } return p[n]; };
   const sim = (a, b) => { if (!a || !b) return 0; return 1 - lev(a, b) / Math.max(a.length, b.length); };
-  const SYN = [["go", "walk", "leave", "head"], ["big", "large", "huge"], ["small", "little", "tiny"], ["home", "house"], ["car", "automobile"], ["bus", "coach"], ["mom", "mother", "mum"], ["dad", "father"], ["hi", "hello"], ["thanks", "thank you"], ["teacher", "instructor"], ["doctor", "physician"], ["kid", "child", "boy"], ["girl", "daughter"], ["shop", "store"], ["eat", "have"], ["happy", "glad"], ["beautiful", "pretty", "nice"]];
+  const SYN = [["go", "walk", "leave", "head"], ["big", "large", "huge"], ["small", "little", "tiny"], ["home", "house"], ["car", "automobile"], ["bus", "coach"], ["mom", "mother", "mum"], ["dad", "father"], ["hi", "hello"], ["thanks", "thank you"], ["teacher", "instructor"], ["doctor", "physician"], ["kid", "child", "boy"], ["girl", "daughter"], ["shop", "store"], ["eat", "have"], ["happy", "glad"], ["beautiful", "pretty", "nice"], ["plane", "airplane", "aeroplane", "aircraft", "jet"], ["train", "railway"], ["bike", "bicycle", "cycle"], ["phone", "telephone", "mobile", "cellphone"], ["sick", "ill", "unwell"], ["tired", "exhausted"], ["quick", "fast", "rapid"], ["start", "begin"], ["end", "finish"], ["shut", "close"], ["buy", "purchase"], ["talk", "speak", "say"], ["look", "see", "watch"], ["hear", "listen"], ["street", "road"], ["mosque", "masjid"], ["prayer", "salah", "salat"], ["fasting", "sawm"], ["book", "kitab"], ["school", "madrasa"], ["friend", "companion", "pal"], ["food", "meal"], ["drink", "beverage"], ["job", "work"], ["near", "close"], ["far", "distant"], ["tall", "long"], ["sea", "ocean"], ["city", "town"], ["village", "town"], ["garden", "park"], ["clothes", "clothing"], ["kitchen", "cooking room"], ["bathroom", "toilet", "restroom"], ["picture", "photo", "image"], ["pen", "pencil"], ["bag", "backpack", "schoolbag"], ["sweet", "dessert", "candy"], ["money", "cash"], ["holiday", "vacation", "break"], ["weekend", "week end"], ["exam", "test"], ["lesson", "class"], ["boy", "son", "child"]];
   const enNorm = s => String(s || "").toLowerCase().replace(/\(.*?\)/g, " ").replace(/[^a-z\s']/g, " ").replace(/\b(the|a|an|to|is|are|it's|its)\b/g, " ").replace(/\s+/g, " ").trim();
   function enOk(said, ans) { const s = enNorm(said); if (!s) return false; const alts = String(ans || "").split(/\/|,|;|—|-| or /i).map(enNorm).filter(Boolean); alts.push(enNorm(ans));
-    return alts.some(a => { if (s === a || sim(s, a) >= .8) return true; const sw = s.split(" "), aw = a.split(" "); if (aw.every(w => sw.some(x => x === w || sim(x, w) >= .8 || SYN.some(g => g.includes(x) && g.includes(w))))) return true; return SYN.some(g => g.includes(s) && g.includes(a)); }); }
+    const sj = s.replace(/\s/g, ""); return alts.some(a => { const aj = a.replace(/\s/g, ""); if (s === a || sj === aj || sim(s, a) >= .8 || sim(sj, aj) >= .8 || (aj.length > 3 && sj.length > 3 && (sj.includes(aj) || aj.includes(sj)))) return true; if (SYN.some(g => g.some(x => x.replace(/\s/g, "") === sj) && g.some(x => x.replace(/\s/g, "") === aj))) return true; const sw = s.split(" "), aw = a.split(" "); if (aw.every(w => sw.some(x => x === w || sim(x, w) >= .8 || SYN.some(g => g.includes(x) && g.includes(w))))) return true; return SYN.some(g => g.includes(s) && g.includes(a)); }); }
   function arScore(said, target) { const t = normAr(target), s = normAr(said); if (!t || !s) return 0; const whole = simRatio(s, t); const tw = t.split(" "), sw = s.split(" "); const cov = tw.filter(w => sw.some(x => x === w || simRatio(x, w) >= .6)).length / tw.length; return Math.max(whole, cov * .97); }
   window.arScore250 = arScore;
 
@@ -32379,6 +32379,9 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
     ["v256", T("بيانات الاشتراك مع مدرس", "Teacher-plan details"), [["v256.pref", T("طالب/ولي أمر + معلم أو معلمة", "Student/parent + male or female teacher")]]],
     ["v258", T("عربي الأطفال — المستويات 1 لـ9", "Kids Arabic — levels 1–9"), [["v258.kids", T("المستويات والاختبار التحديدي وفتح المستوى للطالب", "Levels, placement test, unlock per student")]]],
     ["v271", T("الخطوط زي الوورد + الشريط مابيصغرش", "Word-like fonts + bar never shrinks"), [["v271.font", T("الخطوط لكل جزء (النوع والحجم والسُمك) + الخط أتقل", "Fonts per part + heavier default")]]],
+    ["v282", T("الرئيسية: الترحيب والأقسام أول الصفحة + إخفاء عن الطلاب فقط", "Home: welcome & sections first + hide from students only"), [["v282.top", T("أهلًا بك ولوحة التحكم ثم الأقسام في أول الصفحة، وشيل «ماذا تريد أن تتعلم» و«كمّل»", "Welcome & sections at the top")]]],
+    ["v281", T("الرجوع لنفس المكان + أسئلة المستوى بالإنجليزي والشرح + وقف بدري", "Back to same place + English level questions & explanations + early stop"), [["v281.stop", T("اختبار المستوى يقف لو الغلط عدّى النص", "Level test stops when over half are wrong")]]],
+    ["v280", T("«العربية بين يديك» الكتاب بالصوت الأصلي", "Al-Arabiyyah Bayna Yadayk book with original audio"), [["v280.book", T("الكتاب شريحة شريحة بالتسجيل الأصلي وزر الإجابات (المستوى الثاني)", "Slide by slide, original audio, answers button (level 2)")]]],
     ["v279", T("صوت الجهاز للمالك فقط + زر المايك بجانب أي رفع صوت", "Device audio owner-only + mic button next to every audio upload"), [["v279.sys", T("الطالب يسجّل بالمايك فقط، وصوت الجهاز للمالك (والمعلمين لو سمحت)", "Students: mic only")], ["v279.mic", T("زر «سجّل بالمايك» بجانب أي خانة رفع صوت", "Record-with-mic next to audio uploads")]]],
     ["v278", T("المقامات: أسماء النغمات الحقيقية ولوحة الصوت بتحدد الدرجة والمقام + فصحى أكتر", "Maqam: real note names, degree & maqam detection + more fusha"), [["v278.names", T("أسماء النغمات الحقيقية تحت درجات السلم في مارس المقام", "Real note names under the ladder")], ["v278.tuner", T("لوحة الصوت: أوكتاف تحت وأوكتافك و2 فوق بالأسماء، وعلى الدرجة ولا بين الدرجات، وأقرب مقام", "Tuner: 4 octaves with names, on/between degrees, closest maqam")], ["v278.nosing", T("كلمة غناء بقت إنشاد في المقامات", "Singing → chanting in maqam pages")]]],
     ["v277", T("الرئيسية بـ8 أقسام زي القايمة القديمة ومن غير تكرار", "Home: 8 sections like the old list, no duplicates"), [["v277.home", T("8 أقسام (القرآن والتجويد، القراءات، المقامات، العربية، العلوم الإسلامية، الفصل، المسابقات، حياة المسلم) وجواها مجموعات وفولدرات، وكل محتوى المنصة في مكان واحد، والقايمة القديمة اتشالت", "8 sections with groups & folders; everything in one place; old list removed")]]],
@@ -34023,7 +34026,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
     const cards = list.map((n, i) => { const tools = n.tools.filter(t => ed || !hid(t.key)); const shut = open[n.k] !== 1;
       return `<div class="cd275 ${hid(n.k) ? "hd275" : ""}" style="--c:${E(n.c || D.c || "#0f766e")}"><div class="ch275" onclick="tr276.fold('${n.k}')"><span class="ci275">${E(n.ic)}</span><b>${E(nm(n.t))}</b><small>${tools.length}</small><i>${shut ? "◂" : "▾"}</i></div>
         ${ed ? `<div class="ce275" onclick="event.stopPropagation()"><select onchange="tr276.mvNode('${n.k}',this.value)">${c.doors.map(d => `<option value="${d.id}" ${d.id === n.door ? "selected" : ""}>${T("في: ", "In: ")}${E(nm(d))}</option>`).join("")}</select><button onclick="tr276.up('${D.id}','${n.k}',-1)">↑</button><button onclick="tr276.up('${D.id}','${n.k}',1)">↓</button><button onclick="tr276.ren('${n.k}')">✏️</button><button onclick="tr276.hide('${n.k}')">${hid(n.k) ? "👁️" : "🙈"}</button>${n.custom ? `<button onclick="tr276.delDom('${n.k}')">🗑️</button>` : ""}</div>` : ""}
-        ${shut ? "" : `<div class="cl275">${folders(n).filter(f => ed || f.tools.some(t => !hid(t.key))).map(f => { const fk = n.k + "/" + f.id; const fo = (LS("of276") || {})[fk] === 1; const ft = f.tools.filter(t => ed || !hid(t.key));
+        ${shut ? "" : `<div class="cl275">${folders(n).filter(f => ed || f.tools.some(t => !hid(t.key))).map(f => { const fk = n.k + "/" + f.id; const fo = (LS("of276") || {})[fk] === 1; const ft = f.tools.filter(t => sees(t.key));
           return `<div class="fd276"><div class="fh276" onclick="tr276.ffold(${J(fk)})"><span>${E(f.ic)}</span><b>${E(nm(f))}</b><small>${ft.length}</small><i>${fo ? "▾" : "◂"}</i>${ed ? `<span class="te275" onclick="event.stopPropagation()"><button onclick="tr276.fup(${J(n.k)},${J(f.id)},-1)">↑</button><button onclick="tr276.fup(${J(n.k)},${J(f.id)},1)">↓</button>${f.id !== "rest" ? `<button onclick="tr276.fren(${J(n.k)},${J(f.id)})">✏️</button><button onclick="tr276.fdel(${J(n.k)},${J(f.id)})">🗑️</button>` : ""}</span>` : ""}</div>
           ${fo ? `<div class="fl276">${ft.map(t => `<div class="ti275 ${hid(t.key) ? "hd275" : ""}"><button class="tg275" onclick="${E(t.go)}"><span>${E(t.ic || "•")}</span><b>${E(t.t)}</b></button>${ed ? `<span class="te275"><select onchange="tr276.mvF(${J(t.key)},this.value)"><option value="">📂 ${T("انقلها لفولدر…", "Move to folder…")}</option>${folders(n).filter(x => x.id !== "rest").map(x => `<option value="${E(n.k + "@" + x.id)}">${E(x.ic)} ${E(nm(x))}</option>`).join("")}</select><select onchange="tr276.mvTool(${J(t.key)},this.value)"><option value="">↪️ ${T("انقلها لمجموعة تانية…", "Move to another group…")}</option>${ns.filter(m => m.k !== n.k).map(m => `<option value="${m.k}">${E(nm(m.t))}</option>`).join("")}</select><button onclick="tr276.del(${J(t.key)})">${hid(t.key) ? "👁️" : "🗑️"}</button></span>` : ""}</div>`).join("") || `<div class="xs muted" style="padding:.3rem">${T("فاضي", "Empty")}</div>`}</div>` : ""}</div>`; }).join("")}${ed ? `<button class="add275 nf276" onclick="tr276.newF(${J(n.k)})">＋ 📂 ${T("فولدر جديد", "New folder")}</button>` : ""}</div>`}</div>`; }).join("");
     const head = `<div class="hh275"><div><h2>${E(D.ic || "")} ${E(nm(D))}</h2><p class="muted">${E(AR() ? (D.sar || "") : (D.sen || D.sar || ""))}</p></div>${own() ? `<button class="btn ${ed ? "btn-p" : "btn-o"} btn-sm" onclick="state.ed275=!state.ed275;render()">${ed ? "✅ " + T("خلصت", "Done") : "✏️ " + T("رتّب المحتوى", "Arrange content")}</button>` : ""}</div>`;
@@ -34109,31 +34112,32 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   const G = (d, ic, ar, en, f) => ({ d, ic, ar, en, f });
   const F = (ic, ar, en, re) => ({ ic, ar, en, re });
   const TREE = [
-    G("quran", "🧠", "حفظ القرآن", "Memorization", [F("📅", "خطة الحفظ والورد", "Plan & daily wird", /hzTab='today'|hzTab='session'|hifzt|wird233|khatma233|#\/hifz|خطط حفظ|الورد اليومي|خطة ختمة/), F("🔁", "المراجعة والتسميع", "Review & recitation", /srs244|kamil233|fc223|state\.ts\.mode=null|#\/tasmee|رتّب الآية|سمّع من غير/), F("🗺️", "الخريطة والتقدّم", "Map & progress", /hzTab='map'|growth|pts244|streak233|badges172/), F("👪", "ختمة العيلة", "Family khatma", /go16\('khatma'\)|#\/khatma$/)]),
-    G("quran", "🕌", "التجويد", "Tajweed", [F("📘", "الأحكام والدروس", "Rules & lessons", /tjb|nooraniya|vow172|رحلة|journey|d\/tajweed|matn|تحفة/), F("👄", "المخارج والصفات والحروف", "Articulation & letters", /makharij|tf228|التفخيم/), F("🎤", "التطبيق والتصحيح", "Practice & correction", /mode:'tj'|mir226|vt226|المرآة|صوتي على خط/), F("🎮", "ألعاب وقصص", "Games & stories", /ألعاب|games172|قصة مصوّرة|stories/)]),
-    G("quran", "📖", "المصاحف والاستماع", "Mushafs & listening", [F("🖍️", "المصاحف", "Mushafs", /^(?!.*(الموسوعة|بيان الإسلام|سمّع|تسميع)).*(hzMushaf|kidsmushaf|tajcolor|مصحف)/), F("🎧", "الاستماع", "Listening", /surah_gallery|listen/)]),
+    G("quran", "🧠", "حفظ القرآن", "Memorization", [F("📅", "خطة الحفظ والورد", "Plan & daily wird", /hzTab='today'|hzTab='session'|hifzt|wird233|khatma233|#\/hifz|خطط حفظ|الورد اليومي|خطة ختمة|Smart memori|Daily wird|Khatma plan/), F("🔁", "المراجعة والتسميع", "Review & recitation", /srs244|kamil233|fc223|state\.ts\.mode=null|#\/tasmee|رتّب الآية|سمّع من غير|Recite without|Order the ayah/), F("🗺️", "الخريطة والتقدّم", "Map & progress", /hzTab='map'|growth|pts244|streak233|badges172/), F("👪", "ختمة العيلة", "Family khatma", /go16\('khatma'\)|#\/khatma$/)]),
+    G("quran", "🕌", "التجويد", "Tajweed", [F("📘", "الأحكام والدروس", "Rules & lessons", /tjb|nooraniya|vow172|رحلة|journey|Journey|d\/tajweed|matn|تحفة/), F("👄", "المخارج والصفات والحروف", "Articulation & letters", /makharij|tf228|التفخيم/), F("🎤", "التطبيق والتصحيح", "Practice & correction", /mode:'tj'|mir226|vt226|المرآة|صوتي على خط/), F("🎮", "ألعاب وقصص", "Games & stories", /ألعاب|games172|قصة مصوّرة|stories|[Ss]tor(y|ies)|[Gg]ames/)]),
+    G("quran", "📖", "المصاحف والاستماع", "Mushafs & listening", [F("🖍️", "المصاحف", "Mushafs", /^(?!.*(الموسوعة|بيان الإسلام|سمّع|تسميع)).*(hzMushaf|kidsmushaf|tajcolor|مصحف|[Mm]ushaf)/), F("🎧", "الاستماع", "Listening", /surah_gallery|listen/)]),
     G("qiraat", "📜", "القراءات العشر", "The Ten Qira'at", [F("👥", "القرّاء والرواة", "Readers & narrators", /qiraat/)]),
-    G("maqamat", "🎼", "المقامات", "The maqamat", [F("🎵", "الأساسية والفرعية", "Main & branches", /الأساسية|الفرعية|d\/maqamat|t260\.open\('maqam'\)/), F("🌙", "أنشد معي والأذان", "Sing along & adhan", /أنشد|adhans|nasheed/)]),
+    G("maqamat", "🎼", "المقامات", "The maqamat", [F("🎵", "الأساسية والفرعية", "Main & branches", /الأساسية|الفرعية|d\/maqamat|t260\.open\('maqam'\)|[Mm]ain maqam|[Bb]ranch|[Ss]ub-?maqam/), F("🌙", "أنشد معي والأذان", "Sing along & adhan", /أنشد|adhans|nasheed|[Ss]ing along|[Cc]hant/)]),
     G("maqamat", "🎤", "صوتك", "Your voice", [F("🎚️", "مساحتك الصوتية والمُوالف", "Voice space & tuner", /voice242|tuner/), F("🎯", "خمّن وتحدّى", "Guess & challenge", /maqam-game|maqamgame|mqchallenge/)]),
     G("maqamat", "📐", "النظري", "Theory", [F("🪜", "السلم والتحويل", "Scale & modulation", /go16\('maqamat'\)|tahwil/), F("📚", "موسوعة المقامات المتشابهة", "Similar maqamat encyclopedia", /mqc/)]),
     G("arabic", "🔤", "الحروف والقراءة من الصفر", "Letters & reading from zero", [F("🔤", "القراءة من الصفر", "Reading from zero", /reading/), F("🧒", "عربي للأطفال", "Kids Arabic", /kidsar/)]),
-    G("arabic", "🗣️", "اتكلم عربي", "Speak Arabic", [F("🇪🇬", "العامية المصرية", "Egyptian", /egyptian|lang','eg'/), F("🌍", "اللهجات", "Dialects", /lang','(fu|gu|pa)'|#\/lang|t260\.open\('arabic'\)/)]),
-    G("arabic", "📘", "الفصحى والنحو والصرف", "Fusha & grammar", [F("📗", "الفصحى", "Fusha", /fusha|abyb|arabiya/), F("📐", "النحو والصرف والبلاغة", "Grammar & rhetoric", /nahw/)]),
+    G("arabic", "🗣️", "اتكلم عربي", "Speak Arabic", [F("📗", "الفصحى", "Fusha", /fusha|abyb|arabiya/), F("🇪🇬", "العامية المصرية", "Egyptian", /egyptian|lang','eg'/)]),
+    G("arabic", "📐", "النحو والصرف والبلاغة", "Nahw, Sarf & Balagha (grammar, morphology, rhetoric)", [F("📐", "النحو والصرف والبلاغة", "Nahw, Sarf & Balagha", /nahw/)]),
     G("sciences", "🎓", "المنهج والكتب", "Curriculum & books", [F("🎓", "منهج العلوم الشرعية", "Islamic sciences curriculum", /go16\('ilm'\)|#\/ilm|t260\.open\('ilm'\)/), F("📚", "الكتب المشروحة والمصوّرة", "Explained & scanned books", /bk'|fqs|kutub|books192|pdf|الموسوعة|بيان الإسلام|المكتبة المصوّرة|الكتب/)]),
     G("sciences", "📖", "مكتبة العلوم", "Sciences library", [F("📖", "التفسير وعلوم القرآن", "Tafsir & Quranic sciences", /تفسير|علوم القرآن|Tafsir/i), F("📜", "الحديث وعلومه", "Hadith & its sciences", /الحديث|arbaeen|Hadith/i), F("⚖️", "الفقه", "Fiqh", /الفقه|Fiqh/i), F("🌴", "السيرة وقصص الأنبياء", "Seerah & prophets", /السيرة|الأنبياء|prophets|Sira|Prophet/i), F("⭐", "الأعلام والآداب", "Great figures & manners", /alam|أعلام|الآداب|Virtues/i), F("🕋", "العقيدة وأسماء الله", "Aqeedah & names of Allah", /asma|عقيدة|Aqeedah/i)]),
     G("class", "🎥", "الحصص", "Lessons", [F("🎥", "الفصل والحجز", "Classroom & booking", /classroom|booking/), F("👥", "الحصة الجماعية", "Group lesson", /grp238/)]),
-    G("class", "🧰", "أدوات الفصل", "Class tools", [F("🖍️", "الوايت بورد", "Whiteboard", /wb24|السبورة/)]),
+    G("class", "🧰", "أدوات الفصل", "Class tools", [F("🖍️", "الوايت بورد", "Whiteboard", /wb24|wb251|السبورة|[Ww]hiteboard/)]),
     G("class", "🎯", "المستوى والأسعار", "Level & pricing", [F("🎯", "حدد مستواك", "Find your level", /level|placement|اعرف مستواك/), F("💳", "الأسعار والكفالة", "Pricing & sponsorship", /pricing|sponsor/)]),
     G("comp", "🏆", "المسابقات", "Competitions", [F("🏆", "المسابقات", "Competitions", /competitions/), F("🌟", "محتوى طلاب الأكاديمية", "Student showcase", /sc255|showcase/)]),
     G("life", "🕌", "الصلاة والأذكار", "Prayer & adhkar", [F("🕰️", "مواقيت الصلاة والقبلة", "Prayer times & qibla", /prayer|qibla/), F("📿", "الأذكار", "Adhkar", /adhkar/)]),
     G("life", "🧰", "أدوات يومية", "Daily tools", [F("📅", "الساعة والتقويم", "Clock & calendar", /clk251|cal224|hijri/), F("🪙", "الزكاة والحساب", "Zakat & calculator", /zakat|calc274/), F("🖼️", "كارت آية", "Ayah card", /ayahcard/)]),
     G("life", "🕌", "حياة المسلم كاملة", "All Muslim life", [F("🕌", "كل أدوات المسلم", "All Muslim tools", /muslim241|life249|t260\.open\('muslim'\)|t260\.open\('life'\)/)])
   ];
+  const DEFGONE = {}; ["go16('adhans')", "t260.open('maqam')", "go16('tuner')", "go16('tahwil')"].forEach(k => DEFGONE[k] = 1);
   const REST = ["class", "📂", "أدوات تانية", "Other tools"];
 
   /* ---------- كل أدوات المنصة (من غير تكرار) ---------- */
   const norm = s => String(s || "").replace(/[ً-ْـ]/g, "").replace(/[()\[\]«»—–\-،,.:؛!؟?]/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
-  function allTools() { const out = [], seen = new Set(), seenT = new Set(); const push = (ic, t, go) => { if (!t || !go) return; const g = String(go).replace(/^location\.hash='#\/(\w+)'$/, "go16('$1')"); const tk = norm(t); const gk = /navigate\('library'\)|tr277\.lib/.test(g) ? "lib|" + tk : g; if (seen.has(gk) || seenT.has(tk)) return; seen.add(gk); seenT.add(tk); out.push({ ic: ic || "•", t, go: g, key: gk, m: push.m || "" }); };
+  function allTools() { const out = [], seen = new Set(), seenT = new Set(); const push = (ic, t, go) => { if (!t || !go) return; if (/go16\('lang','(fu|gu|pa)'\)|go16\('abyb'\)|go16\('arabiya'\)|t260\.open\('(arabic|arabiya)'\)/.test(go)) return; const g = String(go).replace(/^location\.hash='#\/(\w+)'$/, "go16('$1')"); const tk = norm(t); const gk = /navigate\('library'\)|tr277\.lib/.test(g) ? "lib|" + tk : g; if (seen.has(gk) || seenT.has(tk)) return; seen.add(gk); seenT.add(tk); out.push({ ic: ic || "•", t, go: g, key: gk, m: push.m || "" }); };
     const secs = (state.data && state.data.sections) || [];
     const libFor = t => { try { const s = secs.find(x => norm(typeof x.title === "object" ? (x.title.ar || "") : x.title) === norm(t) || (typeof x.title === "object" && norm(x.title.en) === norm(t))); return s ? `libGo('${s.id}')` : null; } catch (e) { return null; } };
     try { DOMAINS().forEach(d => (d.tools || []).forEach(x => push(x[0], x[1], /navigate\('library'\)/.test(x[2]) ? (libFor(x[1]) || `tr277.lib(${JSON.stringify(x[1]).replace(/"/g, "'")})`) : x[2]))); } catch (e) {}
@@ -34165,18 +34169,18 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   const sortBy = (arr, o) => o ? arr.slice().sort((a, b) => (o.indexOf(a.id) + 1 || 999) - (o.indexOf(b.id) + 1 || 999)) : arr;
 
   /* ---------- العرض ---------- */
-  function html() { const c = cfg(); const M = model(); const ed = own() && state.ed277; const hid = k => !!c.hide[k];
-    const doors = M.doors.filter(d => ed || !hid("D:" + d.id)); let cur = state.hw277 || LS("hw277") || (doors[0] || {}).id; if (!doors.some(d => d.id === cur)) cur = (doors[0] || {}).id; const D = doors.find(d => d.id === cur) || {};
+  function html() { const c = cfg(); const M = model(); const ed = own() && state.ed277; const O = own(); const GONE = Object.assign({}, DEFGONE, c.gone || {}); Object.keys(c.ungone || {}).forEach(k => delete GONE[k]); const gone = k => !!GONE[k]; const hid = k => !!c.hide[k] || gone(k); const sees = k => ed || (gone(k) ? false : (!c.hide[k] || O));
+    const doors = M.doors.filter(d => sees("D:" + d.id)); let cur = state.hw277 || LS("hw277") || (doors[0] || {}).id; if (!doors.some(d => d.id === cur)) cur = (doors[0] || {}).id; const D = doors.find(d => d.id === cur) || {};
     const OP = LS("op277") || {}; const isOpen = k => OP[k] === 1;
     const tabs = `<div class="tb275">${doors.map(d => `<button class="${d.id === cur ? "on" : ""} ${hid("D:" + d.id) ? "hd275" : ""}" style="--c:${E(d.c || "#0f766e")}" onclick="tr277.tab('${d.id}')">${E(d.ic)} ${E(nm(d))}${ed ? `<span class="e275" onclick="event.stopPropagation();tr277.door('${d.id}')">⚙️</span>` : ""}</button>`).join("")}${ed ? `<button class="add275" onclick="tr277.newDoor()">＋ ${T("قسم جديد", "New section")}</button>` : ""}</div>`;
     const gs = sortBy(M.groups.filter(g => g.d === D.id), c.gord[D.id]);
     const allF = M.folders;
-    const cards = gs.map(g => { const fs = sortBy(allF.filter(f => f.g === g.id), c.ford[g.id]).filter(f => ed || f.tools.some(t => !hid(t.key))); const n = fs.reduce((a, f) => a + f.tools.filter(t => ed || !hid(t.key)).length, 0); if (!ed && (!n || hid("G:" + g.id))) return ""; const op = ed || isOpen(g.id);
+    const cards = gs.map(g => { const fs = sortBy(allF.filter(f => f.g === g.id), c.ford[g.id]).filter(f => ed || f.tools.some(t => sees(t.key))); const n = fs.reduce((a, f) => a + f.tools.filter(t => sees(t.key)).length, 0); if (!ed && (!n || !sees("G:" + g.id))) return ""; const op = ed || isOpen(g.id);
       return `<div class="cd275 ${hid("G:" + g.id) ? "hd275" : ""}" style="--c:${E(D.c || "#0f766e")}"><div class="ch275" onclick="tr277.fold('${g.id}')"><span class="ci275">${E(g.ic)}</span><b>${E(nm(g))}</b><small>${n}</small><i>${op ? "▾" : "◂"}</i></div>
         ${ed ? `<div class="ce275" onclick="event.stopPropagation()"><select onchange="tr277.mvG('${g.id}',this.value)">${M.doors.map(d => `<option value="${d.id}" ${d.id === g.d ? "selected" : ""}>${T("في: ", "In: ")}${E(nm(d))}</option>`).join("")}</select><button onclick="tr277.ord('gord','${D.id}','${g.id}',-1)">↑</button><button onclick="tr277.ord('gord','${D.id}','${g.id}',1)">↓</button><button onclick="tr277.renG('${g.id}')">✏️</button><button onclick="tr277.hide('G:${g.id}')">${hid("G:" + g.id) ? "👁️" : "🙈"}</button><button onclick="tr277.newF('${g.id}')">＋📂</button></div>` : ""}
-        ${op ? `<div class="cl275">${fs.map(f => { const ft = f.tools.filter(t => ed || !hid(t.key)); const fo = isOpen(f.id);
+        ${op ? `<div class="cl275">${fs.map(f => { const ft = f.tools.filter(t => sees(t.key)); const fo = isOpen(f.id);
           return `<div class="fd276"><div class="fh276" onclick="tr277.fold('${f.id}')"><span>${E(f.ic)}</span><b>${E(nm(f))}</b><small>${ft.length}</small><i>${fo ? "▾" : "◂"}</i>${ed ? `<span class="te275" onclick="event.stopPropagation()"><button onclick="tr277.ord('ford','${g.id}','${f.id}',-1)">↑</button><button onclick="tr277.ord('ford','${g.id}','${f.id}',1)">↓</button><button onclick="tr277.renF('${f.id}')">✏️</button><select onchange="tr277.mvF('${f.id}',this.value)"><option value="">↪️ ${T("انقل الفولدر…", "Move folder…")}</option>${M.groups.filter(x => x.id !== g.id).map(x => `<option value="${x.id}">${E(nm(x))}</option>`).join("")}</select><button onclick="tr277.delF('${f.id}')">🗑️</button></span>` : ""}</div>
-            ${fo ? `<div class="fl276">${ft.map(t => `<div class="ti275 ${hid(t.key) ? "hd275" : ""}"><button class="tg275" onclick="${E(t.go)}"><span>${E(t.ic)}</span><b>${E(t.t)}</b></button>${ed ? `<span class="te275"><select onchange="tr277.mvT(${J(t.key)},this.value)"><option value="">📂 ${T("انقلها لـ…", "Move to…")}</option>${M.doors.map(d => M.groups.filter(x => x.d === d.id).map(x => allF.filter(y => y.g === x.id && y.id !== f.id).map(y => `<option value="${y.id}">${E(nm(d))} › ${E(nm(x))} › ${E(nm(y))}</option>`).join("")).join("")).join("")}</select><button onclick="tr277.ord('tord','${f.id}',${J(t.key)},-1)">↑</button><button onclick="tr277.ord('tord','${f.id}',${J(t.key)},1)">↓</button><button onclick="tr277.del(${J(t.key)})">${hid(t.key) ? "👁️" : "🗑️"}</button></span>` : ""}</div>`).join("") || `<div class="xs muted" style="padding:.3rem">${T("فاضي", "Empty")}</div>`}</div>` : ""}</div>`; }).join("")}</div>` : ""}</div>`; }).join("");
+            ${fo ? `<div class="fl276">${ft.map(t => `<div class="ti275 ${hid(t.key) ? "hd275" : ""}"><button class="tg275" onclick="${E(t.go)}"><span>${E(t.ic)}</span><b>${E(t.t)}</b></button>${ed ? `<span class="te275"><select onchange="tr277.mvT(${J(t.key)},this.value)"><option value="">📂 ${T("انقلها لـ…", "Move to…")}</option>${M.doors.map(d => M.groups.filter(x => x.d === d.id).map(x => allF.filter(y => y.g === x.id && y.id !== f.id).map(y => `<option value="${y.id}">${E(nm(d))} › ${E(nm(x))} › ${E(nm(y))}</option>`).join("")).join("")).join("")}</select><button onclick="tr277.ord('tord','${f.id}',${J(t.key)},-1)">↑</button><button onclick="tr277.ord('tord','${f.id}',${J(t.key)},1)">↓</button><button title="${T("إخفاء عن الطلاب (يبقى عندك)", "Hide from students (you still see it)")}" onclick="tr277.hide(${J(t.key)})">${c.hide[t.key] ? "👁️" : "🙈"}</button><button title="${T("حذف من الرئيسية للجميع", "Remove from home for everyone")}" onclick="tr277.del(${J(t.key)})">${gone(t.key) ? "↩️" : "🗑️"}</button></span>` : ""}</div>`).join("") || `<div class="xs muted" style="padding:.3rem">${T("فاضي", "Empty")}</div>`}</div>` : ""}</div>`; }).join("")}</div>` : ""}</div>`; }).join("");
     const head = `<div class="hh275"><div><h2 style="--c:${E(D.c || "")}">${E(D.ic || "")} ${E(nm(D))}</h2><p class="muted">${E(AR() ? (D.sar || "") : (D.sen || D.sar || ""))}</p></div>${own() ? `<button class="btn ${ed ? "btn-p" : "btn-o"} btn-sm" onclick="state.ed277=!state.ed277;render()">${ed ? "✅ " + T("خلصت", "Done") : "✏️ " + T("رتّب المحتوى", "Arrange content")}</button>` : ""}</div>`;
     const bar = ed ? `<div class="row" style="gap:.4rem;margin:.4rem 0;flex-wrap:wrap"><button class="btn btn-o btn-sm" onclick="tr277.newG('${D.id}')">＋ ${T("مجموعة جديدة هنا", "New group here")}</button><button class="btn btn-o btn-sm" onclick="tr277.reset()">↺ ${T("رجّع الترتيب الأصلي", "Reset")}</button></div>` : "";
     return `<section class="sec tr275" id="tr275" style="padding:.8rem 0"><div class="wrap">${tabs}${head}${bar}<div class="gr275">${cards || `<div class="muted">${T("مفيش محتوى هنا", "Nothing here")}</div>`}</div></div></section>`; }
@@ -34200,8 +34204,8 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
     newF(g) { const r = ask3({ ic: "📂" }); if (!r) return; const c = cfg(); (c.fadd = c.fadd || []).push(Object.assign({ id: "v" + Date.now().toString(36), g }, r)); save(c); },
     delF(f) { if (!confirm(T("أمسح الفولدر؟ الحاجات اللي جواه هتروح «أدوات تانية» (مش هتتمسح).", "Delete the folder? Its items go to 'Other tools'."))) return; const c = cfg(); c.fdel[f] = 1; c.fadd = (c.fadd || []).filter(x => x.id !== f); Object.keys(c.place).forEach(k => { if (c.place[k] === f) delete c.place[k]; }); save(c); },
     hide(k) { const c = cfg(); if (c.hide[k]) delete c.hide[k]; else c.hide[k] = 1; save(c); },
-    del(k) { const c = cfg(); if (c.hide[k]) { delete c.hide[k]; return save(c); } const t = model().tools.find(x => x.key === k);
-      if (!confirm(T("⚠️ «" + (t ? t.t : "") + "» دي موجودة هنا بس — لو شلتها مش هيبقى ليها مكان في المنصة يوصلها منه حد. (هتفضل باهتة هنا في وضع الترتيب لو حبيت ترجّعها) أشيلها؟", "⚠️ This item exists only here — removing it leaves no way to reach it. Remove?"))) return; c.hide[k] = 1; save(c); },
+    del(k) { const c = cfg(); c.gone = c.gone || {}; c.ungone = c.ungone || {}; if (c.gone[k] || (DEFGONE[k] && !c.ungone[k])) { delete c.gone[k]; c.ungone[k] = 1; return save(c); } const t = model().tools.find(x => x.key === k);
+      if (!confirm(T("⚠️ «" + (t ? t.t : "") + "» موجودة هنا فقط — إذا حذفتها لن يصل إليها أحد من الرئيسية (تبقى باهتة في وضع الترتيب ويمكنك إرجاعها بـ↩️). إذا أردت إخفاءها عن الطلاب فقط استخدم 🙈. أحذفها؟", "⚠️ This item exists only here. Remove it for everyone? (Use 🙈 to hide from students only.)"))) return; c.gone[k] = 1; delete c.ungone[k]; save(c); },
     newDoor() { const r = ask3({ ic: "📁" }); if (!r) return; const c = cfg(); const id = "x" + Date.now().toString(36); (c.dadd = c.dadd || []).push(Object.assign({ id, c: "#0f766e", sar: "", sen: "" }, r)); state.hw277 = id; save(c); },
     door(id) { const c = cfg(); const M = model(); const d = M.doors.find(x => x.id === id); if (!d) return;
       const act = pick(T("القسم: ", "Section: ") + nm(d), [["ren", T("غيّر الاسم والأيقونة", "Rename / icon")], ["desc", T("غيّر الوصف", "Description")], ["col", T("غيّر اللون", "Colour")], ["l", T("حرّكه قبل", "Move earlier")], ["r", T("حرّكه بعد", "Move later")], ["merge", T("ادمجه في قسم تاني", "Merge into another section")], ["hide", c.hide["D:" + id] ? T("أظهره", "Show") : T("اخفيه", "Hide")], ["del", T("امسحه (محتواه يتنقل)", "Delete (content moves)")]]); if (!act) return;
@@ -34291,7 +34295,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   const isOwner = () => { try { return realRole() === "owner"; } catch (e) { return false; } };
   const isTeacher = () => { try { return realRole() === "teacher" || role() === "teacher"; } catch (e) { return false; } };
-  const sysOK = () => { if (!FF("v279.sys")) return true; if (isOwner()) return true; const s = setv("sysrec279", null) || {}; const uid = state.auth && state.auth.user && state.auth.user.id; return isTeacher() && (s.teachers === true || (Array.isArray(s.ids) && s.ids.includes(uid))); };
+  const sysOK = () => { if (!FF("v279.sys")) return true; if (isOwner()) return true; const s = setv("sysrec279", null) || { teachers: true }; const uid = state.auth && state.auth.user && state.auth.user.id; return isTeacher() && (s.teachers === true || (Array.isArray(s.ids) && s.ids.includes(uid))); };
 
   /* ---------- (1) صوت الجهاز للمالك بس ---------- */
   const SYS_RX = /صوت (الجهاز|الكمبيوتر|السيستم|النظام)|system (audio|sound)|computer (audio|sound)|device audio/i;
@@ -34303,7 +34307,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   css(`body.nosys279 .sys279{display:none!important}`);
 
   /* إعداد المالك: يسمح للمعلمين */
-  if (typeof ownerSettings === "function") { const _os = ownerSettings; ownerSettings = function () { const s = setv("sysrec279", null) || {}; return `<div class="card" style="border:2px solid #7c3aed;margin-bottom:1rem"><h3>🖥️ ${T("تسجيل صوت الجهاز (صوت الكمبيوتر)", "Recording device audio")}</h3><p class="sm muted">${T("الطالب يسجّل صوته بالمايك فقط. تسجيل صوت الجهاز لك أنت، ويمكنك فتحه للمعلمين.", "Students record only their own voice with the mic. Device audio is yours; you can open it to teachers.")}</p><label class="row" style="gap:.4rem;align-items:center"><input type="checkbox" ${s.teachers ? "checked" : ""} onchange="sys279(this.checked)"> ${T("اسمح لكل المعلمين بتسجيل صوت الجهاز", "Allow all teachers to record device audio")}</label></div>` + _os.apply(this, arguments); }; }
+  if (typeof ownerSettings === "function") { const _os = ownerSettings; ownerSettings = function () { const s = setv("sysrec279", null) || { teachers: true }; return `<div class="card" style="border:2px solid #7c3aed;margin-bottom:1rem"><h3>🖥️ ${T("تسجيل صوت الجهاز (صوت الكمبيوتر)", "Recording device audio")}</h3><p class="sm muted">${T("الطالب يسجّل صوته بالمايك فقط. تسجيل صوت الجهاز لك أنت، ويمكنك فتحه للمعلمين.", "Students record only their own voice with the mic. Device audio is yours; you can open it to teachers.")}</p><label class="row" style="gap:.4rem;align-items:center"><input type="checkbox" ${s.teachers ? "checked" : ""} onchange="sys279(this.checked)"> ${T("اسمح لكل المعلمين بتسجيل صوت الجهاز", "Allow all teachers to record device audio")}</label></div>` + _os.apply(this, arguments); }; }
   window.sys279 = v => { const s = Object.assign({}, setv("sysrec279", null) || {}, { teachers: !!v }); saveSetting16("sysrec279", s); };
 
   /* ---------- (2) «سجّل بالمايك» جنب أي رفع صوت ---------- */
@@ -34331,6 +34335,152 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
 
   const _r = render; render = function () { const o = _r.apply(this, arguments); try { hideSys(); micBtns(); } catch (e) {} return o; };
   let q = 0; new MutationObserver(() => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; try { hideSys(); micBtns(); } catch (e) {} }); }).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/* ================= v280: «العربية بين يديك» الكتاب نفسه بالصوت الأصلي (#/abyb280) — شريحة شريحة زي الكتاب بالظبط: صورة الصفحة من غير الإجابات + زرار «الإجابات» يظهرها، والتسجيل الأصلي للكتاب على شريحته (من غير Azure)، تنقّل بالأسهم والكيبورد، والتقدّم بيتحفظ («خلصت» بعد 70% من الشرائح) — الملفات على فرع media في الريبو (abyb/LxUyy) وبتتعرض من jsDelivr (والاحتياطي raw.githubusercontent) — المستوى التاني (15 وحدة) نزل، والباقي بيتضاف لـ abyb/index.json ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s); } };
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const CDN = "https://cdn.jsdelivr.net/gh/adarwesh701-byte/Quran-Academy@media/abyb/", RAW = "https://raw.githubusercontent.com/adarwesh701-byte/Quran-Academy/media/abyb/";
+  const LV = { L1: ["المستوى الأول", "Level 1"], L2: ["المستوى الثاني", "Level 2"], L3: ["المستوى الثالث", "Level 3"], L4: ["المستوى الرابع", "Level 4"] };
+  let IDX = null, loading = 0;
+  function load() { if (IDX || loading) return; loading = 1; fetch(CDN + "index.json?v=" + (typeof UI_VERSION !== "undefined" ? UI_VERSION : "")).then(r => r.ok ? r.json() : Promise.reject()).catch(() => fetch(RAW + "index.json").then(r => r.json())).then(j => { IDX = j; render(); }).catch(() => { loading = 0; }); }
+  const P = () => { try { return JSON.parse(localStorage.getItem("itqan_abyb280") || "{}"); } catch (e) { return {}; } };
+  const saveP = p => { try { localStorage.setItem("itqan_abyb280", JSON.stringify(p)); } catch (e) {} };
+  const S = () => state.ab280 = state.ab280 || { L: null, u: null, s: 1, ans: 0 };
+  const unit = () => { const s = S(); return IDX && s.L && (IDX[s.L] || []).find(x => x.tag === s.u); };
+  const pct = u => { const v = (P()[u.tag] || []).length; return Math.round(v / u.n * 100); };
+  const img = (tag, name) => `<img class="im280" src="${CDN}${tag}/${name}" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${RAW}${tag}/${name}'}" alt="">`;
+
+  function page() { load(); const s = S();
+    if (!IDX) return pageWrap("📘", T("العربية بين يديك", "Al-Arabiyyah Bayna Yadayk"), "", `<div class="card">⏳ ${T("جارٍ التحميل…", "Loading…")}</div>`, 1000);
+    const levels = Object.keys(LV).filter(k => (IDX[k] || []).length); if (!s.L || !IDX[s.L]) s.L = levels[0];
+    const u = unit();
+    if (u) return viewer(u);
+    const tabs = `<div class="tb275">${Object.keys(LV).map(k => `<button class="${k === s.L ? "on" : ""} ${(IDX[k] || []).length ? "" : "hd275"}" style="--c:#b45309" ${(IDX[k] || []).length ? `onclick="ab280.lv('${k}')"` : "disabled"}>${E(T(LV[k][0], LV[k][1]))}${(IDX[k] || []).length ? "" : " · " + T("قريبًا", "soon")}</button>`).join("")}</div>`;
+    const list = (IDX[s.L] || []).map(x => { const p = pct(x); return `<button class="uc280 ${p >= 70 ? "done" : ""}" onclick="ab280.open('${x.tag}')"><span class="n280">${p >= 70 ? "⭐" : x.u}</span><b>${E(x.title)}</b><small>${x.n} ${T("شريحة", "slides")} · 🔊 ${x.audio.length}</small><i style="--p:${p}%"></i></button>`; }).join("");
+    return pageWrap("📘", T("العربية بين يديك — الكتاب", "Al-Arabiyyah Bayna Yadayk — the book"), T("الكتاب نفسه صفحة صفحة بالتسجيل الأصلي. حاول تجاوب الأول، وبعدها اضغط «الإجابات».", "The book itself, page by page, with its original audio. Try first, then press «Answers»."), tabs + `<div class="ug280">${list}</div>`, 1000); }
+
+  function viewer(u) { const s = S(); const n = u.n; s.s = Math.max(1, Math.min(n, s.s || 1)); const i = s.s; const hasAns = u.ans.includes(i); const au = u.audio.includes(i);
+    const p = P(); const seen = new Set(p[u.tag] || []); if (!seen.has(i)) { seen.add(i); p[u.tag] = [...seen]; saveP(p); }
+    const name = hasAns && !s.ans ? `q${i}.jpg` : `a${i}.jpg`;
+    const pre = i < n ? `<link rel="prefetch" href="${CDN}${u.tag}/${u.ans.includes(i + 1) ? "q" : "a"}${i + 1}.jpg">` : "";
+    return pageWrap("📘", `${T("الوحدة", "Unit")} ${u.u}: ${u.title}`, T(LV[s.L][0], LV[s.L][1]), `<div class="vw280">
+      <div class="bar280"><button class="btn btn-o btn-sm" onclick="ab280.close()">☰ ${T("كل الوحدات", "All units")}</button><span class="xs muted">${i} / ${n} · ${pct(u)}%</span><select class="in" style="width:auto" onchange="ab280.go(+this.value)">${Array.from({ length: n }, (_, k) => `<option value="${k + 1}" ${k + 1 === i ? "selected" : ""}>${T("شريحة", "Slide")} ${k + 1}${u.audio.includes(k + 1) ? " 🔊" : ""}${u.ans.includes(k + 1) ? " ✍️" : ""}</option>`).join("")}</select></div>
+      <div class="st280" onclick="ab280.tap(event)">${img(u.tag, name)}</div>
+      ${au ? `<audio id="au280" class="au280" controls preload="auto" src="${CDN}${u.tag}/${i}.mp3" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${RAW}${u.tag}/${i}.mp3'}"></audio>` : ""}
+      <div class="nav280"><button class="btn btn-o btn-lg" ${i <= 1 ? "disabled" : ""} onclick="ab280.go(${i - 1})">${AR() ? "→" : "←"} ${T("السابق", "Previous")}</button>${hasAns ? `<button class="btn ${s.ans ? "btn-p" : "btn-o"} btn-lg" onclick="ab280.ans()">${s.ans ? "🙈 " + T("أخفِ الإجابات", "Hide answers") : "👁️ " + T("الإجابات", "Answers")}</button>` : ""}<button class="btn btn-p btn-lg" ${i >= n ? "disabled" : ""} onclick="ab280.go(${i + 1})">${T("التالي", "Next")} ${AR() ? "←" : "→"}</button></div>${pre}</div>`, 1100); }
+
+  window.ab280 = {
+    lv(k) { S().L = k; render(); },
+    open(tag) { const s = S(); s.u = tag; const last = (P()["last:" + tag]) || 1; s.s = last; s.ans = 0; render(); window.scrollTo({ top: 0 }); },
+    close() { const s = S(); s.u = null; render(); },
+    go(i) { const s = S(); const u = unit(); if (!u) return; s.s = Math.max(1, Math.min(u.n, i)); s.ans = 0; const p = P(); p["last:" + u.tag] = s.s; saveP(p); try { document.getElementById("au280") && document.getElementById("au280").pause(); } catch (e) {} render(); const st = document.querySelector(".st280"); st && st.scrollIntoView({ block: "start", behavior: "smooth" }); },
+    ans() { const s = S(); s.ans = s.ans ? 0 : 1; render(); },
+    tap(e) { const r = e.currentTarget.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width; const s = S(); if (x > .7) ab280.go(s.s + (AR() ? -1 : 1)); else if (x < .3) ab280.go(s.s + (AR() ? 1 : -1)); }
+  };
+  document.addEventListener("keydown", e => { if (state.route !== "abyb280" || !unit() || /INPUT|SELECT|TEXTAREA/.test((e.target || {}).tagName || "")) return; const s = S(); if (e.key === "ArrowLeft") ab280.go(s.s + (AR() ? 1 : -1)); else if (e.key === "ArrowRight") ab280.go(s.s + (AR() ? -1 : 1)); else if (e.key === " " && document.getElementById("au280")) { e.preventDefault(); const a = document.getElementById("au280"); a.paused ? a.play() : a.pause(); } });
+
+  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("abyb280")) PAGES16.push("abyb280"); } catch (e) {}
+  try { if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("abyb280")) HASH_ROUTES.push("abyb280"); } catch (e) {}
+  if (/^#\/abyb280/.test(location.hash)) state.route = "abyb280";
+  const _r = render; render = function () { if (state.route === "abyb280" && FF("v280.book")) { const app = document.getElementById("app"); if (!app) return; let b; try { b = page(); } catch (e) { console.error(e); b = `<div class="card">${E(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + (typeof renderAIWidget === "function" ? renderAIWidget() : ""); return; } return _r.apply(this, arguments); };
+  if (typeof DOMAINS === "function") { const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { if (FF("v280.book")) { const a = ds.find(d => d.k === "arabic"); if (a && a.tools && !a.tools.some(t => /abyb280/.test(t[2]))) a.tools.splice(1, 0, ["📘", T("العربية بين يديك — الكتاب بالصوت الأصلي", "Al-Arabiyyah Bayna Yadayk — book with original audio"), "go16('abyb280')", ""]); } } catch (e) {} return ds; }; }
+  css(`.ug280{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.7rem;margin-top:.6rem}
+  .uc280{position:relative;display:flex;flex-direction:column;gap:.25rem;text-align:start;padding:.8rem .9rem 1rem;border-radius:18px;border:1px solid var(--line);background:var(--card);cursor:pointer;color:inherit;overflow:hidden}.uc280 b{font-family:'Amiri',serif;font-size:1.25rem}.uc280.done{border-color:#16a34a}
+  .n280{width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:#b45309;color:#fff;font-weight:800}.uc280 i{position:absolute;bottom:0;inset-inline-start:0;height:4px;width:var(--p);background:#16a34a}
+  .bar280{display:flex;gap:.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:.5rem}
+  .st280{border-radius:14px;overflow:hidden;box-shadow:0 6px 20px -10px rgba(0,0,0,.35);background:#fff;cursor:pointer;user-select:none}.im280{display:block;width:100%;height:auto}
+  .au280{width:100%;margin-top:.6rem}.nav280{display:flex;gap:.5rem;justify-content:space-between;margin-top:.7rem;flex-wrap:wrap}.nav280 .btn{flex:1;min-width:8rem}`);
+})();
+
+/* ================= v281: طلبات المالك 20/11 (6) — (1) سهم «افتح/اقفل الشريط» اتشال · (2) لو الطالب أخفى كارت اللوجو يفضل مخفي طول الجلسة · (3) الرجوع: الرابع يرجّعك لنفس المكان اللي جيت منه بالظبط (والرئيسية بنفس السكرول)، وتسيب الاختبار ترجع للمكان اللي قبله · (4) أسئلة «حدد مستواك» بالإنجليزي: السؤال إنجليزي والكلمة العربي جوّاه، والاختيارات اللي مصطلحات (نحو/صرف/بلاغة) جنبها الفرانكو والمعنى · (5) بعد كل إجابة (صح أو غلط) الشرح بلغة الطالب · (6) اختبار تحديد المستوى بيقف لوحده لو الغلط عدّى النص (مالوش لازمة يكمّل) · (7) صوت الجهاز مسموح للمعلمين افتراضيًا (الطالب مايك بس) ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const AR = () => state.lang === "ar"; const T = (a, e) => AR() ? a : e;
+  const E = s => { try { return esc(s); } catch (e) { return String(s == null ? "" : s); } };
+  const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
+  const SS = (k, v) => { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } };
+
+  /* (1) */ css(`html body #rope268{display:none!important}`);
+  /* (2) */ if (SS("logo281")) document.documentElement.classList.add("lg281");
+  document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".x274")) { SS("logo281", "1"); document.documentElement.classList.add("lg281"); } }, true);
+  css(`html.lg281 #fl268{display:none!important}`);
+
+  /* (3) الرجوع لنفس المكان */
+  const key = () => location.hash || "#/home";
+  const savePos = () => { try { const m = JSON.parse(SS("pos281") || "{}"); m[key()] = scrollY; SS("pos281", JSON.stringify(m)); } catch (e) {} };
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[onclick*='go16'],[onclick*='navigate'],[onclick*='libGo'],[onclick*='t260.open'],[onclick*='tr277.lib'],a[href^='#/']"); if (b) savePos(); }, true);
+  addEventListener("popstate", () => { const h = (location.hash || "").replace(/^#\/?/, ""); if (!h && state.route !== "home") { state.route = "home"; state.pageArg = null; try { render(); } catch (e) {} }
+    try { const m = JSON.parse(SS("pos281") || "{}"); const y = m[key()]; if (y != null) { let n = 0; const go = () => { scrollTo(0, y); if (++n < 6 && Math.abs(scrollY - y) > 30) setTimeout(go, 120); }; setTimeout(go, 60); } } catch (e) {} });
+  if (window.pl265) { const _q = pl265.quit; pl265.quit = function () { if (!confirm(T("تخرج من الاختبار؟", "Quit the test?"))) return; state.pl265 = null; state.fuQ = null; try { clearInterval(fuAuto.t); } catch (e) {} if (history.length > 1) history.back(); else navigate("home"); }; }
+
+  /* (4)+(5) أسئلة المستوى بالإنجليزي + الشرح */
+  const FU = {
+"معنى «كِتَاب»:":{"e":"Meaning of «كِتَاب»:","x":["«كِتَاب» تعني book.","«كِتَاب» means book."]},
+"الحرف الأول في «مَدْرَسَة»:":{"e":"The first letter of «مَدْرَسَة»:","x":["أول حرف في «مَدْرَسَة» هو الميم (م).","«مَدْرَسَة» (school) starts with mīm (م)."]},
+"«أنا طالب، وهي …»":{"e":"«أنا طالب، وهي …» — I am a (male) student, and she is …","o":{"طالبة":"female student","طالب":"male student","طلاب":"students","طالبان":"two students"},"x":["للمؤنث نزيد التاء المربوطة: طالب ← طالبة.","For a female we add tāʾ marbūṭa: طالب → طالبة."]},
+"جمع «ولد»:":{"e":"Plural of «ولد» (boy):","o":{"أولاد":"boys (plural)","ولدان":"two boys (dual)","والد":"father","ولادة":"birth"},"x":["جمع «وَلَد» جمع تكسير: «أولاد».","The plural of وَلَد is the broken plural أولاد."]},
+"«هذا ___ كبير»":{"e":"«هذا ___ كبير» — This is a big house (fill in):","x":["بعد «هذا» يأتي الخبر مرفوعًا منوّنًا: بيتٌ.","After هذا the predicate is nominative with tanwīn: بيتٌ."]},
+"«ذهبتُ ___ المسجد»":{"e":"«ذهبتُ ___ المسجد» — I went ___ the mosque:","o":{"إلى":"to","في":"in","على":"on","عن":"about / from"},"x":["حرف الجر «إلى» يدل على الاتجاه: ذهبتُ إلى المسجد.","إلى shows direction: I went to the mosque."]},
+"ماضي «يكتب»:":{"e":"Past tense of «يكتب» (he writes):","o":{"كتب":"he wrote (past)","اكتب":"write! (command)","كاتب":"writer","مكتوب":"written"},"x":["الماضي من «يكتب» هو «كَتَبَ».","The past of يكتب is كَتَبَ."]},
+"«هؤلاء ___»":{"e":"«هؤلاء ___» — These are ___ (fill in):","x":["«هؤلاء» للجمع، فنستعمل الجمع: طلابٌ.","هؤلاء is plural, so we use the plural: طلابٌ."]},
+"ضد «كبير»:":{"e":"Opposite of «كبير» (big):","o":{"صغير":"small","طويل":"tall / long","جميل":"beautiful","قديم":"old"},"x":["ضد «كبير» هو «صغير».","The opposite of كبير (big) is صغير (small)."]},
+"«أين ___ ؟» (سؤال عن مكان الكتاب)":{"e":"«أين ___ ؟» — Where is the book?","x":["بعد «أين» يأتي المبتدأ مرفوعًا: أين الكتابُ؟","After أين the subject is nominative: أين الكتابُ؟"]},
+"«الطالبان ___ الدرس»":{"e":"«الطالبان ___ الدرس» — The two students ___ the lesson:","x":["المثنى المذكر يأخذ «يكتبان».","For two males the verb is يكتبان."]},
+"الفعل المضارع المجزوم: «لم ___»":{"e":"Jussive present verb (majzūm) after «لم»:","x":["«لم» تجزم المضارع فيُسكَّن آخره: لم يذهبْ.","لم makes the present verb majzūm (sukūn): لم يذهبْ."]},
+"إعراب «محمدٌ» في «جاء محمدٌ»:":{"e":"The iʿrāb (إعراب – grammatical case) of «محمدٌ» in «جاء محمدٌ»:","o":{"فاعل مرفوع":"fāʿil marfūʿ – nominative subject","مفعول به":"mafʿūl bihi – object","مبتدأ":"mubtadaʾ – topic","مجرور":"majrūr – genitive"},"x":["«محمدٌ» قام بالفعل «جاء» فهو فاعل مرفوع بالضمة.","محمدٌ did the action of جاء, so he is the fāʿil (subject), nominative with ḍamma."]},
+"«رأيتُ ___ مجتهدين»":{"e":"«رأيتُ ___ مجتهدين» — I saw the hard-working teachers:","x":["المفعول به جمع مذكر سالم منصوب بالياء: المعلمين.","The object (sound masculine plural) takes -īn: المعلمين."]},
+"الأمر من «قرأ» للمفرد المذكر:":{"e":"Command (amr) of «قرأ» (to read) for one male:","o":{"اقرأ":"read! (command)","يقرأ":"he reads","قارئ":"reader","قراءة":"reading"},"x":["الأمر من «قرأ»: اقرأْ.","The command of قرأ is اقرأ (read!)."]},
+"«كان الجوُّ ___»":{"e":"«كان الجوُّ ___» — The weather was beautiful:","x":["«كان» تنصب الخبر: كان الجوُّ جميلًا.","Kāna makes its predicate accusative: جميلًا."]},
+"«إنَّ العلمَ ___»":{"e":"«إنَّ العلمَ ___» — Indeed knowledge is light:","x":["«إنَّ» ترفع الخبر: إنَّ العلمَ نورٌ.","Inna leaves its predicate nominative: نورٌ."]},
+"الممنوع من الصرف:":{"e":"Which word is mamnūʿ min aṣ-ṣarf (ممنوع من الصرف – diptote, takes no tanwīn)?","x":["«مساجد» على صيغة منتهى الجموع فهي ممنوعة من الصرف.","مساجد follows the ultimate-plural pattern, so it is a diptote."]},
+"«ما أجملَ السماءَ!» أسلوب:":{"e":"«ما أجملَ السماءَ!» is the style of:","o":{"تعجب":"taʿajjub – exclamation","استفهام":"istifhām – question","نفي":"nafy – negation","نداء":"nidāʾ – vocative"},"x":["«ما أفعلَ!» صيغة تعجب.","The pattern «ما أفعلَ!» is taʿajjub (exclamation)."]},
+"المفعول لأجله في «قمتُ احترامًا للمعلم»:":{"e":"The mafʿūl li-ajlihi (مفعول لأجله – object of purpose) in «قمتُ احترامًا للمعلم»:","x":["«احترامًا» يبيّن سبب القيام.","احترامًا explains why I stood: out of respect."]},
+"«ظننتُ الأمرَ ___»":{"e":"«ظننتُ الأمرَ ___» — I thought the matter easy:","x":["«ظنّ» تنصب مفعولين: الأمرَ سهلًا.","Ẓanna takes two objects in the accusative: الأمرَ سهلًا."]},
+"الحال في «جاء الطالبُ مسرعًا»:":{"e":"The ḥāl (الحال – circumstantial word) in «جاء الطالبُ مسرعًا»:","x":["«مسرعًا» يبيّن هيئة الطالب وقت المجيء.","مسرعًا describes the student's state as he came: hurrying."]},
+"نوع «لا» في «لا رجلَ في الدار»:":{"e":"Type of «لا» in «لا رجلَ في الدار»:","o":{"نافية للجنس":"nāfiya lil-jins – absolute negation","ناهية":"nāhiya – prohibition","عاطفة":"ʿāṭifa – conjunction","زائدة":"zāʾida – extra"},"x":["«لا» النافية للجنس تنفي الجنس كله وتنصب اسمها: لا رجلَ.","This لا negates the whole category and puts its noun in the accusative."]},
+"التمييز في «اشتريتُ عشرين كتابًا»:":{"e":"The tamyīz (التمييز – specifying word) in «اشتريتُ عشرين كتابًا»:","x":["«كتابًا» يوضّح المعدود بعد «عشرين».","كتابًا specifies what was counted after عشرين."]},
+"الصواب:":{"e":"Which sentence is correct?","x":["المبتدأ والخبر مثنى مرفوعان بالألف: الأستاذان مجتهدان.","Both the topic and predicate are dual and nominative (-ān)."]},
+"في ﴿وَاشْتَعَلَ الرَّأْسُ شَيْبًا﴾ استعارة:":{"e":"In ﴿وَاشْتَعَلَ الرَّأْسُ شَيْبًا﴾ the istiʿāra (استعارة – metaphor) is:","o":{"مكنية":"makniyya – implicit","تصريحية":"taṣrīḥiyya – explicit","تشبيه بليغ":"tashbīh balīgh – eloquent simile","كناية":"kināya – metonymy"},"x":["شُبّه الشيب بالنار وحُذفت النار وبقي من لوازمها «اشتعل»، فهي مكنية.","Grey hair is likened to fire; the fire is omitted and only «ishtaʿala» remains — an implicit metaphor."]},
+"وزن «استغفار»:":{"e":"The wazn (وزن – morphological pattern) of «استغفار»:","x":["«استغفار» على وزن «استفعال».","استغفار follows the pattern استفعال."]},
+"«زيدٌ أسدٌ» تشبيه:":{"e":"«زيدٌ أسدٌ» is which tashbīh (تشبيه – simile)?","o":{"بليغ":"balīgh – eloquent (no particle, no shared quality)","تمثيلي":"tamthīlī – composite","مرسل مفصل":"mursal mufaṣṣal – explicit","ضمني":"ḍimnī – implicit"},"x":["حُذفت أداة التشبيه ووجه الشبه، فهو تشبيه بليغ.","Both the particle and the shared quality are omitted: tashbīh balīgh."]},
+"إعراب «أيُّ» في «أيُّهم أفضلُ؟»:":{"e":"The iʿrāb (إعراب) of «أيُّ» in «أيُّهم أفضلُ؟»:","o":{"مبتدأ مرفوع":"mubtadaʾ marfūʿ – nominative topic","خبر":"khabar – predicate","فاعل":"fāʿil – subject","مفعول به":"mafʿūl bihi – object"},"x":["اسم الاستفهام «أيّ» هنا مبتدأ مرفوع، و«أفضلُ» خبره.","The question word أيّ is the topic (nominative); أفضلُ is its predicate."]},
+"الجناس في «ويوم تقوم الساعة يقسم المجرمون ما لبثوا غير ساعة»:":{"e":"The jinās (الجناس – paronomasia) in this verse is:","o":{"تام":"tāmm – complete","ناقص":"nāqiṣ – incomplete","طباق":"ṭibāq – antithesis","مقابلة":"muqābala – contrast"},"x":["«الساعة» الأولى القيامة والثانية الزمن، واتفقا لفظًا تمامًا: جناس تام.","«as-sāʿa» first means the Hour, then a period of time — identical words: complete jinās."]}
+}
+;
+  function prep() { const z = state.fuQ; if (!z || !z.pl265 || !z.qs) return 0; let ch = 0;
+    z.qs.forEach(q => { if (q.k !== "mcq265") return; if (!q.ar281) { q.ar281 = q.t; q.te281 = q.te || ""; } const f = FU[q.ar281];
+      if (f && !q.f281) { q.f281 = 1; (q.opts || []).forEach(o => { if (Array.isArray(o) && !o[1] && f.o && f.o[o[0]]) o[1] = f.o[o[0]]; }); if (!q.te281) q.te281 = f.e; ch = 1; }
+      const want = !AR() && q.te281 ? q.te281 : q.ar281; if (q.t !== want) { q.t = want; q.te = ""; ch = 1; } });
+    return ch; }
+  function explain() { const z = state.fuQ; if (!z || !z.pl265 || z.pick == null) return; const q = z.qs[z.n]; if (!q || q.k !== "mcq265") return; const box = document.querySelector("#app .fures"); if (!box || box.nextElementSibling && box.nextElementSibling.classList.contains("ex281")) return;
+    const f = FU[q.ar281]; const ans = q.opts[q.ans] || []; let x = f && f.x ? (AR() ? f.x[0] : f.x[1]) : (AR() ? `الإجابة الصحيحة: «${ans[0]}»${ans[1] ? " — " + ans[1] : ""}.` : `The correct answer is «${ans[0]}»${ans[1] ? " (" + ans[1] + ")" : ""}.`);
+    box.insertAdjacentHTML("afterend", `<div class="ex281" dir="${AR() ? "rtl" : "ltr"}">💡 ${E(x)}</div>`); }
+  css(`.ex281{margin-top:.5rem;padding:.55rem .75rem;border-radius:12px;background:color-mix(in srgb,var(--accent) 9%,var(--card));line-height:1.8}`);
+
+  /* (6) وقف بدري */
+  if (window.pl265 && pl265.pick) { const _p = pl265.pick; pl265.pick = function () { const r = _p.apply(this, arguments); try { const q = state.fuQ; if (q && q.qs && FF("v281.stop")) { const done = q.n + 1, wrong = done - q.ok; if (wrong > q.qs.length * .5) { q.stop281 = 1; } } } catch (e) {} return r; }; }
+  if (typeof fuNext === "function") { const _n = fuNext; fuNext = function () { const q = state.fuQ; if (q && q.pl265 && q.stop281) { q.n = q.qs.length - 1; } return _n.apply(this, arguments); }; }
+
+
+  let busy = 0;
+  const _r = render; render = function () { const o = _r.apply(this, arguments); if (busy) return o; try { if (prep()) { busy = 1; try { _r.apply(this, arguments); } finally { busy = 0; } } explain(); } catch (e) {} return o; };
+})();
+
+/* ================= v282: الرئيسية (طلب المالك 20/11) — «أهلًا بك» ولوحة التحكم الكاملة وبعدها أقسام الموقع في أول الصفحة علطول · «ماذا تريد أن تتعلم؟» و«ما الذي يهمك؟» وكارت «كمّل» اتشالوا · تحدّي الـ30 يوم في مكانه ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  function home() { if (state.route !== "home" || !FF("v282.top")) return; const app = document.getElementById("app"); if (!app) return;
+    const first = [...app.children].find(e => e.tagName === "SECTION"); const hub = app.querySelector(":scope > section.hub"); const tr = app.querySelector(":scope > #tr275");
+    if (first) { if (hub && hub !== first) first.before(hub); const after = hub || first; if (tr && after.nextElementSibling !== tr) after.after(tr); }
+    app.querySelectorAll("#int200").forEach(e => e.remove());
+    app.querySelectorAll("h2, h3").forEach(h => { if (/^\s*(ماذا تريد أن تتعلم|عايز تتعلم إيه|What would you like to learn)\??\s*$/.test(h.textContent)) { const box = h.closest(".card, section > .wrap > div") || h; if (box.querySelector && box.querySelector("#tr275, .hub")) h.remove(); else (box.textContent.trim().length < 60 ? box : h).remove(); } });
+    app.querySelectorAll("button, a").forEach(b => { if (/^\s*(كمّل|كمل|Continue|Resume)\s*$/.test(b.textContent)) { const c = b.closest(".card, [class*=rs], [class*=resume], [class*=cont]"); (c && !c.querySelector("#tr275, .hub") ? c : b).remove(); } }); }
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { home(); } catch (e) {} return o; };
+  let q = 0; new MutationObserver(() => { if (q || state.route !== "home") return; q = 1; requestAnimationFrame(() => { q = 0; try { home(); } catch (e) {} }); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 
 // بدء التشغيل
