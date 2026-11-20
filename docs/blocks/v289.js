@@ -6,7 +6,7 @@
   /* نستنى: الجلسة جاهزة + أول رسم بعد الجاهزية + الصفحة تستقر 200ms من غير تغييرات في #app (بحد أقصى 0.9 ثانية بعد الجاهزية) */
   let readyAt = 0, last = 0, t = 0;
   const app = () => document.getElementById("app");
-  function check() { clearTimeout(t); if (!state.auth || !state.auth.ready) { t = setTimeout(check, 60); return; } if (!readyAt) readyAt = Date.now(); const now = Date.now(); if (now - last >= 150 || now - readyAt > 900) { requestAnimationFrame(() => requestAnimationFrame(done)); return; } t = setTimeout(check, 60); }
+  function check() { clearTimeout(t); if (!state.auth || !state.auth.ready) { t = setTimeout(check, 60); return; } if (!readyAt) readyAt = Date.now(); const now = Date.now(); if (now - last >= 150 || now - readyAt > 900) { requestAnimationFrame(() => requestAnimationFrame(done)); setTimeout(done, 120); return; } t = setTimeout(check, 60); }
   document.addEventListener("DOMContentLoaded", () => { const a = app(); if (a) new MutationObserver(() => { last = Date.now(); }).observe(a, { childList: true, subtree: true }); check(); });
   if (document.readyState !== "loading") check();
   /* أي تنقّل بعد كده مايأثرش: الشاشة بتتشال مرة واحدة بس */
