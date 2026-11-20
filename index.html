@@ -3238,7 +3238,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-20-v294";
+const UI_VERSION = "2026-11-20-v295";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -32381,6 +32381,7 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
     ["v256", T("بيانات الاشتراك مع مدرس", "Teacher-plan details"), [["v256.pref", T("طالب/ولي أمر + معلم أو معلمة", "Student/parent + male or female teacher")]]],
     ["v258", T("عربي الأطفال — المستويات 1 لـ9", "Kids Arabic — levels 1–9"), [["v258.kids", T("المستويات والاختبار التحديدي وفتح المستوى للطالب", "Levels, placement test, unlock per student")]]],
     ["v271", T("الخطوط زي الوورد + الشريط مابيصغرش", "Word-like fonts + bar never shrinks"), [["v271.font", T("الخطوط لكل جزء (النوع والحجم والسُمك) + الخط أتقل", "Fonts per part + heavier default")]]],
+    ["v295", T("القوائم بالضغط بس", "Menus open on click only"), [["v295.nohover", T("مفيش قائمة بتفتح لوحدها بمرور الماوس، وبتتقفل بعد الاختيار أو الضغط برّه", "No menu opens on hover; closes after choosing or clicking outside")]]],
     ["v293", T("محرك المناهج + العربية بين يديك تفاعلي", "Curriculum engine + interactive Al-Arabiyyah"), [["v293.ce", T("دروس بالصوت الأصلي جملة جملة وتمارين واختبارات", "Lessons with original audio sentence by sentence, exercises, tests")]]],
     ["v290", T("السبورة البيضاء العائمة", "Floating whiteboard"), [["v290.wb", T("سبورة فوق أي صفحة + PDF", "Whiteboard over any page + PDF")]]],
     ["v289", T("تحميل ثابت بدون تذبذب + أداء أسرع", "Stable loading + faster"), [["v289.boot", T("شاشة التحميل لحد ما الصفحة المطلوبة تستقر", "Loading screen until the requested page settles")], ["v289.cache", T("فتح أسرع من البيانات المحفوظة ثم تحديثها", "Faster start from cached data, then refresh")]]],
@@ -35447,7 +35448,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
     next() { const U = S.U; if (!U) return; const ls = U.lessons.map(merge).filter(L => !L.hidden); const i = ls.findIndex(L => L.id === S.L.id); const n = ls[i + 1]; if (n) ce293.open("abyb", U.id, n.id); else ce293.open("abyb", U.id); }
   });
   /* ---------- محرر المالك ---------- */
-  function editor(c, u, L) { if (String(L.id).startsWith("exam:")) return ""; if (!S.ed) return `<div class="ed"><b>✏️ ${T("أدوات المالك", "Owner tools")}</b> <button class="btn btn-o xs" onclick="ce293.edit()">${T("عدّل الدرس (النص والمتحدث والتوقيت)", "Edit lesson (text, speaker, timing)")}</button> <span class="xs muted">${L.status === "ok" ? "✅ " + T("منشور بالنص", "Published with text") : "🟠 " + T("مسودة: الطلاب يرون الصوت وصفحة الكتاب فقط", "Draft: students see audio + book page only")}</span></div>`;
+  function editor(c, u, L) { if (String(L.id).startsWith("exam:")) return ""; if (!S.ed) return `<div class="ed"><b>✏️ ${T("أدوات المالك", "Owner tools")}</b> <button class="btn btn-o xs" onclick="ce293.edit()">${T("عدّل الدرس (النص والمتحدث والتوقيت)", "Edit lesson (text, speaker, timing)")}</button> <span class="xs muted">${L.aq > .3 ? "⚠️ " + T("راجع توقيت الجمل (التقسيم الآلي غير متأكد)", "Review sentence timing (auto split uncertain)") + " · " : ""}${L.status === "ok" ? "✅ " + T("منشور بالنص", "Published with text") : "🟠 " + T("مسودة: الطلاب يرون الصوت وصفحة الكتاب فقط", "Draft: students see audio + book page only")}</span></div>`;
     const D = S.ed; return `<div class="ed"><b>✏️ ${T("تعديل الدرس", "Edit lesson")}</b><p class="xs muted">${T("انسخ النص من صفحة الكتاب جملة جملة. ▶ يجرب المقطع. «⏱ بداية/نهاية» تسجّل وقت الصوت الحالي وهو شغال.", "Copy the text from the book page line by line. ▶ tests the segment. ⏱ start/end stores the current playback time.")}</p>
       <div class="row" style="gap:.4rem;flex-wrap:wrap"><label>${T("العنوان", "Title")} <input value="${E(D.title || "")}" onchange="ce293.ef('title',this.value)"></label><label>${T("النوع", "Type")} <select onchange="ce293.ef('kind',this.value)">${Object.keys(KIND).map(k => `<option value="${k}" ${D.kind === k ? "selected" : ""}>${KIND[k][AR() ? 1 : 2]}</option>`).join("")}</select></label><label>${T("الحالة", "Status")} <select onchange="ce293.ef('status',this.value)"><option value="draft" ${D.status === "draft" ? "selected" : ""}>${T("مسودة (صوت + صفحة)", "Draft (audio + page)")}</option><option value="ok" ${D.status === "ok" ? "selected" : ""}>${T("منشور بالنص للطلاب", "Published with text")}</option></select></label><label><input type="checkbox" ${D.hidden ? "checked" : ""} onchange="ce293.ef('hidden',this.checked)"> 🙈 ${T("إخفاء عن الطلاب", "Hide from students")}</label></div>
       <div class="row" style="gap:.4rem;margin:.4rem 0"><button class="btn btn-o xs" onclick="ce293.full()">▶ ${T("شغّل الصوت كله", "Play full audio")}</button><button class="btn btn-o xs" onclick="ce293.stop()">⏸</button><label class="xs">${T("استبدال الصوت (mp3):", "Replace audio (mp3):")} <input type="file" accept="audio/*" onchange="ce293.upA(this.files[0])"></label></div>
@@ -35468,6 +35469,27 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("ce293")) PAGES16.push("ce293"); } catch (e) {}
   try { if (window.url288 && url288.slugOf) { /* اسم مقروء للّينك */ } } catch (e) {}
   if (typeof DOMAINS === "function") { const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { if (FF("v293.ce")) { const a = ds.find(d => d.k === "arabic"); if (a && a.tools && !a.tools.some(t => /ce293/.test(t[2]))) a.tools.splice(0, 0, ["🎧", T("العربية بين يديك — دروس تفاعلية بالصوت جملة جملة", "Al-Arabiyyah Bayna Yadayk — interactive lessons"), "go16('ce293','abyb')", ""]); } } catch (e) {} return ds; }; }
+})();
+
+/* ================= v295: القوائم مابتفتحش لوحدها (طلب المالك) — كانت فيه مناطق «مرّر هنا لتنزل القوائم» وأسهم وشرايط بتفتح القوائم فوق المحتوى بمجرد ما الماوس يعدّي عليها (منطقة الهيدر zn215، سهم القوائم tbb209، سهم الشريط rope268، تبويبات الشرايط الجانبية tab201/h207، الشريط الجانبي rb169، الدوك dk196، أقسام الأدوات hd193) · دلوقتي بتفتح بالضغط بس، وبتتقفل لما تختار حاجة أو تنتقل لصفحة أو تضغط برّه أو Esc · من غير أي تغيير في شكل الشريط اللي فوق ================= */
+(function () {
+  const FF = k => { try { return window.ff254(k); } catch (e) { return true; } };
+  const HOVER = "#zn215,#tbb209,.tab201,#h207-tools,.h207,#rope268,#rb169,.dk196h,.hd193,details.ac200>summary,details.ac200";
+  const block = e => { if (!FF("v295.nohover")) return; const t = e.target; if (t && t.nodeType === 1 && t.matches && t.matches(HOVER)) { e.stopImmediatePropagation(); e.stopPropagation(); } };
+  // على window في مرحلة الـ capture: بيشتغل قبل أي مستمع على العنصر أو على document
+  window.addEventListener("mouseenter", block, true);
+  window.addEventListener("mouseover", e => { if (!FF("v295.nohover")) return; const t = e.target; if (t && t.closest && t.closest("#rope268")) e.stopImmediatePropagation(); }, true);
+  document.addEventListener("DOMContentLoaded", () => { document.body.classList.remove("hv283"); });
+  /* القفل: بعد اختيار عنصر، أو الانتقال لصفحة، أو الضغط برّه، أو Esc */
+  const openNow = () => document.body.classList.contains("tb209-open") || document.body.classList.contains("hv283") || (ropeOpened && !document.body.classList.contains("nc268"));
+  let ropeOpened = false; document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#rope268")) setTimeout(() => { ropeOpened = !document.body.classList.contains("nc268"); }, 0); }, true);
+  function closeMenus() { const b = document.body; if (!b) return; b.classList.remove("hv283"); if (ropeOpened && !b.classList.contains("nc268")) { ropeOpened = false; try { hd268.tog(); } catch (e) {} } if (b.classList.contains("tb209-open")) { try { const t = document.getElementById("tbb209"); t && t.click(); } catch (e) {} if (b.classList.contains("tb209-open")) b.classList.remove("tb209-open"); } }
+  let lastRoute = null;
+  const _r = render; render = function () { const o = _r.apply(this, arguments); try { const k = state.route + "|" + (state.pageArg || ""); if (lastRoute !== null && k !== lastRoute && FF("v295.nohover")) closeMenus(); lastRoute = k; } catch (e) {} return o; };
+  document.addEventListener("click", e => { if (!FF("v295.nohover") || !openNow()) return; const t = e.target; if (t.closest("#tbb209,#rope268,#zn215,.pin268")) return; if (t.closest("#app .hdr .nav a, #app .bar185 a, #app .dombar a, #app .unav a, #app .mnav a")) { setTimeout(closeMenus, 0); return; } if (!t.closest("#app .hdr, #app .bar185, #app .dombar, #app .unav, #app .mnav")) closeMenus(); }, true);
+  addEventListener("keydown", e => { if (e.key === "Escape" && openNow()) closeMenus(); });
+  /* عنوان المنطقة كان بيقول «مرّر هنا» — بقى «اضغط» */
+  let q = 0; new MutationObserver(() => { if (q) return; q = 1; setTimeout(() => { q = 0; const z = document.getElementById("zn215"); if (z && z.title && /مرّر|Hover/.test(z.title)) z.title = state.lang === "ar" ? "اضغط لفتح القوائم" : "Click to open the menus"; }, 200); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 
 // بدء التشغيل
