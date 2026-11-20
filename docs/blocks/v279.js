@@ -5,7 +5,7 @@
   const css = s => document.head.insertAdjacentHTML("beforeend", `<style>${s}</style>`);
   const isOwner = () => { try { return realRole() === "owner"; } catch (e) { return false; } };
   const isTeacher = () => { try { return realRole() === "teacher" || role() === "teacher"; } catch (e) { return false; } };
-  const sysOK = () => { if (!FF("v279.sys")) return true; if (isOwner()) return true; const s = setv("sysrec279", null) || {}; const uid = state.auth && state.auth.user && state.auth.user.id; return isTeacher() && (s.teachers === true || (Array.isArray(s.ids) && s.ids.includes(uid))); };
+  const sysOK = () => { if (!FF("v279.sys")) return true; if (isOwner()) return true; const s = setv("sysrec279", null) || { teachers: true }; const uid = state.auth && state.auth.user && state.auth.user.id; return isTeacher() && (s.teachers === true || (Array.isArray(s.ids) && s.ids.includes(uid))); };
 
   /* ---------- (1) صوت الجهاز للمالك بس ---------- */
   const SYS_RX = /صوت (الجهاز|الكمبيوتر|السيستم|النظام)|system (audio|sound)|computer (audio|sound)|device audio/i;
@@ -17,7 +17,7 @@
   css(`body.nosys279 .sys279{display:none!important}`);
 
   /* إعداد المالك: يسمح للمعلمين */
-  if (typeof ownerSettings === "function") { const _os = ownerSettings; ownerSettings = function () { const s = setv("sysrec279", null) || {}; return `<div class="card" style="border:2px solid #7c3aed;margin-bottom:1rem"><h3>🖥️ ${T("تسجيل صوت الجهاز (صوت الكمبيوتر)", "Recording device audio")}</h3><p class="sm muted">${T("الطالب يسجّل صوته بالمايك فقط. تسجيل صوت الجهاز لك أنت، ويمكنك فتحه للمعلمين.", "Students record only their own voice with the mic. Device audio is yours; you can open it to teachers.")}</p><label class="row" style="gap:.4rem;align-items:center"><input type="checkbox" ${s.teachers ? "checked" : ""} onchange="sys279(this.checked)"> ${T("اسمح لكل المعلمين بتسجيل صوت الجهاز", "Allow all teachers to record device audio")}</label></div>` + _os.apply(this, arguments); }; }
+  if (typeof ownerSettings === "function") { const _os = ownerSettings; ownerSettings = function () { const s = setv("sysrec279", null) || { teachers: true }; return `<div class="card" style="border:2px solid #7c3aed;margin-bottom:1rem"><h3>🖥️ ${T("تسجيل صوت الجهاز (صوت الكمبيوتر)", "Recording device audio")}</h3><p class="sm muted">${T("الطالب يسجّل صوته بالمايك فقط. تسجيل صوت الجهاز لك أنت، ويمكنك فتحه للمعلمين.", "Students record only their own voice with the mic. Device audio is yours; you can open it to teachers.")}</p><label class="row" style="gap:.4rem;align-items:center"><input type="checkbox" ${s.teachers ? "checked" : ""} onchange="sys279(this.checked)"> ${T("اسمح لكل المعلمين بتسجيل صوت الجهاز", "Allow all teachers to record device audio")}</label></div>` + _os.apply(this, arguments); }; }
   window.sys279 = v => { const s = Object.assign({}, setv("sysrec279", null) || {}, { teachers: !!v }); saveSetting16("sysrec279", s); };
 
   /* ---------- (2) «سجّل بالمايك» جنب أي رفع صوت ---------- */
