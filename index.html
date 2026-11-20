@@ -3238,7 +3238,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-20-v290";
+const UI_VERSION = "2026-11-20-v291";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -32382,7 +32382,7 @@ window.ff254 = window.ff254 || (k => { try { const o = setv("ff254", {}) || {}; 
     ["v258", T("عربي الأطفال — المستويات 1 لـ9", "Kids Arabic — levels 1–9"), [["v258.kids", T("المستويات والاختبار التحديدي وفتح المستوى للطالب", "Levels, placement test, unlock per student")]]],
     ["v271", T("الخطوط زي الوورد + الشريط مابيصغرش", "Word-like fonts + bar never shrinks"), [["v271.font", T("الخطوط لكل جزء (النوع والحجم والسُمك) + الخط أتقل", "Fonts per part + heavier default")]]],
     ["v290", T("السبورة البيضاء العائمة", "Floating whiteboard"), [["v290.wb", T("سبورة فوق أي صفحة + PDF", "Whiteboard over any page + PDF")]]],
-    ["v289", T("تحميل ثابت بدون تذبذب + أداء أسرع", "Stable loading + faster"), [["v289.boot", T("شاشة التحميل لحد ما الصفحة المطلوبة تستقر", "Loading screen until the requested page settles")]]],
+    ["v289", T("تحميل ثابت بدون تذبذب + أداء أسرع", "Stable loading + faster"), [["v289.boot", T("شاشة التحميل لحد ما الصفحة المطلوبة تستقر", "Loading screen until the requested page settles")], ["v289.cache", T("فتح أسرع من البيانات المحفوظة ثم تحديثها", "Faster start from cached data, then refresh")]]],
     ["v288", T("لينكات بأسماء احترافية + الشريطين الجانبيين", "Professional link names + two side bars"), [["v288.urls", T("لينكات مقروءة زي /Maqam_Rast", "Readable links like /Maqam_Rast")], ["v288.rails", T("شريط يمين وشريط شمال بالأيقونات", "Right and left icon bars")]]],
     ["v286", T("منشئ التجربة + اختيار التحكم", "Experience Builder + control mode"), [["v286.xb", T("تطبيق تصميم منشئ التجربة المنشور على الموقع", "Apply the published Experience Builder design")]]],
     ["v285", T("تجربة الموبايل والتابلت", "Mobile & tablet experience"), [["v285.mob", T("موبايل: شريط علوي صغير + قائمة جانبية + شريط سفلي + نوافذ من تحت + جداول كروت · تابلت: الشريط صف يتسحب", "Mobile app bar, drawer, bottom nav, sheets, table cards · tablet scroll bar")], ["v285.top", T("أهلًا بك والأقسام أول الرئيسية", "Welcome & sections first")]]],
@@ -35179,6 +35179,17 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   document.addEventListener("DOMContentLoaded", () => { const a = app(); if (a) new MutationObserver(() => { last = Date.now(); }).observe(a, { childList: true, subtree: true }); check(); });
   if (document.readyState !== "loading") check();
   /* أي تنقّل بعد كده مايأثرش: الشاشة بتتشال مرة واحدة بس */
+  /* ---------- البيانات من الكاش الأول (الإعدادات + الملف الشخصي) وبعدين نحدّث في الخلفية — عشان الصفحة تترسم بسرعة ومرة واحدة ---------- */
+  if (FF("v289.cache")) {
+    const SK = "itqan_set289", PK = u => "itqan_prof289_" + u; const rd = k => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }; const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+    let bootS = 1, bootP = 1;
+    const _ls = loadSettings; loadSettings = async function () { const c = bootS ? rd(SK) : null; bootS = 0; const fresh = Promise.resolve(_ls.apply(this, arguments)).then(() => { const n = state.settings; if (n) { const was = JSON.stringify(rd(SK)); wr(SK, n); if (c && was !== JSON.stringify(n) && state.auth && state.auth.ready) { try { render(); } catch (e) {} } } });
+      if (c) { try { applySettings(c); } catch (e) { return fresh; } fresh.catch(() => {}); return; } return fresh; };
+    const _lp = loadProfile; loadProfile = async function () { const u = state.auth && state.auth.user; const c = bootP && u ? rd(PK(u.id)) : null; bootP = 0;
+      const fresh = Promise.resolve(_lp.apply(this, arguments)).then(() => { const p = state.auth && state.auth.profile; const uu = state.auth && state.auth.user; if (uu && p) { const was = JSON.stringify(rd(PK(uu.id))); wr(PK(uu.id), p); if (c && was !== JSON.stringify(p) && state.auth.ready) { try { render(); } catch (e) {} } } });
+      if (c && u) { state.auth.profile = c; fresh.catch(() => {}); return; } return fresh; };
+    window.addEventListener("storage", () => {});
+  }
 })();
 
 /* ================= v290: السبورة البيضاء العائمة فوق أي صفحة (طلب المالك 20/11 Phase 2) — بتفتح فوق الصفحة الحالية من غير ما تسيبها: تتحرك، تكبر وتصغر، ملء الشاشة، تصغير، شفافية، إخفاء الأدوات · الأدوات: قلم، رصاص، هايلايتر، ممحاة، خط، سهم، مستطيل، دائرة، نص (عربي صحيح)، ألوان، سُمك، تراجع/إعادة، مسح، تكبير/تصغير وتحريك اللوحة، صورة من الجهاز، صفحات متعددة، خلفية بيضاء/مربعات/شفافة · حفظ تلقائي ويرجع زي ما سبته · تصدير PDF (كل الصفحات أو اللي تختارها) وطباعة · لمس وقلم وصباع من غير تأخير ================= */
