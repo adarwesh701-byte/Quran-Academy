@@ -155,7 +155,7 @@
 
   /* ---------- الربط: الصفحة + الأقسام ---------- */
   const _r = render; render = function () { if (state.route === "ce293" && FF("v293.ce")) { const app = document.getElementById("app"); if (app) { app.innerHTML = renderHeader() + pageWrap("📗", T("المناهج التفاعلية", "Interactive curricula"), T("تعلّم من الكتاب نفسه بالصوت الأصلي: جملة جملة، حوار، تمارين، واختبار.", "Learn from the book itself with the original audio: sentence by sentence, dialogue, exercises and tests."), `<div class="ce293">${page()}</div>`) + renderFooter(); try { hl(); } catch (e) {} } return; } if (state.route !== "ce293") { if (AU.el && !AU.el.paused && !S.keep) stop(); } return _r.apply(this, arguments); };
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("ce293")) PAGES16.push("ce293"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("ce293")) PAGES16.push("ce293"); } catch (e) {}
   try { if (window.url288 && url288.slugOf) { /* اسم مقروء للّينك */ } } catch (e) {}
   if (typeof DOMAINS === "function") { const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { if (FF("v293.ce")) { const a = ds.find(d => d.k === "arabic"); if (a && a.tools && !a.tools.some(t => /ce293/.test(t[2]))) a.tools.splice(0, 0, ["🎧", T("العربية بين يديك — دروس تفاعلية بالصوت جملة جملة", "Al-Arabiyyah Bayna Yadayk — interactive lessons"), "go16('ce293','abyb')", ""]); } } catch (e) {} return ds; }; }
 })();

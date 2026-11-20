@@ -27,13 +27,13 @@
   const _r = render; render = function () {
     try {
       if (state.auth && state.auth.user && AUTH.includes(state.route)) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} }
-      if (bare && !landed && state.auth && state.auth.ready) { landed = 1; if (state.route !== "home" && !(location.hash || "").replace(/^#\/?/, "")) state.route = "home"; }
+      if (bare && !landed && state.auth && state.auth.ready) { landed = 1; if (state.route !== "home" && !(location.hash || "").replace(/^#\/?/, "") && /^\/(index\.html)?$/.test(location.pathname)) state.route = "home"; }
       if (state.route === "calc274") { const app = document.getElementById("app"); if (app) { app.innerHTML = renderHeader() + pageWrap("🧮", T("الآلة الحاسبة المتقدمة", "Advanced calculator"), T("علمية: أقواس، أسس، جذور، لوغاريتم، مثلثات، نسبة، ذاكرة، وسجل للعمليات. ينفع بالكيبورد.", "Scientific: brackets, powers, roots, logs, trig, percent, memory and history. Keyboard works."), `<div id="cp274"></div>`, 560) + renderFooter() + (typeof renderAIWidget === "function" ? renderAIWidget() : ""); calc.mount(document.getElementById("cp274")); } return; }
     } catch (e) { console.error(e); }
     const o = _r.apply(this, arguments);
     try { extra(); } catch (e) {}
     return o; };
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("calc274")) PAGES16.push("calc274"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("calc274")) PAGES16.push("calc274"); } catch (e) {}
   try { if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("calc274")) HASH_ROUTES.push("calc274"); } catch (e) {}
 
   /* ---------- (5) الآلة الحاسبة ---------- */

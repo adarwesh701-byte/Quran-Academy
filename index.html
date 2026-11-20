@@ -3238,7 +3238,7 @@ async function syncUiTranslations(force) {
   } catch (e) { console.error(e); }
   state.i18nSyncing = false;
 }
-const UI_VERSION = "2026-11-20-v293";
+const UI_VERSION = "2026-11-20-v294";
 
 /* اللغة: حفظها في الحساب + تحميل ترجماتها */
 function setLang(l) {
@@ -9224,7 +9224,7 @@ const PAGES16 = ["tools", "hifz", "tuner", "maqam-game", "sponsor", "khatma", "p
 const _readHash16 = readHash;
 readHash = function () {
   const p = (location.hash || "").replace(/^#\/?/, "").split("/");
-  if (PAGES16.includes(p[0])) { state.route = p[0]; state.pageArg = p[1] ? decodeURIComponent(p[1]) : null; return; }
+  if (PAGES16.includes(p[0])) { state.route = p[0]; state.pageArg = p[1] ? p.slice(1).map(decodeURIComponent).join("/") : null; return; }
   _readHash16();
 };
 function go16(route, arg) { state.route = route; state.pageArg = arg || null; try { history.pushState(null, "", "#/" + route + (arg ? "/" + arg : "")); } catch (e) {} window.scrollTo({ top: 0, behavior: "smooth" }); state.menuOpen = false; render(); }
@@ -33802,13 +33802,13 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   const _r = render; render = function () {
     try {
       if (state.auth && state.auth.user && AUTH.includes(state.route)) { state.route = "home"; try { history.replaceState(null, "", "#/home"); } catch (e) {} }
-      if (bare && !landed && state.auth && state.auth.ready) { landed = 1; if (state.route !== "home" && !(location.hash || "").replace(/^#\/?/, "")) state.route = "home"; }
+      if (bare && !landed && state.auth && state.auth.ready) { landed = 1; if (state.route !== "home" && !(location.hash || "").replace(/^#\/?/, "") && /^\/(index\.html)?$/.test(location.pathname)) state.route = "home"; }
       if (state.route === "calc274") { const app = document.getElementById("app"); if (app) { app.innerHTML = renderHeader() + pageWrap("🧮", T("الآلة الحاسبة المتقدمة", "Advanced calculator"), T("علمية: أقواس، أسس، جذور، لوغاريتم، مثلثات، نسبة، ذاكرة، وسجل للعمليات. ينفع بالكيبورد.", "Scientific: brackets, powers, roots, logs, trig, percent, memory and history. Keyboard works."), `<div id="cp274"></div>`, 560) + renderFooter() + (typeof renderAIWidget === "function" ? renderAIWidget() : ""); calc.mount(document.getElementById("cp274")); } return; }
     } catch (e) { console.error(e); }
     const o = _r.apply(this, arguments);
     try { extra(); } catch (e) {}
     return o; };
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("calc274")) PAGES16.push("calc274"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("calc274")) PAGES16.push("calc274"); } catch (e) {}
   try { if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("calc274")) HASH_ROUTES.push("calc274"); } catch (e) {}
 
   /* ---------- (5) الآلة الحاسبة ---------- */
@@ -34392,7 +34392,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   };
   document.addEventListener("keydown", e => { if (state.route !== "abyb280" || !unit() || /INPUT|SELECT|TEXTAREA/.test((e.target || {}).tagName || "")) return; const s = S(); if (e.key === "ArrowLeft") ab280.go(s.s + (AR() ? 1 : -1)); else if (e.key === "ArrowRight") ab280.go(s.s + (AR() ? -1 : 1)); else if (e.key === " " && document.getElementById("au280")) { e.preventDefault(); const a = document.getElementById("au280"); a.paused ? a.play() : a.pause(); } });
 
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("abyb280")) PAGES16.push("abyb280"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("abyb280")) PAGES16.push("abyb280"); } catch (e) {}
   try { if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("abyb280")) HASH_ROUTES.push("abyb280"); } catch (e) {}
   if (/^#\/abyb280/.test(location.hash)) state.route = "abyb280";
   const _r = render; render = function () { if (state.route === "abyb280" && FF("v280.book")) { const app = document.getElementById("app"); if (!app) return; let b; try { b = page(); } catch (e) { console.error(e); b = `<div class="card">${E(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + (typeof renderAIWidget === "function" ? renderAIWidget() : ""); return; } return _r.apply(this, arguments); };
@@ -34511,7 +34511,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   const want = () => { const r = state.route || "home"; let a = typeof state.pageArg === "string" ? state.pageArg : ""; if (!a && r === "library" && state.libSec) a = state.libSec; if (!a && ["track-detail", "cert", "verify"].includes(r) && state.track) a = state.track; return "#/" + r + (a ? "/" + encodeURIComponent(a).replace(/%2F/g, "/") : ""); };
   let syncing = 0;
   function sync() { if (!FF("v283.links") || syncing) return; const w = want(); const cur = location.hash || ""; if (cur === w || cur.startsWith(w + "/") || (w === "#/home" && cur === "")) return; const seg = s => s.replace(/^#\/?/, "").split(/[/?]/)[0]; if (seg(cur) === seg(w) && !state.pageArg && !(state.route === "library" && state.libSec)) return; try { history.pushState(null, "", w); } catch (e) {} }
-  if (typeof readHash === "function") { const _h = readHash; readHash = function () { const was = syncing; syncing = 1; try { const r = _h.apply(this, arguments); const p = (location.hash || "").replace(/^#\/?/, "").split("/"); if (!p[0]) { state.route = "home"; state.pageArg = null; } if (p[0] === "library" && p[1]) { state.route = "library"; state.libSec = decodeURIComponent(p[1]); } else if (p[0] && p[0] !== state.route && Array.isArray(window.PAGES16) && PAGES16.includes(p[0])) { state.route = p[0]; state.pageArg = p[1] ? decodeURIComponent(p[1]) : null; } else if (p[0] && p[0] === state.route && p[1] && state.pageArg == null && Array.isArray(window.PAGES16) && PAGES16.includes(p[0])) state.pageArg = decodeURIComponent(p[1]); return r; } finally { syncing = was; } }; }
+  if (typeof readHash === "function") { const _h = readHash; readHash = function () { const was = syncing; syncing = 1; try { const r = _h.apply(this, arguments); const p = (location.hash || "").replace(/^#\/?/, "").split("/"); if (!p[0]) { state.route = "home"; state.pageArg = null; } if (p[0] === "library" && p[1]) { state.route = "library"; state.libSec = decodeURIComponent(p[1]); } else if (p[0] && p[0] !== state.route && (typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && PAGES16.includes(p[0])) { state.route = p[0]; state.pageArg = p[1] ? p.slice(1).map(decodeURIComponent).join("/") : null; } else if (p[0] && p[0] === state.route && p[1] && state.pageArg == null && (typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && PAGES16.includes(p[0])) state.pageArg = p.slice(1).map(decodeURIComponent).join("/"); return r; } finally { syncing = was; } }; }
   addEventListener("popstate", () => { syncing = 1; setTimeout(() => { syncing = 0; }, 400); }, true);
   const hrefOf = go => { let m; if ((m = /go16\('([^']+)'(?:\s*,\s*'([^']+)')?\)/.exec(go))) return "#/" + m[1] + (m[2] ? "/" + m[2] : ""); if ((m = /navigate\('([^']+)'\)/.exec(go))) return "#/" + m[1]; if ((m = /libGo\('([^']+)'\)/.exec(go))) return "#/library/" + m[1]; if ((m = /t260\.open\('([^']+)'\)/.exec(go))) { try { const t = t260.ALL()[m[1]]; if (t && /^#\//.test(t.go)) return t.go; } catch (e) {} } return null; };
   function linkify() { document.querySelectorAll("#app button.tg275:not([data-l283]), #app button.uc280:not([data-l283])").forEach(b => { b.dataset.l283 = 1; const go = b.getAttribute("onclick") || ""; const h = hrefOf(go); if (!h) return; const a = document.createElement("a"); a.className = b.className; a.href = h; a.innerHTML = b.innerHTML; a.dataset.l283 = 1; a.setAttribute("onclick", `if(event.ctrlKey||event.metaKey||event.shiftKey||event.button===1)return true;event.preventDefault();${go}`); b.replaceWith(a); }); }
@@ -34803,11 +34803,11 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
 
   /* ================= 4) المنشئ نفسه ================= */
   const LK = "itqan_xb286_work";
-  const ROUTES = () => { const base = [["home", T("الرئيسية", "Home")], ["myspace", T("مساحتي", "My space")], ["dashboard", T("لوحة التحكم", "Dashboard")], ["library", T("المكتبة", "Library")], ["maqamat", T("المقامات", "Maqamat")], ["hifz", T("الحفظ", "Memorization")], ["competitions", T("المسابقات", "Competitions")], ["placement", T("اختبار المستوى", "Placement")], ["tracks", T("الدورات", "Courses")], ["booking", T("الحجز", "Booking")], ["profile", T("ملفي", "Profile")], ["pricing", T("الأسعار", "Pricing")], ["about", T("من نحن", "About")], ["abyb280", T("العربية بين يديك", "Al-Arabiya Bayna Yadayk")], ["calc274", T("الآلة الحاسبة", "Calculator")]]; const seen = new Set(base.map(b => b[0])); try { (window.PAGES16 || []).forEach(r => { if (!seen.has(r) && !/xb286/.test(r)) { seen.add(r); base.push([r, r]); } }); } catch (e) {} return base; };
+  const ROUTES = () => { const base = [["home", T("الرئيسية", "Home")], ["myspace", T("مساحتي", "My space")], ["dashboard", T("لوحة التحكم", "Dashboard")], ["library", T("المكتبة", "Library")], ["maqamat", T("المقامات", "Maqamat")], ["hifz", T("الحفظ", "Memorization")], ["competitions", T("المسابقات", "Competitions")], ["placement", T("اختبار المستوى", "Placement")], ["tracks", T("الدورات", "Courses")], ["booking", T("الحجز", "Booking")], ["profile", T("ملفي", "Profile")], ["pricing", T("الأسعار", "Pricing")], ["about", T("من نحن", "About")], ["abyb280", T("العربية بين يديك", "Al-Arabiya Bayna Yadayk")], ["calc274", T("الآلة الحاسبة", "Calculator")]]; const seen = new Set(base.map(b => b[0])); try { (typeof PAGES16 !== "undefined" ? PAGES16 : []).forEach(r => { if (!seen.has(r) && !/xb286/.test(r)) { seen.add(r); base.push([r, r]); } }); } catch (e) {} return base; };
   const DEVSZ = { desktop: [1440, 900, "🖥️", "كمبيوتر", "Desktop"], laptop: [1280, 800, "💻", "لابتوب", "Laptop"], tablet: [820, 1180, "📱", "تابلت", "Tablet"], mobile: [390, 844, "📱", "موبايل", "Mobile"], custom: [1024, 768, "📐", "مقاس حر", "Custom"] };
   const xb = window.xb286 = {
     D: null, U: [], R: [], role: "student", page: "home", dv: "mobile", land: false, W: 0, H: 0, zoom: "fit", edit: true, sel: null, dtab: "a", tab: "el", frame: null, dirty: false, base: null,
-    go(r) { if ((window.PAGES16 || []).includes(r)) go16(r); else navigate(r); },
+    go(r) { if ((typeof PAGES16 !== "undefined" ? PAGES16 : []).includes(r)) go16(r); else navigate(r); },
     async open() { if (!ownR()) return toast(T("ده للمالك بس", "Owner only"), true); if (state.route !== "xb286") { state.route = "xb286"; try { history.pushState(null, "", "#/xb286"); } catch (e) {} }
       if (!xb.D) { let w = null; try { w = JSON.parse(localStorage.getItem(LK) || "null"); } catch (e) {} const dr = (state.settings || {}).xb286draft; xb.base = J(LIVE() || EMPTY()); xb.D = J(w || dr || xb.base); xb.D.tokens = Object.assign({ a: {}, d: {}, t: {}, m: {} }, xb.D.tokens || {}); xb.D.rules = xb.D.rules || []; xb.D.nav = xb.D.nav || { on: false, items: [] }; xb.dirty = !!w; }
       render(); },
@@ -35008,7 +35008,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
     if (state.route === "xb286" && !IN_PREV) { const app = document.getElementById("app"); if (!ownR()) { state.route = "home"; } else if (app) { if (!xb.D) { setTimeout(() => xb.open(), 0); app.innerHTML = renderHeader() + `<div style="padding:3rem;text-align:center">⏳</div>`; return; }
         if (!document.getElementById("xb286")) { app.innerHTML = xb.page_(); const f = document.getElementById("xbi286"); f.onload = () => { xb.hook(); xb.fit(); setTimeout(() => { xb.hl(); if (xb.tab === "pg") xb.side(); }, 600); }; xb.bar(); xb.side(); setTimeout(xb.fit, 30); } else { xb.bar(); xb.side(); } return; } }
     const o = _r.apply(this, arguments); try { modeMark(); settingsCard(); apply(); } catch (e) { console.warn("v286", e); } return o; };
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("xb286")) PAGES16.push("xb286"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("xb286")) PAGES16.push("xb286"); } catch (e) {}
   try { if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("xb286")) HASH_ROUTES.push("xb286"); } catch (e) {}
   addEventListener("resize", () => { if (state.route === "xb286") xb.fit(); });
   let q = 0; new MutationObserver(ms => { if (q) return; if (!ms.some(m => m.target.id === "app" || (m.target.closest && m.target.closest("#app")))) return; q = 1; setTimeout(() => { q = 0; try { if (state.route !== "xb286" || IN_PREV) apply(); settingsCard(); } catch (e) {} }, 150); }).observe(document.documentElement, { childList: true, subtree: true });
@@ -35036,7 +35036,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   const encA = a => (/^[a-z][a-z0-9-]*$/.test(a) ? cap(a) : a).replace(/\//g, "~");
   const decA = a => { a = a.replace(/~/g, "/"); return /^[A-Z][a-z0-9-]*$/.test(a) ? a.charAt(0).toLowerCase() + a.slice(1) : a; };
   const toPretty = u => { const m = /#\/?([^?]*)/.exec(String(u)); if (!m) return null; const parts = m[1].split("/"); const r = parts.shift(); if (!r) return "/"; if (r === "home" && !parts.length) return "/"; let a = parts.join("/"); try { a = decodeURIComponent(a); } catch (e) {} return "/" + slugOf(r) + (a ? "_" + encodeURIComponent(encA(a)).replace(/%7E/g, "~") : ""); };
-  const fromPath = p => { let seg = String(p || "").replace(/^\/+|\/+$/g, ""); try { seg = decodeURIComponent(seg); } catch (e) {} if (!seg || /\.|\//.test(seg)) return null; const i = seg.indexOf("_"); const sl = i < 0 ? seg : seg.slice(0, i), a = i < 0 ? "" : seg.slice(i + 1); let r = REV[sl.toLowerCase()]; if (!r) { const low = sl.toLowerCase(); let all = []; try { all = (window.PAGES16 || []).concat(typeof HASH_ROUTES !== "undefined" ? HASH_ROUTES : []); } catch (e) {} r = all.find(x => x.toLowerCase() === low) || (/-page$/.test(low) ? low.replace(/-page$/, "") : null); } if (!r) return null; return "#/" + r + (a ? "/" + encodeURIComponent(decA(a)).replace(/%2F/g, "/") : ""); };
+  const fromPath = p => { let seg = String(p || "").replace(/^\/+|\/+$/g, ""); try { seg = decodeURIComponent(seg); } catch (e) {} if (!seg || /\.|\//.test(seg)) return null; const i = seg.indexOf("_"); const sl = i < 0 ? seg : seg.slice(0, i), a = i < 0 ? "" : seg.slice(i + 1); let r = REV[sl.toLowerCase()]; if (!r) { const low = sl.toLowerCase(); let all = []; try { all = (typeof PAGES16 !== "undefined" ? PAGES16 : []).concat(typeof HASH_ROUTES !== "undefined" ? HASH_ROUTES : []); } catch (e) {} r = all.find(x => x.toLowerCase() === low) || (/-page$/.test(low) ? low.replace(/-page$/, "") : null); } if (!r) return null; return "#/" + r + (a ? "/" + encodeURIComponent(decA(a)).replace(/%2F/g, "/") : ""); };
   try { const _n = navigate; navigate = function () { try { state.pageArg = null; } catch (e) {} return _n.apply(this, arguments); }; } catch (e) {}
   window.url288 = { toPretty, fromPath, slugOf };
   let POP = 0;
@@ -35053,7 +35053,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
   }
   function pretty() { if (!ON()) return; if (location.hash && location.hash.startsWith("#/")) { const p = toPretty(location.hash); if (p && p !== location.pathname + location.hash) H.rep(history.state, "", p); }
     document.querySelectorAll('#app a[data-l283][href^="#/"], #rl288 a[href^="#/"], #rr288 a[href^="#/"]').forEach(a => { const p = toPretty(a.getAttribute("href")); if (p) a.setAttribute("href", p); }); }
-  window.go288 = u => { u = String(u || "").trim(); if (!u) return; if (/^https?:\/\//.test(u)) return void window.open(u, "_blank", "noopener"); let h = u.startsWith("#/") ? u : u.startsWith("/") ? (fromPath(u) || "#/home") : "#/" + u; const p = h.replace(/^#\/?/, "").split("/"); const r = p[0] || "home", a = p.slice(1).join("/"); try { if (r === "library" && a && typeof libGo === "function") return libGo(decodeURIComponent(a)); if ((window.PAGES16 || []).includes(r)) return go16(r, a ? decodeURIComponent(a) : undefined); navigate(r); } catch (e) { location.href = "/" + h; } };
+  window.go288 = u => { u = String(u || "").trim(); if (!u) return; if (/^https?:\/\//.test(u)) return void window.open(u, "_blank", "noopener"); let h = u.startsWith("#/") ? u : u.startsWith("/") ? (fromPath(u) || "#/home") : "#/" + u; const p = h.replace(/^#\/?/, "").split("/"); const r = p[0] || "home", a = p.slice(1).join("/"); try { if (r === "library" && a && typeof libGo === "function") return libGo(decodeURIComponent(a)); if ((typeof PAGES16 !== "undefined" ? PAGES16 : []).includes(r)) return go16(r, a ? decodeURIComponent(a) : undefined); navigate(r); } catch (e) { location.href = "/" + h; } };
 
   /* ================= 2) الشريطين الجانبيين ================= */
   const SEC = [["quran", "📖", "القرآن", "Quran"], ["qiraat", "📜", "القراءات", "Qira'at"], ["maqamat", "🎼", "الصوت والمقامات", "Voice & Maqamat"], ["arabic", "✍️", "العربي", "Arabic"], ["sciences", "📚", "العلوم الإسلامية", "Islamic sciences"], ["class", "🎥", "الفصل والحصص", "Classroom"], ["comp", "🏆", "المسابقات", "Competitions"], ["life", "🕌", "حياة المسلم", "Muslim life"]];
@@ -35465,7 +35465,7 @@ body.dark .k273q{background:#3f3a12}body.dark .k273ans{background:#14381f}</styl
 
   /* ---------- الربط: الصفحة + الأقسام ---------- */
   const _r = render; render = function () { if (state.route === "ce293" && FF("v293.ce")) { const app = document.getElementById("app"); if (app) { app.innerHTML = renderHeader() + pageWrap("📗", T("المناهج التفاعلية", "Interactive curricula"), T("تعلّم من الكتاب نفسه بالصوت الأصلي: جملة جملة، حوار، تمارين، واختبار.", "Learn from the book itself with the original audio: sentence by sentence, dialogue, exercises and tests."), `<div class="ce293">${page()}</div>`) + renderFooter(); try { hl(); } catch (e) {} } return; } if (state.route !== "ce293") { if (AU.el && !AU.el.paused && !S.keep) stop(); } return _r.apply(this, arguments); };
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("ce293")) PAGES16.push("ce293"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("ce293")) PAGES16.push("ce293"); } catch (e) {}
   try { if (window.url288 && url288.slugOf) { /* اسم مقروء للّينك */ } } catch (e) {}
   if (typeof DOMAINS === "function") { const _D = DOMAINS; DOMAINS = function () { const ds = _D.apply(this, arguments); try { if (FF("v293.ce")) { const a = ds.find(d => d.k === "arabic"); if (a && a.tools && !a.tools.some(t => /ce293/.test(t[2]))) a.tools.splice(0, 0, ["🎧", T("العربية بين يديك — دروس تفاعلية بالصوت جملة جملة", "Al-Arabiyyah Bayna Yadayk — interactive lessons"), "go16('ce293','abyb')", ""]); } } catch (e) {} return ds; }; }
 })();

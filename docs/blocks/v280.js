@@ -44,7 +44,7 @@
   };
   document.addEventListener("keydown", e => { if (state.route !== "abyb280" || !unit() || /INPUT|SELECT|TEXTAREA/.test((e.target || {}).tagName || "")) return; const s = S(); if (e.key === "ArrowLeft") ab280.go(s.s + (AR() ? 1 : -1)); else if (e.key === "ArrowRight") ab280.go(s.s + (AR() ? -1 : 1)); else if (e.key === " " && document.getElementById("au280")) { e.preventDefault(); const a = document.getElementById("au280"); a.paused ? a.play() : a.pause(); } });
 
-  try { if (Array.isArray(window.PAGES16) && !PAGES16.includes("abyb280")) PAGES16.push("abyb280"); } catch (e) {}
+  try { if ((typeof PAGES16 !== "undefined" && Array.isArray(PAGES16)) && !PAGES16.includes("abyb280")) PAGES16.push("abyb280"); } catch (e) {}
   try { if (typeof HASH_ROUTES !== "undefined" && !HASH_ROUTES.includes("abyb280")) HASH_ROUTES.push("abyb280"); } catch (e) {}
   if (/^#\/abyb280/.test(location.hash)) state.route = "abyb280";
   const _r = render; render = function () { if (state.route === "abyb280" && FF("v280.book")) { const app = document.getElementById("app"); if (!app) return; let b; try { b = page(); } catch (e) { console.error(e); b = `<div class="card">${E(e.message)}</div>`; } app.innerHTML = renderHeader() + b + renderFooter() + (typeof renderAIWidget === "function" ? renderAIWidget() : ""); return; } return _r.apply(this, arguments); };
