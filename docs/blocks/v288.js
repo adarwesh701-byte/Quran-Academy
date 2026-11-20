@@ -44,6 +44,7 @@
     myspace: { ic: "👤", ar: "مساحتي", en: "My space", go: "myspace", need: () => { try { return !!state.auth.user; } catch (e) { return false; } } },
     lang: { ic: "🌐", ar: "اللغة والعرض", en: "Language", run: () => { const b = document.getElementById("ctl113"); b && b.click(); }, need: () => !!document.getElementById("ctl113") },
     tools: { ic: "🧰", ar: "الأدوات", en: "Tools", run: () => { try { bar201.tog("tools"); } catch (e) { const b = document.getElementById("tab201-tools") || document.getElementById("h207-tools"); b && b.click(); } }, need: () => !!document.getElementById("sd152") },
+    wb: { ic: "🧑‍🏫", ar: "السبورة", en: "Whiteboard", run: () => wb290.open(), need: () => !!window.wb290 },
     builder: { ic: "🎨", ar: "منشئ التجربة", en: "Builder", run: () => xb286.open(), need: () => own() && window.xb286 && ((state.settings || {}).ctl286 !== "old") },
     ctl: { ic: "🛠️", ar: "وضع الحصة", en: "Class mode", run: () => { const b = document.getElementById("lk187"); b && b.click(); }, need: () => !!document.getElementById("lk187") },
     fonts: { ic: "🔤", ar: "الخطوط", en: "Fonts", run: () => { try { ft271.open(); } catch (e) {} }, need: () => !!document.querySelector(".fb271") },
@@ -51,7 +52,7 @@
     ai: { ic: "🤖", ar: "المساعد الذكي", en: "AI assistant", run: () => { state.aiOpen = !state.aiOpen; render(); }, need: () => !!document.querySelector(".ai-widget") }
   };
   SEC.forEach(([id, ic, ar, en]) => { AUTO["s_" + id] = { ic, ar, en, run: () => { navigate("home"); setTimeout(() => { try { tr277.tab(id); } catch (e) {} const s = document.getElementById("tr275"); s && s.scrollIntoView({ behavior: "smooth", block: "start" }); }, 250); } }; });
-  const DEF = () => ({ open: false, tablet: true, pos: "center", r: { items: ["home"].concat(SEC.map(s => "s_" + s[0])).concat(["pricing", "myspace"]).map(k => ({ k })) }, l: { items: ["lang", "tools", "builder", "ctl", "ai", "fonts", "pin"].map(k => ({ k })) } });
+  const DEF = () => ({ open: false, tablet: true, pos: "center", r: { items: ["home"].concat(SEC.map(s => "s_" + s[0])).concat(["pricing", "myspace"]).map(k => ({ k })) }, l: { items: ["lang", "wb", "tools", "builder", "ctl", "ai", "fonts", "pin"].map(k => ({ k })) } });
   const CFG = () => { const c = (state.settings || {}).rails288; return c && c.r && c.l ? c : DEF(); };
   const roleNow = () => { try { if (!state.auth.user) return "guest"; const r = realRole(); return r === "owner" && state.preview ? state.preview : (r || "student"); } catch (e) { return "student"; } };
   const ROLES = { owner: ["المالك", "Owner"], admin: ["المشرفين", "Admins"], teacher: ["المعلمين", "Teachers"], student: ["الطلاب", "Students"], guest: ["الزوار", "Visitors"] };

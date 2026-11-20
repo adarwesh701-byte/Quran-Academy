@@ -27,7 +27,7 @@
 
   /* ---------- الشريط اللي فوق ---------- */
   function navFix() { if (!FF("v254.nav")) return; const hdr = document.querySelector("#app header, #app .hdr"); if (!hdr) return;
-    document.querySelectorAll('#app a[onclick^="navigate(\'about\')"]').forEach(a => { a.textContent = T("من نحن والتواصل", "About & contact"); });
+    document.querySelectorAll('#app a[onclick^="navigate(\'about\')"]').forEach(a => { const v = T("من نحن والتواصل", "About & contact"); if (a.textContent !== v) a.textContent = v; });
     document.querySelectorAll('#app a[onclick^="navigate(\'contact\')"]').forEach(a => a.remove());
     document.querySelectorAll('#app a[onclick*="go16(\'tools\')"]').forEach(a => a.remove());
     document.querySelectorAll('#app .nav a[onclick^="navigate(\'pricing\')"], #app header a[onclick^="navigate(\'pricing\')"]').forEach(a => { if (a.dataset.n254) return; a.dataset.n254 = 1; a.textContent = "💳 " + T("اشترك", "Subscribe"); a.classList.add("sub254"); a.insertAdjacentHTML("afterend", `<a href="#" class="tp254" title="${T("أسعار الاشتراك مع مدرس", "Prices with a teacher")}" onclick="state.ptab='lessons';navigate('pricing');return false;">👨‍🏫</a>`); }); }
