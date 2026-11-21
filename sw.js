@@ -1,5 +1,15 @@
 /* Itqan Academy service worker — app shell cache (network-first for the page, cache-first for static assets) */
-const CACHE = "itqan-v295";
+const CACHE = "itqan-v303";
+// Match only the configured Supabase project; suffix checks also accept attacker-controlled domains.
+const SUPABASE_HOST = "ymycfxmigvvermsdnagm.supabase.co";
+const isSupabaseRequest = (url) => url.hostname === SUPABASE_HOST;
+// Only persist REST content fetched with the public anon key. A logged-in user's
+// JWT may receive RLS-filtered rows, so it must never enter the shared Cache API.
+const isAnonymousSupabaseRead = (request) => {
+  const apiKey = request.headers && request.headers.get("apikey");
+  const authorization = request.headers && request.headers.get("authorization");
+  return !!apiKey && authorization === `Bearer ${apiKey}`;
+};
 const SHELL = ["/", "/index.html", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
@@ -15,17 +25,20 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   // المحتوى العام (الأقسام والمحتوى والإعدادات والترجمة): الشبكة أولًا، ولو مفيش نت نعرض آخر نسخة
-  if (url.hostname.endsWith("supabase.co") && /\/rest\/v1\/(sections|contents|site_settings|tr_en)\b/.test(url.pathname)) {
+  if (isSupabaseRequest(url) && /\/rest\/v1\/(sections|contents|site_settings|tr_en)\b/.test(url.pathname)) {
+    // Authenticated/RLS-scoped responses always go straight to the network and
+    // are never read from or written to the shared offline cache.
+    if (!isAnonymousSupabaseRead(req)) return;
     e.respondWith(fetch(req).then((r) => { if (r.ok) { const cp = r.clone(); caches.open("itqan-data").then((c) => c.put(req.url, cp)); } return r; }).catch(() => caches.open("itqan-data").then((c) => c.match(req.url)).then((h) => h || Response.error())));
     return;
   }
   // حماية من الزحمة: أي طلب قراءة من قاعدة البيانات لو رجع «مشغول» (429/503/502/504) بنعيده تلقائي بعد شوية بدل ما المستخدم يشوف خطأ
-  if (url.hostname.endsWith("supabase.co") && /\/rest\/v1\//.test(url.pathname)) {
+  if (isSupabaseRequest(url) && /\/rest\/v1\//.test(url.pathname)) {
     e.respondWith((async () => { let last; for (let i = 0; i < 4; i++) { try { const r = await fetch(req.clone()); if (![429, 502, 503, 504].includes(r.status)) return r; last = r; } catch (er) { last = null; } await new Promise((ok) => setTimeout(ok, 400 * (i + 1) + Math.random() * 600)); } return last || fetch(req); })());
     return;
   }
   // never cache API / auth / realtime calls
-  if (url.hostname.endsWith("supabase.co") || url.hostname.includes("translate") || url.hostname.includes("mymemory")) return;
+  if (isSupabaseRequest(url) || url.hostname.includes("translate") || url.hostname.includes("mymemory")) return;
   if (req.mode === "navigate" || (url.origin === location.origin && (url.pathname === "/" || url.pathname.endsWith(".html")))) {
     // الشبكة أولًا (أحدث نسخة دايمًا)، ولو مفيش نت أو اتأخر أكتر من ٤ ثواني نفتح المحفوظة
     const isMain = url.pathname === "/" || url.pathname === "/index.html";

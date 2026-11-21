@@ -1,0 +1,798 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>u must correct</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+	/* Paint a complete callout box on every PDF page fragment. */
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+/*
+ * Toggles and callouts hold arbitrary content, so they can easily be taller
+ * than a page. They must stay breakable: avoiding breaks inside them makes
+ * Chromium push the whole block onto the next page, which leaves the previous
+ * page mostly empty before every long toggle.
+ */
+details,
+aside {
+	margin: 1.25em 0;
+}
+
+/* Keep a toggle's title on the same page as the start of its content. */
+summary {
+	page-break-after: avoid;
+	break-after: avoid;
+}
+
+/*
+ * Toggle headings render as <h1/h2/h3 style="display:inline-block"> inside
+ * <summary>. Without this reset, the heading's margin-top pushes it below the
+ * ::marker (▼), so the triangle and the title appear on separate lines.
+ */
+summary h1,
+summary h2,
+summary h3,
+summary h4 {
+	margin-top: 0;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="41ecea6a-e158-80f5-b9bf-e6333f23f289" class="page sans"><header><h1 class="page-title" dir="auto">u must correct</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="41ecea6a-e158-80dd-976e-d133b69450e6" class="" dir="auto">أكاديمية إتقان — جدول كل الأوردرات بالتفصيل (من أول يوم لحد النهارده)</h1><p id="41ecea6a-e158-80cd-af36-ca2a44c8b9cf" class="" dir="auto">آخر تحديث: 20 نوفمبر 2026 الفجر · آخر نسخة على الموقع: <strong>v272</strong></p><p id="41ecea6a-e158-802f-b03c-d3e5fad8a475" class="" dir="auto">✅ اتعمل واتجرّب · 🟡 جزئي (المكتوب في «ليه» هو الناقص) · ⬜ لسه · 👤 مستني حاجة منك · ❌ مش هيتعمل زي ما هو (السبب مكتوب)</p><p id="41ecea6a-e158-80f6-989f-c6a1e6113a2b" class="" dir="auto"><strong>المصادر بالترتيب:</strong></p><ul id="41ecea6a-e158-8035-a6a6-f4ff71861cce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>N1</strong> = Notion الأول «My Projrccct» (<code>418cea6ae15880a49284ebfbee6410ef</code>).</li></ul><ul id="41ecea6a-e158-809d-bf5d-d073c859c69a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>N2</strong> = Notion التاني «project» (<code>41dcea6ae1588002a19bc0d07cfc4ec6</code>).</li></ul><ul id="41ecea6a-e158-80d6-b39c-d8306de5b274" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>N3</strong> = Notion التالت «project» (<code>41dcea6ae158805babaed7026175cffe</code>).</li></ul><ul id="41ecea6a-e158-8089-a8ce-cc6663ae0e94" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>N4</strong> = Notion الرابع «projjjjjeeeect» (<code>41dcea6ae158801e8943d715342da1f3</code>)، ومعاه رسالة الشات النهارده.</li></ul><ul id="41ecea6a-e158-806d-84d2-ec8aafa7b8f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>CH</strong> = طلبات الشات.</li></ul><ul id="41ecea6a-e158-8051-941e-fa76db05de97" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>AI</strong> = اقتراحات الـ AI.</li></ul><ul id="41ecea6a-e158-8040-be6b-e8c7669da5ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">نسخة HTML من N1 وN2 بالصور في <code>docs/notion1/</code> و<code>docs/notion2/</code>، ونسخة N3 في <code>docs/notion3/</code>.</li></ul><hr id="41ecea6a-e158-8001-a9d6-cdb9179e8d18" dir="auto"/><h2 id="41ecea6a-e158-808c-8651-d41a631fbaf7" class="" dir="auto">الخلاصة</h2><table id="41ecea6a-e158-807c-8ef5-f10c590d8934" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-8067-b3cb-dd1569bb3a4f" dir="ltr"><th id="NY~w" class="simple-table-header-color simple-table-header">المصدر</th><th id="B&lt;e&lt;" class="simple-table-header-color simple-table-header">عدد البنود</th><th id="^}GI" class="simple-table-header-color simple-table-header">✅</th><th id="`gHV" class="simple-table-header-color simple-table-header">🟡</th><th id="~j[s" class="simple-table-header-color simple-table-header">⬜</th><th id="}yNT" class="simple-table-header-color simple-table-header">👤</th><th id="nR;[" class="simple-table-header-color simple-table-header">❌</th></tr></thead><tbody><tr id="41ecea6a-e158-800e-8d04-eb5f7f0e025d" dir="ltr"><td id="NY~w" class="">N1 (My Projrccct)</td><td id="B&lt;e&lt;" class="">160</td><td id="^}GI" class="">77</td><td id="`gHV" class="">44</td><td id="~j[s" class="">34</td><td id="}yNT" class="">4</td><td id="nR;[" class="">1</td></tr><tr id="41ecea6a-e158-80fa-905e-de1b5c9b45cb" dir="ltr"><td id="NY~w" class="">N2 (project)</td><td id="B&lt;e&lt;" class="">48</td><td id="^}GI" class="">32</td><td id="`gHV" class="">9</td><td id="~j[s" class="">5</td><td id="}yNT" class="">1</td><td id="nR;[" class="">1</td></tr><tr id="41ecea6a-e158-8035-a41b-dd76480b09aa" dir="ltr"><td id="NY~w" class="">N3 (project)</td><td id="B&lt;e&lt;" class="">40</td><td id="^}GI" class="">30</td><td id="`gHV" class="">7</td><td id="~j[s" class="">3</td><td id="}yNT" class="">—</td><td id="nR;[" class="">—</td></tr><tr id="41ecea6a-e158-80b0-a989-fedb8378a15f" dir="ltr"><td id="NY~w" class="">N4 + شات النهارده</td><td id="B&lt;e&lt;" class="">19</td><td id="^}GI" class="">15</td><td id="`gHV" class="">1</td><td id="~j[s" class="">3</td><td id="}yNT" class="">—</td><td id="nR;[" class="">—</td></tr><tr id="41ecea6a-e158-805a-b61a-dcceb4210f0a" dir="ltr"><td id="NY~w" class="">شات 19/11</td><td id="B&lt;e&lt;" class="">14</td><td id="^}GI" class="">14</td><td id="`gHV" class="">—</td><td id="~j[s" class="">—</td><td id="}yNT" class="">—</td><td id="nR;[" class="">—</td></tr><tr id="41ecea6a-e158-80bd-ad59-db262c1656e1" dir="ltr"><td id="NY~w" class="">اقتراحات AI</td><td id="B&lt;e&lt;" class="">112</td><td id="^}GI" class="">64</td><td id="`gHV" class="">12</td><td id="~j[s" class="">32</td><td id="}yNT" class="">4</td><td id="nR;[" class="">—</td></tr><tr id="41ecea6a-e158-8037-bb8f-e5e68623b9b1" dir="ltr"><td id="NY~w" class="">تقرير Notion «33» (اللي كان ناقص فيه)</td><td id="B&lt;e&lt;" class="">77</td><td id="^}GI" class="">21</td><td id="`gHV" class="">30</td><td id="~j[s" class="">23</td><td id="}yNT" class="">2</td><td id="nR;[" class="">1</td></tr></tbody></table><p id="41ecea6a-e158-80b4-88da-c6a7077fbd23" class="" dir="auto"><strong>أكبر 4 أسباب للي لسه:</strong></p><ol type="1" id="41ecea6a-e158-8060-9b14-d29d162d4158" class="numbered-list" start="1" dir="auto"><li><strong>محتوى العربي من الكتب</strong> (الفصحى والعامية والنحو والصرف والبلاغة). ده حوالي 3,000 صفحة ممسوحة، وهي <strong>الأوردر التالت</strong>. حالة كل كتاب في قسم «الكتب» تحت.</li></ol><ol type="1" id="41ecea6a-e158-80ae-bf20-f81db99cfaf0" class="numbered-list" start="2" dir="auto"><li><strong>حاجات محتاجة حساب أو مفتاح منك:</strong> الدفع الأونلاين، وTwilio، وGoogle Play، وApple، وتأكيد الإيميل في Supabase.</li></ol><ol type="1" id="41ecea6a-e158-80e2-b608-c56bdb009860" class="numbered-list" start="3" dir="auto"><li><strong>حاجات محتاجة سيرفر أو ملفات أصلية:</strong> فصل الموسيقى عن الصوت، وموسيقى الأناشيد الأصلية (حقوق نشر)، والمخارج المتحركة الواقعية (محتاجة رسومات أنيميشن).</li></ol><ol type="1" id="41ecea6a-e158-8063-888a-e7532c7c12a8" class="numbered-list" start="4" dir="auto"><li><strong>وضع البناء الكامل «زي فولدرات الكمبيوتر»</strong> لكل الموقع: سلة، وتحديد متعدد، وكليك يمين. ده شغل كبير، واتعمل منه أجزاء: 👁️ مين يشوف إيه، والأدوات، وحياة المسلم، والشريط.</li></ol><hr id="41ecea6a-e158-80d4-a35a-d58b597503e3" dir="auto"/><h2 id="41ecea6a-e158-8016-b345-d17e824f0e1f" class="" dir="auto">ملف Notion «33» = صفحة «اللي اتعمل واللي لسه» (اتراجعت 20/11)</h2><p id="41ecea6a-e158-8053-850d-de749360f427" class="" dir="auto">الملف ده مش طلبات جديدة. هو <strong>تقرير قديم</strong> اتكتب يوم 19/11 الصبح بعد v230–v244، وفيه 162 بند بحالتهم ساعتها. البنود هي نفسها بنود N1 بترقيم مختلف. ده كل بند كان فيه ⬜ أو 🟡 أو 👤 ساعتها، وحالته <strong>النهارده</strong> على v272:</p><table id="41ecea6a-e158-805f-8203-c27991e5cb17" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-8059-bbc1-dc64e96cb020" dir="ltr"><th id="Pbmo" class="simple-table-header-color simple-table-header"># في الملف</th><th id="yKMo" class="simple-table-header-color simple-table-header">الطلب</th><th id="RVYz" class="simple-table-header-color simple-table-header">كان</th><th id="~Zz=" class="simple-table-header-color simple-table-header">دلوقتي</th><th id="q[br" class="simple-table-header-color simple-table-header">النسخة / ليه لسه</th></tr></thead><tbody><tr id="41ecea6a-e158-8065-897e-c041f8237643" dir="ltr"><td id="Pbmo" class="">12</td><td id="yKMo" class="">أكسيس كامل أتحكم في كل حاجة</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">👁️ مين يشوف إيه v252 + الأدوات v260 + الشريط v261 + الخطوط v271 · ⬜ وضع الفولدرات (سلة/نقل/تحديد متعدد) — شغل كبير</td></tr><tr id="41ecea6a-e158-80ce-8748-d636b6465cf0" dir="ltr"><td id="Pbmo" class="">14</td><td id="yKMo" class="">مخارج وحركات واقعية متحركة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">محتاج رسومات أنيميشن حقيقية للفم والحلق</td></tr><tr id="41ecea6a-e158-80f0-be92-c8278beff47f" dir="ltr"><td id="Pbmo" class="">15</td><td id="yKMo" class="">أشيل تعديل واحد من نسخة</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v254</td></tr><tr id="41ecea6a-e158-8084-8643-d7e268df6c3d" dir="ltr"><td id="Pbmo" class="">18</td><td id="yKMo" class="">أصوات الحروف</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">⬜ صوت مسجّل لكل حرف (من قارئ، مش AI)</td></tr><tr id="41ecea6a-e158-8034-b1f2-ffee534e52ea" dir="ltr"><td id="Pbmo" class="">21</td><td id="yKMo" class="">الشريط الممدود يبدأ بعد اللوجو</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v264/v268 — اتأكدت على الموقع: الشريط صف واحد بعد اللوجو</td></tr><tr id="41ecea6a-e158-80af-bfb7-fa1e7e93d422" dir="ltr"><td id="Pbmo" class="">22</td><td id="yKMo" class="">أيقونة «استكشاف الكلام» بالإعدادات بس</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">محتاج صورة لو لسه ظاهرة</td></tr><tr id="41ecea6a-e158-8082-955c-cc0a2351b763" dir="ltr"><td id="Pbmo" class="">23</td><td id="yKMo" class="">شريط الإعدادات مخفي ويطلع بزرار</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v207/v209 · اتغيّر بطلب N3 (الشريط ثابت)</td></tr><tr id="41ecea6a-e158-8063-84a7-f0c75e26e1d4" dir="ltr"><td id="Pbmo" class="">29</td><td id="yKMo" class="">النسخة الاحتياطية من/لحد</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">محتاج snapshot يومي للداتابيز وواجهة استرجاع — كبير</td></tr><tr id="41ecea6a-e158-805e-8a63-d5ba503a9d4e" dir="ltr"><td id="Pbmo" class="">30</td><td id="yKMo" class="">أقسام المالك ظاهرة للطالب</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v234 + v260</td></tr><tr id="41ecea6a-e158-808d-a5d8-d243e0fb1cae" dir="ltr"><td id="Pbmo" class="">31</td><td id="yKMo" class="">صوتيات «العربية بين يديك»</td><td id="RVYz" class="">👤</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">الفولدر على Drive اتفتح (4 مستويات، كل وحدة PowerPoint 65–165 ميجا بالصوت جوه). محتاج الملفات توصل للجهاز — شوف قسم الكتب</td></tr><tr id="41ecea6a-e158-80e0-8d8a-e69121f4f137" dir="ltr"><td id="Pbmo" class="">33</td><td id="yKMo" class="">المالك يبعت الآهات للطالب</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه ماوصلتلهوش</td></tr><tr id="41ecea6a-e158-80f3-b532-f0805cb80de5" dir="ltr"><td id="Pbmo" class="">36</td><td id="yKMo" class="">صفحة المقامات بالتقسيم</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v241/v242/v249</td></tr><tr id="41ecea6a-e158-80c6-a9ae-ebba0e0f3fac" dir="ltr"><td id="Pbmo" class="">38</td><td id="yKMo" class="">أرفع أي أداة في أي صفحة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">⬆️ من مساحتي للأدوات v260 · ⬜ لأي صفحة</td></tr><tr id="41ecea6a-e158-80b6-8f5a-f492d4604ed5" dir="ltr"><td id="Pbmo" class="">39</td><td id="yKMo" class="">شيل الكروت الكبيرة من المقامات</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v245</td></tr><tr id="41ecea6a-e158-802c-927a-fd623726edcf" dir="ltr"><td id="Pbmo" class="">44</td><td id="yKMo" class="">أعلى وأقل طبقة فوق الدرجات</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v248</td></tr><tr id="41ecea6a-e158-80dc-8eef-e6c84a79516e" dir="ltr"><td id="Pbmo" class="">45</td><td id="yKMo" class="">أدوات التعديل في وضع التعديل بس</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">فيه زراير ✏️ للمالك برا وضع التعديل</td></tr><tr id="41ecea6a-e158-80cd-a6f8-c34ee5ca5466" dir="ltr"><td id="Pbmo" class="">46</td><td id="yKMo" class="">قسم «للمالك فقط» في المقامات</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">اتجمّعت في «مساحتي» بدل كده — قولّي لو لسه عايزه</td></tr><tr id="41ecea6a-e158-80c7-83ab-f729981c7003" dir="ltr"><td id="Pbmo" class="">47</td><td id="yKMo" class="">«العربية بين يديك» المستويات المتقدمة</td><td id="RVYz" class="">👤</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">نفس 31</td></tr><tr id="41ecea6a-e158-8084-a6f2-d204cc8fff18" dir="ltr"><td id="Pbmo" class="">48</td><td id="yKMo" class="">الترجمة مخفية وتتفتح كلمة كلمة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">سطر سطر ✅ v250 · ⬜ كلمة كلمة</td></tr><tr id="41ecea6a-e158-8097-8c42-f1efdb8fc9c4" dir="ltr"><td id="Pbmo" class="">49</td><td id="yKMo" class="">محادثات أطول ومن المحتوى الحقيقي</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class=""><strong>ممكن دلوقتي</strong>: أنستونا و«كلّمني عربي بشويش» وصلوا</td></tr><tr id="41ecea6a-e158-80db-b60e-f85e11ef4bfc" dir="ltr"><td id="Pbmo" class="">50</td><td id="yKMo" class="">الفلاش كارد: الفرانكو مع العربي</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v250</td></tr><tr id="41ecea6a-e158-80ba-b259-f70cc2cb38a3" dir="ltr"><td id="Pbmo" class="">51</td><td id="yKMo" class="">الصعوبة زي Anki</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">✅ للسور v244 · ⬜ للعربي</td></tr><tr id="41ecea6a-e158-802d-95c4-e9e56521b455" dir="ltr"><td id="Pbmo" class="">52</td><td id="yKMo" class="">تسجيل صوت السيستم مع الطالب في المحادثة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">المتصفح مابيسمحش يلقط صوت الجهاز إلا بمشاركة الشاشة — ممكن كاختيار</td></tr><tr id="41ecea6a-e158-80ff-bf07-c7b72f92f7b5" dir="ltr"><td id="Pbmo" class="">53</td><td id="yKMo" class="">المحادثة اللي خلصت ✓ + رسالة + شهادة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">بعد محتوى الكتب</td></tr><tr id="41ecea6a-e158-80e9-9666-edc99ce977c0" dir="ltr"><td id="Pbmo" class="">54</td><td id="yKMo" class="">اختيار الطالب من فوق القسم</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-80dc-a157-f883e73f6d9d" dir="ltr"><td id="Pbmo" class="">55</td><td id="yKMo" class="">شيل الفاضي والمكرر في العربي</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v249 · مراجعة نهائية بعد الكتب</td></tr><tr id="41ecea6a-e158-803c-9789-d51b562ab5c6" dir="ltr"><td id="Pbmo" class="">56</td><td id="yKMo" class="">شريط الأحكام فوق المصحف علطول</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v246 + v269</td></tr><tr id="41ecea6a-e158-80db-9e3e-dad7a39eee03" dir="ltr"><td id="Pbmo" class="">57</td><td id="yKMo" class="">شيل الجدول (الحفظ واقف)</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">محتاج صورة الحتة على الموقع الحالي</td></tr><tr id="41ecea6a-e158-8001-bd9d-ca01118d051a" dir="ltr"><td id="Pbmo" class="">58</td><td id="yKMo" class="">افتح ده للطالب</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">نفس السبب</td></tr><tr id="41ecea6a-e158-80a4-b2e4-f3e436e75cd0" dir="ltr"><td id="Pbmo" class="">59</td><td id="yKMo" class="">الدرجات بالإنجليزي + الأوكتاف</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v247 + v262</td></tr><tr id="41ecea6a-e158-80fe-8349-d8c0aac53c13" dir="ltr"><td id="Pbmo" class="">64</td><td id="yKMo" class="">المقام ليه أكتر من جواب وأختار</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-8091-9a1b-e46d7a189ce3" dir="ltr"><td id="Pbmo" class="">65</td><td id="yKMo" class="">الفرعي زي الأساسي</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v249</td></tr><tr id="41ecea6a-e158-8054-aa9c-e05823660d6a" dir="ltr"><td id="Pbmo" class="">67</td><td id="yKMo" class="">وضع البناء زي فولدرات الكمبيوتر</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">أجزاء منه (v252/v260/v261) · ⬜ السلة والنقل والتحديد المتعدد</td></tr><tr id="41ecea6a-e158-80ad-9342-e8a230f5af54" dir="ltr"><td id="Pbmo" class="">68</td><td id="yKMo" class="">مكان واحد لكل حاجة من غير تكرار</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v254/v257/v260</td></tr><tr id="41ecea6a-e158-8073-b7a1-e5f882b53240" dir="ltr"><td id="Pbmo" class="">69</td><td id="yKMo" class="">أيقونات الرئيسية/مساحتي/الدورات/المحتوى</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v261/v264 — اتأكدت على الموقع (🏠 🧰 🎁 🗺️ 🎓 ℹ️)</td></tr><tr id="41ecea6a-e158-800f-b7da-f54dbef5b902" dir="ltr"><td id="Pbmo" class="">70–72</td><td id="yKMo" class="">مكان العرض، إضافة/حذف أيقونات، تصميم لكل قسم</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">الشريط بيترتّب ويتسمّى من ✏️ v261 · ⬜ تصميم مختلف لكل قسم</td></tr><tr id="41ecea6a-e158-802e-a6b2-e78f09b1ab25" dir="ltr"><td id="Pbmo" class="">73</td><td id="yKMo" class="">أدوات المسلم + الأذان في الخلفية</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">✅ حياة المسلم v249 · ⬜ الأذان في الخلفية (محتاج Push حقيقي)</td></tr><tr id="41ecea6a-e158-809d-bba4-f78b9af8fb77" dir="ltr"><td id="Pbmo" class="">74</td><td id="yKMo" class="">أدوات زي الموبايل في الرئيسية (قيام الليل)</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">كارت «تحدّي القيام 30 يوم» ظاهر في الرئيسية · ⬜ ودجتس بتصميمات</td></tr><tr id="41ecea6a-e158-8013-94e6-ee2c793dc9d7" dir="ltr"><td id="Pbmo" class="">79</td><td id="yKMo" class="">المحادثة: B يستنى التسجيل</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v250 · ⬜ «العب دور» يسمع لوحده</td></tr><tr id="41ecea6a-e158-8029-91aa-f7319b3bf86d" dir="ltr"><td id="Pbmo" class="">80</td><td id="yKMo" class="">شريط وضع المطوّر (لون كل حتة + معاينة)</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">الخطوط لكل جزء v271 · ⬜ اللون لكل عنصر</td></tr><tr id="41ecea6a-e158-8088-9353-ce3e5fcf5d34" dir="ltr"><td id="Pbmo" class="">81</td><td id="yKMo" class="">كل الشرايط الجانبية نفس التصميم</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-80e8-a05a-cdd593fb033b" dir="ltr"><td id="Pbmo" class="">83</td><td id="yKMo" class="">كليك يمين على الأيقونات</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-80eb-8ba3-df6bbe2645a4" dir="ltr"><td id="Pbmo" class="">84</td><td id="yKMo" class="">طريقة فتح الصفحات لكل الموقع</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">expansion في المقامات والأدوات</td></tr><tr id="41ecea6a-e158-8031-9be2-c0d57bb62105" dir="ltr"><td id="Pbmo" class="">85</td><td id="yKMo" class="">كل المشايخ + بحث</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">✅ كل المشايخ لكل رواية v266 · ⬜ البحث عربي/إنجليزي</td></tr><tr id="41ecea6a-e158-8087-b637-d7f1366fddcc" dir="ltr"><td id="Pbmo" class="">86</td><td id="yKMo" class="">صفحة القرّاء: تقطيع ورفع</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">⬜ التقطيع الأوتوماتيكي</td></tr><tr id="41ecea6a-e158-80e4-9ddc-dd77ccbbf2ee" dir="ltr"><td id="Pbmo" class="">87</td><td id="yKMo" class="">«إبلاغ عن خطأ»</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-80ec-81b2-f2ac4b6f3a91" dir="ltr"><td id="Pbmo" class="">89</td><td id="yKMo" class="">طبّق على الصفحات الشبيهة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v252</td></tr><tr id="41ecea6a-e158-806c-8fd9-d5fb68ce6d8f" dir="ltr"><td id="Pbmo" class="">91</td><td id="yKMo" class="">المحتوى تحت التبويبات في نفس الصفحة</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v245</td></tr><tr id="41ecea6a-e158-8015-be24-d76020fb0c44" dir="ltr"><td id="Pbmo" class="">92</td><td id="yKMo" class="">Google Play</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">👤</td><td id="q[br" class="">حساب Google Play (25$)</td></tr><tr id="41ecea6a-e158-8056-abdd-f2e509553e34" dir="ltr"><td id="Pbmo" class="">93</td><td id="yKMo" class="">«العربية بين يدي أولادنا»</td><td id="RVYz" class="">👤</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v258 المستويات 1–9 · <strong>الكتب التسعة وصلت النهارده</strong> — الفصول الناقصة جاية</td></tr><tr id="41ecea6a-e158-80cd-b81d-fcd232cf2bf5" dir="ltr"><td id="Pbmo" class="">96</td><td id="yKMo" class="">كل الأحكام شريط واحد بالأبواب</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v246</td></tr><tr id="41ecea6a-e158-8011-be35-f48fbed41232" dir="ltr"><td id="Pbmo" class="">98</td><td id="yKMo" class="">التفخيم والترقيق تحت الصفات</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">✅ الحرف يفتح مكانه v269 · ⬜ التفخيم تحت الصفات</td></tr><tr id="41ecea6a-e158-8062-9fd2-ddc3b3d086ce" dir="ltr"><td id="Pbmo" class="">102</td><td id="yKMo" class="">سهم الهمس والجهر + فتحات مختلفة</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">محتاج رسومات جديدة</td></tr><tr id="41ecea6a-e158-801e-aaba-d7c4a73d274e" dir="ltr"><td id="Pbmo" class="">103</td><td id="yKMo" class="">«ابعت للمعلم» على أي تسجيل</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-8027-bafb-ca7f84c0e387" dir="ltr"><td id="Pbmo" class="">104</td><td id="yKMo" class="">اختيار القارئ المتاح بس</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v266</td></tr><tr id="41ecea6a-e158-8023-8e7d-cd096ee2d43a" dir="ltr"><td id="Pbmo" class="">106</td><td id="yKMo" class="">الطلوع والنزول</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">—</td></tr><tr id="41ecea6a-e158-805c-9b13-f6fe5570908c" dir="ltr"><td id="Pbmo" class="">108–109</td><td id="yKMo" class="">الكلام تحت الأذان بزرار + كلمات الأناشيد</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v254 + v249</td></tr><tr id="41ecea6a-e158-8047-96b5-cc0f78c3e22a" dir="ltr"><td id="Pbmo" class="">110</td><td id="yKMo" class="">ساعة هدية كل شهر بتايمر</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v263</td></tr><tr id="41ecea6a-e158-8061-8db9-fc073c018600" dir="ltr"><td id="Pbmo" class="">111–112</td><td id="yKMo" class="">علامة 🔊 على الكتاب + طريقة عرض الكتب</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-8056-87ed-ede3e0c061f2" dir="ltr"><td id="Pbmo" class="">113</td><td id="yKMo" class="">حروف الحلق مايتحركش فيها اللسان</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">نفس سبب 14</td></tr><tr id="41ecea6a-e158-8004-aad8-d873c7e7c782" dir="ltr"><td id="Pbmo" class="">114</td><td id="yKMo" class="">صوت الحصري في الأحكام</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v269 (الأحكام المركّبة بصوت الحصري للآية كلها)</td></tr><tr id="41ecea6a-e158-80f0-93a5-d23c9a16f141" dir="ltr"><td id="Pbmo" class="">116</td><td id="yKMo" class="">شرح بعد الإجابة + تكرار الغلط + التايمر</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">✅ التجويد v270 (الغلط بيتعاد) · ⬜ التحكم في التايمر</td></tr><tr id="41ecea6a-e158-80fa-a44f-de12bedc056b" dir="ltr"><td id="Pbmo" class="">118</td><td id="yKMo" class="">أيقونات أكبر + واحد بس يتفتح</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">الرئيسية بس</td></tr><tr id="41ecea6a-e158-80b3-8d73-d794341b9384" dir="ltr"><td id="Pbmo" class="">120</td><td id="yKMo" class="">صفحة اقتراحات في مساحتي</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">«🆕 كل الجديد»</td></tr><tr id="41ecea6a-e158-8055-9854-daea707a1180" dir="ltr"><td id="Pbmo" class="">121</td><td id="yKMo" class="">زراير الصوت (نسائي/طفل)</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v250</td></tr><tr id="41ecea6a-e158-8030-8ad8-f2cb04663563" dir="ltr"><td id="Pbmo" class="">123–124</td><td id="yKMo" class="">رجّع زرار العرض واللغة على الجنب + الشريط بتحكم</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">✅ التحكم في كل جزء من الهيدر 📌 v268 · ⬜ زرار العرض على الجنب</td></tr><tr id="41ecea6a-e158-808a-bc01-eda725c9089c" dir="ltr"><td id="Pbmo" class="">125</td><td id="yKMo" class="">موسيقى الأناشيد الأصلية</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">❌</td><td id="q[br" class="">حقوق نشر</td></tr><tr id="41ecea6a-e158-803c-a98d-f943030bf812" dir="ltr"><td id="Pbmo" class="">126</td><td id="yKMo" class="">20 أداة للحفظ</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">6 من 20</td></tr><tr id="41ecea6a-e158-8028-ae01-dc78eb90a5b5" dir="ltr"><td id="Pbmo" class="">127–132</td><td id="yKMo" class="">أفكار كريتيف لصفحة الدخول</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">لسه</td></tr><tr id="41ecea6a-e158-803e-899b-c82053edb77a" dir="ltr"><td id="Pbmo" class="">134–138</td><td id="yKMo" class="">أدوات مقامات للقرآن · مساحات الإنشاد · أدوات العربي · التنظيم</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">⬜ مساحات الإنشاد للمالك</td></tr><tr id="41ecea6a-e158-80be-a046-f4fe5d4ecb65" dir="ltr"><td id="Pbmo" class="">140</td><td id="yKMo" class="">التسجيل بالموبايل</td><td id="RVYz" class="">👤</td><td id="~Zz=" class="">👤</td><td id="q[br" class="">Twilio</td></tr><tr id="41ecea6a-e158-80ed-b4e8-c6bbe3278a05" dir="ltr"><td id="Pbmo" class="">143</td><td id="yKMo" class="">«التعرّف على الصوت محتاج إنترنت» في التطبيق</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">محتاج plugin في تطبيق أندرويد</td></tr><tr id="41ecea6a-e158-8033-81b7-ce812b57ae39" dir="ltr"><td id="Pbmo" class="">144–145</td><td id="yKMo" class="">نطق «ربك» · السماعة جنب الحصري</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">محتاج صورة للمكان</td></tr><tr id="41ecea6a-e158-8042-bd05-f3b8ba2dd8c2" dir="ltr"><td id="Pbmo" class="">146</td><td id="yKMo" class="">الأحكام تتكتب زي الباقي</td><td id="RVYz" class="">🟡</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v235</td></tr><tr id="41ecea6a-e158-80c3-9e77-eab43a6cdfab" dir="ltr"><td id="Pbmo" class="">158</td><td id="yKMo" class="">صوت السيستم ولا المايك</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">⬜</td><td id="q[br" class="">نفس 52</td></tr><tr id="41ecea6a-e158-80f6-8d07-f056beb3e6ba" dir="ltr"><td id="Pbmo" class="">159</td><td id="yKMo" class="">الأمثلة تحت كل حكم بصوتها</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">🟡</td><td id="q[br" class="">v270 فيه سماع في امتحان الدرس · ⬜ تحت كل مثال</td></tr><tr id="41ecea6a-e158-8033-a390-c4416b38887a" dir="ltr"><td id="Pbmo" class="">161</td><td id="yKMo" class="">الحوار ← القواعد ← الكلمات ← الفلاش كارد</td><td id="RVYz" class="">⬜</td><td id="~Zz=" class="">✅</td><td id="q[br" class="">v250</td></tr></tbody></table><p id="41ecea6a-e158-80ec-8ed5-fd77b3b23cee" class="" dir="auto"><strong>الخلاصة:</strong> من 77 سطر كانوا مش خلصانين في التقرير ده: <strong>21 خلصوا</strong> من ساعتها، و<strong>30 جزئي</strong>، و<strong>23 لسه</strong>، و<strong>2 محتاجين حاجة منك</strong>، وواحد مش هيتعمل (موسيقى الأناشيد).<br/>ملفات <strong>11</strong> (= N3) و<strong>22</strong> (= N2) هي نفس الصفحات اللي في الجداول تحت، ومحفوظة في <code>docs/notion2</code> و<code>docs/notion3</code>.</p><hr id="41ecea6a-e158-8032-b762-d37a7a2edf99" dir="auto"/><h2 id="41ecea6a-e158-807b-a9ab-e2eead891c04" class="" dir="auto">الكتب — حالة كل ملف (20/11 الفجر)</h2><table id="41ecea6a-e158-80fa-9123-dfe87f451e8e" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-8090-996c-de0e5ba5b9f5" dir="ltr"><th id="`hY&gt;" class="simple-table-header-color simple-table-header">الكتاب</th><th id="&lt;gpx" class="simple-table-header-color simple-table-header">وصل؟</th><th id="Zb{y" class="simple-table-header-color simple-table-header">حالته على الموقع</th><th id="KTVW" class="simple-table-header-color simple-table-header">الخطوة الجاية</th></tr></thead><tbody><tr id="41ecea6a-e158-808b-88de-ca820060b6ab" dir="ltr"><td id="`hY&gt;" class="">«العربية بين يدي أولادنا» 1→9</td><td id="&lt;gpx" class="">✅ التسعة وصلوا في المحادثة دي (85–118 ص لكل كتاب)</td><td id="Zb{y" class="">🟡 v258: 81 وحدة، جزء من كل كتاب</td><td id="KTVW" class="">كمّل الفصول الناقصة كتاب كتاب</td></tr><tr id="41ecea6a-e158-8022-8d20-edbeb5ffc2f3" dir="ltr"><td id="`hY&gt;" class="">أنستونا (العامية)</td><td id="&lt;gpx" class="">✅ وصل (176 ص)</td><td id="Zb{y" class="">⬜</td><td id="KTVW" class="">وحدات عامية جديدة بنفس شكل <code>EG*</code>، بالعامية</td></tr><tr id="41ecea6a-e158-80c0-ab26-cc03ed026d48" dir="ltr"><td id="`hY&gt;" class="">«كلّمني عربي بشويش»</td><td id="&lt;gpx" class="">✅ وصل (132 ص)</td><td id="Zb{y" class="">⬜</td><td id="KTVW" class="">محادثات أطول (بيقفّل N1 #45 و#76)</td></tr><tr id="41ecea6a-e158-809f-a9dc-e499268bc7d9" dir="ltr"><td id="`hY&gt;" class="">«العربية بين يديك»</td><td id="&lt;gpx" class="">🟡 الفولدر على Drive عام واتفتح من متصفح Claude: 4 مستويات، كل مستوى ~16 وحدة PowerPoint (65–165 ميجا للوحدة، الصوت جوه الملف)</td><td id="Zb{y" class="">🟡 القراءة اتوسّعت v250 · ⬜ الكتاب نفسه</td><td id="KTVW" class="">الشِل بتاعي ممنوع يوصل لجوجل درايف، والمتصفح السحابي مابيوصّلش ملفات للشغل. الحل: نزّل فولدر المستوى على جهازك وضيف الفولدر في تطبيق Claude ← أقراه من عندك وحدة وحدة</td></tr><tr id="41ecea6a-e158-80e2-930d-d8d3edf01f1f" dir="ltr"><td id="`hY&gt;" class="">«تيسير الرحمن» (التجويد)</td><td id="&lt;gpx" class="">—</td><td id="Zb{y" class="">🟡 اتأكدت: شرح التجويد اللي على الموقع (<code>tjb.json</code>) معمول أساسًا من كتاب تاني، ومن «تيسير الرحمن» الباب 24 بس. الكتاب نفسه مش موجود كملف لا في الريبو ولا في Supabase</td><td id="KTVW" class="">لو عايز الشرح كله منه: ابعته (أو حطه في الفولدر اللي هتوصله)</td></tr><tr id="41ecea6a-e158-80b1-9719-d5f9d72cfc35" dir="ltr"><td id="`hY&gt;" class="">الصرف (424) · النحو (1088) · البلاغة الميسرة (100) · أسرار البلاغة (326/578) · Egyptian Arabic grammar (225)</td><td id="&lt;gpx" class="">❌ مش في المحادثة دي (كانوا في اللي قبلها)</td><td id="Zb{y" class="">⬜</td><td id="KTVW" class="">ابعتهم تاني، أو حطهم في نفس الفولدر على جهازك</td></tr></tbody></table><h2 id="41ecea6a-e158-80e2-aa93-f09335b548c7" class="" dir="auto">N4 + رسالة الشات النهارده (الأوردرات الجاية — بالترتيب اللي طلبته)</h2><table id="41ecea6a-e158-80d1-b64d-d7af9b157fad" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-80a6-83cc-e775c50818de" dir="ltr"><th id="N{dt" class="simple-table-header-color simple-table-header">#</th><th id="i]@o" class="simple-table-header-color simple-table-header">الطلب</th><th id="`:CV" class="simple-table-header-color simple-table-header">الحالة</th><th id="z|Sk" class="simple-table-header-color simple-table-header">لو لسه: ليه / إمتى</th></tr></thead><tbody><tr id="41ecea6a-e158-8080-b319-ca002cce3c23" dir="ltr"><td id="N{dt" class="">1</td><td id="i]@o" class="">جدول كبير لكل الأوردرات من N1–N4 والاقتراحات والشات: اتعمل ولا لا، وليه</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">الملف ده</td></tr><tr id="41ecea6a-e158-80fb-b13d-dcaf6c155354" dir="ltr"><td id="N{dt" class="">2</td><td id="i]@o" class="">ملف المشروع اللي أي AI يكمّل بيه من غير ما حاجة تضيع</td><td id="`:CV" class="">✅</td><td id="z|Sk" class=""><code>HANDOFF_v264.md</code></td></tr><tr id="41ecea6a-e158-8057-83be-d922e6838b21" dir="ltr"><td id="N{dt" class="">3</td><td id="i]@o" class="">اختبار تحديد مستوى العامية: «العزا» مكتوبة فرانكو بس — لازم عربي + فرانكو + إنجليزي</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265 (اتكتبت من جديد: «العزاء» بالعربي، ومن غير ترجمة آلية)</td></tr><tr id="41ecea6a-e158-80cc-b3fe-fbb3e7e8c92c" dir="ltr"><td id="N{dt" class="">4</td><td id="i]@o" class="">أسئلة اختياراتها كلها تنفع — اختيار واحد بس صح</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265 (كل أسئلة التعبيرات اتكتبت باختيار صح واحد)</td></tr><tr id="41ecea6a-e158-80df-9eb3-e39abf1e59c1" dir="ltr"><td id="N{dt" class="">5</td><td id="i]@o" class="">اختبار العامية بنفس قواعد محتوى العربي</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265 (نفس أنواع أسئلة الوحدات + RTL + الفرانكو مع العربي)</td></tr><tr id="41ecea6a-e158-80c2-a77d-fb91c068c9bd" dir="ltr"><td id="N{dt" class="">6</td><td id="i]@o" class="">«تسلم إيدك»: الإجابات عربي وجنبها الإنجليزي</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265</td></tr><tr id="41ecea6a-e158-8041-a0f9-e31c2acf0dff" dir="ltr"><td id="N{dt" class="">7</td><td id="i]@o" class="">كل الأسئلة بالشكل ده</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265</td></tr><tr id="41ecea6a-e158-801b-97b1-e61fdbab5cde" dir="ltr"><td id="N{dt" class="">8</td><td id="i]@o" class="">تحديد المستوى فيه ريكوردات وكل أنواع أسئلة الوحدات</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265 (سماع، معنى، كمّل، خط إيد، كلام، «قولها بالعربي»، اختيارات)</td></tr><tr id="41ecea6a-e158-806a-b2f3-f1450e8990b6" dir="ltr"><td id="N{dt" class="">9</td><td id="i]@o" class="">10+ أسئلة لكل مستوى · 70/50 · إعادة بأسئلة تانية · في كل الأقسام</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v265 (الفصحى، العامية، الأطفال، التجويد، القراءات، الشرعي، المقامات)</td></tr><tr id="41ecea6a-e158-8041-b662-c76e4c9194e5" dir="ltr"><td id="N{dt" class="">10</td><td id="i]@o" class="">شيل كل الأناشيد اللي لينكات ومفيش لينك في أي حتة</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v266 (58 لينك يوتيوب اتأرشفوا — نسخة في <code>contents_links_backup266</code> — وأي لينك يوتيوب مخفي عن غير المالك)</td></tr><tr id="41ecea6a-e158-80b8-a8e6-e4332900c3e3" dir="ltr"><td id="N{dt" class="">11</td><td id="i]@o" class="">صور صفحات المصاحف (شمرلي/المدينة…)</td><td id="`:CV" class="">🟡</td><td id="z|Sk" class="">v267: «📖 صفحات مصحف المدينة» صفحة صفحة بخط المجمع (QCF) + الشمرلي موجود · ⬜ المقارنة مع حفص صفحة صفحة</td></tr><tr id="41ecea6a-e158-80e8-8981-c17cd0b747e1" dir="ltr"><td id="N{dt" class="">12</td><td id="i]@o" class="">الشريط ثابت دايمًا (default) + اختيار «يطلع وينزل»</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v264</td></tr><tr id="41ecea6a-e158-809d-af96-efcaab12a28b" dir="ltr"><td id="N{dt" class="">13</td><td id="i]@o" class="">صف واحد: الأدوات والاشتراك المجاني والدليل جنب الرئيسية</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v264</td></tr><tr id="41ecea6a-e158-80f6-a685-dcdecbe808fb" dir="ltr"><td id="N{dt" class="">14</td><td id="i]@o" class="">أيقونة جنب كل اسم</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v264</td></tr><tr id="41ecea6a-e158-8093-99b2-d10691e6a5aa" dir="ltr"><td id="N{dt" class="">15</td><td id="i]@o" class="">«مع معلمي» للطالب و«مع طالبي» للمعلم</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v264 (والأيقونة اللي من غير كلام بقت «🏷️ أسعار مع مدرس»)</td></tr><tr id="41ecea6a-e158-8021-b640-fc6999785471" dir="ltr"><td id="N{dt" class="">16</td><td id="i]@o" class="">شيل 🕌 اللي جنب اللغة</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v264</td></tr><tr id="41ecea6a-e158-80f9-abec-c75712105ca3" dir="ltr"><td id="N{dt" class="">17</td><td id="i]@o" class="">الحجم حسب الشاشة</td><td id="`:CV" class="">✅</td><td id="z|Sk" class="">v264 (الموبايل: الأيقونة فوق والكلام تحت وكله ظاهر)</td></tr><tr id="41ecea6a-e158-8046-882b-ec82fe0a228f" dir="ltr"><td id="N{dt" class="">18</td><td id="i]@o" class="">ارفع الكتب كلها: «العربية بين يديك» (Drive) · «العربية بين يدي أولادنا» · النحو والصرف والبلاغة · العامية — من غير ما تقطع حاجة</td><td id="`:CV" class="">⬜</td><td id="z|Sk" class="">الأوردر 3 (الأخير، زي ما طلبت)</td></tr><tr id="41ecea6a-e158-80f4-b606-e68bbc911269" dir="ltr"><td id="N{dt" class="">19</td><td id="i]@o" class="">«العربية بين يدي أولادنا» مرفوع ولا لا؟</td><td id="`:CV" class="">🟡</td><td id="z|Sk" class="">v258: المستويات 1–9 موجودة (63 وحدة جديدة + 18 الأول)، بس اتنقل منها جزء من كل كتاب مش كل الفصول. هكمّل الفصول الناقصة في الأوردر 3</td></tr></tbody></table><h2 id="41ecea6a-e158-8018-bd35-cd1183d1573c" class="" dir="auto">شات 19–20/11 بالليل (بعد v266)</h2><table id="41ecea6a-e158-8046-87b6-f2368c05e075" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-80b1-9612-f0ed0e3ba10e" dir="ltr"><th id="l&gt;:o" class="simple-table-header-color simple-table-header">#</th><th id="r\MU" class="simple-table-header-color simple-table-header">الطلب</th><th id="{GD:" class="simple-table-header-color simple-table-header">الحالة</th><th id="zxBv" class="simple-table-header-color simple-table-header">النسخة / ليه</th></tr></thead><tbody><tr id="41ecea6a-e158-8061-bc99-d1add6d88e7f" dir="ltr"><td id="l&gt;:o" class="">1</td><td id="r\MU" class="">الهيدر مش ثابت — اللوجو بس ثابت، والمالك يتحكم في كل جزء (ثابت/يطلع مع الصفحة/يختفي وانت نازل)</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v268 (زرار 📌)</td></tr><tr id="41ecea6a-e158-80ad-bd44-de656ef91183" dir="ltr"><td id="l&gt;:o" class="">2</td><td id="r\MU" class="">الشريط صف واحد بخط أصغر على الكمبيوتر والتابلت، والموبايل سطرين عادي</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v268 (الخط بيصغر لوحده لحد ما يدخل)</td></tr><tr id="41ecea6a-e158-802f-a919-d9c1367d1d76" dir="ltr"><td id="l&gt;:o" class="">3</td><td id="r\MU" class="">الشريط مفرود افتراضيًا، والحبل يقفله</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v268</td></tr><tr id="41ecea6a-e158-800b-82f0-f65ee8387aba" dir="ltr"><td id="l&gt;:o" class="">4</td><td id="r\MU" class="">صفحة درجات المقام بترعش وتطلع وتنزل</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v269 (الصفحة بتفضل مكانها لما تتحدّث)</td></tr><tr id="41ecea6a-e158-8057-84c5-f4cbf2749b92" dir="ltr"><td id="l&gt;:o" class="">5</td><td id="r\MU" class="">شريط الأحكام مغطي على المصحف</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v269</td></tr><tr id="41ecea6a-e158-803f-90d2-c21e3de75c06" dir="ltr"><td id="l&gt;:o" class="">6</td><td id="r\MU" class="">مش عارف أعلّم على اللام الشمسية والمتجانسين والمتقاربين</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v269</td></tr><tr id="41ecea6a-e158-80d9-8ccb-c1d43d95c0a1" dir="ltr"><td id="l&gt;:o" class="">7</td><td id="r\MU" class="">الحروف أكبر وكل حرف يفتح مكانه في المخارج والصفات</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v269</td></tr><tr id="41ecea6a-e158-805f-9ca5-fa4a52acf57b" dir="ltr"><td id="l&gt;:o" class="">8</td><td id="r\MU" class="">امتحان بعد كل درس تجويد + ✓ خلص</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v270 (سماع + «إيه الحكم» + أسئلة الحكم، 70% = خلص، والغلط بيتعاد)</td></tr><tr id="41ecea6a-e158-8028-bbc6-ca26e14ec4a4" dir="ltr"><td id="l&gt;:o" class="">9</td><td id="r\MU" class="">امتحانات بعد كل درس في <strong>كل</strong> الأقسام</td><td id="{GD:" class="">🟡</td><td id="zxBv" class="">✅ التجويد · الفصحى والأطفال فيهم امتحان وحدة من قبل · ⬜ العلوم الشرعية والمقامات والقراءات بنفس الشكل</td></tr><tr id="41ecea6a-e158-8063-b8f3-e684e9df94eb" dir="ltr"><td id="l&gt;:o" class="">10</td><td id="r\MU" class="">الأحكام المركّبة بصوت الحصري للآية كلها</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v269</td></tr><tr id="41ecea6a-e158-801f-ad92-e8d9fd963255" dir="ltr"><td id="l&gt;:o" class="">11</td><td id="r\MU" class="">التجويد مختصر + «عرض الشرح بالتفصيل» + من غير أسماء كتب</td><td id="{GD:" class="">🟡</td><td id="zxBv" class="">v270 المختصر والتفصيل ومن غير مصادر · ⬜ إعادة كتابة الشرح من «تيسير الرحمن» والمصطلحات من الكتب الإنجليزي (محتاج الكتب نفسها)</td></tr><tr id="41ecea6a-e158-803c-bd8d-f172d37859b6" dir="ltr"><td id="l&gt;:o" class="">12</td><td id="r\MU" class="">الخط موحّد والبولد للعناوين بس</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v269</td></tr><tr id="41ecea6a-e158-806e-8ad0-f94bb3925580" dir="ltr"><td id="l&gt;:o" class="">13</td><td id="r\MU" class="">الخط أتقل (أسمك) في الموقع كله من غير ما يكبر + زرار أتحكم في الخطوط زي الوورد (النوع والحجم والسُمك لكل جزء)</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v271 (زرار 🔤 للمالك + في لوحة التحكم)</td></tr><tr id="41ecea6a-e158-807c-b170-e24f768e3644" dir="ltr"><td id="l&gt;:o" class="">14</td><td id="r\MU" class="">الشريط: الخط مايصغرش لوحده، أكبر شوية، ومفيش حاجة تختفي على الجنب</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v271 (اللي مالوش مكان بينزل سطر)</td></tr><tr id="41ecea6a-e158-8019-b765-e04ad7bddc58" dir="ltr"><td id="l&gt;:o" class="">15</td><td id="r\MU" class="">المصطلحات والشرح بالإنجليزي من الكتب الإنجليزي اللي على الموقع</td><td id="{GD:" class="">✅</td><td id="zxBv" class="">v272 (الكتابين مع بعض من غير تكرار ومن غير أسماء كتب)</td></tr></tbody></table><h2 id="41ecea6a-e158-805d-93bf-c0486aa6652f" class="" dir="auto">شات 19/11 (المحادثة دي + اللي قبلها)</h2><table id="41ecea6a-e158-80f0-9184-ea80ff7156c8" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-8064-90c0-c4f5518df898" dir="ltr"><th id="Fjfl" class="simple-table-header-color simple-table-header">#</th><th id="xpwI" class="simple-table-header-color simple-table-header">الطلب</th><th id="Y^Xi" class="simple-table-header-color simple-table-header">الحالة</th><th id="EFXr" class="simple-table-header-color simple-table-header">النسخة</th></tr></thead><tbody><tr id="41ecea6a-e158-8063-a9aa-fe5021f6d27b" dir="ltr"><td id="Fjfl" class="">1</td><td id="xpwI" class="">نسخ الموقع المحفوظة 3 بس</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v257</td></tr><tr id="41ecea6a-e158-80b8-817c-eff21598a639" dir="ltr"><td id="Fjfl" class="">2</td><td id="xpwI" class="">تقفل تعديل واحد من أي نسخة</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v254 (من v249 وطالع)</td></tr><tr id="41ecea6a-e158-8055-88da-f4a5d4b65dd6" dir="ltr"><td id="Fjfl" class="">3</td><td id="xpwI" class="">شيل «محتوى الأكاديمية»</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v254</td></tr><tr id="41ecea6a-e158-8037-8823-f7657dc5bd12" dir="ltr"><td id="Fjfl" class="">4</td><td id="xpwI" class="">لوجو باهت في الخلفية مع التحكم</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v254</td></tr><tr id="41ecea6a-e158-802b-b897-ebace0df8cd0" dir="ltr"><td id="Fjfl" class="">5</td><td id="xpwI" class="">مين يشوف أي خانة (المالك/المسجلين/الطلاب/المعلمين/الزوار)</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v252/v254</td></tr><tr id="41ecea6a-e158-802a-b104-f4e344ff3dc0" dir="ltr"><td id="Fjfl" class="">6</td><td id="xpwI" class="">الأذان والأناشيد من غير ترجمة + فرانكو + «عرض الترجمة»</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v254 (الفرانكو اتصلح في v258)</td></tr><tr id="41ecea6a-e158-80ab-b8bb-c1bb623b0374" dir="ltr"><td id="Fjfl" class="">7</td><td id="xpwI" class="">ولي أمر/طالب + النوع + معلم/معلمة</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v256 (القفل الأوتوماتيكي محتاج نوع كل معلم 👤)</td></tr><tr id="41ecea6a-e158-8047-b35e-c8bac7aee9f6" dir="ltr"><td id="Fjfl" class="">8</td><td id="xpwI" class="">مسابقة محتوى طلاب الأكاديمية كاملة</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v255</td></tr><tr id="41ecea6a-e158-807e-8827-f29222e91b0f" dir="ltr"><td id="Fjfl" class="">9</td><td id="xpwI" class="">نشر واجب الطالب بموافقته</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v255</td></tr><tr id="41ecea6a-e158-8043-b816-e2920fde57eb" dir="ltr"><td id="Fjfl" class="">10</td><td id="xpwI" class="">عربي الأطفال 1→9</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v258</td></tr><tr id="41ecea6a-e158-80d2-a8c6-f050bf3fc216" dir="ltr"><td id="Fjfl" class="">11</td><td id="xpwI" class="">العامية المصرية تفضل بالعامية (مش فصحى)</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v259</td></tr><tr id="41ecea6a-e158-80b9-abc9-d697b36b0240" dir="ltr"><td id="Fjfl" class="">12</td><td id="xpwI" class="">قسم الأدوات الجديد + «مساحتي» للمالك + «رحلتي مع معلمي/مع طلابي»</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v260</td></tr><tr id="41ecea6a-e158-80d2-8c85-fbcf14161f9e" dir="ltr"><td id="Fjfl" class="">13</td><td id="xpwI" class="">الشريط اللي فوق + لوحة التحكم</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v261</td></tr><tr id="41ecea6a-e158-80b1-9fa6-d7d5ae1387f0" dir="ltr"><td id="Fjfl" class="">14</td><td id="xpwI" class="">المقامات (B2/C4، خط الصوت، المسافات، الأوكتاف) + الفتح بالتايمر + الساعة المجانية</td><td id="Y^Xi" class="">✅</td><td id="EFXr" class="">v262/v263</td></tr></tbody></table><h2 id="41ecea6a-e158-803a-a35d-c093f6e3f2ce" class="" dir="auto">N3 — Notion التالت</h2><table id="41ecea6a-e158-80b6-8f8f-d88097e764dd" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-8091-8b00-cad09e512472" dir="ltr"><th id="EjX&lt;" class="simple-table-header-color simple-table-header">#</th><th id="EftS" class="simple-table-header-color simple-table-header">الطلب</th><th id="uSFl" class="simple-table-header-color simple-table-header">الحالة</th><th id="WGDn" class="simple-table-header-color simple-table-header">النسخة / ليه</th></tr></thead><tbody><tr id="41ecea6a-e158-8010-9037-c92fe9db3516" dir="ltr"><td id="EjX&lt;" class="">1</td><td id="EftS" class="">اسمها Standard Arabic / Fusha</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-80a4-b692-cee5d14c6408" dir="ltr"><td id="EjX&lt;" class="">2</td><td id="EftS" class="">«أسمع صوت السيستم» في المكان ده (image.png)</td><td id="uSFl" class="">⬜</td><td id="WGDn" class="">محتاج أحدد المكان من الصورة على الموقع الحقيقي — في الدفعة الجاية بعد الكتب</td></tr><tr id="41ecea6a-e158-8022-b862-f46e352fcf23" dir="ltr"><td id="EjX&lt;" class="">3</td><td id="EftS" class="">«العب دور»: يستنى الطالب يخلص ولما يسكت يكمّل</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">v250 التسجيل بيستنى السكوت · ⬜ الموقع يبدأ يسمع لوحده بعد سطره</td></tr><tr id="41ecea6a-e158-8084-858c-ce4ced950abd" dir="ltr"><td id="EjX&lt;" class="">4</td><td id="EftS" class="">شيل الشريط الجانبي أبو 3 نقط</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-807f-b044-f8e2fd5dd154" dir="ltr"><td id="EjX&lt;" class="">5</td><td id="EftS" class="">القراءات العشر قسم واحد في الشريط التاني</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v262</td></tr><tr id="41ecea6a-e158-8054-b986-f682c858bdce" dir="ltr"><td id="EjX&lt;" class="">6</td><td id="EftS" class="">المصحف عند الطالب زي المالك + اختيار المصحف (شمرلي/المدينة…) + الأحكام والروايات عليه</td><td id="uSFl" class="">⬜</td><td id="WGDn" class="">الأوردر 2 (صور الصفحات من مصدر عام)</td></tr><tr id="41ecea6a-e158-8079-8dfd-c6cdb335db52" dir="ltr"><td id="EjX&lt;" class="">7</td><td id="EftS" class="">عبد الرشيد صوفي اختفى — حط كل المشايخ المتاحين لكل رواية</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v266 (القايمة بتتملا من mp3quran لكل رواية)</td></tr><tr id="41ecea6a-e158-8083-a4b0-cad4176259bb" dir="ltr"><td id="EjX&lt;" class="">8</td><td id="EftS" class="">الدرجات B2 C4 جنب Re Mi Fa</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v262</td></tr><tr id="41ecea6a-e158-8090-8fce-c3df49f05c24" dir="ltr"><td id="EjX&lt;" class="">9</td><td id="EftS" class="">الصوت مش ظابط مع صوت الطالب (image 4)</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v262 (تنعيم الخط وتصحيح قفزات الأوكتاف)</td></tr><tr id="41ecea6a-e158-808e-b557-d2ffa9e8d763" dir="ltr"><td id="EjX&lt;" class="">10</td><td id="EftS" class="">شيل زرار «من غير نت»</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-80b9-b251-d46f6b7b430a" dir="ltr"><td id="EjX&lt;" class="">11</td><td id="EftS" class="">محتوى طلابي (نشر الواجبات بموافقة، أقسام collapsed، صوت/فيديو/ملفات/لينكات)</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v255</td></tr><tr id="41ecea6a-e158-8054-8bdc-d33cc80d9f7f" dir="ltr"><td id="EjX&lt;" class="">12</td><td id="EftS" class="">الكاريوكي في «أنشد معي» لوحده والابتهال للصوتيات</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">الكلمات v254 · ⬜ نقل الكاريوكي</td></tr><tr id="41ecea6a-e158-8027-a7e7-d851ad30416b" dir="ltr"><td id="EjX&lt;" class="">13</td><td id="EftS" class="">زرار التسجيل تحت كل قسم</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-8026-9c27-d2dc5b529813" dir="ltr"><td id="EjX&lt;" class="">14</td><td id="EftS" class="">شيل الهيدر من كل الموقع</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-8092-ae27-c9c7d1163e34" dir="ltr"><td id="EjX&lt;" class="">15</td><td id="EftS" class="">مدى الصوت: مسافات متناسبة + أوكتاف فوق/تحت + الزراير بالعرض</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v262</td></tr><tr id="41ecea6a-e158-800f-adc2-ff2de8aaee1b" dir="ltr"><td id="EjX&lt;" class="">16</td><td id="EftS" class="">الأدوات اللي تنفع للطالب في أقسام قليلة</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v260</td></tr><tr id="41ecea6a-e158-80a6-9a17-e9c2fdd37e00" dir="ltr"><td id="EjX&lt;" class="">17</td><td id="EftS" class="">شيل «مصحف الروايات نص وصوت» + «المقارنة مع حفص» صفحة صفحة والخلافات في الهامش</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">v262 اتشال · ⬜ صفحة صفحة والهامش — بعد ما صور المصاحف تيجي (الأوردر 2)</td></tr><tr id="41ecea6a-e158-80bb-8c2b-ff146f09ab33" dir="ltr"><td id="EjX&lt;" class="">18</td><td id="EftS" class="">«افتح محتوى» بمدة + تفعيل + تايمر</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v263</td></tr><tr id="41ecea6a-e158-80f2-9e94-cb7cc073277b" dir="ltr"><td id="EjX&lt;" class="">19</td><td id="EftS" class="">الساعة المجانية كل شهر بتايمر</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v263</td></tr><tr id="41ecea6a-e158-80fc-966e-e68b16e3e4f8" dir="ltr"><td id="EjX&lt;" class="">20</td><td id="EftS" class="">شيل صفحة «الأقسام والأدوات»</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v257</td></tr><tr id="41ecea6a-e158-8018-b360-d7b5036f1f9b" dir="ltr"><td id="EjX&lt;" class="">21</td><td id="EftS" class="">شيل الباقات/اشترك/الفصل/الأقسام من الشريط التاني</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v257</td></tr><tr id="41ecea6a-e158-80aa-83dc-d4e82be8051f" dir="ltr"><td id="EjX&lt;" class="">22</td><td id="EftS" class="">قسم «الأدوات» الجديد بكل التفاصيل والتحكم</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v260</td></tr><tr id="41ecea6a-e158-803c-959c-d7e7dbc3066d" dir="ltr"><td id="EjX&lt;" class="">23</td><td id="EftS" class="">«مساحتي» للمالك + «ارفعها للأدوات»</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v260</td></tr><tr id="41ecea6a-e158-80ff-a38f-cd6d3e958c6e" dir="ltr"><td id="EjX&lt;" class="">24</td><td id="EftS" class="">«رحلتي مع معلمي» / «مع طلابي»</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v260</td></tr><tr id="41ecea6a-e158-80b1-9d18-ee2c25647476" dir="ltr"><td id="EjX&lt;" class="">25</td><td id="EftS" class="">«اشترك» بلون مميز + أيقونة أسعار المدرس</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-809c-a928-dacdc381b684" dir="ltr"><td id="EjX&lt;" class="">26</td><td id="EftS" class="">«من نحن والتواصل» اسم واحد</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v254</td></tr><tr id="41ecea6a-e158-8022-95b5-f214d0a526cf" dir="ltr"><td id="EjX&lt;" class="">27</td><td id="EftS" class="">الهيدر ثابت</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">v254 + v261 · لسه فيه حركة (N4 #12)</td></tr><tr id="41ecea6a-e158-809f-a543-de4445d677f8" dir="ltr"><td id="EjX&lt;" class="">28</td><td id="EftS" class="">شيل الرسائل والإشعارات من شريط لوحتي</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v257 + v260</td></tr><tr id="41ecea6a-e158-80af-91b5-c8df46eacb86" dir="ltr"><td id="EjX&lt;" class="">29</td><td id="EftS" class="">شريط لوحتي فوق جنب الرئيسية</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v261</td></tr><tr id="41ecea6a-e158-80b7-8345-e654fc490e04" dir="ltr"><td id="EjX&lt;" class="">30</td><td id="EftS" class="">الوايت بورد في الأدوات ومجانية للكل</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v260</td></tr><tr id="41ecea6a-e158-80ef-bdf0-e40f8f13332c" dir="ltr"><td id="EjX&lt;" class="">31</td><td id="EftS" class="">لوحة التحكم (الملف + الإعدادات)</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v261</td></tr><tr id="41ecea6a-e158-80ed-a0eb-ddcf1e2f2ed2" dir="ltr"><td id="EjX&lt;" class="">32</td><td id="EftS" class="">الحجوزات للإعدادات</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v261</td></tr><tr id="41ecea6a-e158-804f-a616-f2cf6d8ac797" dir="ltr"><td id="EjX&lt;" class="">33</td><td id="EftS" class="">باقات العيلة جوه «اشترك» زي باقي الأقسام</td><td id="uSFl" class="">⬜</td><td id="WGDn" class="">لسه ماوصلتلهاش — الأوردر 2</td></tr><tr id="41ecea6a-e158-80d1-8c05-d325086494ab" dir="ltr"><td id="EjX&lt;" class="">34</td><td id="EftS" class="">«احصل على اشتراك مجاني» فيها الساعة المجانية والتايمر</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v263</td></tr><tr id="41ecea6a-e158-807d-8caa-d3854db01877" dir="ltr"><td id="EjX&lt;" class="">35</td><td id="EftS" class="">شيل «شكل الفم»</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v257</td></tr><tr id="41ecea6a-e158-80ad-ae18-eb4ef9c1a4e0" dir="ltr"><td id="EjX&lt;" class="">36</td><td id="EftS" class="">المصحف الملوّن يفتح علطول</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v260</td></tr><tr id="41ecea6a-e158-80f9-ada8-d4ca425127ec" dir="ltr"><td id="EjX&lt;" class="">37</td><td id="EftS" class="">الشريط اللي فوق: ترتيب/أسماء/أيقونات/ظاهر أو يختفي</td><td id="uSFl" class="">✅</td><td id="WGDn" class="">v261</td></tr><tr id="41ecea6a-e158-806e-b02e-e099018912c7" dir="ltr"><td id="EjX&lt;" class="">38</td><td id="EftS" class="">الرئيسية: الترتيب + أطلّع وأنزّل وأغيّر الألوان</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">v257 الترتيب · التحكم الكامل من وضع البناء</td></tr><tr id="41ecea6a-e158-80b3-841b-c8aefa860c64" dir="ltr"><td id="EjX&lt;" class="">39</td><td id="EftS" class="">مواقيت الصلاة والجداول بالمكان الحالي</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">v261 «استخدم مكاني» · ⬜ ربطه بصفحة المواقيت</td></tr><tr id="41ecea6a-e158-802c-82c7-f890859cb372" dir="ltr"><td id="EjX&lt;" class="">40</td><td id="EftS" class="">دليل الموقع مقفول لغير المشترك إلا الأدوات</td><td id="uSFl" class="">🟡</td><td id="WGDn" class="">v260 بيفتح الأدوات المفتوحة بس · ⬜ قفل أقسام الدليل نفسه</td></tr></tbody></table><h2 id="41ecea6a-e158-801c-9027-c6c56fba605b" class="" dir="auto">N2 — Notion التاني</h2><table id="41ecea6a-e158-8091-a544-c7bfa1e3b38f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-800c-bcab-c8b0e4f490d3" dir="ltr"><th id="xpqC" class="simple-table-header-color simple-table-header">#</th><th id="_fb}" class="simple-table-header-color simple-table-header">الطلب</th><th id="TuLC" class="simple-table-header-color simple-table-header">الحالة</th><th id="n?mw" class="simple-table-header-color simple-table-header">النسخة / ليه</th></tr></thead><tbody><tr id="41ecea6a-e158-808b-9468-e3fabbe6d0ac" dir="ltr"><td id="xpqC" class="">1</td><td id="_fb}" class="">إيه يظهر للطالب عنصر عنصر + تطبيق على الصفحات الشبيهة</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v252</td></tr><tr id="41ecea6a-e158-80f4-835e-fe70daf3f262" dir="ltr"><td id="xpqC" class="">2</td><td id="_fb}" class="">«أدوات المسلم» = الأدوات اللي مش في أي قسم + ترتيب زي الفولدرات</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249 (بقت «حياة المسلم»)</td></tr><tr id="41ecea6a-e158-803f-b93e-fb9739c06845" dir="ltr"><td id="xpqC" class="">3</td><td id="_fb}" class="">الأذانات تتشال من المسار وتتحط في الابتهال جوه كل مقام</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-80f3-8bf7-c0e70e333bd6" dir="ltr"><td id="xpqC" class="">4</td><td id="_fb}" class="">الفرعي ليه قسم لوحده تحت كل أساسي، وكل فرعي صفحة كاملة</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-8090-a9b6-f7eab6f0284e" dir="ltr"><td id="xpqC" class="">5</td><td id="_fb}" class="">شيل الشريط والهيدر من صفحة المقام</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-80ef-86f0-f6601b8ebef7" dir="ltr"><td id="xpqC" class="">6</td><td id="_fb}" class="">تسجيل + سماع صوت السيستم في كل الأقسام</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-8025-8a88-eb72a4a577d9" dir="ltr"><td id="xpqC" class="">7</td><td id="_fb}" class="">الفصل والحصص والمسابقات وحياة المسلم مسارات + الوايت بورد فيهم</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-806d-b9ef-d213fa2b03af" dir="ltr"><td id="xpqC" class="">8</td><td id="_fb}" class="">قايمة التلاوات منظمة وصغيرة</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-8056-a62b-e4568e4f7b37" dir="ltr"><td id="xpqC" class="">9</td><td id="_fb}" class="">كل صفحة تتفتح جوه صفحتها (expand)</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">اتعمل في المقامات والأدوات · فيه صفحات قديمة لسه بتفتح برا</td></tr><tr id="41ecea6a-e158-8004-8ea5-fe38c1c9ed2a" dir="ltr"><td id="xpqC" class="">10</td><td id="_fb}" class="">الوايت بورد زي مايكروسوفت (لانهائية، PDF مقسّم، رفع لطالب/مجموعة/قسم، في صفحة الطالب والمعلم، من غير مصادر)</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v251</td></tr><tr id="41ecea6a-e158-80f0-abe5-e5dedfc2286d" dir="ltr"><td id="xpqC" class="">11</td><td id="_fb}" class="">الفصحى في «تكلّم عربي» من غير «وحدات» + المنهج المتكامل حاجة واحدة ومخفية لحد الرفع</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-80a5-a12c-d5a6dd168864" dir="ltr"><td id="xpqC" class="">12</td><td id="_fb}" class="">رفع «العربية بين يديك» (العلامة الصفرا، الصوت متقطع على الجمل، خطوة خطوة زي الكتاب)</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">القراءة اتوسّعت v250 · ⬜ الكتاب نفسه — الأوردر 3 (من Drive)</td></tr><tr id="41ecea6a-e158-8010-8690-e2d7a5a7170e" dir="ltr"><td id="xpqC" class="">13</td><td id="_fb}" class="">عربي الأطفال كل المستويات خطوة خطوة زي الكتاب</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">v258 المستويات 1–9 · ⬜ الفصول الناقصة — الأوردر 3</td></tr><tr id="41ecea6a-e158-800e-a120-dfe28c537955" dir="ltr"><td id="xpqC" class="">14</td><td id="_fb}" class="">شيل «مواقف» من العامية</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-801e-a557-d5c224c2a0bb" dir="ltr"><td id="xpqC" class="">15</td><td id="_fb}" class="">العامية من <strong>كل</strong> الكتب مش كتاب واحد</td><td id="TuLC" class="">⬜</td><td id="n?mw" class="">الكتب: أنستونا، وكلمني عربي بشويش، وقواعد العامية بالإنجليزي — الأوردر 3</td></tr><tr id="41ecea6a-e158-80a1-8e69-fdd7f3e4e821" dir="ltr"><td id="xpqC" class="">16</td><td id="_fb}" class="">ترتيب الوحدة: حوار (قراءة ← سماع ← تفاعل) ← أدوات وألعاب ← قاعدة ← امتحان الوحدة</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">✅ للأطفال v258 · ⬜ الفصحى والعامية الجديدة</td></tr><tr id="41ecea6a-e158-80fe-af85-dc80ecb9361c" dir="ltr"><td id="xpqC" class="">17</td><td id="_fb}" class="">الفتح مستوى مستوى + اختبار تحديد + المالك/المعلم يفتح لأي طالب</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">✅ للأطفال v258 · ⬜ الباقي + تحديد المستوى الجديد (N4)</td></tr><tr id="41ecea6a-e158-80e8-a6aa-ccd2020629d5" dir="ltr"><td id="xpqC" class="">18</td><td id="_fb}" class="">ماتشيلش الموجود، ابني عليه</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">قاعدة ثابتة</td></tr><tr id="41ecea6a-e158-808a-9e67-c18e743ce17d" dir="ltr"><td id="xpqC" class="">19</td><td id="_fb}" class="">الرجوع يرجّعك لنفس الشكل</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v251</td></tr><tr id="41ecea6a-e158-80ea-b437-c52bdcb29695" dir="ltr"><td id="xpqC" class="">20</td><td id="_fb}" class="">جوه كل نسخة أقدر أشيل تعديل واحد</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v254 (من v249)</td></tr><tr id="41ecea6a-e158-80c0-8165-fad8a80a866d" dir="ltr"><td id="xpqC" class="">21</td><td id="_fb}" class="">الصرف والنحو والبلاغة <strong>كاملين</strong> + نسخة في العلوم الإسلامية</td><td id="TuLC" class="">⬜</td><td id="n?mw" class="">الأوردر 3 (الملفات وصلت النهارده: 424 + 1088 + 100 + 326 + 578 صفحة)</td></tr><tr id="41ecea6a-e158-80c1-b09a-c5aaf022527d" dir="ltr"><td id="xpqC" class="">22</td><td id="_fb}" class="">شيل الكتاب من Vercel بعد ما يتحول</td><td id="TuLC" class="">⬜</td><td id="n?mw" class="">بعد الأوردر 3</td></tr><tr id="41ecea6a-e158-80a4-bc0b-d2fd09956567" dir="ltr"><td id="xpqC" class="">23</td><td id="_fb}" class="">ماترفعش لينكات يوتيوب</td><td id="TuLC" class="">⬜</td><td id="n?mw" class="">الأوردر 2</td></tr><tr id="41ecea6a-e158-80d0-b420-de7ee12fdf3f" dir="ltr"><td id="xpqC" class="">24</td><td id="_fb}" class="">«أنشد معي» زي «غنّي معي» + فصل الموسيقى عن الصوت</td><td id="TuLC" class="">❌/⬜</td><td id="n?mw" class="">الفصل مايتعملش جوه المتصفح بجودة كويسة (محتاج Moises/Demucs على سيرفر) · الكلمات المتزامنة ممكنة لو بعتّ ملفات الصوت</td></tr><tr id="41ecea6a-e158-8003-8e9e-ec2d76515738" dir="ltr"><td id="xpqC" class="">25</td><td id="_fb}" class="">أداة في مساحتي أرفع فيها نشيد يتعمل كده ويتحط</td><td id="TuLC" class="">⬜</td><td id="n?mw" class="">نفس السبب</td></tr><tr id="41ecea6a-e158-802b-bb25-ef4245f90578" dir="ltr"><td id="xpqC" class="">26</td><td id="_fb}" class="">تقويم ميلادي + هجري + الساعة بتصميمات</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v251</td></tr><tr id="41ecea6a-e158-8076-83e1-c96e8fd7fb80" dir="ltr"><td id="xpqC" class="">27</td><td id="_fb}" class="">نسخة الموبايل والتابلت منفصلة</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">v252 الإخفاء حسب الجهاز · ⬜ تعديل منفصل لكل نسخة</td></tr><tr id="41ecea6a-e158-8098-8622-c0f8e6d008be" dir="ltr"><td id="xpqC" class="">28</td><td id="_fb}" class="">الأصوات من الإعدادات (طفل/ست/راجل) والمحادثة كلها بيها</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8029-8692-c03b2069e5a6" dir="ltr"><td id="xpqC" class="">29</td><td id="_fb}" class="">مقارنة itqan.academy</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v253 (مقفولة لحد ما تشغّلها)</td></tr><tr id="41ecea6a-e158-8007-bd86-ed6af15955a6" dir="ltr"><td id="xpqC" class="">30</td><td id="_fb}" class="">بعد تأكيد الإيميل يدخل علطول</td><td id="TuLC" class="">👤</td><td id="n?mw" class="">إعداد في Supabase (Confirm email + Redirect URLs)</td></tr><tr id="41ecea6a-e158-8024-b27a-f0d090870acb" dir="ltr"><td id="xpqC" class="">31</td><td id="_fb}" class="">next لوحده بعد التسجيل</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8052-99a1-da2c8497d3ef" dir="ltr"><td id="xpqC" class="">32</td><td id="_fb}" class="">completed بعد 70% بس</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">الفصحى والأطفال · ⬜ كل كتب العربي الجديدة</td></tr><tr id="41ecea6a-e158-805f-a7b3-ef9a2d78884c" dir="ltr"><td id="xpqC" class="">33</td><td id="_fb}" class="">الفرانكو مع العربي مش مع الإنجليزي</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8065-8c1a-ddf35e30c75e" dir="ltr"><td id="xpqC" class="">34</td><td id="_fb}" class="">الاختيارات عشوائية</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8048-afb7-e66f794f84b2" dir="ltr"><td id="xpqC" class="">35</td><td id="_fb}" class="">خط الإيد + التعرف العربي + تعديل بالكيبورد + رفع للمعلم</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8051-867d-e019cf8b53ae" dir="ltr"><td id="xpqC" class="">36</td><td id="_fb}" class="">«قولها بالعربي» + ترجمات كتير مقبولة</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8026-8c5f-ec5ebd25e806" dir="ltr"><td id="xpqC" class="">37</td><td id="_fb}" class="">العربي من اليمين للشمال</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-80c9-92e7-e9ad58ad4511" dir="ltr"><td id="xpqC" class="">38</td><td id="_fb}" class="">خانة المعنى بالإنجليزي تحت خط الإيد</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-8050-947c-d76e28201d8f" dir="ltr"><td id="xpqC" class="">39</td><td id="_fb}" class="">لاج في الصوت</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">اتحسن · محتاج تجربة على الموبايل</td></tr><tr id="41ecea6a-e158-8093-a53a-cde5319054b3" dir="ltr"><td id="xpqC" class="">40</td><td id="_fb}" class="">التسجيل مايقفش وهو بيتكلم</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-803d-83e8-e6bd0c1afe41" dir="ltr"><td id="xpqC" class="">41</td><td id="_fb}" class="">قبول أوسع للإجابات المفتوحة</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-804f-a540-f516b2747e43" dir="ltr"><td id="xpqC" class="">42</td><td id="_fb}" class="">اختيار واحد بس صح</td><td id="TuLC" class="">🟡</td><td id="n?mw" class="">✅ في الوحدات v250 · ⬜ اختبار تحديد المستوى (N4 #4)</td></tr><tr id="41ecea6a-e158-8014-8d45-d81f66837b3f" dir="ltr"><td id="xpqC" class="">43</td><td id="_fb}" class="">سماع: اختيار للسماع واختيار للمعنى، كل واحد بدرجة</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-80ab-9458-fa687e67bd83" dir="ltr"><td id="xpqC" class="">44</td><td id="_fb}" class="">سؤال الكلام من غير سماع</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v250</td></tr><tr id="41ecea6a-e158-80c4-8106-db0559d2b2e5" dir="ltr"><td id="xpqC" class="">45</td><td id="_fb}" class="">الصفحة الإنجليزي: الكلمة العربي وجنبها المعنى</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v249</td></tr><tr id="41ecea6a-e158-80a7-a10d-e12158a55bae" dir="ltr"><td id="xpqC" class="">46</td><td id="_fb}" class="">إشعار الطالب الجديد ← صفحته وإيميله متحدد + كذا طالب + «قريب» يخفي الأسعار</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v251</td></tr><tr id="41ecea6a-e158-802f-8167-c8f48b87890c" dir="ltr"><td id="xpqC" class="">47</td><td id="_fb}" class="">اختيار المحتوى: الكل، ثم تمدد وتختار من جوه</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v251</td></tr><tr id="41ecea6a-e158-8088-8d0b-f59fdfcd5522" dir="ltr"><td id="xpqC" class="">48</td><td id="_fb}" class="">الواجهة تحت الأقسام في الرئيسية</td><td id="TuLC" class="">✅</td><td id="n?mw" class="">v251/v257</td></tr></tbody></table><h2 id="41ecea6a-e158-8091-9b9e-f618eb6e9252" class="" dir="auto">N1 — Notion الأول «My Projrccct» (بالترتيب اللي في الصفحة)</h2><table id="41ecea6a-e158-802d-aadf-fae5109cb206" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-8064-97ca-ffb1968366f1" dir="ltr"><th id="u&gt;}&lt;" class="simple-table-header-color simple-table-header">#</th><th id="jchc" class="simple-table-header-color simple-table-header">الطلب</th><th id="FaCu" class="simple-table-header-color simple-table-header">الحالة</th><th id="sYTc" class="simple-table-header-color simple-table-header">النسخة / ليه</th></tr></thead><tbody><tr id="41ecea6a-e158-802a-a2c4-ce3ba050d216" dir="ltr"><td id="u&gt;}&lt;" class="">1</td><td id="jchc" class="">تذكير بالتجديد على جوجل كاليندر</td><td id="FaCu" class="">👤</td><td id="sYTc" class="">قولّي تجديد إيه (Vercel؟ دومين؟) وإمتى، وأنا أعمله في الكاليندر علطول</td></tr><tr id="41ecea6a-e158-80b1-bb7c-dc743f2b5e89" dir="ltr"><td id="u&gt;}&lt;" class="">2</td><td id="jchc" class="">أعدّل كلام صفحة الدخول</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">من وضع البناء · ⬜ محرر مخصوص للصفحة</td></tr><tr id="41ecea6a-e158-80fd-aaf0-c3897014e7df" dir="ltr"><td id="u&gt;}&lt;" class="">3</td><td id="jchc" class="">«عندي حساب» يفتح الدخول مش التسجيل</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230</td></tr><tr id="41ecea6a-e158-80c4-bd01-c977af9078d2" dir="ltr"><td id="u&gt;}&lt;" class="">4</td><td id="jchc" class="">الدخول فيه جوجل + الإيميل والباسورد</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230 (فيسبوك اتشال بطلبك)</td></tr><tr id="41ecea6a-e158-80ff-bacf-c1af4ce5a7ac" dir="ltr"><td id="u&gt;}&lt;" class="">5</td><td id="jchc" class="">لون الدخول مميز في الليلي والنهاري</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230</td></tr><tr id="41ecea6a-e158-80d7-8fd1-ef60314e3f5f" dir="ltr"><td id="u&gt;}&lt;" class="">6</td><td id="jchc" class="">شيل «بدون تأكيد الإيميل»</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230</td></tr><tr id="41ecea6a-e158-802b-b831-fd24a94394ac" dir="ltr"><td id="u&gt;}&lt;" class="">7</td><td id="jchc" class="">شيل الأسعار من صفحة الزائر</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230</td></tr><tr id="41ecea6a-e158-8032-bb88-cb4fda87c150" dir="ltr"><td id="u&gt;}&lt;" class="">8</td><td id="jchc" class="">شيل «كمّل من حيث وقفت» و«تراجع» و«رجوع لمكانك»</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">اتشالوا من التنقّل · «الرجوع لنفس الشكل» اترجع بطلبك في N2</td></tr><tr id="41ecea6a-e158-8013-be20-fea0be91d359" dir="ltr"><td id="u&gt;}&lt;" class="">9</td><td id="jchc" class="">أكسيس كامل أتحكم في كل الصفحات</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">👁️ مين يشوف إيه (v252) + الأدوات (v260) + الشريط (v261) · ⬜ وضع الفولدرات الكامل</td></tr><tr id="41ecea6a-e158-8014-84cd-cdc45b5e3d85" dir="ltr"><td id="u&gt;}&lt;" class="">10</td><td id="jchc" class="">رفع الكتاب بنسبة تحميل ظاهرة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">Notion 13</td></tr><tr id="41ecea6a-e158-8085-830a-e783a217646e" dir="ltr"><td id="u&gt;}&lt;" class="">11</td><td id="jchc" class="">مخارج وحركات واقعية متحركة كاختيار</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">محتاج رسومات/أنيميشن حقيقية للفم والحلق</td></tr><tr id="41ecea6a-e158-8014-91a7-d2ed7effcbfa" dir="ltr"><td id="u&gt;}&lt;" class="">12</td><td id="jchc" class="">إيه اتعدل في كل نسخة + أشيل حاجة واحدة بس</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v254</td></tr><tr id="41ecea6a-e158-8073-a8c0-d7a66ffca8e9" dir="ltr"><td id="u&gt;}&lt;" class="">13</td><td id="jchc" class="">البحث بيودّي لينك غلط</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80a3-97de-c21904c394f0" dir="ltr"><td id="u&gt;}&lt;" class="">14</td><td id="jchc" class="">Azure: إزاي يتحط ويشتغل</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80f4-8ff9-d30aeead9c9b" dir="ltr"><td id="u&gt;}&lt;" class="">15</td><td id="jchc" class="">كل الأصوات + أصوات الحروف</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">الأصوات شغالة · ⬜ صوت مسجّل لكل حرف</td></tr><tr id="41ecea6a-e158-8029-b483-db4868583c66" dir="ltr"><td id="u&gt;}&lt;" class="">16</td><td id="jchc" class="">الموقع بيرعش</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v231</td></tr><tr id="41ecea6a-e158-807b-8d8a-f19c8862e055" dir="ltr"><td id="u&gt;}&lt;" class="">17</td><td id="jchc" class="">الأيقونات فوق السهم فوق بعض</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8072-ae42-c1c112596c04" dir="ltr"><td id="u&gt;}&lt;" class="">18</td><td id="jchc" class="">الشريط الممدود يبدأ بعد اللوجو في كل اللغات</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الشريط اتغيّر كله في v254/v261 — محتاج صورة لو لسه موجود</td></tr><tr id="41ecea6a-e158-80e4-87ca-fa825f0d8769" dir="ltr"><td id="u&gt;}&lt;" class="">19</td><td id="jchc" class="">أيقونة «استكشاف الكلام» تظهر بإعداد بس</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8059-8c45-d0015db477b3" dir="ltr"><td id="u&gt;}&lt;" class="">20</td><td id="jchc" class="">الشريط مخفي ويطلع بزرار</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v207/v209 · اتغيّر بطلب N3</td></tr><tr id="41ecea6a-e158-801e-8f78-d28f2a15c590" dir="ltr"><td id="u&gt;}&lt;" class="">21</td><td id="jchc" class="">Azure مارفعش الأصوات</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8053-9cc7-d6750014af06" dir="ltr"><td id="u&gt;}&lt;" class="">22</td><td id="jchc" class="">السكرول بطيء على التابلت</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8016-b8fc-f2d734eabc34" dir="ltr"><td id="u&gt;}&lt;" class="">23</td><td id="jchc" class="">شيل التسجيل بفيسبوك</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230</td></tr><tr id="41ecea6a-e158-8000-a254-e3d67e8210b9" dir="ltr"><td id="u&gt;}&lt;" class="">24</td><td id="jchc" class="">زراير مش شغالة (صورة)</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">اتصلح معظمها · ⬜ زراير صوت/طفل في إعدادات المقام (image 40)</td></tr><tr id="41ecea6a-e158-80b7-9279-c25417dad459" dir="ltr"><td id="u&gt;}&lt;" class="">25</td><td id="jchc" class="">ده مابيختفيش مع الشريط</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8076-a239-e08eea6e6c3c" dir="ltr"><td id="u&gt;}&lt;" class="">26</td><td id="jchc" class="">الرجوع لوقت معيّن في النسخ الاحتياطية (من/لـ)</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">محتاج snapshot يومي للداتابيز وواجهة استرجاع — كبير</td></tr><tr id="41ecea6a-e158-8064-ac00-fa20edee6750" dir="ltr"><td id="u&gt;}&lt;" class="">27</td><td id="jchc" class="">حاجات التعديل في مساحتي ظاهرة للطالب</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234 + v260 (مساحتي للمالك بس)</td></tr><tr id="41ecea6a-e158-80e8-ae8f-ff0994453719" dir="ltr"><td id="u&gt;}&lt;" class="">28</td><td id="jchc" class="">الصوتيات في الموقع</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80bd-9373-f74c071ab920" dir="ltr"><td id="u&gt;}&lt;" class="">29</td><td id="jchc" class="">العربية بين يديك</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">الأوردر 3</td></tr><tr id="41ecea6a-e158-8080-8046-e3be2398d9bd" dir="ltr"><td id="u&gt;}&lt;" class="">30</td><td id="jchc" class="">تسجيل أعلى/أقل طبقة للطالب + أحفظه بصوتي + أنزّل الآهات وأبعتها</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ مساحتك الصوتية · ⬜ الآهات من المالك للطالب</td></tr><tr id="41ecea6a-e158-8024-bb1a-d1bf99b0b6a1" dir="ltr"><td id="u&gt;}&lt;" class="">31</td><td id="jchc" class="">شيل العلامات المائية من الفيديوهات</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v235</td></tr><tr id="41ecea6a-e158-8005-a29e-e36a894bcf0d" dir="ltr"><td id="u&gt;}&lt;" class="">32</td><td id="jchc" class="">صفحة الأدوات الإسلامية collapsed</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v249</td></tr><tr id="41ecea6a-e158-807b-a464-ccd22c3717a2" dir="ltr"><td id="u&gt;}&lt;" class="">33</td><td id="jchc" class="">صفحة المقامات: أساسية · فرعية · أنشد معي · مساحتك الصوتية (مداك، تمارين، خمّن، اكتشف) · النظري</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v241/v242</td></tr><tr id="41ecea6a-e158-80e2-8a99-f7c7d49e941a" dir="ltr"><td id="u&gt;}&lt;" class="">34</td><td id="jchc" class="">أرفع أي أداة في أي صفحة (أدوات المالك)</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">⬆️ من مساحتي للأدوات (v260)</td></tr><tr id="41ecea6a-e158-802a-885e-cdbf0a0d971a" dir="ltr"><td id="u&gt;}&lt;" class="">35</td><td id="jchc" class="">شيل صفحة الاقتراحات من المقامات</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8056-986d-f843367aeef4" dir="ltr"><td id="u&gt;}&lt;" class="">36</td><td id="jchc" class="">شيل الصفحة دي من كل المقامات</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v245</td></tr><tr id="41ecea6a-e158-80ae-b132-d49434683ee2" dir="ltr"><td id="u&gt;}&lt;" class="">37</td><td id="jchc" class="">«مارس المقام» جوه الصفحة للمقام ده بس</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v239/v245</td></tr><tr id="41ecea6a-e158-80b9-b643-cf6ef3ad30cc" dir="ltr"><td id="u&gt;}&lt;" class="">38</td><td id="jchc" class="">الخروج يرجّعك لمكانك + expansion افتراضي وخيار صفحة تانية</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ الرجوع v251 · ⬜ خيار الفتح لكل حاجة</td></tr><tr id="41ecea6a-e158-8095-be81-c1d1c5fe6ea0" dir="ltr"><td id="u&gt;}&lt;" class="">39</td><td id="jchc" class="">شيل خمّن/تمارين/الآهات من شريط المقام + التحويل في الأساسية بس</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v239</td></tr><tr id="41ecea6a-e158-8030-ad38-d0b524d6b84c" dir="ltr"><td id="u&gt;}&lt;" class="">40</td><td id="jchc" class="">أعلى وأقل طبقة فوق الدرجات</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v248</td></tr><tr id="41ecea6a-e158-803f-9805-dc7c41b56fd0" dir="ltr"><td id="u&gt;}&lt;" class="">41</td><td id="jchc" class="">أدوات التعديل ماتظهرش إلا في وضع التعديل</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">معظمها · فيه زراير ✏️ للمالك برا وضع التعديل</td></tr><tr id="41ecea6a-e158-8074-81d3-d858d8f9b6bf" dir="ltr"><td id="u&gt;}&lt;" class="">42</td><td id="jchc" class="">أدوات المالك في قسم «للمالك فقط» جوه المقامات</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">اتجمّعت في «مساحتي» بدل كده — قولّي لو لسه عايز القسم</td></tr><tr id="41ecea6a-e158-8044-99e1-c27ff2dd950b" dir="ltr"><td id="u&gt;}&lt;" class="">43</td><td id="jchc" class="">العربية بين يديك: المستويات المتقدمة</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الأوردر 3</td></tr><tr id="41ecea6a-e158-8023-9518-ef089d747b59" dir="ltr"><td id="u&gt;}&lt;" class="">44</td><td id="jchc" class="">الترجمة مخفية وتتفتح كلمة كلمة</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">سطر سطر ✅ · ⬜ كلمة كلمة</td></tr><tr id="41ecea6a-e158-80a8-872e-c4b91ed7f8e5" dir="ltr"><td id="u&gt;}&lt;" class="">45</td><td id="jchc" class="">محادثات أكتر وأطول ومن المحتوى الحقيقي</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الأوردر 3 (من الكتب)</td></tr><tr id="41ecea6a-e158-8026-b747-f9282332ed5e" dir="ltr"><td id="u&gt;}&lt;" class="">46</td><td id="jchc" class="">الفلاش كارد: الفرانكو مع العربي + صعوبة زي Anki</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ الفرانكو v250 · ✅ Anki للسور · ⬜ Anki للعربي</td></tr><tr id="41ecea6a-e158-8011-a7d6-fd66ac917988" dir="ltr"><td id="u&gt;}&lt;" class="">47</td><td id="jchc" class="">أسجّل صوت السيستم مع الطالب في المحادثة</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">المتصفح بيقفل التقاط صوت الجهاز إلا بإذن مشاركة الشاشة — ممكن كاختيار</td></tr><tr id="41ecea6a-e158-80fb-8696-f0041a16c577" dir="ltr"><td id="u&gt;}&lt;" class="">48</td><td id="jchc" class="">المحادثة اللي خلصت ✓ + رسالة + شهادة</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">بعد محتوى الكتب</td></tr><tr id="41ecea6a-e158-80d7-9829-efae1dff5dbb" dir="ltr"><td id="u&gt;}&lt;" class="">49</td><td id="jchc" class="">اختيار الطالب من فوق القسم</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-804e-aabc-e6c31e7391ed" dir="ltr"><td id="u&gt;}&lt;" class="">50</td><td id="jchc" class="">شيل الفاضي والمكرر في العربي</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v249 · ⬜ مراجعة نهائية بعد الكتب</td></tr><tr id="41ecea6a-e158-80ae-b372-c708b27d5d04" dir="ltr"><td id="u&gt;}&lt;" class="">51</td><td id="jchc" class="">نزّل ده فوق المصحف علطول</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">محتاج صورة الحتة على الموقع الحالي</td></tr><tr id="41ecea6a-e158-803a-85e9-ef0a17acba65" dir="ltr"><td id="u&gt;}&lt;" class="">52</td><td id="jchc" class="">شيل الجدول (الحفظ واقف لو مااخترتوش)</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8093-a05f-d5f7609f3a16" dir="ltr"><td id="u&gt;}&lt;" class="">53</td><td id="jchc" class="">افتح ده للطالب يشتغل عليه</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80f1-bbbe-e6f80393b774" dir="ltr"><td id="u&gt;}&lt;" class="">54</td><td id="jchc" class="">الدرجات بالإنجليزي + الأوكتاف</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v247 + v262</td></tr><tr id="41ecea6a-e158-8016-bc0b-c2210ed720e1" dir="ltr"><td id="u&gt;}&lt;" class="">55</td><td id="jchc" class="">أي تسجيل يوقف أي صوت شغال</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80dc-a69f-c18b05b431f2" dir="ltr"><td id="u&gt;}&lt;" class="">56</td><td id="jchc" class="">قسم القراءات العشر</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v241</td></tr><tr id="41ecea6a-e158-80f9-a340-c58c75f9679c" dir="ltr"><td id="u&gt;}&lt;" class="">57</td><td id="jchc" class="">وايت بورد كاملة برا الكلاس روم</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v243/v251</td></tr><tr id="41ecea6a-e158-8050-aae5-fe562c199917" dir="ltr"><td id="u&gt;}&lt;" class="">58</td><td id="jchc" class="">أرسم المقامات والطبقات على الوايت بورد</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v243</td></tr><tr id="41ecea6a-e158-80fc-b8f5-e63e91680c8f" dir="ltr"><td id="u&gt;}&lt;" class="">59</td><td id="jchc" class="">لو المقام ليه أكتر من جواب أختار</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8055-9bea-e063a72c01d5" dir="ltr"><td id="u&gt;}&lt;" class="">60</td><td id="jchc" class="">الفرعي زي الأساسي في كل حاجة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80ec-95ff-c67b31f336a6" dir="ltr"><td id="u&gt;}&lt;" class="">61</td><td id="jchc" class="">الرئيسية بمسارات (المقامات، القرآن والتجويد، القراءات، العربي، الإسلامي)</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v241</td></tr><tr id="41ecea6a-e158-808d-af3f-cc2a24e572fb" dir="ltr"><td id="u&gt;}&lt;" class="">62</td><td id="jchc" class="">أشيل/أنقل/أحدد كذا حاجة/سلة/رسم بالأرقام/ليا ولا للكل — زي الكمبيوتر</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v252 الإخفاء · ⬜ النقل الحر والسلة والتحديد المتعدد</td></tr><tr id="41ecea6a-e158-808b-ac36-fed389d4e69c" dir="ltr"><td id="u&gt;}&lt;" class="">63</td><td id="jchc" class="">ضغطة أعدّل بيها الكلام</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">وضع البناء القديم</td></tr><tr id="41ecea6a-e158-807d-9b3b-f2d8f3059622" dir="ltr"><td id="u&gt;}&lt;" class="">64</td><td id="jchc" class="">كل قسم أدواته من غير تكرار + مكان واحد للمحتوى والدورات والأسعار</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v254/v257/v260</td></tr><tr id="41ecea6a-e158-8086-8336-f8586cc9f525" dir="ltr"><td id="u&gt;}&lt;" class="">65</td><td id="jchc" class="">أيقونات الرئيسية (الرئيسية/مساحتي/الدورات/المحتوى) + أدوات زي كانفا وإكسيل</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">الشريط v261 · ⬜ أدوات تصميم زي كانفا</td></tr><tr id="41ecea6a-e158-8082-ad0f-f8e9598d203a" dir="ltr"><td id="u&gt;}&lt;" class="">66</td><td id="jchc" class="">قسم بتصميم مختلف (دولينجو/أبل)</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">layouts180</td></tr><tr id="41ecea6a-e158-80dd-8ba6-fe30425c4e92" dir="ltr"><td id="u&gt;}&lt;" class="">67</td><td id="jchc" class="">المحتوى في الرئيسية بنفس شكل صفحته</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v254</td></tr><tr id="41ecea6a-e158-8097-8f37-ff691ecf32ee" dir="ltr"><td id="u&gt;}&lt;" class="">68</td><td id="jchc" class="">أضيف/أشيل أيقونات + تحذير لو آخر نسخة</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8015-94f7-cb158d13bbe1" dir="ltr"><td id="u&gt;}&lt;" class="">69</td><td id="jchc" class="">أدوات المسلم: القبلة، المصاحف، المواقيت بالأذان في الخلفية، الأذكار…</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ حياة المسلم · ⬜ الأذان في الخلفية · ⬜ المصاحف (الأوردر 2)</td></tr><tr id="41ecea6a-e158-80b8-a060-e9ad4d9635c5" dir="ltr"><td id="u&gt;}&lt;" class="">70</td><td id="jchc" class="">مين يشوف الصفحة/أكرر/أنقل</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v252</td></tr><tr id="41ecea6a-e158-800f-8514-d55b1f714011" dir="ltr"><td id="u&gt;}&lt;" class="">71</td><td id="jchc" class="">أدوات زي الموبايل في الرئيسية (قيام الليل) بتصميمات</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-805a-bcc3-e0d98ffcbf13" dir="ltr"><td id="u&gt;}&lt;" class="">72</td><td id="jchc" class="">إعدادات مش شغالة (Azure…)</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80a5-8dfc-d09c5f0e8799" dir="ltr"><td id="u&gt;}&lt;" class="">73</td><td id="jchc" class="">مساعدة في تحديد مقام آية للشيخ</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v242</td></tr><tr id="41ecea6a-e158-8037-85e7-fb4be36671ee" dir="ltr"><td id="u&gt;}&lt;" class="">74</td><td id="jchc" class="">«اكتشف المقام الذي تقرأ به» + الميكس</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v242</td></tr><tr id="41ecea6a-e158-80c4-bd53-c8bee86fbab2" dir="ltr"><td id="u&gt;}&lt;" class="">75</td><td id="jchc" class="">المحادثة: B يستنى تسجيلي والتوقيت طبيعي</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v250 · ⬜ «العب دور» يسمع لوحده</td></tr><tr id="41ecea6a-e158-8083-ad2b-cfa5668868d0" dir="ltr"><td id="u&gt;}&lt;" class="">76</td><td id="jchc" class="">محادثات كتير جدًا</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الأوردر 3</td></tr><tr id="41ecea6a-e158-805e-aa03-d48cbad117bf" dir="ltr"><td id="u&gt;}&lt;" class="">77</td><td id="jchc" class="">شريط وضع التطوير (لون كل حتة لوحدها، ليلي/نهاري، معاينة قبل النشر)</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">⬜ اللون لكل عنصر بمعاينة</td></tr><tr id="41ecea6a-e158-803e-bc72-c4e4d28f4114" dir="ltr"><td id="u&gt;}&lt;" class="">78</td><td id="jchc" class="">كل الشرايط الجانبية نفس التصميم + مكانها + إنشاء أيقونة</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80e8-b837-de72274bac2d" dir="ltr"><td id="u&gt;}&lt;" class="">79</td><td id="jchc" class="">شيل الشريط ده + أتحكم في كل حاجة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v254</td></tr><tr id="41ecea6a-e158-80b5-b587-cba9130b74ed" dir="ltr"><td id="u&gt;}&lt;" class="">80</td><td id="jchc" class="">الشريط يفتح صفحة جديدة أو expansion</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-802c-b4e2-cec0260ec69e" dir="ltr"><td id="u&gt;}&lt;" class="">81</td><td id="jchc" class="">كليك يمين على الأيقونات (افتح في تاب جديد…)</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8086-8738-c9a33d4f81a0" dir="ltr"><td id="u&gt;}&lt;" class="">82</td><td id="jchc" class="">طريقة فتح الأيقونة (زي الآيفون) لكل الموقع أو الصفحة</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8030-bafc-ed3f455b6061" dir="ltr"><td id="u&gt;}&lt;" class="">83</td><td id="jchc" class="">كل المشايخ + بحث عربي/إنجليزي</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الأوردر 2 (مع قايمة الروايات)</td></tr><tr id="41ecea6a-e158-80f9-8750-ded95b6da6a6" dir="ltr"><td id="u&gt;}&lt;" class="">84</td><td id="jchc" class="">صفحة القرّاء للمالك: أسمع وأحدد آيات المقام وتتقطع وتترفع</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v242 الاقتراح · ⬜ التقطيع الأوتوماتيكي</td></tr><tr id="41ecea6a-e158-8038-9641-ebc937f4321c" dir="ltr"><td id="u&gt;}&lt;" class="">85</td><td id="jchc" class="">مايتعملش ملف لشيخ إلا لو ليه تلاوة + «إبلاغ عن خطأ»</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ القايمة v249 · ⬜ الإبلاغ</td></tr><tr id="41ecea6a-e158-807e-8b0b-f62a9944dfed" dir="ltr"><td id="u&gt;}&lt;" class="">86</td><td id="jchc" class="">الأذان والابتهالات والأناشيد في صفحة كل مقام</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v249</td></tr><tr id="41ecea6a-e158-8042-b08f-e74f63af938c" dir="ltr"><td id="u&gt;}&lt;" class="">87</td><td id="jchc" class="">تطبيق على الصفحات الشبيهة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v252</td></tr><tr id="41ecea6a-e158-80a9-b935-fb2d44059812" dir="ltr"><td id="u&gt;}&lt;" class="">88</td><td id="jchc" class="">رقم الإشعارات يتصفّر لما أفتح</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-80fa-92cb-c0cfe8344b84" dir="ltr"><td id="u&gt;}&lt;" class="">89</td><td id="jchc" class="">المحتوى تحت ومن غير تكرار وفي نفس الصفحة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v245</td></tr><tr id="41ecea6a-e158-801b-9991-df21ec11ac66" dir="ltr"><td id="u&gt;}&lt;" class="">90</td><td id="jchc" class="">معاينة قبل الحفظ + تطبيق على الكل</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ في الأدوات والشريط · ⬜ لكل الموقع</td></tr><tr id="41ecea6a-e158-8038-bd1a-f13d77c4bfd6" dir="ltr"><td id="u&gt;}&lt;" class="">91</td><td id="jchc" class="">Google Play + التحمّل والأمان</td><td id="FaCu" class="">👤</td><td id="sYTc" class="">حساب Google Play (25$) · الخطة اتكتبت</td></tr><tr id="41ecea6a-e158-80f4-8bcd-eb333b5f5bc6" dir="ltr"><td id="u&gt;}&lt;" class="">92</td><td id="jchc" class="">كل الاقتراحات A to Z</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">اتكتبت</td></tr><tr id="41ecea6a-e158-80c9-bf03-c4b286386930" dir="ltr"><td id="u&gt;}&lt;" class="">93</td><td id="jchc" class="">«العربية بين يدي أولادنا» ملف محترم</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v258 · الفصول الناقصة في الأوردر 3</td></tr><tr id="41ecea6a-e158-806d-94e6-d9efc3afeb88" dir="ltr"><td id="u&gt;}&lt;" class="">94</td><td id="jchc" class="">محتوى العربي ضعيف</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">✅ الأطفال · ⬜ الفصحى والعامية — الأوردر 3</td></tr><tr id="41ecea6a-e158-80e4-94ce-ce32a4096572" dir="ltr"><td id="u&gt;}&lt;" class="">95</td><td id="jchc" class="">أي حاجة فاضية ماتظهرش لغيري</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8035-84bb-c78059b67c28" dir="ltr"><td id="u&gt;}&lt;" class="">96</td><td id="jchc" class="">فكّرني أبعت Agent تاني يراجع</td><td id="FaCu" class="">👤</td><td id="sYTc" class="">تذكير: ابعت <code>HANDOFF_v264.md</code> لأي Agent يراجع</td></tr><tr id="41ecea6a-e158-807b-bc74-d3f2af69264f" dir="ltr"><td id="u&gt;}&lt;" class="">97</td><td id="jchc" class="">كل الأحكام في شريط واحد فوق المصحف بالأبواب</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v246</td></tr><tr id="41ecea6a-e158-8017-8bb9-dcd98a85f0b8" dir="ltr"><td id="u&gt;}&lt;" class="">98</td><td id="jchc" class="">شباك الخطأ: نسخة واحدة، حروف أكبر، الحرف يفتح المخرج، التفخيم والترقيق، الحفظ شغال</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v234/v246 · ⬜ التفخيم والترقيق تحت الصفات</td></tr><tr id="41ecea6a-e158-80a0-9b7b-ce6d3b1f8642" dir="ltr"><td id="u&gt;}&lt;" class="">99</td><td id="jchc" class="">ضغطة = الكلمة والآية · كليك يمين/دبل = الأخطاء</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v240</td></tr><tr id="41ecea6a-e158-80d0-8a84-c88c73e7a212" dir="ltr"><td id="u&gt;}&lt;" class="">100</td><td id="jchc" class="">شيل الأسهم</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8073-8d69-f51131a1fc60" dir="ltr"><td id="u&gt;}&lt;" class="">101</td><td id="jchc" class="">المخارج: سهم الهمس والجهر + فتحات مختلفة للحروف</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">محتاج رسومات جديدة</td></tr><tr id="41ecea6a-e158-80f4-a88f-c4ee09c5ad07" dir="ltr"><td id="u&gt;}&lt;" class="">102</td><td id="jchc" class="">زرار «ابعت للمعلم» على أي تسجيل (يروح الواجب)</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-803f-88e9-f9632ecade46" dir="ltr"><td id="u&gt;}&lt;" class="">103</td><td id="jchc" class="">اختيار القارئ المتاح بس</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الأوردر 2</td></tr><tr id="41ecea6a-e158-805d-b085-f815c4bdabcb" dir="ltr"><td id="u&gt;}&lt;" class="">104</td><td id="jchc" class="">العجم من دو</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v235</td></tr><tr id="41ecea6a-e158-802c-bb8d-f6cd19a0fc33" dir="ltr"><td id="u&gt;}&lt;" class="">105</td><td id="jchc" class="">الطلوع والنزول (مايفضلش فوق)</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80fa-b909-f54046151b1d" dir="ltr"><td id="u&gt;}&lt;" class="">106</td><td id="jchc" class="">«قرآن» جنب مرتل ومجود</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v235</td></tr><tr id="41ecea6a-e158-80d6-a47c-c435cfa0eaad" dir="ltr"><td id="u&gt;}&lt;" class="">107</td><td id="jchc" class="">الكلام تحت الأذان/الابتهال بزرار عرض</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v254</td></tr><tr id="41ecea6a-e158-806c-95a4-e6701733de40" dir="ltr"><td id="u&gt;}&lt;" class="">108</td><td id="jchc" class="">كلمات القصايد والأناشيد في أنشد معي</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v249</td></tr><tr id="41ecea6a-e158-8080-a106-dff896c49f6b" dir="ltr"><td id="u&gt;}&lt;" class="">109</td><td id="jchc" class="">الساعة الهدية + تايمر + كل شهر ساعة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v58 + v263</td></tr><tr id="41ecea6a-e158-80d5-8466-d791ba6f9fc2" dir="ltr"><td id="u&gt;}&lt;" class="">110</td><td id="jchc" class="">علامة 🔊 على الكتاب اللي فيه صوت + طريقة عرض الكتب</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8078-bdc1-c044d0be3633" dir="ltr"><td id="u&gt;}&lt;" class="">111</td><td id="jchc" class="">حروف الحلق مايتحركش فيها اللسان</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">نفس سبب #101</td></tr><tr id="41ecea6a-e158-8026-8bb5-f89872f93143" dir="ltr"><td id="u&gt;}&lt;" class="">112</td><td id="jchc" class="">المالك يحدد مقام آيات بمساعدة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v242</td></tr><tr id="41ecea6a-e158-80db-8236-d7da43d13d7e" dir="ltr"><td id="u&gt;}&lt;" class="">113</td><td id="jchc" class="">مشكلة في المحادثات العربي</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v250</td></tr><tr id="41ecea6a-e158-80ce-9f3c-dfde976b70a4" dir="ltr"><td id="u&gt;}&lt;" class="">114</td><td id="jchc" class="">صوت الحصري (wbw) في التجويد مش Azure</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">معظم الأماكن · ⬜ مراجعة كاملة</td></tr><tr id="41ecea6a-e158-8030-97ff-fde3c6ad614b" dir="ltr"><td id="u&gt;}&lt;" class="">115</td><td id="jchc" class="">Azure مايقراش قرآن ولا أحكام</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8071-8448-dae6d781d90a" dir="ltr"><td id="u&gt;}&lt;" class="">116</td><td id="jchc" class="">أمثلة الأحكام بالكلمتين بتوع الحكم بس</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-809b-b83b-de7d21c4f50b" dir="ltr"><td id="u&gt;}&lt;" class="">117</td><td id="jchc" class="">المصطلح بالإنجليزي جنب الفرانكو</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v235</td></tr><tr id="41ecea6a-e158-8047-b289-c105d1a48262" dir="ltr"><td id="u&gt;}&lt;" class="">118</td><td id="jchc" class="">شرح بعد كل إجابة + تكرار الغلط + التحكم في التايمر</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-806a-b2a5-c01e36fdbf75" dir="ltr"><td id="u&gt;}&lt;" class="">119</td><td id="jchc" class="">مصطلحات التجويد من الكتب الإنجليزي (مش ترجمة)</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v235 · ⬜ مراجعة كاملة</td></tr><tr id="41ecea6a-e158-8033-ab3a-cac0a3772589" dir="ltr"><td id="u&gt;}&lt;" class="">120</td><td id="jchc" class="">أيقونات أكبر + expansion واحد يقفل التاني</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80e0-8fdf-f3e77c615c75" dir="ltr"><td id="u&gt;}&lt;" class="">121</td><td id="jchc" class="">الرعشة لما الصفحة تفتح</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-801d-ba61-e9ad9cd316cf" dir="ltr"><td id="u&gt;}&lt;" class="">122</td><td id="jchc" class="">صفحة اقتراحات في مساحتي</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">«🆕 كل الجديد» (hub218)</td></tr><tr id="41ecea6a-e158-80ae-a53b-d239b4ac4a77" dir="ltr"><td id="u&gt;}&lt;" class="">123</td><td id="jchc" class="">دول مش شغالين</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">زراير الأصوات ✅ v250</td></tr><tr id="41ecea6a-e158-8031-b16e-f6f78c46677f" dir="ltr"><td id="u&gt;}&lt;" class="">124</td><td id="jchc" class="">خانة القارئ بتطلع أسامي الطلبة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8001-bdb8-e58c55662e5c" dir="ltr"><td id="u&gt;}&lt;" class="">125</td><td id="jchc" class="">رجّع زرار العرض واللغة على الجنب + التحكم فيه</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8046-b639-f252a859fc1a" dir="ltr"><td id="u&gt;}&lt;" class="">126</td><td id="jchc" class="">رجّع الشريط + تحكم في مكانه</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8050-a25d-c080682583ee" dir="ltr"><td id="u&gt;}&lt;" class="">127</td><td id="jchc" class="">موسيقى الأناشيد الأصلية</td><td id="FaCu" class="">❌</td><td id="sYTc" class="">حقوق نشر — البديل تسجيلات بإذن أصحابها</td></tr><tr id="41ecea6a-e158-80b5-a422-c840090056df" dir="ltr"><td id="u&gt;}&lt;" class="">128</td><td id="jchc" class="">20 أداة للحفظ</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">6 من 20 (الورد، الختمة، كمّل الآية، السلسلة، المراجعة المتباعدة، النقاط)</td></tr><tr id="41ecea6a-e158-80cc-b5f4-d78330f934e2" dir="ltr"><td id="u&gt;}&lt;" class="">129</td><td id="jchc" class="">فتح المحتوى بدقايق/ساعات/أيام… + العدد</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v263</td></tr><tr id="41ecea6a-e158-803a-94f2-ddefb0e58de0" dir="ltr"><td id="u&gt;}&lt;" class="">130</td><td id="jchc" class="">صفحة التسجيل وحشة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230/v236</td></tr><tr id="41ecea6a-e158-8090-bcb1-f3480eed5764" dir="ltr"><td id="u&gt;}&lt;" class="">131</td><td id="jchc" class="">لغة الجهاز، جوجل، login/signup منفصلين، مايطلبش البيانات تاني</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v230/v234</td></tr><tr id="41ecea6a-e158-80fa-b3d8-e40dc6f95363" dir="ltr"><td id="u&gt;}&lt;" class="">132</td><td id="jchc" class="">أفكار كريتيف لصفحة الدخول</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8048-b3ab-d2eb63252112" dir="ltr"><td id="u&gt;}&lt;" class="">133</td><td id="jchc" class="">الغلطة اللي في صورة الواتساب</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-80f4-8abd-cd9ecc304049" dir="ltr"><td id="u&gt;}&lt;" class="">134</td><td id="jchc" class="">أدوات مقامات تفيد الطالب في القرآن</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">المُوالف والتحويل وخمّن واكتشف · ⬜ باقي القايمة</td></tr><tr id="41ecea6a-e158-80cb-bc6d-deedf75ff1a2" dir="ltr"><td id="u&gt;}&lt;" class="">135</td><td id="jchc" class="">مساحات للإنشاد والأغاني للمالك</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8068-8570-fe29128b0a4f" dir="ltr"><td id="u&gt;}&lt;" class="">136</td><td id="jchc" class="">أدوات لتعليم العربي بفاعلية</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">v250</td></tr><tr id="41ecea6a-e158-8017-9fd0-fcf47070d333" dir="ltr"><td id="u&gt;}&lt;" class="">137</td><td id="jchc" class="">اقتراحات تنظيم في صفحة التنظيم</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">org200</td></tr><tr id="41ecea6a-e158-8062-8016-ef317683f77d" dir="ltr"><td id="u&gt;}&lt;" class="">138</td><td id="jchc" class="">التطبيق تقيل والسكرول</td><td id="FaCu" class="">🟡</td><td id="sYTc" class="">اتحسن · محتاج تقسيم index.html (5.3 ميجا)</td></tr><tr id="41ecea6a-e158-80cf-89ce-e5f2eb6a2586" dir="ltr"><td id="u&gt;}&lt;" class="">139</td><td id="jchc" class="">التسجيل برقم الموبايل</td><td id="FaCu" class="">👤</td><td id="sYTc" class="">Twilio أو مزوّد SMS</td></tr><tr id="41ecea6a-e158-80dd-821f-ce175fa7da1a" dir="ltr"><td id="u&gt;}&lt;" class="">140</td><td id="jchc" class="">مفيش كلام فوق بعض</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v235</td></tr><tr id="41ecea6a-e158-80b9-9e31-e04e4bca405c" dir="ltr"><td id="u&gt;}&lt;" class="">141</td><td id="jchc" class="">القوايم بتطلع غلط أول ما الصفحة تفتح</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80a4-b45b-cd51fc154004" dir="ltr"><td id="u&gt;}&lt;" class="">142</td><td id="jchc" class="">التطبيق: «التعرّف على الصوت محتاج إنترنت»</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">الـ WebView على أندرويد مابيدعمش التعرّف — محتاج plugin في التطبيق</td></tr><tr id="41ecea6a-e158-802a-8d76-f1f8f5ffd81b" dir="ltr"><td id="u&gt;}&lt;" class="">143</td><td id="jchc" class="">نطق «ربك»</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">محتاج أعرف الصفحة بالظبط (صورة)</td></tr><tr id="41ecea6a-e158-8057-918d-eab488fda62d" dir="ltr"><td id="u&gt;}&lt;" class="">144</td><td id="jchc" class="">السماعة جنب الحصري + الكلمة مكتوبة</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8081-b936-de52ab55e723" dir="ltr"><td id="u&gt;}&lt;" class="">145</td><td id="jchc" class="">كلام الاشتراك السنوي</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-80e5-a4e6-f0ea37406c06" dir="ltr"><td id="u&gt;}&lt;" class="">146</td><td id="jchc" class="">اشتراك المحتوى الأول</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8045-accd-cf69a979954c" dir="ltr"><td id="u&gt;}&lt;" class="">147</td><td id="jchc" class="">شيل القسم ده من الاشتراك</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8018-b804-cb52eded7f5e" dir="ltr"><td id="u&gt;}&lt;" class="">148</td><td id="jchc" class="">«أسبوع مجاني وبعده خصم»</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-80fc-b50b-da173d1a8abb" dir="ltr"><td id="u&gt;}&lt;" class="">149</td><td id="jchc" class="">شيل «طلاب الشيخ المباشرين»</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8006-986e-de026badbe07" dir="ltr"><td id="u&gt;}&lt;" class="">150</td><td id="jchc" class="">شيل دي</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-80b9-9764-dc3bf5218d98" dir="ltr"><td id="u&gt;}&lt;" class="">151</td><td id="jchc" class="">الحصة الجماعية (سعر الجروب، الدعوة، 5/10، مين يدفع)</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v238</td></tr><tr id="41ecea6a-e158-80d3-9019-f599dfe747b3" dir="ltr"><td id="u&gt;}&lt;" class="">152</td><td id="jchc" class="">شيل دي</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8025-9e4e-dff1983c7209" dir="ltr"><td id="u&gt;}&lt;" class="">153</td><td id="jchc" class="">حاجات «للأونر فقط» ظاهرة للطلبة</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v234</td></tr><tr id="41ecea6a-e158-8063-a983-e4155adb7d85" dir="ltr"><td id="u&gt;}&lt;" class="">154</td><td id="jchc" class="">الصفات: عربي + فرانكو + المصطلح الإنجليزي من الكتب</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80d3-a3e0-dd0ecb1ba384" dir="ltr"><td id="u&gt;}&lt;" class="">155</td><td id="jchc" class="">السعر بعملة بلد الزائر بس</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v191/v234</td></tr><tr id="41ecea6a-e158-80a5-87ff-ee850c0034f1" dir="ltr"><td id="u&gt;}&lt;" class="">156</td><td id="jchc" class="">أختار صوت السيستم ولا المايك</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-8088-9a7a-dce5cdd734b0" dir="ltr"><td id="u&gt;}&lt;" class="">157</td><td id="jchc" class="">الأمثلة تحت كل حكم بصوتها</td><td id="FaCu" class="">⬜</td><td id="sYTc" class="">—</td></tr><tr id="41ecea6a-e158-80e5-8fbe-fa4b362f3ea0" dir="ltr"><td id="u&gt;}&lt;" class="">158</td><td id="jchc" class="">الكلام عربي جنب الفرانكو</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v250</td></tr><tr id="41ecea6a-e158-8007-bb1b-c09b7595b493" dir="ltr"><td id="u&gt;}&lt;" class="">159</td><td id="jchc" class="">الحوار ← القواعد ← الكلمات ← الفلاش كارد + كروت قواعد</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">v250</td></tr><tr id="41ecea6a-e158-80cd-b919-ddc278da7279" dir="ltr"><td id="u&gt;}&lt;" class="">160</td><td id="jchc" class="">شيل ده</td><td id="FaCu" class="">✅</td><td id="sYTc" class="">—</td></tr></tbody></table><h2 id="41ecea6a-e158-8043-907a-d22cead64cf0" class="" dir="auto">اقتراحات الـ AI</h2><p id="41ecea6a-e158-802d-a29a-f623d539d1c7" class="" dir="auto"><strong>✅ اتعمل (64):</strong><br/>للمعلمين والأكاديميات · اختار تصميمك · القراءة المريحة · حاسبة الزكاة · التاريخ الهجري · شريط تقدّم القراءة · عداد الأذكار · الصفحة بتتكلم · الليلي التلقائي · ثيم رمضان والعيد · وضع الصيانة · تصدير Excel · بطاقات المراجعة · ادفع اللي تقدر عليه · وضع التركيز · المصحف الليلي · التقويم الهجري · إحصائيات الزوار · منع أخد الطالب برّه · عقد المعلمين · الفواتير · اللوحة المالية · التحقق بخطوتين · ورقة عمل · باقة العيلة · المعلم البديل · المرآة · صوتي على خط زمني · الورد اليومي · خطة ختمة · كمّل الآية · السلسلة بحماية يوم · أهداف أسبوعية · مراجعة متباعدة · النقاط والمستويات والشارات · شهادة إتمام جزء · مدرّب الطبقة · تمرين التحويل · خمّن المقام · محادثات Azure · برنامج الإحالة · أسعار حسب الدولة · الحصة الجماعية · القراءات العشر · مساحتك الصوتية · الوايت بورد · الكتابة بخط الإيد · الساعة والتقويم · لوحة شرف (مسابقة الطلاب) · ملف إنجاز قابل للمشاركة · رسائل للطلاب بالمجموعات · أفكار itqan.academy · قصص الأنبياء (من الكتاب) · الأذكار بالعدّاد · مكتبة PDF (الكتب المصوّرة) · أعلام الإسلام · الأربعون النووية · أسماء الله الحسنى · كارت الآية · مواقيت الصلاة · ختمة العيلة · قصص مصوّرة · الفتح بالتايمر · الساعة المجانية الشهرية.</p><p id="41ecea6a-e158-8001-943c-e570979fb9a0" class="" dir="auto"><strong>🟡 جزئي (12):</strong></p><table id="41ecea6a-e158-80bf-945d-eb587ddebc7d" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41ecea6a-e158-802d-b33f-d3450f3dd70e" dir="ltr"><th id="b:i&lt;" class="simple-table-header-color simple-table-header">الاقتراح</th><th id="P?Vv" class="simple-table-header-color simple-table-header">الناقص</th></tr></thead><tbody><tr id="41ecea6a-e158-80ff-b89a-ff925f280f2a" dir="ltr"><td id="b:i&lt;" class="">ترتيب الآيات المتشابهة</td><td id="P?Vv" class="">قايمة صغيرة · محتاج كل المتشابهات</td></tr><tr id="41ecea6a-e158-8077-b028-f13e96299ac8" dir="ltr"><td id="b:i&lt;" class="">تحدّي أسبوعي</td><td id="P?Vv" class="">المسابقة الأسبوعية موجودة · ⬜ تحدّي تجويد</td></tr><tr id="41ecea6a-e158-80bb-a05f-cd90e5c071e6" dir="ltr"><td id="b:i&lt;" class="">شارات لكل باب</td><td id="P?Vv" class="">الشارات عامة · ⬜ لكل باب تجويد</td></tr><tr id="41ecea6a-e158-8016-add0-f9eee508864e" dir="ltr"><td id="b:i&lt;" class="">مكتبة تسجيلات القرّاء لكل مقام</td><td id="P?Vv" class="">بتتملا بإيدك من «مساحتي»</td></tr><tr id="41ecea6a-e158-806c-bae3-edf85a9c113f" dir="ltr"><td id="b:i&lt;" class="">تذكير قبل الحصة</td><td id="P?Vv" class="">إشعار/إيميل ✅ · ⬜ واتساب (WhatsApp Business API)</td></tr><tr id="41ecea6a-e158-80a0-9954-c029982417f8" dir="ltr"><td id="b:i&lt;" class="">تقسيم الطلاب لمجموعات</td><td id="P?Vv" class="">الوايت بورد للمجموعات ✅ · ⬜ إدارة مجموعات</td></tr><tr id="41ecea6a-e158-80e2-bd70-cf3fc42f7f67" dir="ltr"><td id="b:i&lt;" class="">صلاحيات مساعد إداري</td><td id="P?Vv" class="">«فريقي والصلاحيات» موجود · ⬜ صلاحيات دقيقة</td></tr><tr id="41ecea6a-e158-8070-8ef4-e2749dbf9c6a" dir="ltr"><td id="b:i&lt;" class="">أوفلاين</td><td id="P?Vv" class="">اتشال بطلبك (زرار «من غير نت»)</td></tr><tr id="41ecea6a-e158-8088-baf1-e08613c66187" dir="ltr"><td id="b:i&lt;" class="">الأذكار والمكتبة المصوّرة</td><td id="P?Vv" class="">بالعدّاد ✅ · ⬜ صوت بشري لكل ذكر</td></tr><tr id="41ecea6a-e158-8081-9258-c95a171ad136" dir="ltr"><td id="b:i&lt;" class="">قاموس كلمات الدرس بصوت</td><td id="P?Vv" class="">جوه الوحدات ✅ · ⬜ صفحة قاموس</td></tr><tr id="41ecea6a-e158-805f-9786-ef44ab6080fe" dir="ltr"><td id="b:i&lt;" class="">أذكار الصباح والمساء بالصوت</td><td id="P?Vv" class="">⬜ صوت بشري</td></tr><tr id="41ecea6a-e158-80ac-be9f-eb9dd085b4f9" dir="ltr"><td id="b:i&lt;" class="">سيرة الأطفال</td><td id="P?Vv" class=""><code>seerah_kids.json</code> قديم · ⬜ صفحة</td></tr></tbody></table><p id="41ecea6a-e158-809d-9367-f5ba55b12aad" class="" dir="auto"><strong>⬜ لسه (32) — السبب: الأولوية كانت لطلباتك المباشرة (Notion)، وبعضهم محتاج حسابات:</strong><br/>خريطة حرارية للأخطاء · عداد الحفظ بالأوجه · اختبار سماعي «إيه الحكم؟» · مقارنة صوتك بالشيخ (موجة) · تقرير شهري لولي الأمر PDF · واجبات بتسليم صوتي · تقييم المعلم · بنك أسئلة مشترك · قوالب حصص · لوحة حضور شهرية · حساب ولي أمر مربوط بالأبناء · إشعار بالغياب · ملخص أسبوعي · كوبونات بتاريخ انتهاء · رسائل جماعية بشرائح · سجل دخول المستخدمين · استطلاعات · تذاكر دعم · تقسيم index.html · SEO لكل مقام وحكم · لغات واجهة تانية · إمكانية وصول · «سورة الأسبوع من غير مصحف» كتحدّي · كود خصم شخصي لكل فايز مربوط بالإحالة · لايف شهري · «قبل وبعد» · برنامج سفراء · رسالة واتساب أسبوعية.</p><p id="41ecea6a-e158-8004-9021-ff264455370d" class="" dir="auto"><strong>👤 محتاجة حساب/مفتاح:</strong> تجديد تلقائي واسترداد جزئي وتقارير ضرايب (بوابة دفع Paymob/Kashier) · Push حقيقية ونسخة iOS (Firebase وApple Developer).</p><p id="41ecea6a-e158-802a-8df6-c560e6b736f7" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -114,6 +114,7 @@
 
   /* ---------- اختبار الوحدة ---------- */
   ce293.exam = () => { const U = S.U; if (!U) return; const all = U.lessons.map(merge).filter(L => !L.hidden && L.status === "ok").flatMap(L => gen(L).map(q => Object.assign(q, { _L: L }))); S.L = { id: "exam:" + U.id, title: T("اختبار الوحدة", "Unit exam"), kind: "listen", lines: [], audio: "", img: "", slide: "", status: "ok", __q: shuf(all).slice(0, 12) }; S.q = null; S.step = "quiz"; state.pageArg = ["abyb", U.id, "exam"].join("/"); render(); };
+  ce293._x = { getJ, merge, gen, P, saveP, CUR, media }; /* v301: يستعملها منشئ الامتحانات */
 
   /* ---------- الأوامر ---------- */
   const src = () => media(S.c, S.L.audio);

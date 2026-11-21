@@ -1,16 +1,69 @@
-// Itqan Academy desktop app: opens the live site, so every website update appears instantly.
-const { app, BrowserWindow, shell, session } = require("electron");
+// Itqan Academy desktop app. External navigation is restricted to explicit HTTPS hosts.
+const { app, BrowserWindow, shell } = require("electron");
+
 const SITE = "https://itqan-maqamat-academy.vercel.app";
+const { isAllowedInApp, isPermissionAllowed, safeExternalUrl } = require("./security");
+
+function openExternalSafely(raw) {
+  const safeUrl = safeExternalUrl(raw);
+  if (safeUrl) shell.openExternal(safeUrl);
+}
+
 function create() {
-  const w = new BrowserWindow({ width: 1280, height: 820, minWidth: 380, backgroundColor: "#faf7f2", title: "Itqan Academy", autoHideMenuBar: true, icon: __dirname + "/icon.png",
-    webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false } });
-  session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(["media", "fullscreen", "notifications", "clipboard-sanitized-write"].includes(perm)));
-  w.webContents.setWindowOpenHandler(({ url }) => { if (!url.startsWith(SITE)) { shell.openExternal(url); return { action: "deny" }; } return { action: "allow" }; });
-  w.webContents.on("will-navigate", (e, url) => { if (!url.startsWith(SITE) && !/supabase\.co|accounts\.google\.com|paypal\.com/.test(url)) { e.preventDefault(); shell.openExternal(url); } });
-  // بدون نت: يفتح نسخة الموقع الكاملة المتخزنة جوه التطبيق
-  w.webContents.on("did-fail-load", (e, code, desc, url, isMain) => { if (isMain && code !== -3) w.loadFile(__dirname + "/site/index.html"); });
+  const w = new BrowserWindow({
+    width: 1280,
+    height: 820,
+    minWidth: 380,
+    backgroundColor: "#faf7f2",
+    title: "Itqan Academy",
+    autoHideMenuBar: true,
+    icon: __dirname + "/icon.png",
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      webSecurity: true,
+    },
+  });
+
+  const ses = w.webContents.session;
+  ses.setPermissionRequestHandler((webContents, permission, callback, details) => {
+    const origin = details && details.requestingOrigin;
+    callback(isPermissionAllowed(origin, permission));
+  });
+  ses.setPermissionCheckHandler((webContents, permission, requestingOrigin) => {
+    return isPermissionAllowed(requestingOrigin, permission);
+  });
+
+  w.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAllowedInApp(url)) return { action: "allow" };
+    openExternalSafely(url);
+    return { action: "deny" };
+  });
+
+  const guardNavigation = (event, url) => {
+    if (isAllowedInApp(url)) return;
+    event.preventDefault();
+    openExternalSafely(url);
+  };
+  w.webContents.on("will-navigate", guardNavigation);
+  w.webContents.on("will-redirect", guardNavigation);
+  w.webContents.on("will-attach-webview", (event) => event.preventDefault());
+
+  // Offline fallback is bundled by the desktop build workflow.
+  w.webContents.on("did-fail-load", (event, code, description, url, isMainFrame) => {
+    if (isMainFrame && code !== -3) {
+      w.loadFile(__dirname + "/site/index.html").catch(() => {});
+    }
+  });
+
   w.loadURL(SITE);
 }
+
 app.whenReady().then(create);
-app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
-app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) create(); });
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) create();
+});

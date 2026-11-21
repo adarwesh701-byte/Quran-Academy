@@ -44,25 +44,37 @@ async function hmac512(key: string, msg: string) {
   const s = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(msg)));
   return [...s].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+function constantTimeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const url = new URL(req.url);
   try {
     if (url.searchParams.get("paymob") === "1") {
+      if (req.method !== "POST") return J({ error: "method" }, 405);
       const body = await req.json().catch(() => ({}));
       const obj = body.obj || {};
       const { prv } = await cfg();
       if (!prv.paymob_hmac) return J({ ok: false }, 400);
       const msg = HKEYS.map((k) => { const v = pick(obj, k); return v === null || v === undefined ? "" : String(v); }).join("");
       const mine = await hmac512(prv.paymob_hmac, msg);
-      if (mine !== (url.searchParams.get("hmac") || "").toLowerCase()) return J({ ok: false, error: "bad_hmac" }, 401);
+      const supplied = (url.searchParams.get("hmac") || "").toLowerCase();
+      if (!/^[a-f0-9]{128}$/.test(supplied) || !constantTimeEqual(mine, supplied)) return J({ ok: false, error: "bad_hmac" }, 401);
       if (obj.success === true && obj.pending === false && !obj.is_refunded && !obj.is_voided) {
         const ref = String(pick(obj, "order.merchant_order_id") || "");
         const oid = ref.slice(0, 36);
         const o = oid && await getOrder(oid);
-        const { pay } = await cfg();
-        if (o && Math.round(egpOf(o, Number(pay.egpRate || 0)) * 100) <= Number(obj.amount_cents)) await markPaid(o.id, "paymob", String(obj.id));
+        const { pay, prv: paymentSecrets } = await cfg();
+        const expectedCents = o ? Math.round(egpOf(o, Number(pay.egpRate || 0)) * 100) : 0;
+        const allowedIds = String(paymentSecrets.paymob_integrations || "").split(/[ ,]+/).map((x: string) => Number(x)).filter((x: number) => Number.isSafeInteger(x) && x > 0);
+        if (o && isValidPaymobTransaction(obj, expectedCents, allowedIds)) {
+          await markPaid(o.id, "paymob", String(obj.id));
+        }
       }
       return J({ ok: true });
     }
@@ -86,8 +98,7 @@ Deno.serve(async (req) => {
       const r = await fetch(`${base}/v2/checkout/orders/${encodeURIComponent(paypal_order_id)}/capture`, { method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" } });
       const j = await r.json();
       const cap = j?.purchase_units?.[0]?.payments?.captures?.[0];
-      const okAmt = cap && Number(cap.amount?.value) + 0.009 >= usdOf(o, rate) && cap.amount?.currency_code === "USD";
-      if (j?.status === "COMPLETED" && cap?.status === "COMPLETED" && cap.custom_id === o.id && okAmt) { await markPaid(o.id, "paypal", cap.id); return J({ ok: true, paid: true }); }
+      if (j?.status === "COMPLETED" && isExactPayPalCapture(cap, o.id, usdOf(o, rate))) { await markPaid(o.id, "paypal", cap.id); return J({ ok: true, paid: true }); }
       return J({ error: "paypal_not_completed", status: j?.status || j?.name }, 400);
     }
     if (action === "paymob_create") {

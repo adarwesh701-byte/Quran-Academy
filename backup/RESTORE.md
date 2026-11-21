@@ -19,7 +19,7 @@
    - من **SQL Editor**: الصق ملف `itqan-schema-….sql` كله ودوس Run.
    - من **Authentication ← Providers**: فعّل Email و Google زي الأول.
 4. **البيانات**:
-   - ابعت ملف `itqan-backup-….json` لـ Claude وقوله «رجّع البيانات دي في المشروع الجديد». هو هيعمل insert لكل جدول.
+   - استعد ملف البيانات داخل بيئة إدارية موثوقة باستخدام سكربت استعادة تمت مراجعته. لا ترفع ملف النسخة الاحتياطية إلى Claude أو أي محادثة؛ قد يحتوي بيانات شخصية أو أسرارًا.
    - جدول `book_rows` (نصوص الكتب) بيتبني تاني من الكتب أوتوماتيك.
 5. **Edge Functions**:
    - الموجود في `backup/edge-functions/` اعمله Deploy بنفس الاسم.
@@ -27,8 +27,7 @@
    - أسامي الدوال: translate, send-email, calendar, phone-login, lesson-report, secure-media, payments, paypal-capture, art-gen, book-import, tts, book-tr, gcal-busy, tafsir-tr, purge-uploads, vclone, ai, vinbox, tr-run, dom-check, lesson-rec, azure-tts
 6. **غيّر المفاتيح في الكود**: في `index.html` دوّر على `ymycfxmigvvermsdnagm` وعلى الـ anon key، وحط بدالهم بتوع المشروع الجديد (من Supabase ← Settings ← API).
 7. **Vercel**: Import من GitHub، ومن غير أي إعدادات. هيطلعلك لينك الموقع على طول.
-8. **المالك**: سجّل دخول بإيميلك، وبعدين من SQL Editor نفّذ:
-   `update profiles set role='owner' where email='ايميلك';`
+8. **المالك (استعادة طوارئ فقط)**: لا ترفع دور أي حساب بتعديل مباشر من واجهة الموقع أو SQL عام. اتبع `docs/ops/DISASTER-RECOVERY-DRILL.md`، وتحقق من مخطط الأدوار ومصدر الحقيقة بين Auth و`profiles` أولًا. يجب أن ينفذ الإجراء مالك مشروع Supabase الموثق، بعد نسخة احتياطية ومراجعة ثانية وتسجيل العملية. لا ترسل ملفات Backup التي قد تحتوي أسرارًا أو بيانات طلاب إلى Claude أو محادثات عامة أو مستودعات عامة.
 9. **الملفات المرفوعة** (الصور والأصوات): مكانها Supabase Storage. لو المشروع القديم لسه شغّال، انقلها من Storage. أسامي الـ buckets موجودة في ملف البيانات.
 
 ## نصايح عشان ماتقعش أصلًا
