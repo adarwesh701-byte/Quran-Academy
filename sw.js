@@ -1,5 +1,5 @@
 /* Itqan Academy service worker — app shell cache (network-first for the page, cache-first for static assets) */
-const CACHE = "itqan-v304";
+const CACHE = "itqan-v305";
 // Match only the configured Supabase project; suffix checks also accept attacker-controlled domains.
 const SUPABASE_HOST = "ymycfxmigvvermsdnagm.supabase.co";
 const isSupabaseRequest = (url) => url.hostname === SUPABASE_HOST;
