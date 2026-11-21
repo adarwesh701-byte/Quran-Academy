@@ -70,13 +70,14 @@
 
   /* ---------- (2) زر الرجوع: يرجع داخل التطبيق ولا يقفله ---------- */
   let lastExitTap = 0;
-  try {
-    if (!(history.state && history.state.r302)) {
-      const cur = location.href;
-      history.replaceState(Object.assign({}, history.state || {}, { r302: "root" }), "", cur);
-      history.pushState(Object.assign({}, history.state || {}, { r302: "app" }), "", cur);
-    }
-  } catch (e) {}
+  /* كروم/أندرويد بيتخطّى مداخل التاريخ اللي بتتضاف بدون لمسة من المستخدم → نركّب الحماية عند أول لمسة/ضغطة مش وقت التحميل (سبب إن الرجوع كان بيقفل التطبيق) */
+  const arm302 = () => { try {
+    if (history.state && history.state.r302) return;
+    const cur = location.href;
+    history.replaceState(Object.assign({}, history.state || {}, { r302: "root" }), "", cur);
+    history.pushState(Object.assign({}, history.state || {}, { r302: "app" }), "", cur);
+  } catch (e) {} };
+  ["pointerdown", "touchstart", "keydown", "click"].forEach(ev => addEventListener(ev, function f() { arm302(); ["pointerdown", "touchstart", "keydown", "click"].forEach(x => removeEventListener(x, f, true)); }, true));
   addEventListener("popstate", e => {
     try {
       const st = e.state || history.state || {};
